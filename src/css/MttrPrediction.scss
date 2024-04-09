@@ -256,7 +256,12 @@
   }
 }
 .mttr-modal-main {
-  max-width: 80%;
+  max-width: 100%;
+  margin-top: 15px; /* Center the modal horizontally */
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: center; /* Center the modal vertically */
+  align-items: center; /* Center the modal vertically */
 }
 // .mttr-modal-table{
 //     max-width: 10% !important;
