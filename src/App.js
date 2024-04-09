@@ -36,6 +36,7 @@ import ProjectDetails from "./components/ProjectList/ProjectDetails";
 import Projectpermission from "./components/ProjectList/Projectpermission";
 import EditprojectDetails from "./components/ProjectList/EditprojectDetails";
 import CompanyAdmin from "./components/Company/CompanyAdmin";
+import { ModalProvider } from "./components/ModalContext";
 import SeparateLibrary from "./components/Libraries/SeparateLibrary";
 import ConnectedLibrary from "./components/Libraries/ConnectedLibrary";
 // import AddProjectList from "./components/Projects";
@@ -50,69 +51,61 @@ function App() {
    //const [sessionId, setSessionId] = useState(false);
   return (
     <div>
-      <ToastContainer
-        autoClose={5000}
-        hideProgressBar={true}
-        pauseOnHover={false}
-        toastClassName="toastRequestSuccess"
-        bodyClassName="toastBody"
-        closeButton={false}
-      />
-      <Router history={history}>          
-        <Switch>
-        <Route exact path="/">
-            {userId ? <Redirect to="/project/list" /> : <Redirect to="/login" />}
-          </Route>
+      <ModalProvider>
+        <ToastContainer
+          autoClose={5000}
+          hideProgressBar={true}
+          pauseOnHover={false}
+          toastClassName="toastRequestSuccess"
+          bodyClassName="toastBody"
+          closeButton={false}
+        />
+        <Router history={history}>
+          <Switch>
+            <Route exact path="/" component={Login}>
+              <Redirect to="/login" />
+            </Route>
 
-
-          <PublicLayout exact name="Login" path="/login" component={Login} />
-          <PublicLayout exact name="Dashboard" path="/dashboard" component={Dashboard} />
-          <PublicLayout exact name="Company" path="/company" component={Company} />
-          <PublicLayout exact name="User" path="/user" component={User} />
-          <PublicLayout exact name="Theme" path="/theme" component={Theme} />
-         
-          <PublicLayout exact name="ProjectList" path="/project/list" component={ProjectList} />
-          <PublicLayout exact name="pbs" path="/pbs/:id" component={PBS} />
-          <PublicLayout
-            exact
-            name="FailureRatePrediction"
-            path="/failure-rate-prediction/:id"
-            component={FailureRatePrediction}
-          />
-          <PublicLayout exact name="MTTRPrediction" path="/mttr/prediction/:id" component={MTTRPrediction} />
-          <PublicLayout exact name="FMECA" path="/fmeca/:id" component={FMECA} />
-          <PublicLayout exact name="RBD" path="/rbd/:id" component={RBD} />
-          <PublicLayout exact name="FTA" path="/fta/:id" component={FTA} />
-          <PublicLayout exact name="PMMRA" path="/pmmra/:id" component={PMMRA} />
-          <PublicLayout
-            exact
-            name="SparePartsAnalysis"
-            path="/spare-parts-analysis/:id"
-            component={SparePartsAnalysis}
-          />
-          <PublicLayout exact name="Safety" path="/safety/:id" component={Safety} />
-          {/* <PublicLayout exact name="Editproject" path="/editProject/:name" component={Editprojectlist} /> */}
-          <PublicLayout exact name="ProjectDetails" path="/project/details/:id" component={ProjectDetails} />
-          <PublicLayout exact name="Projectpermission" path="/permissions/:name" component={Projectpermission} />
-          <PublicLayout
-            exact
-            name="EditprojectDetails"
-            path="/project/details/edit/:name"
-            component={EditprojectDetails}
-          />
-        
-          <Theme />
-          <PublicLayout exact name="CompanyAdmin" path="/company/admin" component={CompanyAdmin} />
-          <PublicLayout exact name="separateLibrary" path="/separate/library/:id" component={SeparateLibrary} />
-          <PublicLayout
-            exact
-            name="ConnectedLibrary"
-            path="/connected/library/:id"
-            component={ConnectedLibrary}
-          />
-        </Switch>
-      </Router>
-      
+            <PublicLayout exact name="Login" path="/login" component={Login} />
+            <PublicLayout exact name="Dashboard" path="/dashboard" component={Dashboard} />
+            <PublicLayout exact name="Company" path="/company" component={Company} />
+            <PublicLayout exact name="User" path="/user" component={User} />
+            <PublicLayout exact name="ProjectList" path="/project/list" component={ProjectList} />
+            <PublicLayout exact name="pbs" path="/pbs/:id" component={PBS} />
+            <PublicLayout
+              exact
+              name="FailureRatePrediction"
+              path="/failure-rate-prediction/:id"
+              component={FailureRatePrediction}
+            />
+            <PublicLayout exact name="MTTRPrediction" path="/mttr/prediction/:id" component={MTTRPrediction} />
+            <PublicLayout exact name="FMECA" path="/fmeca/:id" component={FMECA} />
+            <PublicLayout exact name="RBD" path="/rbd/:id" component={RBD} />
+            <PublicLayout exact name="FTA" path="/fta/:id" component={FTA} selectedComponent={"FTA"} />
+            <PublicLayout exact name="PMMRA" path="/pmmra/:id" component={PMMRA} />
+            <PublicLayout
+              exact
+              name="SparePartsAnalysis"
+              path="/spare-parts-analysis/:id"
+              component={SparePartsAnalysis}
+            />
+            <PublicLayout exact name="Safety" path="/safety/:id" component={Safety} />
+            {/* <PublicLayout exact name="Editproject" path="/editProject/:name" component={Editprojectlist} /> */}
+            <PublicLayout exact name="ProjectDetails" path="/project/details/:id" component={ProjectDetails} />
+            <PublicLayout exact name="Projectpermission" path="/permissions/:name" component={Projectpermission} />
+            <PublicLayout
+              exact
+              name="EditprojectDetails"
+              path="/project/details/edit/:name"
+              component={EditprojectDetails}
+            />
+            <PublicLayout exact name="CompanyAdmin" path="/company/admin" component={CompanyAdmin} />
+            <PublicLayout exact name="SeparateLibrary" path="/separate/library/:id" component={SeparateLibrary} />
+            <PublicLayout exact name="ConnectedLibrary" path="/connected/library/:id" component={ConnectedLibrary} />
+            <PublicLayout exact name="Theme" path="/theme" component={Theme} />
+          </Switch>
+        </Router>
+      </ModalProvider>
     </div>
     // return (
     //   <Theme>

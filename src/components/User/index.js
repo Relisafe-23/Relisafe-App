@@ -49,11 +49,7 @@ function User() {
 
   const getUserEditDetails = (id) => {
     const userId = id;
-    Api.get(`/api/v1/user/${userId}`, {
-      headers: {
-        userId: userId,
-      },
-    })
+    Api.get(`/api/v1/user/`, { params: { userId: userId } })
       .then((res) => {
         const editData = res.data.usersList;
         setEditUserId(userId);
@@ -186,7 +182,6 @@ function User() {
       params: {
         companyId: companyId,
         userId: userId,
-       
       },
     })
       .then((res) => {
@@ -259,10 +254,10 @@ function User() {
       .matches(/^[A-Z]/, "First Letter Must Be In Capital"),
     role: Yup.string().required("User role is required"),
     phone: Yup.string()
-    .matches(/^[0-9\s]+$/, "Enter Valid Phone Number")
-    .min(10, "Enter valid number")
-    .max(10, "Enter valid number")
-    .required("Phone Number Is Required"),
+      .matches(/^[0-9\s]+$/, "Enter Valid Phone Number")
+      .min(10, "Enter valid number")
+      .max(10, "Enter valid number")
+      .required("Phone Number Is Required"),
   });
 
   const editSchema = Yup.object().shape({
@@ -284,11 +279,12 @@ function User() {
     editName: Yup.string()
       .required("Name is required")
       .matches(/^[A-Z]/, "First Letter Must Be in Capital"),
-    editPhone:  Yup.string()
-    .matches(/^[0-9\s]+$/, "Enter Valid Phone Number")
-    .min(10, "Enter valid number")
-    .max(10, "Enter valid number")
-    .required("Phone Number Is Required"),
+    editPhone: Yup.string()
+      .oneOf([Yup.ref("password"), null], "Password should be match")
+      .matches(
+        "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])",
+        "Confirm Password Should contain Uppercase, Lowercase, Numbers and Special Characters"
+      ),
     editRole: Yup.string().required("User role is required"),
   });
 

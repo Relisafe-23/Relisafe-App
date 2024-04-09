@@ -5,12 +5,9 @@ export const customStyles = {
     color: "white",
     // marginTop:"5px",
     // match with the menu
-    borderRadius: state.isFocused ? "6px " : "6px",
+    borderRadius: "5px ",
     // Overwrittes the different states of border
     borderColor: state.isFocused ? "black" : "#1d5460",
-    // borderRadius: state.isFocused ? "3px " : "3px",
-    // // Overwrittes the different states of border
-    // borderColor: state.isFocused ? "black" : "#1D5460",
     // Removes weird border around container
     boxShadow: state.isFocused ? null : null,
     "&:hover": {

@@ -18,6 +18,52 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
+.css-1bioabq {
+  --node-padding: 2px !important;
+  width: 100% !important;
+  margin: auto !important;
+}
+
+.transform-component-module_content__FBWxo {
+  width: 100% !important;
+}
+.transform-component-module_wrapper__SPB86 {
+  width: 100% !important;
+}
+.p-tag {
+  position: absolute;
+  width: 100%;
+  transform: translateY(-55px);
+}
+.css-1vs3jbz {
+  padding-left: 10px !important;
+}
+.dropdown-arrow {
+  float: right; /* Align the arrow to the right */
+  margin-right: 5px; /* Add some spacing between the text and the arrow */
+  font-size: 18px;
+}
+.dropdown-title {
+  color: black;
+}
+:where(.css-dev-only-do-not-override-fpg3f5).ant-card .ant-card-actions {
+  translate: 0px -5px;
+}
+.css-to7de5::before {
+  height: 45px !important;
+  translate: 0px -25px;
+}
+.css-to7de5 {
+  margin-top: 25px !important;
+}
+.custom-button:hover p {
+  color: blue; /* Change to the desired hover color */
+}
+
+.FTA-card :hover {
+  cursor: pointer;
+}
+
 /* 
 *,
 *::after,

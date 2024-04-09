@@ -396,9 +396,9 @@ if (hasData) {
       field: "taskType",
       type: "string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "110px" },
       validate: (rowData) => {
-        if (rowData?.TaskType === undefined || rowData?.TaskType === "") {
+        if (rowData?.taskType === undefined || rowData?.taskType === "") {
           return "required";
         }
         return true;
@@ -424,8 +424,8 @@ if (hasData) {
               name="TaskType"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter Task Type"
-              style={{ height: "40px", borderRadius: "4px" }}
+              placeholder="Task Type"
+              style={{ height: "40px", borderRadius: "4px" , width: "80px"}}
               title="Enter Task Type"
             />
           );
@@ -449,7 +449,7 @@ if (hasData) {
       field: "time",
       type: "string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "110px" },
       validate: (rowData) => {
         if (rowData.time === undefined || rowData.time === "") {
           return "required";
@@ -477,8 +477,8 @@ if (hasData) {
               name="time"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter Average Task Time"
-              style={{ height: "40px", borderRadius: "4px" }}
+              placeholder="Average Task Time"
+              style={{ height: "40px", borderRadius: "4px" , width: "140px"}}
               title="Enter Average Task Time"
             />
           );
@@ -502,7 +502,7 @@ if (hasData) {
       field: "totalLabour",
       type: "string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "110px" },
       validate: (rowData) => {
         if (rowData?.totalLabour === undefined || rowData?.totalLabour === "") {
           return "required";
@@ -530,8 +530,8 @@ if (hasData) {
               name="totalLabour"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter No of Labours"
-              style={{ height: "40px", borderRadius: "4px" }}
+              placeholder="No of Labours"
+              style={{ height: "40px", borderRadius: "4px" , width: "100px"}}
               title="Enter No of Labours"
             />
           );
@@ -553,14 +553,15 @@ if (hasData) {
     {
       title: "Skills",
       field: "skill",
+      type: "string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
-      validate: (rowData) => {
-        if (rowData?.skill === undefined || rowData?.skill === "") {
-          return "required";
-        }
-        return true;
-      },
+      cellStyle: { minWidth: "110px" },
+      // validate: (rowData) => {
+      //   if (rowData?.skill === undefined || rowData?.skill === "") {
+      //     return "required";
+      //   }
+      //   return true;
+      // },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "skill") || [];
         const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "skill") || [];
@@ -581,8 +582,8 @@ if (hasData) {
               name="skill"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter Skill"
-              style={{ height: "40px", borderRadius: "4px" }}
+              placeholder="Skill"
+              style={{ height: "40px", borderRadius: "4px" , width: "100px"}}
               title="Enter Skill"
             />
           );
@@ -604,14 +605,15 @@ if (hasData) {
     {
       title: "Tools",
       field: "tools",
+      type: "string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
-      validate: (rowData) => {
-        if (rowData?.tools === undefined || rowData?.tools === "") {
-          return "required";
-        }
-        return true;
-      },
+      cellStyle: { minWidth: "110px" },
+      // validate: (rowData) => {
+      //   if (rowData?.tools === undefined || rowData?.tools === "") {
+      //     return "required";
+      //   }
+      //   return true;
+      // },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "tools") || [];
         const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "tools") || [];
@@ -632,8 +634,8 @@ if (hasData) {
               name="tools"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter Tools"
-              style={{ height: "40px", borderRadius: "4px" }}
+              placeholder="Tools"
+              style={{ height: "40px", borderRadius: "4px" , width: "100px"}}
               title="Enter Tools"
             />
           );
@@ -655,14 +657,15 @@ if (hasData) {
     {
       title: "Part no",
       field: "partNo",
+      type: "string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
-      validate: (rowData) => {
-        if (rowData?.partNo === undefined || rowData?.partNo === "") {
-          return "required";
-        }
-        return true;
-      },
+      cellStyle: { minWidth: "110px" },
+      // validate: (rowData) => {
+      //   if (rowData?.partNo === undefined || rowData?.partNo === "") {
+      //     return "required";
+      //   }
+      //   return true;
+      // },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "partNo") || [];
         const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "partNo") || [];
@@ -683,8 +686,8 @@ if (hasData) {
               name="partNo"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter Part No"
-              style={{ height: "40px", borderRadius: "4px" }}
+              placeholder="Part No"
+              style={{ height: "40px", borderRadius: "4px" , width: "100px"}}
               title="Enter Part No"
             />
           );
@@ -706,14 +709,15 @@ if (hasData) {
     {
       title: "Tool Type",
       field: "toolType",
+      type:"string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
-      validate: (rowData) => {
-        if (rowData?.toolType === undefined || rowData?.toolType === "") {
-          return "required";
-        }
-        return "true";
-      },
+      cellStyle: { minWidth: "120px" },
+      // validate: (rowData) => {
+      //   if (rowData?.toolType === undefined || rowData?.toolType === "") {
+      //     return "required";
+      //   }
+      //   return true;
+      // },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "toolType") || [];
         const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "toolType") || [];
@@ -734,9 +738,9 @@ if (hasData) {
               name="toolType"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter Tool Type"
-              title="Enter Tool Type"
-              style={{ height: "40px", borderRadius: "4px" }}
+              placeholder="toolType"
+              style={{ height: "40px", borderRadius: "4px" , width: "100px"}}
+              title="Enter toolType"
             />
           );
         }
@@ -746,14 +750,15 @@ if (hasData) {
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "partNo");
-              getAllConnectedLibrary(selectedItems, "partNo");
+              handleInputChange(selectedItems, "toolType");
+              getAllConnectedLibrary(selectedItems, "toolType");
             }}
             options={options}
           />
         );
       },
     },
+   
   ];
 
   const submitSchema = Yup.object().shape({
@@ -766,13 +771,13 @@ if (hasData) {
     levelOfReplace: Yup.object().required("Level of replace is required"),
     levelOfRepair: repairable?.value != "Yes" ? null : Yup.object().required("Level of repair is required"),
     spare: Yup.object().required("Spare is required"),
-    mct: Yup.string().required("MCT is required"),
-    mlh: Yup.string().required("MLH is required"),
+    mct: mctValue ? Yup.string().required("MCT is required") : Yup.string().nullable(),
+    mlh: mlhValue ? Yup.string().required("MLH is required") : Yup.string().nullable(),
     // labourHour: Yup.string().required("Labour hour is required"),
-    partType:
-      category === "" || category === "Assembly"
-        ? Yup.string().nullable()
-        : Yup.object().required("Part Type is Required"),
+    // partType:
+    //   category === "" || category === "Assembly"
+    //     ? Yup.string().nullable()
+    //     : Yup.object().required("Part Type is Required"),
   });
 
   const CreateProcedureData = (value) => {
@@ -798,6 +803,7 @@ if (hasData) {
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
+         toast.success("Procedure Created Successfully");
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -830,6 +836,7 @@ const userId = localStorage.getItem("userId");
     })
       .then((response) => {
         getProcedureData();
+        toast.success("Procedure Updated Successfully");
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -878,6 +885,7 @@ const userId = localStorage.getItem("userId");
     })
       .then((response) => {
         getProcedureData();
+        toast.error("Procedure Deleted Successfully");
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;

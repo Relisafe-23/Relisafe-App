@@ -241,6 +241,13 @@ input::-webkit-inner-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+.org-chart-container {
+  width: 100%;
+  height: 100vh;
+  cursor: grab;
+  /* overflow: hidden; */
+}
 .separate {
   margin-top: 100px;
  

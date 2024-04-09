@@ -42,7 +42,7 @@ function Login() {
         const status = res.status;
         if (status === 200) {
           setResponseSuccess(true);
-          const userId = res?.data?.user.id;
+          const userId = res?.data?.user?.id;
           const token = res?.data?.user?.sessionId;
           const companyId = res?.data?.user?.companyId;
           const role = res?.data?.user?.role;

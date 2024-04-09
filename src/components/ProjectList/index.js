@@ -198,7 +198,8 @@ export default function ProjectList(props) {
       });
   };
   const getUserDetails = (id) => {
-    Api.get(`/api/v1/user/${userId}`)
+    const userId = localStorage.getItem("userId");
+    Api.get(`/api/v1/user/`, { params: { userId: userId } })
       .then((res) => {
         const editData = res.data.usersList;
         const userStatus = res.data.usersList.isOwner;

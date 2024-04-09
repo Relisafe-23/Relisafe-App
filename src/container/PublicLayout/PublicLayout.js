@@ -17,7 +17,9 @@ const DefaultLayout = (props) => {
   const projectId = props?.location?.state?.projectId
     ? props?.location?.state?.projectId
     : props?.computedMatch?.params?.id;
+
   const [active, setActive] = useState(false);
+
   const sessionId = localStorage.getItem("sessionId");
   const loading = () => <div className="animated fadeIn pt-1 text-center">Loading...</div>;
   const value = () => {
@@ -29,10 +31,20 @@ const DefaultLayout = (props) => {
       <div className="app-body" style={{ minHeight: "calc(100vh - 123px)" }}>
         <div>
           {sessionId ? (
-            <SideBar onClick={value} value={projectId} active={active} props={productId} openSideBar={openSideBar} />
+            <SideBar
+              onClick={value}
+              value={projectId}
+              active={active}
+              props={productId}
+              openSideBar={openSideBar}
+              selecte
+            />
           ) : null}
 
-          <HeaderNavBar active={active} />
+          <HeaderNavBar
+            active={active}
+            selectedComponent={props?.selectedComponent === "FTA" ? "FTA" : null}
+          />
           <div>
             {sessionId ? (
               <div className={`${active ? "site-maincontent home-content" : "site-maincontent active home-content"}`}>
