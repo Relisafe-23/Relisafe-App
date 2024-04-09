@@ -33,10 +33,13 @@ import FrUnit from "../core/FRUnit";
 import { nprdPartTypes } from "./NprdPartTypes";
 import { nprdFRP } from "./NprdFRP";
 import { nprdPartDes } from "./NprdPartDes";
+import { nprdFRP2016 } from "./nprd_2016/NprdFRP2016";
 import MaterialTable from "material-table";
 import { ThemeProvider } from "@material-ui/styles";
 import { createTheme } from "@material-ui/core/styles";
 import { tableIcons } from "../PBS/TableIcons";
+import { FaEllipsisV } from "react-icons/fa";
+import Tooltip from "@mui/material/Tooltip";
 import { toast } from "react-toastify";
 import Resistor from "./PartTypes/Resistor";
 import IcMemory from "./PartTypes/IC-memory-analog";
@@ -80,7 +83,7 @@ function Index(props) {
   const [initialTreeStructure, setInitialTreeStructure] = useState();
   const [showModal, setShowModal] = useState(false);
   const [nprdModel, setNprdModel] = useState(false);
-  // const [nprd2016Model, setNprd2016Model] = useState(false);
+  const [nprd2016Model, setNprd2016Model] = useState(false);
   const [nprdSubModal, setNprdSubModal] = useState(false);
   const [partTypeNprd, setPartTypeNprd] = useState();
   const [partTypeDescr, setPartTypeDescr] = useState();
@@ -440,8 +443,8 @@ function Index(props) {
     partType: Yup.object().required("Part Type is required"),
     temperature: Yup.string().required("Temperature is  required"),
     frDistribution: Yup.object().required("FR Distribution is  required"),
-    // failureRate: Yup.string().required("Failure Rate Offset is required"),
-    // operand: Yup.object().required("FR Offset Operand is required"),
+    failureRate: Yup.string().required("Failure Rate Offset is required"),
+    operand: Yup.object().required("FR Offset Operand is required"),
     field:
       source.value === "Field"
         ? Yup.string().required("Field is Required")
@@ -980,14 +983,14 @@ function Index(props) {
                                     //     ? null
                                     //     : "disabled"
                                     // }
-                                    // isDisabled={
-                                    //   writePermission?.write === true ||
-                                    //   writePermission?.write === "undefined" ||
-                                    //   role === "admin" ||
-                                    //   (isOwner === true && createdBy === userId)
-                                    //     ? null
-                                    //     : "disabled"
-                                    // }
+                                    isDisabled={
+                                      writePermission?.write === true ||
+                                      writePermission?.write === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
+                                        ? null
+                                        : "disabled"
+                                    }
                                     placeholder="Select"
                                     onBlur={handleBlur}
                                     onChange={(e) => {
@@ -1252,10 +1255,9 @@ function Index(props) {
                                           setShowModal(true); // Open the modal
                                         } else if (e.value === "NPRD11") {
                                           setNprdModel(true);
-                                        } 
-                                        // else if (e.value === "NPRD16") {
-                                        //   setNprd2016Model(true);
-                                        // }
+                                        } else if (e.value === "NPRD16") {
+                                          setNprd2016Model(true);
+                                        }
                                         setFieldValue("standard", e);
                                       }}
                                       options={[
@@ -1282,7 +1284,7 @@ function Index(props) {
                               </Row>
                               <Row className="mt-3">
                                 <Col>
-                                  <Label>FR Offset Operand</Label>
+                                  <Label notify="true">FR Offset Operand</Label>
                                   <Form.Group>
                                     <Select
                                       className="mt-1"
@@ -1323,15 +1325,15 @@ function Index(props) {
                                       ]}
                                       value={values.operand}
                                     />
-                                    {/* <ErrorMessage
+                                    <ErrorMessage
                                       className="error text-danger"
                                       component="span"
                                       name="operand"
-                                    /> */}
+                                    />
                                   </Form.Group>
                                 </Col>
                                 <Col>
-                                  <Label>
+                                  <Label notify="true">
                                     Failure Rate Offset
                                   </Label>
                                   <Form.Group>
@@ -1346,11 +1348,11 @@ function Index(props) {
                                       onChange={handleChange}
                                       value={values.failureRate}
                                     />
-                                    {/* <ErrorMessage
+                                    <ErrorMessage
                                       className="error text-danger"
                                       component="span"
                                       name="failureRate"
-                                    /> */}
+                                    />
                                   </Form.Group>
                                 </Col>
                               </Row>
@@ -1743,9 +1745,6 @@ function Index(props) {
                                                 className="delete-cancel-btn me-2"
                                                 variant="outline-secondary"
                                                 type="reset"
-                                                onClick={(e) => {
-                                                  setNprdModel(false);
-                                                }}
                                               >
                                                 CANCEL
                                               </Button>
@@ -1856,7 +1855,7 @@ function Index(props) {
                                   </div>
                                 </Modal>
                               </div>
-                              {/* <div>
+                              <div>
                                 <Modal
                                   show={nprd2016Model}
                                   centered
@@ -2170,9 +2169,6 @@ function Index(props) {
                                                 className="delete-cancel-btn me-2"
                                                 variant="outline-secondary"
                                                 type="reset"
-                                                onClick={(e) => {
-                                                  setNprd2016Model(false);
-                                                }}
                                               >
                                                 CANCEL
                                               </Button>
@@ -2284,7 +2280,7 @@ function Index(props) {
                                     </Modal.Footer>
                                   </div>
                                 </Modal>
-                              </div> */}
+                              </div>
                             </div>
                           </Col>
                         </Row>
