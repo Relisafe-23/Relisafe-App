@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Col, Dropdown, Form, Modal, Row } from "react-bootstrap";
+import { Button, Card, Col, Dropdown, Form, Modal, Row ,OverlayTrigger} from "react-bootstrap";
 import Label from "../LabelComponent";
 import "../../css/PBS.scss";
 import { ErrorMessage, Formik } from "formik";
@@ -12,10 +12,7 @@ import { ThemeProvider } from "@material-ui/styles";
 import { createTheme } from "@material-ui/core/styles";
 import { tableIcons } from "./TableIcons";
 import { Electronic, Mechanical } from "../core/partTypeCategory";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import * as XLSX from "xlsx";
-
-import { faPlus, faPen, faEllipsisVertical, faEllipsisV } from "@fortawesome/free-solid-svg-icons";
 import { Link, useHistory } from "react-router-dom";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
@@ -24,6 +21,9 @@ import { FaCheckCircle } from "react-icons/fa";
 import { customStyles } from "../core/select";
 import Tooltip from "@mui/material/Tooltip";
 import { toast } from "react-toastify";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFileImport, faFileExport, faPlus , faFileDownload, faFileUpload} from '@fortawesome/free-solid-svg-icons';
+
 
 export default function PBS(props) {
   const projectId = props?.location?.state?.projectId;
@@ -378,11 +378,27 @@ if (modifiedTableData.length > 0) {
       });
   };
 
-  const rowStyle = (rowData) => {
+  function hueToLCH(hue) {
+    // Convert hue to LCH color
+    const l = 45.12; // Lightness value
+    const c = 0.267; // Chroma value
+    const h = hue; // Hue value
+
+    return `oklch(${l}% ${c} ${h})`;
+}
+
+  const rowStyle =  (rowData) => {
+    // const userThemeColor = res?.data?.user?.userThemeColor ?? 189;
     const lastProductId = localStorage.getItem("lastCreatedProductId");
+    const storedHue = localStorage.getItem("themeHue");
+    const initialHue = storedHue ? parseInt(storedHue, 10) : 0;
+    
+     
     if (rowData.id === lastProductId) {
+      const lchColor = hueToLCH(initialHue);
+      console.log("hslColor.....",lchColor)
       return {
-        backgroundColor: "#1d5460",
+        backgroundColor: lchColor,
         color: "white",
       };
     }
@@ -521,6 +537,7 @@ if (modifiedTableData.length > 0) {
 
   const patchForm = (values) => {
     const userId = localStorage.getItem("userId");
+    setISLoading(true);
     Api.patch(`/api/v1/product/update`, {
       productId: productId,
       productName: values.name,
@@ -549,7 +566,8 @@ if (modifiedTableData.length > 0) {
         setPartNumber("");
         setPatchName("");
         setPartType("");
-        window.location.reload();
+        setISLoading(false);
+        // window.location.reload();
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -691,49 +709,77 @@ if (modifiedTableData.length > 0) {
                   formik;
                 return (
                   <div>
-                    <Row >
-                      <Col>
-                        <label for="file-input" class="file-label file-inputs">
-                          Import
-                        </label>
-                        <input type="file" className="input-fields" id="file-input" onChange={importExcel} />
-                      </Col>
-                      <Col>
-                        <Button
-                          className="btn-aligne export-btns-FailureRate"
-                          onClick={() => {
-                            DownloadExcel();
-                          }}
-                        >
-                          Export
-                        </Button>
-                      </Col>
-                    </Row>
-
-                    <div className="d-flex justify-content-end mt-3">
-                      {mainProductModalOpen === false ? (
-                        <Button
-                          className="save-btn"
-                          onClick={() => {
-                            setMainProductModalOpen(true);
-                            setPatchModal(false);
-                            setSubProduct(false);
-                            setChildProductCriteria(false);
-                          }}
-                          disabled={
-                            permission?.write === true ||
-                            permission?.write === "undefined" ||
-                            role === "admin" ||
-                            (isOwner === true && createdBy === userId)
-                              ? null
-                              : "disabled"
-                          }
-                        >
-                          CREATE PRODUCT
-                        </Button>
-                      ) : null}
-                    </div>
-                    <div className="main-div-product">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', 
+                 }}>
+                  <div style={{ display: 'flex', width: 'auto' }}>
+                  <Tooltip placement="top" title="Import">
+                    <Button
+                      className="add-product-btn"
+                      onClick={() => {
+                        setMainProductModalOpen(true);
+                        setPatchModal(false);
+                        setSubProduct(false);
+                        setChildProductCriteria(false);
+                      }}
+                      disabled={
+                        permission?.write === true ||
+                        permission?.write === 'undefined' ||
+                        role === 'admin' ||
+                        (isOwner === true && createdBy === userId)
+                          ? null
+                          : 'disabled'
+                      }
+                      style={{marginRight: '10%'}}
+                    >
+                      <FontAwesomeIcon icon={faFileDownload} style={{ width: '15' }} />
+                    </Button>
+                    </Tooltip>
+                    <Tooltip placement="top" title="Export">
+                    <Button
+                      className="add-product-btn"
+                      onClick={() => {
+                        setMainProductModalOpen(true);
+                        setPatchModal(false);
+                        setSubProduct(false);
+                        setChildProductCriteria(false);
+                      }}
+                      disabled={
+                        permission?.write === true ||
+                        permission?.write === 'undefined' ||
+                        role === 'admin' ||
+                        (isOwner === true && createdBy === userId)
+                          ? null
+                          : 'disabled'
+                      }
+                    >
+                        <FontAwesomeIcon icon={faFileUpload} style={{ width: '15' }} />
+                    </Button>
+                    </Tooltip>
+                  </div>
+                  <Tooltip placement="top" title="Create Product">
+                  <Button
+                    className="add-product-btn"
+                    onClick={() => {
+                      setMainProductModalOpen(true);
+                      setPatchModal(false);
+                      setSubProduct(false);
+                      setChildProductCriteria(false);
+                    }}
+                    disabled={
+                      permission?.write === true ||
+                      permission?.write === 'undefined' ||
+                      role === 'admin' ||
+                      (isOwner === true && createdBy === userId)
+                        ? null
+                        : 'disabled'
+                    }
+                  >
+                    <FontAwesomeIcon icon={faPlus} style={{ width: '15' }} />
+                  </Button>
+                  </Tooltip>
+                  
+                </div>
+                <div className="main-div-product">
                       <Modal
                         show={mainProductModalOpen}
                         size="lg"
@@ -784,48 +830,6 @@ if (modifiedTableData.length > 0) {
                                     </Form.Group>
                                   </Col>
 
-                                  <Col>
-                                    {category.value === "Assembly" ? null : (
-                                      <div className="">
-                                        <Form.Group className="mt-3 ">
-                                          <Label notify={true}>Part Type</Label>
-                                          <Select
-                                            type="select"
-                                            styles={customStyles}
-                                            value={values.partType}
-                                            placeholder="Select Part Type"
-                                            name="partType"
-                                            className="mt-1"
-                                            onBlur={handleBlur}
-                                            onChange={(e) => {
-                                              setFieldValue("partType", e);
-                                              setPartType(e.value);
-                                            }}
-                                            options={[
-                                              category.value === "Electronic"
-                                                ? {
-                                                    options: Electronic.map((list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })),
-                                                  }
-                                                : {
-                                                    options: Mechanical.map((list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })),
-                                                  },
-                                            ]}
-                                          />
-                                          <ErrorMessage
-                                            className="error text-danger"
-                                            component="span"
-                                            name="partType"
-                                          />
-                                        </Form.Group>
-                                      </div>
-                                    )}
-                                  </Col>
                                   <Col>
                                     <Form.Group>
                                       <Label notify={true} className="mb-1 ">
@@ -995,21 +999,17 @@ if (modifiedTableData.length > 0) {
                                               setFieldValue("partType", e);
                                               setPartType(e.value);
                                             }}
-                                            options={[
+                                            options={
                                               category.value === "Electronic"
-                                                ? {
-                                                    options: Electronic.map((list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })),
-                                                  }
-                                                : {
-                                                    options: Mechanical.map((list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })),
-                                                  },
-                                            ]}
+                                                ? Electronic.map((list) => ({
+                                                    value: list.value,
+                                                    label: list.label,
+                                                  })).sort((a, b) => a.label.localeCompare(b.label))
+                                                : Mechanical.map((list) => ({
+                                                    value: list.value,
+                                                    label: list.label,
+                                                  })).sort((a, b) => a.label.localeCompare(b.label))
+                                            }
                                           />
                                           <ErrorMessage
                                             className="error text-danger"
@@ -1224,7 +1224,7 @@ if (modifiedTableData.length > 0) {
                         </div>
                       </Modal.Footer>
                     </Modal>
-                  </div>
+               </div>
                 );
               }}
             </Formik>
@@ -1257,7 +1257,7 @@ if (modifiedTableData.length > 0) {
                           (isOwner === true && createdBy === userId) ? (
                             <Dropdown.Menu right>
                               {rowData.category === "Electronic" || rowData.category === "Mechanical" ? null : (
-                                <Tooltip title="create sub product">
+                                <Tooltip title="create sub product" placement="top">
                                   <Dropdown.Item
                                     className="user-dropitem-project text-center"
                                     onClick={() => {
@@ -1272,7 +1272,7 @@ if (modifiedTableData.length > 0) {
                                       setChildProductCriteria(false);
                                     }}
                                   >
-                                    <Link>Create</Link>
+                                    <Link>Add Child Part</Link>
                                   </Dropdown.Item>
                                 </Tooltip>
                               )}

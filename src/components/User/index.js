@@ -1,12 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { Button, Col, Form, Modal, Row, Table, InputGroup, Dropdown, Card } from "react-bootstrap";
+import {
+  Button,
+  Col,
+  Form,
+  Modal,
+  Row,
+  Table,
+  InputGroup,
+  Dropdown,
+  Card,
+} from "react-bootstrap";
 import Label from "../LabelComponent";
 import { ErrorMessage, Formik } from "formik";
 import Api from "../../Api";
 import * as Yup from "yup";
 import "../../css/User.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisV, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faEllipsisV,
+  faEye,
+  faEyeSlash,
+} from "@fortawesome/free-solid-svg-icons";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { FaExclamationCircle } from "react-icons/fa";
 import { useHistory } from "react-router-dom";
@@ -26,7 +40,8 @@ function User() {
   const [passwordShown, setPasswordShown] = useState(false);
   const [confirmPasswordShown, setConfirmPasswordShown] = useState(false);
   const [editPasswordShown, setEditPasswordShown] = useState(false);
-  const [editConfirmPasswordShown, setEditConfirmPasswordShown] = useState(false);
+  const [editConfirmPasswordShown, setEditConfirmPasswordShown] =
+    useState(false);
   const [deleteMsg, setDeleteMsg] = useState(false);
   const [userCompanyId, setUserCompanyId] = useState();
   const [responseUpdate, setResponseUpdate] = useState(false);
@@ -110,7 +125,6 @@ function User() {
   };
 
   const updateForm = (values, { resetForm }) => {
-    
     const email = values.editEmail.toLowerCase();
     Api.patch(`/api/v1/user/${editUserId}`, {
       email: email,
@@ -177,7 +191,7 @@ function User() {
   const getUserList = () => {
     const userId = localStorage.getItem("userId");
     const companyId = localStorage.getItem("companyId");
-    setUserCompanyId(companyId); 
+    setUserCompanyId(companyId);
     Api.get(`api/v1/user/company/list`, {
       params: {
         companyId: companyId,
@@ -235,7 +249,9 @@ function User() {
   };
 
   const submitSchema = Yup.object().shape({
-    email: Yup.string().email("Must be a valid email").required("Email is required"),
+    email: Yup.string()
+      .email("Must be a valid email")
+      .required("Email is required"),
     password: Yup.string()
       .matches(
         "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])",
@@ -253,15 +269,17 @@ function User() {
       // .matches("^(?=.*[a-z])(?=.*[A-Z])", "must contain alphabets and numbers")
       .matches(/^[A-Z]/, "First Letter Must Be In Capital"),
     role: Yup.string().required("User role is required"),
-    phone: Yup.string()
-      .matches(/^[0-9\s]+$/, "Enter Valid Phone Number")
-      .min(10, "Enter valid number")
-      .max(10, "Enter valid number")
-      .required("Phone Number Is Required"),
+    // phone: Yup.string()
+    //   .matches(/^[0-9\s]+$/, "Enter Valid Phone Number")
+    //   .min(10, "Enter valid number")
+    //   .max(10, "Enter valid number")
+    //   .required("Phone Number Is Required"),
   });
 
   const editSchema = Yup.object().shape({
-    editEmail: Yup.string().email("Must be a valid email").required("Email is required"),
+    editEmail: Yup.string()
+      .email("Must be a valid email")
+      .required("Email is required"),
     editPassword: Yup.string()
       // .oneOf([Yup.ref("editPassword"), null], "Passwords must match")
       .matches(
@@ -301,7 +319,11 @@ function User() {
       </div>
       <div className="d-flex justify-content-end mt-4 mb-2">
         {activeUserRole === "Employee" ? null : (
-          <Button className="save-btn " type="submit" onClick={() => setShow(true)}>
+          <Button
+            className="save-btn "
+            type="submit"
+            onClick={() => setShow(true)}
+          >
             CREATE USER
           </Button>
         )}
@@ -325,10 +347,19 @@ function User() {
               companyName: "",
             }}
             validationSchema={submitSchema}
-            onSubmit={(values, { resetForm }) => submitForm(values, { resetForm })}
+            onSubmit={(values, { resetForm }) =>
+              submitForm(values, { resetForm })
+            }
           >
             {(formik) => {
-              const { values, handleChange, handleSubmit, handleBlur, setFieldValue, isValid } = formik;
+              const {
+                values,
+                handleChange,
+                handleSubmit,
+                handleBlur,
+                setFieldValue,
+                isValid,
+              } = formik;
               return (
                 <div>
                   <div>
@@ -349,7 +380,11 @@ function User() {
                                   className="mt-1"
                                   placeholder="Name"
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="name" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="name"
+                                />
                               </Form.Group>
                             </Col>
                             <Col>
@@ -366,7 +401,11 @@ function User() {
                                   className="mt-1"
                                   placeholder="Email"
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="email" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="email"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -401,7 +440,11 @@ function User() {
                                     />
                                   </InputGroup.Text>
                                 </InputGroup>
-                                <ErrorMessage className="error text-danger" component="span" name="password" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="password"
+                                />
                               </Form.Group>
                             </Col>
                             <Col>
@@ -409,7 +452,9 @@ function User() {
                                 <Label notify={true}>Confirm Password</Label>
                                 <InputGroup className="mt-1">
                                   <Form.Control
-                                    type={confirmPasswordShown ? "text" : "password"}
+                                    type={
+                                      confirmPasswordShown ? "text" : "password"
+                                    }
                                     name="confirmPassword"
                                     onPaste={(e) => {
                                       e.preventDefault();
@@ -427,14 +472,22 @@ function User() {
                                   />
                                   <InputGroup.Text>
                                     <FontAwesomeIcon
-                                      icon={confirmPasswordShown ? faEye : faEyeSlash}
+                                      icon={
+                                        confirmPasswordShown
+                                          ? faEye
+                                          : faEyeSlash
+                                      }
                                       style={{ cursor: "pointer" }}
                                       onClick={toggleConfirmPasswordVisiblity}
                                       size="1x"
                                     />
                                   </InputGroup.Text>
                                 </InputGroup>
-                                <ErrorMessage className="error text-danger" component="span" name="confirmPassword" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="confirmPassword"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -453,7 +506,11 @@ function User() {
                                   className="mt-1"
                                   placeholder="Select Role"
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="role" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="role"
+                                />
                               </Form.Group>
                             </Col>
                             <Col>
@@ -470,7 +527,7 @@ function User() {
                                   className="mt-1"
                                   placeholder="Phone"
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="phone" />
+                                {/* <ErrorMessage className="error text-danger" component="span" name="phone" /> */}
                               </Form.Group>
                             </Col>
                           </Row>
@@ -488,7 +545,11 @@ function User() {
                         >
                           CANCEL
                         </Button>
-                        <Button className="save-btn  " type="submit" disabled={!isValid || isSubmit}>
+                        <Button
+                          className="save-btn  "
+                          type="submit"
+                          disabled={!isValid || isSubmit}
+                        >
                           CREATE
                         </Button>
                       </div>
@@ -516,7 +577,14 @@ function User() {
         onSubmit={(values, { resetForm }) => updateForm(values, { resetForm })}
       >
         {(formik) => {
-          const { values, handleChange, handleSubmit, handleBlur, setFieldValue, isValid } = formik;
+          const {
+            values,
+            handleChange,
+            handleSubmit,
+            handleBlur,
+            setFieldValue,
+            isValid,
+          } = formik;
 
           return (
             <div>
@@ -543,7 +611,11 @@ function User() {
                                   className="form-group p-2"
                                   placeholder="Name"
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="editName" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="editName"
+                                />
                               </Form.Group>
                             </Col>
                             <Col>
@@ -559,7 +631,11 @@ function User() {
                                   className="form-group p-2"
                                   placeholder="Email"
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="editEmail" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="editEmail"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -569,7 +645,9 @@ function User() {
                               <Form.Group>
                                 <InputGroup>
                                   <Form.Control
-                                    type={editPasswordShown ? "text" : "password"}
+                                    type={
+                                      editPasswordShown ? "text" : "password"
+                                    }
                                     name="editPassword"
                                     onPaste={(e) => {
                                       e.preventDefault();
@@ -588,14 +666,20 @@ function User() {
                                   />
                                   <InputGroup.Text>
                                     <FontAwesomeIcon
-                                      icon={editPasswordShown ? faEye : faEyeSlash}
+                                      icon={
+                                        editPasswordShown ? faEye : faEyeSlash
+                                      }
                                       style={{ cursor: "pointer" }}
                                       onClick={editTogglePasswordVisiblity}
                                       size="1x"
                                     />
                                   </InputGroup.Text>
                                 </InputGroup>
-                                <ErrorMessage className="error text-danger" component="span" name="editPassword" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="editPassword"
+                                />
                               </Form.Group>
                             </Col>
                             <Col>
@@ -603,7 +687,11 @@ function User() {
                               <Form.Group>
                                 <InputGroup>
                                   <Form.Control
-                                    type={editConfirmPasswordShown ? "text" : "password"}
+                                    type={
+                                      editConfirmPasswordShown
+                                        ? "text"
+                                        : "password"
+                                    }
                                     name="editConfirmPassword"
                                     onPaste={(e) => {
                                       e.preventDefault();
@@ -622,9 +710,15 @@ function User() {
                                   />
                                   <InputGroup.Text>
                                     <FontAwesomeIcon
-                                      icon={editConfirmPasswordShown ? faEye : faEyeSlash}
+                                      icon={
+                                        editConfirmPasswordShown
+                                          ? faEye
+                                          : faEyeSlash
+                                      }
                                       style={{ cursor: "pointer" }}
-                                      onClick={editToggleConfirmPasswordVisiblity}
+                                      onClick={
+                                        editToggleConfirmPasswordVisiblity
+                                      }
                                       size="1x"
                                     />
                                   </InputGroup.Text>
@@ -654,7 +748,11 @@ function User() {
                                 />
                               </Form.Group>
 
-                              <ErrorMessage className="error text-danger" component="span" name="editRole" />
+                              <ErrorMessage
+                                className="error text-danger"
+                                component="span"
+                                name="editRole"
+                              />
                             </Col>
                             <Col>
                               <Label>Phone Number</Label>
@@ -669,7 +767,11 @@ function User() {
                                   onBlur={handleBlur}
                                   placeholder="Phone"
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="editPhone" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="editPhone"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -706,10 +808,17 @@ function User() {
               <div>
                 {/* <Modal show={deleteMsg} size="lg" className="user-delete-modal">
                   <Modal.Body className="modal-body-user"> */}
-                <Modal show={deleteMsg} centered className="project-delete-modal-use" backdrop="static">
+                <Modal
+                  show={deleteMsg}
+                  centered
+                  className="project-delete-modal-use"
+                  backdrop="static"
+                >
                   <Modal.Body>
                     <div style={{ marginTop: "25px" }}>
-                      <h5 className="d-flex justify-content-center">Are you sure you want to delete this user?</h5>
+                      <h5 className="d-flex justify-content-center">
+                        Are you sure you want to delete this user?
+                      </h5>
                     </div>
                     <div className="d-flex mt-4 ms-5">
                       <b className="text-center"> Name:</b>
@@ -724,7 +833,10 @@ function User() {
                       <p className="mx-3">{deleteRole}</p>
                     </div>
                   </Modal.Body>
-                  <Modal.Footer className=" d-flex justify-content-center" style={{ borderTop: 0, bottom: "20px" }}>
+                  <Modal.Footer
+                    className=" d-flex justify-content-center"
+                    style={{ borderTop: 0, bottom: "20px" }}
+                  >
                     <Button
                       className="  delete-cancel-btn  "
                       variant="outline-secondary"
@@ -732,7 +844,10 @@ function User() {
                     >
                       NO
                     </Button>
-                    <Button className="save-btn ms-1" onClick={() => deleteUserDetails(userId)}>
+                    <Button
+                      className="save-btn ms-1"
+                      onClick={() => deleteUserDetails(userId)}
+                    >
                       YES
                     </Button>
                   </Modal.Footer>
@@ -753,7 +868,9 @@ function User() {
                 <th>Email Address</th>
                 <th>Role</th>
                 <th>Phone Number</th>
-                {activeUserRole === "Employee" ? null : <th class="text-center">Action</th>}
+                {activeUserRole === "Employee" ? null : (
+                  <th class="text-center">Action</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -764,13 +881,19 @@ function User() {
                     <td>{list.name}</td>
                     <td>{list.email}</td>
                     <td>{list.role}</td>
-                    <td>{list.phone}</td>
+                    <td>
+                      <center>{list.phone ? list.phone : "-"}</center>
+                    </td>
                     {activeUserRole === "Employee" ? null : (
                       <td>
                         <center>
                           <Dropdown>
                             <Dropdown.Toggle className="user-dropdown">
-                              <FontAwesomeIcon icon={faEllipsisV} className="fa-lg" color="black" />
+                              <FontAwesomeIcon
+                                icon={faEllipsisV}
+                                className="fa-lg"
+                                color="black"
+                              />
                             </Dropdown.Toggle>
                             <Dropdown.Menu className="py-2">
                               <Dropdown.Item
@@ -813,7 +936,11 @@ function User() {
         <Modal show={responseUpdate} centered>
           <div className="d-flex justify-content-center mt-5">
             {status === 201 ? (
-              <FontAwesomeIcon icon={faCircleCheck} fontSize={"40px"} color="#1D5460" />
+              <FontAwesomeIcon
+                icon={faCircleCheck}
+                fontSize={"40px"}
+                color="#1D5460"
+              />
             ) : (
               <FaExclamationCircle size={45} color="#de2222b0" />
             )}
@@ -827,18 +954,28 @@ function User() {
 
         <Modal show={responseSuccess} centered>
           <div className="d-flex justify-content-center mt-5">
-            <FontAwesomeIcon icon={faCircleCheck} fontSize={"40px"} color="#1D5460" />
+            <FontAwesomeIcon
+              icon={faCircleCheck}
+              fontSize={"40px"}
+              color="#1D5460"
+            />
           </div>
           <Modal.Footer className=" d-flex justify-content-center success-message mt-3 mb-4">
             <div>
-              <h4 className="d-flex justify-content-center">{successMessage}</h4>
+              <h4 className="d-flex justify-content-center">
+                {successMessage}
+              </h4>
             </div>
           </Modal.Footer>
         </Modal>
 
         <Modal show={responseDelete} centered>
           <div className="d-flex justify-content-center mt-5">
-            <FontAwesomeIcon icon={faCircleCheck} fontSize={"40px"} color="#1D5460" />
+            <FontAwesomeIcon
+              icon={faCircleCheck}
+              fontSize={"40px"}
+              color="#1D5460"
+            />
           </div>
           <Modal.Footer className=" d-flex justify-content-center success-message mt-3 mb-4">
             <div>

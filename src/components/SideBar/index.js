@@ -1,6 +1,12 @@
 import React, { Component, useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import Api from "../../Api";
+import classNames from "classnames";
+import { Modal, Button, Row, Col } from "react-bootstrap";
+import {
+  faCircleCheck,
+  faCircleExclamation,
+} from "@fortawesome/free-solid-svg-icons";
 
 // Icons
 import { GiBookshelf } from "react-icons/gi";
@@ -55,10 +61,19 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
   const userId = localStorage.getItem("userId");
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
-
+  const [selectedModule, setSelectedModule] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(null);
   const storedHue = localStorage.getItem("themeHue");
   const initialHue = storedHue ? parseInt(storedHue, 10) : 0;
   const [hue, setHue] = useState(initialHue);
+  const [confirmed, setConfirmed] = useState(false);
+
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  const navigateToProject = () => {
+    setShowConfirmation(false);
+    // Perform navigation logic here
+  };
   const getProjectPermission = () => {
     const id = projectId;
     Api.get(`/api/v1/projectPermission/list`, {
@@ -157,6 +172,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                 <NavLink
                   to={"/company/admin"}
                   activeClassName="main-nav-active"
+                  style={{
+                    backgroundColor:
+                      selectedModule === "user"
+                        ? "mediumaquamarine"
+                        : "inherit",
+                  }}
+                  onClick={() => setSelectedModule("user")}
                 >
                   <FontAwesomeIcon
                     icon={faUser}
@@ -171,7 +193,16 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
           ) : role === "admin" || (isOwner === true && createdBy === userId) ? (
             <div>
               <div className="menu-list">
-                <NavLink to={"/user"} activeClassName="main-nav-active">
+                <NavLink
+                  to={"/user"}
+                  style={{
+                    backgroundColor:
+                      selectedModule === "user"
+                        ? "mediumaquamarine"
+                        : "inherit",
+                  }}
+                  onClick={() => setSelectedModule("user")}
+                >
                   <FontAwesomeIcon
                     icon={faUser}
                     size="1x"
@@ -183,7 +214,19 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
               </div>
 
               <div className="menu-list mt-1">
-                <NavLink to={"/project/list"} activeClassName="main-nav-active">
+                <NavLink
+                  to={"/project/list"}
+                  activeClassName="main-nav-active"
+                  style={{
+                    backgroundColor:
+                      selectedModule === "projects"
+                        ? "mediumaquamarine"
+                        : "inherit",
+                  }}
+                  onClick={() => {
+                    setShowConfirmation(true);
+                  }}
+                >
                   <FontAwesomeIcon
                     icon={faFile}
                     size="1x"
@@ -195,7 +238,17 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
               </div>
 
               <div className="menu-list">
-                <NavLink to={"/theme"} activeClassName="main-nav-active">
+                <NavLink
+                  to={"/theme"}
+                  activeClassName="main-nav-active"
+                  style={{
+                    backgroundColor:
+                      selectedModule === "theme"
+                        ? "mediumaquamarine"
+                        : "inherit",
+                  }}
+                  onClick={() => setSelectedModule("theme")}
+                >
                   <FontAwesomeIcon
                     icon={faChartSimple}
                     size="1x"
@@ -217,13 +270,20 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         state: { projectId: projectId, state },
                       }}
                       activeClassName="main-nav-active"
+                      style={{
+                        backgroundColor:
+                          selectedModule === "pbs"
+                            ? "mediumaquamarine"
+                            : "inherit",
+                      }}
+                      onClick={() => setSelectedModule("pbs")}
                     >
                       <FontAwesomeIcon
                         icon={faSuitcase}
                         size="1x"
                         className="menu-icon"
                         title="PBS"
-                      />{" "}
+                      />
                       <span>PBS</span>
                     </NavLink>
                   </div>
@@ -235,13 +295,20 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         state: { projectId: projectId, state },
                       }}
                       activeClassName="main-nav-active"
+                      style={{
+                        backgroundColor:
+                          selectedModule === "failureRatePrediction"
+                            ? "mediumaquamarine"
+                            : "inherit",
+                      }}
+                      onClick={() => setSelectedModule("failureRatePrediction")}
                     >
                       <FontAwesomeIcon
                         icon={faChartLine}
                         size="1x"
                         className="menu-icon"
                         title="Failure Rate Prediction"
-                      />{" "}
+                      />
                       <span>Failure Rate Prediction</span>
                     </NavLink>
                   </div>
@@ -257,6 +324,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         },
                       }}
                       activeClassName="main-nav-active"
+                      style={{
+                        backgroundColor:
+                          selectedModule === "mttrPrediction"
+                            ? "mediumaquamarine"
+                            : "inherit",
+                      }}
+                      onClick={() => setSelectedModule("mttrPrediction")}
                     >
                       <FontAwesomeIcon
                         icon={faSuitcase}
@@ -279,6 +353,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         },
                       }}
                       activeClassName="main-nav-active"
+                      style={{
+                        backgroundColor:
+                          selectedModule === "fmeca"
+                            ? "mediumaquamarine"
+                            : "inherit",
+                      }}
+                      onClick={() => setSelectedModule("fmeca")}
                     >
                       <FontAwesomeIcon
                         icon={faTableList}
@@ -297,6 +378,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         state: { projectId: projectId, state },
                       }}
                       activeClassName="main-nav-active"
+                      style={{
+                        backgroundColor:
+                          selectedModule === "rbd"
+                            ? "mediumaquamarine"
+                            : "inherit",
+                      }}
+                      onClick={() => setSelectedModule("rbd")}
                     >
                       <FontAwesomeIcon
                         icon={faChartBar}
@@ -315,6 +403,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         state: { projectId: projectId, state },
                       }}
                       activeClassName="main-nav-active"
+                      style={{
+                        backgroundColor:
+                          selectedModule === "fta"
+                            ? "mediumaquamarine"
+                            : "inherit",
+                      }}
+                      onClick={() => setSelectedModule("fta")}
                     >
                       <FontAwesomeIcon
                         icon={faRepeat}
@@ -337,6 +432,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         },
                       }}
                       activeClassName="main-nav-active"
+                      style={{
+                        backgroundColor:
+                          selectedModule === "pmmra"
+                            ? "mediumaquamarine"
+                            : "inherit",
+                      }}
+                      onClick={() => setSelectedModule("pmmra")}
                     >
                       <FontAwesomeIcon
                         icon={faBook}
@@ -359,6 +461,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         },
                       }}
                       activeClassName="main-nav-active"
+                      style={{
+                        backgroundColor:
+                          selectedModule === "sparePartsAnalysis"
+                            ? "mediumaquamarine"
+                            : "inherit",
+                      }}
+                      onClick={() => setSelectedModule("sparePartsAnalysis")}
                     >
                       <FontAwesomeIcon
                         icon={faFilter}
@@ -382,6 +491,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         },
                       }}
                       activeClassName="main-nav-active"
+                      style={{
+                        backgroundColor:
+                          selectedModule === "safety"
+                            ? "mediumaquamarine"
+                            : "inherit",
+                      }}
+                      onClick={() => setSelectedModule("safety")}
                     >
                       <FontAwesomeIcon
                         icon={faLock}
@@ -417,6 +533,15 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                                 },
                               }}
                               activeClassName="main-nav-active"
+                              style={{
+                                backgroundColor:
+                                  selectedModule === "seperateLibrary"
+                                    ? "mediumaquamarine"
+                                    : "inherit",
+                              }}
+                              onClick={() =>
+                                setSelectedModule("seperateLibrary")
+                              }
                             >
                               <FontAwesomeIcon
                                 icon={faObjectUngroup}
@@ -434,6 +559,15 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                                 state: { projectId: projectId, state },
                               }}
                               activeClassName="main-nav-active"
+                              style={{
+                                backgroundColor:
+                                  selectedModule === "connecetedLibrary"
+                                    ? "mediumaquamarine"
+                                    : "inherit",
+                              }}
+                              onClick={() =>
+                                setSelectedModule("connecetedLibrary")
+                              }
                             >
                               <FontAwesomeIcon
                                 icon={faLink}
@@ -457,7 +591,17 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
           ) : role === "Employee" ? (
             <div>
               <div className="menu-list">
-                <NavLink to={"/user"} activeClassName="main-nav-active">
+                <NavLink
+                  to={"/user"}
+                  activeClassName="main-nav-active"
+                  style={{
+                    backgroundColor:
+                      selectedModule === "user"
+                        ? "mediumaquamarine"
+                        : "inherit",
+                  }}
+                  onClick={() => setSelectedModule("user")}
+                >
                   <FontAwesomeIcon
                     icon={faUser}
                     size="1x"
@@ -478,6 +622,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                     },
                   }}
                   activeClassName="main-nav-active"
+                  style={{
+                    backgroundColor:
+                      selectedModule === "project"
+                        ? "mediumaquamarine"
+                        : "inherit",
+                  }}
+                  onClick={() => setSelectedModule("project")}
                 >
                   <FontAwesomeIcon
                     icon={faFile}
@@ -502,6 +653,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           },
                         }}
                         activeClassName="main-nav-active"
+                        style={{
+                          backgroundColor:
+                            selectedModule === "pbs"
+                              ? "mediumaquamarine"
+                              : "inherit",
+                        }}
+                        onClick={() => setSelectedModule("pbs")}
                       >
                         <FontAwesomeIcon
                           icon={faSuitcase}
@@ -524,6 +682,15 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           },
                         }}
                         activeClassName="main-nav-active"
+                        style={{
+                          backgroundColor:
+                            selectedModule === "failureRatePrediction"
+                              ? "mediumaquamarine"
+                              : "inherit",
+                        }}
+                        onClick={() =>
+                          setSelectedModule("failureRatePrediction")
+                        }
                       >
                         <FontAwesomeIcon
                           icon={faChartLine}
@@ -547,6 +714,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           },
                         }}
                         activeClassName="main-nav-active"
+                        style={{
+                          backgroundColor:
+                            selectedModule === "mttrPrediction"
+                              ? "mediumaquamarine"
+                              : "inherit",
+                        }}
+                        onClick={() => setSelectedModule("mttrPrediction")}
                       >
                         <FontAwesomeIcon
                           icon={faSuitcase}
@@ -570,6 +744,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           },
                         }}
                         activeClassName="main-nav-active"
+                        style={{
+                          backgroundColor:
+                            selectedModule === "fmeca"
+                              ? "mediumaquamarine"
+                              : "inherit",
+                        }}
+                        onClick={() => setSelectedModule("fmeca")}
                       >
                         <FontAwesomeIcon
                           icon={faTableList}
@@ -592,6 +773,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           },
                         }}
                         activeClassName="main-nav-active"
+                        style={{
+                          backgroundColor:
+                            selectedModule === "rbd"
+                              ? "mediumaquamarine"
+                              : "inherit",
+                        }}
+                        onClick={() => setSelectedModule("rbd")}
                       >
                         <FontAwesomeIcon
                           icon={faChartBar}
@@ -614,6 +802,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           },
                         }}
                         activeClassName="main-nav-active"
+                        style={{
+                          backgroundColor:
+                            selectedModule === "fta"
+                              ? "mediumaquamarine"
+                              : "inherit",
+                        }}
+                        onClick={() => setSelectedModule("fta")}
                       >
                         <FontAwesomeIcon
                           icon={faRepeat}
@@ -637,6 +832,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           },
                         }}
                         activeClassName="main-nav-active"
+                        style={{
+                          backgroundColor:
+                            selectedModule === "pmmra"
+                              ? "mediumaquamarine"
+                              : "inherit",
+                        }}
+                        onClick={() => setSelectedModule("pmmra")}
                       >
                         <FontAwesomeIcon
                           icon={faBook}
@@ -660,6 +862,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           },
                         }}
                         activeClassName="main-nav-active"
+                        style={{
+                          backgroundColor:
+                            selectedModule === "sparePartsAnalysis"
+                              ? "mediumaquamarine"
+                              : "inherit",
+                        }}
+                        onClick={() => setSelectedModule("sparePartsAnalysis")}
                       >
                         <FontAwesomeIcon
                           icon={faFilter}
@@ -684,6 +893,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           },
                         }}
                         activeClassName="main-nav-active"
+                        style={{
+                          backgroundColor:
+                            selectedModule === "safety"
+                              ? "mediumaquamarine"
+                              : "inherit",
+                        }}
+                        onClick={() => setSelectedModule("safety")}
                       >
                         <FontAwesomeIcon
                           icon={faLock}
@@ -705,7 +921,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                             className="menu-icon"
                             title="LIBRARIES"
                           />{" "}
-                          <span className="ms-4 ">LIBRARIES1</span>
+                          <span className="ms-4 ">LIBRARIES</span>
                         </Accordion.Header>
                         <br />
                         <Accordion.Body>
@@ -722,6 +938,15 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                                   },
                                 }}
                                 activeClassName="main-nav-active"
+                                style={{
+                                  backgroundColor:
+                                    selectedModule === "seperateLibrary"
+                                      ? "mediumaquamarine"
+                                      : "inherit",
+                                }}
+                                onClick={() =>
+                                  setSelectedModule("seperateLibrary")
+                                }
                               >
                                 <FontAwesomeIcon
                                   icon={faObjectUngroup}
@@ -746,6 +971,15 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                                   },
                                 }}
                                 activeClassName="main-nav-active"
+                                style={{
+                                  backgroundColor:
+                                    selectedModule === "connectedLibrary"
+                                      ? "mediumaquamarine"
+                                      : "inherit",
+                                }}
+                                onClick={() =>
+                                  setSelectedModule("connectedLibrary")
+                                }
                               >
                                 <FontAwesomeIcon
                                   icon={faLink}
@@ -776,6 +1010,13 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                               },
                             }}
                             activeClassName="main-nav-active"
+                            style={{
+                              backgroundColor:
+                                selectedModule === "seperateLibrary"
+                                  ? "mediumaquamarine"
+                                  : "inherit",
+                            }}
+                            onClick={() => setSelectedModule("seperateLibrary")}
                           >
                             <FontAwesomeIcon
                               icon={faObjectUngroup}
@@ -800,6 +1041,15 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                               },
                             }}
                             activeClassName="main-nav-active"
+                            style={{
+                              backgroundColor:
+                                selectedModule === "connectedLibrary"
+                                  ? "mediumaquamarine"
+                                  : "inherit",
+                            }}
+                            onClick={() =>
+                              setSelectedModule("connectedLibrary")
+                            }
                           >
                             <FontAwesomeIcon
                               icon={faLink}
@@ -820,6 +1070,22 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
               </div>
             </div>
           ) : null}
+          <Modal show={showConfirmation} onHide={() => setShowConfirmation(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to navigate to the project list?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirmation(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={navigateToProject}>
+            OK
+          </Button>
+        </Modal.Footer>
+      </Modal>
         </div>
       </div>
     </div>

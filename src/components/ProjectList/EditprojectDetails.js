@@ -225,8 +225,8 @@ export default function EditprojectDetails(props) {
       .min(0, "Min value 0.")
       .max(24, "Max value 24."),
     environment: Yup.object().required("Environment is required"),
-    nonShortProbability: Yup.string().required("Non Short Probability(NSP) is required"),
-    mMaxValue: Yup.string().required("Phi for Mmax required"),
+    // nonShortProbability: Yup.string().required("Non Short Probability(NSP) is required"),
+    // mMaxValue: Yup.string().required("Phi for Mmax required"),
     productlife: Yup.string().required("Product life in years is required"),
     daysopration: Yup.number()
       .typeError("you must specify a number")
@@ -969,7 +969,7 @@ export default function EditprojectDetails(props) {
                           <Row>
                             <Col>
                               <Form.Group className="mt-3">
-                                <Label notify={true}>Non Short Probability(NSP)</Label>
+                                <Label>Non Short Probability(NSP)</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
@@ -980,15 +980,14 @@ export default function EditprojectDetails(props) {
                                   placeholder="Non Short Probability(NSP)"
                                   name="nonShortProbability"
                                 />
-                                <ErrorMessage name="nonShortProbability" component="span" className="error" />
+                                {/* <ErrorMessage name="nonShortProbability" component="span" className="error" /> */}
                               </Form.Group>
                             </Col>
                             <Col>
                               <Form.Group className="mt-3">
-                                <Label notify={true}>&#934; for Mmax</Label>
+                                <Label>&#934; for Mmax</Label>
                                 <Form.Control
                                   type="number"
-                                  min="0"
                                   step="any"
                                   value={values.mMaxValue}
                                   onChange={handleChange}
@@ -996,7 +995,7 @@ export default function EditprojectDetails(props) {
                                   placeholder="phi for mMax"
                                   name="mMaxValue"
                                 />
-                                <ErrorMessage name="mMaxValue" component="span" className="error" />
+                                {/* <ErrorMessage name="mMaxValue" component="span" className="error" /> */}
                               </Form.Group>
                             </Col>
                           </Row>

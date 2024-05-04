@@ -771,8 +771,8 @@ if (hasData) {
     levelOfReplace: Yup.object().required("Level of replace is required"),
     levelOfRepair: repairable?.value != "Yes" ? null : Yup.object().required("Level of repair is required"),
     spare: Yup.object().required("Spare is required"),
-    mct: mctValue ? Yup.string().required("MCT is required") : Yup.string().nullable(),
-    mlh: mlhValue ? Yup.string().required("MLH is required") : Yup.string().nullable(),
+    mct: Yup.string().required("MCT is required"),
+    mlh: Yup.string().required("MLH is required"),
     // labourHour: Yup.string().required("Labour hour is required"),
     // partType:
     //   category === "" || category === "Assembly"
@@ -803,7 +803,6 @@ if (hasData) {
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
-         toast.success("Procedure Created Successfully");
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;

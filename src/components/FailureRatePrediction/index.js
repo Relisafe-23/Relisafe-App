@@ -80,7 +80,7 @@ function Index(props) {
   const [initialTreeStructure, setInitialTreeStructure] = useState();
   const [showModal, setShowModal] = useState(false);
   const [nprdModel, setNprdModel] = useState(false);
-  // const [nprd2016Model, setNprd2016Model] = useState(false);
+  const [nprd2016Model, setNprd2016Model] = useState(false);
   const [nprdSubModal, setNprdSubModal] = useState(false);
   const [partTypeNprd, setPartTypeNprd] = useState();
   const [partTypeDescr, setPartTypeDescr] = useState();
@@ -468,27 +468,50 @@ function Index(props) {
   });
 
   const getFRPValue = (values) => {
-    const nprdFRPFiltered = nprdFRP.filter((item) => {
-      return (
-        item?.PartTypeId === partTypeNprd.value &&
-        item?.Quality === values.value &&
-        item?.PartDescrId === partTypeDescr.value
-      );
-    });
-    setNprdFR(nprdFRPFiltered);
-    setData(nprdFRPFiltered);
+    if(values.value == "Null"){
+      const nprdFRPFiltered = nprdFRP.filter((item) => {
+        return (
+          item?.PartTypeId === partTypeNprd.value &&
+          item?.PartDescrId === partTypeDescr.value
+        );
+      });
+      setNprdFR(nprdFRPFiltered);
+      setData(nprdFRPFiltered);
+    }else{
+      const nprdFRPFiltered = nprdFRP.filter((item) => {
+        return (
+          item?.PartTypeId === partTypeNprd.value &&
+          item?.Quality === values.value &&
+          item?.PartDescrId === partTypeDescr.value
+        );
+      });
+      setNprdFR(nprdFRPFiltered);
+      setData(nprdFRPFiltered);
+    }
   };
 
   const getFRP2016Value = (values) => {
-    const nprdFRPFiltered = frpValueNprd2016Data.filter((item) => {
-      return (
-        item?.PartTypeId === partType2016Nprd?.value &&
-        item?.Quality === values?.value &&
-        item?.PartDescrId === partType2016Descr?.value
-      );
-    });
-    setNprdFR(nprdFRPFiltered);
-    setData(nprdFRPFiltered);
+    if(values.value == "Null"){
+      const nprdFRPFiltered = frpValueNprd2016Data.filter((item) => {
+        return (
+          item?.PartTypeId === partType2016Nprd?.value &&
+          item?.PartDescrId === partType2016Descr?.value
+        );
+      });
+      setNprdFR(nprdFRPFiltered);
+      setData(nprdFRPFiltered);
+    }else{
+      const nprdFRPFiltered = frpValueNprd2016Data.filter((item) => {
+        return (
+          item?.PartTypeId === partType2016Nprd?.value &&
+          item?.Quality === values?.value &&
+          item?.PartDescrId === partType2016Descr?.value
+        );
+      });
+      setNprdFR(nprdFRPFiltered);
+      setData(nprdFRPFiltered);
+    }
+    
   };
 
   const qualityOptions = [
@@ -507,6 +530,10 @@ function Index(props) {
     {
       value: "Industrial",
       label: "Industrial",
+    },
+    {
+      value: "Null",
+      label: "Null",
     },
   ];
 
@@ -1249,16 +1276,19 @@ function Index(props) {
                                       onBlur={handleBlur}
                                       onChange={(e) => {
                                         if (e.value === "MIL") {
-                                          setShowModal(true); // Open the modal
+                                          setShowModal(true);
                                         } else if (e.value === "NPRD11") {
                                           setNprdModel(true);
-                                        } 
-                                        // else if (e.value === "NPRD16") {
-                                        //   setNprd2016Model(true);
-                                        // }
+                                        } else if (e.value === "NPRD16") {
+                                          setNprd2016Model(true);
+                                        }
                                         setFieldValue("standard", e);
                                       }}
                                       options={[
+                                        {
+                                          value: "Select",
+                                          label: "Select",
+                                        },
                                         {
                                           value: "MIL",
                                           label: "MIL",
@@ -1856,7 +1886,7 @@ function Index(props) {
                                   </div>
                                 </Modal>
                               </div>
-                              {/* <div>
+                              <div>
                                 <Modal
                                   show={nprd2016Model}
                                   centered
@@ -2284,7 +2314,7 @@ function Index(props) {
                                     </Modal.Footer>
                                   </div>
                                 </Modal>
-                              </div> */}
+                              </div>
                             </div>
                           </Col>
                         </Row>
