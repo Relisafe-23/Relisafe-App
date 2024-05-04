@@ -865,7 +865,7 @@ convertToJson(headers,fileData)
     },
     {
       field: "detectableMeansDuringOperation",
-      title: "Detectable Means during operation",
+      title: "Cause",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
