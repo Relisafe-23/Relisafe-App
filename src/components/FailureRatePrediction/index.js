@@ -1396,16 +1396,16 @@ function Index(props) {
                                       }}
                                       onBlur={handleBlur}
                                       name="frUnit"
-                                      isDisabled={
-                                        writePermission?.write === true ||
-                                        writePermission?.write ===
-                                          "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true &&
-                                          createdBy === userId)
-                                          ? null
-                                          : "disabled"
-                                      }
+                                      // isDisabled={
+                                      //   writePermission?.write === true ||
+                                      //   writePermission?.write ===
+                                      //     "undefined" ||
+                                      //   role === "admin" ||
+                                      //   (isOwner === true &&
+                                      //     createdBy === userId)
+                                      //     ? null
+                                      //     : "disabled"
+                                      // }
                                       value={values.frUnit}
                                       options={[
                                         {
