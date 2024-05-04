@@ -115,7 +115,7 @@ function Index(props) {
       operatingPhase: values.operatingPhase,
       function: values.function,
       failureMode: values.failureMode,
-      searchFM: values.searchFM,
+      // searchFM: values.searchFM,
       cause: values.cause,
       failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 0,
       detectableMeansDuringOperation: values.detectableMeansDuringOperation,
@@ -225,7 +225,7 @@ const importExcel = (e) => {
     operatingPhase: "",
     function: "",
     failureMode: "",
-    searchFM: "",
+    // searchFM: "",
     failureModeRatioAlpha: "",
     cause: "",
     subSystemEffect: "",
@@ -446,7 +446,7 @@ const importExcel = (e) => {
     "operatingPhase",
     "function",
     "failureMode",
-    "searchFM",
+    // "searchFM",
     "failureModeRatioAlpha",
     "cause",
     "subSystemEffect",
@@ -715,56 +715,56 @@ const importExcel = (e) => {
         return true;
       },
     },
-    {
-      field: "searchFM",
-      title: "Search FM*",
-      type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "searchFM") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "searchFM") || [];
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="searchFM"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Search FM"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Search FM"
-            />
-          );
-        }
-        return (
-          <Select
-            name="searchFM"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "searchFM");
-              getAllConnectedLibrary(selectedItems, "searchFM");
-            }}
-            options={options}
-          />
-        );
-      },
-      onCellClick: () => handleDropdownSelection("searchFM"),
-    },
+    // {
+    //   field: "searchFM",
+    //   title: "Search FM*",
+    //   type: "string",
+    //   headerStyle: { textAlign: "center" },
+    //   cellStyle: { minWidth: "230px" },
+    //   editComponent: ({ value, onChange }) => {
+    //     const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "searchFM") || [];
+    //     const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "searchFM") || [];
+    //     const options =
+    //       conncetedFilteredData.length > 0
+    //         ? conncetedFilteredData?.map((item) => ({
+    //             value: item?.destinationValue,
+    //             label: item?.destinationValue,
+    //           }))
+    //         : seperateFilteredData?.map((item) => ({
+    //             value: item?.sourceValue,
+    //             label: item?.sourceValue,
+    //           }));
+    //     if (!options || options.length === 0) {
+    //       return (
+    //         <input
+    //           type="text"
+    //           name="searchFM"
+    //           value={value}
+    //           onChange={(e) => {
+    //             createDropdownEditComponent(e.target.value);
+    //             onChange(e.target.value);
+    //           }}
+    //           placeholder="Enter Search FM"
+    //           style={{ height: "40px", borderRadius: "4px" }}
+    //           title="Enter Search FM"
+    //         />
+    //       );
+    //     }
+    //     return (
+    //       <Select
+    //         name="searchFM"
+    //         value={value ? { label: value, value: value } : ""}
+    //         onChange={(selectedItems) => {
+    //           onChange(selectedItems?.value);
+    //           handleInputChange(selectedItems, "searchFM");
+    //           getAllConnectedLibrary(selectedItems, "searchFM");
+    //         }}
+    //         options={options}
+    //       />
+    //     );
+    //   },
+    //   onCellClick: () => handleDropdownSelection("searchFM"),
+    // },
     {
       field: "cause",
       title: "Cause",
@@ -2380,7 +2380,7 @@ const importExcel = (e) => {
         operatingPhase: values.operatingPhase ? values.operatingPhase : data.operatingPhase,
         function: values.function ? values.function : data.function,
         failureMode: values.failureMode ? values.failureMode : data.failureMode,
-        searchFM: values.searchFM ? values.searchFM : data.searchFM,
+        // searchFM: values.searchFM ? values.searchFM : data.searchFM,
         cause: values.cause ? values.cause : data.cause,
         failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 1,
         detectableMeansDuringOperation: values.detectableMeansDuringOperation
@@ -2494,7 +2494,7 @@ const importExcel = (e) => {
       operatingPhase: values.operatingPhase,
       function: values.function,
       failureMode: values.failureMode,
-      searchFM: values.searchFM,
+      // searchFM: values.searchFM,
 
       failureModeRatioAlpha: values.failureModeRatioAlpha,
       cause: values.cause,
