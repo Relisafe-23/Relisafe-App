@@ -70,9 +70,15 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
 
   const [showConfirmation, setShowConfirmation] = useState(false);
 
+  const handleClick = (event) => {
+    event.preventDefault();
+    setShowConfirmation(true);
+  };
+
   const navigateToProject = () => {
     setShowConfirmation(false);
     // Perform navigation logic here
+    history.push("/project/list");
   };
   const getProjectPermission = () => {
     const id = projectId;
@@ -223,9 +229,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         ? "mediumaquamarine"
                         : "inherit",
                   }}
-                  onClick={() => {
-                    setShowConfirmation(true);
-                  }}
+                   onClick={handleClick}
                 >
                   <FontAwesomeIcon
                     icon={faFile}
