@@ -471,19 +471,6 @@ if (modifiedTableData.length > 0) {
         position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
       });
     };
-
-  // const handleCopyClick = (data) => {
-  //   navigator.clipboard
-  //     .writeText(data)
-  //     .then(() => {
-  //       console.log("Data copied to clipboard:", data);
-  //       // You can show a success message to the user if needed
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error copying data:", error);
-  //       // Handle error, e.g., show an error message to the user
-  //     });
-  // };
   const getTreeProduct = () => {
     const sessionId = localStorage.getItem("sessionId");
     const userId = localStorage.getItem("userId");
@@ -933,55 +920,6 @@ if (modifiedTableData.length > 0) {
                                       <ErrorMessage className="error text-danger" component="span" name="category" />
                                     </Form.Group>
                                   </Col>
-                                  {/* <Col>
-                                    {category.value === "Mechanical" ||
-                                    category.value === "Electronic" ||
-                                    patchCategory === "Mechanical" ||
-                                    patchCategory === "Electronic" ? (
-                                      <div className="">
-                                        <Form.Group className="mt-3 ">
-                                          <Label notify={true}>Part Type</Label>
-                                          <Select
-                                            type="select"
-                                            styles={customStyles}
-                                            value={values.partType}
-                                            placeholder="Select Part Type"
-                                            name="partType"
-                                            className="mt-1"
-                                            onBlur={handleBlur}
-                                            onChange={(e) => {
-                                              setFieldValue("partType", e);
-                                              setPartType(e.value);
-                                            }}
-                                            options={[
-                                              category.value === "Electronic"
-                                                ? {
-                                                    options: Electronic.map(
-                                                      (list) => ({
-                                                        value: list.value,
-                                                        label: list.label,
-                                                      })
-                                                    ),
-                                                  }
-                                                : {
-                                                    options: Mechanical.map(
-                                                      (list) => ({
-                                                        value: list.value,
-                                                        label: list.label,
-                                                      })
-                                                    ),
-                                                  },
-                                            ]}
-                                          />
-                                          <ErrorMessage
-                                            className="error text-danger"
-                                            component="span"
-                                            name="partType"
-                                          />
-                                        </Form.Group>
-                                      </div>
-                                    ) : null}
-                                  </Col> */}
                                   <Col>
                                     {category.value === "Assembly" ? null : (
                                       <div className="">
@@ -1020,52 +958,6 @@ if (modifiedTableData.length > 0) {
                                       </div>
                                     )}
                                   </Col>
-                                  {/* <Col>
-                                  {category.value === "Assembly"? null:
-                                  ( <div className="">
-                                      <Form.Group className="mt-3 ">
-                                        <Label notify={true}>Part Type</Label>
-                                        <Select
-                                          type="select"
-                                          styles={customStyles}
-                                          value={values.partType}
-                                          placeholder="Select Part Type"
-                                          name="partType"
-                                          className="mt-1"
-                                          onBlur={handleBlur}
-                                          onChange={(e) => {
-                                            setFieldValue("partType", e);
-                                            setPartType(e.value);
-                                          }}
-                                          options={[
-                                            category.value === "Electronic"
-                                              ? {
-                                                  options: Electronic.map(
-                                                    (list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })
-                                                  ),
-                                                }
-                                              : {
-                                                  options: Mechanical.map(
-                                                    (list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })
-                                                  ),
-                                                },
-                                          ]}
-                                        />
-                                        <ErrorMessage
-                                          className="error text-danger"
-                                          component="span"
-                                          name="partType"
-                                        />
-                                      </Form.Group>
-                                    </div>)}
-                                   
-                                  </Col> */}
                                 </Row>
                               </Card>
                               <div className="mttr-sec mt-3">
