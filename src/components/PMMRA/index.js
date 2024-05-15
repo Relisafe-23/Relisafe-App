@@ -39,6 +39,14 @@ import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FaExclamationCircle } from "react-icons/fa";
 import { customStyles } from "../core/select";
+import {
+  faFileImport,
+  faFileExport,
+  faPlus,
+  faFileDownload,
+  faFileUpload,
+} from "@fortawesome/free-solid-svg-icons";
+import { Tooltip, TableCell } from "@material-ui/core";
 
 const Validation = Yup.object().shape({
   category: Yup.object().required("Category is required"),
@@ -1443,7 +1451,7 @@ export default function PMMRA(props) {
         <div>
           <Projectname projectId={projectId} />
 
-          <Row>
+          {/* <Row>
             <Col>
               <label for="file-input" class="file-label file-inputs">
                 Import
@@ -1460,7 +1468,38 @@ export default function PMMRA(props) {
                 Export
               </Button>
             </Col>
-          </Row>
+          </Row> */}
+           <div
+            style={{
+              display: "flex",
+              marginTop: "8px",
+              height: "40px",
+            }}
+          >
+            <Tooltip placement="left-end" title="Import">
+              <Col>
+                <label htmlFor="file-input" className="import-export-btn">
+                  <FontAwesomeIcon icon={faFileDownload} />
+                </label>
+                <input
+                  type="file"
+                  className="input-fields"
+                  id="file-input"
+                  onChange={importExcel}
+                />
+              </Col>
+            </Tooltip>
+            <Tooltip placement="left" title="Export">
+              <Button
+                className="import-export-btn"
+                onClick={() => {
+                  exportToExcel(InitialValues);
+                }}
+              >
+                <FontAwesomeIcon icon={faFileUpload} style={{ width: "15" }} />
+              </Button>
+            </Tooltip>
+          </div>
           <Row>
             <Col xs={12} sm={9} className="projectName">
               <Dropdown value={projectId} productId={productId} />

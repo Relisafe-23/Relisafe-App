@@ -19,6 +19,11 @@ import { useHistory } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { CSVLink } from "react-csv";
 import { toast } from "react-toastify";
+import { Tooltip, TableCell } from "@material-ui/core";
+import {
+  faFileDownload,
+  faFileUpload,
+} from "@fortawesome/free-solid-svg-icons";
 
 
 function Index(props) {
@@ -609,7 +614,7 @@ function Index(props) {
                         : "disabled"
                     }
                   >
-                    <Row>
+                    {/* <Row>
                       <Col>
                         <label for="file-input" class="file-label file-inputs">
                           Import
@@ -626,7 +631,38 @@ function Index(props) {
                           Export
                         </Button>
                       </Col>
-                    </Row>
+                    </Row> */}
+                     <div
+            style={{
+              display: "flex",
+              marginTop: "8px",
+              height: "40px",
+            }}
+          >
+            <Tooltip placement="left" title="Import">
+              <Col>
+                <label htmlFor="file-input" className="import-export-btn">
+                  <FontAwesomeIcon icon={faFileDownload} />
+                </label>
+                <input
+                  type="file"
+                  className="input-fields"
+                  id="file-input"
+                  onChange={importExcel}
+                />
+              </Col>
+            </Tooltip>
+            <Tooltip placement="left" title="Export">
+              <Button
+                className="import-export-btn"
+                onClick={() => {
+                  exportToExcel(values);
+                }}
+              >
+                <FontAwesomeIcon icon={faFileUpload} style={{ width: "15" }} />
+              </Button>
+            </Tooltip>
+          </div>
                     <Row>
                       <Col xs={12} sm={9} className="projectName">
                         <Dropdown value={projectId} productId={productId} data={treeTableData} />

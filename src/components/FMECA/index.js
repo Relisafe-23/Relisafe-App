@@ -12,6 +12,10 @@ import { createTheme } from "@material-ui/core/styles";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
 import { toast } from "react-toastify";
+import {
+  faFileDownload,
+  faFileUpload,
+} from "@fortawesome/free-solid-svg-icons";
 
 //import  XLSX from 'xlsx'
 
@@ -311,37 +315,30 @@ function Index(props) {
     }
   };
 
+  const importExcel = (e) => {
+    const file = e.target.files[0];
 
- const importExcel=(e)=>{
-  const file=e.target.files[0]
-  
-  
-  const  reader = new FileReader()
-  reader.onload=(event)=>{
-    
-    //parse data
-     const bstr =event.target.result
-     const workBook = XLSX.read(bstr,{type:"binary"})
-// get first sheet
-const workSheetName=workBook.SheetNames[0]
-const workSheet=workBook.Sheets[workSheetName]
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      //parse data
+      const bstr = event.target.result;
+      const workBook = XLSX.read(bstr, { type: "binary" });
+      // get first sheet
+      const workSheetName = workBook.SheetNames[0];
+      const workSheet = workBook.Sheets[workSheetName];
 
-//convert array
+      //convert array
 
-const fileData=XLSX.utils.sheet_to_json(workSheet,{header:1})
-const headers=fileData[0]
-const heads = headers.map(head=>({title:head,field:head}))
-setColDefs(heads)
-fileData.splice(0,1)
-setData(convertToJson(headers,fileData))
-convertToJson(headers,fileData)
-  }
-  reader.readAsBinaryString(file)
- }
-
-
-  
-
+      const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+      const headers = fileData[0];
+      const heads = headers.map((head) => ({ title: head, field: head }));
+      setColDefs(heads);
+      fileData.splice(0, 1);
+      setData(convertToJson(headers, fileData));
+      convertToJson(headers, fileData);
+    };
+    reader.readAsBinaryString(file);
+  };
 
   useEffect(() => {
     getTreeData();
@@ -833,10 +830,9 @@ convertToJson(headers,fileData)
                 label: item?.sourceValue,
               }));
         if (!options || options.length === 0) {
-          
           return (
             <input
-            type="number"
+              type="number"
               name="failureModeRatioAlpha"
               value={value}
               onChange={(e) => {
@@ -2753,29 +2749,37 @@ convertToJson(headers,fileData)
         <div>
           <Projectname projectId={projectId} />
 
-          <Row>
-            <Col>
-              <label for="file-input" class="file-label file-inputs">
-                Import
-              </label>
-              <input
-                type="file"
-                className="input-fields"
-                id="file-input"
-                onChange={importExcel}
-              />
-            </Col>
-            <Col>
+          <div
+            style={{
+              display: "flex",
+              marginTop: "8px",
+              height: "40px",
+            }}
+          >
+            <Tooltip placement="left" title="Import">
+              <Col>
+                <label htmlFor="file-input" className="import-export-btn">
+                  <FontAwesomeIcon icon={faFileDownload} />
+                </label>
+                <input
+                  type="file"
+                  className="input-fields"
+                  id="file-input"
+                  onChange={importExcel}
+                />
+              </Col>
+            </Tooltip>
+            <Tooltip placement="left" title="Export">
               <Button
-                className="btn-aligne export-btns-FailureRate"
+                className="import-export-btn"
                 onClick={() => {
                   DownloadExcel();
                 }}
               >
-                Export
+                <FontAwesomeIcon icon={faFileUpload} style={{ width: "15" }} />
               </Button>
-            </Col>
-          </Row>
+            </Tooltip>
+          </div>
 
           {/* <input className="mt-3" type="file" onChange={importExcel} accept=".xlsx" /> */}
 

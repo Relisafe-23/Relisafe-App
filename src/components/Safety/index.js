@@ -18,6 +18,11 @@ import { Input, TextField } from "@material-ui/core";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
 import Select from "react-select";
+import { Tooltip, TableCell } from "@material-ui/core";
+import {
+  faFileDownload,
+  faFileUpload,
+} from "@fortawesome/free-solid-svg-icons";
 
 function Index(props) {
   const [initialProductID, setInitialProductID] = useState();
@@ -2573,7 +2578,7 @@ const importExcel = (e) => {
         <div>
           <Projectname projectId={projectId} />
 
-          <Row>
+          {/* <Row>
             <Col>
               <label for="file-input" class="file-label file-inputs">
                 Import
@@ -2590,7 +2595,38 @@ const importExcel = (e) => {
                 Export
               </Button>
             </Col>
-          </Row>
+          </Row> */}
+            <div
+            style={{
+              display: "flex",
+              marginTop: "8px",
+              height: "40px",
+            }}
+          >
+            <Tooltip placement="left" title="Import">
+              <Col>
+                <label htmlFor="file-input" className="import-export-btn">
+                  <FontAwesomeIcon icon={faFileDownload} />
+                </label>
+                <input
+                  type="file"
+                  className="input-fields"
+                  id="file-input"
+                  onChange={importExcel}
+                />
+              </Col>
+            </Tooltip>
+            <Tooltip placement="left" title="Export">
+              <Button
+                className="import-export-btn"
+                onClick={() => {
+                  DownloadExcel();
+                }}
+              >
+                <FontAwesomeIcon icon={faFileUpload} style={{ width: "15" }} />
+              </Button>
+            </Tooltip>
+          </div>
 
           {/* <input className="mt-3" type="file" onChange={importExcel} accept=".xlsx" /> */}
           <Dropdown value={projectId} productId={productId} />
