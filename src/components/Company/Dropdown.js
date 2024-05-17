@@ -3,182 +3,225 @@ import { Row, Col, Button } from "react-bootstrap";
 import { useHistory } from "react-router-dom";
 import Select from "react-select";
 import Api from "../../Api";
-import { customStyles } from "../core/select";
+import Label from "../LabelComponent";
 
 export default function Dropdown(props) {
   const projectId = props?.value;
-  const productId = props?.productId;
+  const [productId, setProductId] = useState(props?.productId);
   const [productData, setProductData] = useState([]);
   const [prefillData, setPrefillData] = useState();
+  const [productIndex, setProductIndex] = useState(1);
   const history = useHistory();
-  const userId = localStorage.getItem("userId");
-
-  useEffect(() => {
-    getTreeProduct();
-  }, []);
 
   const getTreeProduct = () => {
     Api.get(`/api/v1/productTreeStructure/product/list`, {
       params: {
         projectId: projectId,
-        userId: userId,
       },
-    })
-      .then((res) => {
-        const treeData = res?.data?.data;
-        setProductData(treeData);
-        setPrefillData(
-          treeData[0]?.productName
-            ? { value: treeData[0]?.id, label: `${treeData[0].indexCount} ${treeData[0].productName}` }
-            : ""
-        );
-        // setProductId(treeData[0]?.id);
-      })
-      .catch((error) => {
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
+    }).then((res) => {
+      const treeData = res?.data?.data;
+      setProductData(treeData);
+      setPrefillData(
+        treeData[0]?.productName
+          ? { label: treeData[0]?.productName, value: treeData[0]?.id }
+          : ""
+      );
+      // setProductId(treeData[0]?.id);
+    });
   };
-
-  //logout
-  const logout = () => {
-    localStorage.clear(history.push("/login"));
-    window.location.reload();
-  };
+  useEffect(() => {
+    getTreeProduct();
+    productTreeData();
+  }, [productId]);
 
   const productTreeData = () => {
+    console.log("productId.....", productId);
     Api.get("/api/v1/productTreeStructure/get/tree/product/list", {
       params: {
         projectId: projectId,
         treeStructureId: productId,
-        userId: userId,
       },
-    })
-      .then((res) => {
-        const data = res?.data?.data;
-        setPrefillData(data?.productName ? { value: data?.id, label: `${data.indexCount} ${data.productName}` } : "");
-      })
-      .catch((error) => {
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
+    }).then((res) => {
+      const data = res?.data?.data;
+      setPrefillData(
+        data?.productName
+          ? { value: data?.productId, label: data?.productName }
+          : ""
+      );
+    });
   };
-  useEffect(() => {
-    if (productId === prefillData?.value) {
-    } else {
-      productTreeData();
-    }
-  }, [productId]);
 
-  // const nextProduct = () => {
-  //   Api.get("/api/v1/productTreeStructure/get/tree/product/list", {
-  //     params: {
-  //       projectId: projectId,
-  //       treeStructureId: productId,
-  //     },
-  //   }).then((res) => {
-  //
-  //   });
-  // };
+  const  getNextProduct = () => {
+    let found = false; // Flag to indicate if the matching element is found
+
+    for (let i = 0; i < productData.length; i++) {
+      const mList = productData[i];
+
+      if (!found && mList.id === productId) {
+        found = true;
+
+        // Check if the next product exists
+        if (i + 1 < productData.length) {
+          const prodId = productData[i + 1];
+          console.log("Next prodId:", prodId);
+          setProductId(prodId.id);
+          history.push({ state: { productId: prodId.id } });
+        } else {
+          console.log("No next element found.");
+        }
+      }
+    }
+  };
+  const  getPreviousProduct = () => {
+    let found = false; 
+    for (let i = 0; i < productData.length; i++) {
+      const mList = productData[i];
+
+      if (!found && mList.id === productId) {
+        found = true;
+        if (i + 1 < productData.length) {
+          const prodId = productData[i - 1];
+          console.log("Next prodId:", prodId);
+          setProductId(prodId.id);
+          history.push({ state: { productId: prodId.id } });
+        } else {
+          console.log("No next element found.");
+        }
+      }
+    }
+  };
 
   const getProductId = (e) => {
-    history.push({ state: { productId: e.value.id,parentId:e.value.parentId } });
+    console.log("eeeeeeee.......",e)
+    history.push({ state: { productId: e.value } });
   };
 
   return (
     <div>
-      {/* <div className="d-flex flex-direction-row">
-        <div>
-          <Button className="FRP-button " variant="secondary">{`${"<< PREV"}`}</Button>
-        </div>
-        <div>
-          {productData?.map((list, i) => {})}
-          <Select
-            type="select"
-            placeholder="Select Product"
-            value={prefillData}
-            options={[
-              {
-                options: productData?.map((list, i) => ({
-                  value: list.id,
-                  label: list.indexCount + ".  " + list.productName,
-                })),
-              },
-            ]}
-            onChange={(e) => {
-              setPrefillData(e);
-              getProductId(e);
-
-              // setProductId(e.id);
-            }}
-          />
-        </div>
-        <div>
-          <Button
-            className="FRP-button"
-            variant="secondary"
-            onClick={() => {
-              setProductIndex(productIndex - 1);
-            }}
-          >
-            {`${"NEXT >>"}`}{" "}
-          </Button>
-        </div>
-      </div> */}
       <Row>
-        {/* <Col className="d-flex justify-content-start mt-3" sm={12} md={3}>
+        <Col className="d-flex justify-content-start mt-3" sm={12} md={4}>
           <div>
-            <Button
-              className="FRP-button "
-              variant="secondary"
-            >{`${"<< PREV"}`}</Button>
+            <Button 
+            className="FRP-button"
+            onClick={() => {
+             
+                getPreviousProduct();
+            
+            }}
+           >{`${"<< PREV"}`}</Button>
           </div>
-        </Col> */}
-
-        <Col className="mt-3 dropdown-Alignments mx-1">
+        </Col>
+        <Col className="mt-3 dropdown-Alignments" sm={12} md={4}>
           <div>
+            {productData?.map((list, i) => {})}
             <Select
-              styles={customStyles}
               type="select"
               placeholder="Select Product"
               value={prefillData}
               options={[
                 {
                   options: productData?.map((list, i) => ({
-                    value: list,
-                    label: `${list.indexCount} ${list.productName}`,
-                    // label: list.indexCount + ".  " + list.productName,
+                    value: list.id,
+                    label: list.indexCount + "." + list.productName,
                   })),
                 },
               ]}
               onChange={(e) => {
+                console.log("ee,,,,,,,", e.label);
                 setPrefillData(e);
                 getProductId(e);
-                // setPrefillProductData(e);
-
-                // setProductId(e.id);
+                setProductId(e.id);
+                setProductIndex(e.label);
               }}
             />
           </div>
         </Col>
-        {/* <Col className="d-flex justify-content-end mt-3" sm={12} md={3}>
+        <Col className="d-flex justify-content-end mt-3" sm={12} md={4}>
           <div>
             <Button
               className="FRP-button"
-              variant="secondary"
               onClick={() => {
-                setProductIndex(productIndex - 1);
+               
+                  getNextProduct();
+              
               }}
             >
               {`${"NEXT >>"}`}{" "}
             </Button>
           </div>
-        </Col> */}
+        </Col>
       </Row>
     </div>
   );
+}
+{
+  /* <Row style={{ display: "flex", flexDirection: "column", margin: "0" }}>
+  <Col xs={12} sm={9} className="d-flex justify-content-center">
+    <div>
+      <Label>Product's :</Label>
+      <Select
+        className="frp-tree-select"
+        name="treeTableData"
+        type="select"
+        placeholder="Select Product"
+        value={prefillData}
+        options={[
+          {
+            options: productData?.map((list, i) => ({
+              value: list.id,
+              label: list.indexCount + ".  " + list.productName,
+            })),
+          },
+        ]}
+        onChange={(e) => {
+          // setCurrentData(e);
+          // setCurrentActive(true);
+          // setFirstProductPrefill(e);
+          // productData(e);
+          setPrefillData(e);
+          getProductId(e);
+        }}
+      />
+    </div>
+  </Col>
+  <Col xs={12} sm={9} style={{ display: "flex", justifyContent: "space-between" }}>
+    <div>
+      <Button
+        style={{ backgroundColor: "#1D5460", border: "none" }}
+        onClick={() => {
+          setProductIndex(productIndex - 1);
+        }}
+      >
+        {" "}
+        {`${"<< Prev"}`}{" "}
+      </Button>
+    </div>
+    <div> */
+}
+{
+  /* <p className="mb-0 fs-5 d-flex align-items-center mx-5">
+                      {}
+                    </p> */
+}
+{
+  /* <p className="mb-0 fs-5 d-flex align-items-center mx-5">
+        {productData[productIndex]?.productName
+          ? productData[productIndex]?.indexCount + "-" + productData[productIndex]?.productName
+          : " No products to display"}
+      </p>
+    </div>
+
+    <div className="d-flex ">
+      <Button
+        style={{ backgroundColor: "#1D5460", border: "none" }}
+        onClick={() => {
+          setProductIndex(productIndex + 1);
+        }}
+      >
+        {" "}
+        {`${"Next >>"}`}{" "}
+      </Button>
+    </div>
+  </Col>
+</Row>; */
 }

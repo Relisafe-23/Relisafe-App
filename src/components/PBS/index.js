@@ -454,7 +454,6 @@ export default function PBS(props) {
 
     if (rowData.id === lastProductId) {
       const lchColor = hueToLCH(initialHue);
-      console.log("hslColor.....", lchColor);
       return {
         backgroundColor: lchColor,
         color: "white",

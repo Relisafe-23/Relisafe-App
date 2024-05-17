@@ -8,6 +8,7 @@ import "../../css/SideBar.scss";
 const DefaultLayout = (props) => {
   const openSideBar = props?.location?.state?.state;
   const productId = props?.location?.state?.productId || props?.location?.props?.data?.id;
+  console.log("product id in public layout....", productId)
   const projectId = props?.location?.state?.projectId || props?.computedMatch?.params?.id;
 
   const [active, setActive] = useState(false);
