@@ -773,11 +773,12 @@ export default function PBS(props) {
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
+                        alignItems: "center",
                       }}
                     >
-                      <div style={{ display: "flex", width: "auto" }}>
+                      <div style={{ display: "flex", alignItems: "center" }}>
                         <Tooltip placement="left" title="Import">
-                          <Col>
+                          <div>
                             <label
                               htmlFor="file-input"
                               className="add-product-btn"
@@ -789,8 +790,9 @@ export default function PBS(props) {
                               className="input-fields"
                               id="file-input"
                               onChange={importExcel}
+                              style={{ display: "none" }} // Hide the actual input
                             />
-                          </Col>
+                          </div>
                         </Tooltip>
                         <Tooltip placement="right" title="Export">
                           <Button
@@ -806,10 +808,11 @@ export default function PBS(props) {
                                 ? null
                                 : "disabled"
                             }
+                            style={{ marginLeft: "10px" }}
                           >
                             <FontAwesomeIcon
                               icon={faFileUpload}
-                              style={{ width: "15" }}
+                              style={{ width: "15px" }}
                             />
                           </Button>
                         </Tooltip>
@@ -834,11 +837,12 @@ export default function PBS(props) {
                         >
                           <FontAwesomeIcon
                             icon={faPlus}
-                            style={{ width: "15" }}
+                            style={{ width: "15px" }}
                           />
                         </Button>
                       </Tooltip>
                     </div>
+
                     <div className="main-div-product">
                       <Modal
                         show={mainProductModalOpen}
