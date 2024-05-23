@@ -122,9 +122,16 @@ function Index(props) {
         projectId: projectId,
       },
     }).then((res) => {
-      const filteredData = res?.data?.data.filter(
+      let filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "FMECA"
       );
+
+      if (filteredData.length === 0) {
+        filteredData = res?.data?.data.filter(
+          (item) => item?.moduleName === "SAFETY"
+        );
+      }
+
       setAllSepareteData(filteredData);
       if (tableData) {
         const merged = [...tableData, ...filteredData];
@@ -140,9 +147,16 @@ function Index(props) {
         projectId: projectId,
       },
     }).then((res) => {
-      const filteredData = res?.data?.data.filter(
+      let filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "FMECA"
       );
+
+      if (filteredData.length === 0) {
+        filteredData = res?.data?.data.filter(
+          (item) => item?.moduleName === "SAFETY"
+        );
+      }
+
       setAllSepareteData(filteredData);
       if (tableData) {
         const merged = [...tableData, ...filteredData];

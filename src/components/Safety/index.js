@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import MaterialTable from "material-table";
-import { Modal, Button,Row,Col } from "react-bootstrap";
+import { Modal, Button, Row, Col } from "react-bootstrap";
 import "../../css/FMECA.scss";
 import Api from "../../Api";
 import { tableIcons } from "../core/TableIcons";
@@ -26,7 +26,9 @@ import {
 
 function Index(props) {
   const [initialProductID, setInitialProductID] = useState();
-  const projectId = props?.location?.state?.projectId ? props?.location?.state?.projectId : props?.match?.params?.id;
+  const projectId = props?.location?.state?.projectId
+    ? props?.location?.state?.projectId
+    : props?.match?.params?.id;
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
@@ -35,7 +37,7 @@ function Index(props) {
   const [show, setShow] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tableData, setTableData] = useState();
-    const [colDefs, setColDefs] = useState();
+  const [colDefs, setColDefs] = useState();
   const [treeData, setTreeData] = useState([]);
   const [productModal, setProductModal] = useState(false);
   const handleClose = () => setProductModal(true);
@@ -53,68 +55,72 @@ function Index(props) {
   const handleHide = () => setFailureModeRatioError(false);
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
 
+  const DownloadExcel = () => {
+    // Assuming 'tableData' is an array of objects, and you want to remove multiple columns
+    const columnsToRemove = [
+      "projectId",
+      "companyId",
+      "productId",
+      "id",
+      "tableData",
+      "operatingPhase",
+    ];
+    // Create a new array with the unwanted columns removed from each object
+    const modifiedTableData = tableData.map((row) => {
+      const newRow = { ...row };
+      columnsToRemove.forEach((columnName) => {
+        delete newRow[columnName];
+      });
 
- const DownloadExcel = () => {
-   // Assuming 'tableData' is an array of objects, and you want to remove multiple columns
-   const columnsToRemove = ["projectId", "companyId", "productId", "id","tableData", "operatingPhase"];
-   // Create a new array with the unwanted columns removed from each object
-   const modifiedTableData = tableData.map((row) => {
-     const newRow = { ...row };
-     columnsToRemove.forEach((columnName) => {
-       delete newRow[columnName];
-     });
+      // rowsToRemove.forEach(rowName=>{
+      //   delete columns[rowName]
+      // });
 
-     // rowsToRemove.forEach(rowName=>{
-     //   delete columns[rowName]
-     // });
-
-     return newRow;
-   });
-   if(modifiedTableData.length > 0){
-    const columns = Object.keys(modifiedTableData[0]).map((columnName) => ({
-      title: columnName,
-      field: columnName,
-    }));
- 
-    const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
-      skipHeader: false,
+      return newRow;
     });
-    const workBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workBook, workSheet, "safety Data");
- 
-    const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
- 
-    // Create a Blob object and initiate a download
-    const blob = new Blob([buf], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "Safety_Data.xlsx";
-    link.click();
- 
-    // Clean up
-    URL.revokeObjectURL(url);
-   }else{
-    toast("Export Failed !! No Data Found", {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-      type: "error",
-    });
-   }
+    if (modifiedTableData.length > 0) {
+      const columns = Object.keys(modifiedTableData[0]).map((columnName) => ({
+        title: columnName,
+        field: columnName,
+      }));
 
-   
- };
+      const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
+        skipHeader: false,
+      });
+      const workBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workBook, workSheet, "safety Data");
+
+      const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
+
+      // Create a Blob object and initiate a download
+      const blob = new Blob([buf], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "Safety_Data.xlsx";
+      link.click();
+
+      // Clean up
+      URL.revokeObjectURL(url);
+    } else {
+      toast("Export Failed !! No Data Found", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error",
+      });
+    }
+  };
   const createsafetyDataFromExcel = (values) => {
     const companyId = localStorage.getItem("companyId");
-    
+
     setIsLoading(true);
     Api.post("api/v1/safety/", {
       operatingPhase: values.operatingPhase,
@@ -122,14 +128,18 @@ function Index(props) {
       failureMode: values.failureMode,
       // searchFM: values.searchFM,
       cause: values.cause,
-      failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 0,
+      failureModeRatioAlpha: values.failureModeRatioAlpha
+        ? values.failureModeRatioAlpha
+        : 0,
       detectableMeansDuringOperation: values.detectableMeansDuringOperation,
       detectableMeansToMaintainer: values.detectableMeansToMaintainer,
       BuiltInTest: values.BuiltInTest,
       subSystemEffect: values.subSystemEffect,
       systemEffect: values.systemEffect,
       endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta ? values.endEffectRatioBeta : 1,
+      endEffectRatioBeta: values.endEffectRatioBeta
+        ? values.endEffectRatioBeta
+        : 1,
       safetyImpact: values.safetyImpact,
       referenceHazardId: values.referenceHazardId,
       realibilityImpact: values.realibilityImpact,
@@ -140,8 +150,10 @@ function Index(props) {
       designControl: values.designControl,
       maintenanceControl: values.maintenanceControl,
       exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase,
+      immediteActionDuringOperationalPhase:
+        values.immediteActionDuringOperationalPhase,
+      immediteActionDuringNonOperationalPhase:
+        values.immediteActionDuringNonOperationalPhase,
       userField1: values.userField1,
       userField2: values.userField2,
       userField3: values.userField3,
@@ -169,39 +181,36 @@ function Index(props) {
     // rows.push(rowData);
     // createsafetyDataFromExcel(rowData);
   };
- const convertToJson = (headers, data) => {
+  const convertToJson = (headers, data) => {
     const rows = [];
- if (data.length > 0 && data[0].length > 1) {
-   data.forEach((row) => {
-     let rowData = {};
+    if (data.length > 0 && data[0].length > 1) {
+      data.forEach((row) => {
+        let rowData = {};
 
-     row.forEach((element, index) => {
-       rowData[headers[index]] = element;
-     });
-     rows.push(rowData);
-     createsafetyDataFromExcel(rowData);
-   });
+        row.forEach((element, index) => {
+          rowData[headers[index]] = element;
+        });
+        rows.push(rowData);
+        createsafetyDataFromExcel(rowData);
+      });
 
-   return rows;
- } else {
-   toast("No Data Found In Excel Sheet", {
-     position: "top-right",
-     autoClose: 5000,
-     hideProgressBar: false,
-     closeOnClick: true,
-     pauseOnHover: true,
-     draggable: true,
-     progress: undefined,
-     theme: "light",
-     type: "error",
-   });
- }
-    
+      return rows;
+    } else {
+      toast("No Data Found In Excel Sheet", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error",
+      });
+    }
   };
 
-
-
-const importExcel = (e) => {
+  const importExcel = (e) => {
     const file = e.target.files[0];
 
     const reader = new FileReader();
@@ -223,7 +232,6 @@ const importExcel = (e) => {
     };
     reader.readAsBinaryString(file);
   };
-
 
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [data, setData] = useState({
@@ -279,7 +287,15 @@ const importExcel = (e) => {
         projectId: projectId,
       },
     }).then((res) => {
-      const filteredData = res?.data?.data.filter((item) => item?.moduleName === "SAFETY");
+      let filteredData = res?.data?.data.filter(
+        (item) => item?.moduleName === "FMECA"
+      );
+
+      if (filteredData.length === 0) {
+        filteredData = res?.data?.data.filter(
+          (item) => item?.moduleName === "SAFETY"
+        );
+      }
       setAllSepareteData(filteredData);
       const merged = [...tableData, ...filteredData];
       setMergedData(merged);
@@ -425,7 +441,9 @@ const importExcel = (e) => {
       },
     }).then((res) => {
       setIsLoading(false);
-      const filteredData = res.data.getData.filter((entry) => entry?.libraryId?.moduleName === "SAFETY");
+      const filteredData = res.data.getData.filter(
+        (entry) => entry?.libraryId?.moduleName === "SAFETY"
+      );
       setConnectData(filteredData);
     });
   };
@@ -487,7 +505,8 @@ const importExcel = (e) => {
   // Loop through the field names to generate options
   fieldNames.forEach((fieldName) => {
     // Filter the connectData for the current field
-    const filteredData = connectData?.filter((item) => item?.sourceName === fieldName) || [];
+    const filteredData =
+      connectData?.filter((item) => item?.sourceName === fieldName) || [];
     // Map the filtered data to the options format
     dropdownOptions[fieldName] = filteredData.map((item) => ({
       value: item?.sourceValue,
@@ -505,14 +524,40 @@ const importExcel = (e) => {
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
-        moduleName: "SAFETY",
+        moduleName: "FMECA",
         sourceName: fieldName,
         sourceValue: fieldValue.value,
       },
     }).then((res) => {
       const data = res?.data?.libraryData;
+      if (data.length > 0) {
+        setAllConnectedData(data);
+      } else {
+        // If no FMECA data, fetch SAFETY data
+        fetchSafetyData();
+      }
       setAllConnectedData(data);
     });
+  };
+  const fetchSafetyData = async (fieldValue, fieldName) => {
+    try {
+      const safetyResponse = await Api.get(
+        "api/v1/library/get/all/source/value",
+        {
+          params: {
+            projectId: projectId,
+            moduleName: "SAFETY",
+            sourceName: fieldName,
+            sourceValue: fieldValue.value,
+          },
+        }
+      );
+      const safetyData = safetyResponse?.data?.libraryData;
+      setAllConnectedData(safetyData);
+    } catch (error) {
+      console.error("Error fetching SAFETY data:", error);
+      // Optionally handle the error
+    }
   };
 
   useEffect(() => {
@@ -564,7 +609,7 @@ const importExcel = (e) => {
   const columns = [
     {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
-      title: "SAFETY ID",
+      title: "FMECA ID",
       cellStyle: { minWidth: "140px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
     },
@@ -576,7 +621,10 @@ const importExcel = (e) => {
       headerStyle: { textAlign: "center", minWidth: "150px" },
       onCellClick: () => handleDropdownSelection("operatingPhase"),
       editComponent: ({ value, onChange, rowData }) => {
-        const filteredData = allSepareteData?.filter((item) => item?.sourceName === "operatingPhase") || [];
+        const filteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "operatingPhase"
+          ) || [];
         const options = filteredData?.map((item) => ({
           value: item?.sourceValue,
           label: item?.sourceValue,
@@ -596,7 +644,11 @@ const importExcel = (e) => {
           return (
             <Select
               name="operatingPhase"
-              value={data.operatingPhase ? { label: data.operatingPhase, value: data.operatingPhase } : ""}
+              value={
+                data.operatingPhase
+                  ? { label: data.operatingPhase, value: data.operatingPhase }
+                  : ""
+              }
               onChange={(selectedItems) => {
                 handleInputChange(selectedItems, "operatingPhase");
                 getAllConnectedLibrary(selectedItems, "operatingPhase");
@@ -614,14 +666,14 @@ const importExcel = (e) => {
       cellStyle: { minWidth: "50px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
       onCellClick: () => handleDropdownSelection("function"),
-      validate: (rowData) => {
-        //getAllConnectedLibrary("function,f1");
-        // Function column validation logic
-        // Assuming it's correctly implemented
-      },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "function") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "function") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "function") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "function"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -670,8 +722,14 @@ const importExcel = (e) => {
       headerStyle: { textAlign: "center" },
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "failureMode") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "failureMode") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "failureMode"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "failureMode"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -713,12 +771,6 @@ const importExcel = (e) => {
         );
       },
       onCellClick: () => handleDropdownSelection("failureMode"),
-      validate: (rowData) => {
-        if (rowData.failureMode === undefined || rowData.failureMode === "") {
-          return "required";
-        }
-        return true;
-      },
     },
     // {
     //   field: "searchFM",
@@ -727,8 +779,13 @@ const importExcel = (e) => {
     //   headerStyle: { textAlign: "center" },
     //   cellStyle: { minWidth: "230px" },
     //   editComponent: ({ value, onChange }) => {
-    //     const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "searchFM") || [];
-    //     const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "searchFM") || [];
+    //     const seperateFilteredData =
+    //       allSepareteData?.filter((item) => item?.sourceName === "searchFM") ||
+    //       [];
+    //     const conncetedFilteredData =
+    //       allConnectedData?.filter(
+    //         (item) => item?.destinationName === "searchFM"
+    //       ) || [];
     //     const options =
     //       conncetedFilteredData.length > 0
     //         ? conncetedFilteredData?.map((item) => ({
@@ -771,14 +828,6 @@ const importExcel = (e) => {
     //   onCellClick: () => handleDropdownSelection("searchFM"),
     // },
     {
-      field: "cause",
-      title: "Cause",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => (
-        <TextField onChange={(e) => onChange(e.target.value)} value={value} multiline />
-      ),
-    },
-    {
       field: "failureModeRatioAlpha",
       title: "Failure Mode Ratio Alpha*",
       type: "string",
@@ -786,9 +835,13 @@ const importExcel = (e) => {
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "failureModeRatioAlpha") || [];
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "failureModeRatioAlpha"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "failureModeRatioAlpha") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "failureModeRatioAlpha"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -803,7 +856,7 @@ const importExcel = (e) => {
         if (!options || options.length === 0) {
           return (
             <input
-              type="text"
+              type="number"
               name="failureModeRatioAlpha"
               value={value}
               onChange={(e) => {
@@ -829,22 +882,19 @@ const importExcel = (e) => {
           />
         );
       },
-
-      validate: (rowData) => {
-        if (rowData.failureModeRatioAlpha === undefined || rowData.failureModeRatioAlpha === "") {
-          return "required";
-        }
-        return true;
-      },
     },
     {
-      field: "cause",
+      field: "detectableMeansDuringOperation",
       title: "Cause",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "cause") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "cause") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "cause") || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "cause"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -893,16 +943,15 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.subSystemEffect === undefined || rowData.subSystemEffect === "") {
-          return "required";
-        }
-        return true;
-      },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "subSystemEffect") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "subSystemEffect"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "subSystemEffect") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "subSystemEffect"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -950,16 +999,15 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.systemEffect === undefined || rowData.systemEffect === "") {
-          return "required";
-        }
-        return true;
-      },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "systemEffect") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "systemEffect"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "systemEffect") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "systemEffect"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1007,15 +1055,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.endEffect === undefined || rowData.endEffect === "") {
-          return "required";
-        }
-        return true;
-      },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "endEffect") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "endEffect") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "endEffect") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "endEffect"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1061,22 +1108,17 @@ const importExcel = (e) => {
       field: "endEffectRatioBeta",
       title: "End Effect ratio Beta*(must be equal to 1)",
       type: "string",
-      // title: createHeaderWithTooltip(
-      //   "End Effect ratio Beta*",
-      //   "End Effect ratio Beta must be equal to 1"
-      // ),
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.endEffectRatioBeta === undefined || rowData.endEffectRatioBeta === "") {
-          return "required";
-        }
-        return true;
-      },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "endEffectRatioBeta") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "endEffectRatioBeta"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "endEffectRatioBeta") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "endEffectRatioBeta"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1124,16 +1166,21 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.safetyImpact === undefined || rowData.safetyImpact === "") {
-          return "required";
-        }
-        return true;
-      },
+      // validate: (rowData) => {
+      //   if (rowData.safetyImpact === undefined || rowData.safetyImpact === "") {
+      //     return "required";
+      //   }
+      //   return true;
+      // },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "safetyImpact") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "safetyImpact"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "safetyImpact") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "safetyImpact"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1181,9 +1228,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "referenceHazardId") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "referenceHazardId"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "referenceHazardId") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "referenceHazardId"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1231,16 +1283,21 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.realibilityImpact === undefined || rowData.realibilityImpact === "") {
-          return "required";
-        }
-        return true;
-      },
+      // validate: (rowData) => {
+      //   if (rowData.realibilityImpact === undefined || rowData.realibilityImpact === "") {
+      //     return "required";
+      //   }
+      //   return true;
+      // },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "realibilityImpact") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "realibilityImpact"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "realibilityImpact") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "realibilityImpact"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1290,9 +1347,13 @@ const importExcel = (e) => {
       headerStyle: { textAlign: "left" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "serviceDisruptionTime") || [];
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "serviceDisruptionTime"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "serviceDisruptionTime") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "serviceDisruptionTime"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1340,8 +1401,13 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "frequency") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "frequency") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "frequency") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "frequency"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1389,8 +1455,13 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "severity") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "severity") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "severity") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "severity"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1438,8 +1509,13 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "riskIndex") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "riskIndex") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "riskIndex") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "riskIndex"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1488,9 +1564,13 @@ const importExcel = (e) => {
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "detectableMeansDuringOperation") || [];
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "detectableMeansDuringOperation"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "detectableMeansDuringOperation") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "detectableMeansDuringOperation"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1524,8 +1604,14 @@ const importExcel = (e) => {
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "detectableMeansDuringOperation");
-              getAllConnectedLibrary(selectedItems, "detectableMeansDuringOperation");
+              handleInputChange(
+                selectedItems,
+                "detectableMeansDuringOperation"
+              );
+              getAllConnectedLibrary(
+                selectedItems,
+                "detectableMeansDuringOperation"
+              );
             }}
             options={options}
           />
@@ -1539,9 +1625,13 @@ const importExcel = (e) => {
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "detectableMeansToMaintainer") || [];
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "detectableMeansToMaintainer"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "detectableMeansToMaintainer") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "detectableMeansToMaintainer"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1576,7 +1666,10 @@ const importExcel = (e) => {
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "detectableMeansToMaintainer");
-              getAllConnectedLibrary(selectedItems, "detectableMeansToMaintainer");
+              getAllConnectedLibrary(
+                selectedItems,
+                "detectableMeansToMaintainer"
+              );
             }}
             options={options}
           />
@@ -1589,8 +1682,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "BuiltInTest") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "BuiltInTest") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "BuiltInTest"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "BuiltInTest"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1632,15 +1731,21 @@ const importExcel = (e) => {
         );
       },
     },
+
     {
       field: "designControl",
       title: "Design Control",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "designControl") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "designControl"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "designControl") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "designControl"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1682,16 +1787,20 @@ const importExcel = (e) => {
         );
       },
     },
-
     {
       field: "maintenanceControl",
       title: "Maintenance Control",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "maintenanceControl") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "maintenanceControl"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "maintenanceControl") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "maintenanceControl"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1739,9 +1848,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "exportConstraints") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "exportConstraints"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "exportConstraints") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "exportConstraints"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1790,9 +1904,15 @@ const importExcel = (e) => {
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "immediteActionDuringOperationalPhase") || [];
+          allSepareteData?.filter(
+            (item) =>
+              item?.sourceName === "immediteActionDuringOperationalPhase"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "immediteActionDuringOperationalPhase") || [];
+          allConnectedData?.filter(
+            (item) =>
+              item?.destinationName === "immediteActionDuringOperationalPhase"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1826,8 +1946,14 @@ const importExcel = (e) => {
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "immediteActionDuringOperationalPhase");
-              getAllConnectedLibrary(selectedItems, "immediteActionDuringOperationalPhase");
+              handleInputChange(
+                selectedItems,
+                "immediteActionDuringOperationalPhase"
+              );
+              getAllConnectedLibrary(
+                selectedItems,
+                "immediteActionDuringOperationalPhase"
+              );
             }}
             options={options}
           />
@@ -1841,9 +1967,16 @@ const importExcel = (e) => {
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "immediteActionDuringNonOperationalPhase") || [];
+          allSepareteData?.filter(
+            (item) =>
+              item?.sourceName === "immediteActionDuringNonOperationalPhase"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "immediteActionDuringNonOperationalPhase") || [];
+          allConnectedData?.filter(
+            (item) =>
+              item?.destinationName ===
+              "immediteActionDuringNonOperationalPhase"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1877,8 +2010,14 @@ const importExcel = (e) => {
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "immediteActionDuringNonOperationalPhase");
-              getAllConnectedLibrary(selectedItems, "immediteActionDuringNonOperationalPhase");
+              handleInputChange(
+                selectedItems,
+                "immediteActionDuringNonOperationalPhase"
+              );
+              getAllConnectedLibrary(
+                selectedItems,
+                "immediteActionDuringNonOperationalPhase"
+              );
             }}
             options={options}
           />
@@ -1891,8 +2030,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField1") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField1") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField1"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField1"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1940,8 +2085,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField2") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField2") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField2"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField2"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1989,8 +2140,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField3") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField3") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField3"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField3"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2038,8 +2195,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField4") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField4") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField4"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField4"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2087,8 +2250,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField5") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField5") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField5"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField5"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2136,8 +2305,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField6") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField6") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField6"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField6"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2185,8 +2360,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField7") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField7") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField7"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField7"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2234,8 +2415,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField8") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField8") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField8"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField8"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2283,8 +2470,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField9") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField9") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField9"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField9"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2332,8 +2525,14 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField10") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField10") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField10"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField10"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2382,12 +2581,16 @@ const importExcel = (e) => {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
       Api.post("api/v1/safety/", {
-        operatingPhase: values.operatingPhase ? values.operatingPhase : data.operatingPhase,
+        operatingPhase: values.operatingPhase
+          ? values.operatingPhase
+          : data.operatingPhase,
         function: values.function ? values.function : data.function,
         failureMode: values.failureMode ? values.failureMode : data.failureMode,
         // searchFM: values.searchFM ? values.searchFM : data.searchFM,
         cause: values.cause ? values.cause : data.cause,
-        failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 1,
+        failureModeRatioAlpha: values.failureModeRatioAlpha
+          ? values.failureModeRatioAlpha
+          : 1,
         detectableMeansDuringOperation: values.detectableMeansDuringOperation
           ? values.detectableMeansDuringOperation
           : data.detectableMeansDuringOperation,
@@ -2395,26 +2598,48 @@ const importExcel = (e) => {
           ? values.detectableMeansToMaintainer
           : data.detectableMeansToMaintainer,
         BuiltInTest: values.BuiltInTest ? values.BuiltInTest : data.BuiltInTest,
-        subSystemEffect: values.subSystemEffect ? values.subSystemEffect : data.subSystemEffect,
-        systemEffect: values.systemEffect ? values.systemEffect : data.systemEffect,
+        subSystemEffect: values.subSystemEffect
+          ? values.subSystemEffect
+          : data.subSystemEffect,
+        systemEffect: values.systemEffect
+          ? values.systemEffect
+          : data.systemEffect,
         endEffect: values.endEffect ? values.endEffect : data.endEffect,
-        endEffectRatioBeta: values.endEffectRatioBeta ? values.endEffectRatioBeta : 1,
-        safetyImpact: values.safetyImpact ? values.safetyImpact : data.safetyImpact,
-        referenceHazardId: values.referenceHazardId ? values.referenceHazardId : data.referenceHazardId,
-        realibilityImpact: values.realibilityImpact ? values.realibilityImpact : data.realibilityImpact,
-        serviceDisruptionTime: values.serviceDisruptionTime ? values.serviceDisruptionTime : data.serviceDisruptionTime,
+        endEffectRatioBeta: values.endEffectRatioBeta
+          ? values.endEffectRatioBeta
+          : 1,
+        safetyImpact: values.safetyImpact
+          ? values.safetyImpact
+          : data.safetyImpact,
+        referenceHazardId: values.referenceHazardId
+          ? values.referenceHazardId
+          : data.referenceHazardId,
+        realibilityImpact: values.realibilityImpact
+          ? values.realibilityImpact
+          : data.realibilityImpact,
+        serviceDisruptionTime: values.serviceDisruptionTime
+          ? values.serviceDisruptionTime
+          : data.serviceDisruptionTime,
         frequency: values.frequency ? values.frequency : data.frequency,
         severity: values.severity ? values.severity : data.severity,
         riskIndex: values.riskIndex ? values.riskIndex : data.riskIndex,
-        designControl: values.designControl ? values.designControl : data.designControl,
-        maintenanceControl: values.maintenanceControl ? values.maintenanceControl : data.maintenanceControl,
-        exportConstraints: values.exportConstraints ? values.exportConstraints : data.exportConstraints,
-        immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase
-          ? values.immediteActionDuringOperationalPhase
-          : data.immediteActionDuringOperationalPhase,
-        immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase
-          ? values.immediteActionDuringNonOperationalPhase
-          : data.immediteActionDuringNonOperationalPhase,
+        designControl: values.designControl
+          ? values.designControl
+          : data.designControl,
+        maintenanceControl: values.maintenanceControl
+          ? values.maintenanceControl
+          : data.maintenanceControl,
+        exportConstraints: values.exportConstraints
+          ? values.exportConstraints
+          : data.exportConstraints,
+        immediteActionDuringOperationalPhase:
+          values.immediteActionDuringOperationalPhase
+            ? values.immediteActionDuringOperationalPhase
+            : data.immediteActionDuringOperationalPhase,
+        immediteActionDuringNonOperationalPhase:
+          values.immediteActionDuringNonOperationalPhase
+            ? values.immediteActionDuringNonOperationalPhase
+            : data.immediteActionDuringNonOperationalPhase,
         userField1: values.userField1 ? values.userField1 : data.userField1,
         userField2: values.userField2 ? values.userField2 : data.userField2,
         userField3: values.userField3 ? values.userField3 : data.userField3,
@@ -2521,8 +2746,10 @@ const importExcel = (e) => {
       designControl: values.designControl,
       maintenanceControl: values.maintenanceControl,
       exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase,
+      immediteActionDuringOperationalPhase:
+        values.immediteActionDuringOperationalPhase,
+      immediteActionDuringNonOperationalPhase:
+        values.immediteActionDuringNonOperationalPhase,
       userField1: values.userField1,
       userField2: values.userField2,
       userField3: values.userField3,
@@ -2596,7 +2823,7 @@ const importExcel = (e) => {
               </Button>
             </Col>
           </Row> */}
-            <div
+          <div
             style={{
               display: "flex",
               marginTop: "8px",
@@ -2736,10 +2963,15 @@ const importExcel = (e) => {
           <Modal show={show} centered className="user-delete-modal">
             <Modal.Body className="modal-body-user">
               <div>
-                <h4 className="d-flex justify-content-center">Row Deleted successfully</h4>
+                <h4 className="d-flex justify-content-center">
+                  Row Deleted successfully
+                </h4>
               </div>
             </Modal.Body>
-            <Modal.Footer className=" d-flex justify-content-center" style={{ borderTop: 0, bottom: "30px" }}>
+            <Modal.Footer
+              className=" d-flex justify-content-center"
+              style={{ borderTop: 0, bottom: "30px" }}
+            >
               <Button
                 className="px-5 "
                 style={{ backgroundColor: "#398935", borderColor: "#398935" }}
@@ -2751,7 +2983,11 @@ const importExcel = (e) => {
           </Modal>
           <Modal show={show} centered>
             <div className="d-flex justify-content-center mt-5">
-              <FontAwesomeIcon icon={faCircleCheck} fontSize={"40px"} color="#1D5460" />
+              <FontAwesomeIcon
+                icon={faCircleCheck}
+                fontSize={"40px"}
+                color="#1D5460"
+              />
             </div>
             <Modal.Footer className=" d-flex justify-content-center success-message mt-3 mb-4">
               <div>
@@ -2768,9 +3004,13 @@ const importExcel = (e) => {
               {writePermission === true || writePermission === undefined ? (
                 <div>
                   <h5 className="text-center">
-                    Please select product from <b>Dropdown </b>before adding a new row!
+                    Please select product from <b>Dropdown </b>before adding a
+                    new row!
                   </h5>
-                  <Button className="save-btn fw-bold fmeca-button mt-3" onClick={() => setProductModal(false)}>
+                  <Button
+                    className="save-btn fw-bold fmeca-button mt-3"
+                    onClick={() => setProductModal(false)}
+                  >
                     OK
                   </Button>
                 </div>
@@ -2780,7 +3020,10 @@ const importExcel = (e) => {
                     Not
                     <br /> Allowed
                   </h5>
-                  <Button className="save-btn fw-bold ok-buttons" onClick={() => setFailureModeRatioError(false)}>
+                  <Button
+                    className="save-btn fw-bold ok-buttons"
+                    onClick={() => setFailureModeRatioError(false)}
+                  >
                     OK
                   </Button>
                 </div>
