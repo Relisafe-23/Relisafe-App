@@ -99,8 +99,8 @@ export default function Dropdown(props) {
   return (
     <div>
       <Row>
-        <Col className="d-flex justify-content-start mt-3" sm={12} md={4}>
-          <div>
+        <Col className="d-flex justify-content-start mt-1" sm={12} md={4}>
+          <div style={{ marginLeft: "100px" }}>
             <Button 
             className="FRP-button"
             onClick={() => {
@@ -111,7 +111,7 @@ export default function Dropdown(props) {
            >{`${"<< PREV"}`}</Button>
           </div>
         </Col>
-        <Col className="mt-3 dropdown-Alignments" sm={12} md={4}>
+        <Col className="mt-1 dropdown-Alignments" sm={12} md={4}>
           <div>
             {productData?.map((list, i) => {})}
             <Select
@@ -136,8 +136,8 @@ export default function Dropdown(props) {
             />
           </div>
         </Col>
-        <Col className="d-flex justify-content-end mt-3" sm={12} md={4}>
-          <div>
+        <Col className="d-flex justify-content-end mt-1" sm={12} md={4}>
+          <div style={{ marginLeft: "100px" }}>
             <Button
               className="FRP-button"
               onClick={() => {

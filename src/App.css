@@ -71,7 +71,7 @@
   background-color: var(--primary-color) !important;
     color: var(--secondary-color) !important;
     border-radius: 5px;
-  
+    width: 200px;
 }
 .FRP-button::after {
   border: #1d5460 !important;

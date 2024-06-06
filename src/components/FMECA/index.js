@@ -2756,18 +2756,23 @@ function Index(props) {
   const role = localStorage.getItem("role");
 
   return (
-    <div className="mx-4 " style={{ marginTop: "90px" }}>
+    <div className="mx-4 " style={{ marginTop: "40px" }}>
       {isLoading ? (
         <Loader />
       ) : (
+        // <div>
+        //   <Projectname projectId={projectId} />
+        // </div>
+        
         <div>
-          <Projectname projectId={projectId} />
+          
 
-          <div
+          {/* <div
             style={{
               display: "flex",
-              marginTop: "8px",
-              height: "40px",
+
+              marginTop: "50px",
+              marginBottom: "60px",
             }}
           >
             <Tooltip placement="left" title="Import">
@@ -2783,6 +2788,7 @@ function Index(props) {
                 />
               </Col>
             </Tooltip>
+            
             <Tooltip placement="left" title="Export">
               <Button
                 className="import-export-btn"
@@ -2793,11 +2799,40 @@ function Index(props) {
                 <FontAwesomeIcon icon={faFileUpload} style={{ width: "15" }} />
               </Button>
             </Tooltip>
-          </div>
+          </div> */}
+ <div>
+ <Col style={{backgroundColor: "red", height: "70%"}}>
+  <Tooltip placement="left" title="Import">
+  
+      <label htmlFor="file-input" style={{ cursor: "pointer" }}>
+        <FontAwesomeIcon icon={faFileDownload} />
+      </label>
+      <input
+        type="file"
+        className="input-fields"
+        id="file-input"
+        onChange={importExcel}
+        style={{  width: "40px",
+          height: "35px" }}
+      />
+   
+  </Tooltip>
+  <Tooltip placement="left" title="Export">
+    <Button 
+     className="import-export-btn"
+    onClick={DownloadExcel}>
+      <FontAwesomeIcon icon={faFileUpload} style={{ width: "15px" }} />
+    </Button>
+   
+  </Tooltip>
+  </Col>
+</div>
+
+
 
           {/* <input className="mt-3" type="file" onChange={importExcel} accept=".xlsx" /> */}
 
-          <Dropdown value={projectId} productId={productId} />
+         
           <div>
             <div className="mt-5" style={{ bottom: "35px" }}>
               <ThemeProvider theme={tableTheme}>
@@ -2851,7 +2886,7 @@ function Index(props) {
                       backgroundColor: "#CCE6FF",
                       zIndex: 0,
                     },
-                    exportButton: { csv: true },
+                    // exportButton: { csv: true },
                   }}
                   localization={{
                     toolbar: { function: "Placeholder" },

@@ -50,6 +50,7 @@ function ConnectedLibrary(props) {
   const [permission, setPermission] = useState();
 
   const [selectModule, setSelectModule] = useState("");
+  const [selectDestinationModule, setSelectDestinationModule] = useState("");
   const [moduleFieldValue, setModuleFieldValue] = useState("");
   const [projectIds, setProjectId] = useState();
   const [connectData, setConnectData] = useState([]);
@@ -144,6 +145,15 @@ function ConnectedLibrary(props) {
       ),
     },
     // { title: "Complete Subsystem Failure" },
+    // {
+    //   title: "Destination Module",
+    //   render: (rowData) => (
+    //     <div>
+    //       {rowData.destinationModule} {/* Adjust this key based on your actual data structure */}
+    //     </div>
+    //   ),
+    // },
+    
     {
       title: "Destination",
       render: (rowData) => {
@@ -184,10 +194,12 @@ function ConnectedLibrary(props) {
 
   //create Api
   const createConnectLibrary = (values) => {
+    console.log("values.....", values.destinationModule.value)
     setIsLoading(true);
     const comId = localStorage.getItem("companyId");
     Api.post("api/v1/library/create/connect/value", {
       moduleName: values.Module.value,
+      destinationModuleName: values.Module.value,
       projectId: projectId,
       companyId: comId,
       sourceId: sourceId,
@@ -322,7 +334,7 @@ function ConnectedLibrary(props) {
       ) : (
         <div>
           <div>
-            <Formik
+            <Formik 
               initialValues={{
                 Module: editRowData
                   ? {
@@ -333,6 +345,17 @@ function ConnectedLibrary(props) {
                   ? {
                       label: selectModule,
                       value: selectModule,
+                    }
+                  : "",
+                  destinationModule: editRowData
+                  ? {
+                      label: editRowData.libraryId.destinationModule,
+                      value: editRowData.libraryId.destinationModule,
+                    }
+                  : selectDestinationModule
+                  ? {
+                      label: selectDestinationModule,
+                      value: selectDestinationModule,
                     }
                   : "",
                 Field: editRowData
@@ -620,6 +643,61 @@ function ConnectedLibrary(props) {
                                 </Form.Group>
                               </Col>
                             ) : null}
+                            <Col className="col-lg-4 mt-2">
+  <Label>Destination Module</Label>
+  <Form.Group>
+    <Select
+      value={
+        values.destinationModule
+          ? {
+              value: values.destinationModule.value,
+              label: values.destinationModule.label,
+            }
+          : null
+      }
+      onChange={(e) => {
+        setSelectDestinationModule(e.value);
+        setFieldValue("Field", "");
+        setFieldValue("end", []);
+        setModuleData([]);
+        getModuleFieldDetails(e.value);
+        setFieldValue("destinationModule", {
+          label: e.value,
+          value: e.value,
+        });
+        getAllConnect(e.value);
+      }}
+      placeholder="Select Destination Module"
+      type="select"
+      name="destinationModule"
+      styles={customStyles}
+      options={[
+        {
+          value: "FMECA",
+          label: "FMECA",
+        },
+        {
+          value: "SAFETY",
+          label: "SAFETY",
+        },
+        {
+          value: "PMMRA",
+          label: "PMMRA",
+        },
+        {
+          value: "MTTR",
+          label: "MTTR",
+        },
+      ]}
+    />
+    <ErrorMessage
+      component="span"
+      name="destinationModule"
+      className="error text-danger"
+    />
+  </Form.Group>
+</Col>
+
 
                             <Col className="col-lg-4 mt-2">
                               <Label>Destination</Label>
