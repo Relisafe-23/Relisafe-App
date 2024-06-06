@@ -609,13 +609,13 @@ function Index(props) {
   const columns = [
     {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
-      title: "FMECA ID",
+      title: "Hazard *",
       cellStyle: { minWidth: "140px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
     },
     {
       field: "operatingPhase",
-      title: "Operating  Phase",
+      title: "Mode of Operation",
       type: "string",
       cellStyle: { minWidth: "200px", textAlign: "center" },
       headerStyle: { textAlign: "center", minWidth: "150px" },
@@ -661,7 +661,7 @@ function Index(props) {
     },
     {
       field: "function",
-      title: "Function*",
+      title: "Hazard Cause *",
       type: "string",
       cellStyle: { minWidth: "50px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
@@ -717,7 +717,7 @@ function Index(props) {
     },
     {
       field: "failureMode",
-      title: "Failure Mode*",
+      title: "Effect of the Hazard*",
       type: "string",
       headerStyle: { textAlign: "center" },
       cellStyle: { minWidth: "230px" },
@@ -829,7 +829,7 @@ function Index(props) {
     // },
     {
       field: "failureModeRatioAlpha",
-      title: "Failure Mode Ratio Alpha*",
+      title: "Hazard Clasification*",
       type: "string",
       headerStyle: { textAlign: "center" },
       cellStyle: { minWidth: "230px" },
@@ -885,7 +885,7 @@ function Index(props) {
     },
     {
       field: "detectableMeansDuringOperation",
-      title: "Cause",
+      title: "Design Assurance Level (DAL) associated with the hazard",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -939,7 +939,7 @@ function Index(props) {
 
     {
       field: "subSystemEffect",
-      title: "Sub System effect*",
+      title: "Means of detection*",
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
@@ -995,7 +995,7 @@ function Index(props) {
     },
     {
       field: "systemEffect",
-      title: "System Effect*",
+      title: "Crew response*",
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
@@ -1051,7 +1051,7 @@ function Index(props) {
     },
     {
       field: "endEffect",
-      title: "End Effect*",
+      title: "Unique Hazard Identifiers*",
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
@@ -1106,7 +1106,7 @@ function Index(props) {
     },
     {
       field: "endEffectRatioBeta",
-      title: "End Effect ratio Beta*(must be equal to 1)",
+      title: "Initial Severity ((impact))",
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
@@ -1162,7 +1162,7 @@ function Index(props) {
     },
     {
       field: "safetyImpact",
-      title: "Safety Impact*",
+      title: "Initial likelihood (probability)",
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
@@ -1224,7 +1224,7 @@ function Index(props) {
     },
     {
       field: "referenceHazardId",
-      title: "Reference Hazard ID",
+      title: "Initial Risk level",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -1279,7 +1279,7 @@ function Index(props) {
     },
     {
       field: "realibilityImpact",
-      title: "Reliability Impact*",
+      title: "Design mitigation",
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
@@ -1341,7 +1341,7 @@ function Index(props) {
     },
     {
       field: "serviceDisruptionTime",
-      title: "Service Disruption Time(minutes)",
+      title: "Mitigation Responsibility",
       type: "numeric",
       cellStyle: { minWidth: "230px", textAlign: "left" },
       headerStyle: { textAlign: "left" },
@@ -1397,7 +1397,7 @@ function Index(props) {
     },
     {
       field: "frequency",
-      title: "Frequency",
+      title: "Mitigation evidence",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -1451,7 +1451,7 @@ function Index(props) {
     },
     {
       field: "severity",
-      title: "Severity",
+      title: "Operational/Maintenance mitigation",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -1505,7 +1505,7 @@ function Index(props) {
     },
     {
       field: "riskIndex",
-      title: "Risk Index",
+      title: "Mitigation Responsibility",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -1559,7 +1559,7 @@ function Index(props) {
     },
     {
       field: "detectableMeansDuringOperation",
-      title: "Detectable Means during operation",
+      title: "Mitigation evidence",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -1620,7 +1620,7 @@ function Index(props) {
     },
     {
       field: "detectableMeansToMaintainer",
-      title: "Detectable Means to Maintainer",
+      title: "Residual Severity ((impact))",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -1678,7 +1678,7 @@ function Index(props) {
     },
     {
       field: "BuiltInTest",
-      title: "Built-in Test",
+      title: "Residual likelihood (probability)",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -1734,7 +1734,7 @@ function Index(props) {
 
     {
       field: "designControl",
-      title: "Design Control",
+      title: "Residual Risk level",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -1789,7 +1789,7 @@ function Index(props) {
     },
     {
       field: "maintenanceControl",
-      title: "Maintenance Control",
+      title: "Hazard status",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -1844,7 +1844,7 @@ function Index(props) {
     },
     {
       field: "exportConstraints",
-      title: "Export constraints",
+      title: "Other relevant information",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -1891,133 +1891,6 @@ function Index(props) {
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "exportConstraints");
               getAllConnectedLibrary(selectedItems, "exportConstraints");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "immediteActionDuringOperationalPhase",
-      title: "Immediate Action during operational Phases",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) =>
-              item?.sourceName === "immediteActionDuringOperationalPhase"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) =>
-              item?.destinationName === "immediteActionDuringOperationalPhase"
-          ) || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="immediteActionDuringOperationalPhase"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Immediate Action during operational Phases"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Immediate Action during operational Phases"
-            />
-          );
-        }
-        return (
-          <Select
-            name="immediteActionDuringOperationalPhase"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(
-                selectedItems,
-                "immediteActionDuringOperationalPhase"
-              );
-              getAllConnectedLibrary(
-                selectedItems,
-                "immediteActionDuringOperationalPhase"
-              );
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "immediteActionDuringNonOperationalPhase",
-      title: "Immediate Action during Non-operational Phases",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) =>
-              item?.sourceName === "immediteActionDuringNonOperationalPhase"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) =>
-              item?.destinationName ===
-              "immediteActionDuringNonOperationalPhase"
-          ) || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="immediteActionDuringNonOperationalPhase"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Immediate Action during Non-operational Phases"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Immediate Action during Non-operational Phases"
-            />
-          );
-        }
-        return (
-          <Select
-            name="immediteActionDuringNonOperationalPhase"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(
-                selectedItems,
-                "immediteActionDuringNonOperationalPhase"
-              );
-              getAllConnectedLibrary(
-                selectedItems,
-                "immediteActionDuringNonOperationalPhase"
-              );
             }}
             options={options}
           />
@@ -2128,446 +2001,6 @@ function Index(props) {
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "userField2");
               getAllConnectedLibrary(selectedItems, "userField2");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField3",
-      title: "User field 3",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "userField3"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "userField3"
-          ) || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField3"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 3"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 3"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField3"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField3");
-              getAllConnectedLibrary(selectedItems, "userField3");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField4",
-      title: "User field 4",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "userField4"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "userField4"
-          ) || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField4"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 4"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 4"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField4"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField4");
-              getAllConnectedLibrary(selectedItems, "userField4");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField5",
-      title: "User field 5",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "userField5"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "userField5"
-          ) || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField5"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 5"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 5"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField5"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField5");
-              getAllConnectedLibrary(selectedItems, "userField5");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField6",
-      title: "User field 6",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "userField6"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "userField6"
-          ) || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField6"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 6"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 6"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField6"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField6");
-              getAllConnectedLibrary(selectedItems, "userField6");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField7",
-      title: "User field 7",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "userField7"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "userField7"
-          ) || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField7"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 7"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 7"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField7"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField7");
-              getAllConnectedLibrary(selectedItems, "userField7");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField8",
-      title: "User field 8",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "userField8"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "userField8"
-          ) || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField8"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 8"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 8"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField8"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField8");
-              getAllConnectedLibrary(selectedItems, "userField8");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField9",
-      title: "User field 9",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "userField9"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "userField9"
-          ) || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField9"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 9"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 9"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField9"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField9");
-              getAllConnectedLibrary(selectedItems, "userField9");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField10",
-      title: "User field 10",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "userField10"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "userField10"
-          ) || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField10"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 10"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 10"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField10"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField10");
-              getAllConnectedLibrary(selectedItems, "userField10");
             }}
             options={options}
           />

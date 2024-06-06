@@ -1594,7 +1594,7 @@ export default function PBS(props) {
         </div>
       ) : (
         <div>
-          {/* <Card>
+          <Card>
             <Card.Body>
               <Card.Title className="text-center">Access Denied</Card.Title>
               <Card.Text>
@@ -1613,7 +1613,7 @@ export default function PBS(props) {
                 Go Back
               </Button>
             </Card.Body>
-          </Card> */}
+          </Card>
         </div>
       )}
     </div>

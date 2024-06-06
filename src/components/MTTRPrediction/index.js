@@ -1087,7 +1087,7 @@ const MTTRPrediction = (props, active) => {
     }, 2000);
   };
   return (
-    <Container className="mttr-main-div mx-1" style={{ marginTop: "82px" }}>
+    <Container className="mttr-main-div mx-1" style={{ marginTop: "45px" }}>
       {isLoading ? (
         <Loader />
       ) : (
@@ -1140,7 +1140,6 @@ const MTTRPrediction = (props, active) => {
             } = formik;
             return (
               <div>
-                <Projectname projectId={projectId} />
                 <Form onSubmit={handleSubmit} onReset={handleReset}>
                   <fieldset
                     disabled={
@@ -1155,66 +1154,60 @@ const MTTRPrediction = (props, active) => {
                     <div
                       style={{
                         display: "flex",
-                        marginTop: "8px",
-                        height: "40px",
+                        alignItems: "center",
                       }}
                     >
-                      <Tooltip placement="right" title="Import">
-                        <Col>
-                          <label
-                            htmlFor="file-input"
-                            className="import-export-btn"
-                          >
-                            <FontAwesomeIcon icon={faFileDownload} />
-                          </label>
-                          <input
-                            type="file"
-                            className="input-fields"
-                            id="file-input"
-                            onChange={importExcel}
-                          />
-                        </Col>
-                      </Tooltip>
-                      <Tooltip placement="left" title="Export">
-                        <Button
-                          className="import-export-btn"
-                          onClick={() => {
-                            exportToExcel(values);
-                          }}
-                        >
-                          <FontAwesomeIcon
-                            icon={faFileUpload}
-                            style={{ width: "15" }}
-                          />
-                        </Button>
-                      </Tooltip>
-                    </div>
+                      <div style={{ width: "30%", marginRight: "20px" }}>
+                        <Projectname projectId={projectId} />
+                      </div>
 
-                    <Row>
-                      <Col xs={12} sm={9} className="projectName">
+                      <div style={{ width: "100%", marginRight: "20px" }}>
                         <Dropdown
                           value={projectId}
                           productId={productId}
                           data={treeTableData}
                         />
-                      </Col>
-                    </Row>
+                      </div>
 
-                    {/* <label for="file-input" class="file-label file-inputs">
-                      Import
-                    </label>
-                    <input type="file" className="input-fields" id="file-input" onChange={importExcel} /> */}
-
-                    {/* <input type="file" className="btn-impor mt-2" onChange={importExcel} /> */}
-
-                    {/* <Button
-                      className=" btn-aligne export-btns-FailureRate "
-                      onClick={() => {
-                        exportToExcel(values);
-                      }}
-                    >
-                      Export
-                    </Button> */}
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          alignItems: "center",
+                          marginTop: "8px",
+                          height: "40px",
+                        }}
+                      >
+                        <Tooltip placement="right" title="Import">
+                          <div style={{ marginRight: "8px" }}>
+                            <label
+                              htmlFor="file-input"
+                              className="import-export-btn"
+                            >
+                              <FontAwesomeIcon icon={faFileDownload} />
+                            </label>
+                            <input
+                              type="file"
+                              className="input-fields"
+                              id="file-input"
+                              onChange={importExcel}
+                              style={{ display: "none" }}
+                            />
+                          </div>
+                        </Tooltip>
+                        <Tooltip placement="left" title="Export">
+                          <Button
+                            className="import-export-btn"
+                            onClick={() => exportToExcel(values)}
+                          >
+                            <FontAwesomeIcon
+                              icon={faFileUpload}
+                              style={{ width: "15px" }}
+                            />
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    </div>
                     <Row className="d-flex">
                       <div className="mttr-sec mt-3">
                         <p className=" mb-0 para-tag">General Information</p>
