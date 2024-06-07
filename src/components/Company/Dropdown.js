@@ -35,7 +35,6 @@ export default function Dropdown(props) {
   }, [productId]);
 
   const productTreeData = () => {
-    console.log("productId.....", productId);
     Api.get("/api/v1/productTreeStructure/get/tree/product/list", {
       params: {
         projectId: projectId,

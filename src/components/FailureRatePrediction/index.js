@@ -332,11 +332,10 @@ function Index(props) {
     getProjectPermission();
     projectSidebar();
     getNprd2016Datas();
-  }, [projectId]);
-
-  useEffect(() => {
     getTreedata();
-  }, []);
+    productTreeData();
+    getProductFRPData();
+  }, [projectId]);
 
   const productTreeData = () => {
     setIsSpinning(true);
@@ -426,10 +425,7 @@ function Index(props) {
       });
   };
 
-  useEffect(() => {
-    productTreeData();
-    getProductFRPData();
-  }, [productId]);
+
 
   const loginSchema = Yup.object().shape({
     category: Yup.object().required("Category is  required"),
