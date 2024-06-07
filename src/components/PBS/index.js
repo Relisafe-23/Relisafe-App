@@ -100,6 +100,7 @@ export default function PBS(props) {
   const [pasteProductTreeId, setPasteProductTreeId] = useState();
   const [pasteProductId, setPasteProdctId] = useState();
   const [copyProdctId, setCopyProdctId] = useState();
+  const [selectCopyData, setSelectCopyData] = useState([[]]);
 
   const DownloadExcel = () => {
     // Assuming 'tableData' is an array of objects, and you want to remove multiple columns
@@ -650,21 +651,25 @@ export default function PBS(props) {
         }
       });
   };
-  const callCopyAndPasteProduct = (pasteProductTreeIds, pasteProductIds) => {
+  const callCopyProduct = (pasteProductTreeIds, pasteProductIds) => {
     Api.get("/api/v1/product/get/single/product", {
       params: {
-        copyProductTreeId: copyProductTreeId,
-        copyProductId: copyProdctId,
+        copyProductTreeId: pasteProductTreeIds,
+        copyProductId: pasteProductIds,
       },
     }).then((response) => {
-      const selectCopyData = response.data.treeData;
-      if (selectCopyData.children.length > 0) {
-        copyAndPasteProduct(pasteProductTreeIds, pasteProductIds);
-      } else {
-        copyAndPasteParentProduct(pasteProductTreeIds, pasteProductIds);
-      }
+      const copyData = response.data.treeData;
+      setSelectCopyData(copyData);
+
     });
   };
+  const callCopyAndPasteProduct = (pasteProductTreeIds, pasteProductIds) =>{
+    if (selectCopyData.children.length > 0) {
+      copyAndPasteProduct(pasteProductTreeIds, pasteProductIds);
+    } else {
+      copyAndPasteParentProduct(pasteProductTreeIds, pasteProductIds);
+    }
+  }
   const copyAndPasteParentProduct = (pasteProductTreeIds, pasteProductIds) => {
     Api.post("/api/v1/product/copy/paste/parent/product", {
       copyProductTreeId: copyProductTreeId,
@@ -676,6 +681,7 @@ export default function PBS(props) {
       setPasteProductTreeId("");
       setCopyProdctId("");
       setPasteProdctId("");
+      setSelectCopyData();
     });
   };
   const copyAndPasteProduct = (pasteProductTreeIds, pasteProductIds) => {
@@ -686,6 +692,7 @@ export default function PBS(props) {
       copyProductId: copyProdctId,
     }).then((response) => {
       console.log("sample", response);
+      setSelectCopyData();
     });
   };
   const mainProductSchema = Yup.object().shape({
@@ -1527,6 +1534,10 @@ export default function PBS(props) {
                                     setCopyProductTreeId(rowData.parentId);
                                     setCopyProdctId(rowData.id);
                                     handleCopyClick(rowData);
+                                    callCopyProduct(
+                                      rowData.parentId,
+                                      rowData.id
+                                    );
                                   }}
                                 >
                                   <Link>Copy</Link>
