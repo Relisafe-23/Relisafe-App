@@ -2800,33 +2800,63 @@ function Index(props) {
               </Button>
             </Tooltip>
           </div> */}
- <div>
- <Col style={{backgroundColor: "red", height: "70%"}}>
-  <Tooltip placement="left" title="Import">
-  
-      <label htmlFor="file-input" style={{ cursor: "pointer" }}>
-        <FontAwesomeIcon icon={faFileDownload} />
-      </label>
-      <input
-        type="file"
-        className="input-fields"
-        id="file-input"
-        onChange={importExcel}
-        style={{  width: "40px",
-          height: "35px" }}
-      />
-   
-  </Tooltip>
-  <Tooltip placement="left" title="Export">
-    <Button 
-     className="import-export-btn"
-    onClick={DownloadExcel}>
-      <FontAwesomeIcon icon={faFileUpload} style={{ width: "15px" }} />
-    </Button>
-   
-  </Tooltip>
-  </Col>
-</div>
+  <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div style={{ width: "30%", marginRight: "20px" }}>
+                        <Projectname projectId={projectId} />
+                      </div>
+
+                      <div style={{ width: "100%", marginRight: "20px" }}>
+                        <Dropdown
+                          value={projectId}
+                          productId={productId}
+                          data={treeTableData}
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          alignItems: "center",
+                          marginTop: "8px",
+                          height: "40px",
+                        }}
+                      >
+                        <Tooltip placement="right" title="Import">
+                          <div style={{ marginRight: "8px" }}>
+                            <label
+                              htmlFor="file-input"
+                              className="import-export-btn"
+                            >
+                              <FontAwesomeIcon icon={faFileDownload} />
+                            </label>
+                            <input
+                              type="file"
+                              className="input-fields"
+                              id="file-input"
+                              onChange={importExcel}
+                              style={{ display: "none" }}
+                            />
+                          </div>
+                        </Tooltip>
+                        <Tooltip placement="left" title="Export">
+                          <Button
+                            className="import-export-btn"
+                            onClick={() => DownloadExcel()}
+                          >
+                            <FontAwesomeIcon
+                              icon={faFileUpload}
+                              style={{ width: "15px" }}
+                            />
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    </div>
 
 
 
