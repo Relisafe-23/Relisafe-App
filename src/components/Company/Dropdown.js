@@ -91,7 +91,6 @@ export default function Dropdown(props) {
   };
 
   const getProductId = (e) => {
-    console.log("eeeeeeee.......",e)
     history.push({ state: { productId: e.value } });
   };
 
@@ -126,7 +125,6 @@ export default function Dropdown(props) {
                 },
               ]}
               onChange={(e) => {
-                console.log("ee,,,,,,,", e.label);
                 setPrefillData(e);
                 getProductId(e);
                 setProductId(e.id);

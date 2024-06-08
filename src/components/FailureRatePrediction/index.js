@@ -94,6 +94,8 @@ function Index(props) {
   const [partTypeNprd2016Data, setPartTypeNprd2016Data] = useState([]);
   const [partTypeNprdDesc2016Data, setPartTypeNprdDesc2016Data] = useState([]);
   const [frpValueNprd2016Data, setFrpValueNprd2016Data] = useState([]);
+
+  const token = localStorage.getItem("sessionId");
   const handleChange = (rowData) => {
     if (selectedCheckboxes.includes(rowData)) {
       setSelectedCheckboxes(
@@ -145,6 +147,7 @@ function Index(props) {
     : props?.location?.state?.productId
     ? props?.location?.state?.productId
     : initialProductID;
+
   const treeStructure = props?.location?.state?.parentId
     ? props?.location?.state?.parentId
     : initialTreeStructure;
@@ -272,6 +275,7 @@ function Index(props) {
         setIsLoading(false);
         setTreeTabledata(treeData);
         setIsLoading(false);
+        productTreeData(initialProductID);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -333,21 +337,22 @@ function Index(props) {
     projectSidebar();
     getNprd2016Datas();
     getTreedata();
-    productTreeData();
     getProductFRPData();
   }, [projectId]);
 
-  const productTreeData = () => {
+
+  const productTreeData = (ids) => {
     setIsSpinning(true);
     Api.get("/api/v1/productTreeStructure/get/tree/product/list", {
       params: {
         projectId: projectId,
-        treeStructureId: productId,
+        treeStructureId: productId ? productId : ids,
         userId: userId,
       },
     })
       .then((res) => {
         const data = res?.data?.data;
+     
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""
         );
@@ -691,53 +696,13 @@ function Index(props) {
                       <div style={{ width: "30%", marginRight: "20px" }}>
                         <Projectname projectId={projectId} />
                       </div>
-
                       <div style={{ width: "100%", marginRight: "20px" }}>
-                        <Dropdown
+                      <Dropdown
                           value={projectId}
                           productId={productId}
                           data={treeTableData}
                         />
                       </div>
-
-                      {/* <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          alignItems: "center",
-                          marginTop: "8px",
-                          height: "40px",
-                        }}
-                      >
-                        <Tooltip placement="right" title="Import">
-                          <div style={{ marginRight: "8px" }}>
-                            <label
-                              htmlFor="file-input"
-                              className="import-export-btn"
-                            >
-                              <FontAwesomeIcon icon={faFileDownload} />
-                            </label>
-                            <input
-                              type="file"
-                              className="input-fields"
-                              id="file-input"
-                              onChange={importExcel}
-                              style={{ display: "none" }}
-                            />
-                          </div>
-                        </Tooltip>
-                        <Tooltip placement="left" title="Export">
-                          <Button
-                            className="import-export-btn"
-                            onClick={() => exportToExcel(values)}
-                          >
-                            <FontAwesomeIcon
-                              icon={faFileUpload}
-                              style={{ width: "15px" }}
-                            />
-                          </Button>
-                        </Tooltip>
-                      </div> */}
                     </div>
 
                     <Row className="d-flex  mt-4">
