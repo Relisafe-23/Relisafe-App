@@ -275,7 +275,6 @@ function Index(props) {
         setIsLoading(false);
         setTreeTabledata(treeData);
         setIsLoading(false);
-        productTreeData(initialProductID);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -333,25 +332,28 @@ function Index(props) {
   }
 
   useEffect(() => {
+    productTreeData();
     getProjectPermission();
     projectSidebar();
     getNprd2016Datas();
     getTreedata();
     getProductFRPData();
-  }, [projectId]);
+   
+  }, [projectId,productId]);
 
 
-  const productTreeData = (ids) => {
+  const productTreeData = () => {
     setIsSpinning(true);
     Api.get("/api/v1/productTreeStructure/get/tree/product/list", {
       params: {
         projectId: projectId,
-        treeStructureId: productId ? productId : ids,
+        treeStructureId: productId,
         userId: userId,
       },
     })
       .then((res) => {
         const data = res?.data?.data;
+        console.log("data.......frp ...",data)
      
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""

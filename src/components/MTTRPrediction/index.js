@@ -355,6 +355,7 @@ const MTTRPrediction = (props, active) => {
     getProcedureData();
     getMttrData();
   }, [productId]);
+  
 
   const propstoGetTreeData = () => {
     setIsSpinning(true);
@@ -369,6 +370,7 @@ const MTTRPrediction = (props, active) => {
     })
       .then((res) => {
         const data = res?.data?.data;
+        console.log("data.......mttr ...",data)
 
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""
