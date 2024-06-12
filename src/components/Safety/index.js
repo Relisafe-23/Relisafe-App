@@ -45,7 +45,7 @@ function Index(props) {
   const [treeTableData, setTreeTabledata] = useState([]);
   const userId = localStorage.getItem("userId");
   const history = useHistory();
-  const [operationPhase, setOperationPhase] = useState();
+  const [modeOfOperation, setModeOfOperation] = useState();
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
   const [companyId, setCompanyId] = useState();
@@ -63,7 +63,7 @@ function Index(props) {
       "productId",
       "id",
       "tableData",
-      "operatingPhase",
+      "modeOfOperation",
     ];
     // Create a new array with the unwanted columns removed from each object
     const modifiedTableData = tableData.map((row) => {
@@ -123,47 +123,36 @@ function Index(props) {
 
     setIsLoading(true);
     Api.post("api/v1/safety/", {
-      operatingPhase: values.operatingPhase,
-      function: values.function,
-      failureMode: values.failureMode,
-      // searchFM: values.searchFM,
-      cause: values.cause,
-      failureModeRatioAlpha: values.failureModeRatioAlpha
-        ? values.failureModeRatioAlpha
+      modeOfOperation: values.modeOfOperation,
+      hazardCause: values.hazardCause,
+      effectOfHazard: values.effectOfHazard,
+      hazardClasification: values.hazardClasification,
+      designAssuranceLevel: values.designAssuranceLevel
+        ? values.designAssuranceLevel
         : 0,
-      detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-      detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-      BuiltInTest: values.BuiltInTest,
-      subSystemEffect: values.subSystemEffect,
-      systemEffect: values.systemEffect,
-      endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta
-        ? values.endEffectRatioBeta
+      meansOfDetection: values.meansOfDetection,
+      crewResponse: values.crewResponse,
+      uniqueHazardIdentifier: values.uniqueHazardIdentifier,
+      initialSeverity: values.initialSeverity,
+      initialLikelihood: values.initialLikelihood,
+      initialRiskLevel: values.initialRiskLevel,
+      designMitigation: values.designMitigation
+        ? values.designMitigation
         : 1,
-      safetyImpact: values.safetyImpact,
-      referenceHazardId: values.referenceHazardId,
-      realibilityImpact: values.realibilityImpact,
-      serviceDisruptionTime: values.serviceDisruptionTime,
-      frequency: values.frequency,
-      severity: values.severity,
-      riskIndex: values.riskIndex,
-      designControl: values.designControl,
-      maintenanceControl: values.maintenanceControl,
-      exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase:
-        values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase:
-        values.immediteActionDuringNonOperationalPhase,
-      userField1: values.userField1,
-      userField2: values.userField2,
-      userField3: values.userField3,
-      userField4: values.userField4,
-      userField5: values.userField5,
-      userField6: values.userField6,
-      userField7: values.userField7,
-      userField8: values.userField8,
-      userField9: values.userField9,
-      userField10: values.userField10,
+      designMitigatonResbiity: values.designMitigatonResbiity,
+      designMitigtonEvidence: values.designMitigtonEvidence,
+      opernalMaintanMitigation: values.opernalMaintanMitigation,
+      opernalMitigatonResbility: values.opernalMitigatonResbility,
+      operatnalMitigationEvidence: values.operatnalMitigationEvidence,
+      residualSeverity: values.residualresidualSeverity,
+      residualLikelihood: values.residualLikelihood,
+      residualRiskLevel: values.residualRiskLevel,
+      hazardStatus: values.hazardStatus,
+      ftaNameId: values.ftaNameId,
+      userField1:
+        values.userField1,
+      userField2:
+        values.userField2,
       projectId: projectId,
       companyId: companyId,
       productId: productId,
@@ -235,41 +224,30 @@ function Index(props) {
 
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [data, setData] = useState({
-    operatingPhase: "",
-    function: "",
-    failureMode: "",
-    // searchFM: "",
-    failureModeRatioAlpha: "",
-    cause: "",
-    subSystemEffect: "",
-    systemEffect: "",
-    endEffect: "",
-    endEffectRatioBeta: "",
-    safetyImpact: "",
-    referenceHazardId: "",
-    realibilityImpact: "",
-    serviceDisruptionTime: "",
-    frequency: "",
-    severity: "",
-    riskIndex: "",
-    detectableMeansDuringOperation: "",
-    detectableMeansToMaintainer: "",
-    BuiltInTest: "",
-    designControl: "",
-    maintenanceControl: "",
-    exportConstraints: "",
-    immediteActionDuringOperationalPhase: "",
-    immediteActionDuringNonOperationalPhase: "",
+    modeOfOperation: "",
+    hazardCause: "",
+    effectOfHazard: "",
+    designAssuranceLevel: "",
+    hazardClasification: "",
+    initialSeverity: "",
+    initialLikelihood: "",
+    initialRiskLevel: "",
+    designMitigation: "",
+    designMitigatonResbiity: "",
+    designMitigtonEvidence: "",
+    opernalMaintanMitigation: "",
+    opernalMitigatonResbility: "",
+    operatnalMitigationEvidence: "",
+    residualSeverity: "",
+    residualLikelihood: "",
+    meansOfDetection: "",
+    crewResponse: "",
+    uniqueHazardIdentifier: "",
+    residualRiskLevel: "",
+    hazardStatus: "",
+    ftaNameId: "",
     userField1: "",
     userField2: "",
-    userField3: "",
-    userField4: "",
-    userField5: "",
-    userField6: "",
-    userField7: "",
-    userField8: "",
-    userField9: "",
-    userField10: "",
   });
 
   const handleInputChange = (selectedItems, name) => {
@@ -422,7 +400,7 @@ function Index(props) {
       headers: { userId: userId },
     })
       .then((response) => {
-        setOperationPhase(response.data?.data?.operationalPhase);
+        setModeOfOperation(response.data?.data?.modeOfOperation);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -466,40 +444,30 @@ function Index(props) {
 
   // Define an array of field names for which you want to generate options
   const fieldNames = [
-    "operatingPhase",
-    "function",
-    "failureMode",
-    // "searchFM",
-    "failureModeRatioAlpha",
-    "cause",
-    "subSystemEffect",
-    "systemEffect",
-    "endEffect",
-    "endEffectRatioBeta",
-    "safetyImpact",
-    "referenceHazardId",
-    "realibilityImpact",
-    "serviceDisruptionTime",
-    "frequency",
-    "severity",
-    "riskIndex",
-    "detectableMeansDuringOperation",
-    "detectableMeansToMaintainer",
-    "BuiltInTest",
-    "designControl",
-    "maintenanceControl",
-    "exportConstraints",
-    "immediteActionDuringOperationalPhase",
-    "immediteActionDuringNonOperationalPhase",
+    "modeOfOperation",
+    "hazardCause",
+    "effectOfHazard",
+    "designAssuranceLevel",
+    "hazardClasification",
+    "initialSeverity",
+    "initialLikelihood",
+    "initialRiskLevel",
+    "designMitigation",
+    "designMitigatonResbiity",
+    "designMitigtonEvidence",
+    "opernalMaintanMitigation",
+    "opernalMitigatonResbility",
+    "operatnalMitigationEvidence",
+    "residualSeverity",
+    "residualLikelihood",
+    "meansOfDetection",
+    "crewResponse",
+    "uniqueHazardIdentifier",
+    "residualRiskLevel",
+    "hazardStatus",
+    "ftaNameId",
     "userField1",
     "userField2",
-    "userField3",
-    "userField4",
-    "userField6",
-    "userField7",
-    "userField8",
-    "userField9",
-    "userField10",
   ]; // Add other field names as needed
 
   // Loop through the field names to generate options
@@ -609,21 +577,21 @@ function Index(props) {
   const columns = [
     {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
-      title: "Hazard *",
+      title: "Hazard*",
       cellStyle: { minWidth: "140px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
     },
     {
-      field: "operatingPhase",
-      title: "Mode of Operation",
+      field: "modeOfOperation",
+      title: "Mode of Operation*",
       type: "string",
       cellStyle: { minWidth: "200px", textAlign: "center" },
       headerStyle: { textAlign: "center", minWidth: "150px" },
-      onCellClick: () => handleDropdownSelection("operatingPhase"),
+      onCellClick: () => handleDropdownSelection("modeOfOperation"),
       editComponent: ({ value, onChange, rowData }) => {
         const filteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "operatingPhase"
+            (item) => item?.sourceName === "modeOfOperation"
           ) || [];
         const options = filteredData?.map((item) => ({
           value: item?.sourceValue,
@@ -635,23 +603,23 @@ function Index(props) {
               type="text"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter Operating Phase"
+              placeholder="Enter Mode of Operation"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Operating Phase"
+              title="Enter Mode of Operation"
             />
           );
         } else {
           return (
             <Select
-              name="operatingPhase"
+              name="modeOfOperation"
               value={
-                data.operatingPhase
-                  ? { label: data.operatingPhase, value: data.operatingPhase }
+                data.modeOfOperation
+                  ? { label: data.modeOfOperation, value: data.modeOfOperation }
                   : ""
               }
               onChange={(selectedItems) => {
-                handleInputChange(selectedItems, "operatingPhase");
-                getAllConnectedLibrary(selectedItems, "operatingPhase");
+                handleInputChange(selectedItems, "modeOfOperation");
+                getAllConnectedLibrary(selectedItems, "modeOfOperation");
               }}
               options={options}
             />
@@ -660,19 +628,19 @@ function Index(props) {
       },
     },
     {
-      field: "function",
-      title: "Hazard Cause *",
+      field: "hazardCause",
+      title: "Hazard Cause*",
       type: "string",
       cellStyle: { minWidth: "50px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
-      onCellClick: () => handleDropdownSelection("function"),
+      onCellClick: () => handleDropdownSelection("hazardCause"),
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "function") ||
+          allSepareteData?.filter((item) => item?.sourceName === "hazardCause") ||
           [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "function"
+            (item) => item?.destinationName === "hazardCause"
           ) || [];
 
         const options =
@@ -689,26 +657,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="function"
+              name="hazardCause"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Function"
+              placeholder="Enter Hazard Cause"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Function"
+              title="Enter Hazard Cause"
             />
           );
         }
         return (
           <Select
-            name="function"
+            name="hazardCause"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "function");
-              getAllConnectedLibrary(selectedItems, "function");
+              handleInputChange(selectedItems, "hazardCause");
+              getAllConnectedLibrary(selectedItems, "hazardCause");
             }}
             options={options}
           />
@@ -716,7 +684,7 @@ function Index(props) {
       },
     },
     {
-      field: "failureMode",
+      field: "effectOfHazard",
       title: "Effect of the Hazard*",
       type: "string",
       headerStyle: { textAlign: "center" },
@@ -724,11 +692,11 @@ function Index(props) {
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "failureMode"
+            (item) => item?.sourceName === "effectOfHazard"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "failureMode"
+            (item) => item?.destinationName === "effectOfHazard"
           ) || [];
 
         const options =
@@ -745,90 +713,35 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="failureMode"
+              name="effectOfHazard"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Failure Mode"
+              placeholder="Enter Effect Of The Hazard"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter FailureMode"
+              title="Enter effectOfHazard"
             />
           );
         }
         return (
           <Select
-            name="failureMode"
+            name="effectOfHazard"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "failureMode");
-              getAllConnectedLibrary(selectedItems, "failureMode");
+              handleInputChange(selectedItems, "effectOfHazard");
+              getAllConnectedLibrary(selectedItems, "effectOfHazard");
             }}
             options={options}
           />
         );
       },
-      onCellClick: () => handleDropdownSelection("failureMode"),
+      onCellClick: () => handleDropdownSelection("effectOfHazard"),
     },
-    // {
-    //   field: "searchFM",
-    //   title: "Search FM*",
-    //   type: "string",
-    //   headerStyle: { textAlign: "center" },
-    //   cellStyle: { minWidth: "230px" },
-    //   editComponent: ({ value, onChange }) => {
-    //     const seperateFilteredData =
-    //       allSepareteData?.filter((item) => item?.sourceName === "searchFM") ||
-    //       [];
-    //     const conncetedFilteredData =
-    //       allConnectedData?.filter(
-    //         (item) => item?.destinationName === "searchFM"
-    //       ) || [];
-    //     const options =
-    //       conncetedFilteredData.length > 0
-    //         ? conncetedFilteredData?.map((item) => ({
-    //             value: item?.destinationValue,
-    //             label: item?.destinationValue,
-    //           }))
-    //         : seperateFilteredData?.map((item) => ({
-    //             value: item?.sourceValue,
-    //             label: item?.sourceValue,
-    //           }));
-    //     if (!options || options.length === 0) {
-    //       return (
-    //         <input
-    //           type="text"
-    //           name="searchFM"
-    //           value={value}
-    //           onChange={(e) => {
-    //             createDropdownEditComponent(e.target.value);
-    //             onChange(e.target.value);
-    //           }}
-    //           placeholder="Enter Search FM"
-    //           style={{ height: "40px", borderRadius: "4px" }}
-    //           title="Enter Search FM"
-    //         />
-    //       );
-    //     }
-    //     return (
-    //       <Select
-    //         name="searchFM"
-    //         value={value ? { label: value, value: value } : ""}
-    //         onChange={(selectedItems) => {
-    //           onChange(selectedItems?.value);
-    //           handleInputChange(selectedItems, "searchFM");
-    //           getAllConnectedLibrary(selectedItems, "searchFM");
-    //         }}
-    //         options={options}
-    //       />
-    //     );
-    //   },
-    //   onCellClick: () => handleDropdownSelection("searchFM"),
-    // },
     {
-      field: "failureModeRatioAlpha",
+      field: "hazardClasification",
       title: "Hazard Clasification*",
       type: "string",
       headerStyle: { textAlign: "center" },
@@ -836,11 +749,11 @@ function Index(props) {
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "failureModeRatioAlpha"
+            (item) => item?.sourceName === "hazardClasification"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "failureModeRatioAlpha"
+            (item) => item?.destinationName === "hazardClasification"
           ) || [];
 
         const options =
@@ -857,7 +770,7 @@ function Index(props) {
           return (
             <input
               type="number"
-              name="failureModeRatioAlpha"
+              name="hazardClasification"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
@@ -871,12 +784,12 @@ function Index(props) {
         }
         return (
           <Select
-            name="failureModeRatioAlpha"
+            name="hazardClasification"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "failureModeRatioAlpha");
-              getAllConnectedLibrary(selectedItems, "failureModeRatioAlpha");
+              handleInputChange(selectedItems, "hazardClasification");
+              getAllConnectedLibrary(selectedItems, "hazardClasification");
             }}
             options={options}
           />
@@ -884,16 +797,16 @@ function Index(props) {
       },
     },
     {
-      field: "detectableMeansDuringOperation",
+      field: "designAssuranceLevel",
       title: "Design Assurance Level (DAL) associated with the hazard",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "cause") || [];
+          allSepareteData?.filter((item) => item?.sourceName === "designAssuranceLevel") || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "cause"
+            (item) => item?.destinationName === "designAssuranceLevel"
           ) || [];
 
         const options =
@@ -910,26 +823,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="cause"
+              name="designAssuranceLevel"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Cause"
+              placeholder="Enter Design Assurance Level"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Cause"
+              title="Enter Design Assurance Level"
             />
           );
         }
         return (
           <Select
-            name="cause"
+            name="designAssuranceLevel"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "cause");
-              getAllConnectedLibrary(selectedItems, "cause");
+              handleInputChange(selectedItems, "designAssuranceLevel");
+              getAllConnectedLibrary(selectedItems, "designAssuranceLevel");
             }}
             options={options}
           />
@@ -938,7 +851,7 @@ function Index(props) {
     },
 
     {
-      field: "subSystemEffect",
+      field: "meansOfDetection",
       title: "Means of detection*",
       type: "string",
       cellStyle: { minWidth: "230px" },
@@ -946,11 +859,11 @@ function Index(props) {
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "subSystemEffect"
+            (item) => item?.sourceName === "meansOfDetection"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "subSystemEffect"
+            (item) => item?.destinationName === "meansOfDetection"
           ) || [];
 
         const options =
@@ -967,26 +880,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="subSystemEffect"
+              name="meansOfDetection"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Sub System effect"
+              placeholder="Enter Means of detection"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Sub System effect"
+              title="Enter Means of detection"
             />
           );
         }
         return (
           <Select
-            name="subSystemEffect"
+            name="meansOfDetection"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "subSystemEffect");
-              getAllConnectedLibrary(selectedItems, "subSystemEffect");
+              handleInputChange(selectedItems, "meansOfDetection");
+              getAllConnectedLibrary(selectedItems, "meansOfDetection");
             }}
             options={options}
           />
@@ -994,7 +907,7 @@ function Index(props) {
       },
     },
     {
-      field: "systemEffect",
+      field: "crewResponse",
       title: "Crew response*",
       type: "string",
       cellStyle: { minWidth: "230px" },
@@ -1002,11 +915,11 @@ function Index(props) {
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "systemEffect"
+            (item) => item?.sourceName === "crewResponse"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "systemEffect"
+            (item) => item?.destinationName === "crewResponse"
           ) || [];
 
         const options =
@@ -1023,26 +936,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="systemEffect"
+              name="crewResponse"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter System Effect"
+              placeholder="Enter Crew Response"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter System Effect"
+              title="Enter Crew Response"
             />
           );
         }
         return (
           <Select
-            name="systemEffect"
+            name="crewResponse"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "systemEffect");
-              getAllConnectedLibrary(selectedItems, "systemEffect");
+              handleInputChange(selectedItems, "crewResponse");
+              getAllConnectedLibrary(selectedItems, "crewResponse");
             }}
             options={options}
           />
@@ -1050,18 +963,18 @@ function Index(props) {
       },
     },
     {
-      field: "endEffect",
+      field: "uniqueHazardIdentifier",
       title: "Unique Hazard Identifiers*",
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "endEffect") ||
+          allSepareteData?.filter((item) => item?.sourceName === "uniqueHazardIdentifier") ||
           [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "endEffect"
+            (item) => item?.destinationName === "uniqueHazardIdentifier"
           ) || [];
 
         const options =
@@ -1078,13 +991,13 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="endEffect"
+              name="uniqueHazardIdentifier"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter End Effect"
+              placeholder="Enter Unique Hazard Identifiers"
               style={{ height: "40px", borderRadius: "4px" }}
               title="Enter End Effect"
             />
@@ -1092,12 +1005,12 @@ function Index(props) {
         }
         return (
           <Select
-            name="endEffect"
+            name="uniqueHazardIdentifier"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "endEffect");
-              getAllConnectedLibrary(selectedItems, "endEffect");
+              handleInputChange(selectedItems, "uniqueHazardIdentifier");
+              getAllConnectedLibrary(selectedItems, "uniqueHazardIdentifier");
             }}
             options={options}
           />
@@ -1105,7 +1018,7 @@ function Index(props) {
       },
     },
     {
-      field: "endEffectRatioBeta",
+      field: "initialSeverity",
       title: "Initial Severity ((impact))",
       type: "string",
       cellStyle: { minWidth: "230px" },
@@ -1113,11 +1026,11 @@ function Index(props) {
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "endEffectRatioBeta"
+            (item) => item?.sourceName === "initialSeverity"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "endEffectRatioBeta"
+            (item) => item?.destinationName === "initialSeverity"
           ) || [];
 
         const options =
@@ -1134,26 +1047,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="endEffectRatioBeta"
+              name="initialSeverity"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter End Effect ratio Beta"
+              placeholder="Enter Initial Severity"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter End Effect ratio Beta"
+              title="Enter Initial Severity"
             />
           );
         }
         return (
           <Select
-            name="endEffectRatioBeta"
+            name="initialSeverity"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "endEffectRatioBeta");
-              getAllConnectedLibrary(selectedItems, "endEffectRatioBeta");
+              handleInputChange(selectedItems, "initialSeverity");
+              getAllConnectedLibrary(selectedItems, "initialSeverity");
             }}
             options={options}
           />
@@ -1161,13 +1074,13 @@ function Index(props) {
       },
     },
     {
-      field: "safetyImpact",
+      field: "initialLikelihood",
       title: "Initial likelihood (probability)",
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
       // validate: (rowData) => {
-      //   if (rowData.safetyImpact === undefined || rowData.safetyImpact === "") {
+      //   if (rowData.designMitigatonResbiity === undefined || rowData.designMitigatonResbiity === "") {
       //     return "required";
       //   }
       //   return true;
@@ -1175,11 +1088,11 @@ function Index(props) {
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "safetyImpact"
+            (item) => item?.sourceName === "initialLikelihood"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "safetyImpact"
+            (item) => item?.destinationName === "initialLikelihood"
           ) || [];
 
         const options =
@@ -1196,26 +1109,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="safetyImpact"
+              name="initialLikelihood"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Safety Impact"
+              placeholder="Enter Initial Likelihood"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Safety Impact"
+              title="Enter Initial Likelihood"
             />
           );
         }
         return (
           <Select
-            name="safetyImpact"
+            name="initialLikelihood"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "safetyImpact");
-              getAllConnectedLibrary(selectedItems, "safetyImpact");
+              handleInputChange(selectedItems, "initialLikelihood");
+              getAllConnectedLibrary(selectedItems, "initialLikelihood");
             }}
             options={options}
           />
@@ -1223,18 +1136,18 @@ function Index(props) {
       },
     },
     {
-      field: "referenceHazardId",
+      field: "initialRiskLevel",
       title: "Initial Risk level",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "referenceHazardId"
+            (item) => item?.sourceName === "initialRiskLevel"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "referenceHazardId"
+            (item) => item?.destinationName === "initialRiskLevel"
           ) || [];
 
         const options =
@@ -1251,26 +1164,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="referenceHazardId"
+              name="initialRiskLevel"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Reference Hazard ID"
+              placeholder="Enter Initial Risk level"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Reference Hazard ID"
+              title="Enter Initial Risk level"
             />
           );
         }
         return (
           <Select
-            name="referenceHazardId"
+            name="initialRiskLevel"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "referenceHazardId");
-              getAllConnectedLibrary(selectedItems, "referenceHazardId");
+              handleInputChange(selectedItems, "initialRiskLevel");
+              getAllConnectedLibrary(selectedItems, "initialRiskLevel");
             }}
             options={options}
           />
@@ -1278,13 +1191,13 @@ function Index(props) {
       },
     },
     {
-      field: "realibilityImpact",
-      title: "Design mitigation",
+      field: "designMitigation",
+      title: "Design Mitigation",
       type: "string",
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
       // validate: (rowData) => {
-      //   if (rowData.realibilityImpact === undefined || rowData.realibilityImpact === "") {
+      //   if (rowData.opernalMaintanMitigation === undefined || rowData.opernalMaintanMitigation === "") {
       //     return "required";
       //   }
       //   return true;
@@ -1292,11 +1205,11 @@ function Index(props) {
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "realibilityImpact"
+            (item) => item?.sourceName === "designMitigation"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "realibilityImpact"
+            (item) => item?.destinationName === "designMitigation"
           ) || [];
 
         const options =
@@ -1313,26 +1226,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="realibilityImpact"
+              name="designMitigation"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Reliability Impact"
+              placeholder="Enter Design mitigation"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Reliability Impact"
+              title="Enter Design mitigation"
             />
           );
         }
         return (
           <Select
-            name="realibilityImpact"
+            name="designMitigation"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "realibilityImpact");
-              getAllConnectedLibrary(selectedItems, "realibilityImpact");
+              handleInputChange(selectedItems, "designMitigation");
+              getAllConnectedLibrary(selectedItems, "designMitigation");
             }}
             options={options}
           />
@@ -1340,19 +1253,19 @@ function Index(props) {
       },
     },
     {
-      field: "serviceDisruptionTime",
-      title: "Mitigation Responsibility",
+      field: "designMitigatonResbiity",
+      title: "Design Mitigation Responsibility",
       type: "numeric",
       cellStyle: { minWidth: "230px", textAlign: "left" },
       headerStyle: { textAlign: "left" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "serviceDisruptionTime"
+            (item) => item?.sourceName === "designMitigatonResbiity"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "serviceDisruptionTime"
+            (item) => item?.destinationName === "designMitigatonResbiity"
           ) || [];
 
         const options =
@@ -1369,26 +1282,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="serviceDisruptionTime"
+              name="designMitigatonResbiity"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Service Disruption Time"
+              placeholder="Enter Design Mitigation Responsibility"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Service Disruption Time"
+              title="Enter Design Mitigation Responsibility"
             />
           );
         }
         return (
           <Select
-            name="serviceDisruptionTime"
+            name="designMitigatonResbiity"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "serviceDisruptionTime");
-              getAllConnectedLibrary(selectedItems, "serviceDisruptionTime");
+              handleInputChange(selectedItems, "designMitigatonResbiity");
+              getAllConnectedLibrary(selectedItems, "designMitigatonResbiity");
             }}
             options={options}
           />
@@ -1396,17 +1309,17 @@ function Index(props) {
       },
     },
     {
-      field: "frequency",
-      title: "Mitigation evidence",
+      field: "designMitigtonEvidence",
+      title: "Design Mitigation Evidence",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "frequency") ||
+          allSepareteData?.filter((item) => item?.sourceName === "designMitigtonEvidence") ||
           [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "frequency"
+            (item) => item?.destinationName === "designMitigtonEvidence"
           ) || [];
 
         const options =
@@ -1423,26 +1336,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="frequency"
+              name="designMitigtonEvidence"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Frequency"
+              placeholder="Enter Design Mitigation Evidence"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Frequency"
+              title="Enter Design Mitigation Evidence"
             />
           );
         }
         return (
           <Select
-            name="frequency"
+            name="designMitigtonEvidence"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "frequency");
-              getAllConnectedLibrary(selectedItems, "frequency");
+              handleInputChange(selectedItems, "designMitigtonEvidence");
+              getAllConnectedLibrary(selectedItems, "designMitigtonEvidence");
             }}
             options={options}
           />
@@ -1450,17 +1363,17 @@ function Index(props) {
       },
     },
     {
-      field: "severity",
+      field: "opernalMaintanMitigation",
       title: "Operational/Maintenance mitigation",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "severity") ||
+          allSepareteData?.filter((item) => item?.sourceName === "opernalMaintanMitigation") ||
           [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "severity"
+            (item) => item?.destinationName === "opernalMaintanMitigation"
           ) || [];
 
         const options =
@@ -1477,26 +1390,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="severity"
+              name="opernalMaintanMitigation"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Severity"
+              placeholder="Enter Operational/Maintenance mitigation"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Severity"
+              title="Enter Operational/Maintenance mitigation"
             />
           );
         }
         return (
           <Select
-            name="severity"
+            name="opernalMaintanMitigation"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "severity");
-              getAllConnectedLibrary(selectedItems, "severity");
+              handleInputChange(selectedItems, "opernalMaintanMitigation");
+              getAllConnectedLibrary(selectedItems, "opernalMaintanMitigation");
             }}
             options={options}
           />
@@ -1504,17 +1417,17 @@ function Index(props) {
       },
     },
     {
-      field: "riskIndex",
-      title: "Mitigation Responsibility",
+      field: "opernalMitigatonResbility",
+      title: "Opernational Mitigation Responsibility",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "riskIndex") ||
+          allSepareteData?.filter((item) => item?.sourceName === "opernalMitigatonResbility") ||
           [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "riskIndex"
+            (item) => item?.destinationName === "opernalMitigatonResbility"
           ) || [];
 
         const options =
@@ -1531,26 +1444,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="riskIndex"
+              name="opernalMitigatonResbility"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Risk Index"
+              placeholder="Enter Opernational Mitigation Responsibility"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Risk Index"
+              title="Enter Opernational Mitigation Responsibility"
             />
           );
         }
         return (
           <Select
-            name="riskIndex"
+            name="opernalMitigatonResbility"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "riskIndex");
-              getAllConnectedLibrary(selectedItems, "riskIndex");
+              handleInputChange(selectedItems, "opernalMitigatonResbility");
+              getAllConnectedLibrary(selectedItems, "opernalMitigatonResbility");
             }}
             options={options}
           />
@@ -1558,18 +1471,18 @@ function Index(props) {
       },
     },
     {
-      field: "detectableMeansDuringOperation",
-      title: "Mitigation evidence",
+      field: "operatnalMitigationEvidence",
+      title: "Operational Mitigation Evidence",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "detectableMeansDuringOperation"
+            (item) => item?.sourceName === "operatnalMitigationEvidence"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "detectableMeansDuringOperation"
+            (item) => item?.destinationName === "operatnalMitigationEvidence"
           ) || [];
 
         const options =
@@ -1586,31 +1499,31 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="detectableMeansDuringOperation"
+              name="operatnalMitigationEvidence"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Detectable Means during operation"
+              placeholder="Enter Operational Mitigation Evidence"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Detectable Means during operation"
+              title="Enter Operational Mitigation Evidence"
             />
           );
         }
         return (
           <Select
-            name="detectableMeansDuringOperation"
+            name="operatnalMitigationEvidence"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
               handleInputChange(
                 selectedItems,
-                "detectableMeansDuringOperation"
+                "operatnalMitigationEvidence"
               );
               getAllConnectedLibrary(
                 selectedItems,
-                "detectableMeansDuringOperation"
+                "operatnalMitigationEvidence"
               );
             }}
             options={options}
@@ -1619,18 +1532,18 @@ function Index(props) {
       },
     },
     {
-      field: "detectableMeansToMaintainer",
+      field: "residualSeverity",
       title: "Residual Severity ((impact))",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "detectableMeansToMaintainer"
+            (item) => item?.sourceName === "residualSeverity"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "detectableMeansToMaintainer"
+            (item) => item?.destinationName === "residualSeverity"
           ) || [];
 
         const options =
@@ -1647,28 +1560,28 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="detectableMeansToMaintainer"
+              name="residualSeverity"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Detectable Means to Maintainer"
+              placeholder="Enter Residual Severity"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Detectable Means to Maintainer"
+              title="Enter Residual Severity"
             />
           );
         }
         return (
           <Select
-            name="detectableMeansToMaintainer"
+            name="residualSeverity"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "detectableMeansToMaintainer");
+              handleInputChange(selectedItems, "residualSeverity");
               getAllConnectedLibrary(
                 selectedItems,
-                "detectableMeansToMaintainer"
+                "residualSeverity"
               );
             }}
             options={options}
@@ -1677,18 +1590,18 @@ function Index(props) {
       },
     },
     {
-      field: "BuiltInTest",
+      field: "residualLikelihood",
       title: "Residual likelihood (probability)",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "BuiltInTest"
+            (item) => item?.sourceName === "residualLikelihood"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "BuiltInTest"
+            (item) => item?.destinationName === "residualLikelihood"
           ) || [];
 
         const options =
@@ -1705,26 +1618,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="BuiltInTest"
+              name="residualLikelihood"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Built-in Test"
+              placeholder="Enter Residual likelihood"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Built-in Test"
+              title="Enter Residual likelihood"
             />
           );
         }
         return (
           <Select
-            name="BuiltInTest"
+            name="residualLikelihood"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "BuiltInTest");
-              getAllConnectedLibrary(selectedItems, "BuiltInTest");
+              handleInputChange(selectedItems, "residualLikelihood");
+              getAllConnectedLibrary(selectedItems, "residualLikelihood");
             }}
             options={options}
           />
@@ -1733,18 +1646,18 @@ function Index(props) {
     },
 
     {
-      field: "designControl",
-      title: "Residual Risk level",
+      field: "residualRiskLevel",
+      title: "Residual Risk Level",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "designControl"
+            (item) => item?.sourceName === "residualRiskLevel"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "designControl"
+            (item) => item?.destinationName === "residualRiskLevel"
           ) || [];
 
         const options =
@@ -1761,26 +1674,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="designControl"
+              name="residualRiskLevel"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Design Control"
+              placeholder="Enter Residual Risk Level"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Design Control"
+              title="Enter Residual Risk Level"
             />
           );
         }
         return (
           <Select
-            name="designControl"
+            name="residualRiskLevel"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "designControl");
-              getAllConnectedLibrary(selectedItems, "designControl");
+              handleInputChange(selectedItems, "residualRiskLevel");
+              getAllConnectedLibrary(selectedItems, "residualRiskLevel");
             }}
             options={options}
           />
@@ -1788,18 +1701,18 @@ function Index(props) {
       },
     },
     {
-      field: "maintenanceControl",
-      title: "Hazard status",
+      field: "hazardStatus",
+      title: "Hazard Status",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "maintenanceControl"
+            (item) => item?.sourceName === "hazardStatus"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "maintenanceControl"
+            (item) => item?.destinationName === "hazardStatus"
           ) || [];
 
         const options =
@@ -1816,26 +1729,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="maintenanceControl"
+              name="hazardStatus"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Maintenance Control"
+              placeholder="Enter Hazard Status"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Maintenance Control"
+              title="Enter Hazard Status"
             />
           );
         }
         return (
           <Select
-            name="maintenanceControl"
+            name="hazardStatus"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "maintenanceControl");
-              getAllConnectedLibrary(selectedItems, "maintenanceControl");
+              handleInputChange(selectedItems, "hazardStatus");
+              getAllConnectedLibrary(selectedItems, "hazardStatus");
             }}
             options={options}
           />
@@ -1843,18 +1756,18 @@ function Index(props) {
       },
     },
     {
-      field: "exportConstraints",
-      title: "Other relevant information",
+      field: "ftaNameId",
+      title: "FTA Name/ID",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
-            (item) => item?.sourceName === "exportConstraints"
+            (item) => item?.sourceName === "ftaNameId"
           ) || [];
         const conncetedFilteredData =
           allConnectedData?.filter(
-            (item) => item?.destinationName === "exportConstraints"
+            (item) => item?.destinationName === "ftaNameId"
           ) || [];
 
         const options =
@@ -1871,26 +1784,26 @@ function Index(props) {
           return (
             <input
               type="text"
-              name="exportConstraints"
+              name="ftaNameId"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Export constraints"
+              placeholder="Enter FTA Name/ID"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Export constraints"
+              title="Enter FTA Name/ID"
             />
           );
         }
         return (
           <Select
-            name="exportConstraints"
+            name="ftaNameId"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "exportConstraints");
-              getAllConnectedLibrary(selectedItems, "exportConstraints");
+              handleInputChange(selectedItems, "ftaNameId");
+              getAllConnectedLibrary(selectedItems, "ftaNameId");
             }}
             options={options}
           />
@@ -2014,75 +1927,64 @@ function Index(props) {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
       Api.post("api/v1/safety/", {
-        operatingPhase: values.operatingPhase
-          ? values.operatingPhase
-          : data.operatingPhase,
-        function: values.function ? values.function : data.function,
-        failureMode: values.failureMode ? values.failureMode : data.failureMode,
-        // searchFM: values.searchFM ? values.searchFM : data.searchFM,
-        cause: values.cause ? values.cause : data.cause,
-        failureModeRatioAlpha: values.failureModeRatioAlpha
-          ? values.failureModeRatioAlpha
+        modeOfOperation: values.modeOfOperation
+          ? values.modeOfOperation
+          : data.modeOfOperation,
+        hazardCause: values.hazardCause ? values.hazardCause : data.hazardCause,
+        effectOfHazard: values.effectOfHazard ? values.effectOfHazard : data.effectOfHazard,
+        hazardClasification: values.hazardClasification ? values.hazardClasification : data.hazardClasification,
+        designAssuranceLevel: values.designAssuranceLevel
+          ? values.designAssuranceLevel
           : 1,
-        detectableMeansDuringOperation: values.detectableMeansDuringOperation
-          ? values.detectableMeansDuringOperation
-          : data.detectableMeansDuringOperation,
-        detectableMeansToMaintainer: values.detectableMeansToMaintainer
-          ? values.detectableMeansToMaintainer
-          : data.detectableMeansToMaintainer,
-        BuiltInTest: values.BuiltInTest ? values.BuiltInTest : data.BuiltInTest,
-        subSystemEffect: values.subSystemEffect
-          ? values.subSystemEffect
-          : data.subSystemEffect,
-        systemEffect: values.systemEffect
-          ? values.systemEffect
-          : data.systemEffect,
-        endEffect: values.endEffect ? values.endEffect : data.endEffect,
-        endEffectRatioBeta: values.endEffectRatioBeta
-          ? values.endEffectRatioBeta
+        meansOfDetection: values.meansOfDetection
+          ? values.meansOfDetection
+          : data.meansOfDetection,
+        crewResponse: values.crewResponse
+          ? values.crewResponse
+          : data.crewResponse,
+        uniqueHazardIdentifier: values.uniqueHazardIdentifier ? values.uniqueHazardIdentifier : data.uniqueHazardIdentifier,
+        initialSeverity: values.initialSeverity
+          ? values.initialSeverity
+          : data.initialSeverity,
+        initialLikelihood: values.initialLikelihood
+          ? values.initialLikelihood
+          : data.initialLikelihood,
+        initialRiskLevel: values.initialRiskLevel ? values.initialRiskLevel : data.initialRiskLevel,
+        designMitigation: values.designMitigation
+          ? values.designMitigation
           : 1,
-        safetyImpact: values.safetyImpact
-          ? values.safetyImpact
-          : data.safetyImpact,
-        referenceHazardId: values.referenceHazardId
-          ? values.referenceHazardId
-          : data.referenceHazardId,
-        realibilityImpact: values.realibilityImpact
-          ? values.realibilityImpact
-          : data.realibilityImpact,
-        serviceDisruptionTime: values.serviceDisruptionTime
-          ? values.serviceDisruptionTime
-          : data.serviceDisruptionTime,
-        frequency: values.frequency ? values.frequency : data.frequency,
-        severity: values.severity ? values.severity : data.severity,
-        riskIndex: values.riskIndex ? values.riskIndex : data.riskIndex,
-        designControl: values.designControl
-          ? values.designControl
-          : data.designControl,
-        maintenanceControl: values.maintenanceControl
-          ? values.maintenanceControl
-          : data.maintenanceControl,
-        exportConstraints: values.exportConstraints
-          ? values.exportConstraints
-          : data.exportConstraints,
-        immediteActionDuringOperationalPhase:
-          values.immediteActionDuringOperationalPhase
-            ? values.immediteActionDuringOperationalPhase
-            : data.immediteActionDuringOperationalPhase,
-        immediteActionDuringNonOperationalPhase:
-          values.immediteActionDuringNonOperationalPhase
-            ? values.immediteActionDuringNonOperationalPhase
-            : data.immediteActionDuringNonOperationalPhase,
-        userField1: values.userField1 ? values.userField1 : data.userField1,
-        userField2: values.userField2 ? values.userField2 : data.userField2,
-        userField3: values.userField3 ? values.userField3 : data.userField3,
-        userField4: values.userField4 ? values.userField4 : data.userField4,
-        userField5: values.userField5 ? values.userField5 : data.userField5,
-        userField6: values.userField6 ? values.userField6 : data.userField6,
-        userField7: values.userField7 ? values.userField7 : data.userField7,
-        userField8: values.userField8 ? values.userField8 : data.userField8,
-        userField9: values.userField9 ? values.userField9 : data.userField9,
-        userField10: values.userField10 ? values.userField10 : data.userField10,
+        designMitigatonResbiity: values.designMitigatonResbiity
+          ? values.designMitigatonResbiity
+          : data.designMitigatonResbiity,
+        designMitigtonEvidence: values.designMitigtonEvidence
+          ? values.designMitigtonEvidence
+          : data.designMitigtonEvidence,
+        opernalMaintanMitigation: values.opernalMaintanMitigation
+          ? values.opernalMaintanMitigation
+          : data.opernalMaintanMitigation,
+        opernalMitigatonResbility: values.opernalMitigatonResbility
+          ? values.opernalMitigatonResbility
+          : data.opernalMitigatonResbility,
+        operatnalMitigationEvidence: values.operatnalMitigationEvidence ? values.operatnalMitigationEvidence : data.operatnalMitigationEvidence,
+        residualSeverity: values.residualSeverity ? values.residualSeverity : data.residualSeverity,
+        residualLikelihood: values.residualLikelihood ? values.residualLikelihood : data.residualLikelihood,
+        residualRiskLevel: values.residualRiskLevel
+          ? values.residualRiskLevel
+          : data.residualRiskLevel,
+        hazardStatus: values.hazardStatus
+          ? values.hazardStatus
+          : data.hazardStatus,
+        ftaNameId: values.ftaNameId
+          ? values.ftaNameId
+          : data.ftaNameId,
+        userField1:
+          values.userField1
+            ? values.userField1
+            : data.userField1,
+        userField2:
+          values.userField2
+            ? values.userField2
+            : data.userField2,
         projectId: projectId,
         companyId: companyId,
         productId: productId,
@@ -2101,98 +2003,38 @@ function Index(props) {
     } else {
       setProductModal(true);
     }
-    // const companyId = localStorage.getItem("companyId");
-    // setIsLoading(true);
-    // Api.post("api/v1/FMECA/", {
-    //   operatingPhase: values.operatingPhase,
-    //   function: values.function,
-    //   failureMode: values.failureMode,
-    //   searchFM: values.searchFM,
-    //   cause: values.cause,
-    //   failureModeRatioAlpha: values.failureModeRatioAlpha,
-    //   detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-    //   detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-    //   BuiltInTest: values.BuiltInTest,
-    //   subSystemEffect: values.subSystemEffect,
-    //   systemEffect: values.systemEffect,
-    //   endEffect: values.endEffect,
-    //   endEffectRatioBeta: values.endEffectRatioBeta,
-    //   safetyImpact: values.safetyImpact,
-    //   referenceHazardId: values.referenceHazardId,
-    //   realibilityImpact: values.realibilityImpact,
-    //   serviceDisruptionTime: values.serviceDisruptionTime,
-    //   frequency: values.frequency,
-    //   severity: values.severity,
-    //   riskIndex: values.riskIndex,
-    //   designControl: values.designControl,
-    //   maintenanceControl: values.maintenanceControl,
-    //   exportConstraints: values.exportConstraints,
-    //   immediteActionDuringOperationalPhase:
-    //     values.immediteActionDuringOperationalPhase,
-    //   immediteActionDuringNonOperationalPhase:
-    //     values.immediteActionDuringNonOperationalPhase,
-    //   userField1: values.userField1,
-    //   userField2: values.userField2,
-    //   userField3: values.userField3,
-    //   userField4: values.userField4,
-    //   userField5: values.userField5,
-    //   userField6: values.userField6,
-    //   userField7: values.userField7,
-    //   userField8: values.userField8,
-    //   userField9: values.userField9,
-    //   userField10: values.userField10,
-    //   projectId: projectId,
-    //   companyId: companyId,
-    //   productId: productId,
-    // }).then((response) => {
-    //   getProductData();
-    //   setIsLoading(false);
-    // });
   };
 
   const updateSafety = (values) => {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
     Api.patch("api/v1/safety/update", {
-      operatingPhase: values.operatingPhase,
-      function: values.function,
-      failureMode: values.failureMode,
-      // searchFM: values.searchFM,
-
-      failureModeRatioAlpha: values.failureModeRatioAlpha,
-      cause: values.cause,
-
-      detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-      detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-      BuiltInTest: values.BuiltInTest,
-      subSystemEffect: values.subSystemEffect,
-      systemEffect: values.systemEffect,
-      endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta,
-      safetyImpact: values.safetyImpact,
-      referenceHazardId: values.referenceHazardId,
-      realibilityImpact: values.realibilityImpact,
-      serviceDisruptionTime: values.serviceDisruptionTime,
-      frequency: values.frequency,
-      severity: values.severity,
-      riskIndex: values.riskIndex,
-      designControl: values.designControl,
-      maintenanceControl: values.maintenanceControl,
-      exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase:
-        values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase:
-        values.immediteActionDuringNonOperationalPhase,
-      userField1: values.userField1,
-      userField2: values.userField2,
-      userField3: values.userField3,
-      userField4: values.userField4,
-      userField5: values.userField5,
-      userField6: values.userField6,
-      userField7: values.userField7,
-      userField8: values.userField8,
-      userField9: values.userField9,
-      userField10: values.userField10,
+      modeOfOperation: values.modeOfOperation,
+      hazardCause: values.hazardCause,
+      effectOfHazard: values.effectOfHazard,
+      hazardClasification: values.hazardClasification,
+      designAssuranceLevel: values.designAssuranceLevel,
+      meansOfDetection: values.meansOfDetection,
+      crewResponse: values.crewResponse,
+      uniqueHazardIdentifier: values.uniqueHazardIdentifier,
+      initialSeverity: values.initialSeverity,
+      initialLikelihood: values.initialLikelihood,
+      initialRiskLevel: values.initialRiskLevel,
+      designMitigation: values.designMitigation,
+      designMitigatonResbiity: values.designMitigatonResbiity,
+      designMitigtonEvidence: values.designMitigtonEvidence,
+      opernalMaintanMitigation: values.opernalMaintanMitigation,
+      opernalMitigatonResbility: values.opernalMitigatonResbility,
+      operatnalMitigationEvidence: values.operatnalMitigationEvidence,
+      residualSeverity: values.residualSeverity,
+      residualLikelihood: values.residualLikelihood,
+      residualRiskLevel: values.residualRiskLevel,
+      hazardStatus: values.hazardStatus,
+      ftaNameId: values.ftaNameId,
+      userField1:
+        values.userField1,
+      userField2:
+        values.userField2,
       projectId: projectId,
       companyId: companyId,
       productId: productId,
