@@ -579,14 +579,14 @@ function Index(props) {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
       title: "Hazard*",
       cellStyle: { minWidth: "140px", textAlign: "center" },
-      headerStyle: { textAlign: "center" },
+      headerStyle: { minWidth: "140px", textAlign: "center" },
     },
     {
       field: "modeOfOperation",
       title: "Mode of Operation*",
       type: "string",
       cellStyle: { minWidth: "200px", textAlign: "center" },
-      headerStyle: { textAlign: "center", minWidth: "150px" },
+      headerStyle: { minWidth: "200px", textAlign: "center" },
       onCellClick: () => handleDropdownSelection("modeOfOperation"),
       editComponent: ({ value, onChange, rowData }) => {
         const filteredData =
@@ -631,8 +631,8 @@ function Index(props) {
       field: "hazardCause",
       title: "Hazard Cause*",
       type: "string",
-      cellStyle: { minWidth: "50px", textAlign: "center" },
-      headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "200px", textAlign: "center" },
+      headerStyle: { minWidth: "200px", textAlign: "center" },
       onCellClick: () => handleDropdownSelection("hazardCause"),
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -687,8 +687,8 @@ function Index(props) {
       field: "effectOfHazard",
       title: "Effect of the Hazard*",
       type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -744,8 +744,8 @@ function Index(props) {
       field: "hazardClasification",
       title: "Hazard Clasification*",
       type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -800,7 +800,8 @@ function Index(props) {
       field: "designAssuranceLevel",
       title: "Design Assurance Level (DAL) associated with the hazard",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "designAssuranceLevel") || [];
@@ -854,8 +855,8 @@ function Index(props) {
       field: "meansOfDetection",
       title: "Means of detection*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -910,8 +911,8 @@ function Index(props) {
       field: "crewResponse",
       title: "Crew response*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -966,8 +967,8 @@ function Index(props) {
       field: "uniqueHazardIdentifier",
       title: "Unique Hazard Identifiers*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "uniqueHazardIdentifier") ||
@@ -1021,8 +1022,8 @@ function Index(props) {
       field: "initialSeverity",
       title: "Initial Severity ((impact))",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1077,8 +1078,8 @@ function Index(props) {
       field: "initialLikelihood",
       title: "Initial likelihood (probability)",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       // validate: (rowData) => {
       //   if (rowData.designMitigatonResbiity === undefined || rowData.designMitigatonResbiity === "") {
       //     return "required";
@@ -1139,7 +1140,8 @@ function Index(props) {
       field: "initialRiskLevel",
       title: "Initial Risk level",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1194,8 +1196,8 @@ function Index(props) {
       field: "designMitigation",
       title: "Design Mitigation",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+            headerStyle: { minWidth: "230px", textAlign: "center" },
       // validate: (rowData) => {
       //   if (rowData.opernalMaintanMitigation === undefined || rowData.opernalMaintanMitigation === "") {
       //     return "required";
@@ -1256,8 +1258,8 @@ function Index(props) {
       field: "designMitigatonResbiity",
       title: "Design Mitigation Responsibility",
       type: "numeric",
-      cellStyle: { minWidth: "230px", textAlign: "left" },
-      headerStyle: { textAlign: "left" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1312,7 +1314,8 @@ function Index(props) {
       field: "designMitigtonEvidence",
       title: "Design Mitigation Evidence",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "designMitigtonEvidence") ||
@@ -1366,7 +1369,8 @@ function Index(props) {
       field: "opernalMaintanMitigation",
       title: "Operational/Maintenance mitigation",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "opernalMaintanMitigation") ||
@@ -1420,7 +1424,8 @@ function Index(props) {
       field: "opernalMitigatonResbility",
       title: "Opernational Mitigation Responsibility",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "opernalMitigatonResbility") ||
@@ -1474,7 +1479,8 @@ function Index(props) {
       field: "operatnalMitigationEvidence",
       title: "Operational Mitigation Evidence",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1535,7 +1541,8 @@ function Index(props) {
       field: "residualSeverity",
       title: "Residual Severity ((impact))",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1593,7 +1600,8 @@ function Index(props) {
       field: "residualLikelihood",
       title: "Residual likelihood (probability)",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1649,7 +1657,8 @@ function Index(props) {
       field: "residualRiskLevel",
       title: "Residual Risk Level",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1704,7 +1713,8 @@ function Index(props) {
       field: "hazardStatus",
       title: "Hazard Status",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1759,7 +1769,8 @@ function Index(props) {
       field: "ftaNameId",
       title: "FTA Name/ID",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1814,7 +1825,8 @@ function Index(props) {
       field: "userField1",
       title: "User field 1",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1869,7 +1881,8 @@ function Index(props) {
       field: "userField2",
       title: "User field 2",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
