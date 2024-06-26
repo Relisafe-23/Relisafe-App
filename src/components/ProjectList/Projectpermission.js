@@ -41,6 +41,8 @@ export default function Projectpermission(props) {
   const [sepLibWrite, setSepLibWrite] = useState(false);
   const [connectLibRead, setConnectLibRead] = useState(false);
   const [connectLibWrite, setConnectLibWrite] = useState(false);
+  const [reportRead, setReportRead] = useState(false);
+  const [reportWrite, setReportWrite] = useState(false);
   const [show, setShow] = useState(false);
   const [permissionId, setPermissionId] = useState();
   const [userData, setUserData] = useState();
@@ -73,6 +75,7 @@ export default function Projectpermission(props) {
   const safety = "Safety";
   const separateLibrary = "Seprate Library";
   const connectLibarary = "Connected Library";
+  const reports = "Reports";
 
   const getUsers = () => {
     const userId = localStorage.getItem("userId");
@@ -136,6 +139,8 @@ export default function Projectpermission(props) {
           setSepLibWrite(data?.modules[10]?.write);
           setConnectLibRead(data?.modules[11]?.read);
           setConnectLibWrite(data?.modules[11]?.write);
+          setReportRead(data?.modules[12]?.read);
+          setReportWrite(data?.modules[12]?.write);
         }
       })
       .catch((error) => {
@@ -162,6 +167,7 @@ export default function Projectpermission(props) {
         { name: safety, read: safetyRead, write: safetyWrite },
         { name: separateLibrary, read: sepLibRead, write: sepLibWrite },
         { name: connectLibarary, read: connectLibRead, write: connectLibWrite },
+        { name: reports, read: reportRead, write: reportWrite },
       ],
       accessType: "Read",
       authorizedPersonnel: user.value,
@@ -254,6 +260,8 @@ export default function Projectpermission(props) {
                         setSepLibWrite("");
                         setConnectLibRead("");
                         setConnectLibWrite("");
+                        setReportRead("");
+                        setReportWrite("");
                         setProjectread("");
                         setProjectwrite("");
                         getPermissionData(e.value);
@@ -482,6 +490,28 @@ export default function Projectpermission(props) {
                               ? setConnectLibWrite(!connectLibWrite)
                               : setConnectLibRead(!connectLibRead);
                             setConnectLibWrite(!connectLibWrite);
+                          }}
+                        />
+                        <text className="mx-3">Write</text>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>{reports}</td>
+                      <td className="edit-project-list">
+                        <Form.Check
+                          type="checkbox"
+                          checked={reportRead}
+                          onClick={() => setReportRead(!reportRead)}
+                        />
+                        <text className="ms-3 me-5">Read </text>
+                        <Form.Check
+                          type="checkbox"
+                          checked={reportWrite}
+                          onClick={() => {
+                            reportRead === true
+                              ? setReportWrite(!reportWrite)
+                              : setReportRead(!reportRead);
+                            setReportWrite(!reportWrite);
                           }}
                         />
                         <text className="mx-3">Write</text>
