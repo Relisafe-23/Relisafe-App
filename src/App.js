@@ -39,6 +39,7 @@ import CompanyAdmin from "./components/Company/CompanyAdmin";
 import { ModalProvider } from "./components/ModalContext";
 import SeparateLibrary from "./components/Libraries/SeparateLibrary";
 import ConnectedLibrary from "./components/Libraries/ConnectedLibrary";
+import Reports from "./components/Reports";
 // import AddProjectList from "./components/Projects";
 
  import Theme from "./components/Theme";
@@ -103,6 +104,7 @@ function App() {
             <PublicLayout exact name="SeparateLibrary" path="/separate/library/:id" component={SeparateLibrary} />
             <PublicLayout exact name="ConnectedLibrary" path="/connected/library/:id" component={ConnectedLibrary} />
             <PublicLayout exact name="Theme" path="/theme" component={Theme} />
+            <PublicLayout exact name="Reports" path="/reports/:id" component={Reports} />
           </Switch>
         </Router>
       </ModalProvider>

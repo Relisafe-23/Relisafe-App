@@ -797,6 +797,14 @@ export default function PBS(props) {
                               className="input-fields"
                               id="file-input"
                               onChange={importExcel}
+                              disabled={
+                                permission?.write === true ||
+                                permission?.write === "undefined" ||
+                                role === "admin" ||
+                                (isOwner === true && createdBy === userId)
+                                  ? null
+                                  : "disabled"
+                              }
                               style={{ display: "none" }} // Hide the actual input
                             />
                           </div>

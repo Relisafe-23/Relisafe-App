@@ -23,6 +23,7 @@ import Theme from "./components/Theme";
 import { ThemeProvider } from "./components/Theme";
 import SeparateLibrary from "./components/Libraries/SeparateLibrary";
 import ConnectedLibrary from "./components/Libraries/ConnectedLibrary";
+import Reports from "./components/Reports";
 
 
 //Side Menu Bar
@@ -172,6 +173,12 @@ const routes = [
     exact: true,
     name: "ConnectedLibrary",
     component: ConnectedLibrary,
+  }, 
+  {
+    path: "/reports/:id",
+    exact: true,
+    name: "Reports",
+    component: Reports,
   },
 ];
 

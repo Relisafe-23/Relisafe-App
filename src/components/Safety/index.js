@@ -266,7 +266,7 @@ function Index(props) {
       },
     }).then((res) => {
       let filteredData = res?.data?.data.filter(
-        (item) => item?.moduleName === "FMECA"
+        (item) => item?.moduleName === "SAFETY"
       );
 
       if (filteredData.length === 0) {
@@ -493,11 +493,13 @@ function Index(props) {
       params: {
         projectId: projectId,
         moduleName: "FMECA",
+        destinationModule: "SAFETY",
         sourceName: fieldName,
         sourceValue: fieldValue.value,
       },
     }).then((res) => {
       const data = res?.data?.libraryData;
+      console.log("data......",data)
       if (data.length > 0) {
         setAllConnectedData(data);
       } else {
@@ -593,6 +595,7 @@ function Index(props) {
           allSepareteData?.filter(
             (item) => item?.sourceName === "modeOfOperation"
           ) || [];
+          console.log("filteredData......",filteredData)
         const options = filteredData?.map((item) => ({
           value: item?.sourceValue,
           label: item?.sourceValue,

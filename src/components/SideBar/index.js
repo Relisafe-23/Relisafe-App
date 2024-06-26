@@ -41,6 +41,7 @@ import {
   faLock,
   faLink,
   faObjectUngroup,
+  faFileInvoice,
 } from "@fortawesome/free-solid-svg-icons";
 
 // Styles
@@ -586,6 +587,35 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                       </Accordion.Item>
                     </Accordion>
                   </div>
+                  <div className="menu-list mt-1">
+                    {" "}
+                    <NavLink
+                      to={{
+                        pathname: `/reports/${projectId}`,
+                        state: {
+                          projectId: projectId,
+                          productId: productId,
+                          state,
+                        },
+                      }}
+                      activeClassName="main-nav-active"
+                      style={{
+                        backgroundColor:
+                          selectedModule === "reports"
+                            ? "mediumaquamarine"
+                            : "inherit",
+                      }}
+                      onClick={() => setSelectedModule("reports")}
+                    >
+                      <FontAwesomeIcon
+                        icon={faFileInvoice}
+                        size="1x"
+                        className="menu-icon"
+                        title="Reports"
+                      />{" "}
+                      <span>Reports</span>
+                    </NavLink>
+                  </div>
                 </div>
               ) : null}
               <div className="menu-list">
@@ -1065,6 +1095,36 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           </NavLink>
                         </div>
                       ) : null}
+                    </div>
+                  ) : null}
+                   {readPermission?.[12]?.read === true ? (
+                    <div className="menu-list mt-1">
+                      <NavLink
+                        to={{
+                          pathname: `/reports/${projectId}`,
+                          state: {
+                            projectId: projectId,
+                            productId: productId,
+                            spaWrite: readPermission?.[12].write,
+                          },
+                        }}
+                        activeClassName="main-nav-active"
+                        style={{
+                          backgroundColor:
+                            selectedModule === "reports"
+                              ? "mediumaquamarine"
+                              : "inherit",
+                        }}
+                        onClick={() => setSelectedModule("reports")}
+                      >
+                        <FontAwesomeIcon
+                          icon={faFilter}
+                          size="1x"
+                          className="menu-icon"
+                          title="Reports"
+                        />{" "}
+                        <span>Reports</span>
+                      </NavLink>
                     </div>
                   ) : null}
                 </div>
