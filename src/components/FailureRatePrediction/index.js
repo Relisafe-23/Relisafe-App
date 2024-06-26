@@ -94,6 +94,7 @@ function Index(props) {
   const [partTypeNprd2016Data, setPartTypeNprd2016Data] = useState([]);
   const [partTypeNprdDesc2016Data, setPartTypeNprdDesc2016Data] = useState([]);
   const [frpValueNprd2016Data, setFrpValueNprd2016Data] = useState([]);
+  const [permission, setPermission] = useState()
 
   const token = localStorage.getItem("sessionId");
   const handleChange = (rowData) => {
@@ -307,6 +308,7 @@ function Index(props) {
       .then((res) => {
         const data = res?.data?.data;
         setWritePermission(data?.modules[1].write);
+        setPermission(data?.modules[1]);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -341,7 +343,6 @@ function Index(props) {
    
   }, [projectId,productId]);
 
-
   const productTreeData = () => {
     setIsSpinning(true);
     Api.get("/api/v1/productTreeStructure/get/tree/product/list", {
@@ -353,8 +354,6 @@ function Index(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-        console.log("data.......frp ...",data)
-     
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""
         );
@@ -626,7 +625,11 @@ function Index(props) {
     <Container className="mttr-main-div mx-1" style={{ marginTop: "90px" }}>
       {isLoading ? (
         <Loader />
-      ) : (
+      ) : permission?.read === true ||
+          permission?.read === "undefined" ||
+          role === "admin" ||
+          (isOwner === true && createdBy === userId) ? (
+            <div>
         <Formik
           enableReinitialize={true}
           initialValues={{
@@ -2356,6 +2359,30 @@ function Index(props) {
             );
           }}
         </Formik>
+        </div>
+         ):(
+          <div>
+          <Card>
+            <Card.Body>
+              <Card.Title className="text-center">Access Denied</Card.Title>
+              <Card.Text>
+                <p className="text-center">
+                  You dont have permission to access these sections
+                  <br />
+                  Contact admin to get permission or go back to project list
+                  page
+                </p>
+              </Card.Text>
+              <Button
+                variant="primary"
+                className="save-btn fw-bold pbs-button-1"
+                onClick={history.goBack}
+              >
+                Go Back
+              </Button>
+            </Card.Body>
+          </Card>
+        </div>
       )}
     </Container>
   );

@@ -129,7 +129,6 @@ function Reports(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-        console.log("data......", data?.modules)
         setPermission(data?.modules[12]);
         setIsLoading(false);
       })
@@ -158,7 +157,6 @@ function Reports(props) {
     <div>
       <div className="mt-5">
       <div className="separate">
-        {console.log("permission........",permission)}
         <div className="mttr-sec mt-0">
             <p className=" mb-0 para-tag d-flex justify-content-center">Report</p>
           </div>

@@ -1097,7 +1097,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                       ) : null}
                     </div>
                   ) : null}
-                   {readPermission?.[7]?.read === true ? (
+                   {readPermission?.[12]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
@@ -1105,7 +1105,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           state: {
                             projectId: projectId,
                             productId: productId,
-                            spaWrite: readPermission?.[7].write,
+                            spaWrite: readPermission?.[12].write,
                           },
                         }}
                         activeClassName="main-nav-active"
