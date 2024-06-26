@@ -38,8 +38,8 @@ function Projectname(props) {
   return (
     <Row>
       <div className="mttr-sec">
-        <h5 className="text-center mb-0 para-tag_1 p-3">
-          {companyName} {projectName}
+        <h5 className="mb-0 para-tag_1 p-1">
+        Project Name: {companyName} {projectName}
         </h5>
       </div>
     </Row>

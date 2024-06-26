@@ -18,6 +18,14 @@ function Login() {
 
   const history = useHistory();
 
+  useEffect(() => {
+    const sessionId = localStorage.getItem('sessionId');
+    if (sessionId) {
+      const role = localStorage.getItem('role');
+      history.push(role === 'SuperAdmin' ? '/company' : '/project/list');
+    }
+  }, [history]);
+
   const togglePasswordVisiblity = () => {
     setPasswordShown(passwordShown ? false : true);
   };

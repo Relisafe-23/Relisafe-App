@@ -80,7 +80,7 @@ function Index(props) {
   const [initialTreeStructure, setInitialTreeStructure] = useState();
   const [showModal, setShowModal] = useState(false);
   const [nprdModel, setNprdModel] = useState(false);
-  // const [nprd2016Model, setNprd2016Model] = useState(false);
+  const [nprd2016Model, setNprd2016Model] = useState(false);
   const [nprdSubModal, setNprdSubModal] = useState(false);
   const [partTypeNprd, setPartTypeNprd] = useState();
   const [partTypeDescr, setPartTypeDescr] = useState();
@@ -94,6 +94,8 @@ function Index(props) {
   const [partTypeNprd2016Data, setPartTypeNprd2016Data] = useState([]);
   const [partTypeNprdDesc2016Data, setPartTypeNprdDesc2016Data] = useState([]);
   const [frpValueNprd2016Data, setFrpValueNprd2016Data] = useState([]);
+
+  const token = localStorage.getItem("sessionId");
   const handleChange = (rowData) => {
     if (selectedCheckboxes.includes(rowData)) {
       setSelectedCheckboxes(
@@ -145,6 +147,7 @@ function Index(props) {
     : props?.location?.state?.productId
     ? props?.location?.state?.productId
     : initialProductID;
+
   const treeStructure = props?.location?.state?.parentId
     ? props?.location?.state?.parentId
     : initialTreeStructure;
@@ -329,14 +332,15 @@ function Index(props) {
   }
 
   useEffect(() => {
+    productTreeData();
     getProjectPermission();
     projectSidebar();
     getNprd2016Datas();
-  }, [projectId]);
-
-  useEffect(() => {
     getTreedata();
-  }, []);
+    getProductFRPData();
+   
+  }, [projectId,productId]);
+
 
   const productTreeData = () => {
     setIsSpinning(true);
@@ -349,6 +353,8 @@ function Index(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
+        console.log("data.......frp ...",data)
+     
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""
         );
@@ -426,10 +432,7 @@ function Index(props) {
       });
   };
 
-  useEffect(() => {
-    productTreeData();
-    getProductFRPData();
-  }, [productId]);
+
 
   const loginSchema = Yup.object().shape({
     category: Yup.object().required("Category is  required"),
@@ -468,27 +471,50 @@ function Index(props) {
   });
 
   const getFRPValue = (values) => {
-    const nprdFRPFiltered = nprdFRP.filter((item) => {
-      return (
-        item?.PartTypeId === partTypeNprd.value &&
-        item?.Quality === values.value &&
-        item?.PartDescrId === partTypeDescr.value
-      );
-    });
-    setNprdFR(nprdFRPFiltered);
-    setData(nprdFRPFiltered);
+    if(values.value == "Null"){
+      const nprdFRPFiltered = nprdFRP.filter((item) => {
+        return (
+          item?.PartTypeId === partTypeNprd.value &&
+          item?.PartDescrId === partTypeDescr.value
+        );
+      });
+      setNprdFR(nprdFRPFiltered);
+      setData(nprdFRPFiltered);
+    }else{
+      const nprdFRPFiltered = nprdFRP.filter((item) => {
+        return (
+          item?.PartTypeId === partTypeNprd.value &&
+          item?.Quality === values.value &&
+          item?.PartDescrId === partTypeDescr.value
+        );
+      });
+      setNprdFR(nprdFRPFiltered);
+      setData(nprdFRPFiltered);
+    }
   };
 
   const getFRP2016Value = (values) => {
-    const nprdFRPFiltered = frpValueNprd2016Data.filter((item) => {
-      return (
-        item?.PartTypeId === partType2016Nprd?.value &&
-        item?.Quality === values?.value &&
-        item?.PartDescrId === partType2016Descr?.value
-      );
-    });
-    setNprdFR(nprdFRPFiltered);
-    setData(nprdFRPFiltered);
+    if(values.value == "Null"){
+      const nprdFRPFiltered = frpValueNprd2016Data.filter((item) => {
+        return (
+          item?.PartTypeId === partType2016Nprd?.value &&
+          item?.PartDescrId === partType2016Descr?.value
+        );
+      });
+      setNprdFR(nprdFRPFiltered);
+      setData(nprdFRPFiltered);
+    }else{
+      const nprdFRPFiltered = frpValueNprd2016Data.filter((item) => {
+        return (
+          item?.PartTypeId === partType2016Nprd?.value &&
+          item?.Quality === values?.value &&
+          item?.PartDescrId === partType2016Descr?.value
+        );
+      });
+      setNprdFR(nprdFRPFiltered);
+      setData(nprdFRPFiltered);
+    }
+    
   };
 
   const qualityOptions = [
@@ -507,6 +533,10 @@ function Index(props) {
     {
       value: "Industrial",
       label: "Industrial",
+    },
+    {
+      value: "Null",
+      label: "Null",
     },
   ];
 
@@ -648,7 +678,7 @@ function Index(props) {
                         : "disabled"
                     }
                   >
-                    <Projectname projectId={projectId} />
+                    {/* <Projectname projectId={projectId} />
                     <Row>
                       <Col xs={12} sm={9} className="projectName">
                         <Dropdown
@@ -658,7 +688,24 @@ function Index(props) {
                         />
                       </Col>
                       <Col></Col>
-                    </Row>
+                    </Row> */}
+                     <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div style={{ width: "30%", marginRight: "20px" }}>
+                        <Projectname projectId={projectId} />
+                      </div>
+                      <div style={{ width: "100%", marginRight: "20px" }}>
+                      <Dropdown
+                          value={projectId}
+                          productId={productId}
+                          data={treeTableData}
+                        />
+                      </div>
+                    </div>
 
                     <Row className="d-flex  mt-4">
                       <Col>
@@ -1249,16 +1296,19 @@ function Index(props) {
                                       onBlur={handleBlur}
                                       onChange={(e) => {
                                         if (e.value === "MIL") {
-                                          setShowModal(true); // Open the modal
+                                          setShowModal(true);
                                         } else if (e.value === "NPRD11") {
                                           setNprdModel(true);
-                                        } 
-                                        // else if (e.value === "NPRD16") {
-                                        //   setNprd2016Model(true);
-                                        // }
+                                        } else if (e.value === "NPRD16") {
+                                          setNprd2016Model(true);
+                                        }
                                         setFieldValue("standard", e);
                                       }}
                                       options={[
+                                        {
+                                          value: "Select",
+                                          label: "Select",
+                                        },
                                         {
                                           value: "MIL",
                                           label: "MIL",
@@ -1366,16 +1416,16 @@ function Index(props) {
                                       }}
                                       onBlur={handleBlur}
                                       name="frUnit"
-                                      isDisabled={
-                                        writePermission?.write === true ||
-                                        writePermission?.write ===
-                                          "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true &&
-                                          createdBy === userId)
-                                          ? null
-                                          : "disabled"
-                                      }
+                                      // isDisabled={
+                                      //   writePermission?.write === true ||
+                                      //   writePermission?.write ===
+                                      //     "undefined" ||
+                                      //   role === "admin" ||
+                                      //   (isOwner === true &&
+                                      //     createdBy === userId)
+                                      //     ? null
+                                      //     : "disabled"
+                                      // }
                                       value={values.frUnit}
                                       options={[
                                         {
@@ -1856,7 +1906,7 @@ function Index(props) {
                                   </div>
                                 </Modal>
                               </div>
-                              {/* <div>
+                              <div>
                                 <Modal
                                   show={nprd2016Model}
                                   centered
@@ -2284,7 +2334,7 @@ function Index(props) {
                                     </Modal.Footer>
                                   </div>
                                 </Modal>
-                              </div> */}
+                              </div>
                             </div>
                           </Col>
                         </Row>

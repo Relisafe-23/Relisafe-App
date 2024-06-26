@@ -75,6 +75,7 @@ function SeparateLibrary(props) {
     {
       title: "Fields",
       field: "sourceName",
+      render: (rowData) => rowData.sourceName.charAt(0).toUpperCase() + rowData.sourceName.slice(1),
     },
     {
       title: "Value",
@@ -272,14 +273,14 @@ function SeparateLibrary(props) {
                         </Form.Group>
                       </Col>
                       <Col>
-                        <Label notify={true}>Field</Label>
+                        <Label notify={true}>Fields</Label>
                         <Form.Group>
                           <Select
                             value={values.Field}
                             onChange={(e) => {
                               setLibraryFieldId(e.id);
                               setFieldValue("Value", "");
-                              setFieldValue("Field", { label: e.value, value: e.value });
+                              setFieldValue("Field", { label: e.label, value: e.value });
                               setSelectModuleFieldVlue(e.value);
                             }}
                             placeholder="Select Field"
@@ -336,6 +337,7 @@ function SeparateLibrary(props) {
           </Formik>
           <div>
             <div style={{ bottom: "10px" }}>
+              {console.log("allSepareteData.....",allSepareteData[0])}
               <MaterialTable
                 title="Separate Library"
                 className="mb-5"

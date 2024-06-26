@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import MaterialTable from "material-table";
-import { Modal, Button,Row,Col } from "react-bootstrap";
+import { Modal, Button, Row, Col } from "react-bootstrap";
 import "../../css/FMECA.scss";
 import Api from "../../Api";
 import { tableIcons } from "../core/TableIcons";
@@ -18,10 +18,17 @@ import { Input, TextField } from "@material-ui/core";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
 import Select from "react-select";
+import { Tooltip, TableCell } from "@material-ui/core";
+import {
+  faFileDownload,
+  faFileUpload,
+} from "@fortawesome/free-solid-svg-icons";
 
 function Index(props) {
   const [initialProductID, setInitialProductID] = useState();
-  const projectId = props?.location?.state?.projectId ? props?.location?.state?.projectId : props?.match?.params?.id;
+  const projectId = props?.location?.state?.projectId
+    ? props?.location?.state?.projectId
+    : props?.match?.params?.id;
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
@@ -30,7 +37,7 @@ function Index(props) {
   const [show, setShow] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tableData, setTableData] = useState();
-    const [colDefs, setColDefs] = useState();
+  const [colDefs, setColDefs] = useState();
   const [treeData, setTreeData] = useState([]);
   const [productModal, setProductModal] = useState(false);
   const handleClose = () => setProductModal(true);
@@ -38,7 +45,7 @@ function Index(props) {
   const [treeTableData, setTreeTabledata] = useState([]);
   const userId = localStorage.getItem("userId");
   const history = useHistory();
-  const [operationPhase, setOperationPhase] = useState();
+  const [modeOfOperation, setModeOfOperation] = useState();
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
   const [companyId, setCompanyId] = useState();
@@ -48,105 +55,104 @@ function Index(props) {
   const handleHide = () => setFailureModeRatioError(false);
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
 
+  const DownloadExcel = () => {
+    // Assuming 'tableData' is an array of objects, and you want to remove multiple columns
+    const columnsToRemove = [
+      "projectId",
+      "companyId",
+      "productId",
+      "id",
+      "tableData",
+      "modeOfOperation",
+    ];
+    // Create a new array with the unwanted columns removed from each object
+    const modifiedTableData = tableData.map((row) => {
+      const newRow = { ...row };
+      columnsToRemove.forEach((columnName) => {
+        delete newRow[columnName];
+      });
 
- const DownloadExcel = () => {
-   // Assuming 'tableData' is an array of objects, and you want to remove multiple columns
-   const columnsToRemove = ["projectId", "companyId", "productId", "id","tableData", "operatingPhase"];
-   // Create a new array with the unwanted columns removed from each object
-   const modifiedTableData = tableData.map((row) => {
-     const newRow = { ...row };
-     columnsToRemove.forEach((columnName) => {
-       delete newRow[columnName];
-     });
+      // rowsToRemove.forEach(rowName=>{
+      //   delete columns[rowName]
+      // });
 
-     // rowsToRemove.forEach(rowName=>{
-     //   delete columns[rowName]
-     // });
-
-     return newRow;
-   });
-   if(modifiedTableData.length > 0){
-    const columns = Object.keys(modifiedTableData[0]).map((columnName) => ({
-      title: columnName,
-      field: columnName,
-    }));
- 
-    const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
-      skipHeader: false,
+      return newRow;
     });
-    const workBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workBook, workSheet, "safety Data");
- 
-    const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
- 
-    // Create a Blob object and initiate a download
-    const blob = new Blob([buf], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "Safety_Data.xlsx";
-    link.click();
- 
-    // Clean up
-    URL.revokeObjectURL(url);
-   }else{
-    toast("Export Failed !! No Data Found", {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-      type: "error",
-    });
-   }
+    if (modifiedTableData.length > 0) {
+      const columns = Object.keys(modifiedTableData[0]).map((columnName) => ({
+        title: columnName,
+        field: columnName,
+      }));
 
-   
- };
+      const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
+        skipHeader: false,
+      });
+      const workBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workBook, workSheet, "safety Data");
+
+      const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
+
+      // Create a Blob object and initiate a download
+      const blob = new Blob([buf], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "Safety_Data.xlsx";
+      link.click();
+
+      // Clean up
+      URL.revokeObjectURL(url);
+    } else {
+      toast("Export Failed !! No Data Found", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error",
+      });
+    }
+  };
   const createsafetyDataFromExcel = (values) => {
     const companyId = localStorage.getItem("companyId");
-    
+
     setIsLoading(true);
     Api.post("api/v1/safety/", {
-      operatingPhase: values.operatingPhase,
-      function: values.function,
-      failureMode: values.failureMode,
-      searchFM: values.searchFM,
-      cause: values.cause,
-      failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 0,
-      detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-      detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-      BuiltInTest: values.BuiltInTest,
-      subSystemEffect: values.subSystemEffect,
-      systemEffect: values.systemEffect,
-      endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta ? values.endEffectRatioBeta : 1,
-      safetyImpact: values.safetyImpact,
-      referenceHazardId: values.referenceHazardId,
-      realibilityImpact: values.realibilityImpact,
-      serviceDisruptionTime: values.serviceDisruptionTime,
-      frequency: values.frequency,
-      severity: values.severity,
-      riskIndex: values.riskIndex,
-      designControl: values.designControl,
-      maintenanceControl: values.maintenanceControl,
-      exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase,
-      userField1: values.userField1,
-      userField2: values.userField2,
-      userField3: values.userField3,
-      userField4: values.userField4,
-      userField5: values.userField5,
-      userField6: values.userField6,
-      userField7: values.userField7,
-      userField8: values.userField8,
-      userField9: values.userField9,
-      userField10: values.userField10,
+      modeOfOperation: values.modeOfOperation,
+      hazardCause: values.hazardCause,
+      effectOfHazard: values.effectOfHazard,
+      hazardClasification: values.hazardClasification,
+      designAssuranceLevel: values.designAssuranceLevel
+        ? values.designAssuranceLevel
+        : 0,
+      meansOfDetection: values.meansOfDetection,
+      crewResponse: values.crewResponse,
+      uniqueHazardIdentifier: values.uniqueHazardIdentifier,
+      initialSeverity: values.initialSeverity,
+      initialLikelihood: values.initialLikelihood,
+      initialRiskLevel: values.initialRiskLevel,
+      designMitigation: values.designMitigation
+        ? values.designMitigation
+        : 1,
+      designMitigatonResbiity: values.designMitigatonResbiity,
+      designMitigtonEvidence: values.designMitigtonEvidence,
+      opernalMaintanMitigation: values.opernalMaintanMitigation,
+      opernalMitigatonResbility: values.opernalMitigatonResbility,
+      operatnalMitigationEvidence: values.operatnalMitigationEvidence,
+      residualSeverity: values.residualresidualSeverity,
+      residualLikelihood: values.residualLikelihood,
+      residualRiskLevel: values.residualRiskLevel,
+      hazardStatus: values.hazardStatus,
+      ftaNameId: values.ftaNameId,
+      userField1:
+        values.userField1,
+      userField2:
+        values.userField2,
       projectId: projectId,
       companyId: companyId,
       productId: productId,
@@ -164,39 +170,36 @@ function Index(props) {
     // rows.push(rowData);
     // createsafetyDataFromExcel(rowData);
   };
- const convertToJson = (headers, data) => {
+  const convertToJson = (headers, data) => {
     const rows = [];
- if (data.length > 0 && data[0].length > 1) {
-   data.forEach((row) => {
-     let rowData = {};
+    if (data.length > 0 && data[0].length > 1) {
+      data.forEach((row) => {
+        let rowData = {};
 
-     row.forEach((element, index) => {
-       rowData[headers[index]] = element;
-     });
-     rows.push(rowData);
-     createsafetyDataFromExcel(rowData);
-   });
+        row.forEach((element, index) => {
+          rowData[headers[index]] = element;
+        });
+        rows.push(rowData);
+        createsafetyDataFromExcel(rowData);
+      });
 
-   return rows;
- } else {
-   toast("No Data Found In Excel Sheet", {
-     position: "top-right",
-     autoClose: 5000,
-     hideProgressBar: false,
-     closeOnClick: true,
-     pauseOnHover: true,
-     draggable: true,
-     progress: undefined,
-     theme: "light",
-     type: "error",
-   });
- }
-    
+      return rows;
+    } else {
+      toast("No Data Found In Excel Sheet", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error",
+      });
+    }
   };
 
-
-
-const importExcel = (e) => {
+  const importExcel = (e) => {
     const file = e.target.files[0];
 
     const reader = new FileReader();
@@ -219,44 +222,32 @@ const importExcel = (e) => {
     reader.readAsBinaryString(file);
   };
 
-
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [data, setData] = useState({
-    operatingPhase: "",
-    function: "",
-    failureMode: "",
-    searchFM: "",
-    failureModeRatioAlpha: "",
-    cause: "",
-    subSystemEffect: "",
-    systemEffect: "",
-    endEffect: "",
-    endEffectRatioBeta: "",
-    safetyImpact: "",
-    referenceHazardId: "",
-    realibilityImpact: "",
-    serviceDisruptionTime: "",
-    frequency: "",
-    severity: "",
-    riskIndex: "",
-    detectableMeansDuringOperation: "",
-    detectableMeansToMaintainer: "",
-    BuiltInTest: "",
-    designControl: "",
-    maintenanceControl: "",
-    exportConstraints: "",
-    immediteActionDuringOperationalPhase: "",
-    immediteActionDuringNonOperationalPhase: "",
+    modeOfOperation: "",
+    hazardCause: "",
+    effectOfHazard: "",
+    designAssuranceLevel: "",
+    hazardClasification: "",
+    initialSeverity: "",
+    initialLikelihood: "",
+    initialRiskLevel: "",
+    designMitigation: "",
+    designMitigatonResbiity: "",
+    designMitigtonEvidence: "",
+    opernalMaintanMitigation: "",
+    opernalMitigatonResbility: "",
+    operatnalMitigationEvidence: "",
+    residualSeverity: "",
+    residualLikelihood: "",
+    meansOfDetection: "",
+    crewResponse: "",
+    uniqueHazardIdentifier: "",
+    residualRiskLevel: "",
+    hazardStatus: "",
+    ftaNameId: "",
     userField1: "",
     userField2: "",
-    userField3: "",
-    userField4: "",
-    userField5: "",
-    userField6: "",
-    userField7: "",
-    userField8: "",
-    userField9: "",
-    userField10: "",
   });
 
   const handleInputChange = (selectedItems, name) => {
@@ -274,7 +265,15 @@ const importExcel = (e) => {
         projectId: projectId,
       },
     }).then((res) => {
-      const filteredData = res?.data?.data.filter((item) => item?.moduleName === "SAFETY");
+      let filteredData = res?.data?.data.filter(
+        (item) => item?.moduleName === "FMECA"
+      );
+
+      if (filteredData.length === 0) {
+        filteredData = res?.data?.data.filter(
+          (item) => item?.moduleName === "SAFETY"
+        );
+      }
       setAllSepareteData(filteredData);
       const merged = [...tableData, ...filteredData];
       setMergedData(merged);
@@ -401,7 +400,7 @@ const importExcel = (e) => {
       headers: { userId: userId },
     })
       .then((response) => {
-        setOperationPhase(response.data?.data?.operationalPhase);
+        setModeOfOperation(response.data?.data?.modeOfOperation);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -420,7 +419,9 @@ const importExcel = (e) => {
       },
     }).then((res) => {
       setIsLoading(false);
-      const filteredData = res.data.getData.filter((entry) => entry?.libraryId?.moduleName === "SAFETY");
+      const filteredData = res.data.getData.filter(
+        (entry) => entry?.libraryId?.moduleName === "SAFETY"
+      );
       setConnectData(filteredData);
     });
   };
@@ -443,46 +444,37 @@ const importExcel = (e) => {
 
   // Define an array of field names for which you want to generate options
   const fieldNames = [
-    "operatingPhase",
-    "function",
-    "failureMode",
-    "searchFM",
-    "failureModeRatioAlpha",
-    "cause",
-    "subSystemEffect",
-    "systemEffect",
-    "endEffect",
-    "endEffectRatioBeta",
-    "safetyImpact",
-    "referenceHazardId",
-    "realibilityImpact",
-    "serviceDisruptionTime",
-    "frequency",
-    "severity",
-    "riskIndex",
-    "detectableMeansDuringOperation",
-    "detectableMeansToMaintainer",
-    "BuiltInTest",
-    "designControl",
-    "maintenanceControl",
-    "exportConstraints",
-    "immediteActionDuringOperationalPhase",
-    "immediteActionDuringNonOperationalPhase",
+    "modeOfOperation",
+    "hazardCause",
+    "effectOfHazard",
+    "designAssuranceLevel",
+    "hazardClasification",
+    "initialSeverity",
+    "initialLikelihood",
+    "initialRiskLevel",
+    "designMitigation",
+    "designMitigatonResbiity",
+    "designMitigtonEvidence",
+    "opernalMaintanMitigation",
+    "opernalMitigatonResbility",
+    "operatnalMitigationEvidence",
+    "residualSeverity",
+    "residualLikelihood",
+    "meansOfDetection",
+    "crewResponse",
+    "uniqueHazardIdentifier",
+    "residualRiskLevel",
+    "hazardStatus",
+    "ftaNameId",
     "userField1",
     "userField2",
-    "userField3",
-    "userField4",
-    "userField6",
-    "userField7",
-    "userField8",
-    "userField9",
-    "userField10",
   ]; // Add other field names as needed
 
   // Loop through the field names to generate options
   fieldNames.forEach((fieldName) => {
     // Filter the connectData for the current field
-    const filteredData = connectData?.filter((item) => item?.sourceName === fieldName) || [];
+    const filteredData =
+      connectData?.filter((item) => item?.sourceName === fieldName) || [];
     // Map the filtered data to the options format
     dropdownOptions[fieldName] = filteredData.map((item) => ({
       value: item?.sourceValue,
@@ -500,14 +492,40 @@ const importExcel = (e) => {
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
-        moduleName: "SAFETY",
+        moduleName: "FMECA",
         sourceName: fieldName,
         sourceValue: fieldValue.value,
       },
     }).then((res) => {
       const data = res?.data?.libraryData;
+      if (data.length > 0) {
+        setAllConnectedData(data);
+      } else {
+        // If no FMECA data, fetch SAFETY data
+        fetchSafetyData();
+      }
       setAllConnectedData(data);
     });
+  };
+  const fetchSafetyData = async (fieldValue, fieldName) => {
+    try {
+      const safetyResponse = await Api.get(
+        "api/v1/library/get/all/source/value",
+        {
+          params: {
+            projectId: projectId,
+            moduleName: "SAFETY",
+            sourceName: fieldName,
+            sourceValue: fieldValue.value,
+          },
+        }
+      );
+      const safetyData = safetyResponse?.data?.libraryData;
+      setAllConnectedData(safetyData);
+    } catch (error) {
+      console.error("Error fetching SAFETY data:", error);
+      // Optionally handle the error
+    }
   };
 
   useEffect(() => {
@@ -559,19 +577,22 @@ const importExcel = (e) => {
   const columns = [
     {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
-      title: "SAFETY ID",
+      title: "Hazard*",
       cellStyle: { minWidth: "140px", textAlign: "center" },
-      headerStyle: { textAlign: "center" },
+      headerStyle: { minWidth: "140px", textAlign: "center" },
     },
     {
-      field: "operatingPhase",
-      title: "Operating  Phase",
+      field: "modeOfOperation",
+      title: "Mode of Operation*",
       type: "string",
       cellStyle: { minWidth: "200px", textAlign: "center" },
-      headerStyle: { textAlign: "center", minWidth: "150px" },
-      onCellClick: () => handleDropdownSelection("operatingPhase"),
+      headerStyle: { minWidth: "200px", textAlign: "center" },
+      onCellClick: () => handleDropdownSelection("modeOfOperation"),
       editComponent: ({ value, onChange, rowData }) => {
-        const filteredData = allSepareteData?.filter((item) => item?.sourceName === "operatingPhase") || [];
+        const filteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "modeOfOperation"
+          ) || [];
         const options = filteredData?.map((item) => ({
           value: item?.sourceValue,
           label: item?.sourceValue,
@@ -582,19 +603,23 @@ const importExcel = (e) => {
               type="text"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter Operating Phase"
+              placeholder="Enter Mode of Operation"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Operating Phase"
+              title="Enter Mode of Operation"
             />
           );
         } else {
           return (
             <Select
-              name="operatingPhase"
-              value={data.operatingPhase ? { label: data.operatingPhase, value: data.operatingPhase } : ""}
+              name="modeOfOperation"
+              value={
+                data.modeOfOperation
+                  ? { label: data.modeOfOperation, value: data.modeOfOperation }
+                  : ""
+              }
               onChange={(selectedItems) => {
-                handleInputChange(selectedItems, "operatingPhase");
-                getAllConnectedLibrary(selectedItems, "operatingPhase");
+                handleInputChange(selectedItems, "modeOfOperation");
+                getAllConnectedLibrary(selectedItems, "modeOfOperation");
               }}
               options={options}
             />
@@ -603,187 +628,20 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "function",
-      title: "Function*",
+      field: "hazardCause",
+      title: "Hazard Cause*",
       type: "string",
-      cellStyle: { minWidth: "50px", textAlign: "center" },
-      headerStyle: { textAlign: "center" },
-      onCellClick: () => handleDropdownSelection("function"),
-      validate: (rowData) => {
-        //getAllConnectedLibrary("function,f1");
-        // Function column validation logic
-        // Assuming it's correctly implemented
-      },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "function") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "function") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="function"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Function"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Function"
-            />
-          );
-        }
-        return (
-          <Select
-            name="function"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "function");
-              getAllConnectedLibrary(selectedItems, "function");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "failureMode",
-      title: "Failure Mode*",
-      type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "failureMode") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "failureMode") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="failureMode"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Failure Mode"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter FailureMode"
-            />
-          );
-        }
-        return (
-          <Select
-            name="failureMode"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "failureMode");
-              getAllConnectedLibrary(selectedItems, "failureMode");
-            }}
-            options={options}
-          />
-        );
-      },
-      onCellClick: () => handleDropdownSelection("failureMode"),
-      validate: (rowData) => {
-        if (rowData.failureMode === undefined || rowData.failureMode === "") {
-          return "required";
-        }
-        return true;
-      },
-    },
-    {
-      field: "searchFM",
-      title: "Search FM*",
-      type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "searchFM") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "searchFM") || [];
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="searchFM"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Search FM"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Search FM"
-            />
-          );
-        }
-        return (
-          <Select
-            name="searchFM"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "searchFM");
-              getAllConnectedLibrary(selectedItems, "searchFM");
-            }}
-            options={options}
-          />
-        );
-      },
-      onCellClick: () => handleDropdownSelection("searchFM"),
-    },
-    {
-      field: "cause",
-      title: "Cause",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => (
-        <TextField onChange={(e) => onChange(e.target.value)} value={value} multiline />
-      ),
-    },
-    {
-      field: "failureModeRatioAlpha",
-      title: "Failure Mode Ratio Alpha*",
-      type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "200px", textAlign: "center" },
+      headerStyle: { minWidth: "200px", textAlign: "center" },
+      onCellClick: () => handleDropdownSelection("hazardCause"),
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "failureModeRatioAlpha") || [];
+          allSepareteData?.filter((item) => item?.sourceName === "hazardCause") ||
+          [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "failureModeRatioAlpha") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "hazardCause"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -799,7 +657,120 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="failureModeRatioAlpha"
+              name="hazardCause"
+              value={value}
+              onChange={(e) => {
+                createDropdownEditComponent(e.target.value);
+                onChange(e.target.value);
+              }}
+              placeholder="Enter Hazard Cause"
+              style={{ height: "40px", borderRadius: "4px" }}
+              title="Enter Hazard Cause"
+            />
+          );
+        }
+        return (
+          <Select
+            name="hazardCause"
+            value={value ? { label: value, value: value } : ""}
+            onChange={(selectedItems) => {
+              onChange(selectedItems?.value);
+              handleInputChange(selectedItems, "hazardCause");
+              getAllConnectedLibrary(selectedItems, "hazardCause");
+            }}
+            options={options}
+          />
+        );
+      },
+    },
+    {
+      field: "effectOfHazard",
+      title: "Effect of the Hazard*",
+      type: "string",
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
+      editComponent: ({ value, onChange }) => {
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "effectOfHazard"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "effectOfHazard"
+          ) || [];
+
+        const options =
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
+          return (
+            <input
+              type="text"
+              name="effectOfHazard"
+              value={value}
+              onChange={(e) => {
+                createDropdownEditComponent(e.target.value);
+                onChange(e.target.value);
+              }}
+              placeholder="Enter Effect Of The Hazard"
+              style={{ height: "40px", borderRadius: "4px" }}
+              title="Enter effectOfHazard"
+            />
+          );
+        }
+        return (
+          <Select
+            name="effectOfHazard"
+            value={value ? { label: value, value: value } : ""}
+            onChange={(selectedItems) => {
+              onChange(selectedItems?.value);
+              handleInputChange(selectedItems, "effectOfHazard");
+              getAllConnectedLibrary(selectedItems, "effectOfHazard");
+            }}
+            options={options}
+          />
+        );
+      },
+      onCellClick: () => handleDropdownSelection("effectOfHazard"),
+    },
+    {
+      field: "hazardClasification",
+      title: "Hazard Clasification*",
+      type: "string",
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
+      editComponent: ({ value, onChange }) => {
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "hazardClasification"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "hazardClasification"
+          ) || [];
+
+        const options =
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
+          return (
+            <input
+              type="number"
+              name="hazardClasification"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
@@ -813,91 +784,31 @@ const importExcel = (e) => {
         }
         return (
           <Select
-            name="failureModeRatioAlpha"
+            name="hazardClasification"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "failureModeRatioAlpha");
-              getAllConnectedLibrary(selectedItems, "failureModeRatioAlpha");
-            }}
-            options={options}
-          />
-        );
-      },
-
-      validate: (rowData) => {
-        if (rowData.failureModeRatioAlpha === undefined || rowData.failureModeRatioAlpha === "") {
-          return "required";
-        }
-        return true;
-      },
-    },
-    {
-      field: "cause",
-      title: "Cause",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "cause") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "cause") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="cause"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Cause"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Cause"
-            />
-          );
-        }
-        return (
-          <Select
-            name="cause"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "cause");
-              getAllConnectedLibrary(selectedItems, "cause");
+              handleInputChange(selectedItems, "hazardClasification");
+              getAllConnectedLibrary(selectedItems, "hazardClasification");
             }}
             options={options}
           />
         );
       },
     },
-
     {
-      field: "subSystemEffect",
-      title: "Sub System effect*",
+      field: "designAssuranceLevel",
+      title: "Design Assurance Level (DAL) associated with the hazard",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.subSystemEffect === undefined || rowData.subSystemEffect === "") {
-          return "required";
-        }
-        return true;
-      },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "subSystemEffect") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "designAssuranceLevel") || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "subSystemEffect") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "designAssuranceLevel"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -913,48 +824,48 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="subSystemEffect"
+              name="designAssuranceLevel"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Sub System effect"
+              placeholder="Enter Design Assurance Level"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Sub System effect"
+              title="Enter Design Assurance Level"
             />
           );
         }
         return (
           <Select
-            name="subSystemEffect"
+            name="designAssuranceLevel"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "subSystemEffect");
-              getAllConnectedLibrary(selectedItems, "subSystemEffect");
+              handleInputChange(selectedItems, "designAssuranceLevel");
+              getAllConnectedLibrary(selectedItems, "designAssuranceLevel");
             }}
             options={options}
           />
         );
       },
     },
+
     {
-      field: "systemEffect",
-      title: "System Effect*",
+      field: "meansOfDetection",
+      title: "Means of detection*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.systemEffect === undefined || rowData.systemEffect === "") {
-          return "required";
-        }
-        return true;
-      },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "systemEffect") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "meansOfDetection"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "systemEffect") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "meansOfDetection"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -970,26 +881,26 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="systemEffect"
+              name="meansOfDetection"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter System Effect"
+              placeholder="Enter Means of detection"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter System Effect"
+              title="Enter Means of detection"
             />
           );
         }
         return (
           <Select
-            name="systemEffect"
+            name="meansOfDetection"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "systemEffect");
-              getAllConnectedLibrary(selectedItems, "systemEffect");
+              handleInputChange(selectedItems, "meansOfDetection");
+              getAllConnectedLibrary(selectedItems, "meansOfDetection");
             }}
             options={options}
           />
@@ -997,20 +908,20 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "endEffect",
-      title: "End Effect*",
+      field: "crewResponse",
+      title: "Crew response*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.endEffect === undefined || rowData.endEffect === "") {
-          return "required";
-        }
-        return true;
-      },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "endEffect") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "endEffect") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "crewResponse"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "crewResponse"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1026,13 +937,68 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="endEffect"
+              name="crewResponse"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter End Effect"
+              placeholder="Enter Crew Response"
+              style={{ height: "40px", borderRadius: "4px" }}
+              title="Enter Crew Response"
+            />
+          );
+        }
+        return (
+          <Select
+            name="crewResponse"
+            value={value ? { label: value, value: value } : ""}
+            onChange={(selectedItems) => {
+              onChange(selectedItems?.value);
+              handleInputChange(selectedItems, "crewResponse");
+              getAllConnectedLibrary(selectedItems, "crewResponse");
+            }}
+            options={options}
+          />
+        );
+      },
+    },
+    {
+      field: "uniqueHazardIdentifier",
+      title: "Unique Hazard Identifiers*",
+      type: "string",
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
+      editComponent: ({ value, onChange }) => {
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "uniqueHazardIdentifier") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "uniqueHazardIdentifier"
+          ) || [];
+
+        const options =
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
+          return (
+            <input
+              type="text"
+              name="uniqueHazardIdentifier"
+              value={value}
+              onChange={(e) => {
+                createDropdownEditComponent(e.target.value);
+                onChange(e.target.value);
+              }}
+              placeholder="Enter Unique Hazard Identifiers"
               style={{ height: "40px", borderRadius: "4px" }}
               title="Enter End Effect"
             />
@@ -1040,12 +1006,12 @@ const importExcel = (e) => {
         }
         return (
           <Select
-            name="endEffect"
+            name="uniqueHazardIdentifier"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "endEffect");
-              getAllConnectedLibrary(selectedItems, "endEffect");
+              handleInputChange(selectedItems, "uniqueHazardIdentifier");
+              getAllConnectedLibrary(selectedItems, "uniqueHazardIdentifier");
             }}
             options={options}
           />
@@ -1053,25 +1019,20 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "endEffectRatioBeta",
-      title: "End Effect ratio Beta*(must be equal to 1)",
+      field: "initialSeverity",
+      title: "Initial Severity ((impact))",
       type: "string",
-      // title: createHeaderWithTooltip(
-      //   "End Effect ratio Beta*",
-      //   "End Effect ratio Beta must be equal to 1"
-      // ),
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.endEffectRatioBeta === undefined || rowData.endEffectRatioBeta === "") {
-          return "required";
-        }
-        return true;
-      },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "endEffectRatioBeta") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "initialSeverity"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "endEffectRatioBeta") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "initialSeverity"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1087,26 +1048,26 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="endEffectRatioBeta"
+              name="initialSeverity"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter End Effect ratio Beta"
+              placeholder="Enter Initial Severity"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter End Effect ratio Beta"
+              title="Enter Initial Severity"
             />
           );
         }
         return (
           <Select
-            name="endEffectRatioBeta"
+            name="initialSeverity"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "endEffectRatioBeta");
-              getAllConnectedLibrary(selectedItems, "endEffectRatioBeta");
+              handleInputChange(selectedItems, "initialSeverity");
+              getAllConnectedLibrary(selectedItems, "initialSeverity");
             }}
             options={options}
           />
@@ -1114,21 +1075,26 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "safetyImpact",
-      title: "Safety Impact*",
+      field: "initialLikelihood",
+      title: "Initial likelihood (probability)",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.safetyImpact === undefined || rowData.safetyImpact === "") {
-          return "required";
-        }
-        return true;
-      },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
+      // validate: (rowData) => {
+      //   if (rowData.designMitigatonResbiity === undefined || rowData.designMitigatonResbiity === "") {
+      //     return "required";
+      //   }
+      //   return true;
+      // },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "safetyImpact") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "initialLikelihood"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "safetyImpact") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "initialLikelihood"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1144,26 +1110,26 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="safetyImpact"
+              name="initialLikelihood"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Safety Impact"
+              placeholder="Enter Initial Likelihood"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Safety Impact"
+              title="Enter Initial Likelihood"
             />
           );
         }
         return (
           <Select
-            name="safetyImpact"
+            name="initialLikelihood"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "safetyImpact");
-              getAllConnectedLibrary(selectedItems, "safetyImpact");
+              handleInputChange(selectedItems, "initialLikelihood");
+              getAllConnectedLibrary(selectedItems, "initialLikelihood");
             }}
             options={options}
           />
@@ -1171,14 +1137,20 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "referenceHazardId",
-      title: "Reference Hazard ID",
+      field: "initialRiskLevel",
+      title: "Initial Risk level",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "referenceHazardId") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "initialRiskLevel"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "referenceHazardId") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "initialRiskLevel"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1194,26 +1166,26 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="referenceHazardId"
+              name="initialRiskLevel"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Reference Hazard ID"
+              placeholder="Enter Initial Risk level"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Reference Hazard ID"
+              title="Enter Initial Risk level"
             />
           );
         }
         return (
           <Select
-            name="referenceHazardId"
+            name="initialRiskLevel"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "referenceHazardId");
-              getAllConnectedLibrary(selectedItems, "referenceHazardId");
+              handleInputChange(selectedItems, "initialRiskLevel");
+              getAllConnectedLibrary(selectedItems, "initialRiskLevel");
             }}
             options={options}
           />
@@ -1221,21 +1193,26 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "realibilityImpact",
-      title: "Reliability Impact*",
+      field: "designMitigation",
+      title: "Design Mitigation",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
-      validate: (rowData) => {
-        if (rowData.realibilityImpact === undefined || rowData.realibilityImpact === "") {
-          return "required";
-        }
-        return true;
-      },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+            headerStyle: { minWidth: "230px", textAlign: "center" },
+      // validate: (rowData) => {
+      //   if (rowData.opernalMaintanMitigation === undefined || rowData.opernalMaintanMitigation === "") {
+      //     return "required";
+      //   }
+      //   return true;
+      // },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "realibilityImpact") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "designMitigation"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "realibilityImpact") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "designMitigation"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1251,26 +1228,26 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="realibilityImpact"
+              name="designMitigation"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Reliability Impact"
+              placeholder="Enter Design mitigation"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Reliability Impact"
+              title="Enter Design mitigation"
             />
           );
         }
         return (
           <Select
-            name="realibilityImpact"
+            name="designMitigation"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "realibilityImpact");
-              getAllConnectedLibrary(selectedItems, "realibilityImpact");
+              handleInputChange(selectedItems, "designMitigation");
+              getAllConnectedLibrary(selectedItems, "designMitigation");
             }}
             options={options}
           />
@@ -1278,16 +1255,20 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "serviceDisruptionTime",
-      title: "Service Disruption Time(minutes)",
+      field: "designMitigatonResbiity",
+      title: "Design Mitigation Responsibility",
       type: "numeric",
-      cellStyle: { minWidth: "230px", textAlign: "left" },
-      headerStyle: { textAlign: "left" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "serviceDisruptionTime") || [];
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "designMitigatonResbiity"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "serviceDisruptionTime") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "designMitigatonResbiity"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1303,26 +1284,26 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="serviceDisruptionTime"
+              name="designMitigatonResbiity"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Service Disruption Time"
+              placeholder="Enter Design Mitigation Responsibility"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Service Disruption Time"
+              title="Enter Design Mitigation Responsibility"
             />
           );
         }
         return (
           <Select
-            name="serviceDisruptionTime"
+            name="designMitigatonResbiity"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "serviceDisruptionTime");
-              getAllConnectedLibrary(selectedItems, "serviceDisruptionTime");
+              handleInputChange(selectedItems, "designMitigatonResbiity");
+              getAllConnectedLibrary(selectedItems, "designMitigatonResbiity");
             }}
             options={options}
           />
@@ -1330,162 +1311,19 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "frequency",
-      title: "Frequency",
+      field: "designMitigtonEvidence",
+      title: "Design Mitigation Evidence",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "frequency") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "frequency") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="frequency"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Frequency"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Frequency"
-            />
-          );
-        }
-        return (
-          <Select
-            name="frequency"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "frequency");
-              getAllConnectedLibrary(selectedItems, "frequency");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "severity",
-      title: "Severity",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "severity") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "severity") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="severity"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Severity"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Severity"
-            />
-          );
-        }
-        return (
-          <Select
-            name="severity"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "severity");
-              getAllConnectedLibrary(selectedItems, "severity");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "riskIndex",
-      title: "Risk Index",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "riskIndex") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "riskIndex") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="riskIndex"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Risk Index"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Risk Index"
-            />
-          );
-        }
-        return (
-          <Select
-            name="riskIndex"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "riskIndex");
-              getAllConnectedLibrary(selectedItems, "riskIndex");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "detectableMeansDuringOperation",
-      title: "Detectable Means during operation",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "detectableMeansDuringOperation") || [];
+          allSepareteData?.filter((item) => item?.sourceName === "designMitigtonEvidence") ||
+          [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "detectableMeansDuringOperation") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "designMitigtonEvidence"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1501,26 +1339,26 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="detectableMeansDuringOperation"
+              name="designMitigtonEvidence"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Detectable Means during operation"
+              placeholder="Enter Design Mitigation Evidence"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Detectable Means during operation"
+              title="Enter Design Mitigation Evidence"
             />
           );
         }
         return (
           <Select
-            name="detectableMeansDuringOperation"
+            name="designMitigtonEvidence"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "detectableMeansDuringOperation");
-              getAllConnectedLibrary(selectedItems, "detectableMeansDuringOperation");
+              handleInputChange(selectedItems, "designMitigtonEvidence");
+              getAllConnectedLibrary(selectedItems, "designMitigtonEvidence");
             }}
             options={options}
           />
@@ -1528,15 +1366,19 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "detectableMeansToMaintainer",
-      title: "Detectable Means to Maintainer",
+      field: "opernalMaintanMitigation",
+      title: "Operational/Maintenance mitigation",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "detectableMeansToMaintainer") || [];
+          allSepareteData?.filter((item) => item?.sourceName === "opernalMaintanMitigation") ||
+          [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "detectableMeansToMaintainer") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "opernalMaintanMitigation"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1552,26 +1394,26 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="detectableMeansToMaintainer"
+              name="opernalMaintanMitigation"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Detectable Means to Maintainer"
+              placeholder="Enter Operational/Maintenance mitigation"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Detectable Means to Maintainer"
+              title="Enter Operational/Maintenance mitigation"
             />
           );
         }
         return (
           <Select
-            name="detectableMeansToMaintainer"
+            name="opernalMaintanMitigation"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "detectableMeansToMaintainer");
-              getAllConnectedLibrary(selectedItems, "detectableMeansToMaintainer");
+              handleInputChange(selectedItems, "opernalMaintanMitigation");
+              getAllConnectedLibrary(selectedItems, "opernalMaintanMitigation");
             }}
             options={options}
           />
@@ -1579,215 +1421,19 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "BuiltInTest",
-      title: "Built-in Test",
+      field: "opernalMitigatonResbility",
+      title: "Opernational Mitigation Responsibility",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "BuiltInTest") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "BuiltInTest") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="BuiltInTest"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Built-in Test"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Built-in Test"
-            />
-          );
-        }
-        return (
-          <Select
-            name="BuiltInTest"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "BuiltInTest");
-              getAllConnectedLibrary(selectedItems, "BuiltInTest");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "designControl",
-      title: "Design Control",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "designControl") || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "designControl") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="designControl"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Design Control"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Design Control"
-            />
-          );
-        }
-        return (
-          <Select
-            name="designControl"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "designControl");
-              getAllConnectedLibrary(selectedItems, "designControl");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-
-    {
-      field: "maintenanceControl",
-      title: "Maintenance Control",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "maintenanceControl") || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "maintenanceControl") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="maintenanceControl"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Maintenance Control"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Maintenance Control"
-            />
-          );
-        }
-        return (
-          <Select
-            name="maintenanceControl"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "maintenanceControl");
-              getAllConnectedLibrary(selectedItems, "maintenanceControl");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "exportConstraints",
-      title: "Export constraints",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "exportConstraints") || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "exportConstraints") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="exportConstraints"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Export constraints"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Export constraints"
-            />
-          );
-        }
-        return (
-          <Select
-            name="exportConstraints"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "exportConstraints");
-              getAllConnectedLibrary(selectedItems, "exportConstraints");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "immediteActionDuringOperationalPhase",
-      title: "Immediate Action during operational Phases",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "immediteActionDuringOperationalPhase") || [];
+          allSepareteData?.filter((item) => item?.sourceName === "opernalMitigatonResbility") ||
+          [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "immediteActionDuringOperationalPhase") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "opernalMitigatonResbility"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1803,26 +1449,26 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="immediteActionDuringOperationalPhase"
+              name="opernalMitigatonResbility"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Immediate Action during operational Phases"
+              placeholder="Enter Opernational Mitigation Responsibility"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Immediate Action during operational Phases"
+              title="Enter Opernational Mitigation Responsibility"
             />
           );
         }
         return (
           <Select
-            name="immediteActionDuringOperationalPhase"
+            name="opernalMitigatonResbility"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "immediteActionDuringOperationalPhase");
-              getAllConnectedLibrary(selectedItems, "immediteActionDuringOperationalPhase");
+              handleInputChange(selectedItems, "opernalMitigatonResbility");
+              getAllConnectedLibrary(selectedItems, "opernalMitigatonResbility");
             }}
             options={options}
           />
@@ -1830,15 +1476,20 @@ const importExcel = (e) => {
       },
     },
     {
-      field: "immediteActionDuringNonOperationalPhase",
-      title: "Immediate Action during Non-operational Phases",
+      field: "operatnalMitigationEvidence",
+      title: "Operational Mitigation Evidence",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "immediteActionDuringNonOperationalPhase") || [];
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "operatnalMitigationEvidence"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "immediteActionDuringNonOperationalPhase") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "operatnalMitigationEvidence"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1854,26 +1505,316 @@ const importExcel = (e) => {
           return (
             <input
               type="text"
-              name="immediteActionDuringNonOperationalPhase"
+              name="operatnalMitigationEvidence"
               value={value}
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value);
               }}
-              placeholder="Enter Immediate Action during Non-operational Phases"
+              placeholder="Enter Operational Mitigation Evidence"
               style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Immediate Action during Non-operational Phases"
+              title="Enter Operational Mitigation Evidence"
             />
           );
         }
         return (
           <Select
-            name="immediteActionDuringNonOperationalPhase"
+            name="operatnalMitigationEvidence"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "immediteActionDuringNonOperationalPhase");
-              getAllConnectedLibrary(selectedItems, "immediteActionDuringNonOperationalPhase");
+              handleInputChange(
+                selectedItems,
+                "operatnalMitigationEvidence"
+              );
+              getAllConnectedLibrary(
+                selectedItems,
+                "operatnalMitigationEvidence"
+              );
+            }}
+            options={options}
+          />
+        );
+      },
+    },
+    {
+      field: "residualSeverity",
+      title: "Residual Severity ((impact))",
+      type: "string",
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
+      editComponent: ({ value, onChange }) => {
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "residualSeverity"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "residualSeverity"
+          ) || [];
+
+        const options =
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
+          return (
+            <input
+              type="text"
+              name="residualSeverity"
+              value={value}
+              onChange={(e) => {
+                createDropdownEditComponent(e.target.value);
+                onChange(e.target.value);
+              }}
+              placeholder="Enter Residual Severity"
+              style={{ height: "40px", borderRadius: "4px" }}
+              title="Enter Residual Severity"
+            />
+          );
+        }
+        return (
+          <Select
+            name="residualSeverity"
+            value={value ? { label: value, value: value } : ""}
+            onChange={(selectedItems) => {
+              onChange(selectedItems?.value);
+              handleInputChange(selectedItems, "residualSeverity");
+              getAllConnectedLibrary(
+                selectedItems,
+                "residualSeverity"
+              );
+            }}
+            options={options}
+          />
+        );
+      },
+    },
+    {
+      field: "residualLikelihood",
+      title: "Residual likelihood (probability)",
+      type: "string",
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
+      editComponent: ({ value, onChange }) => {
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "residualLikelihood"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "residualLikelihood"
+          ) || [];
+
+        const options =
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
+          return (
+            <input
+              type="text"
+              name="residualLikelihood"
+              value={value}
+              onChange={(e) => {
+                createDropdownEditComponent(e.target.value);
+                onChange(e.target.value);
+              }}
+              placeholder="Enter Residual likelihood"
+              style={{ height: "40px", borderRadius: "4px" }}
+              title="Enter Residual likelihood"
+            />
+          );
+        }
+        return (
+          <Select
+            name="residualLikelihood"
+            value={value ? { label: value, value: value } : ""}
+            onChange={(selectedItems) => {
+              onChange(selectedItems?.value);
+              handleInputChange(selectedItems, "residualLikelihood");
+              getAllConnectedLibrary(selectedItems, "residualLikelihood");
+            }}
+            options={options}
+          />
+        );
+      },
+    },
+
+    {
+      field: "residualRiskLevel",
+      title: "Residual Risk Level",
+      type: "string",
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
+      editComponent: ({ value, onChange }) => {
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "residualRiskLevel"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "residualRiskLevel"
+          ) || [];
+
+        const options =
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
+          return (
+            <input
+              type="text"
+              name="residualRiskLevel"
+              value={value}
+              onChange={(e) => {
+                createDropdownEditComponent(e.target.value);
+                onChange(e.target.value);
+              }}
+              placeholder="Enter Residual Risk Level"
+              style={{ height: "40px", borderRadius: "4px" }}
+              title="Enter Residual Risk Level"
+            />
+          );
+        }
+        return (
+          <Select
+            name="residualRiskLevel"
+            value={value ? { label: value, value: value } : ""}
+            onChange={(selectedItems) => {
+              onChange(selectedItems?.value);
+              handleInputChange(selectedItems, "residualRiskLevel");
+              getAllConnectedLibrary(selectedItems, "residualRiskLevel");
+            }}
+            options={options}
+          />
+        );
+      },
+    },
+    {
+      field: "hazardStatus",
+      title: "Hazard Status",
+      type: "string",
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
+      editComponent: ({ value, onChange }) => {
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "hazardStatus"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "hazardStatus"
+          ) || [];
+
+        const options =
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
+          return (
+            <input
+              type="text"
+              name="hazardStatus"
+              value={value}
+              onChange={(e) => {
+                createDropdownEditComponent(e.target.value);
+                onChange(e.target.value);
+              }}
+              placeholder="Enter Hazard Status"
+              style={{ height: "40px", borderRadius: "4px" }}
+              title="Enter Hazard Status"
+            />
+          );
+        }
+        return (
+          <Select
+            name="hazardStatus"
+            value={value ? { label: value, value: value } : ""}
+            onChange={(selectedItems) => {
+              onChange(selectedItems?.value);
+              handleInputChange(selectedItems, "hazardStatus");
+              getAllConnectedLibrary(selectedItems, "hazardStatus");
+            }}
+            options={options}
+          />
+        );
+      },
+    },
+    {
+      field: "ftaNameId",
+      title: "FTA Name/ID",
+      type: "string",
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
+      editComponent: ({ value, onChange }) => {
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "ftaNameId"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "ftaNameId"
+          ) || [];
+
+        const options =
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
+          return (
+            <input
+              type="text"
+              name="ftaNameId"
+              value={value}
+              onChange={(e) => {
+                createDropdownEditComponent(e.target.value);
+                onChange(e.target.value);
+              }}
+              placeholder="Enter FTA Name/ID"
+              style={{ height: "40px", borderRadius: "4px" }}
+              title="Enter FTA Name/ID"
+            />
+          );
+        }
+        return (
+          <Select
+            name="ftaNameId"
+            value={value ? { label: value, value: value } : ""}
+            onChange={(selectedItems) => {
+              onChange(selectedItems?.value);
+              handleInputChange(selectedItems, "ftaNameId");
+              getAllConnectedLibrary(selectedItems, "ftaNameId");
             }}
             options={options}
           />
@@ -1884,10 +1825,17 @@ const importExcel = (e) => {
       field: "userField1",
       title: "User field 1",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField1") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField1") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField1"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField1"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1933,10 +1881,17 @@ const importExcel = (e) => {
       field: "userField2",
       title: "User field 2",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField2") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField2") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField2"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField2"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1978,398 +1933,6 @@ const importExcel = (e) => {
         );
       },
     },
-    {
-      field: "userField3",
-      title: "User field 3",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField3") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField3") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField3"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 3"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 3"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField3"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField3");
-              getAllConnectedLibrary(selectedItems, "userField3");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField4",
-      title: "User field 4",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField4") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField4") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField4"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 4"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 4"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField4"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField4");
-              getAllConnectedLibrary(selectedItems, "userField4");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField5",
-      title: "User field 5",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField5") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField5") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField5"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 5"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 5"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField5"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField5");
-              getAllConnectedLibrary(selectedItems, "userField5");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField6",
-      title: "User field 6",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField6") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField6") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField6"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 6"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 6"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField6"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField6");
-              getAllConnectedLibrary(selectedItems, "userField6");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField7",
-      title: "User field 7",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField7") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField7") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField7"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 7"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 7"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField7"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField7");
-              getAllConnectedLibrary(selectedItems, "userField7");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField8",
-      title: "User field 8",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField8") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField8") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField8"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 8"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 8"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField8"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField8");
-              getAllConnectedLibrary(selectedItems, "userField8");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField9",
-      title: "User field 9",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField9") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField9") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField9"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 9"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 9"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField9"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField9");
-              getAllConnectedLibrary(selectedItems, "userField9");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "userField10",
-      title: "User field 10",
-      type: "string",
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField10") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField10") || [];
-
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="userField10"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter User field 10"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter User field 10"
-            />
-          );
-        }
-        return (
-          <Select
-            name="userField10"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "userField10");
-              getAllConnectedLibrary(selectedItems, "userField10");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
   ];
 
   const submit = (values) => {
@@ -2377,49 +1940,64 @@ const importExcel = (e) => {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
       Api.post("api/v1/safety/", {
-        operatingPhase: values.operatingPhase ? values.operatingPhase : data.operatingPhase,
-        function: values.function ? values.function : data.function,
-        failureMode: values.failureMode ? values.failureMode : data.failureMode,
-        searchFM: values.searchFM ? values.searchFM : data.searchFM,
-        cause: values.cause ? values.cause : data.cause,
-        failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 1,
-        detectableMeansDuringOperation: values.detectableMeansDuringOperation
-          ? values.detectableMeansDuringOperation
-          : data.detectableMeansDuringOperation,
-        detectableMeansToMaintainer: values.detectableMeansToMaintainer
-          ? values.detectableMeansToMaintainer
-          : data.detectableMeansToMaintainer,
-        BuiltInTest: values.BuiltInTest ? values.BuiltInTest : data.BuiltInTest,
-        subSystemEffect: values.subSystemEffect ? values.subSystemEffect : data.subSystemEffect,
-        systemEffect: values.systemEffect ? values.systemEffect : data.systemEffect,
-        endEffect: values.endEffect ? values.endEffect : data.endEffect,
-        endEffectRatioBeta: values.endEffectRatioBeta ? values.endEffectRatioBeta : 1,
-        safetyImpact: values.safetyImpact ? values.safetyImpact : data.safetyImpact,
-        referenceHazardId: values.referenceHazardId ? values.referenceHazardId : data.referenceHazardId,
-        realibilityImpact: values.realibilityImpact ? values.realibilityImpact : data.realibilityImpact,
-        serviceDisruptionTime: values.serviceDisruptionTime ? values.serviceDisruptionTime : data.serviceDisruptionTime,
-        frequency: values.frequency ? values.frequency : data.frequency,
-        severity: values.severity ? values.severity : data.severity,
-        riskIndex: values.riskIndex ? values.riskIndex : data.riskIndex,
-        designControl: values.designControl ? values.designControl : data.designControl,
-        maintenanceControl: values.maintenanceControl ? values.maintenanceControl : data.maintenanceControl,
-        exportConstraints: values.exportConstraints ? values.exportConstraints : data.exportConstraints,
-        immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase
-          ? values.immediteActionDuringOperationalPhase
-          : data.immediteActionDuringOperationalPhase,
-        immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase
-          ? values.immediteActionDuringNonOperationalPhase
-          : data.immediteActionDuringNonOperationalPhase,
-        userField1: values.userField1 ? values.userField1 : data.userField1,
-        userField2: values.userField2 ? values.userField2 : data.userField2,
-        userField3: values.userField3 ? values.userField3 : data.userField3,
-        userField4: values.userField4 ? values.userField4 : data.userField4,
-        userField5: values.userField5 ? values.userField5 : data.userField5,
-        userField6: values.userField6 ? values.userField6 : data.userField6,
-        userField7: values.userField7 ? values.userField7 : data.userField7,
-        userField8: values.userField8 ? values.userField8 : data.userField8,
-        userField9: values.userField9 ? values.userField9 : data.userField9,
-        userField10: values.userField10 ? values.userField10 : data.userField10,
+        modeOfOperation: values.modeOfOperation
+          ? values.modeOfOperation
+          : data.modeOfOperation,
+        hazardCause: values.hazardCause ? values.hazardCause : data.hazardCause,
+        effectOfHazard: values.effectOfHazard ? values.effectOfHazard : data.effectOfHazard,
+        hazardClasification: values.hazardClasification ? values.hazardClasification : data.hazardClasification,
+        designAssuranceLevel: values.designAssuranceLevel
+          ? values.designAssuranceLevel
+          : 1,
+        meansOfDetection: values.meansOfDetection
+          ? values.meansOfDetection
+          : data.meansOfDetection,
+        crewResponse: values.crewResponse
+          ? values.crewResponse
+          : data.crewResponse,
+        uniqueHazardIdentifier: values.uniqueHazardIdentifier ? values.uniqueHazardIdentifier : data.uniqueHazardIdentifier,
+        initialSeverity: values.initialSeverity
+          ? values.initialSeverity
+          : data.initialSeverity,
+        initialLikelihood: values.initialLikelihood
+          ? values.initialLikelihood
+          : data.initialLikelihood,
+        initialRiskLevel: values.initialRiskLevel ? values.initialRiskLevel : data.initialRiskLevel,
+        designMitigation: values.designMitigation
+          ? values.designMitigation
+          : 1,
+        designMitigatonResbiity: values.designMitigatonResbiity
+          ? values.designMitigatonResbiity
+          : data.designMitigatonResbiity,
+        designMitigtonEvidence: values.designMitigtonEvidence
+          ? values.designMitigtonEvidence
+          : data.designMitigtonEvidence,
+        opernalMaintanMitigation: values.opernalMaintanMitigation
+          ? values.opernalMaintanMitigation
+          : data.opernalMaintanMitigation,
+        opernalMitigatonResbility: values.opernalMitigatonResbility
+          ? values.opernalMitigatonResbility
+          : data.opernalMitigatonResbility,
+        operatnalMitigationEvidence: values.operatnalMitigationEvidence ? values.operatnalMitigationEvidence : data.operatnalMitigationEvidence,
+        residualSeverity: values.residualSeverity ? values.residualSeverity : data.residualSeverity,
+        residualLikelihood: values.residualLikelihood ? values.residualLikelihood : data.residualLikelihood,
+        residualRiskLevel: values.residualRiskLevel
+          ? values.residualRiskLevel
+          : data.residualRiskLevel,
+        hazardStatus: values.hazardStatus
+          ? values.hazardStatus
+          : data.hazardStatus,
+        ftaNameId: values.ftaNameId
+          ? values.ftaNameId
+          : data.ftaNameId,
+        userField1:
+          values.userField1
+            ? values.userField1
+            : data.userField1,
+        userField2:
+          values.userField2
+            ? values.userField2
+            : data.userField2,
         projectId: projectId,
         companyId: companyId,
         productId: productId,
@@ -2438,96 +2016,38 @@ const importExcel = (e) => {
     } else {
       setProductModal(true);
     }
-    // const companyId = localStorage.getItem("companyId");
-    // setIsLoading(true);
-    // Api.post("api/v1/FMECA/", {
-    //   operatingPhase: values.operatingPhase,
-    //   function: values.function,
-    //   failureMode: values.failureMode,
-    //   searchFM: values.searchFM,
-    //   cause: values.cause,
-    //   failureModeRatioAlpha: values.failureModeRatioAlpha,
-    //   detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-    //   detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-    //   BuiltInTest: values.BuiltInTest,
-    //   subSystemEffect: values.subSystemEffect,
-    //   systemEffect: values.systemEffect,
-    //   endEffect: values.endEffect,
-    //   endEffectRatioBeta: values.endEffectRatioBeta,
-    //   safetyImpact: values.safetyImpact,
-    //   referenceHazardId: values.referenceHazardId,
-    //   realibilityImpact: values.realibilityImpact,
-    //   serviceDisruptionTime: values.serviceDisruptionTime,
-    //   frequency: values.frequency,
-    //   severity: values.severity,
-    //   riskIndex: values.riskIndex,
-    //   designControl: values.designControl,
-    //   maintenanceControl: values.maintenanceControl,
-    //   exportConstraints: values.exportConstraints,
-    //   immediteActionDuringOperationalPhase:
-    //     values.immediteActionDuringOperationalPhase,
-    //   immediteActionDuringNonOperationalPhase:
-    //     values.immediteActionDuringNonOperationalPhase,
-    //   userField1: values.userField1,
-    //   userField2: values.userField2,
-    //   userField3: values.userField3,
-    //   userField4: values.userField4,
-    //   userField5: values.userField5,
-    //   userField6: values.userField6,
-    //   userField7: values.userField7,
-    //   userField8: values.userField8,
-    //   userField9: values.userField9,
-    //   userField10: values.userField10,
-    //   projectId: projectId,
-    //   companyId: companyId,
-    //   productId: productId,
-    // }).then((response) => {
-    //   getProductData();
-    //   setIsLoading(false);
-    // });
   };
 
   const updateSafety = (values) => {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
     Api.patch("api/v1/safety/update", {
-      operatingPhase: values.operatingPhase,
-      function: values.function,
-      failureMode: values.failureMode,
-      searchFM: values.searchFM,
-
-      failureModeRatioAlpha: values.failureModeRatioAlpha,
-      cause: values.cause,
-
-      detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-      detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-      BuiltInTest: values.BuiltInTest,
-      subSystemEffect: values.subSystemEffect,
-      systemEffect: values.systemEffect,
-      endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta,
-      safetyImpact: values.safetyImpact,
-      referenceHazardId: values.referenceHazardId,
-      realibilityImpact: values.realibilityImpact,
-      serviceDisruptionTime: values.serviceDisruptionTime,
-      frequency: values.frequency,
-      severity: values.severity,
-      riskIndex: values.riskIndex,
-      designControl: values.designControl,
-      maintenanceControl: values.maintenanceControl,
-      exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase,
-      userField1: values.userField1,
-      userField2: values.userField2,
-      userField3: values.userField3,
-      userField4: values.userField4,
-      userField5: values.userField5,
-      userField6: values.userField6,
-      userField7: values.userField7,
-      userField8: values.userField8,
-      userField9: values.userField9,
-      userField10: values.userField10,
+      modeOfOperation: values.modeOfOperation,
+      hazardCause: values.hazardCause,
+      effectOfHazard: values.effectOfHazard,
+      hazardClasification: values.hazardClasification,
+      designAssuranceLevel: values.designAssuranceLevel,
+      meansOfDetection: values.meansOfDetection,
+      crewResponse: values.crewResponse,
+      uniqueHazardIdentifier: values.uniqueHazardIdentifier,
+      initialSeverity: values.initialSeverity,
+      initialLikelihood: values.initialLikelihood,
+      initialRiskLevel: values.initialRiskLevel,
+      designMitigation: values.designMitigation,
+      designMitigatonResbiity: values.designMitigatonResbiity,
+      designMitigtonEvidence: values.designMitigtonEvidence,
+      opernalMaintanMitigation: values.opernalMaintanMitigation,
+      opernalMitigatonResbility: values.opernalMitigatonResbility,
+      operatnalMitigationEvidence: values.operatnalMitigationEvidence,
+      residualSeverity: values.residualSeverity,
+      residualLikelihood: values.residualLikelihood,
+      residualRiskLevel: values.residualRiskLevel,
+      hazardStatus: values.hazardStatus,
+      ftaNameId: values.ftaNameId,
+      userField1:
+        values.userField1,
+      userField2:
+        values.userField2,
       projectId: projectId,
       companyId: companyId,
       productId: productId,
@@ -2571,34 +2091,63 @@ const importExcel = (e) => {
         <Loader />
       ) : (
         <div>
-          <Projectname projectId={projectId} />
+          <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div style={{ width: "30%", marginRight: "20px" }}>
+                        <Projectname projectId={projectId} />
+                      </div>
 
-          <Row>
-            <Col>
-              <label for="file-input" class="file-label file-inputs">
-                Import
-              </label>
-              <input type="file" className="input-fields" id="file-input" onChange={importExcel} />
-            </Col>
-            <Col>
-              <Button
-                className="btn-aligne export-btns-FailureRate"
-                onClick={() => {
-                  DownloadExcel();
-                }}
-              >
-                Export
-              </Button>
-            </Col>
-          </Row>
+                      <div style={{ width: "100%", marginRight: "20px" }}>
+                        <Dropdown
+                          value={projectId}
+                          productId={productId}
+                          data={treeTableData}
+                        />
+                      </div>
 
-          {/* <input className="mt-3" type="file" onChange={importExcel} accept=".xlsx" /> */}
-          <Dropdown value={projectId} productId={productId} />
-
-          {/* <div className="mt-3">
-            <Tree data={treeTableData} productId={productId} />
-          </div> */}
-          {/* <Tree data={treeData} productId={productId} /> */}
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          alignItems: "center",
+                          marginTop: "8px",
+                          height: "40px",
+                        }}
+                      >
+                        <Tooltip placement="right" title="Import">
+                          <div style={{ marginRight: "8px" }}>
+                            <label
+                              htmlFor="file-input"
+                              className="import-export-btn"
+                            >
+                              <FontAwesomeIcon icon={faFileDownload} />
+                            </label>
+                            <input
+                              type="file"
+                              className="input-fields"
+                              id="file-input"
+                              onChange={importExcel}
+                              style={{ display: "none" }}
+                            />
+                          </div>
+                        </Tooltip>
+                        <Tooltip placement="left" title="Export">
+                          <Button
+                            className="import-export-btn"
+                            onClick={() => DownloadExcel()}
+                          >
+                            <FontAwesomeIcon
+                              icon={faFileUpload}
+                              style={{ width: "15px" }}
+                            />
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    </div>
 
           <div className="mt-5 " style={{ bottom: "35px" }}>
             <ThemeProvider theme={tableTheme}>
@@ -2700,10 +2249,15 @@ const importExcel = (e) => {
           <Modal show={show} centered className="user-delete-modal">
             <Modal.Body className="modal-body-user">
               <div>
-                <h4 className="d-flex justify-content-center">Row Deleted successfully</h4>
+                <h4 className="d-flex justify-content-center">
+                  Row Deleted successfully
+                </h4>
               </div>
             </Modal.Body>
-            <Modal.Footer className=" d-flex justify-content-center" style={{ borderTop: 0, bottom: "30px" }}>
+            <Modal.Footer
+              className=" d-flex justify-content-center"
+              style={{ borderTop: 0, bottom: "30px" }}
+            >
               <Button
                 className="px-5 "
                 style={{ backgroundColor: "#398935", borderColor: "#398935" }}
@@ -2715,7 +2269,11 @@ const importExcel = (e) => {
           </Modal>
           <Modal show={show} centered>
             <div className="d-flex justify-content-center mt-5">
-              <FontAwesomeIcon icon={faCircleCheck} fontSize={"40px"} color="#1D5460" />
+              <FontAwesomeIcon
+                icon={faCircleCheck}
+                fontSize={"40px"}
+                color="#1D5460"
+              />
             </div>
             <Modal.Footer className=" d-flex justify-content-center success-message mt-3 mb-4">
               <div>
@@ -2732,9 +2290,13 @@ const importExcel = (e) => {
               {writePermission === true || writePermission === undefined ? (
                 <div>
                   <h5 className="text-center">
-                    Please select product from <b>Dropdown </b>before adding a new row!
+                    Please select product from <b>Dropdown </b>before adding a
+                    new row!
                   </h5>
-                  <Button className="save-btn fw-bold fmeca-button mt-3" onClick={() => setProductModal(false)}>
+                  <Button
+                    className="save-btn fw-bold fmeca-button mt-3"
+                    onClick={() => setProductModal(false)}
+                  >
                     OK
                   </Button>
                 </div>
@@ -2744,7 +2306,10 @@ const importExcel = (e) => {
                     Not
                     <br /> Allowed
                   </h5>
-                  <Button className="save-btn fw-bold ok-buttons" onClick={() => setFailureModeRatioError(false)}>
+                  <Button
+                    className="save-btn fw-bold ok-buttons"
+                    onClick={() => setFailureModeRatioError(false)}
+                  >
                     OK
                   </Button>
                 </div>

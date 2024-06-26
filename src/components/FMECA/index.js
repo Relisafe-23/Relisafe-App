@@ -12,6 +12,10 @@ import { createTheme } from "@material-ui/core/styles";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
 import { toast } from "react-toastify";
+import {
+  faFileDownload,
+  faFileUpload,
+} from "@fortawesome/free-solid-svg-icons";
 
 //import  XLSX from 'xlsx'
 
@@ -68,7 +72,7 @@ function Index(props) {
     operatingPhase: "",
     function: "",
     failureMode: "",
-    searchFM: "",
+    // searchFM: "",
     failureModeRatioAlpha: "",
     cause: "",
     subSystemEffect: "",
@@ -118,9 +122,16 @@ function Index(props) {
         projectId: projectId,
       },
     }).then((res) => {
-      const filteredData = res?.data?.data.filter(
+      let filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "FMECA"
       );
+
+      if (filteredData.length === 0) {
+        filteredData = res?.data?.data.filter(
+          (item) => item?.moduleName === "SAFETY"
+        );
+      }
+
       setAllSepareteData(filteredData);
       if (tableData) {
         const merged = [...tableData, ...filteredData];
@@ -136,9 +147,16 @@ function Index(props) {
         projectId: projectId,
       },
     }).then((res) => {
-      const filteredData = res?.data?.data.filter(
+      let filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "FMECA"
       );
+
+      if (filteredData.length === 0) {
+        filteredData = res?.data?.data.filter(
+          (item) => item?.moduleName === "SAFETY"
+        );
+      }
+
       setAllSepareteData(filteredData);
       if (tableData) {
         const merged = [...tableData, ...filteredData];
@@ -228,7 +246,7 @@ function Index(props) {
       operatingPhase: values.operationPhase,
       function: values.function,
       failureMode: values.failureMode,
-      searchFM: values.searchFM,
+      // searchFM: values.searchFM,
       cause: values.cause,
       failureModeRatioAlpha: values.failureModeRatioAlpha
         ? values.failureModeRatioAlpha
@@ -274,9 +292,9 @@ function Index(props) {
     }).then((response) => {
       setIsLoading(false);
       const status = response?.status;
-      if (status === 204) {
-        setFailureModeRatioError(true);
-      }
+      // if (status === 204) {
+      //   setFailureModeRatioError(true);
+      // }
       getProductData();
       setIsLoading(false);
     });
@@ -311,37 +329,30 @@ function Index(props) {
     }
   };
 
+  const importExcel = (e) => {
+    const file = e.target.files[0];
 
- const importExcel=(e)=>{
-  const file=e.target.files[0]
-  
-  
-  const  reader = new FileReader()
-  reader.onload=(event)=>{
-    
-    //parse data
-     const bstr =event.target.result
-     const workBook = XLSX.read(bstr,{type:"binary"})
-// get first sheet
-const workSheetName=workBook.SheetNames[0]
-const workSheet=workBook.Sheets[workSheetName]
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      //parse data
+      const bstr = event.target.result;
+      const workBook = XLSX.read(bstr, { type: "binary" });
+      // get first sheet
+      const workSheetName = workBook.SheetNames[0];
+      const workSheet = workBook.Sheets[workSheetName];
 
-//convert array
+      //convert array
 
-const fileData=XLSX.utils.sheet_to_json(workSheet,{header:1})
-const headers=fileData[0]
-const heads = headers.map(head=>({title:head,field:head}))
-setColDefs(heads)
-fileData.splice(0,1)
-setData(convertToJson(headers,fileData))
-convertToJson(headers,fileData)
-  }
-  reader.readAsBinaryString(file)
- }
-
-
-  
-
+      const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+      const headers = fileData[0];
+      const heads = headers.map((head) => ({ title: head, field: head }));
+      setColDefs(heads);
+      fileData.splice(0, 1);
+      setData(convertToJson(headers, fileData));
+      convertToJson(headers, fileData);
+    };
+    reader.readAsBinaryString(file);
+  };
 
   useEffect(() => {
     getTreeData();
@@ -493,7 +504,7 @@ convertToJson(headers,fileData)
     "operatingPhase",
     "function",
     "failureMode",
-    "searchFM",
+    // "searchFM",
     "failureModeRatioAlpha",
     "cause",
     "subSystemEffect",
@@ -751,61 +762,61 @@ convertToJson(headers,fileData)
       },
       onCellClick: () => handleDropdownSelection("failureMode"),
     },
-    {
-      field: "searchFM",
-      title: "Search FM*",
-      type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "searchFM") ||
-          [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "searchFM"
-          ) || [];
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="searchFM"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Search FM"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Search FM"
-            />
-          );
-        }
-        return (
-          <Select
-            name="searchFM"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "searchFM");
-              getAllConnectedLibrary(selectedItems, "searchFM");
-            }}
-            options={options}
-          />
-        );
-      },
-      onCellClick: () => handleDropdownSelection("searchFM"),
-    },
+    // {
+    //   field: "searchFM",
+    //   title: "Search FM*",
+    //   type: "string",
+    //   headerStyle: { textAlign: "center" },
+    //   cellStyle: { minWidth: "230px" },
+    //   editComponent: ({ value, onChange }) => {
+    //     const seperateFilteredData =
+    //       allSepareteData?.filter((item) => item?.sourceName === "searchFM") ||
+    //       [];
+    //     const conncetedFilteredData =
+    //       allConnectedData?.filter(
+    //         (item) => item?.destinationName === "searchFM"
+    //       ) || [];
+    //     const options =
+    //       conncetedFilteredData.length > 0
+    //         ? conncetedFilteredData?.map((item) => ({
+    //             value: item?.destinationValue,
+    //             label: item?.destinationValue,
+    //           }))
+    //         : seperateFilteredData?.map((item) => ({
+    //             value: item?.sourceValue,
+    //             label: item?.sourceValue,
+    //           }));
+    //     if (!options || options.length === 0) {
+    //       return (
+    //         <input
+    //           type="text"
+    //           name="searchFM"
+    //           value={value}
+    //           onChange={(e) => {
+    //             createDropdownEditComponent(e.target.value);
+    //             onChange(e.target.value);
+    //           }}
+    //           placeholder="Enter Search FM"
+    //           style={{ height: "40px", borderRadius: "4px" }}
+    //           title="Enter Search FM"
+    //         />
+    //       );
+    //     }
+    //     return (
+    //       <Select
+    //         name="searchFM"
+    //         value={value ? { label: value, value: value } : ""}
+    //         onChange={(selectedItems) => {
+    //           onChange(selectedItems?.value);
+    //           handleInputChange(selectedItems, "searchFM");
+    //           getAllConnectedLibrary(selectedItems, "searchFM");
+    //         }}
+    //         options={options}
+    //       />
+    //     );
+    //   },
+    //   onCellClick: () => handleDropdownSelection("searchFM"),
+    // },
     {
       field: "failureModeRatioAlpha",
       title: "Failure Mode Ratio Alpha*",
@@ -835,7 +846,7 @@ convertToJson(headers,fileData)
         if (!options || options.length === 0) {
           return (
             <input
-              type="text"
+              type="number"
               name="failureModeRatioAlpha"
               value={value}
               onChange={(e) => {
@@ -864,7 +875,7 @@ convertToJson(headers,fileData)
     },
     {
       field: "detectableMeansDuringOperation",
-      title: "Detectable Means during operation",
+      title: "Cause",
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
@@ -2565,7 +2576,7 @@ convertToJson(headers,fileData)
           : data.operatingPhase,
         function: values.function ? values.function : data.function,
         failureMode: values.failureMode ? values.failureMode : data.failureMode,
-        searchFM: values.searchFM ? values.searchFM : data.searchFM,
+        // searchFM: values.searchFM ? values.searchFM : data.searchFM,
         cause: values.cause ? values.cause : data.cause,
         failureModeRatioAlpha: values.failureModeRatioAlpha
           ? values.failureModeRatioAlpha
@@ -2636,9 +2647,9 @@ convertToJson(headers,fileData)
         Alldata: tableData,
       }).then((response) => {
         const status = response?.status;
-        if (status === 204) {
-          setFailureModeRatioError(true);
-        }
+        // if (status === 204) {
+        //   setFailureModeRatioError(true);
+        // }
         getProductData();
         setIsLoading(false);
       });
@@ -2654,7 +2665,7 @@ convertToJson(headers,fileData)
       operatingPhase: values.operatingPhase,
       function: values.function,
       failureMode: values.failureMode,
-      searchFM: values.searchFM,
+      // searchFM: values.searchFM,
       failureModeRatioAlpha: values.failureModeRatioAlpha
         ? values.failureModeRatioAlpha
         : 0,
@@ -2702,9 +2713,9 @@ convertToJson(headers,fileData)
     })
       .then((response) => {
         const status = response?.status;
-        if (status === 204) {
-          setFailureModeRatioError(true);
-        }
+        // if (status === 204) {
+        //   setFailureModeRatioError(true);
+        // }
         getProductData();
         setIsLoading(false);
       })
@@ -2745,40 +2756,113 @@ convertToJson(headers,fileData)
   const role = localStorage.getItem("role");
 
   return (
-    <div className="mx-4 " style={{ marginTop: "90px" }}>
+    <div className="mx-4 " style={{ marginTop: "40px" }}>
       {isLoading ? (
         <Loader />
       ) : (
+        // <div>
+        //   <Projectname projectId={projectId} />
+        // </div>
+        
         <div>
-          <Projectname projectId={projectId} />
+          
 
-          <Row>
-            <Col>
-              <label for="file-input" class="file-label file-inputs">
-                Import
-              </label>
-              <input
-                type="file"
-                className="input-fields"
-                id="file-input"
-                onChange={importExcel}
-              />
-            </Col>
-            <Col>
+          {/* <div
+            style={{
+              display: "flex",
+
+              marginTop: "50px",
+              marginBottom: "60px",
+            }}
+          >
+            <Tooltip placement="left" title="Import">
+              <Col>
+                <label htmlFor="file-input" className="import-export-btn">
+                  <FontAwesomeIcon icon={faFileDownload} />
+                </label>
+                <input
+                  type="file"
+                  className="input-fields"
+                  id="file-input"
+                  onChange={importExcel}
+                />
+              </Col>
+            </Tooltip>
+            
+            <Tooltip placement="left" title="Export">
               <Button
-                className="btn-aligne export-btns-FailureRate"
+                className="import-export-btn"
                 onClick={() => {
                   DownloadExcel();
                 }}
               >
-                Export
+                <FontAwesomeIcon icon={faFileUpload} style={{ width: "15" }} />
               </Button>
-            </Col>
-          </Row>
+            </Tooltip>
+          </div> */}
+  <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div style={{ width: "30%", marginRight: "20px" }}>
+                        <Projectname projectId={projectId} />
+                      </div>
+
+                      <div style={{ width: "100%", marginRight: "20px" }}>
+                        <Dropdown
+                          value={projectId}
+                          productId={productId}
+                          data={treeTableData}
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          alignItems: "center",
+                          marginTop: "8px",
+                          height: "40px",
+                        }}
+                      >
+                        <Tooltip placement="right" title="Import">
+                          <div style={{ marginRight: "8px" }}>
+                            <label
+                              htmlFor="file-input"
+                              className="import-export-btn"
+                            >
+                              <FontAwesomeIcon icon={faFileDownload} />
+                            </label>
+                            <input
+                              type="file"
+                              className="input-fields"
+                              id="file-input"
+                              onChange={importExcel}
+                              style={{ display: "none" }}
+                            />
+                          </div>
+                        </Tooltip>
+                        <Tooltip placement="left" title="Export">
+                          <Button
+                            className="import-export-btn"
+                            onClick={() => DownloadExcel()}
+                          >
+                            <FontAwesomeIcon
+                              icon={faFileUpload}
+                              style={{ width: "15px" }}
+                            />
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    </div>
+
+
 
           {/* <input className="mt-3" type="file" onChange={importExcel} accept=".xlsx" /> */}
 
-          <Dropdown value={projectId} productId={productId} />
+         
           <div>
             <div className="mt-5" style={{ bottom: "35px" }}>
               <ThemeProvider theme={tableTheme}>
@@ -2832,7 +2916,7 @@ convertToJson(headers,fileData)
                       backgroundColor: "#CCE6FF",
                       zIndex: 0,
                     },
-                    exportButton: { csv: true },
+                    // exportButton: { csv: true },
                   }}
                   localization={{
                     toolbar: { function: "Placeholder" },

@@ -340,3 +340,25 @@
     margin: 10px;
   }
 }
+
+.import-export-btn {
+  width: 40px;
+  height: 35px;
+  background-color: var(--primary-color) !important;
+  color: white !important;
+  font-weight: 500;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  border: none; /* Remove any default border */
+}
+
+
+.import-export-container {
+  display: flex;
+  margin-top: 8px;
+  background-color: red;
+  height: 40px; /* Adjust the height as needed */
+}

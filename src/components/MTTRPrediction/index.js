@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Button, Col, Form, Row, Modal, Container, Card } from "react-bootstrap";
+import {
+  Button,
+  Col,
+  Form,
+  Row,
+  Modal,
+  Container,
+  Card,
+} from "react-bootstrap";
 import Label from "../LabelComponent";
 import "../../css/MttrPrediction.scss";
 import { ErrorMessage, Formik } from "formik";
@@ -24,15 +32,25 @@ import { customStyles } from "../core/select";
 import { useHistory } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
-
-import { faAdd
+import {
+  faFileImport,
+  faFileExport,
+  faPlus,
+  faFileDownload,
+  faFileUpload,
 } from "@fortawesome/free-solid-svg-icons";
 
+import { faAdd } from "@fortawesome/free-solid-svg-icons";
+
 const MTTRPrediction = (props, active) => {
-  const projectId = props?.location?.state?.projectId ? props?.location?.state?.projectId : props?.match?.params?.id;
+  const projectId = props?.location?.state?.projectId
+    ? props?.location?.state?.projectId
+    : props?.match?.params?.id;
 
   const [initialTreeStructure, setInitialTreeStructure] = useState();
-  const treeStructure = props?.location?.state?.parentId ? props?.location?.state?.parentId : initialTreeStructure;
+  const treeStructure = props?.location?.state?.parentId
+    ? props?.location?.state?.parentId
+    : initialTreeStructure;
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState("");
   const [successMessage, setSuccessMessage] = useState();
@@ -75,10 +93,10 @@ const MTTRPrediction = (props, active) => {
     toolType: "",
     time: "",
     totalLabour: "",
-    skill:"",
-    tools:"",
-    partNo:"",
-    taskType:"",
+    skill: "",
+    tools: "",
+    partNo: "",
+    taskType: "",
   });
 
   const handleInputChange = (selectedItems, name) => {
@@ -96,7 +114,9 @@ const MTTRPrediction = (props, active) => {
         projectId: projectId,
       },
     }).then((res) => {
-      const filteredData = res?.data?.data.filter((item) => item?.moduleName === "MTTR");
+      const filteredData = res?.data?.data.filter(
+        (item) => item?.moduleName === "MTTR"
+      );
       setAllSepareteData(filteredData);
       const merged = [...tableData, ...filteredData];
       setMergedData(merged);
@@ -129,32 +149,31 @@ const MTTRPrediction = (props, active) => {
       const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
       // console.log(excelData);
 
-        // if (excelData.length > 1) {
-         if (excelData.length > 1) {
-         const headers = excelData[0];
-         const rows = excelData.slice(1);
-         const parsedData = rows.map((row) => {
-           const rowData = {};
-           headers.forEach((header, index) => {
-             rowData[header] = row[index];
-           });
-           return rowData;
-         });
-         setImportExcelData(parsedData[0]);
-       } else {
-         toast("No Data Found In Excel Sheet", {
-           position: "top-right",
-           autoClose: 5000,
-           hideProgressBar: false,
-           closeOnClick: true,
-           pauseOnHover: true,
-           draggable: true,
-           progress: undefined,
-           theme: "light",
-           type: "error",
-         });
-       }
-
+      // if (excelData.length > 1) {
+      if (excelData.length > 1) {
+        const headers = excelData[0];
+        const rows = excelData.slice(1);
+        const parsedData = rows.map((row) => {
+          const rowData = {};
+          headers.forEach((header, index) => {
+            rowData[header] = row[index];
+          });
+          return rowData;
+        });
+        setImportExcelData(parsedData[0]);
+      } else {
+        toast("No Data Found In Excel Sheet", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          type: "error",
+        });
+      }
     };
     if (file) {
     }
@@ -204,35 +223,31 @@ const MTTRPrediction = (props, active) => {
 
     // if (originalData.length > 0) {
 
-const hasData = Object.values(originalData).some((value) => !!value);
+    const hasData = Object.values(originalData).some((value) => !!value);
 
-if (hasData) {
-  const dataArray = [];
+    if (hasData) {
+      const dataArray = [];
 
-  dataArray.push(originalData);
-  const ws = XLSX?.utils?.json_to_sheet(dataArray);
-  const wb = XLSX.utils?.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "FormData");
-  const fileName = `${""}MTTR.xlsx`;
-  XLSX.writeFile(wb, fileName);
-} else {
-  toast("Export Failed !! No Data Found", {
-    position: "top-right",
-    autoClose: 5000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    theme: "light",
-    type: "error",
-  });
-}
-
-  
+      dataArray.push(originalData);
+      const ws = XLSX?.utils?.json_to_sheet(dataArray);
+      const wb = XLSX.utils?.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "FormData");
+      const fileName = `${""}MTTR.xlsx`;
+      XLSX.writeFile(wb, fileName);
+    } else {
+      toast("Export Failed !! No Data Found", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error",
+      });
+    }
   };
-
-
 
   const handleCancelClick = () => {
     const shouldReloadPage = true;
@@ -340,6 +355,7 @@ if (hasData) {
     getProcedureData();
     getMttrData();
   }, [productId]);
+  
 
   const propstoGetTreeData = () => {
     setIsSpinning(true);
@@ -354,15 +370,24 @@ if (hasData) {
     })
       .then((res) => {
         const data = res?.data?.data;
+        console.log("data.......mttr ...",data)
 
-        setCategory(data?.category ? { label: data?.category, value: data?.category } : "");
+        setCategory(
+          data?.category ? { label: data?.category, value: data?.category } : ""
+        );
         setQuantity(data?.quantity);
         setReference(data?.reference);
         setName(data?.productName);
         setPartNumber(data?.partNumber);
-        setEnvironment(data?.environment ? { label: data?.environment, value: data?.environment } : "");
+        setEnvironment(
+          data?.environment
+            ? { label: data?.environment, value: data?.environment }
+            : ""
+        );
         setTemperature(data?.temperature);
-        setPartType(data?.partType ? { label: data?.partType, value: data?.partType } : "");
+        setPartType(
+          data?.partType ? { label: data?.partType, value: data?.partType } : ""
+        );
         setIsSpinning(false);
         setIsLoading(false);
       })
@@ -404,20 +429,25 @@ if (hasData) {
         return true;
       },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "TaskType") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "TaskType") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "TaskType") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "TaskType"
+          ) || [];
 
         const options =
-        conncetedFilteredData.length > 0
-          ? conncetedFilteredData?.map((item) => ({
-              value: item?.destinationValue,
-              label: item?.destinationValue,
-            }))
-          : seperateFilteredData?.map((item) => ({
-              value: item?.sourceValue,
-              label: item?.sourceValue,
-            }));
-            if (!options || options.length === 0) {
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
           return (
             <input
               type="text"
@@ -425,7 +455,7 @@ if (hasData) {
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder="Task Type"
-              style={{ height: "40px", borderRadius: "4px" , width: "80px"}}
+              style={{ height: "40px", borderRadius: "4px", width: "80px" }}
               title="Enter Task Type"
             />
           );
@@ -457,20 +487,24 @@ if (hasData) {
         return true;
       },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "time") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "time") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "time") || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "time"
+          ) || [];
 
         const options =
-        conncetedFilteredData.length > 0
-          ? conncetedFilteredData?.map((item) => ({
-              value: item?.destinationValue,
-              label: item?.destinationValue,
-            }))
-          : seperateFilteredData?.map((item) => ({
-              value: item?.sourceValue,
-              label: item?.sourceValue,
-            }));
-            if (!options || options.length === 0) {
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
           return (
             <input
               type="text"
@@ -478,7 +512,7 @@ if (hasData) {
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder="Average Task Time"
-              style={{ height: "40px", borderRadius: "4px" , width: "140px"}}
+              style={{ height: "40px", borderRadius: "4px", width: "140px" }}
               title="Enter Average Task Time"
             />
           );
@@ -510,20 +544,26 @@ if (hasData) {
         return true;
       },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "totalLabour") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "totalLabour") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "totalLabour"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "totalLabour"
+          ) || [];
 
         const options =
-        conncetedFilteredData.length > 0
-          ? conncetedFilteredData?.map((item) => ({
-              value: item?.destinationValue,
-              label: item?.destinationValue,
-            }))
-          : seperateFilteredData?.map((item) => ({
-              value: item?.sourceValue,
-              label: item?.sourceValue,
-            }));
-            if (!options || options.length === 0) {
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
           return (
             <input
               type="text"
@@ -531,7 +571,7 @@ if (hasData) {
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder="No of Labours"
-              style={{ height: "40px", borderRadius: "4px" , width: "100px"}}
+              style={{ height: "40px", borderRadius: "4px", width: "100px" }}
               title="Enter No of Labours"
             />
           );
@@ -563,19 +603,23 @@ if (hasData) {
       //   return true;
       // },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "skill") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "skill") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "skill") || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "skill"
+          ) || [];
         const options =
-        conncetedFilteredData.length > 0
-          ? conncetedFilteredData?.map((item) => ({
-              value: item?.destinationValue,
-              label: item?.destinationValue,
-            }))
-          : seperateFilteredData?.map((item) => ({
-              value: item?.sourceValue,
-              label: item?.sourceValue,
-            }));
-      if (!options || options.length === 0) {
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
           return (
             <input
               type="text"
@@ -583,7 +627,7 @@ if (hasData) {
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder="Skill"
-              style={{ height: "40px", borderRadius: "4px" , width: "100px"}}
+              style={{ height: "40px", borderRadius: "4px", width: "100px" }}
               title="Enter Skill"
             />
           );
@@ -615,19 +659,23 @@ if (hasData) {
       //   return true;
       // },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "tools") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "tools") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "tools") || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "tools"
+          ) || [];
         const options =
-        conncetedFilteredData.length > 0
-          ? conncetedFilteredData?.map((item) => ({
-              value: item?.destinationValue,
-              label: item?.destinationValue,
-            }))
-          : seperateFilteredData?.map((item) => ({
-              value: item?.sourceValue,
-              label: item?.sourceValue,
-            }));
-      if (!options || options.length === 0) {
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
           return (
             <input
               type="text"
@@ -635,7 +683,7 @@ if (hasData) {
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder="Tools"
-              style={{ height: "40px", borderRadius: "4px" , width: "100px"}}
+              style={{ height: "40px", borderRadius: "4px", width: "100px" }}
               title="Enter Tools"
             />
           );
@@ -667,19 +715,24 @@ if (hasData) {
       //   return true;
       // },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "partNo") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "partNo") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "partNo") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "partNo"
+          ) || [];
         const options =
-        conncetedFilteredData.length > 0
-          ? conncetedFilteredData?.map((item) => ({
-              value: item?.destinationValue,
-              label: item?.destinationValue,
-            }))
-          : seperateFilteredData?.map((item) => ({
-              value: item?.sourceValue,
-              label: item?.sourceValue,
-            }));
-      if (!options || options.length === 0) {
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
           return (
             <input
               type="text"
@@ -687,7 +740,7 @@ if (hasData) {
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder="Part No"
-              style={{ height: "40px", borderRadius: "4px" , width: "100px"}}
+              style={{ height: "40px", borderRadius: "4px", width: "100px" }}
               title="Enter Part No"
             />
           );
@@ -709,7 +762,7 @@ if (hasData) {
     {
       title: "Tool Type",
       field: "toolType",
-      type:"string",
+      type: "string",
       headerStyle: { textAlign: "center" },
       cellStyle: { minWidth: "120px" },
       // validate: (rowData) => {
@@ -719,19 +772,24 @@ if (hasData) {
       //   return true;
       // },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "toolType") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "toolType") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "toolType") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "toolType"
+          ) || [];
         const options =
-        conncetedFilteredData.length > 0
-          ? conncetedFilteredData?.map((item) => ({
-              value: item?.destinationValue,
-              label: item?.destinationValue,
-            }))
-          : seperateFilteredData?.map((item) => ({
-              value: item?.sourceValue,
-              label: item?.sourceValue,
-            }));
-      if (!options || options.length === 0) {
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+                value: item?.destinationValue,
+                label: item?.destinationValue,
+              }))
+            : seperateFilteredData?.map((item) => ({
+                value: item?.sourceValue,
+                label: item?.sourceValue,
+              }));
+        if (!options || options.length === 0) {
           return (
             <input
               type="text"
@@ -739,7 +797,7 @@ if (hasData) {
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder="toolType"
-              style={{ height: "40px", borderRadius: "4px" , width: "100px"}}
+              style={{ height: "40px", borderRadius: "4px", width: "100px" }}
               title="Enter toolType"
             />
           );
@@ -758,7 +816,6 @@ if (hasData) {
         );
       },
     },
-   
   ];
 
   const submitSchema = Yup.object().shape({
@@ -769,10 +826,13 @@ if (hasData) {
     temperature: Yup.string().required("Temperature is Required"),
     category: Yup.object().required("Category required"),
     levelOfReplace: Yup.object().required("Level of replace is required"),
-    levelOfRepair: repairable?.value != "Yes" ? null : Yup.object().required("Level of repair is required"),
+    levelOfRepair:
+      repairable?.value != "Yes"
+        ? null
+        : Yup.object().required("Level of repair is required"),
     spare: Yup.object().required("Spare is required"),
-    mct: mctValue ? Yup.string().required("MCT is required") : Yup.string().nullable(),
-    mlh: mlhValue ? Yup.string().required("MLH is required") : Yup.string().nullable(),
+    mct: Yup.string().required("MCT is required"),
+    mlh: Yup.string().required("MLH is required"),
     // labourHour: Yup.string().required("Labour hour is required"),
     // partType:
     //   category === "" || category === "Assembly"
@@ -803,7 +863,6 @@ if (hasData) {
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
-         toast.success("Procedure Created Successfully");
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -816,8 +875,8 @@ if (hasData) {
   const updateProcedureData = (value) => {
     const companyId = localStorage.getItem("companyId");
     const rowId = value?.id;
-    
-const userId = localStorage.getItem("userId");
+
+    const userId = localStorage.getItem("userId");
 
     Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, {
       time: value.time,
@@ -879,9 +938,10 @@ const userId = localStorage.getItem("userId");
     const rowId = value?.id;
     const userId = localStorage.getItem("userId");
     Api.delete(`/api/v1/mttrPrediction/delete/procedure/${rowId}`, {
-      headers: { 
+      headers: {
         token: token,
-        userId:userId },
+        userId: userId,
+      },
     })
       .then((response) => {
         getProcedureData();
@@ -919,7 +979,7 @@ const userId = localStorage.getItem("userId");
         remarks: values.remarks,
         treeStructureId: treeStructure,
         token: token,
-        userId:userId,
+        userId: userId,
       })
         .then((res) => {
           const mttrId = res?.data?.data?.id;
@@ -991,7 +1051,11 @@ const userId = localStorage.getItem("userId");
         const data = res?.data?.data;
         setMttrId(res?.data?.data?.id ? res?.data?.data?.id : null);
         // setMttrId(res?.data?.data?.id);
-        setRepairable(data?.repairable ? { label: data?.repairable, value: data?.repairable } : "");
+        setRepairable(
+          data?.repairable
+            ? { label: data?.repairable, value: data?.repairable }
+            : ""
+        );
         setLevelOfRepair(
           data?.levelOfRepair
             ? {
@@ -1025,7 +1089,7 @@ const userId = localStorage.getItem("userId");
     }, 2000);
   };
   return (
-    <Container className="mttr-main-div mx-1" style={{ marginTop: "82px" }}>
+    <Container className="mttr-main-div mx-1" style={{ marginTop: "45px" }}>
       {isLoading ? (
         <Loader />
       ) : (
@@ -1049,7 +1113,11 @@ const userId = localStorage.getItem("userId");
             labourHour: totalLabourHr ? totalLabourHr : "",
             mttr: mttrData?.mttr ? mttrData?.mttr : "",
 
-            remarks: mttrData?.remarks ? mttrData?.remarks : importExcelData?.remarks ? importExcelData.remarks : "",
+            remarks: mttrData?.remarks
+              ? mttrData?.remarks
+              : importExcelData?.remarks
+              ? importExcelData.remarks
+              : "",
             mmax: mttrData?.mMax ? mttrData?.mMax : "",
             taskType: "",
             time: "",
@@ -1065,10 +1133,15 @@ const userId = localStorage.getItem("userId");
           }}
         >
           {(formik) => {
-            const { values, handleChange, handleSubmit, handleBlur, setFieldValue } = formik;
+            const {
+              values,
+              handleChange,
+              handleSubmit,
+              handleBlur,
+              setFieldValue,
+            } = formik;
             return (
               <div>
-                <Projectname projectId={projectId} />
                 <Form onSubmit={handleSubmit} onReset={handleReset}>
                   <fieldset
                     disabled={
@@ -1080,49 +1153,63 @@ const userId = localStorage.getItem("userId");
                         : "disabled"
                     }
                   >
-                    <Row>
-                      <Col>
-                        {/* <Button className="import-btns-FailureRate">Import</Button> */}
-
-                        <label for="file-input" class="file-label file-inputs">
-                          Import
-                        </label>
-                        <input type="file" className="input-fields" id="file-input" onChange={importExcel} />
-                      </Col>
-
-                      <Col>
-                        <Button
-                          className="btn-aligne export-btns-FailureRate"
-                          onClick={() => {
-                            exportToExcel(values);
-                          }}
-                        >
-                          Export
-                        </Button>
-                      </Col>
-                    </Row>
-
-                    <Row>
-                      <Col xs={12} sm={9} className="projectName">
-                        <Dropdown value={projectId} productId={productId} data={treeTableData} />
-                      </Col>
-                    </Row>
-
-                    {/* <label for="file-input" class="file-label file-inputs">
-                      Import
-                    </label>
-                    <input type="file" className="input-fields" id="file-input" onChange={importExcel} /> */}
-
-                    {/* <input type="file" className="btn-impor mt-2" onChange={importExcel} /> */}
-
-                    {/* <Button
-                      className=" btn-aligne export-btns-FailureRate "
-                      onClick={() => {
-                        exportToExcel(values);
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
                       }}
                     >
-                      Export
-                    </Button> */}
+                      <div style={{ width: "30%", marginRight: "20px" }}>
+                        <Projectname projectId={projectId} />
+                      </div>
+
+                      <div style={{ width: "100%", marginRight: "20px" }}>
+                        <Dropdown
+                          value={projectId}
+                          productId={productId}
+                          data={treeTableData}
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          alignItems: "center",
+                          marginTop: "8px",
+                          height: "40px",
+                        }}
+                      >
+                        <Tooltip placement="right" title="Import">
+                          <div style={{ marginRight: "8px" }}>
+                            <label
+                              htmlFor="file-input"
+                              className="import-export-btn"
+                            >
+                              <FontAwesomeIcon icon={faFileDownload} />
+                            </label>
+                            <input
+                              type="file"
+                              className="input-fields"
+                              id="file-input"
+                              onChange={importExcel}
+                              style={{ display: "none" }}
+                            />
+                          </div>
+                        </Tooltip>
+                        <Tooltip placement="left" title="Export">
+                          <Button
+                            className="import-export-btn"
+                            onClick={() => exportToExcel(values)}
+                          >
+                            <FontAwesomeIcon
+                              icon={faFileUpload}
+                              style={{ width: "15px" }}
+                            />
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    </div>
                     <Row className="d-flex">
                       <div className="mttr-sec mt-3">
                         <p className=" mb-0 para-tag">General Information</p>
@@ -1130,7 +1217,12 @@ const userId = localStorage.getItem("userId");
 
                       <Card className="mt-2 mttr-card ">
                         {isSpinning ? (
-                          <Spinner className="spinner" animation="border" variant="secondary" centered />
+                          <Spinner
+                            className="spinner"
+                            animation="border"
+                            variant="secondary"
+                            centered
+                          />
                         ) : (
                           <div className=" p-4">
                             <Row>
@@ -1164,7 +1256,11 @@ const userId = localStorage.getItem("userId");
                                     onBlur={handleBlur}
                                     // onChange={handleChange}
                                   />
-                                  <ErrorMessage className="error text-danger" component="span" name="partNumber" />
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="partNumber"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -1185,7 +1281,11 @@ const userId = localStorage.getItem("userId");
 
                                     onBlur={handleBlur}
                                   />
-                                  <ErrorMessage className="error text-danger" component="span" name="quantity" />
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="quantity"
+                                  />
                                 </Form.Group>
                               </Col>
                               <Col>
@@ -1202,7 +1302,11 @@ const userId = localStorage.getItem("userId");
                                     // onChange={handleChange}
                                     onBlur={handleBlur}
                                   />
-                                  <ErrorMessage className="error text-danger" component="span" name="reference" />
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="reference"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -1248,11 +1352,16 @@ const userId = localStorage.getItem("userId");
                                       },
                                     ]}
                                   />
-                                  <ErrorMessage className="error text-danger" component="span" name="category" />
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="category"
+                                  />
                                 </Form.Group>
                               </Col>
                               <Col className="part-type-aln">
-                                {category.value === "Mechanical" || category.value === "Electronic" ? (
+                                {category.value === "Mechanical" ||
+                                category.value === "Electronic" ? (
                                   <div>
                                     <Form.Group>
                                       <Label notify={true}>Part Type</Label>
@@ -1280,20 +1389,28 @@ const userId = localStorage.getItem("userId");
                                         options={[
                                           category.value === "Electronic"
                                             ? {
-                                                options: Electronic.map((list) => ({
-                                                  value: list.value,
-                                                  label: list.label,
-                                                })),
+                                                options: Electronic.map(
+                                                  (list) => ({
+                                                    value: list.value,
+                                                    label: list.label,
+                                                  })
+                                                ),
                                               }
                                             : {
-                                                options: Mechanical.map((list) => ({
-                                                  value: list.value,
-                                                  label: list.label,
-                                                })),
+                                                options: Mechanical.map(
+                                                  (list) => ({
+                                                    value: list.value,
+                                                    label: list.label,
+                                                  })
+                                                ),
                                               },
                                         ]}
                                       />
-                                      <ErrorMessage className="error text-danger" component="span" name="partType" />
+                                      <ErrorMessage
+                                        className="error text-danger"
+                                        component="span"
+                                        name="partType"
+                                      />
                                     </Form.Group>
                                   </div>
                                 ) : null}
@@ -1308,11 +1425,18 @@ const userId = localStorage.getItem("userId");
                         )}
                       </Card>
                       <div className="mttr-sec mt-4 ">
-                        <p className=" mb-0 para-tag">Environment Profile and Temperature</p>
+                        <p className=" mb-0 para-tag">
+                          Environment Profile and Temperature
+                        </p>
                       </div>
                       <Card className="mt-2 mttr-card">
                         {isSpinning ? (
-                          <Spinner className="spinner_2" animation="border" variant="secondary" centered />
+                          <Spinner
+                            className="spinner_2"
+                            animation="border"
+                            variant="secondary"
+                            centered
+                          />
                         ) : (
                           <Row className="p-4">
                             <Col>
@@ -1351,7 +1475,11 @@ const userId = localStorage.getItem("userId");
                                   //   },
                                   // ]}
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="environment" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="environment"
+                                />
                               </Form.Group>
                             </Col>
                             <Col>
@@ -1368,7 +1496,11 @@ const userId = localStorage.getItem("userId");
                                   // onChange={handleChange}
                                   onBlur={handleBlur}
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="temperature" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="temperature"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -1379,13 +1511,23 @@ const userId = localStorage.getItem("userId");
                       </div>
                       <Card className="mt-2 mttr-card ">
                         {isSpinning ? (
-                          <Spinner className="spinner_2" animation="border" variant="secondary" centered />
+                          <Spinner
+                            className="spinner_2"
+                            animation="border"
+                            variant="secondary"
+                            centered
+                          />
                         ) : (
                           <div className="p-4">
                             <div>
-                              <Alert severity="info" className="warning-message">
-                                Note: Assembly is repaired by replacing one or more of its lower level parts.The level
-                                of repair of the lower level parts must be equal to the level of replace of assembly
+                              <Alert
+                                severity="info"
+                                className="warning-message"
+                              >
+                                Note: Assembly is repaired by replacing one or
+                                more of its lower level parts.The level of
+                                repair of the lower level parts must be equal to
+                                the level of replace of assembly
                               </Alert>
                             </div>
                             <Row>
@@ -1419,7 +1561,11 @@ const userId = localStorage.getItem("userId");
                                       { value: "Yes", label: "Yes" },
                                     ]}
                                   />
-                                  <ErrorMessage className="error text-danger" component="span" name="repairable" />
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="repairable"
+                                  />
                                 </Form.Group>
                               </Col>
                               <Col>
@@ -1434,7 +1580,11 @@ const userId = localStorage.getItem("userId");
                                       isDisabled
                                       className="mt-1 react-select__option"
                                     />{" "}
-                                    <ErrorMessage className="error text-danger" component="span" name="levelOfRepair" />
+                                    <ErrorMessage
+                                      className="error text-danger"
+                                      component="span"
+                                      name="levelOfRepair"
+                                    />
                                   </Form.Group>
                                 ) : (
                                   <Form.Group>
@@ -1449,7 +1599,8 @@ const userId = localStorage.getItem("userId");
                                         writePermission === true ||
                                         writePermission === "undefined" ||
                                         role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                        (isOwner === true &&
+                                          createdBy === userId)
                                           ? null
                                           : "disabled"
                                       }
@@ -1490,7 +1641,11 @@ const userId = localStorage.getItem("userId");
                                         },
                                       ]}
                                     />
-                                    <ErrorMessage className="error text-danger" component="span" name="levelOfRepair" />
+                                    <ErrorMessage
+                                      className="error text-danger"
+                                      component="span"
+                                      name="levelOfRepair"
+                                    />
                                   </Form.Group>
                                 )}
                               </Col>
@@ -1551,7 +1706,11 @@ const userId = localStorage.getItem("userId");
                                       },
                                     ]}
                                   />
-                                  <ErrorMessage className="error text-danger" component="span" name="levelOfReplace" />
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="levelOfReplace"
+                                  />
                                 </Form.Group>
                               </Col>
                               <Col>
@@ -1583,7 +1742,11 @@ const userId = localStorage.getItem("userId");
                                       { value: "None", label: "None" },
                                     ]}
                                   />
-                                  <ErrorMessage className="error text-danger" component="span" name="spare" />
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="spare"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -1608,7 +1771,10 @@ const userId = localStorage.getItem("userId");
                       <Card className="p-4 mttr-card ">
                         {validateData ? null : (
                           <Alert severity="info" className="warning-message">
-                            <b>Please click MIL 472 procedure 5A Button from MTTR Prediction for result section</b>
+                            <b>
+                              Please click MIL 472 procedure 5A Button from MTTR
+                              Prediction for result section
+                            </b>
                           </Alert>
                         )}
                         <div>
@@ -1628,7 +1794,11 @@ const userId = localStorage.getItem("userId");
                                   onChange={handleChange}
                                   onBlur={handleBlur}
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="mct" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="mct"
+                                />
                               </Form.Group>
                             </Col>
                             <Col>
@@ -1646,7 +1816,11 @@ const userId = localStorage.getItem("userId");
                                   onChange={handleChange}
                                   onBlur={handleBlur}
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="mlh" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="mlh"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -1654,7 +1828,10 @@ const userId = localStorage.getItem("userId");
                             <Col>
                               <Form.Group className="mt-3">
                                 <Label>MTTR</Label>
-                                <Tooltip title="(Calculated only for family type - Assemblie)" arrow>
+                                <Tooltip
+                                  title="(Calculated only for family type - Assemblie)"
+                                  arrow
+                                >
                                   <Form.Control
                                     type="number"
                                     name="mttr"
@@ -1668,7 +1845,11 @@ const userId = localStorage.getItem("userId");
                                     onBlur={handleBlur}
                                   />
                                 </Tooltip>
-                                <ErrorMessage className="text-danger" component="span" name="mttr" />
+                                <ErrorMessage
+                                  className="text-danger"
+                                  component="span"
+                                  name="mttr"
+                                />
                               </Form.Group>
                             </Col>
                             <Col>
@@ -1686,7 +1867,11 @@ const userId = localStorage.getItem("userId");
                                   onChange={handleChange}
                                   onBlur={handleBlur}
                                 />
-                                <ErrorMessage className="error text-danger" component="span" name="mmax" />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="mmax"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -1705,7 +1890,6 @@ const userId = localStorage.getItem("userId");
                                 />
                               </Form.Group>
                             </Col>
-                            
                           </Row>
                         </div>{" "}
                       </Card>
@@ -1723,13 +1907,21 @@ const userId = localStorage.getItem("userId");
                           CANCEL
                         </Button>
 
-                        <Button className="save-btn  " type="submit" disabled={!productId}>
+                        <Button
+                          className="save-btn  "
+                          type="submit"
+                          disabled={!productId}
+                        >
                           SAVE CHANGES
                         </Button>
                       </div>
                       <Modal show={show} centered onHide={() => setShow(!show)}>
                         <div className="d-flex justify-content-center mt-5">
-                          <FontAwesomeIcon icon={faCircleCheck} fontSize={"40px"} color="#1D5460" />
+                          <FontAwesomeIcon
+                            icon={faCircleCheck}
+                            fontSize={"40px"}
+                            color="#1D5460"
+                          />
                         </div>
                         <Modal.Footer
                           className=" d-flex justify-content-center mt-3 mb-5 success-message"
@@ -1741,17 +1933,33 @@ const userId = localStorage.getItem("userId");
                         </Modal.Footer>
                       </Modal>
 
-                      <Modal show={open} dialogClassName="mttr-modal-main" backdrop="static" centered size="lg">
-                        <Modal.Header style={{ borderBottom: 0 }} className="d-flex justify-content-center">
+                      <Modal
+                        show={open}
+                        dialogClassName="mttr-modal-main"
+                        backdrop="static"
+                        centered
+                        size="lg"
+                      >
+                        <Modal.Header
+                          style={{ borderBottom: 0 }}
+                          className="d-flex justify-content-center"
+                        >
                           <br />
                         </Modal.Header>
                         {productId ? (
-                          <Alert severity="info" className=" mttr-alert mx-3 mb-0">
+                          <Alert
+                            severity="info"
+                            className=" mttr-alert mx-3 mb-0"
+                          >
                             Please fill these fields
                           </Alert>
                         ) : (
-                          <Alert severity="info" className=" mttr-alert mx-3 mb-0">
-                            Please Select the product Dropdown before filling these field
+                          <Alert
+                            severity="info"
+                            className=" mttr-alert mx-3 mb-0"
+                          >
+                            Please Select the product Dropdown before filling
+                            these field
                           </Alert>
                         )}
                         <Modal.Body>
@@ -1792,7 +2000,10 @@ const userId = localStorage.getItem("userId");
                           </ThemeProvider>
                         </Modal.Body>
                         <Modal.Footer style={{ borderTop: 0 }}>
-                          <Button className="save-btn " onClick={() => setOpen(false)}>
+                          <Button
+                            className="save-btn "
+                            onClick={() => setOpen(false)}
+                          >
                             Close
                           </Button>
                         </Modal.Footer>

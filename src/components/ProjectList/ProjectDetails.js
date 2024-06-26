@@ -111,8 +111,8 @@ export default function ProjectDetails(props) {
       .max(99, "Maximum length is 2"),
     daysopration: Yup.string().required("Days of operation per year is required"),
     temp: Yup.string().required("Temperature is required"),
-    nonShortProbability: Yup.string().required("Non Short Probability(NSP) is required"),
-    mMaxValue: Yup.string().required("Phi for Mmax required"),
+    // nonShortProbability: Yup.string().required("Non Short Probability(NSP) is required"),
+    // mMaxValue: Yup.string().required("Phi for Mmax required"),
     avgpoweronhoursperday:Yup.number().max(24, "Average Power on hours per day Max value 24."),
     prolifekm: Yup.number()
       .min(1, "Minimum 1 value is required")
@@ -658,7 +658,7 @@ export default function ProjectDetails(props) {
                     <Row>
                       <Col>
                         <Form.Group className="mt-3">
-                          <Label notify={true}>Non Short Probability(NSP)</Label>
+                          <Label>Non Short Probability(NSP)</Label>
                           <Form.Control
                             type="number"
                             min="0"
@@ -691,7 +691,7 @@ export default function ProjectDetails(props) {
                           />
                         </Form.Group> */}
                         <Form.Group className="mt-3">
-                          <Label notify={true}>&#934; for Mmax</Label>
+                          <Label>&#934; for Mmax</Label>
                           <Form.Control
                             type="number"
                             min="0"

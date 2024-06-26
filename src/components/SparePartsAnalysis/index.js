@@ -19,10 +19,16 @@ import { useHistory } from "react-router-dom";
 import * as XLSX from "xlsx";
 import { CSVLink } from "react-csv";
 import { toast } from "react-toastify";
-
+import { Tooltip, TableCell } from "@material-ui/core";
+import {
+  faFileDownload,
+  faFileUpload,
+} from "@fortawesome/free-solid-svg-icons";
 
 function Index(props) {
-  const projectId = props?.location?.state?.projectId ? props?.location?.state?.projectId : props?.match?.params?.id;
+  const projectId = props?.location?.state?.projectId
+    ? props?.location?.state?.projectId
+    : props?.match?.params?.id;
   // const spaPermission = props?.location?.state?.spaWrite;
   // const productId = props?.location?.props?.data?.id
   //   ? props?.location?.props?.data?.id
@@ -61,7 +67,7 @@ function Index(props) {
   const [productName, setProductName] = useState();
   const [colDefs, setColDefs] = useState();
   const [importExcelData, setImportExcelData] = useState({});
-   const [shouldReload, setShouldReload] = useState(false);
+  const [shouldReload, setShouldReload] = useState(false);
 
   const loginSchema = Yup.object().shape({
     spare: Yup.object().required("Spare is required"),
@@ -123,32 +129,30 @@ function Index(props) {
       const workSheet = workBook.Sheets[workSheetName];
 
       const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-         if (excelData.length > 1) {
-           const headers = excelData[0];
-           const rows = excelData.slice(1);
-           const parsedData = rows.map((row) => {
-             const rowData = {};
-             headers.forEach((header, index) => {
-               rowData[header] = row[index];
-             });
-             return rowData;
-           });
-           setImportExcelData(parsedData[0]);
-         } else {
-           toast("No Data Found In Excel Sheet", {
-             position: "top-right",
-             autoClose: 5000,
-             hideProgressBar: false,
-             closeOnClick: true,
-             pauseOnHover: true,
-             draggable: true,
-             progress: undefined,
-             theme: "light",
-             type: "error",
-           });
-         }
-
-      
+      if (excelData.length > 1) {
+        const headers = excelData[0];
+        const rows = excelData.slice(1);
+        const parsedData = rows.map((row) => {
+          const rowData = {};
+          headers.forEach((header, index) => {
+            rowData[header] = row[index];
+          });
+          return rowData;
+        });
+        setImportExcelData(parsedData[0]);
+      } else {
+        toast("No Data Found In Excel Sheet", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          type: "error",
+        });
+      }
     };
     if (file) {
       reader.readAsBinaryString(file);
@@ -157,9 +161,8 @@ function Index(props) {
 
   const createSpareAnalysisDataFromExcel = (values) => {
     setIsLoading(true);
-  
-    const companyId = localStorage.getItem("companyId");
 
+    const companyId = localStorage.getItem("companyId");
 
     Api.patch("api/v1/sparePartsAnalysis/update", {
       spare: spare,
@@ -194,60 +197,58 @@ function Index(props) {
 
   const convertToJson = (headers, originalData) => {
     const rows = [];
-      originalData.forEach((row) => {
-        let rowData = {};
-        row.forEach((element, index) => {
-          rowData[headers[index]] = element;
-        });
-        rows.push(rowData);
-        createSpareAnalysisDataFromExcel(rowData);
+    originalData.forEach((row) => {
+      let rowData = {};
+      row.forEach((element, index) => {
+        rowData[headers[index]] = element;
       });
+      rows.push(rowData);
+      createSpareAnalysisDataFromExcel(rowData);
+    });
   };
 
   const exportToExcel = (value) => {
-    
-      const originalData = {
-        Delivery_Days: value.deliveryTimeDays,
-        Serial_Production_Price1: value.afterSerialProductionPrice1,
-        Moq_Price_1: value.moq_1Price,
-        Moq_Price_3: value.moq_3Price,
-        Serial_Production_Price3: value.afterSerialProductionPrice3,
-        Serial_Production_Price2: value.afterSerialProductionPrice2,
-        Annual_Price: value.annualPrice,
-        Moq_Price_2: value.moq_2Price,
-        Lcc_Price_Validity: value.lccPriceValidity,
-        Recomm_Spare_Quantity: value.recommendedSpareQuantity,
-        Calc_Spare_Qty: value.calculatedSpareQuantity,
-      };
-      
-// if (originalData.length > 1) working
-// if (originalData[1].length > 0) 
-// {
-  const hasData = Object.values(originalData).some((value) => !!value);
+    const originalData = {
+      Delivery_Days: value.deliveryTimeDays,
+      Serial_Production_Price1: value.afterSerialProductionPrice1,
+      Moq_Price_1: value.moq_1Price,
+      Moq_Price_3: value.moq_3Price,
+      Serial_Production_Price3: value.afterSerialProductionPrice3,
+      Serial_Production_Price2: value.afterSerialProductionPrice2,
+      Annual_Price: value.annualPrice,
+      Moq_Price_2: value.moq_2Price,
+      Lcc_Price_Validity: value.lccPriceValidity,
+      Recomm_Spare_Quantity: value.recommendedSpareQuantity,
+      Calc_Spare_Qty: value.calculatedSpareQuantity,
+    };
 
-  if (hasData) {
-    const dataArray = [];
-    dataArray.push(originalData);
-    const ws = XLSX?.utils?.json_to_sheet(dataArray);
-    const wb = XLSX.utils?.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "FormData");
+    // if (originalData.length > 1) working
+    // if (originalData[1].length > 0)
+    // {
+    const hasData = Object.values(originalData).some((value) => !!value);
 
-    // Generate Excel file and download
-    XLSX.writeFile(wb, `${productName}_Spare_Parts_Input.xlsx`);
-  } else {
-    toast("Export Failed !! No Data Found", {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-      type: "error", // Change this to "error" to display an error message
-    });
-  }
+    if (hasData) {
+      const dataArray = [];
+      dataArray.push(originalData);
+      const ws = XLSX?.utils?.json_to_sheet(dataArray);
+      const wb = XLSX.utils?.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "FormData");
 
+      // Generate Excel file and download
+      XLSX.writeFile(wb, `${productName}_Spare_Parts_Input.xlsx`);
+    } else {
+      toast("Export Failed !! No Data Found", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error", // Change this to "error" to display an error message
+      });
+    }
   };
 
   useEffect(() => {
@@ -278,23 +279,22 @@ function Index(props) {
     }, 2000);
   };
 
+  const handleCancelClick = () => {
+    // Perform any necessary checks to determine if a reload is required
+    const shouldReloadPage = true; // Change this condition as needed
 
-   const handleCancelClick = () => {
-     // Perform any necessary checks to determine if a reload is required
-     const shouldReloadPage = true; // Change this condition as needed
-
-     if (shouldReloadPage) {
-       setShouldReload(true);
-     } else {
+    if (shouldReloadPage) {
+      setShouldReload(true);
+    } else {
       //  formik.resetForm();
-       setOpen(false);
-     }
-   };
+      setOpen(false);
+    }
+  };
 
-   if (shouldReload) {
-     // Reload the page
-     window.location.reload();
-   }
+  if (shouldReload) {
+    // Reload the page
+    window.location.reload();
+  }
 
   const getProjectPermission = () => {
     Api.get(`/api/v1/projectPermission/list`, {
@@ -406,8 +406,14 @@ function Index(props) {
       .then((res) => {
         const data = res?.data?.data;
 
-        setRecommendedSpareQuantity(data?.recommendedSpareQuantity ? data?.recommendedSpareQuantity : "");
-        setCalculatedSpareQuantity(res?.data?.CalculatedSpareQuantity ? res?.data?.CalculatedSpareQuantity : "");
+        setRecommendedSpareQuantity(
+          data?.recommendedSpareQuantity ? data?.recommendedSpareQuantity : ""
+        );
+        setCalculatedSpareQuantity(
+          res?.data?.CalculatedSpareQuantity
+            ? res?.data?.CalculatedSpareQuantity
+            : ""
+        );
         setPrefillData(data ? data : "");
         setspareId(data?.id);
         setIsLoading(false);
@@ -508,7 +514,7 @@ function Index(props) {
     setShow(!show);
     setOpen(false);
   };
- 
+
   return (
     <div className=" mx-4" style={{ marginTop: "90px" }}>
       {isLoading ? (
@@ -517,7 +523,9 @@ function Index(props) {
         <Formik
           enableReinitialize={true}
           initialValues={{
-            spare: prefillData?.spare ? { label: prefillData?.spare, value: prefillData?.spare } : "",
+            spare: prefillData?.spare
+              ? { label: prefillData?.spare, value: prefillData?.spare }
+              : "",
             warranty: prefillData?.warrantySpare
               ? {
                   label: prefillData?.warrantySpare,
@@ -541,21 +549,24 @@ function Index(props) {
               : importExcelData?.Lcc_Price_Validity
               ? importExcelData?.Lcc_Price_Validity
               : "",
-            afterSerialProductionPrice1: prefillData?.afterSerialProductionPrice1
-              ? prefillData?.afterSerialProductionPrice1
-              : importExcelData?.Serial_Production_Price1
-              ? importExcelData?.Serial_Production_Price1
-              : "",
-            afterSerialProductionPrice2: prefillData?.afterSerialProductionPrice2
-              ? prefillData?.afterSerialProductionPrice2
-              : importExcelData?.Serial_Production_Price2
-              ? importExcelData?.Serial_Production_Price2
-              : "",
-            afterSerialProductionPrice3: prefillData?.afterSerialProductionPrice3
-              ? prefillData?.afterSerialProductionPrice3
-              : importExcelData?.Serial_Production_Price3
-              ? importExcelData?.Serial_Production_Price3
-              : "",
+            afterSerialProductionPrice1:
+              prefillData?.afterSerialProductionPrice1
+                ? prefillData?.afterSerialProductionPrice1
+                : importExcelData?.Serial_Production_Price1
+                ? importExcelData?.Serial_Production_Price1
+                : "",
+            afterSerialProductionPrice2:
+              prefillData?.afterSerialProductionPrice2
+                ? prefillData?.afterSerialProductionPrice2
+                : importExcelData?.Serial_Production_Price2
+                ? importExcelData?.Serial_Production_Price2
+                : "",
+            afterSerialProductionPrice3:
+              prefillData?.afterSerialProductionPrice3
+                ? prefillData?.afterSerialProductionPrice3
+                : importExcelData?.Serial_Production_Price3
+                ? importExcelData?.Serial_Production_Price3
+                : "",
             moq_1Price: prefillData?.price1MOQ
               ? prefillData?.price1MOQ
               : importExcelData?.Moq_Price_1
@@ -589,15 +600,23 @@ function Index(props) {
           }}
           validationSchema={loginSchema}
           onSubmit={(values, { resetForm }) =>
-            spareId ? SparePartsAnalysisUpdate(values, { resetForm }) : submitForm(values, { resetForm })
+            spareId
+              ? SparePartsAnalysisUpdate(values, { resetForm })
+              : submitForm(values, { resetForm })
           }
         >
           {(formik) => {
-            const { values, handleChange, handleSubmit, handleBlur, isValid, submitForm, setFieldValue } = formik;
+            const {
+              values,
+              handleChange,
+              handleSubmit,
+              handleBlur,
+              isValid,
+              submitForm,
+              setFieldValue,
+            } = formik;
             return (
               <div>
-                <Projectname projectId={projectId} />
-
                 <Form onSubmit={handleSubmit}>
                   <fieldset
                     disabled={
@@ -609,30 +628,64 @@ function Index(props) {
                         : "disabled"
                     }
                   >
-                    <Row>
-                      <Col>
-                        <label for="file-input" class="file-label file-inputs">
-                          Import
-                        </label>
-                        <input type="file" className="input-fields" id="file-input" onChange={importExcel} />
-                      </Col>
-                      <Col>
-                        <Button
-                          className="btn-aligne export-btns-FailureRate"
-                          onClick={() => {
-                            exportToExcel(values);
-                          }}
-                        >
-                          Export
-                        </Button>
-                      </Col>
-                    </Row>
-                    <Row>
-                      <Col xs={12} sm={9} className="projectName">
-                        <Dropdown value={projectId} productId={productId} data={treeTableData} />
-                      </Col>
-                      <Col></Col>
-                    </Row>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div style={{ width: "30%", marginRight: "20px" }}>
+                        <Projectname projectId={projectId} />
+                      </div>
+
+                      <div style={{ width: "100%", marginRight: "20px" }}>
+                        <Dropdown
+                          value={projectId}
+                          productId={productId}
+                          data={treeTableData}
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          alignItems: "center",
+                          marginTop: "8px",
+                          height: "40px",
+                        }}
+                      >
+                        <Tooltip placement="right" title="Import">
+                          <div style={{ marginRight: "8px" }}>
+                            <label
+                              htmlFor="file-input"
+                              className="import-export-btn"
+                            >
+                              <FontAwesomeIcon icon={faFileDownload} />
+                            </label>
+                            <input
+                              type="file"
+                              className="input-fields"
+                              id="file-input"
+                              onChange={importExcel}
+                              style={{ display: "none" }}
+                            />
+                          </div>
+                        </Tooltip>
+                        <Tooltip placement="left" title="Export">
+                          <Button
+                            className="import-export-btn"
+                            onClick={() => exportToExcel(values)}
+                          >
+                            <FontAwesomeIcon
+                              icon={faFileUpload}
+                              style={{ width: "15px" }}
+                            />
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    </div>
+
                     <Row className="d-flex mt-2">
                       {/* <Button className=" btn-aligne"  data={data} onClick={() => DownloadExcel}>
                         Export
@@ -688,7 +741,11 @@ function Index(props) {
                                 ]}
                               />
 
-                              <ErrorMessage className="error text-danger" component="span" name="spare" />
+                              <ErrorMessage
+                                className="error text-danger"
+                                component="span"
+                                name="spare"
+                              />
                             </Form.Group>
                           </Col>
                           <Col>
@@ -724,7 +781,11 @@ function Index(props) {
                                 ]}
                               />
 
-                              <ErrorMessage className="error text-danger" component="span" name="warranty" />
+                              <ErrorMessage
+                                className="error text-danger"
+                                component="span"
+                                name="warranty"
+                              />
                             </Form.Group>
                           </Col>
                         </Row>
@@ -762,7 +823,11 @@ function Index(props) {
                                 ]}
                               />
 
-                              <ErrorMessage className="error text-danger" component="span" name="recommended" />
+                              <ErrorMessage
+                                className="error text-danger"
+                                component="span"
+                                name="recommended"
+                              />
                             </Form.Group>
                           </Col>
                           <Col>
@@ -780,13 +845,19 @@ function Index(props) {
                                 onChange={handleChange}
                               />
 
-                              <ErrorMessage className="error text-danger" component="span" name="deliveryTimeDays" />
+                              <ErrorMessage
+                                className="error text-danger"
+                                component="span"
+                                name="deliveryTimeDays"
+                              />
                             </Form.Group>
                           </Col>
                         </Row>
                       </Card>
                       <div className="mttr-sec mt-4">
-                        <p className=" mb-0 para-tag">Serial Production Price</p>
+                        <p className=" mb-0 para-tag">
+                          Serial Production Price
+                        </p>
                       </div>
                       <Card className="mt-2 p-4 mttr-card">
                         <Row>
@@ -948,19 +1019,33 @@ function Index(props) {
                           CANCEL
                         </Button>
 
-                        <Button className="save-btn  " type="submit" disabled={!productId}>
+                        <Button
+                          className="save-btn  "
+                          type="submit"
+                          disabled={!productId}
+                        >
                           SAVE CHANGES
                         </Button>
                         <div>
-                          <Modal show={show} centered onHide={() => setShow(!show)}>
+                          <Modal
+                            show={show}
+                            centered
+                            onHide={() => setShow(!show)}
+                          >
                             <div className="d-flex justify-content-center mt-5">
                               <div>
-                                <FontAwesomeIcon icon={faCircleCheck} fontSize={"40px"} color="#1D5460" />
+                                <FontAwesomeIcon
+                                  icon={faCircleCheck}
+                                  fontSize={"40px"}
+                                  color="#1D5460"
+                                />
                               </div>
                             </div>
                             <Modal.Footer className=" d-flex justify-content-center success-message  mt-3 mb-5">
                               <div>
-                                <h4>{succesMessage ? succesMessage : "Error"}</h4>
+                                <h4>
+                                  {succesMessage ? succesMessage : "Error"}
+                                </h4>
                               </div>
                             </Modal.Footer>
                           </Modal>

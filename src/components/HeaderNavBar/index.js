@@ -13,12 +13,12 @@ import "../../css/HeaderNavBar.scss";
 import { NavDropdown, Navbar } from "react-bootstrap";
 import { faDownload, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
+import Projectname from "../Company/projectname";
 
 const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
   const [userData, setUserData] = useState();
   const sessionId = localStorage.getItem("sessionId");
   const [file, setFile] = useState(null);
-
   const {
     openFTAModal,
     openPropertiesModal,
