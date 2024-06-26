@@ -1123,7 +1123,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                           className="menu-icon"
                           title="Reports"
                         />{" "}
-                        <span>Report</span>
+                        <span>Reports</span>
                       </NavLink>
                     </div>
                   ) : null}
