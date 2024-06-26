@@ -587,7 +587,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                       </Accordion.Item>
                     </Accordion>
                   </div>
-                  <div className="menu-list mt-1">
+                  {/* <div className="menu-list mt-1">
                     {" "}
                     <NavLink
                       to={{
@@ -615,7 +615,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                       />{" "}
                       <span>Reports</span>
                     </NavLink>
-                  </div>
+                  </div> */}
                 </div>
               ) : null}
               <div className="menu-list">
@@ -1097,7 +1097,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                       ) : null}
                     </div>
                   ) : null}
-                   {readPermission?.[12]?.read === true ? (
+                   {/* {readPermission?.[12]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
@@ -1126,7 +1126,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar }) => {
                         <span>Reports</span>
                       </NavLink>
                     </div>
-                  ) : null}
+                  ) : null} */}
                 </div>
               ) : null}
               <div className="menu-list">
