@@ -10,8 +10,8 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
-import { Document, Packer, Paragraph, TextRun } from "docx";
 import { FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType } from "docx";
 
 function Reports(props) {
   const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
@@ -195,6 +195,10 @@ function Reports(props) {
   }, [sortedData]);
 
   const exportToExcel = () => {
+    if (!projectData) {
+      console.error("Project data is not available.");
+      return;
+    }
     // Create a new worksheet
     const worksheet = XLSX.utils.aoa_to_sheet([
       ["Project Report"], // Title row
@@ -228,6 +232,10 @@ function Reports(props) {
   };
 
   const generatePDFReport = () => {
+    if (!projectData) {
+      console.error("Project data is not available.");
+      return;
+    }
     const input = document.getElementById("pdf-report-content");
     console.log("input.....", input);
 
@@ -248,67 +256,110 @@ function Reports(props) {
   };
 
   // Function to generate Word document
-  const generateWordDocument = () => {
-    if (!projectData) {
-      console.error("Project data is not available.");
-      return;
-    }
+ 
 
-    const doc = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Project Report",
-                  bold: true,
-                  size: 32, // 16pt font size
-                }),
-              ],
-              alignment: "center",
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({ text: "" }), // Empty paragraph for spacing
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Project Name: ${projectData.projectName || "-"}`,
-                }),
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Project Number: ${projectData.projectNumber || "-"}`,
-                }),
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Project Description: ${
-                    projectData.projectDesc || "-"
-                  }`,
-                }),
-              ],
-            }),
-          ],
-        },
-      ],
-    });
 
-    Packer.toBlob(doc)
-      .then((blob) => {
-        saveAs(blob, "project_report.docx");
+const generateWordDocument = () => {
+  if (!projectData) {
+    console.error("Project data is not available.");
+    return;
+  }
+
+  const tableRows = [
+    // Table header row
+    new TableRow({
+      children: headers
+        .filter((header) => columnVisibility[header] !== false)
+        .map(
+          (header) =>
+            new TableCell({
+              children: [new Paragraph({ text: header, bold: true })],
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            })
+        ),
+    }),
+    // Table data rows
+    ...sortedData.map((row) =>
+      new TableRow({
+        children: headers
+          .filter((header) => columnVisibility[header] !== false)
+          .map(
+            (header) =>
+              new TableCell({
+                children: [
+                  new Paragraph({
+                    text: row[headerKeyMapping[header]] || "-",
+                  }),
+                ],
+                width: { size: 100, type: WidthType.PERCENTAGE },
+              })
+          ),
       })
-      .catch((error) => {
-        console.error("Error generating Word document:", error);
-      });
-  };
+    ),
+  ];
+
+  const doc = new Document({
+    sections: [
+      {
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: "Project Report",
+                bold: true,
+                size: 32, // 16pt font size
+              }),
+            ],
+            alignment: "center",
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "" }), // Empty paragraph for spacing
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Project Name: ${projectData.projectName || "-"}`,
+              }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Project Number: ${projectData.projectNumber || "-"}`,
+              }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Project Description: ${projectData.projectDesc || "-"}`,
+              }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: "" }), // Empty paragraph for spacing
+            ],
+          }),
+          new Table({
+            rows: tableRows,
+          }),
+        ],
+      },
+    ],
+  });
+
+  Packer.toBlob(doc)
+    .then((blob) => {
+      saveAs(blob, "project_report.docx");
+    })
+    .catch((error) => {
+      console.error("Error generating Word document:", error);
+    });
+};
+
 
   return (
     <div>
