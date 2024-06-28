@@ -7,7 +7,10 @@ import Api from "../../Api";
 import { useHistory } from "react-router-dom";
 import Select from "react-select";
 import * as XLSX from "xlsx";
-
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import { saveAs } from "file-saver";
+import { Document, Packer, Paragraph, TextRun } from "docx";
 
 function Reports(props) {
   const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
@@ -241,6 +244,76 @@ function Reports(props) {
     // Write the workbook to a file
     XLSX.writeFile(workbook, "project_report.xlsx");
   };
+
+  const generatePDFReport = () => {
+    const input = document.getElementById("pdf-report-content");
+    console.log("input.....",input)
+  
+    setTimeout(() => {
+      html2canvas(input)
+        .then((canvas) => {
+          const imgData = canvas.toDataURL("image/png");
+          const pdf = new jsPDF("p", "mm", "a4");
+          const width = pdf.internal.pageSize.getWidth();
+          const height = pdf.internal.pageSize.getHeight();
+          pdf.addImage(imgData, "PNG", 0, 0, width, height);
+          pdf.save("report.pdf");
+        })
+        .catch((error) => {
+          console.error("Error generating PDF:", error);
+        });
+    }, 500); // Adjust delay as needed
+  };
+
+   // Function to generate Word document
+   const generateWordDocument = () => {
+    const doc = new Document();
+
+    // Add title
+    doc.addSection({
+      children: [
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: "Project Report",
+              bold: true,
+              size: 32, // Font size in half-points (32 * 2 = 64 half-points = 32pt font size)
+            }),
+          ],
+          alignment: "center",
+        }),
+        new Paragraph({ text: "" }), // Empty paragraph for spacing
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Project Name: ${projectData?.projectName || "-"}`,
+            }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Project Number: ${projectData?.projectNumber || "-"}`,
+            }),
+          ],
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Project Description: ${projectData?.projectDesc || "-"}`,
+            }),
+          ],
+        }),
+      ],
+    });
+
+    // Save the document
+    Packer.toBlob(doc).then((blob) => {
+      saveAs(blob, "project_report.docx");
+    });
+  };
+
+  
   
   
 
@@ -401,6 +474,16 @@ function Reports(props) {
                         </Button>
 
                       </Row>
+                       <Row className="d-flex justify-content-center mt-4">
+        <Button className="save-btn" onClick={generatePDFReport}>
+          Generate PDF Report
+        </Button>
+      </Row>
+      <Row>
+      <Button className="save-btn" onClick={generateWordDocument}>
+        Export to Word
+      </Button>
+      </Row>
                     </Card>
                   </Form>
                 )}
@@ -434,7 +517,7 @@ function Reports(props) {
       </div>
       {showReport ? (
         <div className="sheet-container">
-          <div className="sheet">
+          <div className="sheet" id="pdf-report-content">
             <h1>Reports</h1>
             <div className="sheet-content">
               <div className="field">
