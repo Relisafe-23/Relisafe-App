@@ -11,6 +11,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { Document, Packer, Paragraph, TextRun } from "docx";
+import { FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
 
 function Reports(props) {
   const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
@@ -27,34 +28,33 @@ function Reports(props) {
   const [columnVisibility, setColumnVisibility] = useState({
     "Product Name": true,
     "Part Number": true,
-    "Quantity": true,
-    "Reference": true,
-    "Category": true,
+    Quantity: true,
+    Reference: true,
+    Category: true,
     "Part Type": true,
-    "Environment": true,
-    "Temperature": true,
+    Environment: true,
+    Temperature: true,
     FR: true,
     MTTR: true,
     MCT: true,
     MLH: true,
   });
 
-    // Mapping of headers to data keys
-    const headerKeyMapping = {
-      "Product Name": "productName",
-      "Part Number": "partNumber",
-      "Quantity": "quantity",
-      "Reference": "reference",
-      "Category": "category",
-      "Part Type": "partType",
-      "Environment": "environment",
-      "Temperature": "temperature",
-      FR: "fr",
-      MTTR: "mttr",
-      MCT: "mct",
-      MLH: "mlh",
-    };
-  
+  // Mapping of headers to data keys
+  const headerKeyMapping = {
+    "Product Name": "productName",
+    "Part Number": "partNumber",
+    Quantity: "quantity",
+    Reference: "reference",
+    Category: "category",
+    "Part Type": "partType",
+    Environment: "environment",
+    Temperature: "temperature",
+    FR: "fr",
+    MTTR: "mttr",
+    MCT: "mct",
+    MLH: "mlh",
+  };
 
   const token = localStorage.getItem("sessionId");
   const role = localStorage.getItem("role");
@@ -77,12 +77,12 @@ function Reports(props) {
   const columnWidths = {
     "Product Name": "130px",
     "Part Number": "120px",
-    "Quantity": "80px",
-    "Reference": "130px",
-    "Category": "100px",
+    Quantity: "80px",
+    Reference: "130px",
+    Category: "100px",
     "Part Type": "100px",
-    "Environment": "120px",
-    "Temperature": "120px",
+    Environment: "120px",
+    Temperature: "120px",
     FR: "60px",
     MTTR: "60px",
     MCT: "60px",
@@ -194,24 +194,6 @@ function Reports(props) {
     console.log(sortedData);
   }, [sortedData]);
 
-
-  // const exportToExcel = () => {
-  //   const exportData = sortedData.map((row) => {
-  //     const exportRow = {};
-  //     headers.forEach((header) => {
-  //       if (columnVisibility[header]) {
-  //         exportRow[header] = row[headerKeyMapping[header]] || "-";
-  //       }
-  //     });
-  //     return exportRow;
-  //   });
-  
-  //   const worksheet = XLSX.utils.json_to_sheet(exportData);
-  //   const workbook = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-  //   XLSX.writeFile(workbook, "report.xlsx");
-  // };
-
   const exportToExcel = () => {
     // Create a new worksheet
     const worksheet = XLSX.utils.aoa_to_sheet([
@@ -222,7 +204,7 @@ function Reports(props) {
       ["Project Description:", projectData?.projectDesc || ""], // Project Description
       [], // Empty row for spacing
     ]);
-  
+
     // Prepare the data for export
     const exportData = sortedData.map((row) => {
       const exportRow = {};
@@ -233,22 +215,22 @@ function Reports(props) {
       });
       return exportRow;
     });
-  
+
     // Append the data to the worksheet
     XLSX.utils.sheet_add_json(worksheet, exportData, { origin: -1 });
-  
+
     // Create a new workbook and append the worksheet
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-  
+
     // Write the workbook to a file
     XLSX.writeFile(workbook, "project_report.xlsx");
   };
 
   const generatePDFReport = () => {
     const input = document.getElementById("pdf-report-content");
-    console.log("input.....",input)
-  
+    console.log("input.....", input);
+
     setTimeout(() => {
       html2canvas(input)
         .then((canvas) => {
@@ -265,64 +247,77 @@ function Reports(props) {
     }, 500); // Adjust delay as needed
   };
 
-   // Function to generate Word document
-   const generateWordDocument = () => {
-    const doc = new Document();
+  // Function to generate Word document
+  const generateWordDocument = () => {
+    if (!projectData) {
+      console.error("Project data is not available.");
+      return;
+    }
 
-    // Add title
-    doc.addSection({
-      children: [
-        new Paragraph({
+    const doc = new Document({
+      sections: [
+        {
           children: [
-            new TextRun({
-              text: "Project Report",
-              bold: true,
-              size: 32, // Font size in half-points (32 * 2 = 64 half-points = 32pt font size)
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: "Project Report",
+                  bold: true,
+                  size: 32, // 16pt font size
+                }),
+              ],
+              alignment: "center",
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({ text: "" }), // Empty paragraph for spacing
+              ],
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `Project Name: ${projectData.projectName || "-"}`,
+                }),
+              ],
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `Project Number: ${projectData.projectNumber || "-"}`,
+                }),
+              ],
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `Project Description: ${
+                    projectData.projectDesc || "-"
+                  }`,
+                }),
+              ],
             }),
           ],
-          alignment: "center",
-        }),
-        new Paragraph({ text: "" }), // Empty paragraph for spacing
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Project Name: ${projectData?.projectName || "-"}`,
-            }),
-          ],
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Project Number: ${projectData?.projectNumber || "-"}`,
-            }),
-          ],
-        }),
-        new Paragraph({
-          children: [
-            new TextRun({
-              text: `Project Description: ${projectData?.projectDesc || "-"}`,
-            }),
-          ],
-        }),
+        },
       ],
     });
 
-    // Save the document
-    Packer.toBlob(doc).then((blob) => {
-      saveAs(blob, "project_report.docx");
-    });
+    Packer.toBlob(doc)
+      .then((blob) => {
+        saveAs(blob, "project_report.docx");
+      })
+      .catch((error) => {
+        console.error("Error generating Word document:", error);
+      });
   };
-
-  
-  
-  
 
   return (
     <div>
       <div className="mt-5">
         <div>
           <div className="mttr-sec mt-0">
-            <p className="mb-0 para-tag d-flex justify-content-center">Report</p>
+            <p className="mb-0 para-tag d-flex justify-content-center">
+              Report
+            </p>
           </div>
           {permission?.read === true ||
           permission?.read === "undefined" ||
@@ -350,7 +345,10 @@ function Reports(props) {
                 }}
               >
                 {(formikProps) => (
-                  <Form onSubmit={formikProps.handleSubmit} onReset={handleReset}>
+                  <Form
+                    onSubmit={formikProps.handleSubmit}
+                    onReset={handleReset}
+                  >
                     <Card className="mt-4 mttr-card p-4">
                       <Row>
                         <Col>
@@ -370,8 +368,14 @@ function Reports(props) {
                               name="Module"
                               options={[
                                 { value: "RA", label: "Reliability Analysis" },
-                                { value: "MA", label: "Maintainability analysis" },
-                                { value: "PM", label: "Preventive maintenance" },
+                                {
+                                  value: "MA",
+                                  label: "Maintainability analysis",
+                                },
+                                {
+                                  value: "PM",
+                                  label: "Preventive maintenance",
+                                },
                                 { value: "SA", label: "Spares analysis" },
                                 { value: "FMECA", label: "FMECA" },
                                 { value: "SAFETY", label: "SAFETY" },
@@ -399,12 +403,21 @@ function Reports(props) {
                               placeholder="Select Field"
                               name="Field"
                               options={[
-                                { value: "Hierarchy levels", label: "Hierarchy levels" },
+                                {
+                                  value: "Hierarchy levels",
+                                  label: "Hierarchy levels",
+                                },
                                 { value: "Assembly", label: "Assembly" },
                                 { value: "Electronics", label: "Electronics" },
                                 { value: "Mechanical", label: "Mechanical" },
-                                { value: "Component type", label: "Component type" },
-                                { value: "Spare Parts Analysis", label: "Spare Parts Analysis" },
+                                {
+                                  value: "Component type",
+                                  label: "Component type",
+                                },
+                                {
+                                  value: "Spare Parts Analysis",
+                                  label: "Spare Parts Analysis",
+                                },
                                 { value: "SAFETY", label: "SAFETY" },
                               ]}
                             />
@@ -430,61 +443,75 @@ function Reports(props) {
                           GET REPORT
                         </Button>
                       </div>
-                      <Row>
-                        <Col>
-                          <Form.Check
-                            type="checkbox"
-                            name="FR"
-                            label="FR"
-                            checked={columnVisibility.FR}
-                            onChange={handleColumnVisibilityChange}
-                          />
-                        </Col>
-                        <Col>
-                          <Form.Check
-                            type="checkbox"
-                            name="MTTR"
-                            label="MTTR"
-                            checked={columnVisibility.MTTR}
-                            onChange={handleColumnVisibilityChange}
-                          />
-                        </Col>
-                        <Col>
-                          <Form.Check
-                            type="checkbox"
-                            name="MCT"
-                            label="MCT"
-                            checked={columnVisibility.MCT}
-                            onChange={handleColumnVisibilityChange}
-                          />
-                        </Col>
-                        <Col>
-                          <Form.Check
-                            type="checkbox"
-                            name="MLH"
-                            label="MLH"
-                            checked={columnVisibility.MLH}
-                            onChange={handleColumnVisibilityChange}
-                          />
-                        </Col>
-                      </Row>
-                      <Row>
-                      <Button className="save-btn" onClick={exportToExcel}>
-                        Export to Excel
-                        </Button>
-
-                      </Row>
-                       <Row className="d-flex justify-content-center mt-4">
-        <Button className="save-btn" onClick={generatePDFReport}>
-          Generate PDF Report
-        </Button>
-      </Row>
-      <Row>
-      <Button className="save-btn" onClick={generateWordDocument}>
-        Export to Word
-      </Button>
-      </Row>
+                      {showReport ? (
+                        <Row>
+                          <Col>
+                            <Form.Check
+                              type="checkbox"
+                              name="FR"
+                              label="FR"
+                              checked={columnVisibility.FR}
+                              onChange={handleColumnVisibilityChange}
+                            />
+                          </Col>
+                          <Col>
+                            <Form.Check
+                              type="checkbox"
+                              name="MTTR"
+                              label="MTTR"
+                              checked={columnVisibility.MTTR}
+                              onChange={handleColumnVisibilityChange}
+                            />
+                          </Col>
+                          <Col>
+                            <Form.Check
+                              type="checkbox"
+                              name="MCT"
+                              label="MCT"
+                              checked={columnVisibility.MCT}
+                              onChange={handleColumnVisibilityChange}
+                            />
+                          </Col>
+                          <Col>
+                            <Form.Check
+                              type="checkbox"
+                              name="MLH"
+                              label="MLH"
+                              checked={columnVisibility.MLH}
+                              onChange={handleColumnVisibilityChange}
+                            />
+                          </Col>
+                        </Row>
+                      ) : null}
                     </Card>
+                    {showReport ? (
+                      <Row className="d-flex align-items-center">
+                        <Col className="d-flex justify-content-start">
+                          <Button className="save-btn" onClick={exportToExcel}>
+                            <FaFileExcel style={{ marginRight: "8px" }} />
+                            Export to Excel
+                          </Button>
+                        </Col>
+                        <Col className="d-flex justify-content-center">
+                          <Button
+                            className="save-btn"
+                            onClick={generatePDFReport}
+                          >
+                            <FaFilePdf style={{ marginRight: "8px" }} />
+                            Generate PDF Report
+                          </Button>
+                        </Col>
+                        <Col className="d-flex justify-content-end">
+                          <Button
+                            className="save-btn"
+                            onClick={generateWordDocument}
+                          >
+                            <FaFileWord style={{ marginRight: "8px" }} />
+                            Export to Word
+                          </Button>
+                        </Col>
+                      </Row>
+                    ) : null}
                   </Form>
                 )}
               </Formik>
@@ -537,14 +564,13 @@ function Reports(props) {
               <thead>
                 <tr>
                   {headers
-                    .filter(
-                      (header) =>
-                        header === "FR" ||
-                        header === "MTTR" ||
-                        header === "MCT" ||
-                        header === "MLH"
-                          ? columnVisibility[header]
-                          : true
+                    .filter((header) =>
+                      header === "FR" ||
+                      header === "MTTR" ||
+                      header === "MCT" ||
+                      header === "MLH"
+                        ? columnVisibility[header]
+                        : true
                     )
                     .map((header) => (
                       <th
