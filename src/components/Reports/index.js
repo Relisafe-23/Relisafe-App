@@ -6,14 +6,9 @@ import { Formik, ErrorMessage } from "formik";
 import Api from "../../Api";
 import { useHistory } from "react-router-dom";
 import Select from "react-select";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
-import { saveAs } from "file-saver";
-import { FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType } from "docx";
 import PBSReport from "./PbsReport.js";
-import RAReport from "./reliabilityAnalysis.js";
+import RAReport from "./ReliabilityAnalysis.js";
+import MaintabilityReport from "./MainTainabilityReport.js";
 
 function Reports(props) {
   const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
@@ -229,6 +224,8 @@ function Reports(props) {
                     <PBSReport projectId={projectId} /> 
                     :  selectModule === "RA" ?
                     <RAReport projectId={projectId} /> 
+                    :  selectModule == "MA" ?
+                    <MaintabilityReport projectId={projectId}/>
                     : null 
                   }
                   </Form>

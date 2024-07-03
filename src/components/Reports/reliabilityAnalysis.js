@@ -66,12 +66,12 @@ function ReliabilityAnalysis(props) {
     MLH: "mlh",
   };
   const ftaHeaderKeyMapping = {
-    "Source": "source",
-    "Predicted": "predicted",
+    Source: "source",
+    Predicted: "predicted",
     "Duty Cycle": "dutyCycle",
     "FR Distribution": "frDistribution",
     "FR Remarks": "frRemarks",
-    "Standard": "standard",
+    Standard: "standard",
     "FR Offset Operand": "frOffsetOperand",
     "Failure Rate Offset": "failureRateOffset",
     "FR Unit": "frUnit",
@@ -93,7 +93,7 @@ function ReliabilityAnalysis(props) {
     "FR",
   ];
   const FTPHeader = [
-   "Source",
+    "Source",
     "Predicted",
     "DutyCycle",
     "FR Distribution",
@@ -101,15 +101,15 @@ function ReliabilityAnalysis(props) {
     "Standard",
     "FR Offset Operand",
     "Failure Rate Offset",
-    "FR Unit"
+    "FR Unit",
   ];
   const columnWidths = {
-    "Source": "130px",
-    "Predicted": "120px",
+    Source: "130px",
+    Predicted: "120px",
     "Duty Cycle": "80px",
     "FR Distribution": "130px",
     "FR Remarks": "100px",
-    "Standard": "100px",
+    Standard: "100px",
     "FR Offset Operand": "120px",
     "Failure Rate Offset": "120px",
     "FR Unit": "60px",
@@ -210,8 +210,7 @@ function ReliabilityAnalysis(props) {
     getFtaData();
   }, [projectId]); // Include projectId in dependency array to trigger effect on change
 
-  
-  const getFtaData = () =>{
+  const getFtaData = () => {
     const sessionId = localStorage.getItem("sessionId");
     const userId = localStorage.getItem("userId");
 
@@ -233,8 +232,8 @@ function ReliabilityAnalysis(props) {
           logout();
         }
       });
-  }
-  
+  };
+
   // Log sorted data to debug
   useEffect(() => {}, [sortedData]);
 
@@ -248,7 +247,7 @@ function ReliabilityAnalysis(props) {
       ["Project Report"],
       [],
       ["Project Name:", projectData?.projectName || ""],
-      ["Project Number:", projectData?.projectNumber || ""], 
+      ["Project Number:", projectData?.projectNumber || ""],
       ["Project Description:", projectData?.projectDesc || ""],
       [],
     ]);
@@ -262,28 +261,32 @@ function ReliabilityAnalysis(props) {
       });
       return exportRow;
     });
-    
+
     XLSX.utils.sheet_add_json(worksheet, exportData, { origin: -1 });
 
-  const worksheet2 = XLSX.utils.aoa_to_sheet([
-    ["Failure Rate Prediction"], 
-    [],
-  ]);
+    const worksheet2 = XLSX.utils.aoa_to_sheet([
+      ["Failure Rate Prediction"],
+      [],
+    ]);
 
-  const ftpData = ftaTreeData.map((row) => {
-    const ftpRow = {};
-    FTPHeader.forEach((header) => {
-      ftpRow[header] = row[ftaHeaderKeyMapping[header]] || "-";
+    const ftpData = ftaTreeData.map((row) => {
+      const ftpRow = {};
+      FTPHeader.forEach((header) => {
+        ftpRow[header] = row[ftaHeaderKeyMapping[header]] || "-";
+      });
+      return ftpRow;
     });
-    return ftpRow;
-  });
 
-  XLSX.utils.sheet_add_json(worksheet2, ftpData, { origin: -1 });
+    XLSX.utils.sheet_add_json(worksheet2, ftpData, { origin: -1 });
 
     // Create a new workbook and append the worksheet
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Project Report");
-    XLSX.utils.book_append_sheet(workbook, worksheet2, "Failure Rate Prediction");
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet2,
+      "Failure Rate Prediction"
+    );
 
     // Write the workbook to a file
     XLSX.writeFile(workbook, "project_report.xlsx");
@@ -377,7 +380,7 @@ function ReliabilityAnalysis(props) {
       });
       ftpTableRows.push(tableRow);
     });
-  
+
     const doc = new Document({
       sections: [
         {
@@ -439,7 +442,7 @@ function ReliabilityAnalysis(props) {
         },
       ],
     });
-  
+
     Packer.toBlob(doc)
       .then((blob) => {
         saveAs(blob, "project_report.docx");
@@ -448,28 +451,32 @@ function ReliabilityAnalysis(props) {
         console.error("Error generating Word document:", error);
       });
   };
-  
+
   return (
     <div>
       <div className="mt-3"></div>
       {sortedData.length > 0 ? (
-        <Row className="d-flex align-items-center">
-          <Col className="d-flex justify-content-start">
-            <Button className="save-btn" onClick={exportToExcel}>
-              <FaFileExcel style={{ marginRight: "8px" }} />
-              Export to Excel
-            </Button>
-          </Col>
-          <Col className="d-flex justify-content-center">
-            <Button className="save-btn" onClick={generatePDFReport}>
-              <FaFilePdf style={{ marginRight: "8px" }} />
-              Generate PDF Report
-            </Button>
-          </Col>
+        <Row className="d-flex align-items-center justify-content-end">
           <Col className="d-flex justify-content-end">
-            <Button className="save-btn" onClick={generateWordDocument}>
+            <Button
+              className="report-save-btn"
+              onClick={exportToExcel}
+              style={{ marginRight: "8px" }}
+            >
+              <FaFileExcel style={{ marginRight: "8px" }} />
+              Excel
+            </Button>
+            <Button
+              className="report-save-btn"
+              onClick={generatePDFReport}
+              style={{ marginRight: "8px" }}
+            >
+              <FaFilePdf style={{ marginRight: "8px" }} />
+              PDF
+            </Button>
+            <Button className="report-save-btn" onClick={generateWordDocument}>
               <FaFileWord style={{ marginRight: "8px" }} />
-              Export to Word
+              Word
             </Button>
           </Col>
         </Row>

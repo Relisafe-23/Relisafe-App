@@ -19,7 +19,7 @@ import {
   WidthType,
 } from "docx";
 
-function PbsReport(props) {
+function MaintabilityReport(props) {
   const [projectId, setProjectId] = useState(props?.projectId);
   const [isLoading, setIsLoading] = useState(true);
   const [projectData, setProjectData] = useState(null);
@@ -468,4 +468,4 @@ function PbsReport(props) {
   );
 }
 
-export default PbsReport;
+export default MaintabilityReport;

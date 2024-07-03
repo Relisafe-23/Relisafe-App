@@ -1,79 +1,102 @@
-  .sheet-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh; /* Full viewport height */
-    background-color: #f0f0f0; /* Light background to mimic MS Word workspace */
-  }
-  
-  .sheet {
-    width: 15in; /* Width of a standard letter size sheet */
-    height: 10in; /* Height of a standard letter size sheet */
-    padding: 1in; /* Padding to mimic margins */
-    background-color: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow to make it look like a sheet */
-    border: 1px solid #ccc; /* Light border to define edges */
-    overflow: hidden; /* Hide any overflow content */
-  }
-  
-  .sheet h1, .sheet p {
-    margin: 0;
-    padding: 0;
-  }
-  
-  .sheet h1 {
-    margin-bottom: 0.5in; /* Space after heading */
-    text-align: center; /* Center heading */
-  }
-  
-  .sheet p {
-    text-align: justify; /* Justify text for a clean look */
-  }
-  
-  .sheet-content {
-    margin-bottom: 1em; /* Space between the content and other elements */
-  }
-  
-  .field {
-    display: flex;
-    align-items: center;
-    margin-bottom: 1em; /* Space between fields */
-  }
-  
-  .field label {
-    font-weight: bold;
-    margin-right: 0.5em; /* Space between label and its content */
-    min-width: 150px; /* Ensure the labels align vertically */
-  }
-  
-  .field span {
-    flex-grow: 1; /* Allow the span to take the remaining space */
-  }
-  .report-table {
-    width: 100%;
-    // border-collapse: collapse;
-    margin-top: 1em;
-  }
-  
-  .report-table th, .report-table td {
-    border: 1px solid #ccc;
-    padding: 0.5em;
-    text-align: left;
-  }
-  
-  .report-table th {
-    background-color: #f0f0f0;
-    font-weight: bold;
-  }
-  
-  /* Customize specific column widths */
-  .report-table th:nth-child(1), .report-table td:nth-child(1) {
-    width: 100px; /* Example: Set width for the first column */
-  }
-  
-  .report-table th:nth-child(2), .report-table td:nth-child(2) {
-    width: 100px; /* Example: Set width for the second column */
-  }
-  
-  /* Add more nth-child rules for additional columns as needed */
-  
+.sheet-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh; /* Full viewport height */
+  background-color: #f0f0f0; /* Light background to mimic MS Word workspace */
+}
+
+.sheet {
+  width: 15in; /* Width of a standard letter size sheet */
+  padding: 1in; /* Padding to mimic margins */
+  background-color: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow to make it look like a sheet */
+  border: 1px solid #ccc; /* Light border to define edges */
+  overflow: hidden; /* Hide any overflow content */
+}
+
+.sheet h1,
+.sheet p {
+  margin: 0;
+  padding: 0;
+}
+
+.sheet h1 {
+  margin-bottom: 0.5in; /* Space after heading */
+  text-align: center; /* Center heading */
+}
+
+.sheet p {
+  text-align: justify; /* Justify text for a clean look */
+}
+
+.sheet-content {
+  margin-bottom: 1em; /* Space between the content and other elements */
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1em; /* Space between fields */
+}
+
+.field label {
+  font-weight: bold;
+  margin-right: 0.5em; /* Space between label and its content */
+  min-width: 150px; /* Ensure the labels align vertically */
+}
+
+.field span {
+  flex-grow: 1; /* Allow the span to take the remaining space */
+}
+
+.report-table-container {
+  max-height: 400px; /* Adjust height as needed */
+  overflow-y: auto; /* Enable vertical scrolling */
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+
+.report-table th,
+.report-table td {
+  border: 1px solid #ccc;
+  padding: 0.5em;
+  text-align: left;
+}
+
+.report-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+/* Customize specific column widths */
+.report-table th:nth-child(1),
+.report-table td:nth-child(1) {
+  width: 100px; /* Example: Set width for the first column */
+}
+
+.report-table th:nth-child(2),
+.report-table td:nth-child(2) {
+  width: 100px; /* Example: Set width for the second column */
+}
+.report-save-btn {
+  min-width: 15px;
+    background-color: var(--primary-color) !important;
+      color: white !important;
+  font-weight: 500;
+  border-radius: 3px;
+}
+.custom-checkbox-group .custom-checkbox {
+  margin-right: 15px; /* Adjust the value as needed */
+}
+
+.custom-checkbox-group .custom-checkbox:last-child {
+  margin-right: 0; /* Remove margin from the last checkbox */
+}
+
+
+/* Add more nth-child rules for additional columns as needed */
