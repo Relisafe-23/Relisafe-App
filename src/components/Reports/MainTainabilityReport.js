@@ -406,7 +406,7 @@ function MaintabilityReport(props) {
           </Col>
         </Row>
       ) : null}
-      <div className="sheet-container mt-3">
+      <div className="sheet-container mt-1">
         <div className="sheet" id="pdf-report-content">
           <h1>Reports</h1>
           <div className="sheet-content">
