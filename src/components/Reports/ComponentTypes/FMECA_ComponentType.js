@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Col, Form, Row, Button } from "react-bootstrap";
-import "../../css/Reports.scss";
-import Api from "../../Api";
+import "../../../css/Reports.scss";
+import Api from "../../../Api.js";
 import { useHistory } from "react-router-dom";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
+
 import {
   Document,
   Packer,
@@ -21,13 +22,12 @@ import {
   AlignmentType,
   Footer,
 } from "docx";
-import FirstPageReport from "./FirstPageReport.js";
-import LastPageReport from "./LastPageReport.js";
-import Loader from "../core/Loader.js";
+import FirstPageReport from "../FirstPageReport.js";
+import LastPageReport from "../LastPageReport.js";
+import Loader from "../../core/Loader.js";
 
-function PbsReport(props) {
-  
-  const moduleType = props?.selectModule;
+function FMECA_ComponentType(props) {
+  const moduleType = props?.moduleType;
   const [projectId, setProjectId] = useState(props?.projectId);
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
@@ -36,6 +36,8 @@ function PbsReport(props) {
   const history = useHistory();
   const [permission, setPermission] = useState();
   const [data, setData] = useState([]);
+  const [columnLength, setColumnLength] = useState(false);
+  const token = localStorage.getItem("sessionId");
 
   const [columnVisibility, setColumnVisibility] = useState({
     "Product Name": true,
@@ -47,9 +49,47 @@ function PbsReport(props) {
     Environment: true,
     Temperature: true,
     FR: true,
-    MTTR: true,
-    MCT: true,
-    MLH: true,
+    "FMECA ID": true,
+    "Operating phase": true,
+    Function: true,
+    "Failure Mode": true,
+    "Failure Mode Ratio Alpha": true,
+    cause: true,
+    "Sub system effect": true,
+    "End Effect": true,
+    "End Effect ratio Beta(Must equal to 1)": true,
+    "Safety Impact": true,
+    "Reference Hazard ID": true,
+    "Reliability impact": true,
+    "Service Disruption Time(Minutes)": true,
+    Frequency: true,
+    Severity: true,
+    "Risk Index": true,
+    "Detectable means during operation": true,
+    "Detectable means maintainer": true,
+    "Built in Test": true,
+    "Design Control": true,
+    "Maintenance Control": true,
+    "Export Constraints": true,
+    "immediate action during operational phase": true,
+    "user field 1": true,
+    "user field 2": true,
+    "user field 3": true,
+    "user field 4": true,
+    "user field 5": true,
+    "user field 6": true,
+    "user field 7": true,
+    "user field 8": true,
+    "user field 9": true,
+    "user field 10": true,
+    "PM Task ID": true,
+    "PM Task Type": true,
+    "Task Intervel Frequency": true,
+    "Task Interval Unit": true,
+    "Latitude / Frequency tolerance": true,
+    "Scheduled Maintance Task": true,
+    "Task Intervel Determination": true,
+    "Task Description": true,
   });
 
   // Mapping of headers to data keys
@@ -63,12 +103,49 @@ function PbsReport(props) {
     Environment: "environment",
     Temperature: "temperature",
     FR: "fr",
-    MTTR: "mttr",
-    MCT: "mct",
-    MLH: "mlh",
+    "FMECA ID": "fmecaId",
+    "Operating phase": "operatingPhase",
+    Function: "function",
+    "Failure Mode": "failureMode",
+    "Failure Mode Ratio Alpha": "failureModeRatioAlpha",
+    cause: "cause",
+    "Sub system effect": "subSystemEffect",
+    "End Effect": "endEffect",
+    "End Effect ratio Beta(Must equal to 1)": "endEffectRatioBeta",
+    "Safety Impact": "safetyImpact",
+    "Reference Hazard ID": "referenceHazardId",
+    "Reliability impact": "realibilityImpact",
+    "Service Disruption Time(Minutes)": "serviceDisruptionTime",
+    Frequency: "frequency",
+    Severity: "severity",
+    "Risk Index": "riskIndex",
+    "Detectable means during operation": "detectableMeansDuringOperation",
+    "Detectable means maintainer": "detectableMeansToMaintainer",
+    "Built in Test": "BuiltInTest",
+    "Design Control": "designControl",
+    "Maintenance Control": "maintenanceControl",
+    "Export Constraints": "exportConstraints",
+    "immediate action during operational phase": "immediteActionDuringOperationalPhase",
+    "user field 1": "userField1",
+    "user field 2": "userField2",
+    "user field 3": "userField3",
+    "user field 4": "userField4",
+    "user field 5": "userField5",
+    "user field 6": "userField6",
+    "user field 7": "userField7",
+    "user field 8": "userField8",
+    "user field 9": "userField9",
+    "user field 10": "userField10",
+    "PM Task ID": "pmTaskId",
+    "PM Task Type": "pmTaskType",
+    "Task Intervel Frequency": "taskIntrvlFreq",
+    "Task Interval Unit": "taskIntrvlUnit",
+    "Latitude / Frequency tolerance": "LatitudeFreqTolrnc",
+    "Scheduled Maintance Task": "scheduleMaintenceTsk",
+    "Task Intervel Determination": "tskInteralDetermination",
+    "Task Description": "taskDesc",
   };
 
-  const token = localStorage.getItem("sessionId");
   const headers = [
     "Product Name",
     "Part Number",
@@ -79,24 +156,59 @@ function PbsReport(props) {
     "Environment",
     "Temperature",
     "FR",
-    "MTTR",
-    "MCT",
-    "MLH",
+    "FMECA ID",
+    "Operating phase",
+    "Function",
+    "Failure Mode",
+    "Failure Mode Ratio Alpha",
+    "cause",
+    "Sub system effect",
+    "End Effect",
+    "End Effect ratio Beta(Must equal to 1)",
+    "Safety Impact",
+    "Reference Hazard ID",
+    "Reliability impact",
+    "Service Disruption Time(Minutes)",
+    "Frequency",
+    "Severity",
+    "Risk Index",
+    "Detectable means during operation",
+    "Detectable means maintainer",
+    "Built in Test",
+    "Design Control",
+    "Maintenance Control",
+    "Export Constraints",
+    "immediate action during operational phase",
+    "user field 1",
+    "user field 2",
+    "user field 3",
+    "user field 4",
+    "user field 5",
+    "user field 6",
+    "user field 7",
+    "user field 8",
+    "user field 9",
+    "user field 10",
+    "PM Task ID",
+    "PM Task Type",
+    "Task Intervel Frequency",
+    "Task Interval Unit",
+    "Latitude / Frequency tolerance",
+    "Scheduled Maintance Task",
+    "Task Intervel Determination",
+    "Task Description",
   ];
-  const columnWidths = {
-    "Product Name": "130px",
-    "Part Number": "120px",
-    Quantity: "80px",
-    Reference: "130px",
-    Category: "100px",
-    "Part Type": "100px",
-    Environment: "120px",
-    Temperature: "120px",
-    FR: "60px",
-    MTTR: "60px",
-    MCT: "60px",
-    MLH: "60px",
-  };
+
+  const header2 = [
+    "PM Task ID",
+    "PM Task Type",
+    "Task Intervel Frequency",
+    "Task Interval Unit",
+    "Latitude / Frequency tolerance",
+    "Scheduled Maintance Task",
+    "Task Intervel Determination",
+    "Task Description",
+  ];
 
   // Log out
   const logout = () => {
@@ -106,14 +218,11 @@ function PbsReport(props) {
 
   // Fetch project details based on projectId
   const getProjectDetails = () => {
-    setIsLoading(true);
     Api.get(`/api/v1/projectCreation/${projectId}`)
       .then((res) => {
         setProjectData(res.data.data);
-        setIsLoading(false);
       })
       .catch((error) => {
-        setIsLoading(false);
         console.error("Error fetching project details:", error);
       })
       .finally(() => {
@@ -138,7 +247,6 @@ function PbsReport(props) {
         setIsLoading(false);
       })
       .catch((error) => {
-        setIsLoading(false);
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
@@ -146,79 +254,51 @@ function PbsReport(props) {
       });
   };
   const customSort = (a, b) => {
-    const indexA = a.indexCount.toString();
-    const indexB = b.indexCount.toString();
+    const indexA = a?.indexCount?.toString();
+    const indexB = b?.indexCount?.toString();
 
-    return indexA.localeCompare(indexB, undefined, { numeric: true });
+    return indexA?.localeCompare(indexB, undefined, { numeric: true });
   };
 
   // Sort the data array using the custom sort function
   const sortedData = data?.slice().sort(customSort);
 
-  const getTreeProduct = () => {
-    setIsLoading(true);
-    const sessionId = localStorage.getItem("sessionId");
-    const userId = localStorage.getItem("userId");
-
-    Api.get(`/api/v1/reports/get/pbs/report`, {
-      params: {
-        projectId: projectId,
-        reportType: reportType,
-        userId: userId,
-        token: sessionId,
-      },
-    })
-      .then((res) => {
-        const treeData = res?.data?.data;
-        setData(treeData);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
-  };
-  const getHierarchyLevelTreeProduct = () => {
-    setIsLoading(true);
-    const sessionId = localStorage.getItem("sessionId");
-    const userId = localStorage.getItem("userId");
-
-    Api.get(`/api/v1/reports/get/pbs/report`, {
-      params: {
-        projectId: projectId,
-        reportType: reportType,
-        hierarchyType: hierarchyType,
-        userId: userId,
-        token: sessionId,
-      },
-    })
-      .then((res) => {
-        const treeData = res?.data?.data;
-        setData(treeData);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
-  };
-
   useEffect(() => {
     getProjectDetails();
     getProjectPermission();
-
-  if (reportType == 1) {
-      getHierarchyLevelTreeProduct();
-    } else {
-      getTreeProduct();
-    }
+    getComponentTreeProduct();
+    const columnCount = Object.keys(headerKeyMapping).length;
+    if (columnCount > 13) {
+      setColumnLength(true);
+     }
   }, [projectId, reportType, hierarchyType]);
+
+  const getComponentTreeProduct = () => {
+    const sessionId = localStorage.getItem("sessionId");
+    const userId = localStorage.getItem("userId");
+
+    Api.get(`/api/v1/reports/get/fmeca/report`, {
+      params: {
+        projectId: projectId,
+        reportType: reportType,
+        userId: userId,
+        token: sessionId,
+        reportType: reportType,
+        hierarchyType: hierarchyType,
+      },
+    })
+      .then((res) => {
+        const treeData = res?.data?.data;
+        setData(treeData);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        }
+      });
+  };
 
   const handleColumnVisibilityChange = (event) => {
     const { name, checked } = event.target;
@@ -242,7 +322,7 @@ function PbsReport(props) {
       [],
       [],
       ["Project Name", projectData?.projectName || ""],
-      ["Document Title", "Product Breakdown Structure"],
+      ["Document Title", "FMECA"],
       [],
       [],
       ["Rev", ""],
@@ -251,7 +331,7 @@ function PbsReport(props) {
       [],
       ["Project Name", projectData?.projectName || ""],
       ["Project Number", projectData?.projectNumber || ""],
-      ["Document Title", "Product Breakdown Structure"],
+      ["Document Title", "FMECA"],
       ["Revision", ""],
       ["Date", ""],
       [],
@@ -274,36 +354,52 @@ function PbsReport(props) {
       },
     };
 
-    // Main Content Worksheet
     const mainContentData = [
+      [], // Initial empty rows for spacing
       [],
+      ["Project Report"], // Title row
       [],
-      ["Project Report"],
-      [],
-      ["Project Name", projectData?.projectName || ""],
+      ["Project Name", projectData?.projectName || ""], // Project details
       ["Project Number", projectData?.projectNumber || ""],
       ["Project Description", projectData?.projectDesc || ""],
       [],
-      headers.filter((header) => columnVisibility[header]), // Header row
     ];
-
-    sortedData.forEach((row) => {
-      const rowData = headers
-        .map((header) =>
-          columnVisibility[header] ? row[headerKeyMapping[header]] || "-" : null
-        )
-        .filter((item) => item !== null);
-      mainContentData.push(rowData);
+    
+    // Loop through sortedData to map each part type to the Excel sheet
+    sortedData.forEach((part) => {
+      // Add the part type as a header
+      mainContentData.push([part.partType]);
+    
+      // Add the table headers
+      mainContentData.push(headers.map((header) => header));
+    
+      // Map each item in part.items to a row in the Excel sheet
+      part.items.forEach((item) => {
+        const rowData = headers.map((header) => {
+          const key = headerKeyMapping[header];
+          // Get the value from productId or failureRatePrediction, or fallback to '-'
+          return item.productId?.[key] ?? item.failureRatePrediction?.[key] ?? "-";
+        });
+    
+        // Add the row data to the mainContentData array
+        mainContentData.push(rowData);
+      });
+    
+      // Add an empty row after each part section for spacing
+      mainContentData.push([]);
     });
-
+    
+    // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
+    
+    
 
     // Last Page Worksheet
     const lastPageData = [
       [],
       [],
       ["Project Name", projectData?.projectName || ""],
-      ["Document Title", "Product Breakdown Structure"],
+      ["Document Title", "FMECA"],
       [],
       [],
       ["Rev", ""],
@@ -341,7 +437,7 @@ function PbsReport(props) {
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
 
     // Write the workbook to a file
-    XLSX.writeFile(workbook, "pbs_report.xlsx");
+    XLSX.writeFile(workbook, "fmeca_report.xlsx");
   };
 
   const generatePDFReport = () => {
@@ -382,7 +478,7 @@ function PbsReport(props) {
         return addContentToPDF(lastPageContent, pageNumber++);
       })
       .then(() => {
-        pdf.save("pbs_report.pdf");
+        pdf.save("fmeca_report.pdf");
       })
       .catch((error) => {
         console.error("Error generating PDF:", error);
@@ -424,7 +520,7 @@ function PbsReport(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph("Document Title: Product Breakdown Structure", true),
+      createParagraph("Document Title: FMECA", true),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -433,11 +529,8 @@ function PbsReport(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph(
-        `Project Number: ${projectData?.projectNumber || ""}`,
-        true
-      ),
-      createParagraph("Document Title: Product Breakdown Structure", true),
+      createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
+      createParagraph("Document Title: FMECA", true),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -457,9 +550,7 @@ function PbsReport(props) {
     ];
 
     // Main Content Table
-    const mainContentHeaders = headers.filter(
-      (header) => columnVisibility[header]
-    );
+    const mainContentHeaders = headers.filter((header) => columnVisibility[header]);
     const tableHeaderRow = new TableRow({
       children: mainContentHeaders.map(
         (header) =>
@@ -475,9 +566,7 @@ function PbsReport(props) {
 
     const tableRows = sortedData.map((row) => {
       const rowData = headers
-        .map((header) =>
-          columnVisibility[header] ? row[headerKeyMapping[header]] || "-" : null
-        )
+        .map((header) => (columnVisibility[header] ? row[headerKeyMapping[header]] || "-" : null))
         .filter((item) => item !== null);
 
       return new TableRow({
@@ -500,7 +589,7 @@ function PbsReport(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph("Document Title: Product Breakdown Structure", true),
+      createParagraph("Document Title: FMECA", true),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -509,14 +598,8 @@ function PbsReport(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph(
-        `Project Number: ${projectData?.projectNumber || ""}`,
-        true
-      ),
-      createParagraph(
-        `Project Description: ${projectData?.projectDesc || ""}`,
-        true
-      ),
+      createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
+      createParagraph(`Project Description: ${projectData?.projectDesc || ""}`, true),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -524,14 +607,7 @@ function PbsReport(props) {
     ];
 
     // Revision History Table
-    const revisionHistoryHeaders = [
-      "REVISION",
-      "DESCRIPTION",
-      "DATE",
-      "AUTHOR",
-      "CHECKED BY",
-      "APPROVED BY",
-    ];
+    const revisionHistoryHeaders = ["REVISION", "DESCRIPTION", "DATE", "AUTHOR", "CHECKED BY", "APPROVED BY"];
 
     // Create header row
     const revisionHeaderRow = new TableRow({
@@ -579,7 +655,7 @@ function PbsReport(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph("Document Title: Product Breakdown Structure", true),
+      createParagraph("Document Title: FMECA", true),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -688,10 +764,15 @@ function PbsReport(props) {
 
     // Write the document to a file
     Packer.toBlob(doc).then((blob) => {
-      saveAs(blob, "pbs_report.docx");
+      saveAs(blob, "fmeca_report.docx");
     });
   };
 
+  const fmecaData = data?.map((item) => ({
+    productId: item?.productId || {},
+    fmecaData: item?.fmecaData || {},
+    pmmraData: item?.pmmraData || {},
+  }));
   return (
     <div>
       {isLoading ? (
@@ -699,7 +780,8 @@ function PbsReport(props) {
       ) : (
         <div>
           <div className="mt-3"></div>
-          {sortedData.length > 0 ? (
+          {fmecaData?.length > 0 ? (
+            <>
             <Row className="d-flex align-items-center justify-content-end">
               <Col className="d-flex justify-content-end">
                 <Button
@@ -710,16 +792,20 @@ function PbsReport(props) {
                   <FaFileExcel style={{ marginRight: "8px" }} />
                   Excel
                 </Button>
+  
                 <Button
                   className="report-save-btn"
                   onClick={generatePDFReport}
+                  disabled={columnLength}
                   style={{ marginRight: "8px" }}
                 >
                   <FaFilePdf style={{ marginRight: "8px" }} />
                   PDF
                 </Button>
+  
                 <Button
                   className="report-save-btn"
+                  disabled={columnLength}
                   onClick={() => {
                     generateWordDocument(
                       {
@@ -740,11 +826,22 @@ function PbsReport(props) {
                 </Button>
               </Col>
             </Row>
+  
+            {columnLength && (
+             <Row>
+             <Col className="d-flex justify-content-end">
+               <p style={{ color: 'red', textAlign: 'right' }}>
+               *You cannot download the PDF or Word document when the number of columns exceeds the limit.
+               </p>
+             </Col>
+           </Row>
+            )}
+          </>
           ) : null}
           {sortedData.length > 0 ? (
             <div id="pdf-report-content">
               <div id="first-page-report">
-              <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+                <FirstPageReport projectId={projectId} moduleType={moduleType}/>
               </div>
 
               <div className="sheet-container mt-3" id="main-content-report">
@@ -753,7 +850,7 @@ function PbsReport(props) {
                     <Col className="d-flex flex-column align-items-center"></Col>
                     <Col className="d-flex flex-column align-items-center">
                       <h5>{projectData?.projectName}</h5>
-                      <h5>Product Breakdown Structure</h5>
+                      <h5>Maintainability Analysis</h5>
                     </Col>
                     <Col className="d-flex flex-column align-items-center">
                       <h5>Rev:</h5>
@@ -778,112 +875,76 @@ function PbsReport(props) {
 
                   <div>
                     {sortedData.length > 0 ? (
-                      <Row className="d-flex align-items-center justify-content-end">
+                      <Row className="d-flex align-items-center ">
                         <Col className="d-flex flex-row custom-checkbox-group">
-                          <Form.Check
-                            type="checkbox"
-                            name="FR"
-                            label="FR"
-                            checked={columnVisibility.FR}
-                            onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
-                          />
-                          <Form.Check
-                            type="checkbox"
-                            name="MTTR"
-                            label="MTTR"
-                            checked={columnVisibility.MTTR}
-                            onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
-                          />
-                          <Form.Check
-                            type="checkbox"
-                            name="MCT"
-                            label="MCT"
-                            checked={columnVisibility.MCT}
-                            onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
-                          />
-                          <Form.Check
-                            type="checkbox"
-                            name="MLH"
-                            label="MLH"
-                            checked={columnVisibility.MLH}
-                            onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
-                          />
+                          {header2.map((item) => (
+                            <Form.Check
+                              type="checkbox"
+                              name={item}
+                              label={item}
+                              checked={columnVisibility[item]}
+                              onChange={handleColumnVisibilityChange}
+                              className="custom-checkbox ml-5"
+                            />
+                          ))}
                         </Col>
                       </Row>
                     ) : null}
                   </div>
                   <div style={{ overflowX: "auto" }}>
-                    <table className="report-table">
-                      <thead>
-                        <tr>
-                          {headers
-                            .filter((header) =>
-                              header === "FR" ||
-                              header === "MTTR" ||
-                              header === "MCT" ||
-                              header === "MLH"
-                                ? columnVisibility[header]
-                                : true
-                            )
-                            .map((header) => (
-                              <th
-                                key={header}
-                                style={{
-                                  width: columnWidths[header],
-                                  textAlign: "center",
-                                }}
-                              >
-                                {header}
-                              </th>
-                            ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sortedData.map((row, rowIndex) => (
-                          <tr key={rowIndex}>
-                            {headers
-                              .filter(
-                                (header) => columnVisibility[header] !== false
-                              )
-                              .map((header) => (
-                                <td
-                                  key={header}
-                                  style={{ textAlign: "center" }}
-                                >
-                                  {row[headerKeyMapping[header]] || "-"}
-                                </td>
+                    {sortedData.map((part, partIndex) => (
+                      <div key={partIndex} className={partIndex === 0 ? "mt-3" : "my-5"} style={{ overflowX: "auto" }}>
+                        <h5>{part.partType}</h5>
+                        <table className="report-table">
+                          <thead>
+                            <tr>
+                              {headers.map((header) => (
+                                <th key={header} className="table-header">
+                                  {header}
+                                </th>
                               ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {part.items.map((item, itemIndex) => (
+                              <tr key={itemIndex}>
+                                {headers.map((header) => (
+                                  <td key={header} className="table-cell">
+                                   {
+                                  item.productId?.[headerKeyMapping[header]] ??
+                                  item.fmecaData?.[headerKeyMapping[header]] ??
+                                  item.pmmraData?.[headerKeyMapping[header]] ??
+                                    
+                                    "-"}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-
               <div id="last-page-report">
                 <LastPageReport projectId={projectId} moduleType={moduleType}/>
               </div>
             </div>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                width: "100%",
-                justifyContent: "center",
-              }}
-            >
-              <h3>No Records to Display</h3>
-            </div>
-          )}
+          ) : <div
+          style={{
+            display: "flex",
+            width: "100%",
+            justifyContent: "center",
+          }}
+        >
+          <h3>No Records to Display</h3>
+        </div>}
+        
         </div>
       )}
     </div>
   );
 }
 
-export default PbsReport;
+export default FMECA_ComponentType;

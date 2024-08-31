@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Col, Row, Button } from "react-bootstrap";
+import { Col, Form, Row, Card, Button } from "react-bootstrap";
 import "../../css/Reports.scss";
 import Api from "../../Api";
 import { useHistory } from "react-router-dom";
-import Select from "react-select";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -20,17 +19,17 @@ import {
   WidthType,
 } from "docx";
 import Loader from "../core/Loader";
+import SA_ComponentType from "./ComponentTypes/SA_ComponentType.js";
 import FirstPageReport from "./FirstPageReport.js";
 import LastPageReport from "./LastPageReport.js";
-import RA_ComponentType from "./ComponentTypes/RA_ComponentType.js";
 
-function ReliabilityAnalysis(props) {
-  const moduleType = props?.selectModule;
+function SpareAnalysis(props) {
   const [projectId, setProjectId] = useState(props?.projectId);
+  const [isLoading, setIsLoading] = useState(true);
+  const moduleType = props?.selectModule;  
+  const [projectData, setProjectData] = useState(null);
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
-  const [isLoading, setIsLoading] = useState(true);
-  const [projectData, setProjectData] = useState(null);
   const [selectModule, setSelectModule] = useState("");
   const [selectModuleFieldValue, setSelectModuleFieldValue] = useState("");
   const [showReport, setShowReport] = useState(false);
@@ -39,11 +38,9 @@ function ReliabilityAnalysis(props) {
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
   const [data, setData] = useState([]);
-  const [ftaTreeData, setFtaTreeData] = useState([]);
   const [columnLength, setColumnLength] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState({
-    Id: true,
-    "Part Name": true,
+    "Product Name": true,
     "Part Number": true,
     Quantity: true,
     Reference: true,
@@ -56,15 +53,10 @@ function ReliabilityAnalysis(props) {
     MCT: true,
     MLH: true,
   });
-  const safeData = data?.map((item) => ({
-    productId: item?.productId || {},
-    failureRatePrediction: item?.failureRatePrediction || {},
-  }));
 
   // Mapping of headers to data keys
   const headerKeyMapping = {
-    Id: "indexCount",
-    "Part Name": "productName",
+    "Product Name": "productName",
     "Part Number": "partNumber",
     Quantity: "quantity",
     Reference: "reference",
@@ -76,34 +68,33 @@ function ReliabilityAnalysis(props) {
     MTTR: "mttr",
     MCT: "mct",
     MLH: "mlh",
-    Source: "source",
-    Predicted: "predicted",
-    "Duty Cycle": "dutyCycle",
-    "FR Distribution": "frDistribution",
-    "FR Remarks": "frRemarks",
-    Standard: "standard",
-    "FR Offset Operand": "frOffsetOperand",
-    "Failure Rate Offset": "failureRateOffset",
-    "FR Unit": "frUnit",
-  };
-  const ftaHeaderKeyMapping = {
-    Source: "source",
-    Predicted: "predicted",
-    "Duty Cycle": "dutyCycle",
-    "FR Distribution": "frDistribution",
-    "FR Remarks": "frRemarks",
-    Standard: "standard",
-    "FR Offset Operand": "frOffsetOperand",
-    "Failure Rate Offset": "failureRateOffset",
-    "FR Unit": "frUnit",
+    Repairable: "repairable",
+    "Level of Repair": "levelOfRepair",
+    "Level of Replace": "levelOfReplace",
+    Spare: "spare",
+    Mmax: "mMax",
+    Remarks: "remarks",
+    "Warrenty Spare": "warrantySpare",
+    "Recommended Spare": "recommendedSpare",
+    "Delivery Time Days": "deliveryTimeDays",
+    "After Serial Production Price 1": "afterSerialProductionPrice1",
+    Price1MOQ: "price1MOQ",
+    "After Serial Production Price 2": "afterSerialProductionPrice2",
+    Price2MOQ: "price2MOQ",
+    "After Serial Production Price 3": "afterSerialProductionPrice3",
+    Price3MOQ: "price3MOQ",
+    "Annual Price Escalation Percentage": "annualPriceEscalationPercentage",
+    "LCC-Price Validity to be Included": "lccPriceValidity",
+    "Recommended Spare Quantity": "recommendedSpareQuantity",
+    "Calculated Spare Quantity": "calculatedSpareQuantity",
   };
 
   const token = localStorage.getItem("sessionId");
-
+  const role = localStorage.getItem("role");
+  const userId = localStorage.getItem("userId");
 
   const headers = [
-    "Id",
-    "Part Name",
+    "Product Name",
     "Part Number",
     "Quantity",
     "Reference",
@@ -112,26 +103,28 @@ function ReliabilityAnalysis(props) {
     "Environment",
     "Temperature",
     "FR",
-    "Source",
-    "Predicted",
-    "DutyCycle",
-    "FR Distribution",
-    "FR Remarks",
-    "Standard",
-    "FR Offset Operand",
-    "Failure Rate Offset",
-    "FR Unit",
-  ];
-  const FTPHeader = [
-    "Source",
-    "Predicted",
-    "DutyCycle",
-    "FR Distribution",
-    "FR Remarks",
-    "Standard",
-    "FR Offset Operand",
-    "Failure Rate Offset",
-    "FR Unit",
+    "MTTR",
+    "MCT",
+    "MLH",
+    "Repairable",
+    "Level of Repair",
+    "Level of Replace",
+    "Spare",
+    "Mmax",
+    "Remarks",
+    "Warrenty Spare",
+    "Recommended Spare",
+    "Delivery Time Days",
+    "After Serial Production Price 1",
+    "Price 1 MOQ",
+    "After Serial Production Price 2",
+    "Price 2 MOQ",
+    "After Serial Production Price 3",
+    "Price 3 MOQ",
+    "Annual Price Escalation Percentage",
+    "LCC-Price Validity to be Included",
+    "Recommended Spare Quantity",
+    "Calculated Spare Quantity",
   ];
   const columnWidths = {
     Source: "130px",
@@ -169,8 +162,8 @@ function ReliabilityAnalysis(props) {
   };
 
   const getProjectPermission = () => {
-    const userId = localStorage.getItem("userId");
     setIsLoading(true);
+    const userId = localStorage.getItem("userId");
     Api.get(`/api/v1/projectPermission/list`, {
       params: {
         authorizedPersonnel: userId,
@@ -193,17 +186,19 @@ function ReliabilityAnalysis(props) {
       });
   };
 
+
   const getTreeProduct = () => {
     setIsLoading(true);
     const sessionId = localStorage.getItem("sessionId");
     const userId = localStorage.getItem("userId");
 
-    Api.get(`/api/v1/reports/get/reliablility/report`, {
+    Api.get(`/api/v1/reports/get/spart/report/`, {
       params: {
         projectId: projectId,
-        reportType: reportType,
         userId: userId,
         token: sessionId,
+        reportType: reportType,
+        hierarchyType: hierarchyType,
       },
     })
       .then((res) => {
@@ -219,93 +214,38 @@ function ReliabilityAnalysis(props) {
         }
       });
   };
+  const sparePartsData = data?.map((item) => ({
+    productId: item?.productId || {},
+    mttrData: item?.mttrData || {},
+    spareData: item?.sparePartsData,
+  }));
 
   useEffect(() => {
     getProjectDetails();
     getProjectPermission();
-    getFtaData();
-
     if (reportType == 5) {
-      <RA_ComponentType />;
-    } else if (reportType == 1) {
-      getHierarchyLevelTreeProduct();
+      <SA_ComponentType />;
     } else {
       getTreeProduct();
     }
     const columnCount = Object.keys(headerKeyMapping).length;
     if (columnCount > 13) {
       setColumnLength(true);
-    }
+     }
   }, [projectId, reportType, hierarchyType]);
-
-  const getHierarchyLevelTreeProduct = () => {
-    setIsLoading(true);
-    const sessionId = localStorage.getItem("sessionId");
-    const userId = localStorage.getItem("userId");
-
-    Api.get(`/api/v1/reports/get/reliablility/report`, {
-      params: {
-        projectId: projectId,
-        reportType: reportType,
-        hierarchyType: hierarchyType,
-        userId: userId,
-        token: sessionId,
-      },
-    })
-      .then((res) => {
-        const treeData = res?.data?.data;
-        setData(treeData);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
-  };
-
-  const getFtaData = () => {
-    setIsLoading(true);
-    const sessionId = localStorage.getItem("sessionId");
-    const userId = localStorage.getItem("userId");
-
-    Api.get(`/api/v1/productTreeStructure/fta/details`, {
-      params: {
-        projectId: projectId,
-        userId: userId,
-        token: sessionId,
-      },
-    })
-      .then((res) => {
-        const frpData = res?.data?.data;
-        setFtaTreeData(frpData);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
-  };
-
-  // Log sorted data to debug
 
   const exportToExcel = () => {
     if (!projectData) {
       console.error("Project data is not available.");
       return;
     }
-
+  
     // First Page Worksheet
     const firstPageData = [
       [],
       [],
       ["Project Name", projectData?.projectName || ""],
-      ["Document Title", "Reliability Analysis"],
+      ["Document Title", "Spare Parts Analysis"],
       [],
       [],
       ["Rev", ""],
@@ -314,7 +254,7 @@ function ReliabilityAnalysis(props) {
       [],
       ["Project Name", projectData?.projectName || ""],
       ["Project Number", projectData?.projectNumber || ""],
-      ["Document Title", "Reliability Analysis"],
+      ["Document Title", "Spare Parts Analysis"],
       ["Revision", ""],
       ["Date", ""],
       [],
@@ -327,54 +267,49 @@ function ReliabilityAnalysis(props) {
       ["Approved By", ""],
       ["Approved Date", ""],
     ];
-
+  
     const firstPageWorksheet = XLSX.utils.aoa_to_sheet(firstPageData);
-
+  
     // Applying styles to the first project name cell
     firstPageWorksheet["C3"] = {
       font: {
         bold: true,
       },
     };
-
+  
     // Main Content Worksheet
     const mainContentData = [
       [],
       [],
-      ["Project Report"],
+      ["Spare Parts Analysis Report"],
       [],
       ["Project Name", projectData?.projectName || ""],
       ["Project Number", projectData?.projectNumber || ""],
       ["Project Description", projectData?.projectDesc || ""],
       [],
-      headers.filter((header) => columnVisibility[header]), // Header row
-    ];
-
-    // Map the safeData rows to the Excel sheet
-    safeData.forEach((row) => {
-      const rowData = headers
-        .map((header) => {
+      headers, // Header row
+      ...sparePartsData.map((row) =>
+        headers.map((header) => {
           const key = headerKeyMapping[header];
-          // Get the value from either productId or failureRatePrediction, or fallback to '-'
-          const value =
-            row.productId[key] ?? row.failureRatePrediction[key] ?? "-";
-          return columnVisibility[header] ? value : null;
+          return (
+            row?.productId?.[key] ??
+            row?.mttrData?.[key] ??
+            row?.spareData?.[key] ??
+            "-"
+          );
         })
-        .filter((item) => item !== null);
-
-      // Add the mapped row data to the mainContentData array
-      mainContentData.push(rowData);
-    });
-
+      ),
+    ];
+  
     // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-
+  
     // Last Page Worksheet
     const lastPageData = [
       [],
       [],
       ["Project Name", projectData?.projectName || ""],
-      ["Document Title", "Reliability Analysis"],
+      ["Document Title", "Spare Parts Analysis"],
       [],
       [],
       ["Rev", ""],
@@ -398,22 +333,19 @@ function ReliabilityAnalysis(props) {
       ["", "", "", "", "", ""],
       ["", "", "", "", "", ""],
     ];
-
+  
     const lastPageWorksheet = XLSX.utils.aoa_to_sheet(lastPageData);
-
+  
     // Create a new workbook and append the worksheets
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, firstPageWorksheet, "First Page");
-    XLSX.utils.book_append_sheet(
-      workbook,
-      mainContentWorksheet,
-      "Main Content"
-    );
+    XLSX.utils.book_append_sheet(workbook, mainContentWorksheet, "Main Content");
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
-
+  
     // Write the workbook to a file
-    XLSX.writeFile(workbook, "reliability_analysis.xlsx");
+    XLSX.writeFile(workbook, "spare_analysis.xlsx");
   };
+  
 
   const generatePDFReport = () => {
     if (!projectData) {
@@ -453,7 +385,7 @@ function ReliabilityAnalysis(props) {
         return addContentToPDF(lastPageContent, pageNumber++);
       })
       .then(() => {
-        pdf.save("reliability_analysis.pdf");
+        pdf.save("spare_analysis.pdf");
       })
       .catch((error) => {
         console.error("Error generating PDF:", error);
@@ -461,52 +393,43 @@ function ReliabilityAnalysis(props) {
   };
 
   const generateWordDocument = () => {
-    if (!projectData) {
-      console.error("Project data is not available.");
+    if (!sparePartsData) {
+      console.error("Spare parts data is not available.");
       return;
     }
+  
+    // Define table headers based on headers array
     const projectTableRows = [
       new TableRow({
-        children: headers
-          .filter((header) => columnVisibility[header] !== false)
-          .map(
-            (header) =>
-              new TableCell({
-                children: [new Paragraph({ text: header, bold: true })],
-                width: { size: 100, type: WidthType.PERCENTAGE },
-              })
-          ),
-      }),
-    ];
-    const ftpTableRows = [
-      new TableRow({
-        children: FTPHeader.map(
-          (header) =>
-            new TableCell({
-              children: [new Paragraph({ text: header, bold: true })],
-              width: { size: 100, type: WidthType.PERCENTAGE },
-            })
+        children: headers.map((header) =>
+          new TableCell({
+            children: [new Paragraph({ text: header, bold: true })],
+            width: { size: 100, type: WidthType.PERCENTAGE },
+          })
         ),
       }),
     ];
-
-    ftaTreeData.forEach((row) => {
+  
+    // Map the sparePartsData rows to Word table rows
+    sparePartsData?.forEach((row) => {
       const tableRow = new TableRow({
-        children: FTPHeader.map(
-          (header) =>
-            new TableCell({
-              children: [
-                new Paragraph({
-                  text: row[ftaHeaderKeyMapping[header]] || "-",
-                }),
-              ],
-              width: { size: 100, type: WidthType.PERCENTAGE },
-            })
-        ),
+        children: headers.map((header) => {
+          const key = headerKeyMapping[header];
+          const value =
+            row?.productId?.[key] ??
+            row?.mttrData?.[key] ??
+            row?.spareData?.[key] ??
+            "-";
+          return new TableCell({
+            children: [new Paragraph({ text: value })],
+            width: { size: 100, type: WidthType.PERCENTAGE },
+          });
+        }),
       });
-      ftpTableRows.push(tableRow);
+      projectTableRows.push(tableRow);
     });
-
+  
+    // Define the Word document structure
     const doc = new Document({
       sections: [
         {
@@ -514,70 +437,33 @@ function ReliabilityAnalysis(props) {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: "Project Report",
+                  text: "Spare Parts Analysis Report",
                   bold: true,
                   size: 32, // 16pt font size
                 }),
               ],
               alignment: "center",
-            }),
-            new Paragraph({ children: [new TextRun({ text: "" })] }), // Empty paragraph for spacing
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Project Name: ${projectData.projectName || "-"}`,
-                }),
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Project Number: ${projectData.projectNumber || "-"}`,
-                }),
-              ],
-            }),
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: `Project Description: ${
-                    projectData.projectDesc || "-"
-                  }`,
-                }),
-              ],
             }),
             new Paragraph({ children: [new TextRun({ text: "" })] }), // Empty paragraph for spacing
             new Table({
               rows: projectTableRows,
             }),
             new Paragraph({ children: [new TextRun({ text: "" })] }), // Empty paragraph for spacing
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Failure Rate Prediction",
-                  bold: true,
-                  size: 32, // 16pt font size
-                }),
-              ],
-              alignment: "center",
-            }),
-            new Paragraph({ children: [new TextRun({ text: "" })] }), // Empty paragraph for spacing
-            new Table({
-              rows: ftpTableRows,
-            }),
           ],
         },
       ],
     });
-
+  
+    // Generate and save the Word document
     Packer.toBlob(doc)
       .then((blob) => {
-        saveAs(blob, "reliability_analysis.docx");
+        saveAs(blob, "spare_parts_analysis_report.docx");
       })
       .catch((error) => {
         console.error("Error generating Word document:", error);
       });
   };
-
+  
   return (
     <div>
       {isLoading ? (
@@ -585,8 +471,9 @@ function ReliabilityAnalysis(props) {
       ) : (
         <div>
           <div className="mt-3"></div>
-          {safeData?.length > 0 ? (
-            <>
+          {sparePartsData.length > 0 ? (
+            <div>
+                <>
               <Row className="d-flex align-items-center justify-content-end">
                 <Col className="d-flex justify-content-end">
                   <Button
@@ -597,7 +484,7 @@ function ReliabilityAnalysis(props) {
                     <FaFileExcel style={{ marginRight: "8px" }} />
                     Excel
                   </Button>
-
+    
                   <Button
                     className="report-save-btn"
                     onClick={generatePDFReport}
@@ -607,7 +494,7 @@ function ReliabilityAnalysis(props) {
                     <FaFilePdf style={{ marginRight: "8px" }} />
                     PDF
                   </Button>
-
+    
                   <Button
                     className="report-save-btn"
                     disabled={columnLength}
@@ -631,96 +518,92 @@ function ReliabilityAnalysis(props) {
                   </Button>
                 </Col>
               </Row>
-
+    
               {columnLength && (
-                <Row>
-                  <Col className="d-flex justify-content-end">
-                    <p style={{ color: "red", textAlign: "right" }}>
-                      *You cannot download the PDF or Word document when the
-                      number of columns exceeds the limit.
-                    </p>
-                  </Col>
-                </Row>
+               <Row>
+               <Col className="d-flex justify-content-end">
+                 <p style={{ color: 'red', textAlign: 'right' }}>
+                 *You cannot download the PDF or Word document when the number of columns exceeds the limit.
+                 </p>
+               </Col>
+             </Row>
               )}
             </>
-          ) : null}
-          {safeData.length > 0 ? (
-            <div className="sheet-container mt-3">
-              <div className="sheet" id="pdf-report-content">
+
+              <div className="sheet-container mt-3">
+                <div className="sheet" id="pdf-report-content">
                 <div id="first-page-report">
-                  <FirstPageReport
-                    projectId={projectId}
-                    moduleType={moduleType}
-                  />
+                  <FirstPageReport projectId={projectId} moduleType={moduleType}/>
                 </div>
                 <Row className="d-flex justify-content-between">
-                  <Col className="d-flex flex-column align-items-center"></Col>
-                  <Col className="d-flex flex-column align-items-center">
-                    <h5>{projectData?.projectName}</h5>
-                    <h5>Reliability Analysis</h5>
-                  </Col>
-                  <Col className="d-flex flex-column align-items-center">
-                    <h5>Rev:</h5>
-                    <h5>Rev Date:</h5>
-                  </Col>
-                </Row>
-                <div className="sheet-content">
-                  <div className="field">
-                    <label>Project Name:</label>
-                    <span>{projectData?.projectName}</span>
+                    <Col className="d-flex flex-column align-items-center"></Col>
+                    <Col className="d-flex flex-column align-items-center">
+                      <h5>{projectData?.projectName}</h5>
+                      <h5>Spares Analysis</h5>
+                    </Col>
+                    <Col className="d-flex flex-column align-items-center">
+                      <h5>Rev:</h5>
+                      <h5>Rev Date:</h5>
+                    </Col>
+                  </Row>
+
+                  <div className="sheet-content">
+                    <div className="field">
+                      <label>Project Name:</label>
+                      <span>{projectData?.projectName}</span>
+                    </div>
+                    <div className="field">
+                      <label>Project Number:</label>
+                      <span>{projectData?.projectNumber}</span>
+                    </div>
+                    <div className="field">
+                      <label>Project Description:</label>
+                      <span>{projectData?.projectDesc}</span>
+                    </div>
                   </div>
-                  <div className="field">
-                    <label>Project Number:</label>
-                    <span>{projectData?.projectNumber}</span>
-                  </div>
-                  <div className="field">
-                    <label>Project Description:</label>
-                    <span>{projectData?.projectDesc}</span>
-                  </div>
-                </div>
-                <div style={{ overflowX: "auto" }}>
-                  <table className="report-table">
-                    <thead>
-                      <tr>
-                        {headers.map((header) => (
-                          <th
-                            key={header}
-                            style={{
-                              width: columnWidths[header],
-                              textAlign: "center",
-                            }}
-                          >
-                            {header}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {safeData?.map((row, rowIndex) => (
-                        <tr key={rowIndex}>
-                          {headers.map((header) => {
-                            const key = headerKeyMapping[header];
-                            const value =
-                              row.productId[key] ??
-                              row.failureRatePrediction[key] ??
-                              "-";
-                            return (
-                              <td key={header} style={{ textAlign: "center" }}>
-                                {value}
-                              </td>
-                            );
-                          })}
+                
+                  <div style={{ overflowX: "auto" }}>
+                    <table className="report-table">
+                      <thead>
+                        <tr>
+                          {headers.map((header) => (
+                            <th
+                              key={header}
+                              style={{
+                                width: columnWidths[header],
+                                textAlign: "center",
+                              }}
+                            >
+                              {header}
+                            </th>
+                          ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                      {sparePartsData?.map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {headers.map((header) => {
+                              const key = headerKeyMapping[header];
+                              const value =
+                                row?.productId?.[key] ?? 
+                                row?.mttrData?.[key] ?? 
+                                row?.spareData?.[key] ?? 
+                                "-";
+                              return (
+                                <td key={header} style={{ textAlign: "center" }}>
+                                  {value}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <div id="last-page-report">
-                  <LastPageReport
-                    projectId={projectId}
-                    moduleType={moduleType}
-                  />
-                </div>
+              </div>
+              <div id="last-page-report">
+                <LastPageReport projectId={projectId} moduleType={moduleType}/>
               </div>
             </div>
           ) : (
@@ -740,4 +623,4 @@ function ReliabilityAnalysis(props) {
   );
 }
 
-export default ReliabilityAnalysis;
+export default SpareAnalysis;

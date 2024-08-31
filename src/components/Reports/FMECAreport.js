@@ -1,35 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Col, Row, Button } from "react-bootstrap";
+import { Col, Form, Row, Button } from "react-bootstrap";
 import "../../css/Reports.scss";
 import Api from "../../Api";
 import { useHistory } from "react-router-dom";
-import Select from "react-select";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType,
-} from "docx";
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType } from "docx";
 import Loader from "../core/Loader";
+import FMECA_ComponentType from "./ComponentTypes/FMECA_ComponentType.js";
 import FirstPageReport from "./FirstPageReport.js";
 import LastPageReport from "./LastPageReport.js";
-import RA_ComponentType from "./ComponentTypes/RA_ComponentType.js";
 
-function ReliabilityAnalysis(props) {
-  const moduleType = props?.selectModule;
+function FMECAreport(props) {
   const [projectId, setProjectId] = useState(props?.projectId);
+  const [isLoading, setIsLoading] = useState(true);
+  const moduleType = props?.selectModule;  
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
-  const [isLoading, setIsLoading] = useState(true);
   const [projectData, setProjectData] = useState(null);
   const [selectModule, setSelectModule] = useState("");
   const [selectModuleFieldValue, setSelectModuleFieldValue] = useState("");
@@ -39,32 +29,23 @@ function ReliabilityAnalysis(props) {
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
   const [data, setData] = useState([]);
-  const [ftaTreeData, setFtaTreeData] = useState([]);
+  const [FmecaTreeData, setFMECATreeData] = useState([]);
   const [columnLength, setColumnLength] = useState(false);
+  const [pmmraTreeData, setPmmraTreeData] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({
-    Id: true,
-    "Part Name": true,
-    "Part Number": true,
-    Quantity: true,
-    Reference: true,
-    Category: true,
-    "Part Type": true,
-    Environment: true,
-    Temperature: true,
-    FR: true,
-    MTTR: true,
-    MCT: true,
-    MLH: true,
+    "PM Task ID": true,
+    "PM Task Type": true,
+    "Task Intervel Frequency": true,
+    "Task Interval Unit": true,
+    "Latitude / Frequency tolerance": true,
+    "Scheduled Maintance Task": true,
+    "Task Intervel Determination": true,
+    "Task Description": true,
   });
-  const safeData = data?.map((item) => ({
-    productId: item?.productId || {},
-    failureRatePrediction: item?.failureRatePrediction || {},
-  }));
 
   // Mapping of headers to data keys
   const headerKeyMapping = {
-    Id: "indexCount",
-    "Part Name": "productName",
+    "Product Name": "productName",
     "Part Number": "partNumber",
     Quantity: "quantity",
     Reference: "reference",
@@ -73,37 +54,100 @@ function ReliabilityAnalysis(props) {
     Environment: "environment",
     Temperature: "temperature",
     FR: "fr",
-    MTTR: "mttr",
-    MCT: "mct",
-    MLH: "mlh",
-    Source: "source",
-    Predicted: "predicted",
-    "Duty Cycle": "dutyCycle",
-    "FR Distribution": "frDistribution",
-    "FR Remarks": "frRemarks",
-    Standard: "standard",
-    "FR Offset Operand": "frOffsetOperand",
-    "Failure Rate Offset": "failureRateOffset",
-    "FR Unit": "frUnit",
+    "FMECA ID": "fmecaId",
+    "Operating phase": "operatingPhase",
+    Function: "function",
+    "Failure Mode": "failureMode",
+    "Failure Mode Ratio Alpha": "failureModeRatioAlpha",
+    cause: "cause",
+    "Sub system effect": "subSystemEffect",
+    "End Effect": "endEffect",
+    "End Effect ratio Beta(Must equal to 1)": "endEffectRatioBeta",
+    "Safety Impact": "safetyImpact",
+    "Reference Hazard ID": "referenceHazardId",
+    "Reliability impact": "realibilityImpact",
+    "Service Disruption Time(Minutes)": "serviceDisruptionTime",
+    Frequency: "frequency",
+    Severity: "severity",
+    "Risk Index": "riskIndex",
+    "Detectable means during operation": "detectableMeansDuringOperation",
+    "Detectable means maintainer": "detectableMeansToMaintainer",
+    "Built in Test": "BuiltInTest",
+    "Design Control": "designControl",
+    "Maintenance Control": "maintenanceControl",
+    "Export Constraints": "exportConstraints",
+    "immediate action during operational phase": "immediteActionDuringOperationalPhase",
+    "user field 1": "userField1",
+    "user field 2": "userField2",
+    "user field 3": "userField3",
+    "user field 4": "userField4",
+    "user field 5": "userField5",
+    "user field 6": "userField6",
+    "user field 7": "userField7",
+    "user field 8": "userField8",
+    "user field 9": "userField9",
+    "user field 10": "userField10",
+    "PM Task ID": "pmTaskId",
+    "PM Task Type": "pmTaskType",
+    "Task Intervel Frequency": "taskIntrvlFreq",
+    "Task Interval Unit": "taskIntrvlUnit",
+    "Latitude / Frequency tolerance": "LatitudeFreqTolrnc",
+    "Scheduled Maintance Task": "scheduleMaintenceTsk",
+    "Task Intervel Determination": "tskInteralDetermination",
+    "Task Description": "taskDesc",
   };
-  const ftaHeaderKeyMapping = {
-    Source: "source",
-    Predicted: "predicted",
-    "Duty Cycle": "dutyCycle",
-    "FR Distribution": "frDistribution",
-    "FR Remarks": "frRemarks",
-    Standard: "standard",
-    "FR Offset Operand": "frOffsetOperand",
-    "Failure Rate Offset": "failureRateOffset",
-    "FR Unit": "frUnit",
+  const fmecaHeaderKeyMapping = {
+    "FMECA ID": "fmecaId",
+    "Operating phase": "operatingPhase",
+    Function: "function",
+    "Failure Mode": "failureMode",
+    "Failure Mode Ratio Alpha": "failureModeRatioAlpha",
+    cause: "cause",
+    "Sub system effect": "subSystemEffect",
+    "End Effect": "endEffect",
+    "End Effect ratio Beta(Must equal to 1)": "endEffectRatioBeta",
+    "Safety Impact": "safetyImpact",
+    "Reference Hazard ID": "referenceHazardId",
+    "Reliability impact": "realibilityImpact",
+    "Service Disruption Time(Minutes)": "serviceDisruptionTime",
+    Frequency: "frequency",
+    Severity: "severity",
+    "Risk Index": "riskIndex",
+    "Detectable means during operation": "detectableMeansDuringOperation",
+    "Detectable means maintainer": "detectableMeansToMaintainer",
+    "Built in Test": "BuiltInTest",
+    "Design Control": "designControl",
+    "Maintenance Control": "maintenanceControl",
+    "Export Constraints": "exportConstraints",
+    "immediate action during operational phase": "immediteActionDuringOperationalPhase",
+    "user field 1": "userField1",
+    "user field 2": "userField2",
+    "user field 3": "userField3",
+    "user field 4": "userField4",
+    "user field 5": "userField5",
+    "user field 6": "userField6",
+    "user field 7": "userField7",
+    "user field 8": "userField8",
+    "user field 9": "userField9",
+    "user field 10": "userField10",
+  };
+  const pmmraHeaderKeyMapping = {
+    "PM Task ID": "pmTaskId",
+    "PM Task Type": "pmTaskType",
+    "Task Intervel Frequency": "taskIntrvlFreq",
+    "Task Interval Unit": "taskIntrvlUnit",
+    "Latitude / Frequency tolerance": "LatitudeFreqTolrnc",
+    "Scheduled Maintance Task": "scheduleMaintenceTsk",
+    "Task Intervel Determination": "tskInteralDetermination",
+    "Task Description": "taskDesc",
   };
 
   const token = localStorage.getItem("sessionId");
+  const role = localStorage.getItem("role");
+  const userId = localStorage.getItem("userId");
 
-
-  const headers = [
-    "Id",
-    "Part Name",
+  const header1 = [
+    "Product Name",
     "Part Number",
     "Quantity",
     "Reference",
@@ -112,27 +156,53 @@ function ReliabilityAnalysis(props) {
     "Environment",
     "Temperature",
     "FR",
-    "Source",
-    "Predicted",
-    "DutyCycle",
-    "FR Distribution",
-    "FR Remarks",
-    "Standard",
-    "FR Offset Operand",
-    "Failure Rate Offset",
-    "FR Unit",
+    "FMECA ID",
+    "Operating phase",
+    "Function",
+    "Failure Mode",
+    "Failure Mode Ratio Alpha",
+    "cause",
+    "Sub system effect",
+    "End Effect",
+    "End Effect ratio Beta(Must equal to 1)",
+    "Safety Impact",
+    "Reference Hazard ID",
+    "Reliability impact",
+    "Service Disruption Time(Minutes)",
+    "Frequency",
+    "Severity",
+    "Risk Index",
+    "Detectable means during operation",
+    "Detectable means maintainer",
+    "Built in Test",
+    "Design Control",
+    "Maintanence Control",
+    "Export Constraints",
+    "immediate action during operational phase",
+    "user field 1",
+    "user field 2",
+    "user field 3",
+    "user field 4",
+    "user field 5",
+    "user field 6",
+    "user field 7",
+    "user field 8",
+    "user field 9",
+    "user field 10",
   ];
-  const FTPHeader = [
-    "Source",
-    "Predicted",
-    "DutyCycle",
-    "FR Distribution",
-    "FR Remarks",
-    "Standard",
-    "FR Offset Operand",
-    "Failure Rate Offset",
-    "FR Unit",
+
+  const header2 = [
+    "PM Task ID",
+    "PM Task Type",
+    "Task Intervel Frequency",
+    "Task Interval Unit",
+    "Latitude / Frequency tolerance",
+    "Scheduled Maintance Task",
+    "Task Intervel Determination",
+    "Task Description",
   ];
+
+  const combinedHeaders = header1.concat(header2);
   const columnWidths = {
     Source: "130px",
     Predicted: "120px",
@@ -144,6 +214,7 @@ function ReliabilityAnalysis(props) {
     "Failure Rate Offset": "120px",
     "FR Unit": "60px",
   };
+ 
 
   // Log out
   const logout = () => {
@@ -169,8 +240,8 @@ function ReliabilityAnalysis(props) {
   };
 
   const getProjectPermission = () => {
-    const userId = localStorage.getItem("userId");
     setIsLoading(true);
+    const userId = localStorage.getItem("userId");
     Api.get(`/api/v1/projectPermission/list`, {
       params: {
         authorizedPersonnel: userId,
@@ -193,17 +264,19 @@ function ReliabilityAnalysis(props) {
       });
   };
 
+
   const getTreeProduct = () => {
     setIsLoading(true);
     const sessionId = localStorage.getItem("sessionId");
     const userId = localStorage.getItem("userId");
 
-    Api.get(`/api/v1/reports/get/reliablility/report`, {
+    Api.get(`/api/v1/reports/get/fmeca/report`, {
       params: {
         projectId: projectId,
-        reportType: reportType,
         userId: userId,
         token: sessionId,
+        reportType: reportType,
+        hierarchyType: hierarchyType,
       },
     })
       .then((res) => {
@@ -220,41 +293,67 @@ function ReliabilityAnalysis(props) {
       });
   };
 
+  const fmecaData = data?.map((item) => ({
+    productId: item?.productId || {},
+    fmecaData: item?.fmecaData || {},
+    pmmraData: item?.pmmraData || {},
+  }));
+
   useEffect(() => {
     getProjectDetails();
     getProjectPermission();
-    getFtaData();
-
+    getFmecaData();
+    getPmmraData();
     if (reportType == 5) {
-      <RA_ComponentType />;
-    } else if (reportType == 1) {
-      getHierarchyLevelTreeProduct();
+      <FMECA_ComponentType />;
     } else {
       getTreeProduct();
     }
     const columnCount = Object.keys(headerKeyMapping).length;
     if (columnCount > 13) {
       setColumnLength(true);
-    }
+     }
   }, [projectId, reportType, hierarchyType]);
 
-  const getHierarchyLevelTreeProduct = () => {
+  const getFmecaData = () => {
     setIsLoading(true);
     const sessionId = localStorage.getItem("sessionId");
     const userId = localStorage.getItem("userId");
 
-    Api.get(`/api/v1/reports/get/reliablility/report`, {
+    Api.get(`/api/v1/productTreeStructure/fmeca/details`, {
       params: {
         projectId: projectId,
-        reportType: reportType,
-        hierarchyType: hierarchyType,
         userId: userId,
         token: sessionId,
       },
     })
       .then((res) => {
-        const treeData = res?.data?.data;
-        setData(treeData);
+        const fmecaData = res?.data?.data;
+        setFMECATreeData(fmecaData);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        setIsLoading(false);
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        }
+      });
+  };
+  const getPmmraData = () => {
+    setIsLoading(true);
+    const sessionId = localStorage.getItem("sessionId");
+    const userId = localStorage.getItem("userId");
+    Api.get(`/api/v1/productTreeStructure/pmmra/details`, {
+      params: {
+        projectId: projectId,
+        userId: userId,
+        token: sessionId,
+      },
+    })
+      .then((res) => {
+        const pmmraData = res?.data?.data;
+        setPmmraTreeData(pmmraData);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -266,46 +365,24 @@ function ReliabilityAnalysis(props) {
       });
   };
 
-  const getFtaData = () => {
-    setIsLoading(true);
-    const sessionId = localStorage.getItem("sessionId");
-    const userId = localStorage.getItem("userId");
 
-    Api.get(`/api/v1/productTreeStructure/fta/details`, {
-      params: {
-        projectId: projectId,
-        userId: userId,
-        token: sessionId,
-      },
-    })
-      .then((res) => {
-        const frpData = res?.data?.data;
-        setFtaTreeData(frpData);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
-  };
+
 
   // Log sorted data to debug
+  
 
   const exportToExcel = () => {
     if (!projectData) {
       console.error("Project data is not available.");
       return;
     }
-
+  
     // First Page Worksheet
     const firstPageData = [
       [],
       [],
       ["Project Name", projectData?.projectName || ""],
-      ["Document Title", "Reliability Analysis"],
+      ["Document Title", "FMECA"],
       [],
       [],
       ["Rev", ""],
@@ -314,7 +391,7 @@ function ReliabilityAnalysis(props) {
       [],
       ["Project Name", projectData?.projectName || ""],
       ["Project Number", projectData?.projectNumber || ""],
-      ["Document Title", "Reliability Analysis"],
+      ["Document Title", "FMECA"],
       ["Revision", ""],
       ["Date", ""],
       [],
@@ -327,54 +404,50 @@ function ReliabilityAnalysis(props) {
       ["Approved By", ""],
       ["Approved Date", ""],
     ];
-
+  
     const firstPageWorksheet = XLSX.utils.aoa_to_sheet(firstPageData);
-
+  
     // Applying styles to the first project name cell
     firstPageWorksheet["C3"] = {
       font: {
         bold: true,
       },
     };
-
+  
     // Main Content Worksheet
+    const headers = Object.keys(headerKeyMapping); // Assuming you have defined this
     const mainContentData = [
       [],
       [],
-      ["Project Report"],
+      ["Document Title", "FMECA"],
       [],
       ["Project Name", projectData?.projectName || ""],
       ["Project Number", projectData?.projectNumber || ""],
       ["Project Description", projectData?.projectDesc || ""],
       [],
-      headers.filter((header) => columnVisibility[header]), // Header row
-    ];
-
-    // Map the safeData rows to the Excel sheet
-    safeData.forEach((row) => {
-      const rowData = headers
-        .map((header) => {
+      headers, // Header row
+      ...fmecaData.map((row) =>
+        headers.map((header) => {
           const key = headerKeyMapping[header];
-          // Get the value from either productId or failureRatePrediction, or fallback to '-'
-          const value =
-            row.productId[key] ?? row.failureRatePrediction[key] ?? "-";
-          return columnVisibility[header] ? value : null;
+          return (
+            row?.productId?.[key] ??
+            row?.fmecaData?.[key] ??
+            row?.pmmraData?.[key] ??
+            "-"
+          );
         })
-        .filter((item) => item !== null);
-
-      // Add the mapped row data to the mainContentData array
-      mainContentData.push(rowData);
-    });
-
+      ),
+    ];
+  
     // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-
+  
     // Last Page Worksheet
     const lastPageData = [
       [],
       [],
       ["Project Name", projectData?.projectName || ""],
-      ["Document Title", "Reliability Analysis"],
+      ["Document Title", "FMECA"],
       [],
       [],
       ["Rev", ""],
@@ -398,22 +471,19 @@ function ReliabilityAnalysis(props) {
       ["", "", "", "", "", ""],
       ["", "", "", "", "", ""],
     ];
-
+  
     const lastPageWorksheet = XLSX.utils.aoa_to_sheet(lastPageData);
-
+  
     // Create a new workbook and append the worksheets
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, firstPageWorksheet, "First Page");
-    XLSX.utils.book_append_sheet(
-      workbook,
-      mainContentWorksheet,
-      "Main Content"
-    );
+    XLSX.utils.book_append_sheet(workbook, mainContentWorksheet, "Main Content");
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
-
+  
     // Write the workbook to a file
-    XLSX.writeFile(workbook, "reliability_analysis.xlsx");
+    XLSX.writeFile(workbook, "fmeca_report.xlsx");
   };
+  
 
   const generatePDFReport = () => {
     if (!projectData) {
@@ -453,21 +523,24 @@ function ReliabilityAnalysis(props) {
         return addContentToPDF(lastPageContent, pageNumber++);
       })
       .then(() => {
-        pdf.save("reliability_analysis.pdf");
+        pdf.save("fmeca_report.pdf");
       })
       .catch((error) => {
         console.error("Error generating PDF:", error);
       });
   };
 
+
   const generateWordDocument = () => {
     if (!projectData) {
       console.error("Project data is not available.");
       return;
     }
+  
+    // Create table rows for headers
     const projectTableRows = [
       new TableRow({
-        children: headers
+        children: header1
           .filter((header) => columnVisibility[header] !== false)
           .map(
             (header) =>
@@ -478,35 +551,29 @@ function ReliabilityAnalysis(props) {
           ),
       }),
     ];
-    const ftpTableRows = [
-      new TableRow({
-        children: FTPHeader.map(
-          (header) =>
-            new TableCell({
-              children: [new Paragraph({ text: header, bold: true })],
-              width: { size: 100, type: WidthType.PERCENTAGE },
-            })
-        ),
-      }),
-    ];
-
-    ftaTreeData.forEach((row) => {
+  
+    // Create table rows for data, following the same mapping logic as in the component
+    fmecaData?.forEach((row) => {
       const tableRow = new TableRow({
-        children: FTPHeader.map(
-          (header) =>
-            new TableCell({
-              children: [
-                new Paragraph({
-                  text: row[ftaHeaderKeyMapping[header]] || "-",
-                }),
-              ],
+        children: header1
+          .filter((header) => columnVisibility[header] !== false)
+          .map((header) => {
+            const key = headerKeyMapping[header];
+            const value =
+              row?.productId?.[key] ??
+              row?.fmecaData?.[key] ??
+              row?.pmmraData?.[key] ??
+              "-";
+            return new TableCell({
+              children: [new Paragraph({ text: value })],
               width: { size: 100, type: WidthType.PERCENTAGE },
-            })
-        ),
+            });
+          }),
       });
-      ftpTableRows.push(tableRow);
+      projectTableRows.push(tableRow);
     });
-
+  
+    // Create the document structure
     const doc = new Document({
       sections: [
         {
@@ -539,9 +606,7 @@ function ReliabilityAnalysis(props) {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `Project Description: ${
-                    projectData.projectDesc || "-"
-                  }`,
+                  text: `Project Description: ${projectData.projectDesc || "-"}`,
                 }),
               ],
             }),
@@ -550,33 +615,31 @@ function ReliabilityAnalysis(props) {
               rows: projectTableRows,
             }),
             new Paragraph({ children: [new TextRun({ text: "" })] }), // Empty paragraph for spacing
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: "Failure Rate Prediction",
-                  bold: true,
-                  size: 32, // 16pt font size
-                }),
-              ],
-              alignment: "center",
-            }),
-            new Paragraph({ children: [new TextRun({ text: "" })] }), // Empty paragraph for spacing
-            new Table({
-              rows: ftpTableRows,
-            }),
           ],
         },
       ],
     });
-
+  
+    // Generate the Word document and trigger the download
     Packer.toBlob(doc)
       .then((blob) => {
-        saveAs(blob, "reliability_analysis.docx");
+        saveAs(blob, "fmeca_report.docx");
       })
       .catch((error) => {
         console.error("Error generating Word document:", error);
       });
   };
+  
+
+  const handleColumnVisibilityChange = (event) => {
+    const { name, checked } = event.target;
+    setColumnVisibility((prevVisibility) => ({
+      ...prevVisibility,
+      [name]: checked,
+    }));
+  };
+
+
 
   return (
     <div>
@@ -585,8 +648,8 @@ function ReliabilityAnalysis(props) {
       ) : (
         <div>
           <div className="mt-3"></div>
-          {safeData?.length > 0 ? (
-            <>
+          {fmecaData?.length > 0 ? (
+              <>
               <Row className="d-flex align-items-center justify-content-end">
                 <Col className="d-flex justify-content-end">
                   <Button
@@ -597,7 +660,7 @@ function ReliabilityAnalysis(props) {
                     <FaFileExcel style={{ marginRight: "8px" }} />
                     Excel
                   </Button>
-
+    
                   <Button
                     className="report-save-btn"
                     onClick={generatePDFReport}
@@ -607,7 +670,7 @@ function ReliabilityAnalysis(props) {
                     <FaFilePdf style={{ marginRight: "8px" }} />
                     PDF
                   </Button>
-
+    
                   <Button
                     className="report-save-btn"
                     disabled={columnLength}
@@ -631,58 +694,76 @@ function ReliabilityAnalysis(props) {
                   </Button>
                 </Col>
               </Row>
-
+    
               {columnLength && (
-                <Row>
-                  <Col className="d-flex justify-content-end">
-                    <p style={{ color: "red", textAlign: "right" }}>
-                      *You cannot download the PDF or Word document when the
-                      number of columns exceeds the limit.
-                    </p>
-                  </Col>
-                </Row>
+               <Row>
+               <Col className="d-flex justify-content-end">
+                 <p style={{ color: 'red', textAlign: 'right' }}>
+                 *You cannot download the PDF or Word document when the number of columns exceeds the limit.
+                 </p>
+               </Col>
+             </Row>
               )}
             </>
           ) : null}
-          {safeData.length > 0 ? (
-            <div className="sheet-container mt-3">
-              <div className="sheet" id="pdf-report-content">
+          {fmecaData?.length > 0 ? (
+          <div className="sheet-container mt-3">
+            <div className="sheet" id="pdf-report-content">
+             
                 <div id="first-page-report">
-                  <FirstPageReport
-                    projectId={projectId}
-                    moduleType={moduleType}
-                  />
+                  <FirstPageReport projectId={projectId} moduleType={moduleType}/>
                 </div>
                 <Row className="d-flex justify-content-between">
-                  <Col className="d-flex flex-column align-items-center"></Col>
-                  <Col className="d-flex flex-column align-items-center">
-                    <h5>{projectData?.projectName}</h5>
-                    <h5>Reliability Analysis</h5>
-                  </Col>
-                  <Col className="d-flex flex-column align-items-center">
-                    <h5>Rev:</h5>
-                    <h5>Rev Date:</h5>
-                  </Col>
-                </Row>
-                <div className="sheet-content">
-                  <div className="field">
-                    <label>Project Name:</label>
-                    <span>{projectData?.projectName}</span>
-                  </div>
-                  <div className="field">
-                    <label>Project Number:</label>
-                    <span>{projectData?.projectNumber}</span>
-                  </div>
-                  <div className="field">
-                    <label>Project Description:</label>
-                    <span>{projectData?.projectDesc}</span>
-                  </div>
+                    <Col className="d-flex flex-column align-items-center"></Col>
+                    <Col className="d-flex flex-column align-items-center">
+                      <h5>{projectData?.projectName}</h5>
+                      <h5>FMECA</h5>
+                    </Col>
+                    <Col className="d-flex flex-column align-items-center">
+                      <h5>Rev:</h5>
+                      <h5>Rev Date:</h5>
+                    </Col>
+                  </Row>
+
+                  <div className="sheet-content">
+                    <div className="field">
+                      <label>Project Name:</label>
+                      <span>{projectData?.projectName}</span>
+                    </div>
+                    <div className="field">
+                      <label>Project Number:</label>
+                      <span>{projectData?.projectNumber}</span>
+                    </div>
+                    <div className="field">
+                      <label>Project Description:</label>
+                      <span>{projectData?.projectDesc}</span>
+                    </div>
+                  </div> 
+              <div>
+                
+                <div style={{ overflowX: "auto", marginBottom: "10px" }}>
+                  {fmecaData?.length > 0 ? (
+                    <Row className="d-flex align-items-center ">
+                      <Col className="d-flex flex-row custom-checkbox-group">
+                        {header2.map((item) => (
+                          <Form.Check
+                            type="checkbox"
+                            name={item}
+                            label={item}
+                            checked={columnVisibility[item]}
+                            onChange={handleColumnVisibilityChange}
+                            className="custom-checkbox ml-5"
+                          />
+                        ))}
+                      </Col>
+                    </Row>
+                  ) : null}
                 </div>
                 <div style={{ overflowX: "auto" }}>
                   <table className="report-table">
                     <thead>
                       <tr>
-                        {headers.map((header) => (
+                        {header1.map((header) => (
                           <th
                             key={header}
                             style={{
@@ -693,51 +774,64 @@ function ReliabilityAnalysis(props) {
                             {header}
                           </th>
                         ))}
+                        {header2.map((header) =>
+                          columnVisibility[header] ? (
+                            <th
+                              key={header}
+                              style={{
+                                width: columnWidths[header],
+                                textAlign: "center",
+                              }}
+                            >
+                              {header}
+                            </th>
+                          ) : null
+                        )}
                       </tr>
                     </thead>
                     <tbody>
-                      {safeData?.map((row, rowIndex) => (
-                        <tr key={rowIndex}>
-                          {headers.map((header) => {
-                            const key = headerKeyMapping[header];
-                            const value =
-                              row.productId[key] ??
-                              row.failureRatePrediction[key] ??
-                              "-";
-                            return (
-                              <td key={header} style={{ textAlign: "center" }}>
-                                {value}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      ))}
+                    {fmecaData?.map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {combinedHeaders.map((header) => {
+                              const key = headerKeyMapping[header];
+                              const value =
+                                row?.productId?.[key] ??
+                                row?.fmecaData?.[key] ??
+                                row?.pmmraData?.[key] ??
+                                "-";
+                              return (
+                                <td
+                                  key={header}
+                                  style={{ textAlign: "center" }}
+                                >
+                                  {value}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                 </div>
-                <div id="last-page-report">
-                  <LastPageReport
-                    projectId={projectId}
-                    moduleType={moduleType}
-                  />
-                </div>
+              </div>
+              <div id="last-page-report">
+                <LastPageReport projectId={projectId} moduleType={moduleType}/>
               </div>
             </div>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                width: "100%",
-                justifyContent: "center",
-              }}
-            >
-              <h3>No Records to Display</h3>
-            </div>
-          )}
+          </div>
+           ) :  <div
+           style={{
+             display: "flex",
+             width: "100%",
+             justifyContent: "center",
+           }}
+         >
+           <h3>No Records to Display</h3>
+         </div>}
         </div>
       )}
     </div>
   );
 }
 
-export default ReliabilityAnalysis;
+export default FMECAreport;

@@ -29,6 +29,7 @@
     "axios": "^0.21.4",
     "bootstrap": "^5.1.0",
     "docx": "^8.5.0",
+    "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "formik": "^2.2.9",
     "history": "^5.0.1",
@@ -81,5 +82,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/react-router-dom": "^5.3.3"
   }
 }

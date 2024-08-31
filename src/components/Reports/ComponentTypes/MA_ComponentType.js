@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Col, Form, Row, Card, Button } from "react-bootstrap";
-import Label from "../LabelComponent";
-import "../../css/Reports.scss";
-import { Formik, ErrorMessage } from "formik";
-import Api from "../../Api";
+import { Col, Form, Row, Button } from "react-bootstrap";
+import "../../../css/Reports.scss";
+import Api from "../../../Api.js";
 import { useHistory } from "react-router-dom";
-import Select from "react-select";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
+
 import {
   Document,
   Packer,
@@ -20,31 +18,46 @@ import {
   TableRow,
   TableCell,
   WidthType,
+  Header,
+  AlignmentType,
+  Footer,
 } from "docx";
-import Loader from "../core/Loader";
-import MA_ComponentType from "./ComponentTypes/MA_ComponentType.js";
-import FirstPageReport from "./FirstPageReport.js";
-import LastPageReport from "./LastPageReport.js";
+import FirstPageReport from "../FirstPageReport.js";
+import LastPageReport from "../LastPageReport.js";
+import Loader from "../../core/Loader.js";
 
-function MaintainabilityReport(props) {
-  const [projectId, setProjectId] = useState(props?.projectId);
-  const [isLoading, setIsLoading] = useState(true);
+function MA_ComponentType(props) {
   const moduleType = props?.selectModule;  
+  const [projectId, setProjectId] = useState(props?.projectId);
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
+  const [isLoading, setIsLoading] = useState(true);
   const [projectData, setProjectData] = useState(null);
-  const [selectModule, setSelectModule] = useState("");
-  const [selectModuleFieldValue, setSelectModuleFieldValue] = useState("");
-  const [showReport, setShowReport] = useState(false);
   const history = useHistory();
   const [permission, setPermission] = useState();
-  const [isOwner, setIsOwner] = useState(false);
-  const [createdBy, setCreatedBy] = useState();
   const [data, setData] = useState([]);
-  const [mttrTreeData, setMttrTreeData] = useState([]);
-  const [pmmraTreeData, setPmmraTreeData] = useState([]);
   const [columnLength, setColumnLength] = useState(false);
+  const token = localStorage.getItem("sessionId");
+
   const [columnVisibility, setColumnVisibility] = useState({
+    "Product Name": true,
+    "Part Number": true,
+    Quantity: true,
+    Reference: true,
+    Category: true,
+    "Part Type": true,
+    Environment: true,
+    Temperature: true,
+    FR: true,
+    MTTR: true,
+    MCT: true,
+    MLH: true,
+    Repairable: true,
+    "Level of Repair": true,
+    "Level of Replace": true,
+    Spare: true,
+    Mmax: true,
+    Remarks: true,
     "PM Task ID": true,
     "PM Task Type": true,
     "Task Intervel Frequency": true,
@@ -161,10 +174,6 @@ function MaintainabilityReport(props) {
     "User Field 6": "userField6",
   };
 
-  const token = localStorage.getItem("sessionId");
-  const role = localStorage.getItem("role");
-  const userId = localStorage.getItem("userId");
-
   const header1 = [
     "Product Name",
     "Part Number",
@@ -237,31 +246,13 @@ function MaintainabilityReport(props) {
 
   const combinedHeaders = header1.concat(header2);
 
-  const handleColumnVisibilityChange = (event) => {
-    const { name, checked } = event.target;
-    setColumnVisibility((prevVisibility) => ({
-      ...prevVisibility,
-      [name]: checked,
-    }));
-  };
-  const columnWidths = {};
-
-  // Log out
-  const logout = () => {
-    localStorage.clear(history.push("/login"));
-    window.location.reload();
-  };
-
   // Fetch project details based on projectId
   const getProjectDetails = () => {
-    setIsLoading(true);
     Api.get(`/api/v1/projectCreation/${projectId}`)
       .then((res) => {
         setProjectData(res.data.data);
-        setIsLoading(false);
       })
       .catch((error) => {
-        setIsLoading(false);
         console.error("Error fetching project details:", error);
       })
       .finally(() => {
@@ -286,7 +277,6 @@ function MaintainabilityReport(props) {
         setIsLoading(false);
       })
       .catch((error) => {
-        setIsLoading(false);
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
@@ -301,16 +291,25 @@ function MaintainabilityReport(props) {
   };
 
   // Sort the data array using the custom sort function
-  const sortedData = data.slice().sort(customSort);
+  const sortedData = data?.slice().sort(customSort);
 
-  const safeData = data?.map((item) => ({
-    productId: item?.productId || {},
-    mttrData: item?.mttrData || {},
-    pmmraData: item?.pmmraData || {},
-  }));
+  useEffect(() => {
+    getProjectDetails();
+    getProjectPermission();
+    getComponentTreeProduct();
+    const columnCount = Object.keys(headerKeyMapping).length;
+    if (columnCount > 13) {
+      setColumnLength(true);
+     }
+  }, [projectId, reportType, hierarchyType]);
 
-  const getTreeProduct = () => {
-    setIsLoading(true);
+  // Log out
+  const logout = () => {
+    localStorage.clear(history.push("/login"));
+    window.location.reload();
+  };
+
+  const getComponentTreeProduct = () => {
     const sessionId = localStorage.getItem("sessionId");
     const userId = localStorage.getItem("userId");
 
@@ -329,7 +328,6 @@ function MaintainabilityReport(props) {
         setIsLoading(false);
       })
       .catch((error) => {
-        setIsLoading(false);
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
@@ -337,71 +335,12 @@ function MaintainabilityReport(props) {
       });
   };
 
-  useEffect(() => {
-    getProjectDetails();
-    getProjectPermission();
-    getMttrData();
-    getPmmraData();
-    if (reportType == 5) {
-      <MA_ComponentType />;
-    } else {
-      getTreeProduct();
-    }
-    const columnCount = Object.keys(headerKeyMapping).length;
-    if (columnCount > 13) {
-      setColumnLength(true);
-     }
-  }, [projectId, reportType, hierarchyType]);
-
-  const getMttrData = () => {
-    setIsLoading(true);
-    const sessionId = localStorage.getItem("sessionId");
-    const userId = localStorage.getItem("userId");
-
-    Api.get(`/api/v1/productTreeStructure/mttr/details`, {
-      params: {
-        projectId: projectId,
-        userId: userId,
-        token: sessionId,
-      },
-    })
-      .then((res) => {
-        const mttrData = res?.data?.data;
-        setMttrTreeData(mttrData);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
-  };
-  const getPmmraData = () => {
-    setIsLoading(true);
-    const sessionId = localStorage.getItem("sessionId");
-    const userId = localStorage.getItem("userId");
-
-    Api.get(`/api/v1/productTreeStructure/pmmra/details`, {
-      params: {
-        projectId: projectId,
-        userId: userId,
-        token: sessionId,
-      },
-    })
-      .then((res) => {
-        const pmmraData = res?.data?.data;
-        setPmmraTreeData(pmmraData);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
+  const handleColumnVisibilityChange = (event) => {
+    const { name, checked } = event.target;
+    setColumnVisibility((prevVisibility) => ({
+      ...prevVisibility,
+      [name]: checked,
+    }));
   };
 
   // Log sorted data to debug
@@ -451,6 +390,13 @@ function MaintainabilityReport(props) {
     };
   
     // Main Content Worksheet
+    const header1Data = header1;
+    const header2Data = header2.filter((header) => columnVisibility[header]);
+  
+    // Header row for the main content
+    const mainContentHeaders = [...header1Data, ...header2Data];
+  
+    // Prepare data for main content worksheet
     const mainContentData = [
       [],
       [],
@@ -460,17 +406,19 @@ function MaintainabilityReport(props) {
       ["Project Number", projectData?.projectNumber || ""],
       ["Project Description", projectData?.projectDesc || ""],
       [],
-      combinedHeaders.filter((header) => columnVisibility[header]), // Header row
-      ...safeData.map((row) => 
-        combinedHeaders.map((header) => {
-          const key = headerKeyMapping[header];
-          return (
-            row.productId?.[key] ??
-            row.mttrData?.[key] ??
-            row.pmmraData?.[key] ??
-            "-"
-          );
-        })
+      mainContentHeaders,
+      ...sortedData.flatMap((part) =>
+        part.items.map((item) =>
+          mainContentHeaders.map((header) => {
+            const key = headerKeyMapping[header];
+            return (
+              item.productId?.[key] ??
+              item.mttrData?.[key] ??
+              item.pmmraData?.[key] ??
+              "-"
+            );
+          })
+        )
       ),
     ];
   
@@ -519,6 +467,7 @@ function MaintainabilityReport(props) {
     XLSX.writeFile(workbook, "maintainability_analysis.xlsx");
   };
   
+  
 
   const generatePDFReport = () => {
     if (!projectData) {
@@ -565,6 +514,7 @@ function MaintainabilityReport(props) {
       });
   };
 
+
   const generateWordDocument = () => {
     if (!projectData) {
       console.error("Project data is not available.");
@@ -584,8 +534,8 @@ function MaintainabilityReport(props) {
       }),
     ];
   
-    // Map the safeData rows to Word table rows
-    safeData?.forEach((row) => {
+    // Map the sortedData rows to Word table rows
+    sortedData?.forEach((row) => {
       const tableRow = new TableRow({
         children: combinedHeaders.map(
           (header) =>
@@ -665,8 +615,6 @@ function MaintainabilityReport(props) {
       });
   };
   
-  
-  
 
   return (
     <div>
@@ -733,12 +681,14 @@ function MaintainabilityReport(props) {
               )}
             </>
           ) : null}
-          {safeData.length > 0 ? (
-              <div className="sheet-container mt-3">
-                <div className="sheet" id="pdf-report-content">
-                <div id="first-page-report">
+          {sortedData.length > 0 ? (
+            <div id="pdf-report-content">
+               <div id="first-page-report">
                 <FirstPageReport projectId={projectId} moduleType={moduleType}/>
               </div>
+
+              <div className="sheet-container mt-3" id="main-content-report">
+                <div className="sheet">
                   <Row className="d-flex justify-content-between">
                     <Col className="d-flex flex-column align-items-center"></Col>
                     <Col className="d-flex flex-column align-items-center">
@@ -765,8 +715,6 @@ function MaintainabilityReport(props) {
                       <span>{projectData?.projectDesc}</span>
                     </div>
                   </div>
-
-                  
                   <div style={{ overflowX: "auto", marginBottom: "10px" }}>
                     {sortedData.length > 0 ? (
                       <Row className="d-flex align-items-center ">
@@ -785,78 +733,66 @@ function MaintainabilityReport(props) {
                       </Row>
                     ) : null}
                   </div>
-                  <div style={{ overflowX: "auto" }}>
-                    <table className="report-table">
-                      <thead>
-                        <tr>
-                          {header1.map((header) => (
-                            <th
-                              key={header}
-                              style={{
-                                width: columnWidths[header],
-                                textAlign: "center",
-                              }}
-                            >
-                              {header}
-                            </th>
-                          ))}
-                          {header2.map((header) =>
-                            columnVisibility[header] ? (
+                  {sortedData.map((part, partIndex) => (
+                    <div key={partIndex} className={partIndex === 0 ? "mt-3" : "my-5"} style={{ overflowX: "auto" }}>
+                      <h5>{part.partType}</h5>
+                    
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            {header1.map((header) => (
                               <th
                                 key={header}
                                 style={{
-                                  width: columnWidths[header],
                                   textAlign: "center",
                                 }}
                               >
                                 {header}
                               </th>
-                            ) : null
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {safeData?.map((row, rowIndex) => (
-                          <tr key={rowIndex}>
-                            {combinedHeaders.map((header) => {
-                              const key = headerKeyMapping[header];
-                              const value =
-                                row.productId[key] ??
-                                row.mttrData[key] ??
-                                row.pmmraData[key] ??
-                                "-";
-                              return (
-                                <td
+                            ))}
+                            {header2.map((header) =>
+                              columnVisibility[header] ? (
+                                <th
                                   key={header}
-                                  style={{ textAlign: "center" }}
+                                  style={{
+                                    textAlign: "center",
+                                  }}
                                 >
-                                  {value}
-                                </td>
-                              );
-                            })}
+                                  {header}
+                                </th>
+                              ) : null
+                            )}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                        {part.items.map((item, itemIndex) => (
+                            <tr key={itemIndex}>                                
+                              {combinedHeaders.map((header) => (
+                                <td key={header} className="table-cell">
+                                  {
+                                   item.productId?.[headerKeyMapping[header]] ??
+                                   item.mttrData?.[headerKeyMapping[header]] ??
+                                   item.pmmraData?.[headerKeyMapping[header]] ??
+                                  "-"}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
                 </div>
               </div>
-            ): <div
-            style={{
-              display: "flex",
-              width: "100%",
-              justifyContent: "center",
-            }}
-          >
-            <h3>No Records to Display</h3>
-          </div>}
-          <div id="last-page-report">
+              <div id="last-page-report">
                 <LastPageReport projectId={projectId} moduleType={moduleType}/>
               </div>
+            </div>
+          ) : null}
         </div>
       )}
     </div>
   );
 }
 
-export default MaintainabilityReport;
+export default MA_ComponentType;

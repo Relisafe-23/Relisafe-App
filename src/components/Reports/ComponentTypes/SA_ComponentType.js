@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Col, Form, Row, Button } from "react-bootstrap";
-import "../../css/Reports.scss";
-import Api from "../../Api";
+import "../../../css/Reports.scss";
+import Api from "../../../Api.js";
 import { useHistory } from "react-router-dom";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
+
 import {
   Document,
   Packer,
@@ -21,13 +22,13 @@ import {
   AlignmentType,
   Footer,
 } from "docx";
-import FirstPageReport from "./FirstPageReport.js";
-import LastPageReport from "./LastPageReport.js";
-import Loader from "../core/Loader.js";
+import FirstPageReport from "../FirstPageReport.js";
+import LastPageReport from "../LastPageReport.js";
+import Loader from "../../core/Loader.js";
 
-function PbsReport(props) {
-  
-  const moduleType = props?.selectModule;
+
+function SA_ComponentType(props) {
+  const moduleType = props?.selectModule; 
   const [projectId, setProjectId] = useState(props?.projectId);
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
@@ -36,6 +37,8 @@ function PbsReport(props) {
   const history = useHistory();
   const [permission, setPermission] = useState();
   const [data, setData] = useState([]);
+  const [columnLength, setColumnLength] = useState(false);
+  const token = localStorage.getItem("sessionId");
 
   const [columnVisibility, setColumnVisibility] = useState({
     "Product Name": true,
@@ -50,6 +53,25 @@ function PbsReport(props) {
     MTTR: true,
     MCT: true,
     MLH: true,
+    Repairable: true,
+    "Level of Repair": true,
+    "Level of Replace": true,
+    Spare: true,
+    Mmax: true,
+    Remarks: true,
+    "Warrenty Spare": true,
+    "Recommended Spare": true,
+    "Delivery Time Days": true,
+    "After Serial Production Price 1": true,
+    "Price 1 MOQ": true,
+    "After Serial Production Price 2": true,
+    "Price 2 MOQ": true,
+    "After Serial Production Price 3": true,
+    "Price 3 MOQ": true,
+    "Annual Price Escalation Percentage": true,
+    "LCC-Price Validity to be Included": true,
+    "Recommended Spare Quantity": true,
+    "Calculated Spare Quantity": true,
   });
 
   // Mapping of headers to data keys
@@ -66,9 +88,27 @@ function PbsReport(props) {
     MTTR: "mttr",
     MCT: "mct",
     MLH: "mlh",
+    Repairable: "repairable",
+    "Level of Repair": "levelOfRepair",
+    "Level of Replace": "levelOfReplace",
+    Spare: "spare",
+    Mmax: "mMax",
+    Remarks: "remarks",
+    "Warrenty Spare": "warrantySpare",
+    "Recommended Spare": "recommendedSpare",
+    "Delivery Time Days": "deliveryTimeDays",
+    "After Serial Production Price 1": "afterSerialProductionPrice1",
+    Price1MOQ: "price1MOQ",
+    "After Serial Production Price 2": "afterSerialProductionPrice2",
+    Price2MOQ: "price2MOQ",
+    "After Serial Production Price 3": "afterSerialProductionPrice3",
+    Price3MOQ: "price3MOQ",
+    "Annual Price Escalation Percentage": "annualPriceEscalationPercentage",
+    "LCC-Price Validity to be Included": "lccPriceValidity",
+    "Recommended Spare Quantity": "recommendedSpareQuantity",
+    "Calculated Spare Quantity": "calculatedSpareQuantity",
   };
 
-  const token = localStorage.getItem("sessionId");
   const headers = [
     "Product Name",
     "Part Number",
@@ -82,21 +122,26 @@ function PbsReport(props) {
     "MTTR",
     "MCT",
     "MLH",
+    "Repairable",
+    "Level of Repair",
+    "Level of Replace",
+    "Spare",
+    "Mmax",
+    "Remarks",
+    "Warrenty Spare",
+    "Recommended Spare",
+    "Delivery Time Days",
+    "After Serial Production Price 1",
+    "Price 1 MOQ",
+    "After Serial Production Price 2",
+    "Price 2 MOQ",
+    "After Serial Production Price 3",
+    "Price 3 MOQ",
+    "Annual Price Escalation Percentage",
+    "LCC-Price Validity to be Included",
+    "Recommended Spare Quantity",
+    "Calculated Spare Quantity",
   ];
-  const columnWidths = {
-    "Product Name": "130px",
-    "Part Number": "120px",
-    Quantity: "80px",
-    Reference: "130px",
-    Category: "100px",
-    "Part Type": "100px",
-    Environment: "120px",
-    Temperature: "120px",
-    FR: "60px",
-    MTTR: "60px",
-    MCT: "60px",
-    MLH: "60px",
-  };
 
   // Log out
   const logout = () => {
@@ -106,14 +151,11 @@ function PbsReport(props) {
 
   // Fetch project details based on projectId
   const getProjectDetails = () => {
-    setIsLoading(true);
     Api.get(`/api/v1/projectCreation/${projectId}`)
       .then((res) => {
         setProjectData(res.data.data);
-        setIsLoading(false);
       })
       .catch((error) => {
-        setIsLoading(false);
         console.error("Error fetching project details:", error);
       })
       .finally(() => {
@@ -138,7 +180,6 @@ function PbsReport(props) {
         setIsLoading(false);
       })
       .catch((error) => {
-        setIsLoading(false);
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
@@ -146,90 +187,51 @@ function PbsReport(props) {
       });
   };
   const customSort = (a, b) => {
-    const indexA = a.indexCount.toString();
-    const indexB = b.indexCount.toString();
+    const indexA = a?.indexCount?.toString();
+    const indexB = b?.indexCount?.toString();
 
-    return indexA.localeCompare(indexB, undefined, { numeric: true });
+    return indexA?.localeCompare(indexB, undefined, { numeric: true });
   };
 
   // Sort the data array using the custom sort function
   const sortedData = data?.slice().sort(customSort);
 
-  const getTreeProduct = () => {
-    setIsLoading(true);
-    const sessionId = localStorage.getItem("sessionId");
-    const userId = localStorage.getItem("userId");
-
-    Api.get(`/api/v1/reports/get/pbs/report`, {
-      params: {
-        projectId: projectId,
-        reportType: reportType,
-        userId: userId,
-        token: sessionId,
-      },
-    })
-      .then((res) => {
-        const treeData = res?.data?.data;
-        setData(treeData);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
-  };
-  const getHierarchyLevelTreeProduct = () => {
-    setIsLoading(true);
-    const sessionId = localStorage.getItem("sessionId");
-    const userId = localStorage.getItem("userId");
-
-    Api.get(`/api/v1/reports/get/pbs/report`, {
-      params: {
-        projectId: projectId,
-        reportType: reportType,
-        hierarchyType: hierarchyType,
-        userId: userId,
-        token: sessionId,
-      },
-    })
-      .then((res) => {
-        const treeData = res?.data?.data;
-        setData(treeData);
-        setIsLoading(false);
-      })
-      .catch((error) => {
-        setIsLoading(false);
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
-  };
-
   useEffect(() => {
     getProjectDetails();
     getProjectPermission();
-
-  if (reportType == 1) {
-      getHierarchyLevelTreeProduct();
-    } else {
-      getTreeProduct();
-    }
+    getComponentTreeProduct();
+    const columnCount = Object.keys(headerKeyMapping).length;
+    if (columnCount > 13) {
+      setColumnLength(true);
+     }
   }, [projectId, reportType, hierarchyType]);
 
-  const handleColumnVisibilityChange = (event) => {
-    const { name, checked } = event.target;
-    setColumnVisibility((prevVisibility) => ({
-      ...prevVisibility,
-      [name]: checked,
-    }));
+  const getComponentTreeProduct = () => {
+    const sessionId = localStorage.getItem("sessionId");
+    const userId = localStorage.getItem("userId");
+
+    Api.get(`/api/v1/reports/get/spart/report/`, {
+      params: {
+        projectId: projectId,
+        reportType: reportType,
+        userId: userId,
+        token: sessionId,
+      },
+    })
+      .then((res) => {
+        const treeData = res?.data?.data;
+        setData(treeData);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        }
+      });
   };
 
-  // Log sorted data to debug
-  useEffect(() => {}, [sortedData]);
+
 
   const exportToExcel = () => {
     if (!projectData) {
@@ -242,7 +244,7 @@ function PbsReport(props) {
       [],
       [],
       ["Project Name", projectData?.projectName || ""],
-      ["Document Title", "Product Breakdown Structure"],
+      ["Document Title", "Spare Parts Analysis"],
       [],
       [],
       ["Rev", ""],
@@ -251,7 +253,7 @@ function PbsReport(props) {
       [],
       ["Project Name", projectData?.projectName || ""],
       ["Project Number", projectData?.projectNumber || ""],
-      ["Document Title", "Product Breakdown Structure"],
+      ["Document Title", "Spare Parts Analysis"],
       ["Revision", ""],
       ["Date", ""],
       [],
@@ -274,36 +276,52 @@ function PbsReport(props) {
       },
     };
 
-    // Main Content Worksheet
     const mainContentData = [
+      [], // Initial empty rows for spacing
       [],
+      ["Project Report"], // Title row
       [],
-      ["Project Report"],
-      [],
-      ["Project Name", projectData?.projectName || ""],
+      ["Project Name", projectData?.projectName || ""], // Project details
       ["Project Number", projectData?.projectNumber || ""],
       ["Project Description", projectData?.projectDesc || ""],
       [],
-      headers.filter((header) => columnVisibility[header]), // Header row
     ];
-
-    sortedData.forEach((row) => {
-      const rowData = headers
-        .map((header) =>
-          columnVisibility[header] ? row[headerKeyMapping[header]] || "-" : null
-        )
-        .filter((item) => item !== null);
-      mainContentData.push(rowData);
+    
+    // Loop through sortedData to map each part type to the Excel sheet
+    sortedData.forEach((part) => {
+      // Add the part type as a header
+      mainContentData.push([part.partType]);
+    
+      // Add the table headers
+      mainContentData.push(headers.map((header) => header));
+    
+      // Map each item in part.items to a row in the Excel sheet
+      part.items.forEach((item) => {
+        const rowData = headers.map((header) => {
+          const key = headerKeyMapping[header];
+          // Get the value from productId or failureRatePrediction, or fallback to '-'
+          return item.productId?.[key] ?? item.failureRatePrediction?.[key] ?? "-";
+        });
+    
+        // Add the row data to the mainContentData array
+        mainContentData.push(rowData);
+      });
+    
+      // Add an empty row after each part section for spacing
+      mainContentData.push([]);
     });
-
+    
+    // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
+    
+    
 
     // Last Page Worksheet
     const lastPageData = [
       [],
       [],
       ["Project Name", projectData?.projectName || ""],
-      ["Document Title", "Product Breakdown Structure"],
+      ["Document Title", "Spare Parts Analysis"],
       [],
       [],
       ["Rev", ""],
@@ -341,7 +359,7 @@ function PbsReport(props) {
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
 
     // Write the workbook to a file
-    XLSX.writeFile(workbook, "pbs_report.xlsx");
+    XLSX.writeFile(workbook, "spare_analysis.xlsx");
   };
 
   const generatePDFReport = () => {
@@ -382,7 +400,7 @@ function PbsReport(props) {
         return addContentToPDF(lastPageContent, pageNumber++);
       })
       .then(() => {
-        pdf.save("pbs_report.pdf");
+        pdf.save("spare_analysis.pdf");
       })
       .catch((error) => {
         console.error("Error generating PDF:", error);
@@ -424,7 +442,7 @@ function PbsReport(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph("Document Title: Product Breakdown Structure", true),
+      createParagraph("Document Title: Spare Analysis", true),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -433,11 +451,8 @@ function PbsReport(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph(
-        `Project Number: ${projectData?.projectNumber || ""}`,
-        true
-      ),
-      createParagraph("Document Title: Product Breakdown Structure", true),
+      createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
+      createParagraph("Document Title: Spare Analysis", true),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -457,9 +472,7 @@ function PbsReport(props) {
     ];
 
     // Main Content Table
-    const mainContentHeaders = headers.filter(
-      (header) => columnVisibility[header]
-    );
+    const mainContentHeaders = headers.filter((header) => columnVisibility[header]);
     const tableHeaderRow = new TableRow({
       children: mainContentHeaders.map(
         (header) =>
@@ -475,9 +488,7 @@ function PbsReport(props) {
 
     const tableRows = sortedData.map((row) => {
       const rowData = headers
-        .map((header) =>
-          columnVisibility[header] ? row[headerKeyMapping[header]] || "-" : null
-        )
+        .map((header) => (columnVisibility[header] ? row[headerKeyMapping[header]] || "-" : null))
         .filter((item) => item !== null);
 
       return new TableRow({
@@ -500,7 +511,7 @@ function PbsReport(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph("Document Title: Product Breakdown Structure", true),
+      createParagraph("Document Title: Spare Analysis", true),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -509,14 +520,8 @@ function PbsReport(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph(
-        `Project Number: ${projectData?.projectNumber || ""}`,
-        true
-      ),
-      createParagraph(
-        `Project Description: ${projectData?.projectDesc || ""}`,
-        true
-      ),
+      createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
+      createParagraph(`Project Description: ${projectData?.projectDesc || ""}`, true),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -524,14 +529,7 @@ function PbsReport(props) {
     ];
 
     // Revision History Table
-    const revisionHistoryHeaders = [
-      "REVISION",
-      "DESCRIPTION",
-      "DATE",
-      "AUTHOR",
-      "CHECKED BY",
-      "APPROVED BY",
-    ];
+    const revisionHistoryHeaders = ["REVISION", "DESCRIPTION", "DATE", "AUTHOR", "CHECKED BY", "APPROVED BY"];
 
     // Create header row
     const revisionHeaderRow = new TableRow({
@@ -579,7 +577,7 @@ function PbsReport(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph("Document Title: Product Breakdown Structure", true),
+      createParagraph("Document Title: Spare Analysis", true),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -688,9 +686,15 @@ function PbsReport(props) {
 
     // Write the document to a file
     Packer.toBlob(doc).then((blob) => {
-      saveAs(blob, "pbs_report.docx");
+      saveAs(blob, "spare_analysis.docx");
     });
   };
+
+  const sparePartsData = data?.map((item) => ({
+    productId: item?.productId || {},
+    mttrData: item?.mttrData || {},
+    spareData: item?.sparePartsData,
+  }));
 
   return (
     <div>
@@ -699,52 +703,68 @@ function PbsReport(props) {
       ) : (
         <div>
           <div className="mt-3"></div>
-          {sortedData.length > 0 ? (
-            <Row className="d-flex align-items-center justify-content-end">
-              <Col className="d-flex justify-content-end">
-                <Button
-                  className="report-save-btn"
-                  onClick={exportToExcel}
-                  style={{ marginRight: "8px" }}
-                >
-                  <FaFileExcel style={{ marginRight: "8px" }} />
-                  Excel
-                </Button>
-                <Button
-                  className="report-save-btn"
-                  onClick={generatePDFReport}
-                  style={{ marginRight: "8px" }}
-                >
-                  <FaFilePdf style={{ marginRight: "8px" }} />
-                  PDF
-                </Button>
-                <Button
-                  className="report-save-btn"
-                  onClick={() => {
-                    generateWordDocument(
-                      {
-                        projectName: projectData.projectName,
-                        projectNumber: projectData?.projectNumber,
-                        projectDesc: projectData.projectDesc,
-                        projectId: "1",
-                      },
-                      ["Header1", "Header2"],
-                      { Header1: true, Header2: true },
-                      [{ Header1: "Data1", Header2: "Data2" }],
-                      { Header1: "Header1", Header2: "Header2" }
-                    );
-                  }}
-                >
-                  <FaFileWord style={{ marginRight: "8px" }} />
-                  Word
-                </Button>
-              </Col>
-            </Row>
+          {sparePartsData?.length > 0 ? (
+              <>
+              <Row className="d-flex align-items-center justify-content-end">
+                <Col className="d-flex justify-content-end">
+                  <Button
+                    className="report-save-btn"
+                    onClick={exportToExcel}
+                    style={{ marginRight: "8px" }}
+                  >
+                    <FaFileExcel style={{ marginRight: "8px" }} />
+                    Excel
+                  </Button>
+    
+                  <Button
+                    className="report-save-btn"
+                    onClick={generatePDFReport}
+                    disabled={columnLength}
+                    style={{ marginRight: "8px" }}
+                  >
+                    <FaFilePdf style={{ marginRight: "8px" }} />
+                    PDF
+                  </Button>
+    
+                  <Button
+                    className="report-save-btn"
+                    disabled={columnLength}
+                    onClick={() => {
+                      generateWordDocument(
+                        {
+                          projectName: projectData.projectName,
+                          projectNumber: projectData?.projectNumber,
+                          projectDesc: projectData.projectDesc,
+                          projectId: "1",
+                        },
+                        ["Header1", "Header2"],
+                        { Header1: true, Header2: true },
+                        [{ Header1: "Data1", Header2: "Data2" }],
+                        { Header1: "Header1", Header2: "Header2" }
+                      );
+                    }}
+                  >
+                    <FaFileWord style={{ marginRight: "8px" }} />
+                    Word
+                  </Button>
+                </Col>
+              </Row>
+    
+              {columnLength && (
+               <Row>
+               <Col className="d-flex justify-content-end">
+                 <p style={{ color: 'red', textAlign: 'right' }}>
+                 *You cannot download the PDF or Word document when the number of columns exceeds the limit.
+                 </p>
+               </Col>
+             </Row>
+              )}
+            </>
           ) : null}
           {sortedData.length > 0 ? (
             <div id="pdf-report-content">
               <div id="first-page-report">
-              <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+                <FirstPageReport projectId={projectId} moduleType={moduleType}/>
               </div>
 
               <div className="sheet-container mt-3" id="main-content-report">
@@ -753,7 +773,7 @@ function PbsReport(props) {
                     <Col className="d-flex flex-column align-items-center"></Col>
                     <Col className="d-flex flex-column align-items-center">
                       <h5>{projectData?.projectName}</h5>
-                      <h5>Product Breakdown Structure</h5>
+                      <h5>Spare Analysis</h5>
                     </Col>
                     <Col className="d-flex flex-column align-items-center">
                       <h5>Rev:</h5>
@@ -775,93 +795,38 @@ function PbsReport(props) {
                       <span>{projectData?.projectDesc}</span>
                     </div>
                   </div>
-
-                  <div>
-                    {sortedData.length > 0 ? (
-                      <Row className="d-flex align-items-center justify-content-end">
-                        <Col className="d-flex flex-row custom-checkbox-group">
-                          <Form.Check
-                            type="checkbox"
-                            name="FR"
-                            label="FR"
-                            checked={columnVisibility.FR}
-                            onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
-                          />
-                          <Form.Check
-                            type="checkbox"
-                            name="MTTR"
-                            label="MTTR"
-                            checked={columnVisibility.MTTR}
-                            onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
-                          />
-                          <Form.Check
-                            type="checkbox"
-                            name="MCT"
-                            label="MCT"
-                            checked={columnVisibility.MCT}
-                            onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
-                          />
-                          <Form.Check
-                            type="checkbox"
-                            name="MLH"
-                            label="MLH"
-                            checked={columnVisibility.MLH}
-                            onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
-                          />
-                        </Col>
-                      </Row>
-                    ) : null}
-                  </div>
-                  <div style={{ overflowX: "auto" }}>
-                    <table className="report-table">
-                      <thead>
-                        <tr>
-                          {headers
-                            .filter((header) =>
-                              header === "FR" ||
-                              header === "MTTR" ||
-                              header === "MCT" ||
-                              header === "MLH"
-                                ? columnVisibility[header]
-                                : true
-                            )
-                            .map((header) => (
-                              <th
-                                key={header}
-                                style={{
-                                  width: columnWidths[header],
-                                  textAlign: "center",
-                                }}
-                              >
+                  {sortedData.map((part, partIndex) => (
+                    <div key={partIndex} className={partIndex === 0 ? "mt-3" : "my-5"} style={{ overflowX: "auto" }}>
+                      <h5>{part.partType}</h5>
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            {headers.map((header) => (
+                              <th key={header} className="table-header">
                                 {header}
                               </th>
                             ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sortedData.map((row, rowIndex) => (
-                          <tr key={rowIndex}>
-                            {headers
-                              .filter(
-                                (header) => columnVisibility[header] !== false
-                              )
-                              .map((header) => (
-                                <td
-                                  key={header}
-                                  style={{ textAlign: "center" }}
-                                >
-                                  {row[headerKeyMapping[header]] || "-"}
+                          </tr>
+                        </thead>
+                        <tbody>
+                        {part.items.map((item, itemIndex) => (
+                            <tr key={itemIndex}>
+                              {headers.map((header) => (
+                                <td key={header} className="table-cell">
+                                  {
+                                  item.productId?.[headerKeyMapping[header]] ??
+                                    item.mttrData?.[headerKeyMapping[header]] ??
+                                    item.sparePartsData?.[headerKeyMapping[header]] ??
+                                    
+                                    "-"}
                                 </td>
                               ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -869,21 +834,11 @@ function PbsReport(props) {
                 <LastPageReport projectId={projectId} moduleType={moduleType}/>
               </div>
             </div>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                width: "100%",
-                justifyContent: "center",
-              }}
-            >
-              <h3>No Records to Display</h3>
-            </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>
   );
 }
 
-export default PbsReport;
+export default SA_ComponentType;

@@ -9,9 +9,21 @@ import Select from "react-select";
 import PBSReport from "./PbsReport.js";
 import RAReport from "./ReliabilityAnalysis.js";
 import MaintabilityReport from "./MainTainabilityReport.js";
+import FMECAreport from "./FMECAreport.js";
+import SafetyReport from "./SafetyReport.js";
+import SpareAnalysis from "./SpareAnalysis.js";
+import PreventiveManitenance from "./PreventiveManitenance.js";
+import * as Yup from "yup";
+import PBS_ComponentType from "./ComponentTypes/PBS_ComponentType";
+import RA_ComponentType from "./ComponentTypes/RA_ComponentType";
+import MA_ComponentType from "./ComponentTypes/MA_ComponentType";
+import PM_ComponentType from "./ComponentTypes/PM_ComponentType";
+import SA_ComponentType from "./ComponentTypes/SA_ComponentType";
+import FMECA_ComponentType from "./ComponentTypes/FMECA_ComponentType";
+import Safety_ComponentType from "./ComponentTypes/Safety_ComponentType";
 
 function Reports(props) {
-  const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
+  const projectId =props?.location?.state?.projectId;
   const [isLoading, setIsLoading] = useState(true);
   const [projectData, setProjectData] = useState(null);
   const [selectModule, setSelectModule] = useState("");
@@ -21,11 +33,29 @@ function Reports(props) {
   const [permission, setPermission] = useState();
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
-  const [data, setData] = useState([]);
+  const [selectedReportType, setSelectedReportType] = useState(null);
+  const [selectHeirarchyLevel, setSelectHeirarchyLevel] = useState(null);
 
   const token = localStorage.getItem("sessionId");
   const role = localStorage.getItem("role");
   const userId = localStorage.getItem("userId");
+
+  const reportSchema = Yup.object().shape({
+    Module: Yup.object()
+      .required({
+        label: Yup.string().required("Module is required"),
+        value: Yup.string().required("Module is required"),
+      })
+      .nullable()
+      .required("Module is required"),
+    Field: Yup.object()
+      .required({
+        label: Yup.string().required("Field is required"),
+        value: Yup.string().required("Field is required"),
+      })
+      .nullable()
+      .required("Field is required"),
+  });
 
   // Log out
   const logout = () => {
@@ -69,12 +99,18 @@ function Reports(props) {
           logout();
         }
       });
-  };  
+  };
 
   useEffect(() => {
     getProjectDetails();
     getProjectPermission();
-  }, [projectId]); // Include projectId in dependency array to trigger effect on change
+  }, [projectId, selectModuleFieldValue,selectModule]); // Include projectId in dependency array to trigger effect on change
+
+  useEffect(() => {
+    if (selectModule === "PBS" && (selectModuleFieldValue || selectedReportType)) {
+      setShowReport(true);
+    }
+  }, [selectModule, selectModuleFieldValue, selectedReportType]);
 
   const handleReset = (resetForm) => {
     resetForm();
@@ -82,6 +118,7 @@ function Reports(props) {
 
   const generateReport = (values) => {
     setSelectModule(values.Module.value);
+    setShowReport(true);
   };
 
   return (
@@ -89,9 +126,7 @@ function Reports(props) {
       <div className="mt-5">
         <div>
           <div className="mttr-sec mt-0">
-            <p className="mb-0 para-tag d-flex justify-content-center">
-              Report
-            </p>
+            <p className="mb-0 para-tag d-flex justify-content-center">Report</p>
           </div>
           {permission?.read === true ||
           permission?.read === "undefined" ||
@@ -100,9 +135,7 @@ function Reports(props) {
             <div>
               <Formik
                 initialValues={{
-                  Module: selectModule
-                    ? { label: selectModule, value: selectModule }
-                    : "",
+                  Module: selectModule ? { label: selectModule, value: selectModule } : "",
                   Field: selectModuleFieldValue
                     ? {
                         label: selectModuleFieldValue,
@@ -111,17 +144,14 @@ function Reports(props) {
                     : "",
                   Value: "",
                 }}
+                validationSchema={reportSchema}
                 onSubmit={(values) => {
                   // Handle form submission
                   generateReport(values);
-                  setShowReport(true);
                 }}
               >
                 {(formikProps) => (
-                  <Form
-                    onSubmit={formikProps.handleSubmit}
-                    onReset={handleReset}
-                  >
+                  <Form onSubmit={formikProps.handleSubmit} onReset={handleReset}>
                     <Card className="mt-4 mttr-card p-4">
                       <Row>
                         <Col>
@@ -155,20 +185,18 @@ function Reports(props) {
                                 { value: "SAFETY", label: "SAFETY" },
                               ]}
                             />
-                            <ErrorMessage
-                              component="span"
-                              name="Module"
-                              className="error text-danger"
-                            />
+                            <ErrorMessage component="span" name="Module" className="error text-danger" />
                           </Form.Group>
                         </Col>
                         <Col>
-                          <Label notify={true}>Level</Label>
+                          <Label notify={true}>Report Type</Label>
                           <Form.Group>
                             <Select
                               value={formikProps.values.Field}
                               onChange={(e) => {
+                                setSelectedReportType(e.value);
                                 setSelectModuleFieldValue(e.value);
+
                                 formikProps.setFieldValue("Field", {
                                   label: e.label,
                                   value: e.value,
@@ -178,56 +206,176 @@ function Reports(props) {
                               name="Field"
                               options={[
                                 {
-                                  value: "Hierarchy levels",
+                                  value: "0",
+                                  label: "Relisafe Standard",
+                                },
+                                {
+                                  value: "1",
                                   label: "Hierarchy levels",
                                 },
-                                { value: "Assembly", label: "Assembly" },
-                                { value: "Electronics", label: "Electronics" },
-                                { value: "Mechanical", label: "Mechanical" },
+                                { value: "2", label: "Assembly" },
+                                { value: "3", label: "Electronics" },
+                                { value: "4", label: "Mechanical" },
                                 {
-                                  value: "Component type",
+                                  value: "5",
                                   label: "Component type",
                                 },
-                                {
-                                  value: "Spare Parts Analysis",
-                                  label: "Spare Parts Analysis",
-                                },
-                                { value: "SAFETY", label: "SAFETY" },
                               ]}
                             />
-                            <ErrorMessage
-                              component="span"
-                              name="Field"
-                              className="error text-danger"
-                            />
+                            <ErrorMessage component="span" name="Field" className="error text-danger" />
                           </Form.Group>
                         </Col>
+                        {selectedReportType === "1" && (
+                          <Col>
+                            <Label notify={true}>Hierarchy Level</Label>
+                            <Form.Group>
+                              <Select
+                                value={formikProps.values.HierarchyLevel}
+                                onChange={(e) => {
+                                  setSelectHeirarchyLevel(e.value);
+                                  formikProps.setFieldValue("HierarchyLevel", {
+                                    label: e.label,
+                                    value: e.value,
+                                  });
+                                }}
+                                placeholder="Select Field"
+                                name="HierarchyLevel"
+                                options={[
+                                  { value: "1", label: "1" },
+                                  { value: "2", label: "2" },
+                                  { value: "3", label: "3" },
+                                  { value: "4", label: "4" },
+                                  { value: "5", label: "5" },
+                                  { value: "6", label: "6" },
+                                  { value: "7", label: "7" },
+                                  { value: "8", label: "8" },
+                                  { value: "9", label: "9" },
+                                  { value: "10", label: "10" },
+                                ]}
+                              />
+                              <ErrorMessage component="span" name="HierarchyLevel" className="error text-danger" />
+                            </Form.Group>
+                          </Col>
+                        )}
                       </Row>
                       <div className="d-flex flex-direction-row justify-content-end mt-4 mb-2">
+                        <Button className="save-btn mx-3" type="submit">
+                          GET REPORT
+                        </Button>
                         <Button
-                          className="delete-cancel-btn me-2"
+                          className="delete-cancel-btn"
                           variant="outline-secondary"
                           onClick={() => {
                             formikProps.resetForm();
+                            setSelectedReportType("");
+                            setShowReport("");
+                            setSelectModule("");
                           }}
                         >
-                          CANCEL
-                        </Button>
-                        <Button className="save-btn" type="submit">
-                          GET REPORT
+                          RESET
                         </Button>
                       </div>
-                    
                     </Card>
-                    { 
-                    selectModule === "PBS" ?                 
-                    <PBSReport projectId={projectId} /> 
-                    :  selectModule === "RA" ?
-                    <RAReport projectId={projectId} /> 
-                    :  selectModule == "MA" ?
-                    <MaintabilityReport projectId={projectId}/>
-                    : null 
-                  }
+                    {showReport &&
+                      ((selectModule === "PBS" && selectedReportType == 5 && (
+                        <PBS_ComponentType 
+                        projectId={projectId} 
+                        selectModuleFieldValue={selectModuleFieldValue}
+                        selectModule={selectModule}
+                        />
+                      )) ||
+                        (selectModule === "RA" && selectedReportType == 5 && (
+                          <RA_ComponentType projectId={projectId} 
+                          selectModuleFieldValue={selectModuleFieldValue}
+                          selectModule={selectModule}
+                          />
+                        )) ||
+                        (selectModule === "MA" && selectedReportType == 5 && (
+                          <MA_ComponentType projectId={projectId} 
+                          selectModuleFieldValue={selectModuleFieldValue}
+                          selectModule={selectModule} />
+                        )) ||
+                        (selectModule === "PM" && selectedReportType == 5 && (
+                          <PM_ComponentType projectId={projectId} 
+                          selectModuleFieldValue={selectModuleFieldValue} 
+                          selectModule={selectModule}/>
+                        )) ||
+                        (selectModule === "SA" && selectedReportType == 5 && (
+                          <SA_ComponentType projectId={projectId} 
+                          selectModuleFieldValue={selectModuleFieldValue}
+                          selectModule={selectModule} />
+                        )) ||
+                        (selectModule === "FMECA" && selectedReportType == 5 && (
+                          <FMECA_ComponentType projectId={projectId} 
+                          selectModuleFieldValue={selectModuleFieldValue}
+                          selectModule={selectModule} />
+                        )) ||
+                        (selectModule === "SAFETY" && selectedReportType == 5 && (
+                          <Safety_ComponentType
+                            projectId={projectId}
+                            selectModuleFieldValue={selectModuleFieldValue}
+                            hierarchyType={selectHeirarchyLevel}
+                            selectModule={selectModule}
+                          />
+                        )) ||
+                        (selectModule === "PBS" && (
+                          <PBSReport
+                            projectId={projectId}
+                            selectModuleFieldValue={selectModuleFieldValue}
+                            hierarchyType={selectHeirarchyLevel}
+                            selectModule={selectModule}
+                          />
+                        )) ||
+                        (selectModule === "RA" && (
+                          <RAReport
+                            projectId={projectId}
+                            selectModuleFieldValue={selectModuleFieldValue}
+                            hierarchyType={selectHeirarchyLevel}
+                            selectModule={selectModule}
+                          />
+                        )) ||
+                        (selectModule === "MA" &&
+                          (
+                            <MaintabilityReport
+                            projectId={projectId}
+                            selectModuleFieldValue={selectModuleFieldValue}
+                            hierarchyType={selectHeirarchyLevel}
+                            selectModule={selectModule}
+                          />
+                          ))
+                          
+                          ||
+                        (selectModule === "FMECA" && (
+                        <FMECAreport 
+                        projectId={projectId}
+                        selectModuleFieldValue={selectModuleFieldValue}
+                        hierarchyType={selectHeirarchyLevel}
+                        selectModule={selectModule}
+                        />)) ||
+                        (selectModule === "SAFETY" && 
+                        (<SafetyReport projectId={projectId}
+                          selectModuleFieldValue={selectModuleFieldValue}
+                          hierarchyType={selectHeirarchyLevel}
+                          selectModule={selectModule}
+                           />)) ||
+                        (selectModule === "SA" && (
+                        
+                        <SpareAnalysis 
+                        projectId={projectId}
+                        selectModuleFieldValue={selectModuleFieldValue}
+                        hierarchyType={selectHeirarchyLevel}
+                        selectModule={selectModule}
+                        />)) ||
+                        (selectModule === "PM" &&
+                          ( 
+                        <PreventiveManitenance   
+                        projectId={projectId}
+                        selectModuleFieldValue={selectModuleFieldValue}
+                        hierarchyType={selectHeirarchyLevel}
+                        selectModule={selectModule}
+                        />
+                          )
+                        ))}
                   </Form>
                 )}
               </Formik>
@@ -241,15 +389,10 @@ function Reports(props) {
                     <p className="text-center">
                       You don't have permission to access these sections
                       <br />
-                      Contact admin to get permission or go back to project list
-                      page
+                      Contact admin to get permission or go back to project list page
                     </p>
                   </Card.Text>
-                  <Button
-                    variant="primary"
-                    className="save-btn fw-bold pbs-button-1"
-                    onClick={history.goBack}
-                  >
+                  <Button variant="primary" className="save-btn fw-bold pbs-button-1" onClick={history.goBack}>
                     Go Back
                   </Button>
                 </Card.Body>

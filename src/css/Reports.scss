@@ -8,7 +8,7 @@
 
 .sheet {
   width: 15in; /* Width of a standard letter size sheet */
-  padding: 1in; /* Padding to mimic margins */
+  padding: 20px; /* Padding to mimic margins */
   background-color: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow to make it look like a sheet */
   border: 1px solid #ccc; /* Light border to define edges */
@@ -58,7 +58,6 @@
 .report-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1em;
 }
 
 .report-table th,
@@ -97,6 +96,28 @@
 .custom-checkbox-group .custom-checkbox:last-child {
   margin-right: 0; /* Remove margin from the last checkbox */
 }
+.first-page-report-table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
+.first-page-report-table td {
+  border: 1px solid #000;
+  padding: 8px;
+  text-align: left;
+}
+.mt-one {
+  margin-top: 15%;
+}
+.mt-two {
+  margin-top: 35%;
+}
+.mt-three {
+  margin-top: 30%;
+  margin-bottom: 25%;
+}
+.mt-last-page{
+  margin-top: 35%;
+  margin-bottom: 35%;
+}
 
-/* Add more nth-child rules for additional columns as needed */
