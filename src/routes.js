@@ -24,6 +24,7 @@ import { ThemeProvider } from "./components/Theme";
 import SeparateLibrary from "./components/Libraries/SeparateLibrary";
 import ConnectedLibrary from "./components/Libraries/ConnectedLibrary";
 import Reports from "./components/Reports";
+// import ComponentType from "./components/ComponenType";
 
 
 //Side Menu Bar
@@ -173,13 +174,19 @@ const routes = [
     exact: true,
     name: "ConnectedLibrary",
     component: ConnectedLibrary,
-  }, 
+  },
   {
     path: "/reports/:id",
     exact: true,
     name: "Reports",
     component: Reports,
   },
+  // {
+  //   path: "/component/type/:id",
+  //   exact: true,
+  //   name: "ComponentType",
+  //   component: ComponentType,
+  // },
 ];
 
 export default routes;

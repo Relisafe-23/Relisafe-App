@@ -105,6 +105,7 @@ function App() {
             <PublicLayout exact name="ConnectedLibrary" path="/connected/library/:id" component={ConnectedLibrary} />
             <PublicLayout exact name="Theme" path="/theme" component={Theme} />
             <PublicLayout exact name="Reports" path="/reports/:id" component={Reports} />
+            {/* <PublicLayout exact name="ComponentType" path="/component/type/:id" component={Reports} /> */}
           </Switch>
         </Router>
       </ModalProvider>
@@ -113,7 +114,7 @@ function App() {
     //   <Theme>
     //     <div style={{ flex: 1 }}>
     //       {isVisible === true ? Splash_Screen : <Routes data={sessionId} />}
-  
+
     //     </div>
     //   </Theme>
     //   );
