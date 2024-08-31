@@ -125,7 +125,8 @@ function FMECA_ComponentType(props) {
     "Design Control": "designControl",
     "Maintenance Control": "maintenanceControl",
     "Export Constraints": "exportConstraints",
-    "immediate action during operational phase": "immediteActionDuringOperationalPhase",
+    "immediate action during operational phase":
+      "immediteActionDuringOperationalPhase",
     "user field 1": "userField1",
     "user field 2": "userField2",
     "user field 3": "userField3",
@@ -270,7 +271,7 @@ function FMECA_ComponentType(props) {
     const columnCount = Object.keys(headerKeyMapping).length;
     if (columnCount > 13) {
       setColumnLength(true);
-     }
+    }
   }, [projectId, reportType, hierarchyType]);
 
   const getComponentTreeProduct = () => {
@@ -364,35 +365,35 @@ function FMECA_ComponentType(props) {
       ["Project Description", projectData?.projectDesc || ""],
       [],
     ];
-    
+
     // Loop through sortedData to map each part type to the Excel sheet
     sortedData.forEach((part) => {
       // Add the part type as a header
       mainContentData.push([part.partType]);
-    
+
       // Add the table headers
       mainContentData.push(headers.map((header) => header));
-    
+
       // Map each item in part.items to a row in the Excel sheet
       part.items.forEach((item) => {
         const rowData = headers.map((header) => {
           const key = headerKeyMapping[header];
           // Get the value from productId or failureRatePrediction, or fallback to '-'
-          return item.productId?.[key] ?? item.failureRatePrediction?.[key] ?? "-";
+          return (
+            item.productId?.[key] ?? item.failureRatePrediction?.[key] ?? "-"
+          );
         });
-    
+
         // Add the row data to the mainContentData array
         mainContentData.push(rowData);
       });
-    
+
       // Add an empty row after each part section for spacing
       mainContentData.push([]);
     });
-    
+
     // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-    
-    
 
     // Last Page Worksheet
     const lastPageData = [
@@ -529,7 +530,10 @@ function FMECA_ComponentType(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
+      createParagraph(
+        `Project Number: ${projectData?.projectNumber || ""}`,
+        true
+      ),
       createParagraph("Document Title: FMECA", true),
       createParagraph(""),
       createParagraph(""),
@@ -550,7 +554,9 @@ function FMECA_ComponentType(props) {
     ];
 
     // Main Content Table
-    const mainContentHeaders = headers.filter((header) => columnVisibility[header]);
+    const mainContentHeaders = headers.filter(
+      (header) => columnVisibility[header]
+    );
     const tableHeaderRow = new TableRow({
       children: mainContentHeaders.map(
         (header) =>
@@ -566,7 +572,9 @@ function FMECA_ComponentType(props) {
 
     const tableRows = sortedData.map((row) => {
       const rowData = headers
-        .map((header) => (columnVisibility[header] ? row[headerKeyMapping[header]] || "-" : null))
+        .map((header) =>
+          columnVisibility[header] ? row[headerKeyMapping[header]] || "-" : null
+        )
         .filter((item) => item !== null);
 
       return new TableRow({
@@ -598,8 +606,14 @@ function FMECA_ComponentType(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
-      createParagraph(`Project Description: ${projectData?.projectDesc || ""}`, true),
+      createParagraph(
+        `Project Number: ${projectData?.projectNumber || ""}`,
+        true
+      ),
+      createParagraph(
+        `Project Description: ${projectData?.projectDesc || ""}`,
+        true
+      ),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -607,7 +621,14 @@ function FMECA_ComponentType(props) {
     ];
 
     // Revision History Table
-    const revisionHistoryHeaders = ["REVISION", "DESCRIPTION", "DATE", "AUTHOR", "CHECKED BY", "APPROVED BY"];
+    const revisionHistoryHeaders = [
+      "REVISION",
+      "DESCRIPTION",
+      "DATE",
+      "AUTHOR",
+      "CHECKED BY",
+      "APPROVED BY",
+    ];
 
     // Create header row
     const revisionHeaderRow = new TableRow({
@@ -782,66 +803,70 @@ function FMECA_ComponentType(props) {
           <div className="mt-3"></div>
           {fmecaData?.length > 0 ? (
             <>
-            <Row className="d-flex align-items-center justify-content-end">
-              <Col className="d-flex justify-content-end">
-                <Button
-                  className="report-save-btn"
-                  onClick={exportToExcel}
-                  style={{ marginRight: "8px" }}
-                >
-                  <FaFileExcel style={{ marginRight: "8px" }} />
-                  Excel
-                </Button>
-  
-                <Button
-                  className="report-save-btn"
-                  onClick={generatePDFReport}
-                  disabled={columnLength}
-                  style={{ marginRight: "8px" }}
-                >
-                  <FaFilePdf style={{ marginRight: "8px" }} />
-                  PDF
-                </Button>
-  
-                <Button
-                  className="report-save-btn"
-                  disabled={columnLength}
-                  onClick={() => {
-                    generateWordDocument(
-                      {
-                        projectName: projectData.projectName,
-                        projectNumber: projectData?.projectNumber,
-                        projectDesc: projectData.projectDesc,
-                        projectId: "1",
-                      },
-                      ["Header1", "Header2"],
-                      { Header1: true, Header2: true },
-                      [{ Header1: "Data1", Header2: "Data2" }],
-                      { Header1: "Header1", Header2: "Header2" }
-                    );
-                  }}
-                >
-                  <FaFileWord style={{ marginRight: "8px" }} />
-                  Word
-                </Button>
-              </Col>
-            </Row>
-  
-            {columnLength && (
-             <Row>
-             <Col className="d-flex justify-content-end">
-               <p style={{ color: 'red', textAlign: 'right' }}>
-               *You cannot download the PDF or Word document when the number of columns exceeds the limit.
-               </p>
-             </Col>
-           </Row>
-            )}
-          </>
+              <Row className="d-flex align-items-center justify-content-end">
+                <Col className="d-flex justify-content-end">
+                  <Button
+                    className="report-save-btn"
+                    onClick={exportToExcel}
+                    style={{ marginRight: "8px" }}
+                  >
+                    <FaFileExcel style={{ marginRight: "8px" }} />
+                    Excel
+                  </Button>
+
+                  <Button
+                    className="report-save-btn"
+                    onClick={generatePDFReport}
+                    disabled={columnLength}
+                    style={{ marginRight: "8px" }}
+                  >
+                    <FaFilePdf style={{ marginRight: "8px" }} />
+                    PDF
+                  </Button>
+
+                  <Button
+                    className="report-save-btn"
+                    disabled={columnLength}
+                    onClick={() => {
+                      generateWordDocument(
+                        {
+                          projectName: projectData.projectName,
+                          projectNumber: projectData?.projectNumber,
+                          projectDesc: projectData.projectDesc,
+                          projectId: "1",
+                        },
+                        ["Header1", "Header2"],
+                        { Header1: true, Header2: true },
+                        [{ Header1: "Data1", Header2: "Data2" }],
+                        { Header1: "Header1", Header2: "Header2" }
+                      );
+                    }}
+                  >
+                    <FaFileWord style={{ marginRight: "8px" }} />
+                    Word
+                  </Button>
+                </Col>
+              </Row>
+
+              {columnLength && (
+                <Row>
+                  <Col className="d-flex justify-content-end">
+                    <p style={{ color: "red", textAlign: "right" }}>
+                      *You cannot download the PDF or Word document when the
+                      number of columns exceeds the limit.
+                    </p>
+                  </Col>
+                </Row>
+              )}
+            </>
           ) : null}
           {sortedData.length > 0 ? (
             <div id="pdf-report-content">
               <div id="first-page-report">
-                <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+                <FirstPageReport
+                  projectId={projectId}
+                  moduleType={moduleType}
+                />
               </div>
 
               <div className="sheet-container mt-3" id="main-content-report">
@@ -893,7 +918,11 @@ function FMECA_ComponentType(props) {
                   </div>
                   <div style={{ overflowX: "auto" }}>
                     {sortedData.map((part, partIndex) => (
-                      <div key={partIndex} className={partIndex === 0 ? "mt-3" : "my-5"} style={{ overflowX: "auto" }}>
+                      <div
+                        key={partIndex}
+                        className={partIndex === 0 ? "mt-3" : "my-5"}
+                        style={{ overflowX: "auto" }}
+                      >
                         <h5>{part.partType}</h5>
                         <table className="report-table">
                           <thead>
@@ -908,16 +937,26 @@ function FMECA_ComponentType(props) {
                           <tbody>
                             {part.items.map((item, itemIndex) => (
                               <tr key={itemIndex}>
-                                {headers.map((header) => (
-                                  <td key={header} className="table-cell">
-                                   {
-                                  item.productId?.[headerKeyMapping[header]] ??
-                                  item.fmecaData?.[headerKeyMapping[header]] ??
-                                  item.pmmraData?.[headerKeyMapping[header]] ??
-                                    
-                                    "-"}
-                                  </td>
-                                ))}
+                                {headers.map((header) => {
+                                  const key = headerKeyMapping[header];
+                                  const value =
+                                    item.productId?.[key] ??
+                                    item.fmecaData?.[key] ??
+                                    item.pmmraData?.[key] ??
+                                    "-";
+
+                                  // Format the value to 6 decimal places if it's "FR"
+                                  const formattedValue =
+                                    header === "FR" && value !== "-"
+                                      ? parseFloat(value).toFixed(6)
+                                      : value;
+
+                                  return (
+                                    <td key={header} className="table-cell">
+                                      {formattedValue}
+                                    </td>
+                                  );
+                                })}
                               </tr>
                             ))}
                           </tbody>
@@ -928,19 +967,20 @@ function FMECA_ComponentType(props) {
                 </div>
               </div>
               <div id="last-page-report">
-                <LastPageReport projectId={projectId} moduleType={moduleType}/>
+                <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
             </div>
-          ) : <div
-          style={{
-            display: "flex",
-            width: "100%",
-            justifyContent: "center",
-          }}
-        >
-          <h3>No Records to Display</h3>
-        </div>}
-        
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                width: "100%",
+                justifyContent: "center",
+              }}
+            >
+              <h3>No Records to Display</h3>
+            </div>
+          )}
         </div>
       )}
     </div>

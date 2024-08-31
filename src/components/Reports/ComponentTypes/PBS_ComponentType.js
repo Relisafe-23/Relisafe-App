@@ -27,8 +27,7 @@ import LastPageReport from "../LastPageReport.js";
 import Loader from "../../core/Loader.js";
 
 function PbsComponent(props) {
-  
-  const moduleType = props?.selectModule;  
+  const moduleType = props?.selectModule;
   const [projectId, setProjectId] = useState(props?.projectId);
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
@@ -181,16 +180,14 @@ function PbsComponent(props) {
   // Log sorted data to debug
   useEffect(() => {}, [sortedData]);
 
-  
-
   // Assuming you have headers, columnVisibility, sortedData, and projectData defined elsewhere
-  
+
   const exportToExcel = () => {
     if (!projectData) {
       console.error("Project data is not available.");
       return;
     }
-  
+
     // First Page Worksheet
     const firstPageData = [
       [],
@@ -218,9 +215,9 @@ function PbsComponent(props) {
       ["Approved By", ""],
       ["Approved Date", ""],
     ];
-  
+
     const firstPageWorksheet = XLSX.utils.aoa_to_sheet(firstPageData);
-  
+
     // Main Content Worksheet
     const mainContentData = [
       [],
@@ -233,40 +230,45 @@ function PbsComponent(props) {
       [],
       headers.filter((header) => columnVisibility[header]), // Header row
     ];
-  
+
     sortedData.forEach((part) => {
       // Insert the partType as a header row
       mainContentData.push([part.partType]);
-  
+
       // Insert the table headers
       const headersRow = headers
         .filter((header) =>
-          header === "FR" || header === "MTTR" || header === "MCT" || header === "MLH"
+          header === "FR" ||
+          header === "MTTR" ||
+          header === "MCT" ||
+          header === "MLH"
             ? columnVisibility[header]
             : true
         )
         .map((header) => header);
       mainContentData.push(headersRow);
-  
+
       // Insert the item rows for this partType
       part.items.forEach((item) => {
         const itemRow = headers
           .filter((header) =>
-            header === "FR" || header === "MTTR" || header === "MCT" || header === "MLH"
+            header === "FR" ||
+            header === "MTTR" ||
+            header === "MCT" ||
+            header === "MLH"
               ? columnVisibility[header]
               : true
           )
           .map((header) => item[headerKeyMapping[header]] || "-");
         mainContentData.push(itemRow);
       });
-  
+
       // Add an empty row after each partType for spacing
       mainContentData.push([]);
     });
-    
-  
+
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-  
+
     // Last Page Worksheet
     const lastPageData = [
       [],
@@ -296,21 +298,23 @@ function PbsComponent(props) {
       ["", "", "", "", "", ""],
       ["", "", "", "", "", ""],
     ];
-  
+
     const lastPageWorksheet = XLSX.utils.aoa_to_sheet(lastPageData);
-  
+
     // Create a new workbook and append the worksheets
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, firstPageWorksheet, "First Page");
-    XLSX.utils.book_append_sheet(workbook, mainContentWorksheet, "Main Content");
+    XLSX.utils.book_append_sheet(
+      workbook,
+      mainContentWorksheet,
+      "Main Content"
+    );
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
-  
+
     // Write the workbook to a file
     XLSX.writeFile(workbook, "pbc_report.xlsx");
   };
-  
 
-  
   const generatePDFReport = () => {
     if (!projectData) {
       console.error("Project data is not available.");
@@ -400,7 +404,10 @@ function PbsComponent(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
+      createParagraph(
+        `Project Number: ${projectData?.projectNumber || ""}`,
+        true
+      ),
       createParagraph("Document Title: Product Breakdown Structure", true),
       createParagraph(""),
       createParagraph(""),
@@ -434,56 +441,80 @@ function PbsComponent(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
-      createParagraph(`Project Description: ${projectData?.projectDesc || ""}`, true),
+      createParagraph(
+        `Project Number: ${projectData?.projectNumber || ""}`,
+        true
+      ),
+      createParagraph(
+        `Project Description: ${projectData?.projectDesc || ""}`,
+        true
+      ),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
     ];
 
-    
-  
     sortedData.forEach((part) => {
       // Add the partType as a section header
       mainContent.push(createParagraph(part.partType, true));
-  
+
       // Create table headers
       const tableHeaderRow = new TableRow({
         children: headers
           .filter((header) =>
-            header === "FR" || header === "MTTR" || header === "MCT" || header === "MLH"
+            header === "FR" ||
+            header === "MTTR" ||
+            header === "MCT" ||
+            header === "MLH"
               ? columnVisibility[header]
               : true
           )
-          .map((header) => new TableCell({ children: [new Paragraph(header)] })),
+          .map(
+            (header) => new TableCell({ children: [new Paragraph(header)] })
+          ),
       });
-  
+
       // Create table rows for each item under the partType
       const tableRows = part.items.map((item) => {
         const cells = headers
           .filter((header) =>
-            header === "FR" || header === "MTTR" || header === "MCT" || header === "MLH"
+            header === "FR" ||
+            header === "MTTR" ||
+            header === "MCT" ||
+            header === "MLH"
               ? columnVisibility[header]
               : true
           )
-          .map((header) =>
-            new TableCell({ children: [new Paragraph(item[headerKeyMapping[header]] || "-")] })
+          .map(
+            (header) =>
+              new TableCell({
+                children: [
+                  new Paragraph(item[headerKeyMapping[header]] || "-"),
+                ],
+              })
           );
-  
+
         return new TableRow({ children: cells });
       });
-  
+
       // Create the table and add it to the content
       const partTable = new Table({
         rows: [tableHeaderRow, ...tableRows],
       });
-  
+
       mainContent.push(partTable);
       mainContent.push(new Paragraph("")); // Add some spacing after each table
     });
 
     // Revision History Table
-    const revisionHistoryHeaders = ["REVISION", "DESCRIPTION", "DATE", "AUTHOR", "CHECKED BY", "APPROVED BY"];
+    const revisionHistoryHeaders = [
+      "REVISION",
+      "DESCRIPTION",
+      "DATE",
+      "AUTHOR",
+      "CHECKED BY",
+      "APPROVED BY",
+    ];
 
     // Create header row
     const revisionHeaderRow = new TableRow({
@@ -654,11 +685,19 @@ function PbsComponent(props) {
           {sortedData.length > 0 ? (
             <Row className="d-flex align-items-center justify-content-end">
               <Col className="d-flex justify-content-end">
-                <Button className="report-save-btn" onClick={exportToExcel} style={{ marginRight: "8px" }}>
+                <Button
+                  className="report-save-btn"
+                  onClick={exportToExcel}
+                  style={{ marginRight: "8px" }}
+                >
                   <FaFileExcel style={{ marginRight: "8px" }} />
                   Excel
                 </Button>
-                <Button className="report-save-btn" onClick={generatePDFReport} style={{ marginRight: "8px" }}>
+                <Button
+                  className="report-save-btn"
+                  onClick={generatePDFReport}
+                  style={{ marginRight: "8px" }}
+                >
                   <FaFilePdf style={{ marginRight: "8px" }} />
                   PDF
                 </Button>
@@ -688,7 +727,10 @@ function PbsComponent(props) {
           {sortedData.length > 0 ? (
             <div id="pdf-report-content">
               <div id="first-page-report">
-                <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+                <FirstPageReport
+                  projectId={projectId}
+                  moduleType={moduleType}
+                />
               </div>
 
               <div className="sheet-container mt-3" id="main-content-report">
@@ -762,14 +804,21 @@ function PbsComponent(props) {
                   </div>
 
                   {sortedData.map((part, partIndex) => (
-                    <div key={partIndex} className={partIndex === 0 ? "mt-3" : "my-5"} style={{ overflowX: "auto" }}>
+                    <div
+                      key={partIndex}
+                      className={partIndex === 0 ? "mt-3" : "my-5"}
+                      style={{ overflowX: "auto" }}
+                    >
                       <h5>{part.partType}</h5>
                       <table className="report-table">
                         <thead>
                           <tr>
                             {headers
                               .filter((header) =>
-                                header === "FR" || header === "MTTR" || header === "MCT" || header === "MLH"
+                                header === "FR" ||
+                                header === "MTTR" ||
+                                header === "MCT" ||
+                                header === "MLH"
                                   ? columnVisibility[header]
                                   : true
                               )
@@ -785,15 +834,27 @@ function PbsComponent(props) {
                             <tr key={itemIndex}>
                               {headers
                                 .filter((header) =>
-                                  header === "FR" || header === "MTTR" || header === "MCT" || header === "MLH"
+                                  header === "FR" ||
+                                  header === "MTTR" ||
+                                  header === "MCT" ||
+                                  header === "MLH"
                                     ? columnVisibility[header]
                                     : true
                                 )
-                                .map((header) => (
-                                  <td key={header} className="table-cell">
-                                    {item[headerKeyMapping[header]]}
-                                  </td>
-                                ))}
+                                .map((header) => {
+                                  const value = item[headerKeyMapping[header]];
+                                  // Format the value to 6 decimal places if it's "FR"
+                                  const formattedValue =
+                                    header === "FR" && value
+                                      ? parseFloat(value).toFixed(6)
+                                      : value;
+
+                                  return (
+                                    <td key={header} className="table-cell">
+                                      {formattedValue}
+                                    </td>
+                                  );
+                                })}
                             </tr>
                           ))}
                         </tbody>
@@ -804,7 +865,7 @@ function PbsComponent(props) {
               </div>
 
               <div id="last-page-report">
-                <LastPageReport projectId={projectId} moduleType={moduleType}/>
+                <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
             </div>
           ) : null}

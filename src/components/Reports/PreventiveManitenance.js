@@ -26,7 +26,7 @@ import LastPageReport from "./LastPageReport.js";
 function PreventiveManitenance(props) {
   const [projectId, setProjectId] = useState(props?.projectId);
   const [isLoading, setIsLoading] = useState(true);
-  const moduleType = props?.selectModule;  
+  const moduleType = props?.selectModule;
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
   const [projectData, setProjectData] = useState(null);
@@ -268,7 +268,7 @@ function PreventiveManitenance(props) {
     const columnCount = Object.keys(headerKeyMapping).length;
     if (columnCount > 13) {
       setColumnLength(true);
-     }
+    }
   }, [projectId, reportType, hierarchyType]);
 
   const getPmmraData = () => {
@@ -307,7 +307,7 @@ function PreventiveManitenance(props) {
       console.error("Project data is not available.");
       return;
     }
-  
+
     // First Page Worksheet
     const firstPageData = [
       [],
@@ -335,16 +335,16 @@ function PreventiveManitenance(props) {
       ["Approved By", ""],
       ["Approved Date", ""],
     ];
-  
+
     const firstPageWorksheet = XLSX.utils.aoa_to_sheet(firstPageData);
-  
+
     // Applying styles to the first project name cell
     firstPageWorksheet["C3"] = {
       font: {
         bold: true,
       },
     };
-  
+
     // Main Content Worksheet
     const mainContentData = [
       [],
@@ -356,17 +356,17 @@ function PreventiveManitenance(props) {
       ["Project Description", projectData?.projectDesc || ""],
       [],
       headers, // Header row
-      ...preventiveData.map((row) => 
+      ...preventiveData.map((row) =>
         headers.map((header) => {
           const key = headerKeyMapping[header];
           return row.productId?.[key] ?? row.pmmraData?.[key] ?? "-";
         })
       ),
     ];
-  
+
     // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-  
+
     // Last Page Worksheet
     const lastPageData = [
       [],
@@ -396,19 +396,22 @@ function PreventiveManitenance(props) {
       ["", "", "", "", "", ""],
       ["", "", "", "", "", ""],
     ];
-  
+
     const lastPageWorksheet = XLSX.utils.aoa_to_sheet(lastPageData);
-  
+
     // Create a new workbook and append the worksheets
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, firstPageWorksheet, "First Page");
-    XLSX.utils.book_append_sheet(workbook, mainContentWorksheet, "Main Content");
+    XLSX.utils.book_append_sheet(
+      workbook,
+      mainContentWorksheet,
+      "Main Content"
+    );
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
-  
+
     // Write the workbook to a file
     XLSX.writeFile(workbook, "preventive_maintenance.xlsx");
   };
-  
 
   const generatePDFReport = () => {
     if (!projectData) {
@@ -460,7 +463,7 @@ function PreventiveManitenance(props) {
       console.error("Preventive data is not available.");
       return;
     }
-  
+
     // Define table headers based on headers array
     const projectTableRows = [
       new TableRow({
@@ -473,7 +476,7 @@ function PreventiveManitenance(props) {
         ),
       }),
     ];
-  
+
     // Map the preventiveData rows to Word table rows
     preventiveData?.forEach((row) => {
       const tableRow = new TableRow({
@@ -488,7 +491,7 @@ function PreventiveManitenance(props) {
       });
       projectTableRows.push(tableRow);
     });
-  
+
     // Define the Word document structure
     const doc = new Document({
       sections: [
@@ -513,7 +516,7 @@ function PreventiveManitenance(props) {
         },
       ],
     });
-  
+
     // Generate and save the Word document
     Packer.toBlob(doc)
       .then((blob) => {
@@ -523,9 +526,6 @@ function PreventiveManitenance(props) {
         console.error("Error generating Word document:", error);
       });
   };
-  
-
- 
 
   return (
     <div>
@@ -536,69 +536,73 @@ function PreventiveManitenance(props) {
           <div className="mt-3"></div>
           {preventiveData.length > 0 ? (
             <div>
-            <>
-              <Row className="d-flex align-items-center justify-content-end">
-                <Col className="d-flex justify-content-end">
-                  <Button
-                    className="report-save-btn"
-                    onClick={exportToExcel}
-                    style={{ marginRight: "8px" }}
-                  >
-                    <FaFileExcel style={{ marginRight: "8px" }} />
-                    Excel
-                  </Button>
-    
-                  <Button
-                    className="report-save-btn"
-                    onClick={generatePDFReport}
-                    disabled={columnLength}
-                    style={{ marginRight: "8px" }}
-                  >
-                    <FaFilePdf style={{ marginRight: "8px" }} />
-                    PDF
-                  </Button>
-    
-                  <Button
-                    className="report-save-btn"
-                    disabled={columnLength}
-                    onClick={() => {
-                      generateWordDocument(
-                        {
-                          projectName: projectData.projectName,
-                          projectNumber: projectData?.projectNumber,
-                          projectDesc: projectData.projectDesc,
-                          projectId: "1",
-                        },
-                        ["Header1", "Header2"],
-                        { Header1: true, Header2: true },
-                        [{ Header1: "Data1", Header2: "Data2" }],
-                        { Header1: "Header1", Header2: "Header2" }
-                      );
-                    }}
-                  >
-                    <FaFileWord style={{ marginRight: "8px" }} />
-                    Word
-                  </Button>
-                </Col>
-              </Row>
-    
-              {columnLength && (
-               <Row>
-               <Col className="d-flex justify-content-end">
-                 <p style={{ color: 'red', textAlign: 'right' }}>
-                 *You cannot download the PDF or Word document when the number of columns exceeds the limit.
-                 </p>
-               </Col>
-             </Row>
-              )}
-            </>
-         
+              <>
+                <Row className="d-flex align-items-center justify-content-end">
+                  <Col className="d-flex justify-content-end">
+                    <Button
+                      className="report-save-btn"
+                      onClick={exportToExcel}
+                      style={{ marginRight: "8px" }}
+                    >
+                      <FaFileExcel style={{ marginRight: "8px" }} />
+                      Excel
+                    </Button>
+
+                    <Button
+                      className="report-save-btn"
+                      onClick={generatePDFReport}
+                      disabled={columnLength}
+                      style={{ marginRight: "8px" }}
+                    >
+                      <FaFilePdf style={{ marginRight: "8px" }} />
+                      PDF
+                    </Button>
+
+                    <Button
+                      className="report-save-btn"
+                      disabled={columnLength}
+                      onClick={() => {
+                        generateWordDocument(
+                          {
+                            projectName: projectData.projectName,
+                            projectNumber: projectData?.projectNumber,
+                            projectDesc: projectData.projectDesc,
+                            projectId: "1",
+                          },
+                          ["Header1", "Header2"],
+                          { Header1: true, Header2: true },
+                          [{ Header1: "Data1", Header2: "Data2" }],
+                          { Header1: "Header1", Header2: "Header2" }
+                        );
+                      }}
+                    >
+                      <FaFileWord style={{ marginRight: "8px" }} />
+                      Word
+                    </Button>
+                  </Col>
+                </Row>
+
+                {columnLength && (
+                  <Row>
+                    <Col className="d-flex justify-content-end">
+                      <p style={{ color: "red", textAlign: "right" }}>
+                        *You cannot download the PDF or Word document when the
+                        number of columns exceeds the limit.
+                      </p>
+                    </Col>
+                  </Row>
+                )}
+              </>
+
               <div className="sheet-container mt-3">
                 <div className="sheet" id="pdf-report-content">
-                <div id="first-page-report">
-                  <FirstPageReport projectId={projectId} moduleType={moduleType}/>
-                </div>
-                <Row className="d-flex justify-content-between">
+                  <div id="first-page-report">
+                    <FirstPageReport
+                      projectId={projectId}
+                      moduleType={moduleType}
+                    />
+                  </div>
+                  <Row className="d-flex justify-content-between">
                     <Col className="d-flex flex-column align-items-center"></Col>
                     <Col className="d-flex flex-column align-items-center">
                       <h5>{projectData?.projectName}</h5>
@@ -624,7 +628,7 @@ function PreventiveManitenance(props) {
                       <span>{projectData?.projectDesc}</span>
                     </div>
                   </div>
-                
+
                   <div style={{ overflowX: "auto" }}>
                     <table className="report-table">
                       <thead>
@@ -647,10 +651,21 @@ function PreventiveManitenance(props) {
                           <tr key={rowIndex}>
                             {headers.map((header) => {
                               const key = headerKeyMapping[header];
-                              const value =
+                              let value =
                                 row.productId[key] ?? row.pmmraData[key] ?? "-";
+
+                              // Check if the header is "FR" and format the value to 6 decimal places
+                              if (
+                                header === "FR" &&
+                                typeof value === "number"
+                              ) {
+                                value = value.toFixed(6);
+                              }
                               return (
-                                <td key={header} style={{ textAlign: "center" }}>
+                                <td
+                                  key={header}
+                                  style={{ textAlign: "center" }}
+                                >
                                   {value}
                                 </td>
                               );
@@ -663,19 +678,20 @@ function PreventiveManitenance(props) {
                 </div>
               </div>
               <div id="last-page-report">
-                <LastPageReport projectId={projectId} moduleType={moduleType}/>
+                <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
-              </div>
-           ) : <div
-           style={{
-             display: "flex",
-             width: "100%",
-             justifyContent: "center",
-           }}
-         >
-           <h3>No Records to Display</h3>
-         </div>
-         }
+            </div>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                width: "100%",
+                justifyContent: "center",
+              }}
+            >
+              <h3>No Records to Display</h3>
+            </div>
+          )}
         </div>
       )}
     </div>

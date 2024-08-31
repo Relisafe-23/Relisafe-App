@@ -28,7 +28,7 @@ import LastPageReport from "../LastPageReport.js";
 import Loader from "../../core/Loader.js";
 
 function RA_ComponentType(props) {
-  const moduleType = props?.selectModule;  
+  const moduleType = props?.selectModule;
   const [projectId, setProjectId] = useState(props?.projectId);
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
@@ -115,7 +115,6 @@ function RA_ComponentType(props) {
     "FR Unit",
   ];
 
-
   // Log out
   const logout = () => {
     localStorage.clear(history.push("/login"));
@@ -176,7 +175,7 @@ function RA_ComponentType(props) {
     getFtaData();
     const columnCount = Object.keys(headerKeyMapping).length;
     if (columnCount > 13) {
-     setColumnLength(true);
+      setColumnLength(true);
     }
   }, [projectId, reportType, hierarchyType]);
 
@@ -287,35 +286,35 @@ function RA_ComponentType(props) {
       ["Project Description", projectData?.projectDesc || ""],
       [],
     ];
-    
+
     // Loop through sortedData to map each part type to the Excel sheet
     sortedData.forEach((part) => {
       // Add the part type as a header
       mainContentData.push([part.partType]);
-    
+
       // Add the table headers
       mainContentData.push(headers.map((header) => header));
-    
+
       // Map each item in part.items to a row in the Excel sheet
       part.items.forEach((item) => {
         const rowData = headers.map((header) => {
           const key = headerKeyMapping[header];
           // Get the value from productId or failureRatePrediction, or fallback to '-'
-          return item.productId?.[key] ?? item.failureRatePrediction?.[key] ?? "-";
+          return (
+            item.productId?.[key] ?? item.failureRatePrediction?.[key] ?? "-"
+          );
         });
-    
+
         // Add the row data to the mainContentData array
         mainContentData.push(rowData);
       });
-    
+
       // Add an empty row after each part section for spacing
       mainContentData.push([]);
     });
-    
+
     // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-    
-    
 
     // Last Page Worksheet
     const lastPageData = [
@@ -406,7 +405,7 @@ function RA_ComponentType(props) {
         console.error("Error generating PDF:", error);
       });
   };
-  
+
   // PDF button in your JSX
   <Button
     className="report-save-btn"
@@ -415,292 +414,324 @@ function RA_ComponentType(props) {
   >
     <FaFilePdf style={{ marginRight: "8px" }} />
     PDF
-  </Button>
-  
+  </Button>;
 
   const generateWordDocument = () => {
     if (!projectData) {
-        console.error("Project data is not available.");
-        return;
+      console.error("Project data is not available.");
+      return;
     }
 
     const createParagraph = (text, isBold = false) => {
-        return new Paragraph({
-            children: [new TextRun({ text, bold: isBold })],
-        });
+      return new Paragraph({
+        children: [new TextRun({ text, bold: isBold })],
+      });
     };
 
     const createAlignedParagraph = (leftText, rightText) => {
-        return new Paragraph({
-            children: [
-                new TextRun({ text: leftText, bold: true }),
-                new TextRun({
-                    text: rightText,
-                    bold: true,
-                    break: 1,
-                }),
-            ],
-            alignment: AlignmentType.BOTH,
-        });
+      return new Paragraph({
+        children: [
+          new TextRun({ text: leftText, bold: true }),
+          new TextRun({
+            text: rightText,
+            bold: true,
+            break: 1,
+          }),
+        ],
+        alignment: AlignmentType.BOTH,
+      });
     };
 
     // First Page Content
     const firstPageContent = [
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-        createParagraph("Document Title: Reliability Analysis", true),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createAlignedParagraph("Rev:", "Rev Date:"),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-        createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
-        createParagraph("Document Title: Reliability Analysis", true),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createAlignedParagraph("Revision:", "Date:"),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createAlignedParagraph("CreatedBy:", "Created Date:"),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createAlignedParagraph("ReviewedBy:", "Reviewed Date:"),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createAlignedParagraph("ApprovedBy:", "Approved Date:"),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
+      createParagraph("Document Title: Reliability Analysis", true),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createAlignedParagraph("Rev:", "Rev Date:"),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
+      createParagraph(
+        `Project Number: ${projectData?.projectNumber || ""}`,
+        true
+      ),
+      createParagraph("Document Title: Reliability Analysis", true),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createAlignedParagraph("Revision:", "Date:"),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createAlignedParagraph("CreatedBy:", "Created Date:"),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createAlignedParagraph("ReviewedBy:", "Reviewed Date:"),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createAlignedParagraph("ApprovedBy:", "Approved Date:"),
     ];
 
     const mainContent = [
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-        createParagraph("Document Title: Reliability Analysis", true),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createAlignedParagraph("Rev:", "Rev Date:"),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-        createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
-        createParagraph(`Project Description: ${projectData?.projectDesc || ""}`, true),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
+      createParagraph("Document Title: Reliability Analysis", true),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createAlignedParagraph("Rev:", "Rev Date:"),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
+      createParagraph(
+        `Project Number: ${projectData?.projectNumber || ""}`,
+        true
+      ),
+      createParagraph(
+        `Project Description: ${projectData?.projectDesc || ""}`,
+        true
+      ),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
     ];
 
     // Mapping sortedData into the document
     sortedData.forEach((part) => {
-        // Add the partType as a section header
-        mainContent.push(createParagraph(part.partType, true));
+      // Add the partType as a section header
+      mainContent.push(createParagraph(part.partType, true));
 
-        // Create table headers
-        const tableHeaderRow = new TableRow({
-            children: headers
-                .filter((header) =>
-                    header === "FR" || header === "MTTR" || header === "MCT" || header === "MLH"
-                        ? columnVisibility[header]
-                        : true
-                )
-                .map((header) => new TableCell({ children: [new Paragraph(header)] })),
-        });
+      // Create table headers
+      const tableHeaderRow = new TableRow({
+        children: headers
+          .filter((header) =>
+            header === "FR" ||
+            header === "MTTR" ||
+            header === "MCT" ||
+            header === "MLH"
+              ? columnVisibility[header]
+              : true
+          )
+          .map(
+            (header) => new TableCell({ children: [new Paragraph(header)] })
+          ),
+      });
 
-        // Create table rows for each item under the partType
-        const tableRows = part.items.map((item) => {
-            const cells = headers
-                .filter((header) =>
-                    header === "FR" || header === "MTTR" || header === "MCT" || header === "MLH"
-                        ? columnVisibility[header]
-                        : true
-                )
-                .map((header) =>
-                    new TableCell({ children: [new Paragraph(item.productId?.[headerKeyMapping[header]] ?? item.failureRatePrediction?.[headerKeyMapping[header]] ?? "-")] })
-                );
+      // Create table rows for each item under the partType
+      const tableRows = part.items.map((item) => {
+        const cells = headers
+          .filter((header) =>
+            header === "FR" ||
+            header === "MTTR" ||
+            header === "MCT" ||
+            header === "MLH"
+              ? columnVisibility[header]
+              : true
+          )
+          .map(
+            (header) =>
+              new TableCell({
+                children: [
+                  new Paragraph(
+                    item.productId?.[headerKeyMapping[header]] ??
+                      item.failureRatePrediction?.[headerKeyMapping[header]] ??
+                      "-"
+                  ),
+                ],
+              })
+          );
 
-            return new TableRow({ children: cells });
-        });
+        return new TableRow({ children: cells });
+      });
 
-        // Create the table and add it to the content
-        const partTable = new Table({
-            rows: [tableHeaderRow, ...tableRows],
-        });
+      // Create the table and add it to the content
+      const partTable = new Table({
+        rows: [tableHeaderRow, ...tableRows],
+      });
 
-        mainContent.push(partTable);
-        mainContent.push(new Paragraph("")); // Add some spacing after each table
+      mainContent.push(partTable);
+      mainContent.push(new Paragraph("")); // Add some spacing after each table
     });
 
     // Revision History Table
-    const revisionHistoryHeaders = ["REVISION", "DESCRIPTION", "DATE", "AUTHOR", "CHECKED BY", "APPROVED BY"];
+    const revisionHistoryHeaders = [
+      "REVISION",
+      "DESCRIPTION",
+      "DATE",
+      "AUTHOR",
+      "CHECKED BY",
+      "APPROVED BY",
+    ];
 
     // Create header row
     const revisionHeaderRow = new TableRow({
-        children: revisionHistoryHeaders.map(
-            (header) =>
-                new TableCell({
-                    children: [new Paragraph({ text: header, bold: true })],
-                    width: {
-                        size: 100 / revisionHistoryHeaders.length,
-                        type: WidthType.PERCENTAGE,
-                    },
-                })
-        ),
+      children: revisionHistoryHeaders.map(
+        (header) =>
+          new TableCell({
+            children: [new Paragraph({ text: header, bold: true })],
+            width: {
+              size: 100 / revisionHistoryHeaders.length,
+              type: WidthType.PERCENTAGE,
+            },
+          })
+      ),
     });
 
     // Create data rows
     const dummyRevisions = [
-        ["", "", "", "", "", ""],
-        ["", "", "", "", "", ""],
+      ["", "", "", "", "", ""],
+      ["", "", "", "", "", ""],
     ];
 
     const revisionRows = dummyRevisions.map(
-        (revision) =>
-            new TableRow({
-                children: revision.map(
-                    (cell) =>
-                        new TableCell({
-                            children: [new Paragraph(cell)],
-                            width: {
-                                size: 100 / revisionHistoryHeaders.length,
-                                type: WidthType.PERCENTAGE,
-                            },
-                        })
-                ),
-            })
+      (revision) =>
+        new TableRow({
+          children: revision.map(
+            (cell) =>
+              new TableCell({
+                children: [new Paragraph(cell)],
+                width: {
+                  size: 100 / revisionHistoryHeaders.length,
+                  type: WidthType.PERCENTAGE,
+                },
+              })
+          ),
+        })
     );
 
     const revisionHistoryTable = new Table({
-        rows: [revisionHeaderRow, ...revisionRows],
+      rows: [revisionHeaderRow, ...revisionRows],
     });
 
     // Last Page Content
     const lastPageContent = [
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-        createParagraph("Document Title: Reliability Analysis", true),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createAlignedParagraph("Rev:", "Rev Date:"),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph("Revision History", true),
-        createParagraph(""),
-        createParagraph(""),
-        createParagraph(""),
-        revisionHistoryTable,
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
+      createParagraph("Document Title: Reliability Analysis", true),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createAlignedParagraph("Rev:", "Rev Date:"),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph("Revision History", true),
+      createParagraph(""),
+      createParagraph(""),
+      createParagraph(""),
+      revisionHistoryTable,
     ];
 
     // Creating the document
     const doc = new Document({
-        sections: [
-            {
-                properties: {
-                    page: { margins: { top: 720, bottom: 720, left: 720, right: 720 } },
-                },
-                children: [...firstPageContent],
-            },
-            {
-                properties: {
-                    page: { margins: { top: 720, bottom: 720, left: 720, right: 720 } },
-                },
-                children: [...mainContent],
-                headers: {
-                    default: new Header({
-                        children: [
-                            new Paragraph({
-                                children: [
-                                    new TextRun({
-                                        text: "Page ",
-                                    }),
-                                    new TextRun({
-                                        children: ["PAGE_NUMBER"],
-                                        field: "PAGE_NUMBER",
-                                    }),
-                                ],
-                            }),
-                        ],
+      sections: [
+        {
+          properties: {
+            page: { margins: { top: 720, bottom: 720, left: 720, right: 720 } },
+          },
+          children: [...firstPageContent],
+        },
+        {
+          properties: {
+            page: { margins: { top: 720, bottom: 720, left: 720, right: 720 } },
+          },
+          children: [...mainContent],
+          headers: {
+            default: new Header({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Page ",
                     }),
-                },
-                footers: {
-                    default: new Footer({
-                        children: [
-                            new Paragraph({
-                                children: [
-                                    new TextRun({
-                                        text: "Page ",
-                                    }),
-                                    new TextRun({
-                                        children: ["PAGE_NUMBER"],
-                                        field: "PAGE_NUMBER",
-                                    }),
-                                ],
-                            }),
-                        ],
+                    new TextRun({
+                      children: ["PAGE_NUMBER"],
+                      field: "PAGE_NUMBER",
                     }),
-                },
-            },
-            {
-                properties: {
-                    page: { margins: { top: 720, bottom: 720, left: 720, right: 720 } },
-                },
-                children: [...lastPageContent],
-                headers: {
-                    default: new Header({
-                        children: [
-                            new Paragraph({
-                                children: [
-                                    new TextRun({
-                                        text: "Page ",
-                                    }),
-                                    new TextRun({
-                                        children: ["PAGE_NUMBER"],
-                                        field: "PAGE_NUMBER",
-                                    }),
-                                ],
-                            }),
-                        ],
+                  ],
+                }),
+              ],
+            }),
+          },
+          footers: {
+            default: new Footer({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Page ",
                     }),
-                },
-                footers: {
-                    default: new Footer({
-                        children: [
-                            new Paragraph({
-                                children: [
-                                    new TextRun({
-                                        text: "Page ",
-                                    }),
-                                    new TextRun({
-                                        children: ["PAGE_NUMBER"],
-                                        field: "PAGE_NUMBER",
-                                    }),
-                                ],
-                            }),
-                        ],
+                    new TextRun({
+                      children: ["PAGE_NUMBER"],
+                      field: "PAGE_NUMBER",
                     }),
-                },
-            },
-        ],
+                  ],
+                }),
+              ],
+            }),
+          },
+        },
+        {
+          properties: {
+            page: { margins: { top: 720, bottom: 720, left: 720, right: 720 } },
+          },
+          children: [...lastPageContent],
+          headers: {
+            default: new Header({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Page ",
+                    }),
+                    new TextRun({
+                      children: ["PAGE_NUMBER"],
+                      field: "PAGE_NUMBER",
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          },
+          footers: {
+            default: new Footer({
+              children: [
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: "Page ",
+                    }),
+                    new TextRun({
+                      children: ["PAGE_NUMBER"],
+                      field: "PAGE_NUMBER",
+                    }),
+                  ],
+                }),
+              ],
+            }),
+          },
+        },
+      ],
     });
 
     // Write the document to a file
     Packer.toBlob(doc).then((blob) => {
-        saveAs(blob, "reliability_analysis.docx");
+      saveAs(blob, "reliability_analysis.docx");
     });
-};
+  };
 
   return (
     <div>
@@ -710,67 +741,71 @@ function RA_ComponentType(props) {
         <div>
           <div className="mt-3"></div>
           {data.length > 0 && (
-        <>
-          <Row className="d-flex align-items-center justify-content-end">
-            <Col className="d-flex justify-content-end">
-              <Button
-                className="report-save-btn"
-                onClick={exportToExcel}
-                style={{ marginRight: "8px" }}
-              >
-                <FaFileExcel style={{ marginRight: "8px" }} />
-                Excel
-              </Button>
+            <>
+              <Row className="d-flex align-items-center justify-content-end">
+                <Col className="d-flex justify-content-end">
+                  <Button
+                    className="report-save-btn"
+                    onClick={exportToExcel}
+                    style={{ marginRight: "8px" }}
+                  >
+                    <FaFileExcel style={{ marginRight: "8px" }} />
+                    Excel
+                  </Button>
 
-              <Button
-                className="report-save-btn"
-                onClick={generatePDFReport}
-                disabled={columnLength}
-                style={{ marginRight: "8px" }}
-              >
-                <FaFilePdf style={{ marginRight: "8px" }} />
-                PDF
-              </Button>
+                  <Button
+                    className="report-save-btn"
+                    onClick={generatePDFReport}
+                    disabled={columnLength}
+                    style={{ marginRight: "8px" }}
+                  >
+                    <FaFilePdf style={{ marginRight: "8px" }} />
+                    PDF
+                  </Button>
 
-              <Button
-                className="report-save-btn"
-                disabled={columnLength}
-                onClick={() => {
-                  generateWordDocument(
-                    {
-                      projectName: projectData.projectName,
-                      projectNumber: projectData?.projectNumber,
-                      projectDesc: projectData.projectDesc,
-                      projectId: "1",
-                    },
-                    ["Header1", "Header2"],
-                    { Header1: true, Header2: true },
-                    [{ Header1: "Data1", Header2: "Data2" }],
-                    { Header1: "Header1", Header2: "Header2" }
-                  );
-                }}
-              >
-                <FaFileWord style={{ marginRight: "8px" }} />
-                Word
-              </Button>
-            </Col>
-          </Row>
+                  <Button
+                    className="report-save-btn"
+                    disabled={columnLength}
+                    onClick={() => {
+                      generateWordDocument(
+                        {
+                          projectName: projectData.projectName,
+                          projectNumber: projectData?.projectNumber,
+                          projectDesc: projectData.projectDesc,
+                          projectId: "1",
+                        },
+                        ["Header1", "Header2"],
+                        { Header1: true, Header2: true },
+                        [{ Header1: "Data1", Header2: "Data2" }],
+                        { Header1: "Header1", Header2: "Header2" }
+                      );
+                    }}
+                  >
+                    <FaFileWord style={{ marginRight: "8px" }} />
+                    Word
+                  </Button>
+                </Col>
+              </Row>
 
-          {columnLength && (
-           <Row>
-           <Col className="d-flex justify-content-end">
-             <p style={{ color: 'red', textAlign: 'right' }}>
-             *You cannot download the PDF or Word document when the number of columns exceeds the limit.
-             </p>
-           </Col>
-         </Row>
+              {columnLength && (
+                <Row>
+                  <Col className="d-flex justify-content-end">
+                    <p style={{ color: "red", textAlign: "right" }}>
+                      *You cannot download the PDF or Word document when the
+                      number of columns exceeds the limit.
+                    </p>
+                  </Col>
+                </Row>
+              )}
+            </>
           )}
-        </>
-      )}
           {sortedData.length > 0 ? (
             <div id="pdf-report-content">
               <div id="first-page-report">
-                <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+                <FirstPageReport
+                  projectId={projectId}
+                  moduleType={moduleType}
+                />
               </div>
 
               <div className="sheet-container mt-3" id="main-content-report">
@@ -827,15 +862,25 @@ function RA_ComponentType(props) {
                         <tbody>
                           {part.items.map((item, itemIndex) => (
                             <tr key={itemIndex}>
-                              {headers.map((header) => (
-                                <td key={header} className="table-cell">
-                                  {
-                                  item.productId?.[headerKeyMapping[header]] ??
-                                    item.failureRatePrediction?.[headerKeyMapping[header]] ??
-                                    
-                                    "-"}
-                                </td>
-                              ))}
+                              {headers.map((header) => {
+                                const key = headerKeyMapping[header];
+                                const value =
+                                  item.productId?.[key] ??
+                                  item.failureRatePrediction?.[key] ??
+                                  "-";
+
+                                // Format the value to 6 decimal places if the header is "FR"
+                                const formattedValue =
+                                  header === "FR" && value !== "-"
+                                    ? parseFloat(value).toFixed(6)
+                                    : value;
+
+                                return (
+                                  <td key={header} className="table-cell">
+                                    {formattedValue}
+                                  </td>
+                                );
+                              })}
                             </tr>
                           ))}
                         </tbody>
@@ -846,7 +891,7 @@ function RA_ComponentType(props) {
               </div>
 
               <div id="last-page-report">
-                <LastPageReport projectId={projectId} moduleType={moduleType}/>
+                <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
             </div>
           ) : null}

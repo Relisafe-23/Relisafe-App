@@ -92,7 +92,8 @@ function Safety_ComponentType(props) {
     "Hazard Cause": "hazardCause", // Mapped to safetyData
     "Effect of the Hazard": "effectOfHazard", // Mapped to safetyData
     "Hazard Classification": "hazardClasification", // Mapped to safetyData
-    "Design Assurance Level (DAL) associated with the hazard": "designAssuranceLevel", // No mapping provided
+    "Design Assurance Level (DAL) associated with the hazard":
+      "designAssuranceLevel", // No mapping provided
     "Means of Detection": "meansOfDetection", // Mapped to safetyData
     "Crew Response": "crewResponse", // Mapped to safetyData
     "Unique Hazard Identifiers": "uniqueHazardIdentifier", // Mapped to safetyData
@@ -211,7 +212,7 @@ function Safety_ComponentType(props) {
     const columnCount = Object.keys(headerKeyMapping).length;
     if (columnCount > 13) {
       setColumnLength(true);
-     }
+    }
   }, [projectId, reportType, hierarchyType]);
 
   const getComponentTreeProduct = () => {
@@ -240,17 +241,18 @@ function Safety_ComponentType(props) {
         }
       });
   };
-  
+
   const safetyDataArr = data?.map((item, index) => {
     return {
-      partType: item.partType || "Unknown",  // Capture partType
-      items: item.items?.map((subItem) => ({
-        productId: subItem?.productId || {},
-        safetyData: subItem?.safetyData || {},
-      })) || [],
+      partType: item.partType || "Unknown", // Capture partType
+      items:
+        item.items?.map((subItem) => ({
+          productId: subItem?.productId || {},
+          safetyData: subItem?.safetyData || {},
+        })) || [],
     };
   });
-  
+
   const handleColumnVisibilityChange = (event) => {
     const { name, checked } = event.target;
     setColumnVisibility((prevVisibility) => ({
@@ -315,35 +317,35 @@ function Safety_ComponentType(props) {
       ["Project Description", projectData?.projectDesc || ""],
       [],
     ];
-    
+
     // Loop through sortedData to map each part type to the Excel sheet
     safetyDataArr?.forEach((part) => {
       // Add the part type as a header
       mainContentData.push([part.partType]);
-    
+
       // Add the table headers
       mainContentData.push(headers.map((header) => header));
-    
+
       // Map each item in part.items to a row in the Excel sheet
       part?.items?.forEach((item) => {
         const rowData = headers.map((header) => {
           const key = headerKeyMapping[header];
           // Get the value from productId or failureRatePrediction, or fallback to '-'
-          return item.productId?.[key] ?? item.failureRatePrediction?.[key] ?? "-";
+          return (
+            item.productId?.[key] ?? item.failureRatePrediction?.[key] ?? "-"
+          );
         });
-    
+
         // Add the row data to the mainContentData array
         mainContentData.push(rowData);
       });
-    
+
       // Add an empty row after each part section for spacing
       mainContentData.push([]);
     });
-    
+
     // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-    
-    
 
     // Last Page Worksheet
     const lastPageData = [
@@ -479,7 +481,10 @@ function Safety_ComponentType(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
+      createParagraph(
+        `Project Number: ${projectData?.projectNumber || ""}`,
+        true
+      ),
       createParagraph("Document Title: SAFETY", true),
       createParagraph(""),
       createParagraph(""),
@@ -500,7 +505,9 @@ function Safety_ComponentType(props) {
     ];
 
     // Main Content Table
-    const mainContentHeaders = headers.filter((header) => columnVisibility[header]);
+    const mainContentHeaders = headers.filter(
+      (header) => columnVisibility[header]
+    );
     const tableHeaderRow = new TableRow({
       children: mainContentHeaders.map(
         (header) =>
@@ -516,7 +523,9 @@ function Safety_ComponentType(props) {
 
     const tableRows = sortedData.map((row) => {
       const rowData = headers
-        .map((header) => (columnVisibility[header] ? row[headerKeyMapping[header]] || "-" : null))
+        .map((header) =>
+          columnVisibility[header] ? row[headerKeyMapping[header]] || "-" : null
+        )
         .filter((item) => item !== null);
 
       return new TableRow({
@@ -548,8 +557,14 @@ function Safety_ComponentType(props) {
       createParagraph(""),
       createParagraph(""),
       createParagraph(`Project Name: ${projectData?.projectName || ""}`, true),
-      createParagraph(`Project Number: ${projectData?.projectNumber || ""}`, true),
-      createParagraph(`Project Description: ${projectData?.projectDesc || ""}`, true),
+      createParagraph(
+        `Project Number: ${projectData?.projectNumber || ""}`,
+        true
+      ),
+      createParagraph(
+        `Project Description: ${projectData?.projectDesc || ""}`,
+        true
+      ),
       createParagraph(""),
       createParagraph(""),
       createParagraph(""),
@@ -557,7 +572,14 @@ function Safety_ComponentType(props) {
     ];
 
     // Revision History Table
-    const revisionHistoryHeaders = ["REVISION", "DESCRIPTION", "DATE", "AUTHOR", "CHECKED BY", "APPROVED BY"];
+    const revisionHistoryHeaders = [
+      "REVISION",
+      "DESCRIPTION",
+      "DATE",
+      "AUTHOR",
+      "CHECKED BY",
+      "APPROVED BY",
+    ];
 
     // Create header row
     const revisionHeaderRow = new TableRow({
@@ -726,7 +748,7 @@ function Safety_ComponentType(props) {
         <div>
           <div className="mt-3"></div>
           {safetyDataArr?.length > 0 ? (
-              <>
+            <>
               <Row className="d-flex align-items-center justify-content-end">
                 <Col className="d-flex justify-content-end">
                   <Button
@@ -737,7 +759,7 @@ function Safety_ComponentType(props) {
                     <FaFileExcel style={{ marginRight: "8px" }} />
                     Excel
                   </Button>
-    
+
                   <Button
                     className="report-save-btn"
                     onClick={generatePDFReport}
@@ -747,7 +769,7 @@ function Safety_ComponentType(props) {
                     <FaFilePdf style={{ marginRight: "8px" }} />
                     PDF
                   </Button>
-    
+
                   <Button
                     className="report-save-btn"
                     disabled={columnLength}
@@ -771,22 +793,26 @@ function Safety_ComponentType(props) {
                   </Button>
                 </Col>
               </Row>
-    
+
               {columnLength && (
-               <Row>
-               <Col className="d-flex justify-content-end">
-                 <p style={{ color: 'red', textAlign: 'right' }}>
-                 *You cannot download the PDF or Word document when the number of columns exceeds the limit.
-                 </p>
-               </Col>
-             </Row>
+                <Row>
+                  <Col className="d-flex justify-content-end">
+                    <p style={{ color: "red", textAlign: "right" }}>
+                      *You cannot download the PDF or Word document when the
+                      number of columns exceeds the limit.
+                    </p>
+                  </Col>
+                </Row>
               )}
             </>
           ) : null}
           {safetyDataArr?.length > 0 ? (
             <div id="pdf-report-content">
               <div id="first-page-report">
-                <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+                <FirstPageReport
+                  projectId={projectId}
+                  moduleType={moduleType}
+                />
               </div>
 
               <div className="sheet-container mt-3" id="main-content-report">
@@ -843,53 +869,63 @@ function Safety_ComponentType(props) {
                     ) : null}
                   </div>
 
-{safetyDataArr?.map((part, partIndex) => (
-  <div key={partIndex} className={partIndex === 0 ? "mt-3" : "my-5"} style={{ overflowX: "auto" }}>
-    <h5>{part.partType}</h5>  {/* Display the part type */}
-    
-    <table className="report-table">
-      <thead>
-        <tr>
-          {headers.map((header) =>
-            columnVisibility[header] ? (
-              <th
-                key={header}
-                style={{
-                  textAlign: "center",
-                }}
-              >
-                {header}
-              </th>
-            ) : null
-          )}
-        </tr>
-      </thead>
-      <tbody>
-      {console.log("22222222........",part)}
-        {part?.items?.map((item, itemIndex) => (
-          <tr key={itemIndex}>
-            {console.log("item....",item)}
-            {headers?.map((header) => (
-              <td key={header} className="table-cell">
-                {
-                  item?.productId?.[headerKeyMapping[header]] ??
-                  item?.safetyData?.[headerKeyMapping[header]] ??
-                  "-"
-                }
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-))}
+                  {safetyDataArr?.map((part, partIndex) => (
+                    <div
+                      key={partIndex}
+                      className={partIndex === 0 ? "mt-3" : "my-5"}
+                      style={{ overflowX: "auto" }}
+                    >
+                      <h5>{part.partType}</h5> {/* Display the part type */}
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            {headers.map((header) =>
+                              columnVisibility[header] ? (
+                                <th
+                                  key={header}
+                                  style={{
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  {header}
+                                </th>
+                              ) : null
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {part?.items?.map((item, itemIndex) => (
+                            <tr key={itemIndex}>
+                              {headers?.map((header) => {
+                                const key = headerKeyMapping[header];
+                                const value =
+                                  item?.productId?.[key] ??
+                                  item?.safetyData?.[key] ??
+                                  "-";
 
+                                // Format the value to 6 decimal places if the header is "FR"
+                                const formattedValue =
+                                  header === "FR" && value !== "-"
+                                    ? parseFloat(value).toFixed(6)
+                                    : value;
+
+                                return (
+                                  <td key={header} className="table-cell">
+                                    {formattedValue}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               <div id="last-page-report">
-                <LastPageReport projectId={projectId} moduleType={moduleType}/>
+                <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
             </div>
           ) : null}

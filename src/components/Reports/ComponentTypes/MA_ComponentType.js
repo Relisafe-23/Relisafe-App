@@ -27,7 +27,7 @@ import LastPageReport from "../LastPageReport.js";
 import Loader from "../../core/Loader.js";
 
 function MA_ComponentType(props) {
-  const moduleType = props?.selectModule;  
+  const moduleType = props?.selectModule;
   const [projectId, setProjectId] = useState(props?.projectId);
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
@@ -300,7 +300,7 @@ function MA_ComponentType(props) {
     const columnCount = Object.keys(headerKeyMapping).length;
     if (columnCount > 13) {
       setColumnLength(true);
-     }
+    }
   }, [projectId, reportType, hierarchyType]);
 
   // Log out
@@ -351,7 +351,7 @@ function MA_ComponentType(props) {
       console.error("Project data is not available.");
       return;
     }
-  
+
     // First Page Worksheet
     const firstPageData = [
       [],
@@ -379,23 +379,23 @@ function MA_ComponentType(props) {
       ["Approved By", ""],
       ["Approved Date", ""],
     ];
-  
+
     const firstPageWorksheet = XLSX.utils.aoa_to_sheet(firstPageData);
-  
+
     // Applying styles to the first project name cell
     firstPageWorksheet["C3"] = {
       font: {
         bold: true,
       },
     };
-  
+
     // Main Content Worksheet
     const header1Data = header1;
     const header2Data = header2.filter((header) => columnVisibility[header]);
-  
+
     // Header row for the main content
     const mainContentHeaders = [...header1Data, ...header2Data];
-  
+
     // Prepare data for main content worksheet
     const mainContentData = [
       [],
@@ -421,10 +421,10 @@ function MA_ComponentType(props) {
         )
       ),
     ];
-  
+
     // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-  
+
     // Last Page Worksheet
     const lastPageData = [
       [],
@@ -454,20 +454,22 @@ function MA_ComponentType(props) {
       ["", "", "", "", "", ""],
       ["", "", "", "", "", ""],
     ];
-  
+
     const lastPageWorksheet = XLSX.utils.aoa_to_sheet(lastPageData);
-  
+
     // Create a new workbook and append the worksheets
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, firstPageWorksheet, "First Page");
-    XLSX.utils.book_append_sheet(workbook, mainContentWorksheet, "Main Content");
+    XLSX.utils.book_append_sheet(
+      workbook,
+      mainContentWorksheet,
+      "Main Content"
+    );
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
-  
+
     // Write the workbook to a file
     XLSX.writeFile(workbook, "maintainability_analysis.xlsx");
   };
-  
-  
 
   const generatePDFReport = () => {
     if (!projectData) {
@@ -514,13 +516,12 @@ function MA_ComponentType(props) {
       });
   };
 
-
   const generateWordDocument = () => {
     if (!projectData) {
       console.error("Project data is not available.");
       return;
     }
-  
+
     // Define table headers based on combinedHeaders
     const projectTableRows = [
       new TableRow({
@@ -533,7 +534,7 @@ function MA_ComponentType(props) {
         ),
       }),
     ];
-  
+
     // Map the sortedData rows to Word table rows
     sortedData?.forEach((row) => {
       const tableRow = new TableRow({
@@ -555,7 +556,7 @@ function MA_ComponentType(props) {
       });
       projectTableRows.push(tableRow);
     });
-  
+
     // Define the Word document structure
     const doc = new Document({
       sections: [
@@ -604,7 +605,7 @@ function MA_ComponentType(props) {
         },
       ],
     });
-  
+
     // Generate and save the Word document
     Packer.toBlob(doc)
       .then((blob) => {
@@ -614,7 +615,6 @@ function MA_ComponentType(props) {
         console.error("Error generating Word document:", error);
       });
   };
-  
 
   return (
     <div>
@@ -624,7 +624,7 @@ function MA_ComponentType(props) {
         <div>
           <div className="mt-3"></div>
           {sortedData.length > 0 ? (
-              <>
+            <>
               <Row className="d-flex align-items-center justify-content-end">
                 <Col className="d-flex justify-content-end">
                   <Button
@@ -635,7 +635,7 @@ function MA_ComponentType(props) {
                     <FaFileExcel style={{ marginRight: "8px" }} />
                     Excel
                   </Button>
-    
+
                   <Button
                     className="report-save-btn"
                     onClick={generatePDFReport}
@@ -645,7 +645,7 @@ function MA_ComponentType(props) {
                     <FaFilePdf style={{ marginRight: "8px" }} />
                     PDF
                   </Button>
-    
+
                   <Button
                     className="report-save-btn"
                     disabled={columnLength}
@@ -669,22 +669,26 @@ function MA_ComponentType(props) {
                   </Button>
                 </Col>
               </Row>
-    
+
               {columnLength && (
-               <Row>
-               <Col className="d-flex justify-content-end">
-                 <p style={{ color: 'red', textAlign: 'right' }}>
-                 *You cannot download the PDF or Word document when the number of columns exceeds the limit.
-                 </p>
-               </Col>
-             </Row>
+                <Row>
+                  <Col className="d-flex justify-content-end">
+                    <p style={{ color: "red", textAlign: "right" }}>
+                      *You cannot download the PDF or Word document when the
+                      number of columns exceeds the limit.
+                    </p>
+                  </Col>
+                </Row>
               )}
             </>
           ) : null}
           {sortedData.length > 0 ? (
             <div id="pdf-report-content">
-               <div id="first-page-report">
-                <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+              <div id="first-page-report">
+                <FirstPageReport
+                  projectId={projectId}
+                  moduleType={moduleType}
+                />
               </div>
 
               <div className="sheet-container mt-3" id="main-content-report">
@@ -734,9 +738,13 @@ function MA_ComponentType(props) {
                     ) : null}
                   </div>
                   {sortedData.map((part, partIndex) => (
-                    <div key={partIndex} className={partIndex === 0 ? "mt-3" : "my-5"} style={{ overflowX: "auto" }}>
+                    <div
+                      key={partIndex}
+                      className={partIndex === 0 ? "mt-3" : "my-5"}
+                      style={{ overflowX: "auto" }}
+                    >
                       <h5>{part.partType}</h5>
-                    
+
                       <table className="report-table">
                         <thead>
                           <tr>
@@ -765,17 +773,28 @@ function MA_ComponentType(props) {
                           </tr>
                         </thead>
                         <tbody>
-                        {part.items.map((item, itemIndex) => (
-                            <tr key={itemIndex}>                                
-                              {combinedHeaders.map((header) => (
-                                <td key={header} className="table-cell">
-                                  {
-                                   item.productId?.[headerKeyMapping[header]] ??
-                                   item.mttrData?.[headerKeyMapping[header]] ??
-                                   item.pmmraData?.[headerKeyMapping[header]] ??
-                                  "-"}
-                                </td>
-                              ))}
+                          {part.items.map((item, itemIndex) => (
+                            <tr key={itemIndex}>
+                              {combinedHeaders.map((header) => {
+                                const key = headerKeyMapping[header];
+                                const value =
+                                  item.productId?.[key] ??
+                                  item.mttrData?.[key] ??
+                                  item.pmmraData?.[key] ??
+                                  "-";
+
+                                // Format the value to 6 decimal places if the header is "FR"
+                                const formattedValue =
+                                  header === "FR" && value !== "-"
+                                    ? parseFloat(value).toFixed(6)
+                                    : value;
+
+                                return (
+                                  <td key={header} className="table-cell">
+                                    {formattedValue}
+                                  </td>
+                                );
+                              })}
                             </tr>
                           ))}
                         </tbody>
@@ -785,7 +804,7 @@ function MA_ComponentType(props) {
                 </div>
               </div>
               <div id="last-page-report">
-                <LastPageReport projectId={projectId} moduleType={moduleType}/>
+                <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
             </div>
           ) : null}

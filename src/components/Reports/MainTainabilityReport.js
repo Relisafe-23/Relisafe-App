@@ -820,11 +820,15 @@ function MaintainabilityReport(props) {
                           <tr key={rowIndex}>
                             {combinedHeaders.map((header) => {
                               const key = headerKeyMapping[header];
-                              const value =
+                              let value =
                                 row.productId[key] ??
                                 row.mttrData[key] ??
                                 row.pmmraData[key] ??
                                 "-";
+                                 // Check if the header is "FR" and format the value to 6 decimal places
+                            if (header === "FR" && typeof value === "number") {
+                              value = value.toFixed(6);
+                            }
                               return (
                                 <td
                                   key={header}

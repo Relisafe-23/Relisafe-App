@@ -850,12 +850,11 @@ function PbsReport(props) {
                                 (header) => columnVisibility[header] !== false
                               )
                               .map((header) => (
-                                <td
-                                  key={header}
-                                  style={{ textAlign: "center" }}
-                                >
-                                  {row[headerKeyMapping[header]] || "-"}
-                                </td>
+                                <td key={header} style={{ textAlign: "center" }}>
+                                {header == "FR" && row[headerKeyMapping[header]]
+                                  ? parseFloat(row[headerKeyMapping[header]]).toFixed(6)
+                                  : row[headerKeyMapping[header]] || "-"}
+                              </td>
                               ))}
                           </tr>
                         ))}

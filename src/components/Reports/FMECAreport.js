@@ -8,7 +8,16 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType } from "docx";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+} from "docx";
 import Loader from "../core/Loader";
 import FMECA_ComponentType from "./ComponentTypes/FMECA_ComponentType.js";
 import FirstPageReport from "./FirstPageReport.js";
@@ -17,7 +26,7 @@ import LastPageReport from "./LastPageReport.js";
 function FMECAreport(props) {
   const [projectId, setProjectId] = useState(props?.projectId);
   const [isLoading, setIsLoading] = useState(true);
-  const moduleType = props?.selectModule;  
+  const moduleType = props?.selectModule;
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
   const [projectData, setProjectData] = useState(null);
@@ -76,7 +85,8 @@ function FMECAreport(props) {
     "Design Control": "designControl",
     "Maintenance Control": "maintenanceControl",
     "Export Constraints": "exportConstraints",
-    "immediate action during operational phase": "immediteActionDuringOperationalPhase",
+    "immediate action during operational phase":
+      "immediteActionDuringOperationalPhase",
     "user field 1": "userField1",
     "user field 2": "userField2",
     "user field 3": "userField3",
@@ -119,7 +129,8 @@ function FMECAreport(props) {
     "Design Control": "designControl",
     "Maintenance Control": "maintenanceControl",
     "Export Constraints": "exportConstraints",
-    "immediate action during operational phase": "immediteActionDuringOperationalPhase",
+    "immediate action during operational phase":
+      "immediteActionDuringOperationalPhase",
     "user field 1": "userField1",
     "user field 2": "userField2",
     "user field 3": "userField3",
@@ -214,7 +225,6 @@ function FMECAreport(props) {
     "Failure Rate Offset": "120px",
     "FR Unit": "60px",
   };
- 
 
   // Log out
   const logout = () => {
@@ -264,7 +274,6 @@ function FMECAreport(props) {
       });
   };
 
-
   const getTreeProduct = () => {
     setIsLoading(true);
     const sessionId = localStorage.getItem("sessionId");
@@ -312,7 +321,7 @@ function FMECAreport(props) {
     const columnCount = Object.keys(headerKeyMapping).length;
     if (columnCount > 13) {
       setColumnLength(true);
-     }
+    }
   }, [projectId, reportType, hierarchyType]);
 
   const getFmecaData = () => {
@@ -365,18 +374,14 @@ function FMECAreport(props) {
       });
   };
 
-
-
-
   // Log sorted data to debug
-  
 
   const exportToExcel = () => {
     if (!projectData) {
       console.error("Project data is not available.");
       return;
     }
-  
+
     // First Page Worksheet
     const firstPageData = [
       [],
@@ -404,16 +409,16 @@ function FMECAreport(props) {
       ["Approved By", ""],
       ["Approved Date", ""],
     ];
-  
+
     const firstPageWorksheet = XLSX.utils.aoa_to_sheet(firstPageData);
-  
+
     // Applying styles to the first project name cell
     firstPageWorksheet["C3"] = {
       font: {
         bold: true,
       },
     };
-  
+
     // Main Content Worksheet
     const headers = Object.keys(headerKeyMapping); // Assuming you have defined this
     const mainContentData = [
@@ -438,10 +443,10 @@ function FMECAreport(props) {
         })
       ),
     ];
-  
+
     // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-  
+
     // Last Page Worksheet
     const lastPageData = [
       [],
@@ -471,19 +476,22 @@ function FMECAreport(props) {
       ["", "", "", "", "", ""],
       ["", "", "", "", "", ""],
     ];
-  
+
     const lastPageWorksheet = XLSX.utils.aoa_to_sheet(lastPageData);
-  
+
     // Create a new workbook and append the worksheets
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, firstPageWorksheet, "First Page");
-    XLSX.utils.book_append_sheet(workbook, mainContentWorksheet, "Main Content");
+    XLSX.utils.book_append_sheet(
+      workbook,
+      mainContentWorksheet,
+      "Main Content"
+    );
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
-  
+
     // Write the workbook to a file
     XLSX.writeFile(workbook, "fmeca_report.xlsx");
   };
-  
 
   const generatePDFReport = () => {
     if (!projectData) {
@@ -530,13 +538,12 @@ function FMECAreport(props) {
       });
   };
 
-
   const generateWordDocument = () => {
     if (!projectData) {
       console.error("Project data is not available.");
       return;
     }
-  
+
     // Create table rows for headers
     const projectTableRows = [
       new TableRow({
@@ -551,7 +558,7 @@ function FMECAreport(props) {
           ),
       }),
     ];
-  
+
     // Create table rows for data, following the same mapping logic as in the component
     fmecaData?.forEach((row) => {
       const tableRow = new TableRow({
@@ -572,7 +579,7 @@ function FMECAreport(props) {
       });
       projectTableRows.push(tableRow);
     });
-  
+
     // Create the document structure
     const doc = new Document({
       sections: [
@@ -606,7 +613,9 @@ function FMECAreport(props) {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `Project Description: ${projectData.projectDesc || "-"}`,
+                  text: `Project Description: ${
+                    projectData.projectDesc || "-"
+                  }`,
                 }),
               ],
             }),
@@ -619,7 +628,7 @@ function FMECAreport(props) {
         },
       ],
     });
-  
+
     // Generate the Word document and trigger the download
     Packer.toBlob(doc)
       .then((blob) => {
@@ -629,7 +638,6 @@ function FMECAreport(props) {
         console.error("Error generating Word document:", error);
       });
   };
-  
 
   const handleColumnVisibilityChange = (event) => {
     const { name, checked } = event.target;
@@ -639,8 +647,6 @@ function FMECAreport(props) {
     }));
   };
 
-
-
   return (
     <div>
       {isLoading ? (
@@ -649,7 +655,7 @@ function FMECAreport(props) {
         <div>
           <div className="mt-3"></div>
           {fmecaData?.length > 0 ? (
-              <>
+            <>
               <Row className="d-flex align-items-center justify-content-end">
                 <Col className="d-flex justify-content-end">
                   <Button
@@ -660,7 +666,7 @@ function FMECAreport(props) {
                     <FaFileExcel style={{ marginRight: "8px" }} />
                     Excel
                   </Button>
-    
+
                   <Button
                     className="report-save-btn"
                     onClick={generatePDFReport}
@@ -670,7 +676,7 @@ function FMECAreport(props) {
                     <FaFilePdf style={{ marginRight: "8px" }} />
                     PDF
                   </Button>
-    
+
                   <Button
                     className="report-save-btn"
                     disabled={columnLength}
@@ -694,88 +700,78 @@ function FMECAreport(props) {
                   </Button>
                 </Col>
               </Row>
-    
+
               {columnLength && (
-               <Row>
-               <Col className="d-flex justify-content-end">
-                 <p style={{ color: 'red', textAlign: 'right' }}>
-                 *You cannot download the PDF or Word document when the number of columns exceeds the limit.
-                 </p>
-               </Col>
-             </Row>
+                <Row>
+                  <Col className="d-flex justify-content-end">
+                    <p style={{ color: "red", textAlign: "right" }}>
+                      *You cannot download the PDF or Word document when the
+                      number of columns exceeds the limit.
+                    </p>
+                  </Col>
+                </Row>
               )}
             </>
           ) : null}
           {fmecaData?.length > 0 ? (
-          <div className="sheet-container mt-3">
-            <div className="sheet" id="pdf-report-content">
-             
+            <div className="sheet-container mt-3">
+              <div className="sheet" id="pdf-report-content">
                 <div id="first-page-report">
-                  <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+                  <FirstPageReport
+                    projectId={projectId}
+                    moduleType={moduleType}
+                  />
                 </div>
                 <Row className="d-flex justify-content-between">
-                    <Col className="d-flex flex-column align-items-center"></Col>
-                    <Col className="d-flex flex-column align-items-center">
-                      <h5>{projectData?.projectName}</h5>
-                      <h5>FMECA</h5>
-                    </Col>
-                    <Col className="d-flex flex-column align-items-center">
-                      <h5>Rev:</h5>
-                      <h5>Rev Date:</h5>
-                    </Col>
-                  </Row>
+                  <Col className="d-flex flex-column align-items-center"></Col>
+                  <Col className="d-flex flex-column align-items-center">
+                    <h5>{projectData?.projectName}</h5>
+                    <h5>FMECA</h5>
+                  </Col>
+                  <Col className="d-flex flex-column align-items-center">
+                    <h5>Rev:</h5>
+                    <h5>Rev Date:</h5>
+                  </Col>
+                </Row>
 
-                  <div className="sheet-content">
-                    <div className="field">
-                      <label>Project Name:</label>
-                      <span>{projectData?.projectName}</span>
-                    </div>
-                    <div className="field">
-                      <label>Project Number:</label>
-                      <span>{projectData?.projectNumber}</span>
-                    </div>
-                    <div className="field">
-                      <label>Project Description:</label>
-                      <span>{projectData?.projectDesc}</span>
-                    </div>
-                  </div> 
-              <div>
-                
-                <div style={{ overflowX: "auto", marginBottom: "10px" }}>
-                  {fmecaData?.length > 0 ? (
-                    <Row className="d-flex align-items-center ">
-                      <Col className="d-flex flex-row custom-checkbox-group">
-                        {header2.map((item) => (
-                          <Form.Check
-                            type="checkbox"
-                            name={item}
-                            label={item}
-                            checked={columnVisibility[item]}
-                            onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
-                          />
-                        ))}
-                      </Col>
-                    </Row>
-                  ) : null}
+                <div className="sheet-content">
+                  <div className="field">
+                    <label>Project Name:</label>
+                    <span>{projectData?.projectName}</span>
+                  </div>
+                  <div className="field">
+                    <label>Project Number:</label>
+                    <span>{projectData?.projectNumber}</span>
+                  </div>
+                  <div className="field">
+                    <label>Project Description:</label>
+                    <span>{projectData?.projectDesc}</span>
+                  </div>
                 </div>
-                <div style={{ overflowX: "auto" }}>
-                  <table className="report-table">
-                    <thead>
-                      <tr>
-                        {header1.map((header) => (
-                          <th
-                            key={header}
-                            style={{
-                              width: columnWidths[header],
-                              textAlign: "center",
-                            }}
-                          >
-                            {header}
-                          </th>
-                        ))}
-                        {header2.map((header) =>
-                          columnVisibility[header] ? (
+                <div>
+                  <div style={{ overflowX: "auto", marginBottom: "10px" }}>
+                    {fmecaData?.length > 0 ? (
+                      <Row className="d-flex align-items-center ">
+                        <Col className="d-flex flex-row custom-checkbox-group">
+                          {header2.map((item) => (
+                            <Form.Check
+                              type="checkbox"
+                              name={item}
+                              label={item}
+                              checked={columnVisibility[item]}
+                              onChange={handleColumnVisibilityChange}
+                              className="custom-checkbox ml-5"
+                            />
+                          ))}
+                        </Col>
+                      </Row>
+                    ) : null}
+                  </div>
+                  <div style={{ overflowX: "auto" }}>
+                    <table className="report-table">
+                      <thead>
+                        <tr>
+                          {header1.map((header) => (
                             <th
                               key={header}
                               style={{
@@ -785,20 +781,38 @@ function FMECAreport(props) {
                             >
                               {header}
                             </th>
-                          ) : null
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody>
-                    {fmecaData?.map((row, rowIndex) => (
+                          ))}
+                          {header2.map((header) =>
+                            columnVisibility[header] ? (
+                              <th
+                                key={header}
+                                style={{
+                                  width: columnWidths[header],
+                                  textAlign: "center",
+                                }}
+                              >
+                                {header}
+                              </th>
+                            ) : null
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {fmecaData?.map((row, rowIndex) => (
                           <tr key={rowIndex}>
                             {combinedHeaders.map((header) => {
                               const key = headerKeyMapping[header];
-                              const value =
+                              let value =
                                 row?.productId?.[key] ??
                                 row?.fmecaData?.[key] ??
                                 row?.pmmraData?.[key] ??
                                 "-";
+                              if (
+                                header === "FR" &&
+                                typeof value === "number"
+                              ) {
+                                value = value.toFixed(6);
+                              }
                               return (
                                 <td
                                   key={header}
@@ -810,24 +824,29 @@ function FMECAreport(props) {
                             })}
                           </tr>
                         ))}
-                    </tbody>
-                  </table>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div id="last-page-report">
+                  <LastPageReport
+                    projectId={projectId}
+                    moduleType={moduleType}
+                  />
                 </div>
               </div>
-              <div id="last-page-report">
-                <LastPageReport projectId={projectId} moduleType={moduleType}/>
-              </div>
             </div>
-          </div>
-           ) :  <div
-           style={{
-             display: "flex",
-             width: "100%",
-             justifyContent: "center",
-           }}
-         >
-           <h3>No Records to Display</h3>
-         </div>}
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                width: "100%",
+                justifyContent: "center",
+              }}
+            >
+              <h3>No Records to Display</h3>
+            </div>
+          )}
         </div>
       )}
     </div>

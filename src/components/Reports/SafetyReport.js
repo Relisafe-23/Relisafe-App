@@ -8,7 +8,16 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 import { FaFileExcel, FaFilePdf, FaFileWord } from "react-icons/fa";
-import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType } from "docx";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+} from "docx";
 import Loader from "../core/Loader";
 import Safety_ComponentType from "./ComponentTypes/Safety_ComponentType.js";
 import FirstPageReport from "./FirstPageReport.js";
@@ -17,7 +26,7 @@ import LastPageReport from "./LastPageReport.js";
 function SafetyReport(props) {
   const [projectId, setProjectId] = useState(props?.projectId);
   const [isLoading, setIsLoading] = useState(true);
-  const moduleType = props?.selectModule;  
+  const moduleType = props?.selectModule;
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
   const [projectData, setProjectData] = useState(null);
@@ -30,7 +39,6 @@ function SafetyReport(props) {
     FR: true,
   });
 
- 
   const headerKeyMapping = {
     "Product Name": "productName", // Mapped to productId
     "Part Number": "partNumber", // Mapped to productId
@@ -45,7 +53,8 @@ function SafetyReport(props) {
     "Hazard Cause": "hazardCause", // Mapped to safetyData
     "Effect of the Hazard": "effectOfHazard", // Mapped to safetyData
     "Hazard Classification": "hazardClasification", // Mapped to safetyData
-    "Design Assurance Level (DAL) associated with the hazard": "designAssuranceLevel", // No mapping provided
+    "Design Assurance Level (DAL) associated with the hazard":
+      "designAssuranceLevel", // No mapping provided
     "Means of Detection": "meansOfDetection", // Mapped to safetyData
     "Crew Response": "crewResponse", // Mapped to safetyData
     "Unique Hazard Identifiers": "uniqueHazardIdentifier", // Mapped to safetyData
@@ -68,7 +77,6 @@ function SafetyReport(props) {
     "User Field 1": "userField1", // Mapped to safetyData
     "User Field 2": "userField2", // Mapped to safetyData
   };
-  
 
   const token = localStorage.getItem("sessionId");
   const role = localStorage.getItem("role");
@@ -169,7 +177,6 @@ function SafetyReport(props) {
       });
   };
 
-
   const getTreeProduct = () => {
     setIsLoading(true);
     const sessionId = localStorage.getItem("sessionId");
@@ -213,7 +220,7 @@ function SafetyReport(props) {
     const columnCount = Object.keys(headerKeyMapping).length;
     if (columnCount > 13) {
       setColumnLength(true);
-     }
+    }
   }, [projectId, reportType, hierarchyType]);
 
   const handleColumnVisibilityChange = (event) => {
@@ -225,14 +232,13 @@ function SafetyReport(props) {
   };
 
   // Log sorted data to debug
-  
 
   const exportToExcel = () => {
     if (!projectData) {
       console.error("Project data is not available.");
       return;
     }
-  
+
     // First Page Worksheet
     const firstPageData = [
       [],
@@ -260,16 +266,16 @@ function SafetyReport(props) {
       ["Approved By", ""],
       ["Approved Date", ""],
     ];
-  
+
     const firstPageWorksheet = XLSX.utils.aoa_to_sheet(firstPageData);
-  
+
     // Applying styles to the first project name cell
     firstPageWorksheet["C3"] = {
       font: {
         bold: true,
       },
     };
-  
+
     // Main Content Worksheet
     const headers = Object.keys(headerKeyMapping); // Assuming you have defined this
     const mainContentData = [
@@ -294,10 +300,10 @@ function SafetyReport(props) {
         })
       ),
     ];
-  
+
     // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-  
+
     // Last Page Worksheet
     const lastPageData = [
       [],
@@ -327,15 +333,19 @@ function SafetyReport(props) {
       ["", "", "", "", "", ""],
       ["", "", "", "", "", ""],
     ];
-  
+
     const lastPageWorksheet = XLSX.utils.aoa_to_sheet(lastPageData);
-  
+
     // Create a new workbook and append the worksheets
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, firstPageWorksheet, "First Page");
-    XLSX.utils.book_append_sheet(workbook, mainContentWorksheet, "Main Content");
+    XLSX.utils.book_append_sheet(
+      workbook,
+      mainContentWorksheet,
+      "Main Content"
+    );
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
-  
+
     // Write the workbook to a file
     XLSX.writeFile(workbook, "safety_report.xlsx");
   };
@@ -460,7 +470,9 @@ function SafetyReport(props) {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `Project Description: ${projectData.projectDesc || "-"}`,
+                  text: `Project Description: ${
+                    projectData.projectDesc || "-"
+                  }`,
                 }),
               ],
             }),
@@ -489,178 +501,198 @@ function SafetyReport(props) {
         <div>
           <div className="mt-3">
             {safetyData?.length > 0 ? (
-               <>
-               <Row className="d-flex align-items-center justify-content-end">
-                 <Col className="d-flex justify-content-end">
-                   <Button
-                     className="report-save-btn"
-                     onClick={exportToExcel}
-                     style={{ marginRight: "8px" }}
-                   >
-                     <FaFileExcel style={{ marginRight: "8px" }} />
-                     Excel
-                   </Button>
-     
-                   <Button
-                     className="report-save-btn"
-                     onClick={generatePDFReport}
-                     disabled={columnLength}
-                     style={{ marginRight: "8px" }}
-                   >
-                     <FaFilePdf style={{ marginRight: "8px" }} />
-                     PDF
-                   </Button>
-     
-                   <Button
-                     className="report-save-btn"
-                     disabled={columnLength}
-                     onClick={() => {
-                       generateWordDocument(
-                         {
-                           projectName: projectData.projectName,
-                           projectNumber: projectData?.projectNumber,
-                           projectDesc: projectData.projectDesc,
-                           projectId: "1",
-                         },
-                         ["Header1", "Header2"],
-                         { Header1: true, Header2: true },
-                         [{ Header1: "Data1", Header2: "Data2" }],
-                         { Header1: "Header1", Header2: "Header2" }
-                       );
-                     }}
-                   >
-                     <FaFileWord style={{ marginRight: "8px" }} />
-                     Word
-                   </Button>
-                 </Col>
-               </Row>
-     
-               {columnLength && (
-                <Row>
-                <Col className="d-flex justify-content-end">
-                  <p style={{ color: 'red', textAlign: 'right' }}>
-                  *You cannot download the PDF or Word document when the number of columns exceeds the limit.
-                  </p>
-                </Col>
-              </Row>
-               )}
-             </>
+              <>
+                <Row className="d-flex align-items-center justify-content-end">
+                  <Col className="d-flex justify-content-end">
+                    <Button
+                      className="report-save-btn"
+                      onClick={exportToExcel}
+                      style={{ marginRight: "8px" }}
+                    >
+                      <FaFileExcel style={{ marginRight: "8px" }} />
+                      Excel
+                    </Button>
+
+                    <Button
+                      className="report-save-btn"
+                      onClick={generatePDFReport}
+                      disabled={columnLength}
+                      style={{ marginRight: "8px" }}
+                    >
+                      <FaFilePdf style={{ marginRight: "8px" }} />
+                      PDF
+                    </Button>
+
+                    <Button
+                      className="report-save-btn"
+                      disabled={columnLength}
+                      onClick={() => {
+                        generateWordDocument(
+                          {
+                            projectName: projectData.projectName,
+                            projectNumber: projectData?.projectNumber,
+                            projectDesc: projectData.projectDesc,
+                            projectId: "1",
+                          },
+                          ["Header1", "Header2"],
+                          { Header1: true, Header2: true },
+                          [{ Header1: "Data1", Header2: "Data2" }],
+                          { Header1: "Header1", Header2: "Header2" }
+                        );
+                      }}
+                    >
+                      <FaFileWord style={{ marginRight: "8px" }} />
+                      Word
+                    </Button>
+                  </Col>
+                </Row>
+
+                {columnLength && (
+                  <Row>
+                    <Col className="d-flex justify-content-end">
+                      <p style={{ color: "red", textAlign: "right" }}>
+                        *You cannot download the PDF or Word document when the
+                        number of columns exceeds the limit.
+                      </p>
+                    </Col>
+                  </Row>
+                )}
+              </>
             ) : null}
             <div className="sheet-container mt-3">
               <div className="sheet" id="pdf-report-content">
-                
-              <div id="first-page-report">
-                  <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+                <div id="first-page-report">
+                  <FirstPageReport
+                    projectId={projectId}
+                    moduleType={moduleType}
+                  />
                 </div>
                 <Row className="d-flex justify-content-between">
-                    <Col className="d-flex flex-column align-items-center"></Col>
-                    <Col className="d-flex flex-column align-items-center">
-                      <h5>{projectData?.projectName}</h5>
-                      <h5>SAFETY</h5>
-                    </Col>
-                    <Col className="d-flex flex-column align-items-center">
-                      <h5>Rev:</h5>
-                      <h5>Rev Date:</h5>
-                    </Col>
-                  </Row>
+                  <Col className="d-flex flex-column align-items-center"></Col>
+                  <Col className="d-flex flex-column align-items-center">
+                    <h5>{projectData?.projectName}</h5>
+                    <h5>SAFETY</h5>
+                  </Col>
+                  <Col className="d-flex flex-column align-items-center">
+                    <h5>Rev:</h5>
+                    <h5>Rev Date:</h5>
+                  </Col>
+                </Row>
 
-                  <div className="sheet-content">
-                    <div className="field">
-                      <label>Project Name:</label>
-                      <span>{projectData?.projectName}</span>
-                    </div>
-                    <div className="field">
-                      <label>Project Number:</label>
-                      <span>{projectData?.projectNumber}</span>
-                    </div>
-                    <div className="field">
-                      <label>Project Description:</label>
-                      <span>{projectData?.projectDesc}</span>
-                    </div>
-                  </div> 
-                  {safetyData?.length > 0 ? (
+                <div className="sheet-content">
+                  <div className="field">
+                    <label>Project Name:</label>
+                    <span>{projectData?.projectName}</span>
+                  </div>
+                  <div className="field">
+                    <label>Project Number:</label>
+                    <span>{projectData?.projectNumber}</span>
+                  </div>
+                  <div className="field">
+                    <label>Project Description:</label>
+                    <span>{projectData?.projectDesc}</span>
+                  </div>
+                </div>
+                {safetyData?.length > 0 ? (
+                  <div>
                     <div>
-                <div>
-                  
-                    <Row className="d-flex align-items-center justify-content-end">
-                      <Col className="d-flex flex-row custom-checkbox-group">
-                        <Form.Check
-                          type="checkbox"
-                          name="Reference"
-                          label="Reference"
-                          checked={columnVisibility.Reference}
-                          onChange={handleColumnVisibilityChange}
-                          className="custom-checkbox ml-5"
-                        />
-                        <Form.Check
-                          type="checkbox"
-                          name="FR"
-                          label="FR"
-                          checked={columnVisibility.FR}
-                          onChange={handleColumnVisibilityChange}
-                          className="custom-checkbox ml-5"
-                        />
-                      </Col>
-                    </Row>
-                  
-                </div>
-                <div>
-                  <h4>PBS Report</h4>
-                </div>
-                <div style={{ overflowX: "auto" }}>
-                  <table className="report-table">
-                    <thead>
-                      <tr>
-                        {headers
-                          .filter((header) =>
-                            header === "FR" || header === "Reference" ? columnVisibility[header] : true
-                          )
-                          .map((header) => (
-                            <th
-                              key={header}
-                              style={{
-                                width: columnWidths[header],
-                                textAlign: "center",
-                              }}
-                            >
-                              {header}
-                            </th>
-                          ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                   {safetyData?.map((row, rowIndex) => (
-  <tr key={rowIndex}>
-    {headers.map((header) => {
-      const key = headerKeyMapping[header];
-      const value = key ? row?.productId?.[key] ?? row?.safetyData?.[key] ?? "-" : "-";
-      return (
-        <td key={header} style={{ textAlign: "center" }}>
-          {value}
-        </td>
-      );
-    })}
-  </tr>
-))}
+                      <Row className="d-flex align-items-center justify-content-end">
+                        <Col className="d-flex flex-row custom-checkbox-group">
+                          <Form.Check
+                            type="checkbox"
+                            name="Reference"
+                            label="Reference"
+                            checked={columnVisibility.Reference}
+                            onChange={handleColumnVisibilityChange}
+                            className="custom-checkbox ml-5"
+                          />
+                          <Form.Check
+                            type="checkbox"
+                            name="FR"
+                            label="FR"
+                            checked={columnVisibility.FR}
+                            onChange={handleColumnVisibilityChange}
+                            className="custom-checkbox ml-5"
+                          />
+                        </Col>
+                      </Row>
+                    </div>
+                    <div>
+                      <h4>PBS Report</h4>
+                    </div>
+                    <div style={{ overflowX: "auto" }}>
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            {headers
+                              .filter((header) =>
+                                header === "FR" || header === "Reference"
+                                  ? columnVisibility[header]
+                                  : true
+                              )
+                              .map((header) => (
+                                <th
+                                  key={header}
+                                  style={{
+                                    width: columnWidths[header],
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  {header}
+                                </th>
+                              ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {safetyData?.map((row, rowIndex) => (
+                            <tr key={rowIndex}>
+                              {headers.map((header) => {
+                                const key = headerKeyMapping[header];
+                                let value = key
+                                  ? row?.productId?.[key] ??
+                                    row?.safetyData?.[key] ??
+                                    "-"
+                                  : "-";
 
-                    </tbody>
-                  </table>
-                </div>
-                <div id="last-page-report">
-                <LastPageReport projectId={projectId} moduleType={moduleType}/>
-              </div>
-                </div>
-                ) : 
-                <div
-           style={{
-             display: "flex",
-             width: "100%",
-             justifyContent: "center",
-           }}
-         >
-           <h3>No Records to Display</h3>
-         </div>
-                }
+                                // Check if the header is "FR" and format the value to 6 decimal places
+                                if (
+                                  header === "FR" &&
+                                  typeof value === "number"
+                                ) {
+                                  value = value.toFixed(6);
+                                }
+                                return (
+                                  <td
+                                    key={header}
+                                    style={{ textAlign: "center" }}
+                                  >
+                                    {value}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div id="last-page-report">
+                      <LastPageReport
+                        projectId={projectId}
+                        moduleType={moduleType}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      width: "100%",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <h3>No Records to Display</h3>
+                  </div>
+                )}
               </div>
             </div>
           </div>

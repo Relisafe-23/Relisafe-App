@@ -100,7 +100,6 @@ function ReliabilityAnalysis(props) {
 
   const token = localStorage.getItem("sessionId");
 
-
   const headers = [
     "Id",
     "Part Name",
@@ -700,10 +699,16 @@ function ReliabilityAnalysis(props) {
                         <tr key={rowIndex}>
                           {headers.map((header) => {
                             const key = headerKeyMapping[header];
-                            const value =
+                            let value =
                               row.productId[key] ??
                               row.failureRatePrediction[key] ??
                               "-";
+
+                            // Check if the header is "FR" and format the value to 6 decimal places
+                            if (header === "FR" && typeof value === "number") {
+                              value = value.toFixed(6);
+                            }
+
                             return (
                               <td key={header} style={{ textAlign: "center" }}>
                                 {value}

@@ -27,7 +27,7 @@ import LastPageReport from "../LastPageReport.js";
 import Loader from "../../core/Loader.js";
 
 function PM_ComponentType(props) {
-  const moduleType = props?.selectModule;  
+  const moduleType = props?.selectModule;
   const [projectId, setProjectId] = useState(props?.projectId);
   const reportType = props?.selectModuleFieldValue;
   const hierarchyType = props?.hierarchyType;
@@ -283,7 +283,7 @@ function PM_ComponentType(props) {
     const columnCount = Object.keys(headerKeyMapping).length;
     if (columnCount > 13) {
       setColumnLength(true);
-     }
+    }
   }, [projectId, reportType, hierarchyType]);
 
   const getComponentTreeProduct = () => {
@@ -319,15 +319,12 @@ function PM_ComponentType(props) {
     pmmraData: item?.pmmraData || {},
   }));
 
-
-
-
   const exportToExcel = () => {
     if (!projectData) {
       console.error("Project data is not available.");
       return;
     }
-  
+
     // First Page Worksheet
     const firstPageData = [
       [],
@@ -355,9 +352,9 @@ function PM_ComponentType(props) {
       ["Approved By", ""],
       ["Approved Date", ""],
     ];
-  
+
     const firstPageWorksheet = XLSX.utils.aoa_to_sheet(firstPageData);
-  
+
     // Main Content Worksheet
     const mainContentData = [
       [],
@@ -369,7 +366,7 @@ function PM_ComponentType(props) {
       ["Project Description", projectData?.projectDesc || ""],
       [],
     ];
-  
+
     // Loop through each part in sortedData
     sortedData.forEach((part, partIndex) => {
       if (partIndex !== 0) {
@@ -377,7 +374,7 @@ function PM_ComponentType(props) {
       }
       mainContentData.push([part.partType]); // Add part type as a section header
       mainContentData.push(headers); // Add headers
-  
+
       // Loop through each item in the part and map its data
       part.items.forEach((item) => {
         const rowData = headers.map((header) => {
@@ -387,10 +384,10 @@ function PM_ComponentType(props) {
         mainContentData.push(rowData); // Add item data to main content
       });
     });
-  
+
     // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
-  
+
     // Last Page Worksheet
     const lastPageData = [
       [],
@@ -420,19 +417,22 @@ function PM_ComponentType(props) {
       ["", "", "", "", "", ""],
       ["", "", "", "", "", ""],
     ];
-  
+
     const lastPageWorksheet = XLSX.utils.aoa_to_sheet(lastPageData);
-  
+
     // Create a new workbook and append the worksheets
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, firstPageWorksheet, "First Page");
-    XLSX.utils.book_append_sheet(workbook, mainContentWorksheet, "Main Content");
+    XLSX.utils.book_append_sheet(
+      workbook,
+      mainContentWorksheet,
+      "Main Content"
+    );
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
-  
+
     // Write the workbook to a file
     XLSX.writeFile(workbook, "preventive_maintenance.xlsx");
   };
-  
 
   const generatePDFReport = () => {
     if (!projectData) {
@@ -486,10 +486,10 @@ function PM_ComponentType(props) {
       console.error("Sorted data is not available.");
       return;
     }
-  
+
     // Initialize an array to hold all Word table rows
     const projectTableRows = [];
-  
+
     // Loop through each part in sortedData
     sortedData.forEach((part, partIndex) => {
       // Add a header for each part type
@@ -504,19 +504,20 @@ function PM_ComponentType(props) {
           ],
         })
       );
-  
+
       // Add the headers row after the part type header
       projectTableRows.push(
         new TableRow({
-          children: headers.map((header) =>
-            new TableCell({
-              children: [new Paragraph({ text: header, bold: true })],
-              width: { size: 100, type: WidthType.PERCENTAGE },
-            })
+          children: headers.map(
+            (header) =>
+              new TableCell({
+                children: [new Paragraph({ text: header, bold: true })],
+                width: { size: 100, type: WidthType.PERCENTAGE },
+              })
           ),
         })
       );
-  
+
       // Loop through each item in the part and map its data to table rows
       part.items.forEach((item) => {
         const tableRow = new TableRow({
@@ -532,7 +533,7 @@ function PM_ComponentType(props) {
         projectTableRows.push(tableRow);
       });
     });
-  
+
     // Define the Word document structure
     const doc = new Document({
       sections: [
@@ -558,7 +559,7 @@ function PM_ComponentType(props) {
         },
       ],
     });
-  
+
     // Generate and save the Word document
     Packer.toBlob(doc)
       .then((blob) => {
@@ -568,7 +569,7 @@ function PM_ComponentType(props) {
         console.error("Error generating Word document:", error);
       });
   };
-  
+
   return (
     <div>
       {isLoading ? (
@@ -578,66 +579,70 @@ function PM_ComponentType(props) {
           <div className="mt-3"></div>
           {preventiveData?.length > 0 ? (
             <>
-            <Row className="d-flex align-items-center justify-content-end">
-              <Col className="d-flex justify-content-end">
-                <Button
-                  className="report-save-btn"
-                  onClick={exportToExcel}
-                  style={{ marginRight: "8px" }}
-                >
-                  <FaFileExcel style={{ marginRight: "8px" }} />
-                  Excel
-                </Button>
-  
-                <Button
-                  className="report-save-btn"
-                  onClick={generatePDFReport}
-                  disabled={columnLength}
-                  style={{ marginRight: "8px" }}
-                >
-                  <FaFilePdf style={{ marginRight: "8px" }} />
-                  PDF
-                </Button>
-  
-                <Button
-                  className="report-save-btn"
-                  disabled={columnLength}
-                  onClick={() => {
-                    generateWordDocument(
-                      {
-                        projectName: projectData.projectName,
-                        projectNumber: projectData?.projectNumber,
-                        projectDesc: projectData.projectDesc,
-                        projectId: "1",
-                      },
-                      ["Header1", "Header2"],
-                      { Header1: true, Header2: true },
-                      [{ Header1: "Data1", Header2: "Data2" }],
-                      { Header1: "Header1", Header2: "Header2" }
-                    );
-                  }}
-                >
-                  <FaFileWord style={{ marginRight: "8px" }} />
-                  Word
-                </Button>
-              </Col>
-            </Row>
-  
-            {columnLength && (
-             <Row>
-             <Col className="d-flex justify-content-end">
-               <p style={{ color: 'red', textAlign: 'right' }}>
-               *You cannot download the PDF or Word document when the number of columns exceeds the limit.
-               </p>
-             </Col>
-           </Row>
-            )}
-          </>
+              <Row className="d-flex align-items-center justify-content-end">
+                <Col className="d-flex justify-content-end">
+                  <Button
+                    className="report-save-btn"
+                    onClick={exportToExcel}
+                    style={{ marginRight: "8px" }}
+                  >
+                    <FaFileExcel style={{ marginRight: "8px" }} />
+                    Excel
+                  </Button>
+
+                  <Button
+                    className="report-save-btn"
+                    onClick={generatePDFReport}
+                    disabled={columnLength}
+                    style={{ marginRight: "8px" }}
+                  >
+                    <FaFilePdf style={{ marginRight: "8px" }} />
+                    PDF
+                  </Button>
+
+                  <Button
+                    className="report-save-btn"
+                    disabled={columnLength}
+                    onClick={() => {
+                      generateWordDocument(
+                        {
+                          projectName: projectData.projectName,
+                          projectNumber: projectData?.projectNumber,
+                          projectDesc: projectData.projectDesc,
+                          projectId: "1",
+                        },
+                        ["Header1", "Header2"],
+                        { Header1: true, Header2: true },
+                        [{ Header1: "Data1", Header2: "Data2" }],
+                        { Header1: "Header1", Header2: "Header2" }
+                      );
+                    }}
+                  >
+                    <FaFileWord style={{ marginRight: "8px" }} />
+                    Word
+                  </Button>
+                </Col>
+              </Row>
+
+              {columnLength && (
+                <Row>
+                  <Col className="d-flex justify-content-end">
+                    <p style={{ color: "red", textAlign: "right" }}>
+                      *You cannot download the PDF or Word document when the
+                      number of columns exceeds the limit.
+                    </p>
+                  </Col>
+                </Row>
+              )}
+            </>
           ) : null}
           {preventiveData?.length > 0 ? (
             <div id="pdf-report-content">
               <div id="first-page-report">
-                <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+                <FirstPageReport
+                  projectId={projectId}
+                  moduleType={moduleType}
+                />
               </div>
 
               <div className="sheet-container mt-3" id="main-content-report">
@@ -669,7 +674,11 @@ function PM_ComponentType(props) {
                     </div>
                   </div>
                   {sortedData.map((part, partIndex) => (
-                    <div key={partIndex} className={partIndex === 0 ? "mt-3" : "my-5"} style={{ overflowX: "auto" }}>
+                    <div
+                      key={partIndex}
+                      className={partIndex === 0 ? "mt-3" : "my-5"}
+                      style={{ overflowX: "auto" }}
+                    >
                       <h5>{part.partType}</h5>
                       <table className="report-table">
                         <thead>
@@ -682,17 +691,27 @@ function PM_ComponentType(props) {
                           </tr>
                         </thead>
                         <tbody>
-                        {part.items.map((item, itemIndex) => (
+                          {part.items.map((item, itemIndex) => (
                             <tr key={itemIndex}>
-                              {headers.map((header) => (
-                                <td key={header} className="table-cell">
-                                  {
-                                  item.productId?.[headerKeyMapping[header]] ??
-                                    item.pmmraData?.[headerKeyMapping[header]] ??
-                                    
-                                    "-"}
-                                </td>
-                              ))}
+                              {headers.map((header) => {
+                                const key = headerKeyMapping[header];
+                                const value =
+                                  item.productId?.[key] ??
+                                  item.pmmraData?.[key] ??
+                                  "-";
+
+                                // Format the value to 6 decimal places if the header is "FR"
+                                const formattedValue =
+                                  header === "FR" && value !== "-"
+                                    ? parseFloat(value).toFixed(6)
+                                    : value;
+
+                                return (
+                                  <td key={header} className="table-cell">
+                                    {formattedValue}
+                                  </td>
+                                );
+                              })}
                             </tr>
                           ))}
                         </tbody>
@@ -703,7 +722,7 @@ function PM_ComponentType(props) {
               </div>
 
               <div id="last-page-report">
-                <LastPageReport projectId={projectId} moduleType={moduleType}/>
+                <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
             </div>
           ) : null}
