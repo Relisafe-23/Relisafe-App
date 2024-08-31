@@ -499,7 +499,6 @@ function Index(props) {
       },
     }).then((res) => {
       const data = res?.data?.libraryData;
-      console.log("data......",data)
       if (data.length > 0) {
         setAllConnectedData(data);
       } else {
@@ -595,7 +594,6 @@ function Index(props) {
           allSepareteData?.filter(
             (item) => item?.sourceName === "modeOfOperation"
           ) || [];
-          console.log("filteredData......",filteredData)
         const options = filteredData?.map((item) => ({
           value: item?.sourceValue,
           label: item?.sourceValue,
