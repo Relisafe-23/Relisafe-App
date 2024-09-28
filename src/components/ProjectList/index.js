@@ -276,7 +276,7 @@ export default function ProjectList(props) {
                                 history.push({
                                   pathname: `/pbs/${list?.id}`,
 
-                                  state: { projectId: list?.id, state: "openSideBar", pbsWrite: pbspermission },
+                                  state: { projectId: list?.id, state: ["openSidebar", "pbs"],  pbsWrite: pbspermission },
                                 });
                               }}
                             >

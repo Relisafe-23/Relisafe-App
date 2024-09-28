@@ -94,7 +94,7 @@ function Index(props) {
   const [partTypeNprd2016Data, setPartTypeNprd2016Data] = useState([]);
   const [partTypeNprdDesc2016Data, setPartTypeNprdDesc2016Data] = useState([]);
   const [frpValueNprd2016Data, setFrpValueNprd2016Data] = useState([]);
-  const [permission, setPermission] = useState()
+  const [permission, setPermission] = useState();
 
   const token = localStorage.getItem("sessionId");
   const handleChange = (rowData) => {
@@ -323,15 +323,15 @@ function Index(props) {
     localStorage.clear(history.push("/login"));
     window.location.reload();
   };
-  const getNprd2016Datas = () =>{
-    Api.get('/api/v1/failureRatePrediction/get/nprd/2016').then((res)=>{
+  const getNprd2016Datas = () => {
+    Api.get("/api/v1/failureRatePrediction/get/nprd/2016").then((res) => {
       const data = res?.data?.data;
-      setPartTypeNprd2016Data(data?.getPartTypeData);
-      setPartTypeNprdDesc2016Data(data?.getPartDescData)
-      setFrpValueNprd2016Data(data?.getFrpData);
 
-    })
-  }
+      setPartTypeNprd2016Data(data?.getPartTypeData);
+      // setPartTypeNprdDesc2016Data(data?.getPartDescData)
+      // setFrpValueNprd2016Data(data?.getFrpData);
+    });
+  };
 
   useEffect(() => {
     productTreeData();
@@ -340,8 +340,7 @@ function Index(props) {
     getNprd2016Datas();
     getTreedata();
     getProductFRPData();
-   
-  }, [projectId,productId]);
+  }, [projectId, productId]);
 
   const productTreeData = () => {
     setIsSpinning(true);
@@ -431,8 +430,6 @@ function Index(props) {
       });
   };
 
-
-
   const loginSchema = Yup.object().shape({
     category: Yup.object().required("Category is  required"),
     name: Yup.string().required("Name is required"),
@@ -470,7 +467,7 @@ function Index(props) {
   });
 
   const getFRPValue = (values) => {
-    if(values.value == "Null"){
+    if (values.value == "Null") {
       const nprdFRPFiltered = nprdFRP.filter((item) => {
         return (
           item?.PartTypeId === partTypeNprd.value &&
@@ -479,7 +476,7 @@ function Index(props) {
       });
       setNprdFR(nprdFRPFiltered);
       setData(nprdFRPFiltered);
-    }else{
+    } else {
       const nprdFRPFiltered = nprdFRP.filter((item) => {
         return (
           item?.PartTypeId === partTypeNprd.value &&
@@ -492,28 +489,39 @@ function Index(props) {
     }
   };
 
+  const getPartTypeNprdDesc2016Data = (values) => {
+    Api.get("/api/v1/failureRatePrediction/get/nprd/2016/desc", {
+      params: {
+        partTypeId: values?.value,
+      },
+    }).then((res) => {
+      setPartTypeNprdDesc2016Data(res?.data?.data);
+    });
+  };
+
   const getFRP2016Value = (values) => {
-    if(values.value == "Null"){
-      const nprdFRPFiltered = frpValueNprd2016Data.filter((item) => {
-        return (
-          item?.PartTypeId === partType2016Nprd?.value &&
-          item?.PartDescrId === partType2016Descr?.value
-        );
+    if (values.value == "Null") {
+      Api.get("/api/v1/failureRatePrediction/get/nprd/2016/value", {
+        params: {
+          partType2016Nprd: partType2016Nprd?.value,
+          partDescrId: partType2016Descr?.value,
+        },
+      }).then((res) => {
+        setNprdFR(res.data.data);
+        setData(res.data.data);
       });
-      setNprdFR(nprdFRPFiltered);
-      setData(nprdFRPFiltered);
-    }else{
-      const nprdFRPFiltered = frpValueNprd2016Data.filter((item) => {
-        return (
-          item?.PartTypeId === partType2016Nprd?.value &&
-          item?.Quality === values?.value &&
-          item?.PartDescrId === partType2016Descr?.value
-        );
+    } else {
+      Api.get("/api/v1/failureRatePrediction/get/nprd/2016/value", {
+        params: {
+          partType2016Nprd: partType2016Nprd?.value,
+          quality: values?.value,
+          partDescrId: partType2016Descr?.value,
+        },
+      }).then((res) => {
+        setNprdFR(res.data.data);
+        setData(res.data.data);
       });
-      setNprdFR(nprdFRPFiltered);
-      setData(nprdFRPFiltered);
     }
-    
   };
 
   const qualityOptions = [
@@ -626,62 +634,62 @@ function Index(props) {
       {isLoading ? (
         <Loader />
       ) : permission?.read === true ||
-          permission?.read === "undefined" ||
-          role === "admin" ||
-          (isOwner === true && createdBy === userId) ? (
-            <div>
-        <Formik
-          enableReinitialize={true}
-          initialValues={{
-            name: name,
-            reference: reference,
-            partNumber: partNumber,
-            category: category,
-            quantity: quantity,
-            partType: partType,
-            environment: environment,
-            dutyCycle: dutyCycle,
-            frDistribution: frDistribution,
-            temperature: temperature,
-            field: field,
-            predicted: predicted,
-            otherFr: otherFr,
-            allocated: allocated,
-            frRemarks: frRemarks,
-            standard: standard,
-            failureRate: frOffset,
-            operand: frOffsetOperand,
-            frUnit: frUnit,
-            source: source,
-          }}
-          validationSchema={loginSchema}
-          onSubmit={(values) => {
-            frpId ? updateFrpData(values) : submitForm(values);
-          }}
-        >
-          {(formik) => {
-            const {
-              values,
-              handleChange,
-              handleSubmit,
-              handleBlur,
-              submitForm,
-              setFieldValue,
-            } = formik;
-            return (
-              <div>
-                <Form onSubmit={handleSubmit}>
-                  <fieldset
-                    disabled={
-                      writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
-                        ? null
-                        : "disabled"
-                    }
-                  >
-                    {/* <Projectname projectId={projectId} />
+        permission?.read === "undefined" ||
+        role === "admin" ||
+        (isOwner === true && createdBy === userId) ? (
+        <div>
+          <Formik
+            enableReinitialize={true}
+            initialValues={{
+              name: name,
+              reference: reference,
+              partNumber: partNumber,
+              category: category,
+              quantity: quantity,
+              partType: partType,
+              environment: environment,
+              dutyCycle: dutyCycle,
+              frDistribution: frDistribution,
+              temperature: temperature,
+              field: field,
+              predicted: predicted,
+              otherFr: otherFr,
+              allocated: allocated,
+              frRemarks: frRemarks,
+              standard: standard,
+              failureRate: frOffset,
+              operand: frOffsetOperand,
+              frUnit: frUnit,
+              source: source,
+            }}
+            validationSchema={loginSchema}
+            onSubmit={(values) => {
+              frpId ? updateFrpData(values) : submitForm(values);
+            }}
+          >
+            {(formik) => {
+              const {
+                values,
+                handleChange,
+                handleSubmit,
+                handleBlur,
+                submitForm,
+                setFieldValue,
+              } = formik;
+              return (
+                <div>
+                  <Form onSubmit={handleSubmit}>
+                    <fieldset
+                      disabled={
+                        writePermission === true ||
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
+                          ? null
+                          : "disabled"
+                      }
+                    >
+                      {/* <Projectname projectId={projectId} />
                     <Row>
                       <Col xs={12} sm={9} className="projectName">
                         <Dropdown
@@ -692,533 +700,537 @@ function Index(props) {
                       </Col>
                       <Col></Col>
                     </Row> */}
-                     <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div style={{ width: "30%", marginRight: "20px" }}>
-                        <Projectname projectId={projectId} />
-                      </div>
-                      <div style={{ width: "100%", marginRight: "20px" }}>
-                      <Dropdown
-                          value={projectId}
-                          productId={productId}
-                          data={treeTableData}
-                        />
-                      </div>
-                    </div>
-
-                    <Row className="d-flex  mt-4">
-                      <Col>
-                        <div className="mttr-sec ">
-                          <p className=" mb-0 para-tag">General Information</p>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <div style={{ width: "30%", marginRight: "20px" }}>
+                          <Projectname projectId={projectId} />
                         </div>
-                        <Card className="mt-2 px-4 py-4 mttr-card">
-                          {isSpinning ? (
-                            <Spinner
-                              className="spinner"
-                              animation="border"
-                              variant="secondary"
-                              centered
-                            />
-                          ) : (
-                            <div>
-                              <Row>
+                        <div style={{ width: "100%", marginRight: "20px" }}>
+                          <Dropdown
+                            value={projectId}
+                            productId={productId}
+                            data={treeTableData}
+                          />
+                        </div>
+                      </div>
+
+                      <Row className="d-flex  mt-4">
+                        <Col>
+                          <div className="mttr-sec ">
+                            <p className=" mb-0 para-tag">
+                              General Information
+                            </p>
+                          </div>
+                          <Card className="mt-2 px-4 py-4 mttr-card">
+                            {isSpinning ? (
+                              <Spinner
+                                className="spinner"
+                                animation="border"
+                                variant="secondary"
+                                centered
+                              />
+                            ) : (
+                              <div>
+                                <Row>
+                                  <Col>
+                                    <Label>Name</Label>
+                                    <Form.Group>
+                                      <Form.Control
+                                        type="text"
+                                        name="name"
+                                        className="mt-1"
+                                        placeholder="Name"
+                                        value={values.name}
+                                        disabled
+                                        // onChange={handleChange}
+                                        onBlur={handleBlur}
+                                      />
+                                      <ErrorMessage
+                                        className="error text-danger"
+                                        component="span"
+                                        name="name"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                  <Col>
+                                    <Label notify={true}>Part Number</Label>
+                                    <Form.Group>
+                                      <Form.Control
+                                        className="mt-1"
+                                        type="tel"
+                                        maxLength={10}
+                                        name="partNumber"
+                                        disabled
+                                        placeholder="Part Number"
+                                        onBlur={handleBlur}
+                                        value={partNumber}
+                                        // onChange={handleChange}
+                                      />
+                                      <ErrorMessage
+                                        className="error text-danger"
+                                        component="span"
+                                        name="partNumber"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                </Row>
+                                <Row className="mt-3">
+                                  <Col>
+                                    <Label notify={true}>Quantity</Label>
+                                    <Form.Group>
+                                      <Form.Control
+                                        className="mt-1"
+                                        type="number"
+                                        step="any"
+                                        disabled
+                                        min="0"
+                                        name="quantity"
+                                        placeholder="Quantity"
+                                        value={quantity}
+                                        onBlur={handleBlur}
+                                        // onChange={handleChange}
+                                      />
+                                      <ErrorMessage
+                                        className="error text-danger"
+                                        component="span"
+                                        name="quantity"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                  <Col>
+                                    <Label>Reference or Position</Label>
+                                    <Form.Group>
+                                      <Form.Control
+                                        className="mt-1"
+                                        type="text"
+                                        disabled
+                                        placeholder="Reference or Position"
+                                        value={reference}
+                                        name="reference"
+                                        onBlur={handleBlur}
+                                        // onChange={handleChange}
+                                      />
+                                      <ErrorMessage
+                                        className="error text-danger"
+                                        component="span"
+                                        name="reference"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                </Row>
+                                <Row>
+                                  <Col>
+                                    <Form.Group className="mt-3">
+                                      <Label notify="true">Category</Label>
+                                      <Select
+                                        styles={customStyles}
+                                        type="select"
+                                        value={values.category}
+                                        placeholder="Select"
+                                        name="category"
+                                        isDisabled
+                                        onBlur={handleBlur}
+                                        className="mt-1"
+                                        // isDisabled={
+                                        //   writePermission === true ||
+                                        //   writePermission === "undefined" ||
+                                        //   role === "admin" ||
+                                        //   (isOwner === true &&
+                                        //     createdBy === userId)
+                                        //     ? null
+                                        //     : "disabled"
+                                        // }
+                                        // onChange={(e) => {
+                                        //   setFieldValue("category", e);
+                                        //   // setCategory(e);
+                                        // }}
+                                        options={[
+                                          {
+                                            value: "Electronic",
+                                            label: "Electronic",
+                                          },
+                                          {
+                                            value: "Mechanical",
+                                            label: "Mechanical",
+                                          },
+                                          {
+                                            value: "Assembly",
+                                            label: "Assembly",
+                                          },
+                                        ]}
+                                      />
+                                      <ErrorMessage
+                                        className="error text-danger"
+                                        component="span"
+                                        name="category"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                  <Col>
+                                    {values.category?.value === "Mechanical" ||
+                                    values.category?.value === "Electronic" ? (
+                                      <div>
+                                        <Form.Group className="mt-3">
+                                          <Label notify={true}>Part Type</Label>
+                                          <Select
+                                            styles={customStyles}
+                                            type="select"
+                                            isDisabled
+                                            value={values.partType}
+                                            placeholder="Select Part Type"
+                                            name="partType"
+                                            onBlur={handleBlur}
+                                            // isDisabled={
+                                            //   writePermission === true ||
+                                            //   writePermission === "undefined" ||
+                                            //   role === "admin" ||
+                                            //   (isOwner === true &&
+                                            //     createdBy === userId)
+                                            //     ? null
+                                            //     : "disabled"
+                                            // }
+                                            // onChange={(e) => {
+                                            //   setFieldValue("partType", e);
+                                            //   setPartType(e.value);
+                                            // }}
+                                            className="mt-1"
+                                            options={[
+                                              values.category?.value ===
+                                              "Electronic"
+                                                ? {
+                                                    options: Electronic.map(
+                                                      (list) => ({
+                                                        value: list.value,
+                                                        label: list.label,
+                                                      })
+                                                    ),
+                                                  }
+                                                : {
+                                                    options: Mechanical.map(
+                                                      (list) => ({
+                                                        value: list.value,
+                                                        label: list.label,
+                                                      })
+                                                    ),
+                                                  },
+                                            ]}
+                                          />
+                                          <ErrorMessage
+                                            className="error text-danger"
+                                            component="span"
+                                            name="partType"
+                                          />
+                                        </Form.Group>
+                                      </div>
+                                    ) : null}
+                                  </Col>
+                                </Row>
+                              </div>
+                            )}
+                          </Card>
+                          <div className="mttr-sec mt-4 ">
+                            <p className=" mb-0 para-tag">
+                              Environment Profile and Temperature
+                            </p>
+                          </div>
+                          <Card className=" mttr-card">
+                            {isSpinning ? (
+                              <Spinner
+                                className="spinner_2"
+                                animation="border"
+                                variant="secondary"
+                                centered
+                              />
+                            ) : (
+                              <Row className="mx-3 my-4">
                                 <Col>
-                                  <Label>Name</Label>
+                                  <Label notify={true}>Environment</Label>
                                   <Form.Group>
-                                    <Form.Control
-                                      type="text"
-                                      name="name"
-                                      className="mt-1"
-                                      placeholder="Name"
-                                      value={values.name}
-                                      disabled
-                                      // onChange={handleChange}
-                                      onBlur={handleBlur}
-                                    />
-                                    <ErrorMessage
-                                      className="error text-danger"
-                                      component="span"
-                                      name="name"
-                                    />
-                                  </Form.Group>
-                                </Col>
-                                <Col>
-                                  <Label notify={true}>Part Number</Label>
-                                  <Form.Group>
-                                    <Form.Control
-                                      className="mt-1"
-                                      type="tel"
-                                      maxLength={10}
-                                      name="partNumber"
-                                      disabled
-                                      placeholder="Part Number"
-                                      onBlur={handleBlur}
-                                      value={partNumber}
-                                      // onChange={handleChange}
-                                    />
-                                    <ErrorMessage
-                                      className="error text-danger"
-                                      component="span"
-                                      name="partNumber"
-                                    />
-                                  </Form.Group>
-                                </Col>
-                              </Row>
-                              <Row className="mt-3">
-                                <Col>
-                                  <Label notify={true}>Quantity</Label>
-                                  <Form.Group>
-                                    <Form.Control
-                                      className="mt-1"
-                                      type="number"
-                                      step="any"
-                                      disabled
-                                      min="0"
-                                      name="quantity"
-                                      placeholder="Quantity"
-                                      value={quantity}
-                                      onBlur={handleBlur}
-                                      // onChange={handleChange}
-                                    />
-                                    <ErrorMessage
-                                      className="error text-danger"
-                                      component="span"
-                                      name="quantity"
-                                    />
-                                  </Form.Group>
-                                </Col>
-                                <Col>
-                                  <Label>Reference or Position</Label>
-                                  <Form.Group>
-                                    <Form.Control
-                                      className="mt-1"
-                                      type="text"
-                                      disabled
-                                      placeholder="Reference or Position"
-                                      value={reference}
-                                      name="reference"
-                                      onBlur={handleBlur}
-                                      // onChange={handleChange}
-                                    />
-                                    <ErrorMessage
-                                      className="error text-danger"
-                                      component="span"
-                                      name="reference"
-                                    />
-                                  </Form.Group>
-                                </Col>
-                              </Row>
-                              <Row>
-                                <Col>
-                                  <Form.Group className="mt-3">
-                                    <Label notify="true">Category</Label>
                                     <Select
-                                      styles={customStyles}
-                                      type="select"
-                                      value={values.category}
-                                      placeholder="Select"
-                                      name="category"
-                                      isDisabled
-                                      onBlur={handleBlur}
                                       className="mt-1"
+                                      name="environment"
+                                      isDisabled
+                                      styles={customStyles}
+                                      placeholder="Select"
                                       // isDisabled={
                                       //   writePermission === true ||
                                       //   writePermission === "undefined" ||
                                       //   role === "admin" ||
-                                      //   (isOwner === true &&
-                                      //     createdBy === userId)
+                                      //   (isOwner === true && createdBy === userId)
                                       //     ? null
                                       //     : "disabled"
                                       // }
-                                      // onChange={(e) => {
-                                      //   setFieldValue("category", e);
-                                      //   // setCategory(e);
-                                      // }}
                                       options={[
+                                        { value: null, label: "None" },
                                         {
-                                          value: "Electronic",
-                                          label: "Electronic",
-                                        },
-                                        {
-                                          value: "Mechanical",
-                                          label: "Mechanical",
-                                        },
-                                        {
-                                          value: "Assembly",
-                                          label: "Assembly",
+                                          options: Environment.map((list) => ({
+                                            value: list.value,
+                                            label: list.label,
+                                          })),
                                         },
                                       ]}
+                                      type="select"
+                                      value={environment}
+                                      onBlur={handleBlur}
+                                      // onChange={(e) => {
+                                      //   setFieldValue("environment", e);
+                                      //   setEnvironment(e.value);
+                                      // }}
                                     />
                                     <ErrorMessage
                                       className="error text-danger"
                                       component="span"
-                                      name="category"
+                                      name="environment"
                                     />
                                   </Form.Group>
                                 </Col>
                                 <Col>
-                                  {values.category?.value === "Mechanical" ||
-                                  values.category?.value === "Electronic" ? (
-                                    <div>
-                                      <Form.Group className="mt-3">
-                                        <Label notify={true}>Part Type</Label>
-                                        <Select
-                                          styles={customStyles}
-                                          type="select"
-                                          isDisabled
-                                          value={values.partType}
-                                          placeholder="Select Part Type"
-                                          name="partType"
-                                          onBlur={handleBlur}
-                                          // isDisabled={
-                                          //   writePermission === true ||
-                                          //   writePermission === "undefined" ||
-                                          //   role === "admin" ||
-                                          //   (isOwner === true &&
-                                          //     createdBy === userId)
-                                          //     ? null
-                                          //     : "disabled"
-                                          // }
-                                          // onChange={(e) => {
-                                          //   setFieldValue("partType", e);
-                                          //   setPartType(e.value);
-                                          // }}
-                                          className="mt-1"
-                                          options={[
-                                            values.category?.value ===
-                                            "Electronic"
-                                              ? {
-                                                  options: Electronic.map(
-                                                    (list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })
-                                                  ),
-                                                }
-                                              : {
-                                                  options: Mechanical.map(
-                                                    (list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })
-                                                  ),
-                                                },
-                                          ]}
-                                        />
-                                        <ErrorMessage
-                                          className="error text-danger"
-                                          component="span"
-                                          name="partType"
-                                        />
-                                      </Form.Group>
-                                    </div>
-                                  ) : null}
-                                </Col>
-                              </Row>
-                            </div>
-                          )}
-                        </Card>
-                        <div className="mttr-sec mt-4 ">
-                          <p className=" mb-0 para-tag">
-                            Environment Profile and Temperature
-                          </p>
-                        </div>
-                        <Card className=" mttr-card">
-                          {isSpinning ? (
-                            <Spinner
-                              className="spinner_2"
-                              animation="border"
-                              variant="secondary"
-                              centered
-                            />
-                          ) : (
-                            <Row className="mx-3 my-4">
-                              <Col>
-                                <Label notify={true}>Environment</Label>
-                                <Form.Group>
-                                  <Select
-                                    className="mt-1"
-                                    name="environment"
-                                    isDisabled
-                                    styles={customStyles}
-                                    placeholder="Select"
-                                    // isDisabled={
-                                    //   writePermission === true ||
-                                    //   writePermission === "undefined" ||
-                                    //   role === "admin" ||
-                                    //   (isOwner === true && createdBy === userId)
-                                    //     ? null
-                                    //     : "disabled"
-                                    // }
-                                    options={[
-                                      { value: null, label: "None" },
-                                      {
-                                        options: Environment.map((list) => ({
-                                          value: list.value,
-                                          label: list.label,
-                                        })),
-                                      },
-                                    ]}
-                                    type="select"
-                                    value={environment}
-                                    onBlur={handleBlur}
-                                    // onChange={(e) => {
-                                    //   setFieldValue("environment", e);
-                                    //   setEnvironment(e.value);
-                                    // }}
-                                  />
-                                  <ErrorMessage
-                                    className="error text-danger"
-                                    component="span"
-                                    name="environment"
-                                  />
-                                </Form.Group>
-                              </Col>
-                              <Col>
-                                <Label notify="true">Temperature</Label>
-                                <Form.Group>
-                                  <Form.Control
-                                    className="mt-1"
-                                    type="number"
-                                    min="0"
-                                    step="any"
-                                    disabled
-                                    name="temperature"
-                                    placeholder="Temperature"
-                                    value={temperature}
-                                    onBlur={handleBlur}
-                                    // onChange={handleChange}
-                                  />
-                                  <ErrorMessage
-                                    className="error text-danger"
-                                    component="span"
-                                    name="temperature"
-                                  />
-                                </Form.Group>
-                              </Col>
-                            </Row>
-                          )}
-                        </Card>
-                        <Row className="d-flex">
-                          <Col>
-                            <div className="mttr-sec mt-3 ">
-                              <p className=" mb-0 para-tag">Failure Rate</p>
-                            </div>
-                            <Card className="mt-2 mttr-card p-4">
-                              <Row className="mt-3">
-                                <Col className="mt-3">
-                                  <Label notify="true">Source</Label>
-                                  <Select
-                                    type="select"
-                                    className="mt-1"
-                                    value={values.source}
-                                    styles={customStyles}
-                                    name="source"
-                                    // isDisabled={
-                                    //   (field === "" &&
-                                    //     predicted === "" &&
-                                    //     allocated === "" &&
-                                    //     otherFr === "" &&
-                                    //     writePermission?.write === true) ||
-                                    //   writePermission?.write === "undefined" ||
-                                    //   role === "admin" ||
-                                    //   (isOwner === true && createdBy === userId)
-                                    //     ? null
-                                    //     : "disabled"
-                                    // }
-                                    // isDisabled={
-                                    //   writePermission?.write === true ||
-                                    //   writePermission?.write === "undefined" ||
-                                    //   role === "admin" ||
-                                    //   (isOwner === true && createdBy === userId)
-                                    //     ? null
-                                    //     : "disabled"
-                                    // }
-                                    placeholder="Select"
-                                    onBlur={handleBlur}
-                                    onChange={(e) => {
-                                      setFieldValue("source", e);
-                                      setSource(e);
-                                    }}
-                                    options={[
-                                      {
-                                        value: "Predicted",
-                                        label: "Predicted",
-                                      },
-                                      {
-                                        value: "Field",
-                                        label: "Field",
-                                      },
-                                      {
-                                        value: "Allocated",
-                                        label: "Allocated",
-                                      },
-                                      {
-                                        value: "otherFr",
-                                        label: "Other FR",
-                                      },
-                                    ]}
-                                  />
-                                </Col>
-                                <Col className="mt-3">
-                                  {values?.source?.value === "Field" ? (
-                                    <div>
-                                      <Label notify="true">Field</Label>
-                                      <Form.Group>
-                                        <Form.Control
-                                          className="mt-1"
-                                          name="field"
-                                          type="number"
-                                          min="0"
-                                          step="any"
-                                          placeholder="Field"
-                                          onBlur={handleBlur}
-                                          onChange={handleChange}
-                                          value={values.field}
-                                        />
-                                        <ErrorMessage
-                                          className="error text-danger"
-                                          component="span"
-                                          name="field"
-                                        />
-                                      </Form.Group>
-                                    </div>
-                                  ) : values?.source?.value === "Predicted" ? (
-                                    <div>
-                                      <Label notify="true">Predicted</Label>
-                                      <Form.Group>
-                                        <Form.Control
-                                          className="mt-1"
-                                          name="predicted"
-                                          type="number"
-                                          min="0"
-                                          step="any"
-                                          placeholder="Predicted"
-                                          onBlur={handleBlur}
-                                          onChange={handleChange}
-                                          value={values.predicted}
-                                        />
-                                        <ErrorMessage
-                                          className="error text-danger"
-                                          component="span"
-                                          name="predicted"
-                                        />
-                                      </Form.Group>
-                                    </div>
-                                  ) : values?.source?.value === "Allocated" ? (
-                                    <div>
-                                      <Label notify="true">Allocated</Label>
-                                      <Form.Group>
-                                        <Form.Control
-                                          className="mt-1"
-                                          type="number"
-                                          min="0"
-                                          step="any"
-                                          name="allocated"
-                                          placeholder="Allocated"
-                                          onBlur={handleBlur}
-                                          onChange={handleChange}
-                                          value={values.allocated}
-                                        />
-                                        <ErrorMessage
-                                          className="error text-danger"
-                                          component="span"
-                                          name="allocated"
-                                        />
-                                      </Form.Group>
-                                    </div>
-                                  ) : values?.source?.value === "otherFr" ? (
-                                    <div>
-                                      <Label notify="true">Other FR</Label>
-                                      <Form.Group>
-                                        <Form.Control
-                                          className="mt-1"
-                                          name="otherFr"
-                                          type="number"
-                                          step="any"
-                                          min="0"
-                                          placeholder="Other FR"
-                                          value={values.otherFr}
-                                          onBlur={handleBlur}
-                                          onChange={handleChange}
-                                        />
-                                        <ErrorMessage
-                                          className="error text-danger"
-                                          component="span"
-                                          name="otherFr"
-                                        />
-                                      </Form.Group>
-                                    </div>
-                                  ) : null}
-                                </Col>
-                              </Row>
-                              <Row className="mt-3">
-                                <Col>
-                                  <Label notify="true">Duty Cycle</Label>
+                                  <Label notify="true">Temperature</Label>
                                   <Form.Group>
                                     <Form.Control
                                       className="mt-1"
-                                      type="text"
-                                      name="dutyCycle"
-                                      placeholder="Duty Cycle"
-                                      value={values.dutyCycle}
+                                      type="number"
+                                      min="0"
+                                      step="any"
+                                      disabled
+                                      name="temperature"
+                                      placeholder="Temperature"
+                                      value={temperature}
                                       onBlur={handleBlur}
                                       // onChange={handleChange}
                                     />
                                     <ErrorMessage
                                       className="error text-danger"
                                       component="span"
-                                      name="dutyCycle"
-                                    />
-                                  </Form.Group>
-                                </Col>
-                                <Col>
-                                  <Label notify="true">FR Distribution</Label>
-                                  <Form.Group>
-                                    <Select
-                                      className="mt-1"
-                                      type="select"
-                                      name="frDistribution"
-                                      styles={customStyles}
-                                      placeholder="FR Distribution"
-                                      onBlur={handleBlur}
-                                      isDisabled={
-                                        writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true &&
-                                          createdBy === userId)
-                                          ? null
-                                          : "disabled"
-                                      }
-                                      value={values.frDistribution}
-                                      onChange={(e) => {
-                                        setFieldValue("frDistribution", e);
-                                      }}
-                                      options={[
-                                        {
-                                          value: "Normal",
-                                          label: "Normal",
-                                        },
-                                        {
-                                          value: "Exponential",
-                                          label: "Exponential",
-                                        },
-                                      ]}
-                                    />
-                                    <ErrorMessage
-                                      className="error text-danger"
-                                      component="span"
-                                      name="frDistribution"
+                                      name="temperature"
                                     />
                                   </Form.Group>
                                 </Col>
                               </Row>
-                              {/* <Row className="mt-3">
+                            )}
+                          </Card>
+                          <Row className="d-flex">
+                            <Col>
+                              <div className="mttr-sec mt-3 ">
+                                <p className=" mb-0 para-tag">Failure Rate</p>
+                              </div>
+                              <Card className="mt-2 mttr-card p-4">
+                                <Row className="mt-3">
+                                  <Col className="mt-3">
+                                    <Label notify="true">Source</Label>
+                                    <Select
+                                      type="select"
+                                      className="mt-1"
+                                      value={values.source}
+                                      styles={customStyles}
+                                      name="source"
+                                      // isDisabled={
+                                      //   (field === "" &&
+                                      //     predicted === "" &&
+                                      //     allocated === "" &&
+                                      //     otherFr === "" &&
+                                      //     writePermission?.write === true) ||
+                                      //   writePermission?.write === "undefined" ||
+                                      //   role === "admin" ||
+                                      //   (isOwner === true && createdBy === userId)
+                                      //     ? null
+                                      //     : "disabled"
+                                      // }
+                                      // isDisabled={
+                                      //   writePermission?.write === true ||
+                                      //   writePermission?.write === "undefined" ||
+                                      //   role === "admin" ||
+                                      //   (isOwner === true && createdBy === userId)
+                                      //     ? null
+                                      //     : "disabled"
+                                      // }
+                                      placeholder="Select"
+                                      onBlur={handleBlur}
+                                      onChange={(e) => {
+                                        setFieldValue("source", e);
+                                        setSource(e);
+                                      }}
+                                      options={[
+                                        {
+                                          value: "Predicted",
+                                          label: "Predicted",
+                                        },
+                                        {
+                                          value: "Field",
+                                          label: "Field",
+                                        },
+                                        {
+                                          value: "Allocated",
+                                          label: "Allocated",
+                                        },
+                                        {
+                                          value: "otherFr",
+                                          label: "Other FR",
+                                        },
+                                      ]}
+                                    />
+                                  </Col>
+                                  <Col className="mt-3">
+                                    {values?.source?.value === "Field" ? (
+                                      <div>
+                                        <Label notify="true">Field</Label>
+                                        <Form.Group>
+                                          <Form.Control
+                                            className="mt-1"
+                                            name="field"
+                                            type="number"
+                                            min="0"
+                                            step="any"
+                                            placeholder="Field"
+                                            onBlur={handleBlur}
+                                            onChange={handleChange}
+                                            value={values.field}
+                                          />
+                                          <ErrorMessage
+                                            className="error text-danger"
+                                            component="span"
+                                            name="field"
+                                          />
+                                        </Form.Group>
+                                      </div>
+                                    ) : values?.source?.value ===
+                                      "Predicted" ? (
+                                      <div>
+                                        <Label notify="true">Predicted</Label>
+                                        <Form.Group>
+                                          <Form.Control
+                                            className="mt-1"
+                                            name="predicted"
+                                            type="number"
+                                            min="0"
+                                            step="any"
+                                            placeholder="Predicted"
+                                            onBlur={handleBlur}
+                                            onChange={handleChange}
+                                            value={values.predicted}
+                                          />
+                                          <ErrorMessage
+                                            className="error text-danger"
+                                            component="span"
+                                            name="predicted"
+                                          />
+                                        </Form.Group>
+                                      </div>
+                                    ) : values?.source?.value ===
+                                      "Allocated" ? (
+                                      <div>
+                                        <Label notify="true">Allocated</Label>
+                                        <Form.Group>
+                                          <Form.Control
+                                            className="mt-1"
+                                            type="number"
+                                            min="0"
+                                            step="any"
+                                            name="allocated"
+                                            placeholder="Allocated"
+                                            onBlur={handleBlur}
+                                            onChange={handleChange}
+                                            value={values.allocated}
+                                          />
+                                          <ErrorMessage
+                                            className="error text-danger"
+                                            component="span"
+                                            name="allocated"
+                                          />
+                                        </Form.Group>
+                                      </div>
+                                    ) : values?.source?.value === "otherFr" ? (
+                                      <div>
+                                        <Label notify="true">Other FR</Label>
+                                        <Form.Group>
+                                          <Form.Control
+                                            className="mt-1"
+                                            name="otherFr"
+                                            type="number"
+                                            step="any"
+                                            min="0"
+                                            placeholder="Other FR"
+                                            value={values.otherFr}
+                                            onBlur={handleBlur}
+                                            onChange={handleChange}
+                                          />
+                                          <ErrorMessage
+                                            className="error text-danger"
+                                            component="span"
+                                            name="otherFr"
+                                          />
+                                        </Form.Group>
+                                      </div>
+                                    ) : null}
+                                  </Col>
+                                </Row>
+                                <Row className="mt-3">
+                                  <Col>
+                                    <Label notify="true">Duty Cycle</Label>
+                                    <Form.Group>
+                                      <Form.Control
+                                        className="mt-1"
+                                        type="text"
+                                        name="dutyCycle"
+                                        placeholder="Duty Cycle"
+                                        value={values.dutyCycle}
+                                        onBlur={handleBlur}
+                                        // onChange={handleChange}
+                                      />
+                                      <ErrorMessage
+                                        className="error text-danger"
+                                        component="span"
+                                        name="dutyCycle"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                  <Col>
+                                    <Label notify="true">FR Distribution</Label>
+                                    <Form.Group>
+                                      <Select
+                                        className="mt-1"
+                                        type="select"
+                                        name="frDistribution"
+                                        styles={customStyles}
+                                        placeholder="FR Distribution"
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          writePermission === true ||
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
+                                            ? null
+                                            : "disabled"
+                                        }
+                                        value={values.frDistribution}
+                                        onChange={(e) => {
+                                          setFieldValue("frDistribution", e);
+                                        }}
+                                        options={[
+                                          {
+                                            value: "Normal",
+                                            label: "Normal",
+                                          },
+                                          {
+                                            value: "Exponential",
+                                            label: "Exponential",
+                                          },
+                                        ]}
+                                      />
+                                      <ErrorMessage
+                                        className="error text-danger"
+                                        component="span"
+                                        name="frDistribution"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                </Row>
+                                {/* <Row className="mt-3">
                                 <Col>
                                   <Label>Allocated</Label>
                                   <Form.Group>
@@ -1262,339 +1274,285 @@ function Index(props) {
                                   </Form.Group>
                                 </Col>
                               </Row> */}
-                              <Row className="mt-3">
-                                <Col>
-                                  <Label>FR Remarks</Label>
-                                  <Form.Group>
-                                    <Form.Control
-                                      className="mt-1"
-                                      type="text"
-                                      name="frRemarks"
-                                      placeholder="FR Remarks"
-                                      onBlur={handleBlur}
-                                      onChange={handleChange}
-                                      value={values.frRemarks}
-                                    />
-                                  </Form.Group>
-                                </Col>
-                                <Col>
-                                  <Label>Standard</Label>
-                                  <Form.Group>
-                                    <Select
-                                      className="mt-1"
-                                      styles={customStyles}
-                                      name="standard"
-                                      type="select"
-                                      placeholder="Select"
-                                      isDisabled={
-                                        writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true &&
-                                          createdBy === userId)
-                                          ? null
-                                          : "disabled"
-                                      }
-                                      value={values.standard}
-                                      onBlur={handleBlur}
-                                      onChange={(e) => {
-                                        if (e.value === "MIL") {
-                                          setShowModal(true);
-                                        } else if (e.value === "NPRD11") {
-                                          setNprdModel(true);
-                                        } else if (e.value === "NPRD16") {
-                                          setNprd2016Model(true);
+                                <Row className="mt-3">
+                                  <Col>
+                                    <Label>FR Remarks</Label>
+                                    <Form.Group>
+                                      <Form.Control
+                                        className="mt-1"
+                                        type="text"
+                                        name="frRemarks"
+                                        placeholder="FR Remarks"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.frRemarks}
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                  <Col>
+                                    <Label>Standard</Label>
+                                    <Form.Group>
+                                      <Select
+                                        className="mt-1"
+                                        styles={customStyles}
+                                        name="standard"
+                                        type="select"
+                                        placeholder="Select"
+                                        isDisabled={
+                                          writePermission === true ||
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
+                                            ? null
+                                            : "disabled"
                                         }
-                                        setFieldValue("standard", e);
-                                      }}
-                                      options={[
-                                        {
-                                          value: "Select",
-                                          label: "Select",
-                                        },
-                                        {
-                                          value: "MIL",
-                                          label: "MIL",
-                                        },
-                                        {
-                                          value: "IEC",
-                                          label: "IEC",
-                                        },
-                                        {
-                                          value: "NPRD11",
-                                          label: "NPRD 2011",
-                                        },
-                                        {
-                                          value: "NPRD16",
-                                          label: "NPRD 2016",
-                                        },
-                                      ]}
-                                    />
-                                  </Form.Group>
-                                </Col>
-                              </Row>
-                              <Row className="mt-3">
-                                <Col>
-                                  <Label>FR Offset Operand</Label>
-                                  <Form.Group>
-                                    <Select
-                                      className="mt-1"
-                                      type="select"
-                                      name="operand"
-                                      styles={customStyles}
-                                      isDisabled={
-                                        writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true &&
-                                          createdBy === userId)
-                                          ? null
-                                          : "disabled"
-                                      }
-                                      placeholder="Select"
-                                      onBlur={handleBlur}
-                                      onChange={(e) => {
-                                        setFieldValue("operand", e);
-                                      }}
-                                      options={[
-                                        {
-                                          value: "+",
-                                          label: "+",
-                                        },
-                                        {
-                                          value: "-",
-                                          label: "-",
-                                        },
-                                        {
-                                          value: "*",
-                                          label: "*",
-                                        },
-                                        {
-                                          value: "/",
-                                          label: "/",
-                                        },
-                                      ]}
-                                      value={values.operand}
-                                    />
-                                    {/* <ErrorMessage
+                                        value={values.standard}
+                                        onBlur={handleBlur}
+                                        onChange={(e) => {
+                                          if (e.value === "MIL") {
+                                            setShowModal(true);
+                                          } else if (e.value === "NPRD11") {
+                                            setNprdModel(true);
+                                          } else if (e.value === "NPRD16") {
+                                            setNprd2016Model(true);
+                                          }
+                                          setFieldValue("standard", e);
+                                          setPartTypeNprdDesc2016Data();
+                                        }}
+                                        options={[
+                                          {
+                                            value: "Select",
+                                            label: "Select",
+                                          },
+                                          {
+                                            value: "MIL",
+                                            label: "MIL",
+                                          },
+                                          {
+                                            value: "IEC",
+                                            label: "IEC",
+                                          },
+                                          {
+                                            value: "NPRD11",
+                                            label: "NPRD 2011",
+                                          },
+                                          {
+                                            value: "NPRD16",
+                                            label: "NPRD 2016",
+                                          },
+                                        ]}
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                </Row>
+                                <Row className="mt-3">
+                                  <Col>
+                                    <Label>FR Offset Operand</Label>
+                                    <Form.Group>
+                                      <Select
+                                        className="mt-1"
+                                        type="select"
+                                        name="operand"
+                                        styles={customStyles}
+                                        isDisabled={
+                                          writePermission === true ||
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
+                                            ? null
+                                            : "disabled"
+                                        }
+                                        placeholder="Select"
+                                        onBlur={handleBlur}
+                                        onChange={(e) => {
+                                          setFieldValue("operand", e);
+                                        }}
+                                        options={[
+                                          {
+                                            value: "+",
+                                            label: "+",
+                                          },
+                                          {
+                                            value: "-",
+                                            label: "-",
+                                          },
+                                          {
+                                            value: "*",
+                                            label: "*",
+                                          },
+                                          {
+                                            value: "/",
+                                            label: "/",
+                                          },
+                                        ]}
+                                        value={values.operand}
+                                      />
+                                      {/* <ErrorMessage
                                       className="error text-danger"
                                       component="span"
                                       name="operand"
                                     /> */}
-                                  </Form.Group>
-                                </Col>
-                                <Col>
-                                  <Label>
-                                    Failure Rate Offset
-                                  </Label>
-                                  <Form.Group>
-                                    <Form.Control
-                                      className="mt-1"
-                                      type="number"
-                                      min="0"
-                                      step="any"
-                                      name="failureRate"
-                                      placeholder="Failure Rate Offset"
-                                      onBlur={handleBlur}
-                                      onChange={handleChange}
-                                      value={values.failureRate}
-                                    />
-                                    {/* <ErrorMessage
+                                    </Form.Group>
+                                  </Col>
+                                  <Col>
+                                    <Label>Failure Rate Offset</Label>
+                                    <Form.Group>
+                                      <Form.Control
+                                        className="mt-1"
+                                        type="number"
+                                        min="0"
+                                        step="any"
+                                        name="failureRate"
+                                        placeholder="Failure Rate Offset"
+                                        onBlur={handleBlur}
+                                        onChange={handleChange}
+                                        value={values.failureRate}
+                                      />
+                                      {/* <ErrorMessage
                                       className="error text-danger"
                                       component="span"
                                       name="failureRate"
                                     /> */}
-                                  </Form.Group>
-                                </Col>
-                              </Row>
-                              <Row>
-                                <Col>
-                                  <Form.Group className="mt-3">
-                                    <Label>FR unit</Label>
-                                    <Select
-                                      id="frUnit"
-                                      styles={customStyles}
-                                      onChange={(event) => {
-                                        setFieldValue("frUnit", event);
-                                      }}
-                                      onBlur={handleBlur}
-                                      name="frUnit"
-                                      // isDisabled={
-                                      //   writePermission?.write === true ||
-                                      //   writePermission?.write ===
-                                      //     "undefined" ||
-                                      //   role === "admin" ||
-                                      //   (isOwner === true &&
-                                      //     createdBy === userId)
-                                      //     ? null
-                                      //     : "disabled"
-                                      // }
-                                      value={values.frUnit}
-                                      options={[
-                                        {
-                                          options: FrUnit.map((list) => ({
-                                            value: list.value,
-                                            label: list.label,
-                                          })),
-                                        },
-                                      ]}
-                                      className="mt-1"
-                                    />
-                                  </Form.Group>
-                                </Col>
-                                <Col></Col>
-                              </Row>
-                            </Card>
-                            <div className="d-flex flex-direction-row justify-content-end  mt-4 mb-5">
-                              <Button
-                                className="delete-cancel-btn  me-2"
-                                variant="outline-secondary"
-                                type="reset"
-                              >
-                                CANCEL
-                              </Button>
-                              <Button
-                                className="save-btn "
-                                type="submit"
-                                disabled={!productId}
-                              >
-                                SAVE CHANGES
-                              </Button>
-                              <div>
-                                <Modal
-                                  show={nprdModel}
-                                  centered
-                                  onHide={() => setNprdModel(!nprdModel)}
+                                    </Form.Group>
+                                  </Col>
+                                </Row>
+                                <Row>
+                                  <Col>
+                                    <Form.Group className="mt-3">
+                                      <Label>FR unit</Label>
+                                      <Select
+                                        id="frUnit"
+                                        styles={customStyles}
+                                        onChange={(event) => {
+                                          setFieldValue("frUnit", event);
+                                        }}
+                                        onBlur={handleBlur}
+                                        name="frUnit"
+                                        // isDisabled={
+                                        //   writePermission?.write === true ||
+                                        //   writePermission?.write ===
+                                        //     "undefined" ||
+                                        //   role === "admin" ||
+                                        //   (isOwner === true &&
+                                        //     createdBy === userId)
+                                        //     ? null
+                                        //     : "disabled"
+                                        // }
+                                        value={values.frUnit}
+                                        options={[
+                                          {
+                                            options: FrUnit.map((list) => ({
+                                              value: list.value,
+                                              label: list.label,
+                                            })),
+                                          },
+                                        ]}
+                                        className="mt-1"
+                                      />
+                                    </Form.Group>
+                                  </Col>
+                                  <Col></Col>
+                                </Row>
+                              </Card>
+                              <div className="d-flex flex-direction-row justify-content-end  mt-4 mb-5">
+                                <Button
+                                  className="delete-cancel-btn  me-2"
+                                  variant="outline-secondary"
+                                  type="reset"
                                 >
-                                  <Formik
-                                    enableReinitialize={true}
-                                    initialValues={{
-                                      partTypeNprd: partTypeNprd
-                                        ? partTypeNprd
-                                        : "",
-                                      quality: partTypeQuality
-                                        ? partTypeQuality
-                                        : "",
-                                      partTypeDescr: partTypeDescr
-                                        ? partTypeDescr
-                                        : "",
-                                      FR: FR ? FR : "",
-                                    }}
-                                    validationSchema={nprdSchema}
-                                    onSubmit={(values, { resetForm }) =>
-                                      console.log("values...")
-                                    }
+                                  CANCEL
+                                </Button>
+                                <Button
+                                  className="save-btn "
+                                  type="submit"
+                                  disabled={!productId}
+                                >
+                                  SAVE CHANGES
+                                </Button>
+                                <div>
+                                  <Modal
+                                    show={nprdModel}
+                                    centered
+                                    onHide={() => setNprdModel(!nprdModel)}
                                   >
-                                    {(formik) => {
-                                      const {
-                                        values,
-                                        handleChange,
-                                        handleSubmit,
-                                        handleBlur,
-                                        isValid,
-                                        mainProductForm,
-                                        setFieldValue,
-                                      } = formik;
-                                      return (
-                                        <form
-                                          onSubmit={handleSubmit}
-                                          className="d-flex justify-content-center align-items-center"
-                                        >
-                                          <div className="nprdmodal">
-                                            <div className="d-flex justify-content-end m-1">
-                                              <Modal.Header
-                                                closeButton
-                                                style={{ borderBottom: 0 }}
-                                                onClick={() => {
-                                                  setNprdModel(false);
-                                                  setPartTypeNprd();
-                                                  setPartTypeDescr();
-                                                  setPartTypeQuality();
-                                                  setFR();
-                                                  setRowClicked();
-                                                  setData();
-                                                }}
-                                              />
-                                            </div>
-                                            <div className="mttr-sec1 mt-3">
-                                              <p className="mb-0 para-tag">
-                                                NPRD 2011
-                                              </p>
-                                            </div>
-
-                                            <Card className="modal-card m-2">
-                                              {isSpinning ? (
-                                                <Spinner
-                                                  className="spinner_2"
-                                                  animation="border"
-                                                  variant="secondary"
-                                                  centered
+                                    <Formik
+                                      enableReinitialize={true}
+                                      initialValues={{
+                                        partTypeNprd: partTypeNprd
+                                          ? partTypeNprd
+                                          : "",
+                                        quality: partTypeQuality
+                                          ? partTypeQuality
+                                          : "",
+                                        partTypeDescr: partTypeDescr
+                                          ? partTypeDescr
+                                          : "",
+                                        FR: FR ? FR : "",
+                                      }}
+                                      validationSchema={nprdSchema}
+                                      onSubmit={(values, { resetForm }) =>
+                                        console.log("values...")
+                                      }
+                                    >
+                                      {(formik) => {
+                                        const {
+                                          values,
+                                          handleChange,
+                                          handleSubmit,
+                                          handleBlur,
+                                          isValid,
+                                          mainProductForm,
+                                          setFieldValue,
+                                        } = formik;
+                                        return (
+                                          <form
+                                            onSubmit={handleSubmit}
+                                            className="d-flex justify-content-center align-items-center"
+                                          >
+                                            <div className="nprdmodal">
+                                              <div className="d-flex justify-content-end m-1">
+                                                <Modal.Header
+                                                  closeButton
+                                                  style={{ borderBottom: 0 }}
+                                                  onClick={() => {
+                                                    setNprdModel(false);
+                                                    setPartTypeNprd();
+                                                    setPartTypeDescr();
+                                                    setPartTypeQuality();
+                                                    setFR();
+                                                    setRowClicked();
+                                                    setData();
+                                                  }}
                                                 />
-                                              ) : (
-                                                <div>
-                                                  <Row className="mx-3 my-4">
-                                                    <Col>
-                                                      <Label notify={true}>
-                                                        Part Type
-                                                      </Label>
-                                                      <Form.Group>
-                                                        <Select
-                                                          className="mt-1"
-                                                          // styles={customStyles}
-                                                          name="partTypeNprd"
-                                                          type="select"
-                                                          isSearchable={true}
-                                                          placeholder="Select"
-                                                          isDisabled={
-                                                            writePermission ===
-                                                              true ||
-                                                            writePermission ===
-                                                              "undefined" ||
-                                                            role === "admin" ||
-                                                            (isOwner === true &&
-                                                              createdBy ===
-                                                                userId)
-                                                              ? null
-                                                              : "disabled"
-                                                          }
-                                                          value={
-                                                            values.partTypeNprd
-                                                          }
-                                                          onBlur={handleBlur}
-                                                          onChange={(e) => {
-                                                            setFieldValue(
-                                                              "partTypeNprd",
-                                                              e
-                                                            );
-                                                            setPartTypeNprd(e);
-                                                            setPartTypeDescr();
-                                                          }}
-                                                          options={nprdPartType.map(
-                                                            (list) => ({
-                                                              value:
-                                                                list.PartTypeId,
-                                                              label:
-                                                                list.PartType,
-                                                            })
-                                                          )}
-                                                        />
-                                                        <ErrorMessage
-                                                          className="error text-danger"
-                                                          component="span"
-                                                          name="partTypeNprd"
-                                                        />
-                                                      </Form.Group>
-                                                    </Col>
-                                                    {partTypeNprd ? (
+                                              </div>
+                                              <div className="mttr-sec1 mt-3">
+                                                <p className="mb-0 para-tag">
+                                                  NPRD 2011
+                                                </p>
+                                              </div>
+
+                                              <Card className="modal-card m-2">
+                                                {isSpinning ? (
+                                                  <Spinner
+                                                    className="spinner_2"
+                                                    animation="border"
+                                                    variant="secondary"
+                                                    centered
+                                                  />
+                                                ) : (
+                                                  <div>
+                                                    <Row className="mx-3 my-4">
                                                       <Col>
                                                         <Label notify={true}>
-                                                          Part Type Description
+                                                          Part Type
                                                         </Label>
                                                         <Form.Group>
                                                           <Select
                                                             className="mt-1"
                                                             // styles={customStyles}
-                                                            name="partTypeDescr"
+                                                            name="partTypeNprd"
                                                             type="select"
                                                             isSearchable={true}
                                                             placeholder="Select"
@@ -1613,85 +1571,151 @@ function Index(props) {
                                                                 : "disabled"
                                                             }
                                                             value={
-                                                              values.partTypeDescr
+                                                              values.partTypeNprd
                                                             }
                                                             onBlur={handleBlur}
                                                             onChange={(e) => {
                                                               setFieldValue(
-                                                                "partTypeDescr",
+                                                                "partTypeNprd",
                                                                 e
                                                               );
-                                                              setPartTypeDescr(
+                                                              setPartTypeNprd(
                                                                 e
                                                               );
+                                                              setPartTypeDescr();
                                                             }}
-                                                            options={nprdPartDes
-                                                              .filter(
-                                                                (item) =>
-                                                                  item?.PartTypeId ===
-                                                                  partTypeNprd?.value
-                                                              )
-                                                              .map((item) => ({
-                                                                label:
-                                                                  item?.PartDescrFull,
+                                                            options={nprdPartType.map(
+                                                              (list) => ({
                                                                 value:
-                                                                  item?.PartDescrId,
-                                                              }))}
+                                                                  list.PartTypeId,
+                                                                label:
+                                                                  list.PartType,
+                                                              })
+                                                            )}
                                                           />
                                                           <ErrorMessage
                                                             className="error text-danger"
                                                             component="span"
-                                                            name="partTypeDescr"
+                                                            name="partTypeNprd"
                                                           />
                                                         </Form.Group>
                                                       </Col>
-                                                    ) : null}
-                                                  </Row>
-                                                  <Row className="mx-3 my-4">
-                                                    <Col>
-                                                      <Label notify="true">
-                                                        Quality
-                                                      </Label>
-                                                      <Form.Group>
-                                                        <Select
-                                                          className="mt-1"
-                                                          name="quality"
-                                                          type="select"
-                                                          placeholder="Select"
-                                                          styles={customStyles}
-                                                          value={
-                                                            partTypeQuality
-                                                              ? {
-                                                                  label:
-                                                                    partTypeQuality,
-                                                                  value:
-                                                                    partTypeQuality,
-                                                                }
-                                                              : values.quality
-                                                          }
-                                                          onBlur={handleBlur}
-                                                          onChange={(e) => {
-                                                            setFieldValue(
-                                                              "quality",
-                                                              e.value
-                                                            );
-                                                            setPartTypeQuality(
-                                                              e.value
-                                                            );
-                                                            getFRPValue(e);
-                                                          }}
-                                                          options={
-                                                            qualityOptions
-                                                          }
-                                                        />
-                                                        <ErrorMessage
-                                                          className="error text-danger"
-                                                          component="span"
-                                                          name="quality"
-                                                        />
-                                                      </Form.Group>
-                                                    </Col>
-                                                    {/* <Col>
+                                                      {partTypeNprd ? (
+                                                        <Col>
+                                                          <Label notify={true}>
+                                                            Part Type
+                                                            Description
+                                                          </Label>
+                                                          <Form.Group>
+                                                            <Select
+                                                              className="mt-1"
+                                                              // styles={customStyles}
+                                                              name="partTypeDescr"
+                                                              type="select"
+                                                              isSearchable={
+                                                                true
+                                                              }
+                                                              placeholder="Select"
+                                                              isDisabled={
+                                                                writePermission ===
+                                                                  true ||
+                                                                writePermission ===
+                                                                  "undefined" ||
+                                                                role ===
+                                                                  "admin" ||
+                                                                (isOwner ===
+                                                                  true &&
+                                                                  createdBy ===
+                                                                    userId)
+                                                                  ? null
+                                                                  : "disabled"
+                                                              }
+                                                              value={
+                                                                values.partTypeDescr
+                                                              }
+                                                              onBlur={
+                                                                handleBlur
+                                                              }
+                                                              onChange={(e) => {
+                                                                setFieldValue(
+                                                                  "partTypeDescr",
+                                                                  e
+                                                                );
+                                                                setPartTypeDescr(
+                                                                  e
+                                                                );
+                                                              }}
+                                                              options={nprdPartDes
+                                                                .filter(
+                                                                  (item) =>
+                                                                    item?.PartTypeId ===
+                                                                    partTypeNprd?.value
+                                                                )
+                                                                .map(
+                                                                  (item) => ({
+                                                                    label:
+                                                                      item?.PartDescrFull,
+                                                                    value:
+                                                                      item?.PartDescrId,
+                                                                  })
+                                                                )}
+                                                            />
+                                                            <ErrorMessage
+                                                              className="error text-danger"
+                                                              component="span"
+                                                              name="partTypeDescr"
+                                                            />
+                                                          </Form.Group>
+                                                        </Col>
+                                                      ) : null}
+                                                    </Row>
+                                                    <Row className="mx-3 my-4">
+                                                      <Col>
+                                                        <Label notify="true">
+                                                          Quality
+                                                        </Label>
+                                                        <Form.Group>
+                                                          <Select
+                                                            className="mt-1"
+                                                            name="quality"
+                                                            type="select"
+                                                            placeholder="Select"
+                                                            styles={
+                                                              customStyles
+                                                            }
+                                                            value={
+                                                              partTypeQuality
+                                                                ? {
+                                                                    label:
+                                                                      partTypeQuality,
+                                                                    value:
+                                                                      partTypeQuality,
+                                                                  }
+                                                                : values.quality
+                                                            }
+                                                            onBlur={handleBlur}
+                                                            onChange={(e) => {
+                                                              setFieldValue(
+                                                                "quality",
+                                                                e.value
+                                                              );
+                                                              setPartTypeQuality(
+                                                                e.value
+                                                              );
+                                                              getFRPValue(e);
+                                                            }}
+                                                            options={
+                                                              qualityOptions
+                                                            }
+                                                          />
+                                                          <ErrorMessage
+                                                            className="error text-danger"
+                                                            component="span"
+                                                            name="quality"
+                                                          />
+                                                        </Form.Group>
+                                                      </Col>
+                                                      {/* <Col>
                                                       <Label notify="true">
                                                         FR
                                                       </Label>
@@ -1720,333 +1744,283 @@ function Index(props) {
                                                         />
                                                       </Form.Group>
                                                     </Col> */}
-                                                  </Row>
-                                                  {partTypeNprd?.value &&
-                                                  partTypeDescr?.value &&
-                                                  !rowClicked ? (
-                                                    <div className="mt-3 p-2">
-                                                      <ThemeProvider
-                                                        theme={tableTheme}
-                                                      >
-                                                        <MaterialTable
-                                                          title="Manual Library Records"
-                                                          columns={columns}
-                                                          data={data}
-                                                          icons={tableIcons}
-                                                          // parentChildData={(row, rows) =>
-                                                          //   rows.find((a) => a.id === row.productId)
-                                                          // }
-                                                          options={{
-                                                            actionsColumnIndex:
-                                                              -1,
-                                                            addRowPosition:
-                                                              "last",
-                                                            headerStyle: {
-                                                              backgroundColor:
-                                                                "#cce6ff",
-                                                              fontWeight:
-                                                                "bold",
-                                                              zIndex: 0,
-                                                            },
-                                                            defaultExpanded: true,
-                                                            rowStyle,
-                                                          }}
-                                                          onRowClick={(
-                                                            event,
-                                                            rowData
-                                                          ) => {
-                                                            setPredicted(
-                                                              rowData?.FR
-                                                            );
-                                                            setSelectedNprdFR(
+                                                    </Row>
+                                                    {partTypeNprd?.value &&
+                                                    partTypeDescr?.value &&
+                                                    !rowClicked ? (
+                                                      <div className="mt-3 p-2">
+                                                        <ThemeProvider
+                                                          theme={tableTheme}
+                                                        >
+                                                          <MaterialTable
+                                                            title="Manual Library Records"
+                                                            columns={columns}
+                                                            data={data}
+                                                            icons={tableIcons}
+                                                            // parentChildData={(row, rows) =>
+                                                            //   rows.find((a) => a.id === row.productId)
+                                                            // }
+                                                            options={{
+                                                              actionsColumnIndex:
+                                                                -1,
+                                                              addRowPosition:
+                                                                "last",
+                                                              headerStyle: {
+                                                                backgroundColor:
+                                                                  "#cce6ff",
+                                                                fontWeight:
+                                                                  "bold",
+                                                                zIndex: 0,
+                                                              },
+                                                              defaultExpanded: true,
+                                                              rowStyle,
+                                                            }}
+                                                            onRowClick={(
+                                                              event,
                                                               rowData
-                                                            );
-                                                            setPartTypeQuality(
-                                                              rowData?.Quality
-                                                            );
-                                                            setPartTypeNprd({
-                                                              label:
-                                                                rowData?.PartTypeTxt,
-                                                              value:
-                                                                rowData?.PartTypeId,
-                                                            });
-                                                            setPartTypeDescr({
-                                                              label:
-                                                                rowData?.PartDescrFull,
-                                                              value:
-                                                                rowData?.PartDescrId,
-                                                            });
-                                                            setFR(rowData?.FR);
-                                                          }}
-                                                          localization={{
-                                                            body: {
-                                                              emptyDataSourceMessage:
-                                                                "No records to display for this partType and Environment Please Select Anyother partType",
-                                                            },
-                                                          }}
-                                                        />
-                                                      </ThemeProvider>
-                                                    </div>
-                                                  ) : null}
-                                                </div>
-                                              )}
-                                            </Card>
-                                            <div className="d-flex flex-direction-row justify-content-end m-2">
-                                              <Button
-                                                className="delete-cancel-btn me-2"
-                                                variant="outline-secondary"
-                                                type="reset"
-                                                onClick={(e) => {
-                                                  setNprdModel(false);
-                                                }}
-                                              >
-                                                CANCEL
-                                              </Button>
-                                              <Button
-                                                className="save-btn"
-                                                type="button"
-                                                disabled={
-                                                  !productId &
-                                                  values.partTypeDescr &
-                                                  values.partTypeNprd &
-                                                  values.quality
-                                                }
-                                                onClick={(e) => {
-                                                  if (
-                                                    partTypeNprd &&
-                                                    partTypeDescr
-                                                  ) {
+                                                            ) => {
+                                                              setPredicted(
+                                                                rowData?.FR
+                                                              );
+                                                              setSelectedNprdFR(
+                                                                rowData
+                                                              );
+                                                              setPartTypeQuality(
+                                                                rowData?.Quality
+                                                              );
+                                                              setPartTypeNprd({
+                                                                label:
+                                                                  rowData?.PartTypeTxt,
+                                                                value:
+                                                                  rowData?.PartTypeId,
+                                                              });
+                                                              setPartTypeDescr({
+                                                                label:
+                                                                  rowData?.PartDescrFull,
+                                                                value:
+                                                                  rowData?.PartDescrId,
+                                                              });
+                                                              setFR(
+                                                                rowData?.FR
+                                                              );
+                                                            }}
+                                                            localization={{
+                                                              body: {
+                                                                emptyDataSourceMessage:
+                                                                  "No records to display for this partType and Environment Please Select Anyother partType",
+                                                              },
+                                                            }}
+                                                          />
+                                                        </ThemeProvider>
+                                                      </div>
+                                                    ) : null}
+                                                  </div>
+                                                )}
+                                              </Card>
+                                              <div className="d-flex flex-direction-row justify-content-end m-2">
+                                                <Button
+                                                  className="delete-cancel-btn me-2"
+                                                  variant="outline-secondary"
+                                                  type="reset"
+                                                  onClick={(e) => {
                                                     setNprdModel(false);
-                                                    toast.success(
-                                                      "FR Selected"
-                                                    );
+                                                  }}
+                                                >
+                                                  CANCEL
+                                                </Button>
+                                                <Button
+                                                  className="save-btn"
+                                                  type="button"
+                                                  disabled={
+                                                    !productId &
+                                                    values.partTypeDescr &
+                                                    values.partTypeNprd &
+                                                    values.quality
                                                   }
-                                                  setPartTypeNprd();
-                                                  setPartTypeDescr();
-                                                  setPartTypeQuality();
-                                                  setFR();
-                                                  setRowClicked();
-                                                  setNprdModel(!nprdModel);
-                                                }}
-                                              >
-                                                CALCULATE FR
-                                              </Button>
+                                                  onClick={(e) => {
+                                                    if (
+                                                      partTypeNprd &&
+                                                      partTypeDescr
+                                                    ) {
+                                                      setNprdModel(false);
+                                                      toast.success(
+                                                        "FR Selected"
+                                                      );
+                                                    }
+                                                    setPartTypeNprd();
+                                                    setPartTypeDescr();
+                                                    setPartTypeQuality();
+                                                    setFR();
+                                                    setRowClicked();
+                                                    setNprdModel(!nprdModel);
+                                                  }}
+                                                >
+                                                  CALCULATE FR
+                                                </Button>
+                                              </div>
                                             </div>
-                                          </div>
-                                        </form>
-                                      );
-                                    }}
-                                  </Formik>
-                                </Modal>
-                                <Modal
-                                  show={showModal}
-                                  position="center"
-                                  onHide={() => setShowModal(false)}
-                                >
-                                  <div className="modal-content">
-                                    <div className="m-3">
-                                      <FontAwesomeIcon
-                                        icon={faCircleXmark}
-                                        fontSize={"40px"}
-                                        color="#1D5460"
-                                        onClick={() => setShowModal(false)}
-                                        className="close-icon"
-                                      />
+                                          </form>
+                                        );
+                                      }}
+                                    </Formik>
+                                  </Modal>
+                                  <Modal
+                                    show={showModal}
+                                    position="center"
+                                    onHide={() => setShowModal(false)}
+                                  >
+                                    <div className="modal-content">
+                                      <div className="m-3">
+                                        <FontAwesomeIcon
+                                          icon={faCircleXmark}
+                                          fontSize={"40px"}
+                                          color="#1D5460"
+                                          onClick={() => setShowModal(false)}
+                                          className="close-icon"
+                                        />
+                                      </div>
+                                      <Modal.Footer
+                                        className="d-flex mt-3 mb-5"
+                                        style={{ marginTop: 0 }}
+                                      >
+                                        {partType?.value === "Resistor" ? (
+                                          <Resistor />
+                                        ) : partType?.value === "IC-Memory" ||
+                                          partType?.value === "IC-Analog" ? (
+                                          <IcMemory />
+                                        ) : partType?.value ===
+                                          "Potentiometer" ? (
+                                          <Potentiometer />
+                                        ) : partType?.value === "Capacitor" ? (
+                                          <Capacitor />
+                                        ) : partType?.value === "Switch" ? (
+                                          <Switch />
+                                        ) : partType?.value === "Connector" ? (
+                                          <Connector />
+                                        ) : partType?.value === "LFDiode" ? (
+                                          <LFDiode />
+                                        ) : partType?.value ===
+                                          "LFTransistor" ? (
+                                          <LFTransistor />
+                                        ) : partType?.value ===
+                                          "HFTransistor" ? (
+                                          <HFTransistor />
+                                        ) : partType?.value ===
+                                          "Optoelectronic" ? (
+                                          <Optoelectronic />
+                                        ) : partType?.value === "Inductive" ? (
+                                          <Inductive />
+                                        ) : partType?.value === "Connection" ? (
+                                          <Connection />
+                                        ) : partType?.value === "PWB" ? (
+                                          <PWB />
+                                        ) : partType?.value === "Rotating" ? (
+                                          <Rotating />
+                                        ) : partType?.value === "Crystal" ? (
+                                          <Crystal />
+                                        ) : partType?.value === "Breaker" ? (
+                                          <Breaker />
+                                        ) : partType?.value === "Meter" ? (
+                                          <Meter />
+                                        ) : partType?.value === "Lamp" ? (
+                                          <Lamp />
+                                        ) : partType?.value ===
+                                          "Misellaneous" ? (
+                                          <Miscellaneous />
+                                        ) : partType?.value === "Tube" ? (
+                                          <Tube />
+                                        ) : (
+                                          <p style={{ color: "red" }}>
+                                            Part Type is Empty.
+                                          </p>
+                                        )}
+                                      </Modal.Footer>
                                     </div>
-                                    <Modal.Footer
-                                      className="d-flex mt-3 mb-5"
-                                      style={{ marginTop: 0 }}
-                                    >
-                                      {partType?.value === "Resistor" ? (
-                                        <Resistor />
-                                      ) : partType?.value === "IC-Memory" ||
-                                        partType?.value === "IC-Analog" ? (
-                                        <IcMemory />
-                                      ) : partType?.value ===
-                                        "Potentiometer" ? (
-                                        <Potentiometer />
-                                      ) : partType?.value === "Capacitor" ? (
-                                        <Capacitor />
-                                      ) : partType?.value === "Switch" ? (
-                                        <Switch />
-                                      ) : partType?.value === "Connector" ? (
-                                        <Connector />
-                                      ) : partType?.value === "LFDiode" ? (
-                                        <LFDiode />
-                                      ) : partType?.value === "LFTransistor" ? (
-                                        <LFTransistor />
-                                      ) : partType?.value === "HFTransistor" ? (
-                                        <HFTransistor />
-                                      ) : partType?.value ===
-                                        "Optoelectronic" ? (
-                                        <Optoelectronic />
-                                      ) : partType?.value === "Inductive" ? (
-                                        <Inductive />
-                                      ) : partType?.value === "Connection" ? (
-                                        <Connection />
-                                      ) : partType?.value === "PWB" ? (
-                                        <PWB />
-                                      ) : partType?.value === "Rotating" ? (
-                                        <Rotating />
-                                      ) : partType?.value === "Crystal" ? (
-                                        <Crystal />
-                                      ) : partType?.value === "Breaker" ? (
-                                        <Breaker />
-                                      ) : partType?.value === "Meter" ? (
-                                        <Meter />
-                                      ) : partType?.value === "Lamp" ? (
-                                        <Lamp />
-                                      ) : partType?.value === "Misellaneous" ? (
-                                        <Miscellaneous />
-                                      ) : partType?.value === "Tube" ? (
-                                        <Tube />
-                                      ) : (
-                                        <p style={{ color: "red" }}>
-                                          Part Type is Empty.
-                                        </p>
-                                      )}
-                                    </Modal.Footer>
-                                  </div>
-                                </Modal>
-                              </div>
-                              <div>
-                                <Modal
-                                  show={nprd2016Model}
-                                  centered
-                                  onHide={() =>
-                                    setNprd2016Model(!nprd2016Model)
-                                  }
-                                >
-                                  <Formik
-                                    enableReinitialize={true}
-                                    initialValues={{
-                                      partTypeNprd: partType2016Nprd
-                                        ? partType2016Nprd
-                                        : "",
-                                      quality2016: partType2016Quality
-                                        ? partType2016Quality
-                                        : "",
-                                      partTypeDescr: partType2016Descr
-                                        ? partType2016Descr
-                                        : "",
-                                      FR: FR ? FR : "",
-                                    }}
-                                    validationSchema={nprdSchema}
-                                    onSubmit={(values, { resetForm }) =>
-                                      console.log("values...")
+                                  </Modal>
+                                </div>
+                                <div>
+                                  <Modal
+                                    show={nprd2016Model}
+                                    centered
+                                    onHide={() =>
+                                      setNprd2016Model(!nprd2016Model)
                                     }
                                   >
-                                    {(formik) => {
-                                      const {
-                                        values,
-                                        handleChange,
-                                        handleSubmit,
-                                        handleBlur,
-                                        isValid,
-                                        mainProductForm,
-                                        setFieldValue,
-                                      } = formik;
-                                      return (
-                                        <form
-                                          onSubmit={handleSubmit}
-                                          className="d-flex justify-content-center align-items-center"
-                                        >
-                                          <div className="nprdmodal">
-                                            <div className="d-flex justify-content-end m-1">
-                                              <Modal.Header
-                                                closeButton
-                                                style={{ borderBottom: 0 }}
-                                                onClick={() => {
-                                                  setNprd2016Model(false);
-                                                  setPartType2016Nprd();
-                                                  setPartType2016Descr();
-                                                  setPartType2016Quality();
-                                                  setFR();
-                                                  setRowClicked();
-                                                  setData();
-                                                }}
-                                              />
-                                            </div>
-                                            <div className="mttr-sec1 mt-3 ">
-                                              <p className=" mb-0 para-tag">
-                                                NPRD 2016
-                                              </p>
-                                            </div>
-                                            <Card className="modal-card m-2">
-                                              {isSpinning ? (
-                                                <Spinner
-                                                  className="spinner_2"
-                                                  animation="border"
-                                                  variant="secondary"
-                                                  centered
+                                    <Formik
+                                      enableReinitialize={true}
+                                      initialValues={{
+                                        partTypeNprd: partType2016Nprd
+                                          ? partType2016Nprd
+                                          : "",
+                                        quality2016: partType2016Quality
+                                          ? partType2016Quality
+                                          : "",
+                                        partTypeDescr: partType2016Descr
+                                          ? partType2016Descr
+                                          : "",
+                                        FR: FR ? FR : "",
+                                      }}
+                                      validationSchema={nprdSchema}
+                                      onSubmit={(values, { resetForm }) =>
+                                        console.log("values...")
+                                      }
+                                    >
+                                      {(formik) => {
+                                        const {
+                                          values,
+                                          handleChange,
+                                          handleSubmit,
+                                          handleBlur,
+                                          isValid,
+                                          mainProductForm,
+                                          setFieldValue,
+                                        } = formik;
+                                        return (
+                                          <form
+                                            onSubmit={handleSubmit}
+                                            className="d-flex justify-content-center align-items-center"
+                                          >
+                                            <div className="nprdmodal">
+                                              <div className="d-flex justify-content-end m-1">
+                                                <Modal.Header
+                                                  closeButton
+                                                  style={{ borderBottom: 0 }}
+                                                  onClick={() => {
+                                                    setNprd2016Model(false);
+                                                    setPartType2016Nprd();
+                                                    setPartType2016Descr();
+                                                    setPartType2016Quality();
+                                                    setFR();
+                                                    setRowClicked();
+                                                    setData();
+                                                  }}
                                                 />
-                                              ) : (
-                                                <div>
-                                                  <Row className="mx-3 my-4">
-                                                    <Col>
-                                                      <Label notify={true}>
-                                                        Part Type
-                                                      </Label>
-                                                      <Form.Group>
-                                                        <Select
-                                                          className="mt-1"
-                                                          // styles={customStyles}
-                                                          name="partTypeNprd"
-                                                          type="select"
-                                                          isSearchable={true}
-                                                          placeholder="Select"
-                                                          isDisabled={
-                                                            writePermission ===
-                                                              true ||
-                                                            writePermission ===
-                                                              "undefined" ||
-                                                            role === "admin" ||
-                                                            (isOwner === true &&
-                                                              createdBy ===
-                                                                userId)
-                                                              ? null
-                                                              : "disabled"
-                                                          }
-                                                          value={
-                                                            values.partTypeNprd
-                                                          }
-                                                          onBlur={handleBlur}
-                                                          onChange={(e) => {
-                                                            setFieldValue(
-                                                              "partTypeNprd",
-                                                              e
-                                                            );
-                                                            setPartType2016Nprd(
-                                                              e
-                                                            );
-                                                            setPartType2016Descr();
-                                                          }}
-                                                          options={partTypeNprd2016Data.map(
-                                                            (list) => ({
-                                                              value:
-                                                                list.PartTypeId,
-                                                              label:
-                                                                list.PartType,
-                                                            })
-                                                          )}
-                                                        />
-                                                        <ErrorMessage
-                                                          className="error text-danger"
-                                                          component="span"
-                                                          name="partTypeNprd"
-                                                        />
-                                                      </Form.Group>
-                                                    </Col>
-                                                    {partType2016Nprd ? (
+                                              </div>
+                                              <div className="mttr-sec1 mt-3 ">
+                                                <p className=" mb-0 para-tag">
+                                                  NPRD 2016
+                                                </p>
+                                              </div>
+                                              <Card className="modal-card m-2">
+                                                {isSpinning ? (
+                                                  <Spinner
+                                                    className="spinner_2"
+                                                    animation="border"
+                                                    variant="secondary"
+                                                    centered
+                                                  />
+                                                ) : (
+                                                  <div>
+                                                    <Row className="mx-3 my-4">
                                                       <Col>
                                                         <Label notify={true}>
-                                                          Part Type Description
+                                                          Part Type
                                                         </Label>
                                                         <Form.Group>
                                                           <Select
                                                             className="mt-1"
                                                             // styles={customStyles}
-                                                            name="partTypeDescr"
+                                                            name="partTypeNprd"
                                                             type="select"
                                                             isSearchable={true}
                                                             placeholder="Select"
@@ -2065,284 +2039,361 @@ function Index(props) {
                                                                 : "disabled"
                                                             }
                                                             value={
-                                                              values.partTypeDescr
+                                                              values.partTypeNprd
                                                             }
                                                             onBlur={handleBlur}
                                                             onChange={(e) => {
                                                               setFieldValue(
-                                                                "partTypeDescr",
+                                                                "partTypeNprd",
                                                                 e
                                                               );
-                                                              setPartType2016Descr(
+                                                              setPartType2016Nprd(
+                                                                e
+                                                              );
+                                                              setPartType2016Descr();
+                                                              setPartTypeNprdDesc2016Data();
+                                                              getPartTypeNprdDesc2016Data(
                                                                 e
                                                               );
                                                             }}
-                                                            options={partTypeNprdDesc2016Data
-                                                              .filter(
-                                                                (item) =>
-                                                                  item?.PartTypeId ===
-                                                                  partType2016Nprd?.value
-                                                              )
-                                                              .map((item) => ({
-                                                                label:
-                                                                  item?.PartDescrFull,
+                                                            options={partTypeNprd2016Data.map(
+                                                              (list) => ({
                                                                 value:
-                                                                  item?.PartDescrId,
-                                                              }))}
+                                                                  list.PartTypeId,
+                                                                label:
+                                                                  list.PartType,
+                                                              })
+                                                            )}
                                                           />
                                                           <ErrorMessage
                                                             className="error text-danger"
                                                             component="span"
-                                                            name="partTypeDescr"
+                                                            name="partTypeNprd"
                                                           />
                                                         </Form.Group>
                                                       </Col>
-                                                    ) : null}
-                                                  </Row>
-                                                  <Row className="mx-3 my-4">
-                                                    <Col>
-                                                      <Label notify="true">
-                                                        Quality
-                                                      </Label>
-                                                      <Form.Group>
-                                                        <Select
-                                                          className="mt-1"
-                                                          name="quality2016"
-                                                          type="select"
-                                                          placeholder="Select"
-                                                          styles={customStyles}
-                                                          value={
-                                                            partType2016Quality
-                                                              ? {
-                                                                  label:
-                                                                    partType2016Quality,
-                                                                  value:
-                                                                    partType2016Quality,
-                                                                }
-                                                              : values.quality2016
-                                                          }
-                                                          onBlur={handleBlur}
-                                                          onChange={(e) => {
-                                                            setFieldValue(
-                                                              "quality2016",
-                                                              e.value
-                                                            );
-                                                            setPartType2016Quality(
-                                                              e.value
-                                                            );
-                                                            getFRP2016Value(e);
-                                                          }}
-                                                          options={
-                                                            qualityOptions
-                                                          }
-                                                        />
-                                                        <ErrorMessage
-                                                          className="error text-danger"
-                                                          component="span"
-                                                          name="quality2016"
-                                                        />
-                                                      </Form.Group>
-                                                    </Col>
-                                                  </Row>
-                                                  {partType2016Nprd?.value &&
-                                                  partType2016Descr?.value &&
-                                                  !rowClicked ? (
-                                                    <div className="mt-3 p-2">
-                                                      <ThemeProvider
-                                                        theme={tableTheme}
-                                                      >
-                                                        <MaterialTable
-                                                          title="Manual Library Records"
-                                                          columns={columns}
-                                                          data={data}
-                                                          icons={tableIcons}
-                                                          // parentChildData={(row, rows) =>
-                                                          //   rows.find((a) => a.id === row.productId)
-                                                          // }
-                                                          options={{
-                                                            actionsColumnIndex:
-                                                              -1,
-                                                            addRowPosition:
-                                                              "last",
-                                                            headerStyle: {
-                                                              backgroundColor:
-                                                                "#cce6ff",
-                                                              fontWeight:
-                                                                "bold",
-                                                              zIndex: 0,
-                                                            },
-                                                            defaultExpanded: true,
-                                                            rowStyle,
-                                                          }}
-                                                          onRowClick={(
-                                                            event,
-                                                            rowData
-                                                          ) => {
-                                                            setPredicted(
-                                                              rowData?.FR
-                                                            );
-                                                            setSelectedNprdFR(
+                                                      {partType2016Nprd ? (
+                                                        <Col>
+                                                          <Label notify={true}>
+                                                            Part Type
+                                                            Description
+                                                          </Label>
+                                                          <Form.Group>
+                                                            <Select
+                                                              className="mt-1"
+                                                              // styles={customStyles}
+                                                              name="partTypeDescr"
+                                                              type="select"
+                                                              isSearchable={
+                                                                true
+                                                              }
+                                                              placeholder="Select"
+                                                              isDisabled={
+                                                                writePermission ===
+                                                                  true ||
+                                                                writePermission ===
+                                                                  "undefined" ||
+                                                                role ===
+                                                                  "admin" ||
+                                                                (isOwner ===
+                                                                  true &&
+                                                                  createdBy ===
+                                                                    userId)
+                                                                  ? null
+                                                                  : "disabled"
+                                                              }
+                                                              value={
+                                                                values.partTypeDescr
+                                                              }
+                                                              onBlur={
+                                                                handleBlur
+                                                              }
+                                                              onChange={(e) => {
+                                                                setFieldValue(
+                                                                  "partTypeDescr",
+                                                                  e
+                                                                );
+                                                                setPartType2016Descr(
+                                                                  e
+                                                                );
+                                                              }}
+                                                              options={partTypeNprdDesc2016Data
+                                                                ?.filter(
+                                                                  (item) =>
+                                                                    item?.PartTypeId ===
+                                                                    partType2016Nprd?.value
+                                                                )
+                                                                .map(
+                                                                  (item) => ({
+                                                                    label:
+                                                                      item?.PartDescrFull,
+                                                                    value:
+                                                                      item?.PartDescrId,
+                                                                  })
+                                                                )}
+                                                            />
+                                                            <ErrorMessage
+                                                              className="error text-danger"
+                                                              component="span"
+                                                              name="partTypeDescr"
+                                                            />
+                                                          </Form.Group>
+                                                        </Col>
+                                                      ) : null}
+                                                    </Row>
+                                                    <Row className="mx-3 my-4">
+                                                      <Col>
+                                                        <Label notify="true">
+                                                          Quality
+                                                        </Label>
+                                                        <Form.Group>
+                                                          <Select
+                                                            className="mt-1"
+                                                            name="quality2016"
+                                                            type="select"
+                                                            placeholder="Select"
+                                                            styles={
+                                                              customStyles
+                                                            }
+                                                            value={
+                                                              partType2016Quality
+                                                                ? {
+                                                                    label:
+                                                                      partType2016Quality,
+                                                                    value:
+                                                                      partType2016Quality,
+                                                                  }
+                                                                : values.quality2016
+                                                            }
+                                                            onBlur={handleBlur}
+                                                            onChange={(e) => {
+                                                              setFieldValue(
+                                                                "quality2016",
+                                                                e.value
+                                                              );
+                                                              setPartType2016Quality(
+                                                                e.value
+                                                              );
+                                                              getFRP2016Value(
+                                                                e
+                                                              );
+                                                            }}
+                                                            options={
+                                                              qualityOptions
+                                                            }
+                                                          />
+                                                          <ErrorMessage
+                                                            className="error text-danger"
+                                                            component="span"
+                                                            name="quality2016"
+                                                          />
+                                                        </Form.Group>
+                                                      </Col>
+                                                    </Row>
+                                                    {partType2016Nprd?.value &&
+                                                    partType2016Descr?.value &&
+                                                    !rowClicked ? (
+                                                      <div className="mt-3 p-2">
+                                                        <ThemeProvider
+                                                          theme={tableTheme}
+                                                        >
+                                                          <MaterialTable
+                                                            title="Manual Library Records"
+                                                            columns={columns}
+                                                            data={data}
+                                                            icons={tableIcons}
+                                                            // parentChildData={(row, rows) =>
+                                                            //   rows.find((a) => a.id === row.productId)
+                                                            // }
+                                                            options={{
+                                                              actionsColumnIndex:
+                                                                -1,
+                                                              addRowPosition:
+                                                                "last",
+                                                              headerStyle: {
+                                                                backgroundColor:
+                                                                  "#cce6ff",
+                                                                fontWeight:
+                                                                  "bold",
+                                                                zIndex: 0,
+                                                              },
+                                                              defaultExpanded: true,
+                                                              rowStyle,
+                                                            }}
+                                                            onRowClick={(
+                                                              event,
                                                               rowData
-                                                            );
-                                                            setPartType2016Quality(
-                                                              rowData?.Quality
-                                                            );
-                                                            setPartType2016Nprd(
-                                                              {
-                                                                label:
-                                                                  rowData?.PartTypeTxt,
-                                                                value:
-                                                                  rowData?.PartTypeId,
-                                                              }
-                                                            );
-                                                            setPartType2016Descr(
-                                                              {
-                                                                label:
-                                                                  rowData?.PartDescrFull,
-                                                                value:
-                                                                  rowData?.PartDescrId,
-                                                              }
-                                                            );
-                                                            setFR(rowData?.FR);
-                                                          }}
-                                                          localization={{
-                                                            body: {
-                                                              emptyDataSourceMessage:
-                                                                "No records to display for this partType and Environment Please Select Anyother partType",
-                                                            },
-                                                          }}
-                                                        />
-                                                      </ThemeProvider>
-                                                    </div>
-                                                  ) : null}
-                                                </div>
-                                              )}
-                                            </Card>
-                                            <div className="d-flex flex-direction-row justify-content-end m-2">
-                                              <Button
-                                                className="delete-cancel-btn me-2"
-                                                variant="outline-secondary"
-                                                type="reset"
-                                                onClick={(e) => {
-                                                  setNprd2016Model(false);
-                                                }}
-                                              >
-                                                CANCEL
-                                              </Button>
-                                              <Button
-                                                className="save-btn"
-                                                type="button"
-                                                disabled={
-                                                  !productId &
-                                                  values.partTypeDescr &
-                                                  values.partTypeNprd &
-                                                  values.quality
-                                                }
-                                                onClick={(e) => {
-                                                  if (
-                                                    partType2016Nprd &&
-                                                    partType2016Descr
-                                                  ) {
+                                                            ) => {
+                                                              setPredicted(
+                                                                rowData?.FR
+                                                              );
+                                                              setSelectedNprdFR(
+                                                                rowData
+                                                              );
+                                                              setPartType2016Quality(
+                                                                rowData?.Quality
+                                                              );
+                                                              setPartType2016Nprd(
+                                                                {
+                                                                  label:
+                                                                    rowData?.PartTypeTxt,
+                                                                  value:
+                                                                    rowData?.PartTypeId,
+                                                                }
+                                                              );
+                                                              setPartType2016Descr(
+                                                                {
+                                                                  label:
+                                                                    rowData?.PartDescrFull,
+                                                                  value:
+                                                                    rowData?.PartDescrId,
+                                                                }
+                                                              );
+                                                              setFR(
+                                                                rowData?.FR
+                                                              );
+                                                            }}
+                                                            localization={{
+                                                              body: {
+                                                                emptyDataSourceMessage:
+                                                                  "No records to display for this partType and Environment Please Select Anyother partType",
+                                                              },
+                                                            }}
+                                                          />
+                                                        </ThemeProvider>
+                                                      </div>
+                                                    ) : null}
+                                                  </div>
+                                                )}
+                                              </Card>
+                                              <div className="d-flex flex-direction-row justify-content-end m-2">
+                                                <Button
+                                                  className="delete-cancel-btn me-2"
+                                                  variant="outline-secondary"
+                                                  type="reset"
+                                                  onClick={(e) => {
                                                     setNprd2016Model(false);
-                                                    toast.success(
-                                                      "FR Selected"
-                                                    );
+                                                  }}
+                                                >
+                                                  CANCEL
+                                                </Button>
+                                                <Button
+                                                  className="save-btn"
+                                                  type="button"
+                                                  disabled={
+                                                    !productId &
+                                                    values.partTypeDescr &
+                                                    values.partTypeNprd &
+                                                    values.quality
                                                   }
-                                                  setPartType2016Nprd();
-                                                  setPartType2016Descr();
-                                                  setPartType2016Quality();
-                                                  setFR();
-                                                  setRowClicked();
-                                                  setNprd2016Model(
-                                                    !nprd2016Model
-                                                  );
-                                                }}
-                                              >
-                                                CALCULATE FR
-                                              </Button>
+                                                  onClick={(e) => {
+                                                    if (
+                                                      partType2016Nprd &&
+                                                      partType2016Descr
+                                                    ) {
+                                                      setNprd2016Model(false);
+                                                      toast.success(
+                                                        "FR Selected"
+                                                      );
+                                                    }
+                                                    setPartType2016Nprd();
+                                                    setPartType2016Descr();
+                                                    setPartType2016Quality();
+                                                    setFR();
+                                                    setRowClicked();
+                                                    setNprd2016Model(
+                                                      !nprd2016Model
+                                                    );
+                                                  }}
+                                                >
+                                                  CALCULATE FR
+                                                </Button>
+                                              </div>
                                             </div>
-                                          </div>
-                                        </form>
-                                      );
-                                    }}
-                                  </Formik>
-                                </Modal>
-                                <Modal
-                                  show={showModal}
-                                  position="center"
-                                  onHide={() => setShowModal(false)}
-                                >
-                                  <div className="modal-content">
-                                    <div className="m-3">
-                                      <FontAwesomeIcon
-                                        icon={faCircleXmark}
-                                        fontSize={"40px"}
-                                        color="#1D5460"
-                                        onClick={() => setShowModal(false)}
-                                        className="close-icon"
-                                      />
+                                          </form>
+                                        );
+                                      }}
+                                    </Formik>
+                                  </Modal>
+                                  <Modal
+                                    show={showModal}
+                                    position="center"
+                                    onHide={() => setShowModal(false)}
+                                  >
+                                    <div className="modal-content">
+                                      <div className="m-3">
+                                        <FontAwesomeIcon
+                                          icon={faCircleXmark}
+                                          fontSize={"40px"}
+                                          color="#1D5460"
+                                          onClick={() => setShowModal(false)}
+                                          className="close-icon"
+                                        />
+                                      </div>
+                                      <Modal.Footer
+                                        className="d-flex mt-3 mb-5"
+                                        style={{ marginTop: 0 }}
+                                      >
+                                        {partType?.value === "Resistor" ? (
+                                          <Resistor />
+                                        ) : partType?.value === "IC-Memory" ||
+                                          partType?.value === "IC-Analog" ? (
+                                          <IcMemory />
+                                        ) : partType?.value ===
+                                          "Potentiometer" ? (
+                                          <Potentiometer />
+                                        ) : partType?.value === "Capacitor" ? (
+                                          <Capacitor />
+                                        ) : partType?.value === "Switch" ? (
+                                          <Switch />
+                                        ) : partType?.value === "Connector" ? (
+                                          <Connector />
+                                        ) : partType?.value === "LFDiode" ? (
+                                          <LFDiode />
+                                        ) : partType?.value ===
+                                          "LFTransistor" ? (
+                                          <LFTransistor />
+                                        ) : partType?.value ===
+                                          "HFTransistor" ? (
+                                          <HFTransistor />
+                                        ) : partType?.value ===
+                                          "Optoelectronic" ? (
+                                          <Optoelectronic />
+                                        ) : partType?.value === "Inductive" ? (
+                                          <Inductive />
+                                        ) : partType?.value === "Connection" ? (
+                                          <Connection />
+                                        ) : partType?.value === "PWB" ? (
+                                          <PWB />
+                                        ) : partType?.value === "Rotating" ? (
+                                          <Rotating />
+                                        ) : partType?.value === "Crystal" ? (
+                                          <Crystal />
+                                        ) : partType?.value === "Breaker" ? (
+                                          <Breaker />
+                                        ) : partType?.value === "Meter" ? (
+                                          <Meter />
+                                        ) : partType?.value === "Lamp" ? (
+                                          <Lamp />
+                                        ) : partType?.value ===
+                                          "Misellaneous" ? (
+                                          <Miscellaneous />
+                                        ) : partType?.value === "Tube" ? (
+                                          <Tube />
+                                        ) : (
+                                          <p style={{ color: "red" }}>
+                                            Part Type is Empty.
+                                          </p>
+                                        )}
+                                      </Modal.Footer>
                                     </div>
-                                    <Modal.Footer
-                                      className="d-flex mt-3 mb-5"
-                                      style={{ marginTop: 0 }}
-                                    >
-                                      {partType?.value === "Resistor" ? (
-                                        <Resistor />
-                                      ) : partType?.value === "IC-Memory" ||
-                                        partType?.value === "IC-Analog" ? (
-                                        <IcMemory />
-                                      ) : partType?.value ===
-                                        "Potentiometer" ? (
-                                        <Potentiometer />
-                                      ) : partType?.value === "Capacitor" ? (
-                                        <Capacitor />
-                                      ) : partType?.value === "Switch" ? (
-                                        <Switch />
-                                      ) : partType?.value === "Connector" ? (
-                                        <Connector />
-                                      ) : partType?.value === "LFDiode" ? (
-                                        <LFDiode />
-                                      ) : partType?.value === "LFTransistor" ? (
-                                        <LFTransistor />
-                                      ) : partType?.value === "HFTransistor" ? (
-                                        <HFTransistor />
-                                      ) : partType?.value ===
-                                        "Optoelectronic" ? (
-                                        <Optoelectronic />
-                                      ) : partType?.value === "Inductive" ? (
-                                        <Inductive />
-                                      ) : partType?.value === "Connection" ? (
-                                        <Connection />
-                                      ) : partType?.value === "PWB" ? (
-                                        <PWB />
-                                      ) : partType?.value === "Rotating" ? (
-                                        <Rotating />
-                                      ) : partType?.value === "Crystal" ? (
-                                        <Crystal />
-                                      ) : partType?.value === "Breaker" ? (
-                                        <Breaker />
-                                      ) : partType?.value === "Meter" ? (
-                                        <Meter />
-                                      ) : partType?.value === "Lamp" ? (
-                                        <Lamp />
-                                      ) : partType?.value === "Misellaneous" ? (
-                                        <Miscellaneous />
-                                      ) : partType?.value === "Tube" ? (
-                                        <Tube />
-                                      ) : (
-                                        <p style={{ color: "red" }}>
-                                          Part Type is Empty.
-                                        </p>
-                                      )}
-                                    </Modal.Footer>
-                                  </div>
-                                </Modal>
+                                  </Modal>
+                                </div>
                               </div>
-                            </div>
-                          </Col>
-                        </Row>
-                      </Col>
-                      {/* <Col>
+                            </Col>
+                          </Row>
+                        </Col>
+                        {/* <Col>
                         <div className="mttr-sec ">
                           <p className=" mb-0 para-tag">Tree</p>
                         </div>
@@ -2352,16 +2403,16 @@ function Index(props) {
                           </div>
                         </div>
                       </Col> */}
-                    </Row>
-                  </fieldset>
-                </Form>
-              </div>
-            );
-          }}
-        </Formik>
+                      </Row>
+                    </fieldset>
+                  </Form>
+                </div>
+              );
+            }}
+          </Formik>
         </div>
-         ):(
-          <div>
+      ) : (
+        <div>
           <Card>
             <Card.Body>
               <Card.Title className="text-center">Access Denied</Card.Title>

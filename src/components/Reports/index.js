@@ -7,7 +7,7 @@ import Api from "../../Api";
 import { useHistory } from "react-router-dom";
 import Select from "react-select";
 import PBSReport from "./PbsReport.js";
-import RAReport from "./ReliabilityAnalysis.js";
+import RAReport from "./reliabilityAnalysis.js";
 import MaintabilityReport from "./MainTainabilityReport.js";
 import FMECAreport from "./FMECAreport.js";
 import SafetyReport from "./SafetyReport.js";
