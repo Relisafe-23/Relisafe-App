@@ -341,47 +341,33 @@ export default function PBS(props) {
   //   },
   // ];
   const columnsTitle = [
-    { title: "S.No" },
-    { title: " Product Name" },
-    { title: "Category" },
-    {
-      title: "Part Number",
-    },
-    { title: "Part Type" },
-    { title: "FR" },
-    {
-      title: "MTTR",
-    },
-    {
-      title: "MCT",
-    },
-    {
-      title: "MLH",
-    },
-    {
-      title: "Actions",
-    },
+    { title: "", width: "5%", align: "center" }, // Icon column
+    { title: "S.No", width: "7%", align: "center" },
+    { title: "Product Name", width: "18%", align: "center" },
+    { title: "Category", width: "10%", align: "center" },
+    { title: "Part Number", width: "15%", align: "center"},
+    { title: "Part Type", width: "15%", align: "center" },
+    { title: "FR", width: "5%", align: "center" },
+    { title: "MTTR", width: "5%", align: "center" },
+    { title: "MCT", width: "5%", align: "center" },
+    { title: "MLH", width: "5%", align: "center" },
+    { title: "Actions", width: "5%", align: "center" },
   ];
+  
   const columns = [
-    { field: "indexCount" },
-    { field: "productName", cellStyle: { minWidth: "300px" } },
-    { field: "category" },
-    {
-      field: "Part Number",
-      cellStyle: { minWidth: "144px" },
-    },
-    { field: "partType", cellStyle: { minWidth: "123px" } },
-    { field: "FR" },
-    {
-      field: "MTTR",
-    },
-    {
-      field: "MCT",
-    },
-    {
-      field: "MLH",
-    },
+    
+    { field: "indexCount", width: "2%", align: "center"},
+    // { field: "SNo", width: "7%", align: "center", backgroundColor: "#e9ecef" },
+    { field: "productName", width: "20%", align: "center" },
+    { field: "category", width: "10%", align: "center" },
+    { field: "partNumber", width: "10%", align: "center" },
+    { field: "partType", width: "10%", align: "center" },
+    { field: "FR", width: "5%", align: "center" },
+    { field: "MTTR", width: "5%", align: "center" },
+    { field: "MCT", width: "5%", align: "center" },
+    { field: "MLH", width: "5%", align: "center" },
   ];
+  
 
   const tableTheme = createTheme({
     overrides: {
@@ -1395,19 +1381,22 @@ export default function PBS(props) {
                     <tr>
                       {columnsTitle.map((column, index) => (
                         <th
-                          key={index}
-                          className="material-table-header"
-                          style={{
-                            width:
-                              index === 0
-                                ? "150px"
-                                : index === 1
-                                ? "300px"
-                                : index === 4 || index === 9
-                                ? "150px"
-                                : "auto",
-                          }}
-                        >
+                        key={index}
+                        className="material-table-header"
+                        style={{
+                          width: column.width,
+                          textAlign: column.align,
+
+                          //     // width:
+                            // index === 0
+                            //   ? "150px"
+                            //   : index === 1
+                            //   ? "300px"
+                            //   : index === 4 || index === 9
+                            //   ? "150px"
+                            //   : "auto"
+                        }}
+                      >
                           {column.title}
                         </th>
                       ))}
@@ -1418,7 +1407,17 @@ export default function PBS(props) {
               <div className="table-container">
                 <MaterialTable
                   title=""
-                  columns={columns}
+                  columns={columns.map((col, index) => ({
+                    ...col,
+                    cellStyle: {
+                      textAlign: col.align, 
+                    },
+                    headerStyle: {
+                      backgroundColor: columnsTitle[index]?.backgroundColor || "#fff",  // Match header color
+                      color: "#000", // Header text color
+                    },
+
+                  }))}
                   data={sortedData}
                   icons={tableIcons}
                   parentChildData={(row, rows) =>
