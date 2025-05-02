@@ -470,9 +470,8 @@ function SafetyReport(props) {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `Project Description: ${
-                    projectData.projectDesc || "-"
-                  }`,
+                  text: `Project Description: ${projectData.projectDesc || "-"
+                    }`,
                 }),
               ],
             }),
@@ -499,103 +498,107 @@ function SafetyReport(props) {
         <Loader />
       ) : (
         <div>
-          <div className="mt-3">
-            {safetyData?.length > 0 ? (
-              <>
-                <Row className="d-flex align-items-center justify-content-end">
+          <div className="mt-3"></div>
+          {safetyData?.length > 0 ? (
+            <>
+
+              <Row className="d-flex align-items-center justify-content-end">
+                <Col className="d-flex justify-content-end">
+                  <Button
+                    className="report-save-btn"
+                    onClick={exportToExcel}
+                    style={{ marginRight: "8px" }}
+                  >
+                    <FaFileExcel style={{ marginRight: "8px" }} />
+                    Excel
+                  </Button>
+
+                  <Button
+                    className="report-save-btn"
+                    onClick={generatePDFReport}
+                    disabled={columnLength}
+                    style={{ marginRight: "8px" }}
+                  >
+                    <FaFilePdf style={{ marginRight: "8px" }} />
+                    PDF
+                  </Button>
+
+                  <Button
+                    className="report-save-btn"
+                    disabled={columnLength}
+                    onClick={() => {
+                      generateWordDocument(
+                        {
+                          projectName: projectData.projectName,
+                          projectNumber: projectData?.projectNumber,
+                          projectDesc: projectData.projectDesc,
+                          projectId: "1",
+                        },
+                        ["Header1", "Header2"],
+                        { Header1: true, Header2: true },
+                        [{ Header1: "Data1", Header2: "Data2" }],
+                        { Header1: "Header1", Header2: "Header2" }
+                      );
+                    }}
+                  >
+                    <FaFileWord style={{ marginRight: "8px" }} />
+                    Word
+                  </Button>
+                </Col>
+              </Row>
+
+              {columnLength && (
+                <Row>
                   <Col className="d-flex justify-content-end">
-                    <Button
-                      className="report-save-btn"
-                      onClick={exportToExcel}
-                      style={{ marginRight: "8px" }}
-                    >
-                      <FaFileExcel style={{ marginRight: "8px" }} />
-                      Excel
-                    </Button>
-
-                    <Button
-                      className="report-save-btn"
-                      onClick={generatePDFReport}
-                      disabled={columnLength}
-                      style={{ marginRight: "8px" }}
-                    >
-                      <FaFilePdf style={{ marginRight: "8px" }} />
-                      PDF
-                    </Button>
-
-                    <Button
-                      className="report-save-btn"
-                      disabled={columnLength}
-                      onClick={() => {
-                        generateWordDocument(
-                          {
-                            projectName: projectData.projectName,
-                            projectNumber: projectData?.projectNumber,
-                            projectDesc: projectData.projectDesc,
-                            projectId: "1",
-                          },
-                          ["Header1", "Header2"],
-                          { Header1: true, Header2: true },
-                          [{ Header1: "Data1", Header2: "Data2" }],
-                          { Header1: "Header1", Header2: "Header2" }
-                        );
-                      }}
-                    >
-                      <FaFileWord style={{ marginRight: "8px" }} />
-                      Word
-                    </Button>
+                    <p style={{ color: "red", textAlign: "right" }}>
+                      *You cannot download the PDF or Word document when the
+                      number of columns exceeds the limit.
+                    </p>
                   </Col>
                 </Row>
+              )}
+            </>
+          ) : null}
+          {safetyData?.length > 0 ? (
+            <div id="pdf-report-content">
+              <div id="first-page-report">
+                <FirstPageReport
+                  projectId={projectId}
+                  moduleType={moduleType}
+                />
+              </div>
 
-                {columnLength && (
-                  <Row>
-                    <Col className="d-flex justify-content-end">
-                      <p style={{ color: "red", textAlign: "right" }}>
-                        *You cannot download the PDF or Word document when the
-                        number of columns exceeds the limit.
-                      </p>
+              <div className="sheet-container mt-3" id="main-content-report">
+                <div className="sheet">
+                  <Row className="d-flex justify-content-between">
+                    <Col className="d-flex flex-column align-items-center"></Col>
+                    <Col className="d-flex flex-column align-items-center">
+                      <h5>{projectData?.projectName}</h5>
+                      <h5>SAFETY</h5>
+                    </Col>
+                    <Col className="d-flex flex-column align-items-center">
+                      <h5>Rev:</h5>
+                      <h5>Rev Date:</h5>
                     </Col>
                   </Row>
-                )}
-              </>
-            ) : null}
-            <div className="sheet-container mt-3">
-              <div className="sheet" id="pdf-report-content">
-                <div id="first-page-report">
-                  <FirstPageReport
-                    projectId={projectId}
-                    moduleType={moduleType}
-                  />
-                </div>
-                <Row className="d-flex justify-content-between">
-                  <Col className="d-flex flex-column align-items-center"></Col>
-                  <Col className="d-flex flex-column align-items-center">
-                    <h5>{projectData?.projectName}</h5>
-                    <h5>SAFETY</h5>
-                  </Col>
-                  <Col className="d-flex flex-column align-items-center">
-                    <h5>Rev:</h5>
-                    <h5>Rev Date:</h5>
-                  </Col>
-                </Row>
 
-                <div className="sheet-content">
-                  <div className="field">
-                    <label>Project Name:</label>
-                    <span>{projectData?.projectName}</span>
+                  <div className="sheet-content">
+                    <div className="field">
+                      <label>Project Name:</label>
+                      <span>{projectData?.projectName}</span>
+                    </div>
+                    <div className="field">
+                      <label>Project Number:</label>
+                      <span>{projectData?.projectNumber}</span>
+                    </div>
+                    <div className="field">
+                      <label>Project Description:</label>
+                      <span>{projectData?.projectDesc}</span>
+                    </div>
                   </div>
-                  <div className="field">
-                    <label>Project Number:</label>
-                    <span>{projectData?.projectNumber}</span>
-                  </div>
-                  <div className="field">
-                    <label>Project Description:</label>
-                    <span>{projectData?.projectDesc}</span>
-                  </div>
-                </div>
-                {safetyData?.length > 0 ? (
+
                   <div>
-                    <div>
+                    {safetyData?.length > 0 ? (
                       <Row className="d-flex align-items-center justify-content-end">
                         <Col className="d-flex flex-row custom-checkbox-group">
                           <Form.Check
@@ -616,10 +619,10 @@ function SafetyReport(props) {
                           />
                         </Col>
                       </Row>
-                    </div>
-                    <div>
-                      <h4>PBS Report</h4>
-                    </div>
+                    ) : null}
+                  </div>
+
+                  {safetyData?.map((part, partIndex) => (
                     <div style={{ overflowX: "auto" }}>
                       <table className="report-table">
                         <thead>
@@ -650,10 +653,9 @@ function SafetyReport(props) {
                                 const key = headerKeyMapping[header];
                                 let value = key
                                   ? row?.productId?.[key] ??
-                                    row?.safetyData?.[key] ??
-                                    "-"
+                                  row?.safetyData?.[key] ??
+                                  "-"
                                   : "-";
-
                                 // Check if the header is "FR" and format the value to 6 decimal places
                                 if (
                                   header === "FR" &&
@@ -675,27 +677,23 @@ function SafetyReport(props) {
                         </tbody>
                       </table>
                     </div>
-                    <div id="last-page-report">
-                      <LastPageReport
-                        projectId={projectId}
-                        moduleType={moduleType}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      width: "100%",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <h3>No Records to Display</h3>
-                  </div>
-                )}
+                  ))}
+                </div>
+              </div>
+              <div id="last-page-report">
+                <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
             </div>
+          ) : <div
+            style={{
+              display: "flex",
+              width: "100%",
+              justifyContent: "center",
+            }}
+          >
+            <h3>No Records to Display</h3>
           </div>
+          }
         </div>
       )}
     </div>

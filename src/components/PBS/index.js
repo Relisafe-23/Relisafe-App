@@ -7,7 +7,6 @@ import {
   Form,
   Modal,
   Row,
-  OverlayTrigger,
 } from "react-bootstrap";
 import Label from "../LabelComponent";
 import "../../css/PBS.scss";
@@ -32,20 +31,23 @@ import Tooltip from "@mui/material/Tooltip";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faFileImport,
-  faFileExport,
   faPlus,
   faFileDownload,
   faFileUpload,
 } from "@fortawesome/free-solid-svg-icons";
 
 export default function PBS(props) {
-  const projectId = props?.location?.state?.projectId;
+  let projectId = props?.location?.state?.projectId;
+  if (!projectId) {
+    const url = window.location.href; // Get the full URL
+    const urlParts = url.split("/"); // Split URL by '/'
+    projectId = urlParts[urlParts.length - 1]; // Assuming projectId is the last segment of the URL
+  }
+
   const [productId, setProductId] = useState();
   const [treeId, setTreeId] = useState();
   const [deleteId, setDeleteId] = useState();
-  const [productIndexCount, setProductIndexCount] = useState();
-  const [tableData, setTableData] = useState();
+  const [productIndexCount, setProductIndexCount] = useState();  
   const [deleteTreeId, setDeleteTreeId] = useState();
   const [isMainSubmit, setIsMainSubmit] = useState(false);
   const [category, setCategory] = useState({
@@ -65,7 +67,6 @@ export default function PBS(props) {
   const [parentId, setParentId] = useState("");
 
   const [isLoading, setISLoading] = useState(true);
-  const [showToast, setShowToast] = useState(false);
   const [productMessage, setProductMessage] = useState("");
   const [errorCode, setErrorCode] = useState(0);
   const [newProId, setNewProId] = useState();
@@ -229,6 +230,19 @@ export default function PBS(props) {
   const importExcel = (e) => {
     const file = e.target.files[0];
 
+     // Check if the file is an Excel file by checking the extension
+  const fileName = file.name;
+  const validExtensions = ['xlsx', 'xls']; // Allowed file extensions
+  const fileExtension = fileName.split('.').pop().toLowerCase(); // Get file extension
+
+  if (!validExtensions.includes(fileExtension)) {
+    // alert('Please upload a valid Excel file (either .xlsx or .xls)');
+    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+      position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+    });
+    return; // Exit the function if the file is not an Excel file
+  }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       //parse data
@@ -251,10 +265,7 @@ export default function PBS(props) {
     reader.readAsBinaryString(file);
   };
 
-  useEffect(() => {
-    getEnvironAndTemp();
-    getTreeProduct();
-  }, []);
+ 
 
   const userId = localStorage.getItem("userId");
   const getProjectPermission = () => {
@@ -286,14 +297,16 @@ export default function PBS(props) {
         userId: userId,
       },
     }).then((res) => {
-      setIsOwner(res.data.data.isOwner);
-      setCreatedBy(res.data.data.createdBy);
+      setIsOwner(res?.data?.data?.isOwner);
+      setCreatedBy(res?.data?.data?.createdBy);
     });
   };
 
   useEffect(() => {
     getProjectPermission();
     projectSidebar();
+    getEnvironAndTemp();
+    getTreeProduct();
   }, [projectId]);
 
   const showModal = () => {
@@ -316,36 +329,12 @@ export default function PBS(props) {
     }, 2000);
   };
 
-  // const columns = [
-  //   { title: "S.No", field: "indexCount" },
-  //   { title: " Product Name", field: "productName", cellStyle: { minWidth: "300px" } },
-  //   { title: "Category", field: "category" },
-  //   {
-  //     title: "Part Number",
-  //     field: "Part Number",
-  //     cellStyle: { minWidth: "144px" },
-  //   },
-  //   { title: "Part Type", field: "partType", cellStyle: { minWidth: "123px" } },
-  //   { title: "FR", field: "FR" },
-  //   {
-  //     title: "MTTR",
-  //     field: "MTTR",
-  //   },
-  //   {
-  //     title: "MCT",
-  //     field: "MCT",
-  //   },
-  //   {
-  //     title: "MLH",
-  //     field: "MLH",
-  //   },
-  // ];
   const columnsTitle = [
     { title: "", width: "5%", align: "center" }, // Icon column
     { title: "S.No", width: "7%", align: "center" },
     { title: "Product Name", width: "18%", align: "center" },
     { title: "Category", width: "10%", align: "center" },
-    { title: "Part Number", width: "15%", align: "center"},
+    { title: "Part Number", width: "15%", align: "center" },
     { title: "Part Type", width: "15%", align: "center" },
     { title: "FR", width: "5%", align: "center" },
     { title: "MTTR", width: "5%", align: "center" },
@@ -353,10 +342,9 @@ export default function PBS(props) {
     { title: "MLH", width: "5%", align: "center" },
     { title: "Actions", width: "5%", align: "center" },
   ];
-  
+
   const columns = [
-    
-    { field: "indexCount", width: "2%", align: "center"},
+    { field: "indexCount", width: "2%", align: "center" },
     // { field: "SNo", width: "7%", align: "center", backgroundColor: "#e9ecef" },
     { field: "productName", width: "20%", align: "center" },
     { field: "category", width: "10%", align: "center" },
@@ -367,7 +355,6 @@ export default function PBS(props) {
     { field: "MCT", width: "5%", align: "center" },
     { field: "MLH", width: "5%", align: "center" },
   ];
-  
 
   const tableTheme = createTheme({
     overrides: {
@@ -646,16 +633,15 @@ export default function PBS(props) {
     }).then((response) => {
       const copyData = response.data.treeData;
       setSelectCopyData(copyData);
-
     });
   };
-  const callCopyAndPasteProduct = (pasteProductTreeIds, pasteProductIds) =>{
+  const callCopyAndPasteProduct = (pasteProductTreeIds, pasteProductIds) => {
     if (selectCopyData.children.length > 0) {
       copyAndPasteProduct(pasteProductTreeIds, pasteProductIds);
     } else {
       copyAndPasteParentProduct(pasteProductTreeIds, pasteProductIds);
     }
-  }
+  };
   const copyAndPasteParentProduct = (pasteProductTreeIds, pasteProductIds) => {
     Api.post("/api/v1/product/copy/paste/parent/product", {
       copyProductTreeId: copyProductTreeId,
@@ -677,7 +663,6 @@ export default function PBS(props) {
       pasteProductId: pasteProductIds,
       copyProductId: copyProdctId,
     }).then((response) => {
-      console.log("sample", response);
       setSelectCopyData();
     });
   };
@@ -802,12 +787,13 @@ export default function PBS(props) {
                               DownloadExcel();
                             }}
                             disabled={
-                              permission?.write === true ||
-                              permission?.write === "undefined" ||
-                              role === "admin" ||
-                              (isOwner === true && createdBy === userId)
-                                ? null
-                                : "disabled"
+                              data.length === 0 || // Disable if no data
+                              (permission?.write !== true &&
+                                permission?.write !== undefined &&
+                                role !== "admin" &&
+                                !(isOwner === true && createdBy === userId)) // Enable only if all these conditions are false
+                                ? "disabled" // If any of these conditions are met, disable the button
+                                : null // Otherwise, the button is enabled
                             }
                             style={{ marginLeft: "10px" }}
                           >
@@ -1026,55 +1012,6 @@ export default function PBS(props) {
                                       />
                                     </Form.Group>
                                   </Col>
-                                  {/* <Col>
-                                    {category.value === "Mechanical" ||
-                                    category.value === "Electronic" ||
-                                    patchCategory === "Mechanical" ||
-                                    patchCategory === "Electronic" ? (
-                                      <div className="">
-                                        <Form.Group className="mt-3 ">
-                                          <Label notify={true}>Part Type</Label>
-                                          <Select
-                                            type="select"
-                                            styles={customStyles}
-                                            value={values.partType}
-                                            placeholder="Select Part Type"
-                                            name="partType"
-                                            className="mt-1"
-                                            onBlur={handleBlur}
-                                            onChange={(e) => {
-                                              setFieldValue("partType", e);
-                                              setPartType(e.value);
-                                            }}
-                                            options={[
-                                              category.value === "Electronic"
-                                                ? {
-                                                    options: Electronic.map(
-                                                      (list) => ({
-                                                        value: list.value,
-                                                        label: list.label,
-                                                      })
-                                                    ),
-                                                  }
-                                                : {
-                                                    options: Mechanical.map(
-                                                      (list) => ({
-                                                        value: list.value,
-                                                        label: list.label,
-                                                      })
-                                                    ),
-                                                  },
-                                            ]}
-                                          />
-                                          <ErrorMessage
-                                            className="error text-danger"
-                                            component="span"
-                                            name="partType"
-                                          />
-                                        </Form.Group>
-                                      </div>
-                                    ) : null}
-                                  </Col> */}
                                   <Col>
                                     {category.value === "Assembly" ? null : (
                                       <div className="">
@@ -1129,52 +1066,6 @@ export default function PBS(props) {
                                       </div>
                                     )}
                                   </Col>
-                                  {/* <Col>
-                                  {category.value === "Assembly"? null:
-                                  ( <div className="">
-                                      <Form.Group className="mt-3 ">
-                                        <Label notify={true}>Part Type</Label>
-                                        <Select
-                                          type="select"
-                                          styles={customStyles}
-                                          value={values.partType}
-                                          placeholder="Select Part Type"
-                                          name="partType"
-                                          className="mt-1"
-                                          onBlur={handleBlur}
-                                          onChange={(e) => {
-                                            setFieldValue("partType", e);
-                                            setPartType(e.value);
-                                          }}
-                                          options={[
-                                            category.value === "Electronic"
-                                              ? {
-                                                  options: Electronic.map(
-                                                    (list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })
-                                                  ),
-                                                }
-                                              : {
-                                                  options: Mechanical.map(
-                                                    (list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })
-                                                  ),
-                                                },
-                                          ]}
-                                        />
-                                        <ErrorMessage
-                                          className="error text-danger"
-                                          component="span"
-                                          name="partType"
-                                        />
-                                      </Form.Group>
-                                    </div>)}
-                                   
-                                  </Col> */}
                                 </Row>
                               </Card>
                               <div className="mttr-sec mt-3">
@@ -1372,7 +1263,6 @@ export default function PBS(props) {
               }}
             </Formik>
           </div>
-          {/* <input className="mt-3" type="file" onChange={importExcel} accept=".xlsx" /> */}
           <div className="mt-3 ">
             <ThemeProvider theme={tableTheme}>
               <div className="header-container" style={{ overflowX: "auto" }}>
@@ -1381,13 +1271,13 @@ export default function PBS(props) {
                     <tr>
                       {columnsTitle.map((column, index) => (
                         <th
-                        key={index}
-                        className="material-table-header"
-                        style={{
-                          width: column.width,
-                          textAlign: column.align,
+                          key={index}
+                          className="material-table-header"
+                          style={{
+                            width: column.width,
+                            textAlign: column.align,
 
-                          //     // width:
+                            //     // width:
                             // index === 0
                             //   ? "150px"
                             //   : index === 1
@@ -1395,8 +1285,8 @@ export default function PBS(props) {
                             //   : index === 4 || index === 9
                             //   ? "150px"
                             //   : "auto"
-                        }}
-                      >
+                          }}
+                        >
                           {column.title}
                         </th>
                       ))}
@@ -1410,13 +1300,13 @@ export default function PBS(props) {
                   columns={columns.map((col, index) => ({
                     ...col,
                     cellStyle: {
-                      textAlign: col.align, 
+                      textAlign: col.align,
                     },
                     headerStyle: {
-                      backgroundColor: columnsTitle[index]?.backgroundColor || "#fff",  // Match header color
+                      backgroundColor:
+                        columnsTitle[index]?.backgroundColor || "#fff", // Match header color
                       color: "#000", // Header text color
                     },
-
                   }))}
                   data={sortedData}
                   icons={tableIcons}
@@ -1465,7 +1355,8 @@ export default function PBS(props) {
                                         setChildProductCriteria(false);
                                       }}
                                     >
-                                      <Link>Add Child Part</Link>
+                                    <span style={{ color: 'blue' }}>Add Child Part</span>
+
                                     </Dropdown.Item>
                                   </Tooltip>
                                 )}
@@ -1505,7 +1396,7 @@ export default function PBS(props) {
                                     );
                                   }}
                                 >
-                                  <Link>Edit</Link>
+                                <span style={{ color: 'blue' }}>Edit</span>
                                 </Dropdown.Item>
                                 <hr
                                   style={{
@@ -1525,7 +1416,7 @@ export default function PBS(props) {
                                     setDeleteMessage(true);
                                   }}
                                 >
-                                  <Link>Delete</Link>
+                                 <span style={{ color: 'blue' }}>Delete</span>
                                 </Dropdown.Item>
                                 <hr
                                   style={{
@@ -1547,7 +1438,7 @@ export default function PBS(props) {
                                     );
                                   }}
                                 >
-                                  <Link>Copy</Link>
+                                  <span style={{ color: 'blue' }}>Copy</span>
                                 </Dropdown.Item>
                                 <hr
                                   style={{
@@ -1570,10 +1461,8 @@ export default function PBS(props) {
                                     handlePasteClick(rowData);
                                     setParentsId(rowData?.productId);
                                   }}
-
-                                  // onClick={() => handleCopyClick(rowData)}
                                 >
-                                  <Link>Paste</Link>
+                                 <span style={{ color: 'blue' }}>Paste</span>
                                 </Dropdown.Item>
                               </Dropdown.Menu>
                             ) : null}
@@ -1585,12 +1474,6 @@ export default function PBS(props) {
                         },
                       };
                     },
-                    // {
-                    //   icon: () => <Button className="export-btns">Export</Button>,
-                    //   tooltip: "Export to Excel",
-                    //   onClick: DownloadExcel,
-                    //   isFreeAction: true,
-                    // },
                   ]}
                   options={{
                     actionsColumnIndex: -1,

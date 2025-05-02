@@ -38,7 +38,7 @@ function Projectname(props) {
   return (
     <Row>
       <div className="mttr-sec">
-        <h5 className="mb-0 para-tag_1 p-1">
+        <h5 className="mb-0 para-tag_1 p-1"  style={{fontSize:"15px"}}>
         Project Name: {companyName} {projectName}
         </h5>
       </div>

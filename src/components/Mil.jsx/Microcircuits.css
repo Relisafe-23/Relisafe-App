@@ -1,0 +1,209 @@
+.calculation-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9em;
+  }
+  .btn-calculate{
+ 
+    background-color:#007bff;
+    color:white;
+    margin-top: 20px;
+    font-size: 0.9em; 
+  }
+  
+  .calculation-table th {
+    background-color: #f2f2f2;
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+    font-weight: bold;
+  }
+  
+  .calculation-table td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+    vertical-align: middle;
+  }
+  
+  .calculation-table .formula {
+    font-size: 0.8em;
+    color: #555;
+    margin-top: 5px;
+    text-align: center;
+    font-style: italic;
+  }
+  
+  .calculation-table button {
+    padding: 4px 8px;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  .calculation-table button:hover {
+    background-color: #cc0000;
+  }
+  .formula-section {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid #007bff;
+  }
+  
+  .formula-section h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    font-size: 1.2em;
+  }
+  
+  .formula-section p {
+    margin: 8px 0;
+    font-family: monospace;
+    font-size: 1.1em;
+  }
+  
+  .formula-section ul {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+  
+  .formula-section li {
+    margin-bottom: 5px;
+    font-size: 0.95em;
+    line-height: 1.4;
+  }
+  
+  .formula-section sub, 
+  .formula-section sup {
+    font-size: 0.75em;
+  }
+  .calculation-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .calculation-table th, .calculation-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .calculation-table th {
+    background-color: #f2f2f2;
+  }
+  
+  .param-names div, .param-values div, .param-formulas div {
+    padding: 4px 0;
+  }
+  .formula {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+  }
+  .button {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    border: 2px solid #3498db;
+    border-radius: 5px;
+    color:white;
+    background-color: #3498db;
+    transition: all 0.3s ease;
+  }
+  .button:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+  }
+
+  .btn {
+    width: auto; /* or specify a reasonable width like 100px */
+    min-width: 80px; /* ensures button has minimum reasonable width */
+    padding: 8px 16px; /* adds internal spacing */
+    background-color: #007bff; /* example color */
+    color: white; /* text color */
+    border: none; /* removes default border */
+    border-radius: 4px; /* slightly rounded corners */
+    cursor: pointer; /* shows hand cursor on hover */
+    font-size: 14px; /* reasonable text size */
+    font-weight: 500; /* medium weight text */
+    transition: background-color 0.3s; /* smooth hover effect */
+  }
+  
+  .btn:hover {
+    background-color: #0069d9; /* slightly darker on hover */
+  }
+/* For single row layout */
+.saw-device-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.saw-device-field {
+  flex: 1;
+  min-width: 0; /* Prevents overflow */
+}
+/* Container for the form fields */
+.form-row {
+  display: flex;
+  gap: 20px; /* Space between columns */
+  margin-bottom: 15px;
+}
+
+/* Each form field container */
+.form-group {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+/* Labels styling */
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Select dropdown styling */
+.form-group .Select__control {
+  min-height: 38px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+  width: 100%;
+}
+
+.form-group .Select__menu {
+  z-index: 1000; /* Ensure dropdown appears above other elements */
+}
+
+/* Specific styling for Part Type and Environment fields */
+.form-group.part-type-field,
+.form-group.environment-field {
+  flex: 1; /* Make them take equal space */
+  min-width: 250px; /* Minimum width */
+}
+
+/* For the environment field with subscript */
+.form-group.environment-field label {
+  display: flex;
+  align-items: center;
+}
+
+/* Temperature input field */
+.form-group input[type="number"] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}

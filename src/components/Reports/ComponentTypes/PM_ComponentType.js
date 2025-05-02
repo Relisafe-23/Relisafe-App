@@ -725,7 +725,15 @@ function PM_ComponentType(props) {
                 <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
             </div>
-          ) : null}
+          ) : <div
+          style={{
+            display: "flex",
+            width: "100%",
+            justifyContent: "center",
+          }}
+        >
+          <h3>No Records to Display</h3>
+        </div>}
         </div>
       )}
     </div>
