@@ -2401,7 +2401,7 @@ function Index(props) {
                                               }}
                                               options={[
                                                 // { value: "Microcircuits", label: "Microcircuits" },
-                                                { value: "Resistor", label: "Resistor" },
+                                                // { value: "Resistor", label: "Resistor" },
                                                 // { value: "Tubes", label: "Tubes" },
                                                 { value: "Switches", label: "Switches"},
                                                 {value:"Capacitor",label:"Capacitor"},
