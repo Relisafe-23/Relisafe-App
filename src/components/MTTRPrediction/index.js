@@ -69,7 +69,7 @@ const MTTRPrediction = (props, active) => {
   const [temperature, setTemperature] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSpinning, setIsSpinning] = useState(true);
-  const [tableData, setTableData] = useState();
+  const [tableData, setTableData] = useState([]);
   const [validateData, setValidateData] = useState();
   const [mttrData, setMttrData] = useState();
   const [mttrId, setMttrId] = useState();
@@ -139,6 +139,19 @@ const MTTRPrediction = (props, active) => {
 
   const importExcel = (e) => {
     const file = e.target.files[0];
+
+    // Check if the file is an Excel file by checking the extension
+    const fileName = file.name;
+    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
+    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
+
+    if (!validExtensions.includes(fileExtension)) {
+      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+      });
+      return; // Exit the function if the file is not an Excel file
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -355,7 +368,6 @@ const MTTRPrediction = (props, active) => {
     getProcedureData();
     getMttrData();
   }, [productId]);
-  
 
   const propstoGetTreeData = () => {
     setIsSpinning(true);
@@ -370,7 +382,7 @@ const MTTRPrediction = (props, active) => {
     })
       .then((res) => {
         const data = res?.data?.data;
-        console.log("data.......mttr ...",data)
+        console.log("data.......mttr ...", data);
 
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""

@@ -12,14 +12,20 @@ import { createTheme } from "@material-ui/core/styles";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
 import { toast } from "react-toastify";
-import { faFileDownload, faFileUpload } from "@fortawesome/free-solid-svg-icons";
+import {
+  faFileDownload,
+  faFileUpload,
+} from "@fortawesome/free-solid-svg-icons";
 
 //import  XLSX from 'xlsx'
 
 //import * as XLSX from "xlsx/xlsx";
 import * as XLSX from "xlsx";
 
-import { faCircleCheck, faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircleCheck,
+  faCircleExclamation,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FaExclamationCircle } from "react-icons/fa";
 import { TextField } from "@material-ui/core";
@@ -40,7 +46,9 @@ function Index(props) {
   const treeStructure = props?.location?.props?.mainData?.id
     ? props?.location?.props?.mainData?.id
     : initialTreeStructure;
-  const projectId = props?.location?.state?.projectId ? props?.location?.state?.projectId : props?.match?.params?.id;
+  const projectId = props?.location?.state?.projectId
+    ? props?.location?.state?.projectId
+    : props?.match?.params?.id;
   const [show, setShow] = useState(false);
   const [treeTableData, setTreeTabledata] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,10 +122,14 @@ function Index(props) {
         projectId: projectId,
       },
     }).then((res) => {
-      let filteredData = res?.data?.data.filter((item) => item?.moduleName === "FMECA");
+      let filteredData = res?.data?.data.filter(
+        (item) => item?.moduleName === "FMECA"
+      );
 
       if (filteredData.length === 0) {
-        filteredData = res?.data?.data.filter((item) => item?.moduleName === "SAFETY");
+        filteredData = res?.data?.data.filter(
+          (item) => item?.moduleName === "SAFETY"
+        );
       }
 
       setAllSepareteData(filteredData);
@@ -135,10 +147,14 @@ function Index(props) {
         projectId: projectId,
       },
     }).then((res) => {
-      let filteredData = res?.data?.data.filter((item) => item?.moduleName === "FMECA");
+      let filteredData = res?.data?.data.filter(
+        (item) => item?.moduleName === "FMECA"
+      );
 
       if (filteredData.length === 0) {
-        filteredData = res?.data?.data.filter((item) => item?.moduleName === "SAFETY");
+        filteredData = res?.data?.data.filter(
+          (item) => item?.moduleName === "SAFETY"
+        );
       }
 
       setAllSepareteData(filteredData);
@@ -232,14 +248,18 @@ function Index(props) {
       failureMode: values.failureMode,
       // searchFM: values.searchFM,
       cause: values.cause,
-      failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 0,
+      failureModeRatioAlpha: values.failureModeRatioAlpha
+        ? values.failureModeRatioAlpha
+        : 0,
       detectableMeansDuringOperation: values.detectableMeansDuringOperation,
       detectableMeansToMaintainer: values.detectableMeansToMaintainer,
       BuiltInTest: values.BuiltInTest,
       subSystemEffect: values.subSystemEffect,
       systemEffect: values.systemEffect,
       endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta ? values.endEffectRatioBeta : 1,
+      endEffectRatioBeta: values.endEffectRatioBeta
+        ? values.endEffectRatioBeta
+        : 1,
       safetyImpact: values.safetyImpact,
       referenceHazardId: values.referenceHazardId,
       realibilityImpact: values.realibilityImpact,
@@ -250,8 +270,10 @@ function Index(props) {
       designControl: values.designControl,
       maintenanceControl: values.maintenanceControl,
       exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase,
+      immediteActionDuringOperationalPhase:
+        values.immediteActionDuringOperationalPhase,
+      immediteActionDuringNonOperationalPhase:
+        values.immediteActionDuringNonOperationalPhase,
       userField1: values.userField1,
       userField2: values.userField2,
       userField3: values.userField3,
@@ -309,6 +331,19 @@ function Index(props) {
 
   const importExcel = (e) => {
     const file = e.target.files[0];
+
+    // Check if the file is an Excel file by checking the extension
+    const fileName = file.name;
+    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
+    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
+
+    if (!validExtensions.includes(fileExtension)) {
+      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+      });
+      return; // Exit the function if the file is not an Excel file
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -462,7 +497,9 @@ function Index(props) {
       },
     }).then((res) => {
       setIsLoading(false);
-      const filteredData = res.data.getData.filter((entry) => entry?.libraryId?.moduleName === "FMECA");
+      const filteredData = res.data.getData.filter(
+        (entry) => entry?.libraryId?.moduleName === "FMECA"
+      );
       setConnectData(filteredData);
     });
   };
@@ -514,7 +551,8 @@ function Index(props) {
   ];
 
   fieldNames.forEach((fieldName) => {
-    const filteredData = connectData?.filter((item) => item?.sourceName === fieldName) || [];
+    const filteredData =
+      connectData?.filter((item) => item?.sourceName === fieldName) || [];
     dropdownOptions[fieldName] = filteredData.map((item) => ({
       value: item?.sourceValue,
       label: item?.sourceValue,
@@ -586,7 +624,10 @@ function Index(props) {
       headerStyle: { textAlign: "center", minWidth: "150px" },
       onCellClick: () => handleDropdownSelection("operatingPhase"),
       editComponent: ({ value, onChange, rowData }) => {
-        const filteredData = allSepareteData?.filter((item) => item?.sourceName === "operatingPhase") || [];
+        const filteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "operatingPhase"
+          ) || [];
         const options = filteredData?.map((item) => ({
           value: item?.sourceValue,
           label: item?.sourceValue,
@@ -606,7 +647,11 @@ function Index(props) {
           return (
             <Select
               name="operatingPhase"
-              value={data.operatingPhase ? { label: data.operatingPhase, value: data.operatingPhase } : ""}
+              value={
+                data.operatingPhase
+                  ? { label: data.operatingPhase, value: data.operatingPhase }
+                  : ""
+              }
               onChange={(selectedItems) => {
                 handleInputChange(selectedItems, "operatingPhase");
                 getAllConnectedLibrary(selectedItems, "operatingPhase");
@@ -625,8 +670,13 @@ function Index(props) {
       headerStyle: { textAlign: "center" },
       onCellClick: () => handleDropdownSelection("function"),
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "function") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "function") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "function") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "function"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -675,8 +725,14 @@ function Index(props) {
       headerStyle: { textAlign: "center" },
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "failureMode") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "failureMode") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "failureMode"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "failureMode"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -782,9 +838,13 @@ function Index(props) {
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "failureModeRatioAlpha") || [];
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "failureModeRatioAlpha"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "failureModeRatioAlpha") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "failureModeRatioAlpha"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -832,8 +892,12 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "cause") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "cause") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "cause") || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "cause"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -883,9 +947,14 @@ function Index(props) {
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "subSystemEffect") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "subSystemEffect"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "subSystemEffect") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "subSystemEffect"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -934,9 +1003,14 @@ function Index(props) {
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "systemEffect") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "systemEffect"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "systemEffect") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "systemEffect"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -985,8 +1059,13 @@ function Index(props) {
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "endEffect") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "endEffect") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "endEffect") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "endEffect"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1035,9 +1114,14 @@ function Index(props) {
       cellStyle: { minWidth: "230px" },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "endEffectRatioBeta") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "endEffectRatioBeta"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "endEffectRatioBeta") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "endEffectRatioBeta"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1092,9 +1176,14 @@ function Index(props) {
       //   return true;
       // },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "safetyImpact") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "safetyImpact"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "safetyImpact") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "safetyImpact"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1142,9 +1231,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "referenceHazardId") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "referenceHazardId"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "referenceHazardId") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "referenceHazardId"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1199,9 +1293,14 @@ function Index(props) {
       //   return true;
       // },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "realibilityImpact") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "realibilityImpact"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "realibilityImpact") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "realibilityImpact"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1251,9 +1350,13 @@ function Index(props) {
       headerStyle: { textAlign: "left" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "serviceDisruptionTime") || [];
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "serviceDisruptionTime"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "serviceDisruptionTime") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "serviceDisruptionTime"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1301,8 +1404,13 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "frequency") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "frequency") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "frequency") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "frequency"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1350,8 +1458,13 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "severity") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "severity") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "severity") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "severity"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1399,8 +1512,13 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "riskIndex") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "riskIndex") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "riskIndex") ||
+          [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "riskIndex"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1449,9 +1567,13 @@ function Index(props) {
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "detectableMeansDuringOperation") || [];
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "detectableMeansDuringOperation"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "detectableMeansDuringOperation") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "detectableMeansDuringOperation"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1485,8 +1607,14 @@ function Index(props) {
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "detectableMeansDuringOperation");
-              getAllConnectedLibrary(selectedItems, "detectableMeansDuringOperation");
+              handleInputChange(
+                selectedItems,
+                "detectableMeansDuringOperation"
+              );
+              getAllConnectedLibrary(
+                selectedItems,
+                "detectableMeansDuringOperation"
+              );
             }}
             options={options}
           />
@@ -1500,9 +1628,13 @@ function Index(props) {
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "detectableMeansToMaintainer") || [];
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "detectableMeansToMaintainer"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "detectableMeansToMaintainer") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "detectableMeansToMaintainer"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1537,7 +1669,10 @@ function Index(props) {
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "detectableMeansToMaintainer");
-              getAllConnectedLibrary(selectedItems, "detectableMeansToMaintainer");
+              getAllConnectedLibrary(
+                selectedItems,
+                "detectableMeansToMaintainer"
+              );
             }}
             options={options}
           />
@@ -1550,8 +1685,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "BuiltInTest") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "BuiltInTest") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "BuiltInTest"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "BuiltInTest"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1600,9 +1741,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "designControl") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "designControl"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "designControl") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "designControl"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1650,9 +1796,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "maintenanceControl") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "maintenanceControl"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "maintenanceControl") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "maintenanceControl"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1700,9 +1851,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "exportConstraints") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "exportConstraints"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "exportConstraints") || [];
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "exportConstraints"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1751,9 +1907,15 @@ function Index(props) {
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "immediteActionDuringOperationalPhase") || [];
+          allSepareteData?.filter(
+            (item) =>
+              item?.sourceName === "immediteActionDuringOperationalPhase"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "immediteActionDuringOperationalPhase") || [];
+          allConnectedData?.filter(
+            (item) =>
+              item?.destinationName === "immediteActionDuringOperationalPhase"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1787,8 +1949,14 @@ function Index(props) {
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "immediteActionDuringOperationalPhase");
-              getAllConnectedLibrary(selectedItems, "immediteActionDuringOperationalPhase");
+              handleInputChange(
+                selectedItems,
+                "immediteActionDuringOperationalPhase"
+              );
+              getAllConnectedLibrary(
+                selectedItems,
+                "immediteActionDuringOperationalPhase"
+              );
             }}
             options={options}
           />
@@ -1802,9 +1970,16 @@ function Index(props) {
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "immediteActionDuringNonOperationalPhase") || [];
+          allSepareteData?.filter(
+            (item) =>
+              item?.sourceName === "immediteActionDuringNonOperationalPhase"
+          ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "immediteActionDuringNonOperationalPhase") || [];
+          allConnectedData?.filter(
+            (item) =>
+              item?.destinationName ===
+              "immediteActionDuringNonOperationalPhase"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1838,8 +2013,14 @@ function Index(props) {
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "immediteActionDuringNonOperationalPhase");
-              getAllConnectedLibrary(selectedItems, "immediteActionDuringNonOperationalPhase");
+              handleInputChange(
+                selectedItems,
+                "immediteActionDuringNonOperationalPhase"
+              );
+              getAllConnectedLibrary(
+                selectedItems,
+                "immediteActionDuringNonOperationalPhase"
+              );
             }}
             options={options}
           />
@@ -1852,8 +2033,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField1") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField1") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField1"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField1"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1901,8 +2088,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField2") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField2") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField2"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField2"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1950,8 +2143,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField3") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField3") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField3"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField3"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -1999,8 +2198,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField4") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField4") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField4"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField4"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2048,8 +2253,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField5") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField5") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField5"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField5"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2097,8 +2308,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField6") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField6") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField6"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField6"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2146,8 +2363,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField7") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField7") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField7"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField7"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2195,8 +2418,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField8") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField8") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField8"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField8"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2244,8 +2473,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField9") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField9") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField9"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField9"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2293,8 +2528,14 @@ function Index(props) {
       type: "string",
       cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
-        const seperateFilteredData = allSepareteData?.filter((item) => item?.sourceName === "userField10") || [];
-        const conncetedFilteredData = allConnectedData?.filter((item) => item?.destinationName === "userField10") || [];
+        const seperateFilteredData =
+          allSepareteData?.filter(
+            (item) => item?.sourceName === "userField10"
+          ) || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter(
+            (item) => item?.destinationName === "userField10"
+          ) || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -2343,12 +2584,16 @@ function Index(props) {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
       Api.post("api/v1/FMECA/", {
-        operatingPhase: values.operatingPhase ? values.operatingPhase : data.operatingPhase,
+        operatingPhase: values.operatingPhase
+          ? values.operatingPhase
+          : data.operatingPhase,
         function: values.function ? values.function : data.function,
         failureMode: values.failureMode ? values.failureMode : data.failureMode,
         // searchFM: values.searchFM ? values.searchFM : data.searchFM,
         cause: values.cause ? values.cause : data.cause,
-        failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 1,
+        failureModeRatioAlpha: values.failureModeRatioAlpha
+          ? values.failureModeRatioAlpha
+          : 1,
         detectableMeansDuringOperation: values.detectableMeansDuringOperation
           ? values.detectableMeansDuringOperation
           : data.detectableMeansDuringOperation,
@@ -2356,26 +2601,48 @@ function Index(props) {
           ? values.detectableMeansToMaintainer
           : data.detectableMeansToMaintainer,
         BuiltInTest: values.BuiltInTest ? values.BuiltInTest : data.BuiltInTest,
-        subSystemEffect: values.subSystemEffect ? values.subSystemEffect : data.subSystemEffect,
-        systemEffect: values.systemEffect ? values.systemEffect : data.systemEffect,
+        subSystemEffect: values.subSystemEffect
+          ? values.subSystemEffect
+          : data.subSystemEffect,
+        systemEffect: values.systemEffect
+          ? values.systemEffect
+          : data.systemEffect,
         endEffect: values.endEffect ? values.endEffect : data.endEffect,
-        endEffectRatioBeta: values.endEffectRatioBeta ? values.endEffectRatioBeta : 1,
-        safetyImpact: values.safetyImpact ? values.safetyImpact : data.safetyImpact,
-        referenceHazardId: values.referenceHazardId ? values.referenceHazardId : data.referenceHazardId,
-        realibilityImpact: values.realibilityImpact ? values.realibilityImpact : data.realibilityImpact,
-        serviceDisruptionTime: values.serviceDisruptionTime ? values.serviceDisruptionTime : data.serviceDisruptionTime,
+        endEffectRatioBeta: values.endEffectRatioBeta
+          ? values.endEffectRatioBeta
+          : 1,
+        safetyImpact: values.safetyImpact
+          ? values.safetyImpact
+          : data.safetyImpact,
+        referenceHazardId: values.referenceHazardId
+          ? values.referenceHazardId
+          : data.referenceHazardId,
+        realibilityImpact: values.realibilityImpact
+          ? values.realibilityImpact
+          : data.realibilityImpact,
+        serviceDisruptionTime: values.serviceDisruptionTime
+          ? values.serviceDisruptionTime
+          : data.serviceDisruptionTime,
         frequency: values.frequency ? values.frequency : data.frequency,
         severity: values.severity ? values.severity : data.severity,
         riskIndex: values.riskIndex ? values.riskIndex : data.riskIndex,
-        designControl: values.designControl ? values.designControl : data.designControl,
-        maintenanceControl: values.maintenanceControl ? values.maintenanceControl : data.maintenanceControl,
-        exportConstraints: values.exportConstraints ? values.exportConstraints : data.exportConstraints,
-        immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase
-          ? values.immediteActionDuringOperationalPhase
-          : data.immediteActionDuringOperationalPhase,
-        immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase
-          ? values.immediteActionDuringNonOperationalPhase
-          : data.immediteActionDuringNonOperationalPhase,
+        designControl: values.designControl
+          ? values.designControl
+          : data.designControl,
+        maintenanceControl: values.maintenanceControl
+          ? values.maintenanceControl
+          : data.maintenanceControl,
+        exportConstraints: values.exportConstraints
+          ? values.exportConstraints
+          : data.exportConstraints,
+        immediteActionDuringOperationalPhase:
+          values.immediteActionDuringOperationalPhase
+            ? values.immediteActionDuringOperationalPhase
+            : data.immediteActionDuringOperationalPhase,
+        immediteActionDuringNonOperationalPhase:
+          values.immediteActionDuringNonOperationalPhase
+            ? values.immediteActionDuringNonOperationalPhase
+            : data.immediteActionDuringNonOperationalPhase,
         userField1: values.userField1 ? values.userField1 : data.userField1,
         userField2: values.userField2 ? values.userField2 : data.userField2,
         userField3: values.userField3 ? values.userField3 : data.userField3,
@@ -2412,7 +2679,9 @@ function Index(props) {
       function: values.function,
       failureMode: values.failureMode,
       // searchFM: values.searchFM,
-      failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 0,
+      failureModeRatioAlpha: values.failureModeRatioAlpha
+        ? values.failureModeRatioAlpha
+        : 0,
       cause: values.cause,
       detectableMeansDuringOperation: values.detectableMeansDuringOperation,
       detectableMeansToMaintainer: values.detectableMeansToMaintainer,
@@ -2420,7 +2689,9 @@ function Index(props) {
       subSystemEffect: values.subSystemEffect,
       systemEffect: values.systemEffect,
       endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta ? values.endEffectRatioBeta : 1,
+      endEffectRatioBeta: values.endEffectRatioBeta
+        ? values.endEffectRatioBeta
+        : 1,
       safetyImpact: values.safetyImpact,
       referenceHazardId: values.referenceHazardId,
       realibilityImpact: values.realibilityImpact,
@@ -2431,8 +2702,10 @@ function Index(props) {
       designControl: values.designControl,
       maintenanceControl: values.maintenanceControl,
       exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase,
+      immediteActionDuringOperationalPhase:
+        values.immediteActionDuringOperationalPhase,
+      immediteActionDuringNonOperationalPhase:
+        values.immediteActionDuringNonOperationalPhase,
       userField1: values.userField1,
       userField2: values.userField2,
       userField3: values.userField3,
@@ -2496,7 +2769,7 @@ function Index(props) {
   const role = localStorage.getItem("role");
 
   return (
-    <div className="mx-4 mt-5" >
+    <div className="mx-4 mt-5">
       {isLoading ? (
         <Loader />
       ) : (
@@ -2549,7 +2822,11 @@ function Index(props) {
             </div>
 
             <div style={{ width: "100%", marginRight: "20px" }}>
-              <Dropdown value={projectId} productId={productId} data={treeTableData} />
+              <Dropdown
+                value={projectId}
+                productId={productId}
+                data={treeTableData}
+              />
             </div>
 
             <div
@@ -2576,8 +2853,14 @@ function Index(props) {
                 </div>
               </Tooltip>
               <Tooltip placement="left" title="Export">
-                <Button className="import-export-btn" onClick={() => DownloadExcel()}>
-                  <FontAwesomeIcon icon={faFileUpload} style={{ width: "15px" }} />
+                <Button
+                  className="import-export-btn"
+                  onClick={() => DownloadExcel()}
+                >
+                  <FontAwesomeIcon
+                    icon={faFileUpload}
+                    style={{ width: "15px" }}
+                  />
                 </Button>
               </Tooltip>
             </div>
@@ -2653,7 +2936,11 @@ function Index(props) {
 
           <Modal show={show} centered>
             <div className="d-flex justify-content-center mt-5">
-              <FontAwesomeIcon icon={faCircleCheck} fontSize={"40px"} color="#1D5460" />
+              <FontAwesomeIcon
+                icon={faCircleCheck}
+                fontSize={"40px"}
+                color="#1D5460"
+              />
             </div>
             <Modal.Footer className=" d-flex justify-content-center success-message mt-3 mb-4">
               <div>
@@ -2668,9 +2955,13 @@ function Index(props) {
             <Modal.Footer className=" d-flex justify-content-center success-message mb-4">
               <div>
                 <h5 className="text-center">
-                  Please select product from <b>Dropdown </b>before adding a new row!
+                  Please select product from <b>Dropdown </b>before adding a new
+                  row!
                 </h5>
-                <Button className="save-btn fw-bold fmeca-button mt-3" onClick={() => setProductModal(false)}>
+                <Button
+                  className="save-btn fw-bold fmeca-button mt-3"
+                  onClick={() => setProductModal(false)}
+                >
                   OK
                 </Button>
               </div>
@@ -2678,14 +2969,21 @@ function Index(props) {
           </Modal>
           <Modal show={failureModeRatioError} centered onHide={handleHide}>
             <div className="d-flex justify-content-center mt-5">
-              <FontAwesomeIcon icon={faCircleExclamation} size="2x" color="#de2222b0" />
+              <FontAwesomeIcon
+                icon={faCircleExclamation}
+                size="2x"
+                color="#de2222b0"
+              />
             </div>
             <Modal.Footer className=" d-flex justify-content-center success-message mb-4">
               <div>
                 <h5 className="text-center">
                   Sum of Failure Mode must be equal to<b>1</b>
                 </h5>
-                <Button className="save-btn fw-bold fmeca-button mt-3" onClick={() => setFailureModeRatioError(false)}>
+                <Button
+                  className="save-btn fw-bold fmeca-button mt-3"
+                  onClick={() => setFailureModeRatioError(false)}
+                >
                   OK
                 </Button>
               </div>

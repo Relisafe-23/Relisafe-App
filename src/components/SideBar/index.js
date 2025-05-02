@@ -121,8 +121,8 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
         userId: userId,
       },
     }).then((res) => {
-      setIsOwner(res.data.data.isOwner);
-      setCreatedBy(res.data.data.createdBy);
+      setIsOwner(res?.data?.data?.isOwner);
+      setCreatedBy(res?.data?.data?.createdBy);
     });
   }
   };
@@ -135,6 +135,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
 
   useEffect(() => {
     getProjectPermission();
+    console.log("check......",hue)
     projectSidebar();
     const root = document.querySelector(":root");
     root.style.setProperty("--primary-color", `oklch(45.12% 0.267 ${hue})`);
@@ -577,7 +578,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
                                 pathname: `/connected/library/${projectId}`,
                                 state: { projectId: projectId, state },
                               }}
-                              activeClassName="main-nav-active"
+                             activeClassName="main-nav-active"
                               style={{
                                 backgroundColor:
                                   selectedModule === "connecetedLibrary"
@@ -684,7 +685,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
                     className="menu-icon"
                     title="Projects"
                   />
-                  <span>Projects2</span>
+                  <span>Projects</span>
                 </NavLink>
               </div>
               <hr className="divider-color" />

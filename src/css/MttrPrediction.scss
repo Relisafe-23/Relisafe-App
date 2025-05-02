@@ -1,6 +1,79 @@
 .project-name-header {
   margin-left: 30%;
 }
+
+.modal-content {
+  width: 85vw; /* 75% of viewport width */
+  max-width: 1200px; /* Maximum width */
+  margin: 0 auto; /* Center horizontally */
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal Header/Close Button */
+.close-icon {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.close-icon:hover {
+  transform: scale(1.1);
+}
+
+/* Content Area */
+.classical-group {
+  padding: 1rem 1rem; /* Top/bottom: 2rem, Left/right: 3rem */
+  background: #F8F9FA;
+  border-radius: 8px;
+  margin: 2rem;
+}
+
+/* Form Group Styling */
+.form-group {
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Title Styling */
+.classical-group h2 {
+  color: #1D5460;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #1D5460;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 90vw; /* More width on smaller screens */
+    margin: 0 auto;
+  }
+  
+  .classical-group {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .modal-content {
+    width: 95vw;
+  }
+  
+  .classical-group {
+    padding: 1rem;
+  }
+}
 .para-tag_1 {
   font-family: Arial, Helvetica, sans-serif;
   font-weight: bold;

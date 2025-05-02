@@ -131,9 +131,20 @@ export default function PMMRA(props) {
   const [colDefs, setColDefs] = useState();
   const [importExcelData, setImportExcelData] = useState({});
   const [shouldReload, setShouldReload] = useState(false);
-    const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const importExcel = (e) => {
     const file = e.target.files[0];
+    const fileName = file.name;
+    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
+    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
+
+    if (!validExtensions.includes(fileExtension)) {
+      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+      });
+      return; // Exit the function if the file is not an Excel file
+    }
     const reader = new FileReader();
     reader.onload = (event) => {
       const bstr = event.target.result;
@@ -142,30 +153,30 @@ export default function PMMRA(props) {
       const workSheet = workBook.Sheets[workSheetName];
       const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
       // if (excelData[1].length > 1) {
-        if (excelData.length > 1) {
-          const headers = excelData[0];
-          const rows = excelData.slice(1);
-          const parsedData = rows.map((row) => {
-            const rowData = {};
-            headers.forEach((header, index) => {
-              rowData[header] = row[index];
-            });
-            return rowData;
+      if (excelData.length > 1) {
+        const headers = excelData[0];
+        const rows = excelData.slice(1);
+        const parsedData = rows.map((row) => {
+          const rowData = {};
+          headers.forEach((header, index) => {
+            rowData[header] = row[index];
           });
-          setImportExcelData(parsedData[0]);
-        } else {
-          toast("No Data Found In Excel Sheet", {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light",
-            type: "error",
-          });
-        }
+          return rowData;
+        });
+        setImportExcelData(parsedData[0]);
+      } else {
+        toast("No Data Found In Excel Sheet", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          type: "error",
+        });
+      }
     };
     if (file) {
     }
@@ -314,52 +325,49 @@ export default function PMMRA(props) {
       userField4: value.userfield4,
       userField5: value.userfield5,
     };
-// if (originalData.length > 0) {
+    // if (originalData.length > 0) {
 
-  const hasData = Object.values(originalData).some((value) => !!value);
+    const hasData = Object.values(originalData).some((value) => !!value);
 
-  if (hasData) {
-  const dataArray = [];
+    if (hasData) {
+      const dataArray = [];
 
-  dataArray.push(originalData);
-  const ws = XLSX?.utils?.json_to_sheet(dataArray);
-  const wb = XLSX.utils?.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "FormData");
-  const fileName = `${productName}_PMMRA.xlsx`;
-  XLSX.writeFile(wb, fileName);
-} else {
-  toast("Export Failed !! No Data Found", {
-    position: "top-right",
-    autoClose: 5000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    theme: "light",
-    type: "error", // Change this to "error" to display an error message
-  });
-}
-  
+      dataArray.push(originalData);
+      const ws = XLSX?.utils?.json_to_sheet(dataArray);
+      const wb = XLSX.utils?.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "FormData");
+      const fileName = `${productName}_PMMRA.xlsx`;
+      XLSX.writeFile(wb, fileName);
+    } else {
+      toast("Export Failed !! No Data Found", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error", // Change this to "error" to display an error message
+      });
+    }
   };
 
+  const handleCancelClick = () => {
+    // Perform any necessary checks to determine if a reload is required
+    const shouldReloadPage = true; // Change this condition as needed
 
-
-
-    const handleCancelClick = () => {
-      // Perform any necessary checks to determine if a reload is required
-      const shouldReloadPage = true; // Change this condition as needed
-
-      if (shouldReloadPage) {
-        setShouldReload(true);
-      } else {
-        //  formik.resetForm();
-         setOpen(false);
-      }
-    };  if (shouldReload) {
-      // Reload the page
-      window.location.reload();
+    if (shouldReloadPage) {
+      setShouldReload(true);
+    } else {
+      //  formik.resetForm();
+      setOpen(false);
     }
+  };
+  if (shouldReload) {
+    // Reload the page
+    window.location.reload();
+  }
   const [companyId, setCompanyId] = useState();
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [mergedData, setMergedData] = useState([]);
@@ -429,12 +437,12 @@ export default function PMMRA(props) {
     userfield5: "",
   });
 
-  const handleInputChange = (selectedItems, name) => {
-    setData((prevData) => ({
-      ...prevData,
-      [name]: selectedItems ? selectedItems.value : "", // Assuming you want to store the selected value
-    }));
-  };
+  // const handleInputChange = (selectedItems, name) => {
+  //   setData((prevData) => ({
+  //     ...prevData,
+  //     [name]: selectedItems ? selectedItems.value : "", // Assuming you want to store the selected value
+  //   }));
+  // };
 
   const getAllSeprateLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
@@ -448,7 +456,8 @@ export default function PMMRA(props) {
         (item) => item?.moduleName === "PMMRA"
       );
       setAllSepareteData(filteredData);
-      const merged = [...tableData, ...filteredData];
+      // const merged = [...tableData, ...filteredData];
+      const merged = [...(tableData || []), ...filteredData];
       setMergedData(merged);
     });
   };
@@ -647,7 +656,9 @@ export default function PMMRA(props) {
         const data = res?.data?.data;
         setProductName(data.productName);
         setIsLoading(false);
-        setCategory(data?.category ? { label: data?.category, value: data?.category } : "");
+        setCategory(
+          data?.category ? { label: data?.category, value: data?.category } : ""
+        );
         setQuantity(data?.quantity);
         setName(data?.productName);
         setPartNumber(data?.partNumber);
@@ -1070,13 +1081,37 @@ export default function PMMRA(props) {
     parttype: partType,
     quantity: quantity,
     fmecaId: fmecaFillterData?.fmecaId,
-    endeffect: fmecaFillterData?.endEffect ? fmecaFillterData.endEffect : importExcelData?.endEffect ? importExcelData.endEffect : "",
-    reliability: fmecaFillterData?.realibilityImpact ? fmecaFillterData.realibilityImpact : importExcelData?.reliabilityImpact ? importExcelData.reliabilityImpact : "",
-    severity: fmecaFillterData?.severity ? fmecaFillterData.severity : importExcelData?.severity ? importExcelData.severity : "",
-    safetyimpact: fmecaFillterData?.safetyImpact ? fmecaFillterData.safetyImpact : importExcelData?.safetyImpact ? importExcelData.safetyImpact : "",
-    frequency: fmecaFillterData?.frequency ? fmecaFillterData.frequency : importExcelData?.frequency ? importExcelData.frequency : "",
-    riskindex: fmecaFillterData?.riskIndex ? fmecaFillterData.riskIndex : importExcelData?.riskIndex ? importExcelData.riskIndex : "",
-    
+    endeffect: fmecaFillterData?.endEffect
+      ? fmecaFillterData.endEffect
+      : importExcelData?.endEffect
+      ? importExcelData.endEffect
+      : "",
+    reliability: fmecaFillterData?.realibilityImpact
+      ? fmecaFillterData.realibilityImpact
+      : importExcelData?.reliabilityImpact
+      ? importExcelData.reliabilityImpact
+      : "",
+    severity: fmecaFillterData?.severity
+      ? fmecaFillterData.severity
+      : importExcelData?.severity
+      ? importExcelData.severity
+      : "",
+    safetyimpact: fmecaFillterData?.safetyImpact
+      ? fmecaFillterData.safetyImpact
+      : importExcelData?.safetyImpact
+      ? importExcelData.safetyImpact
+      : "",
+    frequency: fmecaFillterData?.frequency
+      ? fmecaFillterData.frequency
+      : importExcelData?.frequency
+      ? importExcelData.frequency
+      : "",
+    riskindex: fmecaFillterData?.riskIndex
+      ? fmecaFillterData.riskIndex
+      : importExcelData?.riskIndex
+      ? importExcelData.riskIndex
+      : "",
+
     // endeffect: pmmraData?.endEffect
     //   ? pmmraData?.endEffect
     //   : importExcelData?.endEffect
@@ -1121,7 +1156,7 @@ export default function PMMRA(props) {
     //   ? pmmraData?.tskInteralDetermination
     //   : importExcelData?.tskInteralDetermination
     //   ? importExcelData.tskInteralDetermination
-   
+
     pmtaskid: pmmraData?.pmTaskId ? pmmraData?.pmTaskId : "",
     taskintervalFrequency: pmmraData?.taskIntrvlFreq
       ? pmmraData?.taskIntrvlFreq
@@ -1141,212 +1176,212 @@ export default function PMMRA(props) {
       : "",
     scheduledMaintenanceTask: pmmraData?.scheduleMaintenceTsk
       ? pmmraData?.scheduleMaintenceTsk
-    //   : importExcelData?.scheduleMaintenceTsk
-    //   ? importExcelData.scheduleMaintenceTsk
-    //   : "",
-    // taskDescription: pmmraData?.taskDesc
-    //   ? pmmraData?.taskDesc
-    //   : importExcelData?.taskDesc
-    //   ? importExcelData.taskDesc
-    //   : "",
-    // tasktimeML1: pmmraData?.tskTimeML1
-    //   ? pmmraData?.tskTimeML1
-    //   : importExcelData?.tskTimeML1
-    //   ? importExcelData.tskTimeML1
-    //   : "",
-    // tasktimeML2: pmmraData?.tskTimeML2
-    //   ? pmmraData?.tskTimeML2
-    //   : importExcelData?.tskTimeML2
-    //   ? importExcelData.tskTimeML2
-    //   : "",
-    // tasktimeML3: pmmraData?.tskTimeML3
-    //   ? pmmraData?.tskTimeML3
-    //   : importExcelData?.tskTimeML3
-    //   ? importExcelData.tskTimeML3
-    //   : "",
-    // tasktimeML4: pmmraData?.tskTimeML4
-    //   ? pmmraData?.tskTimeML4
-    //   : importExcelData?.tskTimeML4
-    //   ? importExcelData.tskTimeML4
-    //   : "",
-    // tasktimeML5: pmmraData?.tskTimeML5
-    //   ? pmmraData?.tskTimeML5
-    //   : importExcelData?.tskTimeML5
-    //   ? importExcelData.tskTimeML5
-    //   : "",
-    // tasktimeML6: pmmraData?.tskTimeML6
-    //   ? pmmraData?.tskTimeML6
-    //   : importExcelData?.tskTimeML6
-    //   ? importExcelData.tskTimeML6
-    //   : "",
-    // tasktimeML7: pmmraData?.tskTimeML7
-    //   ? pmmraData?.tskTimeML7
-    //   : importExcelData?.tskTimeML7
-    //   ? importExcelData.tskTimeML7
-    //   : "",
+      : //   : importExcelData?.scheduleMaintenceTsk
+        //   ? importExcelData.scheduleMaintenceTsk
+        //   : "",
+        // taskDescription: pmmraData?.taskDesc
+        //   ? pmmraData?.taskDesc
+        //   : importExcelData?.taskDesc
+        //   ? importExcelData.taskDesc
+        //   : "",
+        // tasktimeML1: pmmraData?.tskTimeML1
+        //   ? pmmraData?.tskTimeML1
+        //   : importExcelData?.tskTimeML1
+        //   ? importExcelData.tskTimeML1
+        //   : "",
+        // tasktimeML2: pmmraData?.tskTimeML2
+        //   ? pmmraData?.tskTimeML2
+        //   : importExcelData?.tskTimeML2
+        //   ? importExcelData.tskTimeML2
+        //   : "",
+        // tasktimeML3: pmmraData?.tskTimeML3
+        //   ? pmmraData?.tskTimeML3
+        //   : importExcelData?.tskTimeML3
+        //   ? importExcelData.tskTimeML3
+        //   : "",
+        // tasktimeML4: pmmraData?.tskTimeML4
+        //   ? pmmraData?.tskTimeML4
+        //   : importExcelData?.tskTimeML4
+        //   ? importExcelData.tskTimeML4
+        //   : "",
+        // tasktimeML5: pmmraData?.tskTimeML5
+        //   ? pmmraData?.tskTimeML5
+        //   : importExcelData?.tskTimeML5
+        //   ? importExcelData.tskTimeML5
+        //   : "",
+        // tasktimeML6: pmmraData?.tskTimeML6
+        //   ? pmmraData?.tskTimeML6
+        //   : importExcelData?.tskTimeML6
+        //   ? importExcelData.tskTimeML6
+        //   : "",
+        // tasktimeML7: pmmraData?.tskTimeML7
+        //   ? pmmraData?.tskTimeML7
+        //   : importExcelData?.tskTimeML7
+        //   ? importExcelData.tskTimeML7
+        //   : "",
 
-    // skill1contribution: pmmraData?.skillOneContribution
-    //   ? pmmraData?.skillOneContribution
-    //   : importExcelData?.skillOneContribution
-    //   ? importExcelData.skillOneContribution
-    //   : "",
+        // skill1contribution: pmmraData?.skillOneContribution
+        //   ? pmmraData?.skillOneContribution
+        //   : importExcelData?.skillOneContribution
+        //   ? importExcelData.skillOneContribution
+        //   : "",
 
-    // skill1nos: pmmraData?.skillOneNos
-    //   ? pmmraData?.skillOneNos
-    //   : importExcelData?.skillOneNos
-    //   ? importExcelData.skillOneNos
-    //   : "",
-    // skill1: pmmraData?.skill1 ? pmmraData?.skill1 : importExcelData?.skill1 ? importExcelData.skill1 : "",
-    // skill2contribution: pmmraData?.skillTwoContribution
-    //   ? pmmraData?.skillTwoContribution
-    //   : importExcelData?.skillTwoContribution
-    //   ? importExcelData.skillTwoContribution
-    //   : "",
-    // skill2nos: pmmraData?.skillTwoNos
-    //   ? pmmraData?.skillTwoNos
-    //   : importExcelData?.skillTwoNos
-    //   ? importExcelData.skillTwoNos
-    //   : "",
-    // skill2: pmmraData?.skill2 ? pmmraData?.skill2 : importExcelData?.skill2 ? importExcelData.skill2 : "",
-    // skill3contribution: pmmraData?.skillThreeContribution
-    //   ? pmmraData?.skillThreeContribution
-    //   : importExcelData?.skillThreeContribution
-    //   ? importExcelData.skillThreeContribution
-    //   : "",
-    // skill3nos: pmmraData?.skillThreeNos
-    //   ? pmmraData?.skillThreeNos
-    //   : importExcelData?.skillThreeNos
-    //   ? importExcelData.skillThreeNos
-    //   : "",
-    // skill3: pmmraData?.skill3 ? pmmraData?.skill3 : importExcelData?.skill3 ? importExcelData.skill3 : "",
+        // skill1nos: pmmraData?.skillOneNos
+        //   ? pmmraData?.skillOneNos
+        //   : importExcelData?.skillOneNos
+        //   ? importExcelData.skillOneNos
+        //   : "",
+        // skill1: pmmraData?.skill1 ? pmmraData?.skill1 : importExcelData?.skill1 ? importExcelData.skill1 : "",
+        // skill2contribution: pmmraData?.skillTwoContribution
+        //   ? pmmraData?.skillTwoContribution
+        //   : importExcelData?.skillTwoContribution
+        //   ? importExcelData.skillTwoContribution
+        //   : "",
+        // skill2nos: pmmraData?.skillTwoNos
+        //   ? pmmraData?.skillTwoNos
+        //   : importExcelData?.skillTwoNos
+        //   ? importExcelData.skillTwoNos
+        //   : "",
+        // skill2: pmmraData?.skill2 ? pmmraData?.skill2 : importExcelData?.skill2 ? importExcelData.skill2 : "",
+        // skill3contribution: pmmraData?.skillThreeContribution
+        //   ? pmmraData?.skillThreeContribution
+        //   : importExcelData?.skillThreeContribution
+        //   ? importExcelData.skillThreeContribution
+        //   : "",
+        // skill3nos: pmmraData?.skillThreeNos
+        //   ? pmmraData?.skillThreeNos
+        //   : importExcelData?.skillThreeNos
+        //   ? importExcelData.skillThreeNos
+        //   : "",
+        // skill3: pmmraData?.skill3 ? pmmraData?.skill3 : importExcelData?.skill3 ? importExcelData.skill3 : "",
 
-    // addReplacespare1: pmmraData?.addiReplaceSpare1
-    //   ? pmmraData?.addiReplaceSpare1
-    //   : importExcelData?.addiReplaceSpare1
-    //   ? importExcelData.addiReplaceSpare1
-    //   : "",
+        // addReplacespare1: pmmraData?.addiReplaceSpare1
+        //   ? pmmraData?.addiReplaceSpare1
+        //   : importExcelData?.addiReplaceSpare1
+        //   ? importExcelData.addiReplaceSpare1
+        //   : "",
 
-    // addReplacespare2: pmmraData?.addiReplaceSpare2
-    //   ? pmmraData?.addiReplaceSpare2
-    //   : importExcelData?.addiReplaceSpare2
-    //   ? importExcelData.addiReplaceSpare2
-    //   : "",
+        // addReplacespare2: pmmraData?.addiReplaceSpare2
+        //   ? pmmraData?.addiReplaceSpare2
+        //   : importExcelData?.addiReplaceSpare2
+        //   ? importExcelData.addiReplaceSpare2
+        //   : "",
 
-    // addReplacespare3: pmmraData?.addiReplaceSpare3
-    //   ? pmmraData?.addiReplaceSpare3
-    //   : importExcelData?.addiReplaceSpare3
-    //   ? importExcelData.addiReplaceSpare3
-    //   : "",
+        // addReplacespare3: pmmraData?.addiReplaceSpare3
+        //   ? pmmraData?.addiReplaceSpare3
+        //   : importExcelData?.addiReplaceSpare3
+        //   ? importExcelData.addiReplaceSpare3
+        //   : "",
 
-    // Consumable1: pmmraData?.consumable1
-    //   ? pmmraData?.consumable1
-    //   : importExcelData?.consumable1
-    //   ? importExcelData.consumable1
-    //   : "",
+        // Consumable1: pmmraData?.consumable1
+        //   ? pmmraData?.consumable1
+        //   : importExcelData?.consumable1
+        //   ? importExcelData.consumable1
+        //   : "",
 
-    // Consumable2: pmmraData?.consumable2
-    //   ? pmmraData?.consumable2
-    //   : importExcelData?.consumable2
-    //   ? importExcelData.consumable2
-    //   : "",
+        // Consumable2: pmmraData?.consumable2
+        //   ? pmmraData?.consumable2
+        //   : importExcelData?.consumable2
+        //   ? importExcelData.consumable2
+        //   : "",
 
-    // Consumable3: pmmraData?.consumable3
-    //   ? pmmraData?.consumable3
-    //   : importExcelData?.consumable3
-    //   ? importExcelData.consumable3
-    //   : "",
+        // Consumable3: pmmraData?.consumable3
+        //   ? pmmraData?.consumable3
+        //   : importExcelData?.consumable3
+        //   ? importExcelData.consumable3
+        //   : "",
 
-    // Consumable4: pmmraData?.consumable4
-    //   ? pmmraData?.consumable4
-    //   : importExcelData?.consumable4
-    //   ? importExcelData.consumable4
-    //   : "",
+        // Consumable4: pmmraData?.consumable4
+        //   ? pmmraData?.consumable4
+        //   : importExcelData?.consumable4
+        //   ? importExcelData.consumable4
+        //   : "",
 
-    // Consumable5: pmmraData?.consumable5
-    //   ? pmmraData?.consumable5
-    //   : importExcelData?.consumable5
-    //   ? importExcelData.consumable5
-    //   : "",
+        // Consumable5: pmmraData?.consumable5
+        //   ? pmmraData?.consumable5
+        //   : importExcelData?.consumable5
+        //   ? importExcelData.consumable5
+        //   : "",
 
-    // addReplacespare1qty: pmmraData?.addiReplaceSpare1Qty
-    //   ? pmmraData?.addiReplaceSpare1Qty
-    //   : importExcelData?.addiReplaceSpare1Qty
-    //   ? importExcelData.addiReplaceSpare1Qty
-    //   : "",
+        // addReplacespare1qty: pmmraData?.addiReplaceSpare1Qty
+        //   ? pmmraData?.addiReplaceSpare1Qty
+        //   : importExcelData?.addiReplaceSpare1Qty
+        //   ? importExcelData.addiReplaceSpare1Qty
+        //   : "",
 
-    // addReplacespare2qty: pmmraData?.addiReplaceSpare2Qty
-    //   ? pmmraData?.addiReplaceSpare2Qty
-    //   : importExcelData?.addiReplaceSpare2Qty
-    //   ? importExcelData.addiReplaceSpare2Qty
-    //   : "",
+        // addReplacespare2qty: pmmraData?.addiReplaceSpare2Qty
+        //   ? pmmraData?.addiReplaceSpare2Qty
+        //   : importExcelData?.addiReplaceSpare2Qty
+        //   ? importExcelData.addiReplaceSpare2Qty
+        //   : "",
 
-    // addReplacespare3qty: pmmraData?.addiReplaceSpare3Qty
-    //   ? pmmraData?.addiReplaceSpare3Qty
-    //   : importExcelData?.addiReplaceSpare3Qty
-    //   ? importExcelData.addiReplaceSpare3Qty
-    //   : "",
+        // addReplacespare3qty: pmmraData?.addiReplaceSpare3Qty
+        //   ? pmmraData?.addiReplaceSpare3Qty
+        //   : importExcelData?.addiReplaceSpare3Qty
+        //   ? importExcelData.addiReplaceSpare3Qty
+        //   : "",
 
-    // Consumable1qty: pmmraData?.consumable1Qty
-    //   ? pmmraData?.consumable1Qty
-    //   : importExcelData?.consumable1Qty
-    //   ? importExcelData.consumable1Qty
-    //   : "",
+        // Consumable1qty: pmmraData?.consumable1Qty
+        //   ? pmmraData?.consumable1Qty
+        //   : importExcelData?.consumable1Qty
+        //   ? importExcelData.consumable1Qty
+        //   : "",
 
-    // Consumable2qty: pmmraData?.consumable2Qty
-    //   ? pmmraData?.consumable2Qty
-    //   : importExcelData?.consumable2Qty
-    //   ? importExcelData.consumable2Qty
-    //   : "",
+        // Consumable2qty: pmmraData?.consumable2Qty
+        //   ? pmmraData?.consumable2Qty
+        //   : importExcelData?.consumable2Qty
+        //   ? importExcelData.consumable2Qty
+        //   : "",
 
-    // Consumable3qty: pmmraData?.consumable3Qty
-    //   ? pmmraData?.consumable3Qty
-    //   : importExcelData?.consumable3Qty
-    //   ? importExcelData.consumable3Qty
-    //   : "",
+        // Consumable3qty: pmmraData?.consumable3Qty
+        //   ? pmmraData?.consumable3Qty
+        //   : importExcelData?.consumable3Qty
+        //   ? importExcelData.consumable3Qty
+        //   : "",
 
-    // Consumable4qty: pmmraData?.consumable4Qty
-    //   ? pmmraData?.consumable4Qty
-    //   : importExcelData?.consumable4Qty
-    //   ? importExcelData.consumable4Qty
-    //   : "",
+        // Consumable4qty: pmmraData?.consumable4Qty
+        //   ? pmmraData?.consumable4Qty
+        //   : importExcelData?.consumable4Qty
+        //   ? importExcelData.consumable4Qty
+        //   : "",
 
-    // Consumable5qty: pmmraData?.consumable5Qty
-    //   ? pmmraData?.consumable5Qty
-    //   : importExcelData?.consumable5Qty
-    //   ? importExcelData.consumable5Qty
-    //   : "",
+        // Consumable5qty: pmmraData?.consumable5Qty
+        //   ? pmmraData?.consumable5Qty
+        //   : importExcelData?.consumable5Qty
+        //   ? importExcelData.consumable5Qty
+        //   : "",
 
-    // userfield1: pmmraData?.userField1
-    //   ? pmmraData?.userField1
-    //   : importExcelData?.userField1
-    //   ? importExcelData.userField1
-    //   : "",
+        // userfield1: pmmraData?.userField1
+        //   ? pmmraData?.userField1
+        //   : importExcelData?.userField1
+        //   ? importExcelData.userField1
+        //   : "",
 
-    // userfield2: pmmraData?.userField2
-    //   ? pmmraData?.userField2
-    //   : importExcelData?.userField2
-    //   ? importExcelData.userField2
-    //   : "",
+        // userfield2: pmmraData?.userField2
+        //   ? pmmraData?.userField2
+        //   : importExcelData?.userField2
+        //   ? importExcelData.userField2
+        //   : "",
 
-    // userfield3: pmmraData?.userField3
-    //   ? pmmraData?.userField3
-    //   : importExcelData?.userField3
-    //   ? importExcelData.userField3
-    //   : "",
+        // userfield3: pmmraData?.userField3
+        //   ? pmmraData?.userField3
+        //   : importExcelData?.userField3
+        //   ? importExcelData.userField3
+        //   : "",
 
-    // userfield4: pmmraData?.userField4
-    //   ? pmmraData?.userField4
-    //   : importExcelData?.userField4
-    //   ? importExcelData.userField4
-    //   : "",
+        // userfield4: pmmraData?.userField4
+        //   ? pmmraData?.userField4
+        //   : importExcelData?.userField4
+        //   ? importExcelData.userField4
+        //   : "",
 
-    // userfield5: pmmraData?.userField5
-    //   ? pmmraData?.userField5
-    //   : importExcelData?.userField5
-    //   ? importExcelData.userField5
-    //   : "",
-    // Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
-      : "",
+        // userfield5: pmmraData?.userField5
+        //   ? pmmraData?.userField5
+        //   : importExcelData?.userField5
+        //   ? importExcelData.userField5
+        //   : "",
+        // Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
+        "",
     taskDescription: pmmraData?.taskDesc ? pmmraData?.taskDesc : "",
     tasktimeML1: pmmraData?.tskTimeML1 ? pmmraData?.tskTimeML1 : "",
     tasktimeML2: pmmraData?.tskTimeML2 ? pmmraData?.tskTimeML2 : "",
@@ -1449,7 +1484,6 @@ export default function PMMRA(props) {
         <Loader />
       ) : (
         <div>
-
           {/* <Row>
             <Col>
               <label for="file-input" class="file-label file-inputs">
@@ -1468,7 +1502,7 @@ export default function PMMRA(props) {
               </Button>
             </Col>
           </Row> */}
-           {/* <div
+          {/* <div
             style={{
               display: "flex",
               marginTop: "8px",
@@ -1504,74 +1538,72 @@ export default function PMMRA(props) {
               <Dropdown value={projectId} productId={productId} />
             </Col>
           </Row> */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <div style={{ width: "30%", marginRight: "20px" }}>
+              <Projectname projectId={projectId} />
+            </div>
+
+            <div style={{ width: "100%", marginRight: "20px" }}>
+              <Dropdown
+                value={projectId}
+                productId={productId}
+                data={treeTableData}
+              />
+            </div>
+
             <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div style={{ width: "30%", marginRight: "20px" }}>
-                        <Projectname projectId={projectId} />
-                      </div>
-
-                      <div style={{ width: "100%", marginRight: "20px" }}>
-                        <Dropdown
-                          value={projectId}
-                          productId={productId}
-                          data={treeTableData}
-                        />
-                      </div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          alignItems: "center",
-                          marginTop: "8px",
-                          height: "40px",
-                        }}
-                      >
-                        <Tooltip placement="right" title="Import">
-                          <div style={{ marginRight: "8px" }}>
-                            <label
-                              htmlFor="file-input"
-                              className="import-export-btn"
-                            >
-                              <FontAwesomeIcon icon={faFileDownload} />
-                            </label>
-                            <input
-                              type="file"
-                              className="input-fields"
-                              id="file-input"
-                              onChange={importExcel}
-                              style={{ display: "none" }}
-                            />
-                          </div>
-                        </Tooltip>
-                        <Tooltip placement="left" title="Export">
-                          <Button
-                            className="import-export-btn"
-                            onClick={() => {
-                              exportToExcel(InitialValues);
-                            }}
-                          >
-                            <FontAwesomeIcon
-                              icon={faFileUpload}
-                              style={{ width: "15px" }}
-                            />
-                          </Button>
-                        </Tooltip>
-                      </div>
-                    </div>
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                marginTop: "8px",
+                height: "40px",
+              }}
+            >
+              <Tooltip placement="right" title="Import">
+                <div style={{ marginRight: "8px" }}>
+                  <label htmlFor="file-input" className="import-export-btn">
+                    <FontAwesomeIcon icon={faFileDownload} />
+                  </label>
+                  <input
+                    type="file"
+                    className="input-fields"
+                    id="file-input"
+                    onChange={importExcel}
+                    style={{ display: "none" }}
+                  />
+                </div>
+              </Tooltip>
+              <Tooltip placement="left" title="Export">
+                <Button
+                  className="import-export-btn"
+                  onClick={() => {
+                    exportToExcel(InitialValues);
+                  }}
+                >
+                  <FontAwesomeIcon
+                    icon={faFileUpload}
+                    style={{ width: "15px" }}
+                  />
+                </Button>
+              </Tooltip>
+            </div>
+          </div>
           <Row>
             <Formik
               enableReinitialize={true}
               initialValues={InitialValues}
               validationSchema={Validation}
               onSubmit={(values, { resetForm }) =>
-              pmmraId && fmecaId ? UpdatepmmraDetails(values) : submit(values, { resetForm })
-            }
-            
+                pmmraId && fmecaId
+                  ? UpdatepmmraDetails(values)
+                  : submit(values, { resetForm })
+              }
             >
               {(formik) => {
                 const {

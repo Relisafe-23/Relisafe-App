@@ -17,6 +17,7 @@ import * as Yup from "yup";
 import Api from "../../Api";
 import Tree from "../Tree";
 import Dropdown from "../Company/Dropdown";
+import ResistorCalculation from "../Mil.jsx/ResistorCalculation.jsx";
 import Loader from "../core/Loader";
 import { Electronic, Mechanical } from "../core/partTypeCategory";
 import Spinner from "react-bootstrap/esm/Spinner";
@@ -27,6 +28,8 @@ import {
   faCircleCheck,
   faCircleXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import MicrocircuitsCalculation from "../Mil.jsx/MicrocircuitsCalculation";
+import Switches from "../Mil.jsx/Switches";
 import { customStyles } from "../core/select";
 import { Link, useHistory } from "react-router-dom";
 import FrUnit from "../core/FRUnit";
@@ -58,11 +61,24 @@ import Meter from "./PartTypes/Meter";
 import Lamp from "./PartTypes/Lamp";
 import Miscellaneous from "./PartTypes/Miscellaneous";
 import Tube from "./PartTypes/Tube";
+import CapacitorCalculation from "../Mil.jsx/CapacitorCalculation.jsx";
+import InductiveCalculation from "../Mil.jsx/InductiveCalculation.jsx";
+import ConnectionCalculation from "../Mil.jsx/ConnectionCalculation.jsx";
+import Lamps from "../Mil.jsx/Lamps.jsx";
+import Quartz from "../Mil.jsx/Quartz.jsx";
+import ElectronicFilters from "../Mil.jsx/ElectronicFilters.jsx";
+import Fuses from "../Mil.jsx/Fuses.jsx";
+import Laser from "../Mil.jsx/Laser.jsx";
+import Meters from "../Mil.jsx/Meters.jsx";
+import Connectors from "../Mil.jsx/Connectors.jsx";
 
 function Index(props) {
   const projectId = props?.location?.state?.projectId
     ? props?.location?.state?.projectId
     : props?.match?.params?.id;
+  const [currentComponent, setCurrentComponent] = useState({
+    type:'Resistor'
+  })
   const [category, setCategory] = useState("");
   const [environment, setEnvironment] = useState("");
   const [show, setShow] = useState(false);
@@ -79,6 +95,7 @@ function Index(props) {
   const [initialProductID, setInitialProductID] = useState();
   const [initialTreeStructure, setInitialTreeStructure] = useState();
   const [showModal, setShowModal] = useState(false);
+  const [showMil, setShowMil] = useState(false);
   const [nprdModel, setNprdModel] = useState(false);
   const [nprd2016Model, setNprd2016Model] = useState(false);
   const [nprdSubModal, setNprdSubModal] = useState(false);
@@ -95,6 +112,11 @@ function Index(props) {
   const [partTypeNprdDesc2016Data, setPartTypeNprdDesc2016Data] = useState([]);
   const [frpValueNprd2016Data, setFrpValueNprd2016Data] = useState([]);
   const [permission, setPermission] = useState();
+  const [predicted, setPredicted] = useState();
+  const [componentData, setComponentData] = useState({
+    resistor: null,
+
+  });
 
   const token = localStorage.getItem("sessionId");
   const handleChange = (rowData) => {
@@ -113,17 +135,18 @@ function Index(props) {
       partTypeQuality?.label &&
       environment?.label
       ? nprdFRP.find((item) => {
-          return (
-            item?.PartTypeId === partTypeNprd?.value &&
-            item?.Quality === partTypeQuality?.label &&
-            item?.Environment === environment?.label &&
-            item?.PartDescrId === partTypeDescr?.value
-          );
-        })?.FR
+        return (
+          item?.PartTypeId === partTypeNprd?.value &&
+          item?.Quality === partTypeQuality?.label &&
+          item?.Environment === environment?.label &&
+          item?.PartDescrId === partTypeDescr?.value
+        );
+      })?.FR
       : ""
   );
 
   const [FR, setFR] = useState();
+
 
   useEffect(() => {
     if (partTypeNprd?.value && partTypeDescr?.value && environment?.label) {
@@ -146,14 +169,14 @@ function Index(props) {
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-    ? props?.location?.state?.productId
-    : initialProductID;
+      ? props?.location?.state?.productId
+      : initialProductID;
 
   const treeStructure = props?.location?.state?.parentId
     ? props?.location?.state?.parentId
     : initialTreeStructure;
   const [field, setField] = useState();
-  const [predicted, setPredicted] = useState();
+  
   const [dutyCycle, setDutyCycle] = useState(1);
   const [frDistribution, setFrDistribution] = useState();
   const [allocated, setAllocated] = useState();
@@ -474,6 +497,7 @@ function Index(props) {
           item?.PartDescrId === partTypeDescr.value
         );
       });
+      console.log("nprdFRPFiltered.....", nprdFRPFiltered)
       setNprdFR(nprdFRPFiltered);
       setData(nprdFRPFiltered);
     } else {
@@ -484,6 +508,7 @@ function Index(props) {
           item?.PartDescrId === partTypeDescr.value
         );
       });
+      console.log("nprdFRPFiltered.....2....", nprdFRPFiltered)
       setNprdFR(nprdFRPFiltered);
       setData(nprdFRPFiltered);
     }
@@ -682,9 +707,9 @@ function Index(props) {
                     <fieldset
                       disabled={
                         writePermission === true ||
-                        writePermission === "undefined" ||
-                        role === "admin" ||
-                        (isOwner === true && createdBy === userId)
+                          writePermission === "undefined" ||
+                          role === "admin" ||
+                          (isOwner === true && createdBy === userId)
                           ? null
                           : "disabled"
                       }
@@ -768,7 +793,7 @@ function Index(props) {
                                         placeholder="Part Number"
                                         onBlur={handleBlur}
                                         value={partNumber}
-                                        // onChange={handleChange}
+                                      // onChange={handleChange}
                                       />
                                       <ErrorMessage
                                         className="error text-danger"
@@ -792,7 +817,7 @@ function Index(props) {
                                         placeholder="Quantity"
                                         value={quantity}
                                         onBlur={handleBlur}
-                                        // onChange={handleChange}
+                                      // onChange={handleChange}
                                       />
                                       <ErrorMessage
                                         className="error text-danger"
@@ -812,7 +837,7 @@ function Index(props) {
                                         value={reference}
                                         name="reference"
                                         onBlur={handleBlur}
-                                        // onChange={handleChange}
+                                      // onChange={handleChange}
                                       />
                                       <ErrorMessage
                                         className="error text-danger"
@@ -872,7 +897,7 @@ function Index(props) {
                                   </Col>
                                   <Col>
                                     {values.category?.value === "Mechanical" ||
-                                    values.category?.value === "Electronic" ? (
+                                      values.category?.value === "Electronic" ? (
                                       <div>
                                         <Form.Group className="mt-3">
                                           <Label notify={true}>Part Type</Label>
@@ -900,23 +925,23 @@ function Index(props) {
                                             className="mt-1"
                                             options={[
                                               values.category?.value ===
-                                              "Electronic"
+                                                "Electronic"
                                                 ? {
-                                                    options: Electronic.map(
-                                                      (list) => ({
-                                                        value: list.value,
-                                                        label: list.label,
-                                                      })
-                                                    ),
-                                                  }
+                                                  options: Electronic.map(
+                                                    (list) => ({
+                                                      value: list.value,
+                                                      label: list.label,
+                                                    })
+                                                  ),
+                                                }
                                                 : {
-                                                    options: Mechanical.map(
-                                                      (list) => ({
-                                                        value: list.value,
-                                                        label: list.label,
-                                                      })
-                                                    ),
-                                                  },
+                                                  options: Mechanical.map(
+                                                    (list) => ({
+                                                      value: list.value,
+                                                      label: list.label,
+                                                    })
+                                                  ),
+                                                },
                                             ]}
                                           />
                                           <ErrorMessage
@@ -976,10 +1001,10 @@ function Index(props) {
                                       type="select"
                                       value={environment}
                                       onBlur={handleBlur}
-                                      // onChange={(e) => {
-                                      //   setFieldValue("environment", e);
-                                      //   setEnvironment(e.value);
-                                      // }}
+                                    // onChange={(e) => {
+                                    //   setFieldValue("environment", e);
+                                    //   setEnvironment(e.value);
+                                    // }}
                                     />
                                     <ErrorMessage
                                       className="error text-danger"
@@ -1001,7 +1026,7 @@ function Index(props) {
                                       placeholder="Temperature"
                                       value={temperature}
                                       onBlur={handleBlur}
-                                      // onChange={handleChange}
+                                    // onChange={handleChange}
                                     />
                                     <ErrorMessage
                                       className="error text-danger"
@@ -1179,7 +1204,7 @@ function Index(props) {
                                         placeholder="Duty Cycle"
                                         value={values.dutyCycle}
                                         onBlur={handleBlur}
-                                        // onChange={handleChange}
+                                      // onChange={handleChange}
                                       />
                                       <ErrorMessage
                                         className="error text-danger"
@@ -1200,10 +1225,10 @@ function Index(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1300,10 +1325,10 @@ function Index(props) {
                                         placeholder="Select"
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1316,6 +1341,8 @@ function Index(props) {
                                             setNprdModel(true);
                                           } else if (e.value === "NPRD16") {
                                             setNprd2016Model(true);
+                                          } else if (e.value === "MIL") {
+                                            setShowMil(true);
                                           }
                                           setFieldValue("standard", e);
                                           setPartTypeNprdDesc2016Data();
@@ -1357,10 +1384,10 @@ function Index(props) {
                                         styles={customStyles}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1559,13 +1586,13 @@ function Index(props) {
                                                             isDisabled={
                                                               writePermission ===
                                                                 true ||
-                                                              writePermission ===
+                                                                writePermission ===
                                                                 "undefined" ||
-                                                              role ===
+                                                                role ===
                                                                 "admin" ||
-                                                              (isOwner ===
-                                                                true &&
-                                                                createdBy ===
+                                                                (isOwner ===
+                                                                  true &&
+                                                                  createdBy ===
                                                                   userId)
                                                                 ? null
                                                                 : "disabled"
@@ -1619,13 +1646,13 @@ function Index(props) {
                                                               isDisabled={
                                                                 writePermission ===
                                                                   true ||
-                                                                writePermission ===
+                                                                  writePermission ===
                                                                   "undefined" ||
-                                                                role ===
+                                                                  role ===
                                                                   "admin" ||
-                                                                (isOwner ===
-                                                                  true &&
-                                                                  createdBy ===
+                                                                  (isOwner ===
+                                                                    true &&
+                                                                    createdBy ===
                                                                     userId)
                                                                   ? null
                                                                   : "disabled"
@@ -1686,11 +1713,11 @@ function Index(props) {
                                                             value={
                                                               partTypeQuality
                                                                 ? {
-                                                                    label:
-                                                                      partTypeQuality,
-                                                                    value:
-                                                                      partTypeQuality,
-                                                                  }
+                                                                  label:
+                                                                    partTypeQuality,
+                                                                  value:
+                                                                    partTypeQuality,
+                                                                }
                                                                 : values.quality
                                                             }
                                                             onBlur={handleBlur}
@@ -1746,8 +1773,8 @@ function Index(props) {
                                                     </Col> */}
                                                     </Row>
                                                     {partTypeNprd?.value &&
-                                                    partTypeDescr?.value &&
-                                                    !rowClicked ? (
+                                                      partTypeDescr?.value &&
+                                                      !rowClicked ? (
                                                       <div className="mt-3 p-2">
                                                         <ThemeProvider
                                                           theme={tableTheme}
@@ -1864,7 +1891,7 @@ function Index(props) {
                                       }}
                                     </Formik>
                                   </Modal>
-                                  <Modal
+                                  {/* <Modal
                                     show={showModal}
                                     position="center"
                                     onHide={() => setShowModal(false)}
@@ -1936,7 +1963,7 @@ function Index(props) {
                                         )}
                                       </Modal.Footer>
                                     </div>
-                                  </Modal>
+                                  </Modal> */}
                                 </div>
                                 <div>
                                   <Modal
@@ -2027,13 +2054,13 @@ function Index(props) {
                                                             isDisabled={
                                                               writePermission ===
                                                                 true ||
-                                                              writePermission ===
+                                                                writePermission ===
                                                                 "undefined" ||
-                                                              role ===
+                                                                role ===
                                                                 "admin" ||
-                                                              (isOwner ===
-                                                                true &&
-                                                                createdBy ===
+                                                                (isOwner ===
+                                                                  true &&
+                                                                  createdBy ===
                                                                   userId)
                                                                 ? null
                                                                 : "disabled"
@@ -2091,13 +2118,13 @@ function Index(props) {
                                                               isDisabled={
                                                                 writePermission ===
                                                                   true ||
-                                                                writePermission ===
+                                                                  writePermission ===
                                                                   "undefined" ||
-                                                                role ===
+                                                                  role ===
                                                                   "admin" ||
-                                                                (isOwner ===
-                                                                  true &&
-                                                                  createdBy ===
+                                                                  (isOwner ===
+                                                                    true &&
+                                                                    createdBy ===
                                                                     userId)
                                                                   ? null
                                                                   : "disabled"
@@ -2158,11 +2185,11 @@ function Index(props) {
                                                             value={
                                                               partType2016Quality
                                                                 ? {
-                                                                    label:
-                                                                      partType2016Quality,
-                                                                    value:
-                                                                      partType2016Quality,
-                                                                  }
+                                                                  label:
+                                                                    partType2016Quality,
+                                                                  value:
+                                                                    partType2016Quality,
+                                                                }
                                                                 : values.quality2016
                                                             }
                                                             onBlur={handleBlur}
@@ -2191,8 +2218,8 @@ function Index(props) {
                                                       </Col>
                                                     </Row>
                                                     {partType2016Nprd?.value &&
-                                                    partType2016Descr?.value &&
-                                                    !rowClicked ? (
+                                                      partType2016Descr?.value &&
+                                                      !rowClicked ? (
                                                       <div className="mt-3 p-2">
                                                         <ThemeProvider
                                                           theme={tableTheme}
@@ -2317,78 +2344,221 @@ function Index(props) {
                                   </Modal>
                                   <Modal
                                     show={showModal}
-                                    position="center"
-                                    onHide={() => setShowModal(false)}
+                                    onHide={setShowModal}
+                                    centered
+                                    size="xl" // Bootstrap extra-large size
+                                    dialogClassName="custom-modal-width" // Custom class for additional width control
+                                    backdrop="static" // Prevent closing by clicking outside
                                   >
-                                    <div className="modal-content">
-                                      <div className="m-3">
-                                        <FontAwesomeIcon
-                                          icon={faCircleXmark}
-                                          fontSize={"40px"}
-                                          color="#1D5460"
-                                          onClick={() => setShowModal(false)}
-                                          className="close-icon"
-                                        />
+                                    <Modal.Body className="p-0"> {/* Remove default padding */}
+                                      <div className="modal-content">
+                                        {/* Improved Close Button */}
+                                        <div className="text-center mt-1">
+                                          <h3 className="modal-title "><strong>MIL-HDBK-217F</strong></h3>
+
+                                          <FontAwesomeIcon
+                                            icon={faCircleXmark}
+                                            fontSize={"40px"}
+                                            color="#1D5460"
+                                            onClick={() => {
+                                              const savedResult = localStorage.getItem("milValue"); 
+                                              if (savedResult) {
+                                                let result = JSON.parse(savedResult); 
+                                                result = Math.floor(result * 1000000) / 1000000;
+                                                setPredicted(result);
+                                                formik.setFieldValue("predicted", result);
+                                              }
+                                              setShowModal(false);
+                                            }}
+                                            className="close-icon"
+                                          />
+
+                                        </div>
+
+                                        <div className="classical-group mb-2">
+                                          {/* Component Type Selector */}
+                                          <div className="form-group">
+                                            <label><strong>Component Type:</strong></label>
+                                            <Select
+                                              styles={{
+                                                ...customStyles,
+                                                control: (base) => ({
+                                                  ...base,
+                                                  minHeight: '50px',
+                                                  fontSize: '1rem'
+                                                })
+                                              }}
+                                              name="type"
+                                              placeholder="Select component type..."
+                                              value={currentComponent.type ?
+                                                { value: currentComponent.type, label: currentComponent.type } : null}
+                                              onChange={(selectedOption) => {
+                                                localStorage.removeItem("milValue");
+                                                setCurrentComponent({
+                                                  ...currentComponent,
+                                                  type: selectedOption.value
+                                                });
+                                              }}
+                                              options={[
+                                                // { value: "Microcircuits", label: "Microcircuits" },
+                                                // { value: "Resistor", label: "Resistor" },
+                                                // { value: "Tubes", label: "Tubes" },
+                                                { value: "Switches", label: "Switches"},
+                                                {value:"Capacitor",label:"Capacitor"},
+                                                {value:"Inductive",label:"Inductive"},
+                                                {value:"Connections",label:"Connections"},
+                                                {value:"Lamps" ,label:"Lamps"},
+                                                {value:"Quartz", label:"Quartz"},
+                                                {value:"ElectronicFilters" ,label:" Electronic Filters"},
+                                                {value:"Fuses" ,label:"Fuses"},
+                                                {value:"Meters",label:"Meters"},
+                                                // {value:"Laser",label:"Laser"},
+                                                {value:"Connectors",label:"Connectors"},
+                                              ]}
+                                              className="mt-2"
+                                            />
+                                          </div>
+
+                                          {/* Dynamic Component Render */}
+                                          <div className="component-container mt-4">
+                                            {currentComponent.type === "Microcircuits" && <MicrocircuitsCalculation />}
+                                            {currentComponent.type === "Switches" && <Switches
+                                                   onCalculate={(value) => {
+                                                    // Round the value to 4 decimal places
+                                                    const roundedValue = Math.floor(value * 1000000) / 1000000;
+                                                    // Update the predicted field
+                                                    setPredicted(roundedValue);
+                                                    formik.setFieldValue("predicted", roundedValue);
+                                                    // Optionally close the modal
+                                                    // setShowModal(false);
+                                                  }}
+                                            
+                                            />}
+                                            {currentComponent.type === "Resistor" && <ResistorCalculation 
+                                                // onCalculate={(value) => {
+                                                //   const roundedValue = Math.floor(value * 10000) / 10000;
+                                                //   formik.setFieldValue("predicted", roundedValue);
+                                                //   setShowModal(false);
+                                                // }}
+                                            
+                                            
+                                            
+                                            />}
+        {currentComponent.type === "Capacitor" && 
+  <CapacitorCalculation 
+    onCalculate={(failureRate) => {
+      // Round to 4 decimal places
+      const roundedValue = Math.floor(failureRate * 1000000) / 1000000;
+      // Update the predicted field
+      setPredicted(roundedValue);
+      formik.setFieldValue("predicted", roundedValue);
+      // Optionally close the modal
+      // setShowModal(false);
+    }}
+  />
+}
+                                          {currentComponent.type === "Inductive" && 
+  <InductiveCalculation 
+    onCalculate={(value) => {
+      // Round the value to 4 decimal places
+      const roundedValue = Math.floor(value * 1000000) / 1000000;
+      setPredicted(roundedValue);
+      formik.setFieldValue("predicted", roundedValue);
+      // Optionally close the modal after calculation
+      // setShowModal(false);
+    }}
+  />
+}
+{currentComponent.type === "Connections" && 
+  <ConnectionCalculation 
+    onCalculate={(failureRate) => {
+      // Round to 6 decimal places
+      const roundedValue = parseFloat(failureRate.toFixed(6));
+      // Update the predicted field
+      setPredicted(roundedValue);
+      formik.setFieldValue("predicted", roundedValue);
+      // Optionally close the modal
+      // setShowModal(false);
+    }}
+  />
+}
+                                            {currentComponent.type === "Lamps" && 
+  <Lamps 
+    onCalculate={(failureRate) => {
+      if (failureRate !== null) {
+        // Round to 4 decimal places
+        const roundedValue = Math.floor(failureRate * 1000000) / 1000000;
+        // Update the predicted field
+        setPredicted(roundedValue);
+        formik.setFieldValue("predicted", roundedValue);
+        // Optionally close the modal
+        // setShowModal(false);
+      }
+    }}
+  />
+}
+                                          {currentComponent.type === "Quartz" && 
+  <Quartz 
+    onCalculate={(value) => {
+      if (value !== null) {
+        // Round the value to 4 decimal places
+        const roundedValue = Math.floor(value * 1000000) / 1000000;
+        setPredicted(roundedValue);
+        formik.setFieldValue("predicted", roundedValue);
+        // Optionally close the modal after calculation
+        // setShowModal(false);
+      }
+    }}
+  />
+}
+                                          {currentComponent.type === "Laser" && <Laser/>}
+                                          {currentComponent.type === "ElectronicFilters" && <ElectronicFilters
+                                              onCalculate={(value) => {
+                                                // Round the value to 4 decimal places
+                                                const roundedValue = Math.floor(value * 1000000) / 1000000;
+                                                // Update the predicted field
+                                                setPredicted(roundedValue);
+                                                formik.setFieldValue("predicted", roundedValue);
+                                                // Optionally close the modal
+                                                // setShowModal(false);
+                                              }}/>}
+                                          {currentComponent.type === "Fuses" && 
+  <Fuses 
+    onCalculate={(failureRate) => {
+      if (failureRate !== null) {
+        // Round to 4 decimal places
+        const roundedValue = Math.floor(failureRate * 1000000) / 1000000;
+        // Update the predicted field
+        setPredicted(roundedValue);
+        formik.setFieldValue("predicted", roundedValue);
+        // Optionally close the modal
+        // setShowModal(false);
+      }
+    }}
+  />
+}
+                                          {currentComponent.type === "Meters" && 
+  <Meters 
+    onCalculate={(value) => {
+      if (value !== null) {
+        // Round the value to 4 decimal places
+        const roundedValue = Math.floor(value * 1000000) / 1000000;
+        setPredicted(roundedValue);
+        formik.setFieldValue("predicted", roundedValue);
+        // Optionally close the modal after calculation
+        // setShowModal(false);
+      }
+    }}
+  />
+}
+                                          {currentComponent.type === "Connectors" && <Connectors/>}
+
+                                          </div>
+                                        </div>
                                       </div>
-                                      <Modal.Footer
-                                        className="d-flex mt-3 mb-5"
-                                        style={{ marginTop: 0 }}
-                                      >
-                                        {partType?.value === "Resistor" ? (
-                                          <Resistor />
-                                        ) : partType?.value === "IC-Memory" ||
-                                          partType?.value === "IC-Analog" ? (
-                                          <IcMemory />
-                                        ) : partType?.value ===
-                                          "Potentiometer" ? (
-                                          <Potentiometer />
-                                        ) : partType?.value === "Capacitor" ? (
-                                          <Capacitor />
-                                        ) : partType?.value === "Switch" ? (
-                                          <Switch />
-                                        ) : partType?.value === "Connector" ? (
-                                          <Connector />
-                                        ) : partType?.value === "LFDiode" ? (
-                                          <LFDiode />
-                                        ) : partType?.value ===
-                                          "LFTransistor" ? (
-                                          <LFTransistor />
-                                        ) : partType?.value ===
-                                          "HFTransistor" ? (
-                                          <HFTransistor />
-                                        ) : partType?.value ===
-                                          "Optoelectronic" ? (
-                                          <Optoelectronic />
-                                        ) : partType?.value === "Inductive" ? (
-                                          <Inductive />
-                                        ) : partType?.value === "Connection" ? (
-                                          <Connection />
-                                        ) : partType?.value === "PWB" ? (
-                                          <PWB />
-                                        ) : partType?.value === "Rotating" ? (
-                                          <Rotating />
-                                        ) : partType?.value === "Crystal" ? (
-                                          <Crystal />
-                                        ) : partType?.value === "Breaker" ? (
-                                          <Breaker />
-                                        ) : partType?.value === "Meter" ? (
-                                          <Meter />
-                                        ) : partType?.value === "Lamp" ? (
-                                          <Lamp />
-                                        ) : partType?.value ===
-                                          "Misellaneous" ? (
-                                          <Miscellaneous />
-                                        ) : partType?.value === "Tube" ? (
-                                          <Tube />
-                                        ) : (
-                                          <p style={{ color: "red" }}>
-                                            Part Type is Empty.
-                                          </p>
-                                        )}
-                                      </Modal.Footer>
-                                    </div>
+                                    </Modal.Body>
                                   </Modal>
-                                </div>
+                                </div>  
                               </div>
                             </Col>
                           </Row>

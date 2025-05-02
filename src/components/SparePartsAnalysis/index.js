@@ -120,6 +120,18 @@ function Index(props) {
   const importExcel = (e) => {
     const file = e.target.files[0];
 
+    const fileName = file.name;
+    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
+    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
+
+    if (!validExtensions.includes(fileExtension)) {
+      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+      });
+      return; // Exit the function if the file is not an Excel file
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       const bstr = event.target.result;

@@ -1,0 +1,146 @@
+.calculator-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .input-section {
+    background-color: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+  
+  select, input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  .button-group {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  
+  .calculate-btn, .clear-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+  }
+  
+  .calculate-btn {
+    background-color: #4CAF50;
+    color: white;
+  }
+  
+  .calculate-btn:hover {
+    background-color: #45a049;
+  }
+  
+  .clear-btn {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .clear-btn:hover {
+    background-color: #d32f2f;
+  }
+  
+  .results-section {
+    background-color: #e9f7ef;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  
+  th, td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+  }
+  
+  tr:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .formula-section {
+    background-color: #eef2f7;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .formula-section h3 {
+    margin-top: 0;
+  }
+  .input-note {
+    font-size: 0.8em;
+    color: #666;
+    font-style: italic;
+    font-weight: normal;
+  }
+  
+  input:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+  }
+  
+  @media (max-width: 768px) {
+    .input-section {
+      grid-template-columns: 1fr;
+    }
+    
+    table {
+      font-size: 12px;
+    }
+    
+    th, td {
+      padding: 6px 8px;
+    }
+  }
