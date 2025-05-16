@@ -35,21 +35,34 @@ export const getFailureRate = (packageType, pinCount) => {
 
 
 // Temperature factor calculation
-export const calculatePiT = (technology, temperature, Ea = 0.7) => {
+export const calculatePiT = (technology, temperature, Ea = 1.5) => {
   const T = temperature + 273; // Convert to Kelvin
   const k = 8.617e-5; // Boltzmann's constant in eV/K
   
   switch (technology) {
-    case 'Bipolar':
-      return 0.1 * Math.exp(3091 * (1/298 - 1/T));
-    case 'MOS':
-      return 0.1 * Math.exp(4172 * (1/298 - 1/T));
-    case 'BiCMOS':
-      return 3.205e-8 * Math.exp(14179 * (1/298 - 1/T));
-    case 'GaAs':
-      return 1.5 * Math.exp(Ea/k * (1/298 - 1/T));
-    case 'Linear':
-      return 0.65 * Math.exp(Ea/k * (1/298 - 1/T));
+    // Silicon Devices
+    case 'TTL,ASTTL,CML':
+      return 0.1 * Math.exp((0.4 / 8.617e-5) *(1/298 - 1/T));
+      case "F,LTTL,STTL":
+        return 0.1 * Math.exp((0.45 / 8.617e-5) * (1/298 - 1/T));
+    case "BiCMOS":
+      return 0.1 * Math.exp((0.5 / 8.617e-5) * (1/298 - 1/T));
+      case "III,f¹,ISL":
+        return 0.1 * Math.exp(( 0.6 / 8.617e-5) * (1/298 - 1/T));
+        case 'Digital MOS':
+          return 0.1 * Math.exp((0.35 / 8.617e-5) * (1/298 - 1/T));
+          case 'Linear':
+            return 0.1 * Math.exp((0.65 / 8.617e-5) * (1/298 - 1/T));
+            case 'Memories':
+              return 0.1 * Math.exp((0.6 / 8.617e-5) * (1/298 - 1/T));
+              //GaAs Devices
+    case 'GaAs MMIC':
+      return 0.1 * Math.exp(Ea/k * (1/423 - 1/T));
+   
+    
+        case 'GaAs Digital':
+          return 0.1 * Math.exp((1.4 / 8.617e-5) * (1/423 - 1/T));
+         
     default:
       return 1.0;
   }
@@ -62,17 +75,22 @@ export const calculatePiT = (technology, temperature, Ea = 0.7) => {
 
 // Quality factor
 export const getQualityFactor = (quality) => {
-  const factors = {
-    MIL_M_38510_ClassS: 0.25,
-    MIL_I_38535_ClassU: 0.25,
-    MIL_H_38534_ClassS_Hybrid: 0.25,
-    MIL_M_38510_ClassB: 1.0,
-    MIL_I_38535_ClassQ: 1.0,
-    MIL_H_38534_ClassB_Hybrid: 1.0,
-    MIL_STD_883_ClassB1: 2.0,
-    Commercial: 5.0
+  console.log("quality..9999...",quality)
+  const QUALITY_FACTORS = {
+    MIL_M_38510_ClassS: { value: 0.25, label: "MIL-M-38510 Class S" },
+    MIL_I_38535_ClassU: { value: 0.25, label: "MIL-I-38535 Class U" },
+    MIL_H_38534_ClassS_Hybrid: { value: 0.25, label: "MIL-H-38534 Class S Hybrid" },
+    MIL_M_38510_ClassB: { value: 1.0, label: "MIL-M-38510 Class B" },
+    MIL_I_38535_ClassQ: { value: 1.0, label: "MIL-I-38535 Class Q" },
+    MIL_H_38534_ClassB_Hybrid: { value: 1.0, label: "MIL-H-38534 Class B Hybrid" },
+    MIL_STD_883_ClassB1: { value: 2.0, label: "MIL-STD-883 Class B1" },
+    Commercial: { value: 5.0, label: "Commercial" },
+   
   };
-  return factors[quality] || 1.0;
+
+// Example usage
+
+return QUALITY_FACTORS[quality]?.value ?? NaN;
 };
 
 // Learning factor
@@ -159,11 +177,79 @@ export const calculateBipolarSramC1 = (memorySize) => {
   return c1Values[memorySize] || 0;
 };
 
-/**
- * Calculate MOS/BiMOS SRAM failure rate (C₁)
- * @param {string} memorySize - Memory size category
- * @returns {number} C₁ value
- */
+
+
+// export const calculateComponentSum = (components = []) => {
+//   if (!Array.isArray(components)) {
+//     console.warn('Expected array, got:', components);
+//     return 0;
+//   }
+//   return components.reduce((sum, comp = {}) => {
+//     try {
+//       const rate = Number(comp.failureRate);
+//       const qty = Math.max(1, Number(comp.quantity)) || 1; // Ensure minimum 1
+      
+//       if (isNaN(rate)) return sum; // Skip invalid failure rates
+      
+//       return sum + (rate * qty);
+//     } catch (e) {
+//       console.warn("Error processing component:", comp, e);
+//       return sum;
+//     }
+//   }, 0);
+// };
+
+
+export const calculateHybridFailureRate = (component) => {
+  // Validate input
+  if (!component || !component.components) {
+    console.error('Invalid component data');
+    return 0;
+  }
+
+  // Sum of (Nc × λc) for all components
+  const componentSum = calculateComponentSum(component.components);
+  
+  // Get all the π factors with proper defaults
+  const piE = getEnvironmentFactor(component.environment) || 1;
+  const piF = component.piF || getCircuitFunctionFactor(component.circuitType) || 1;
+  const piQ = component.piQ || getQualityFactor(component.quality) || 1;
+  const piL = component.piL || calculateLearningFactor(component.yearsInProduction) || 1;
+  
+  // Get the environmental stress factor (E) with default 0 if not provided
+  const environmentalStress = Number(component.environmentalStress) || 0;
+
+  // Apply the hybrid formula from the image
+  // Corrected formula based on MIL-HDBK-217: λp = 1.2 × Σ(Nc × λc) × (1 + 2.7E) × πE × πF × πQ × πL
+  const failureRate = 1.2 * componentSum * (1 + 2.7 * environmentalStress) * piE * piF * piQ * piL;
+
+  // Debug logging
+  console.log("Calculation Parameters:", {
+    componentSum,
+    environmentalStress,
+    piE,
+    piF,
+    piQ,
+    piL,
+    failureRate
+  });
+
+  return failureRate;
+};
+
+export const calculateComponentSum = (components = []) => {
+  if (!Array.isArray(components)) {
+    console.warn('Expected array, got:', components);
+    return 0;
+  }
+
+  return components.reduce((sum, comp) => {
+    const rate = Number(comp.failureRate) || 0;
+    const qty = Math.max(1, Number(comp.quantity)) || 1;
+    return sum + (rate * qty);
+  }, 0);
+};
+
 export const calculateMosBimosSramC1 = (memorySize) => {
   const c1Values = {
     'Up to 16K': 0.0078,
@@ -185,12 +271,25 @@ export const getMemorySizeCategory = (bitCount) => {
 };
 // GATE/LOGIC ARRAYS CALCULATION
 export const calculateMicrocircuitsAndMicroprocessorsFailureRate = (component) => {
+  console.log("component...yearsInProduction....",component.quality)
   const C1 = calculateGateArrayC1(component);
   const C2 = getFailureRate(component.packageType, component.pinCount);
   const piT = calculatePiT(component.technology, component.temperature);
   const piE = getEnvironmentFactor(component.environment);
   const piQ = getQualityFactor(component.quality);
   const piL = calculateLearningFactor(component.yearsInProduction);
+
+  console.log("C1......",C1);
+  console.log("C2......",C2);
+  console.log("piT......",piT);
+  console.log("piE......",piE);
+  console.log("piQ......",piQ);
+  console.log("C1......",C1);
+
+
+console.log("final environment......",getEnvironmentFactor(component.environment))
+
+  console.log("final formulae......",(C1 * piT + C2 * piE) * piQ * piL)
 
   return (C1 * piT + C2 * piE) * piQ * piL;
 };
@@ -209,7 +308,6 @@ export const calculateGateArrayC1 = (component) => {
       gateCount > 60000) {
     return 'Use VHSIC/VHSIC-Like model';
   }
-console.log("component.technology..",component)
   // Get the appropriate data set based on technology
   const data = component.devices === 'bipolarData' 
   ? bipolarData 
@@ -557,8 +655,10 @@ export const QUALITY_FACTORS = [
     label: "None beyond best commercial practices",
     value: 1.0,
     screeningLevel: "Standard"
-  }
+  },
 ];
+
+console.log("value1...",QUALITY_FACTORS)
 // Environment Factors Configuration
 export const ENVIRONMENTAL_FACTORS = {
   GB: { label: "Ground Benign", value: 0.50 },
@@ -576,7 +676,17 @@ export const ENVIRONMENTAL_FACTORS = {
   ML: { label: "Missile Launch", value: 12 },
   CL: { label: "Cannon Launch", value: 220 }
 };
+export const CIRCUIT_FUNCTION_FACTORS = {
+  Digital: { label: "Digital", value: 1.0 },
+  Video: { label: "Video (10 MHz < f < 1 GHz)", value: 1.2 },
+  Microwave: { label: "Microwave (f > 1 GHz)", value: 2.6 },
+  Linear: { label: "Linear (f < 10 MHz)", value: 5.8 },
+  Power: { label: "Power", value: 21 }
+};
 
+export const getCircuitFunctionFactor = (circuitType) => {
+  return CIRCUIT_FUNCTION_FACTORS[circuitType]?.value || 1.0;
+};
 // Base failure rate constant
 export const BASE_FAILURE_RATE = 2.1;
 

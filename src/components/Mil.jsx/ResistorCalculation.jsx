@@ -2,20 +2,8 @@ import React, { useState } from 'react';
 import './Resistor.css';
 import { Row, Col, Button } from 'react-bootstrap'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
   Typography,
-
-  IconButton,
-  Tooltip,
-  List,
-  ListItem,
-  ListItemText
 } from '@material-ui/core';
 import { Link } from '@material-ui/core';
 import Box from '@mui/material/Box';
@@ -61,36 +49,6 @@ const ResistorCalculation = () => {
     { style: "RVC", spec: "MIL-R-23285", description: "Resistor, Variable, Nonwirewound", λb: 0.0037, πTColumn: 1, πSColumn: 1 }
   ];
 
-  // Temperature factors
-  const tempFactors = [
-    { temp: 20, col1: 0.88, col2: 0.95 },
-    { temp: 30, col1: 1.1, col2: 1.1 },
-    { temp: 40, col1: 1.5, col2: 1.2 },
-    { temp: 50, col1: 1.8, col2: 1.3 },
-    { temp: 60, col1: 2.3, col2: 1.4 },
-    { temp: 70, col1: 2.8, col2: 1.5 },
-    { temp: 80, col1: 3.4, col2: 1.6 },
-    { temp: 90, col1: 4.0, col2: 1.7 },
-    { temp: 100, col1: 4.8, col2: 1.9 },
-    { temp: 110, col1: 5.6, col2: 2.0 },
-    { temp: 120, col1: 6.6, col2: 2.1 },
-    { temp: 130, col1: 7.6, col2: 2.3 },
-    { temp: 140, col1: 8.7, col2: 2.4 },
-    { temp: 150, col1: 10, col2: 2.5 }
-  ];
-
-  // Power stress factors
-  const powerStressFactors = [
-    { stress: 0.1, col1: 0.79, col2: 0.66 },
-    { stress: 0.2, col1: 0.88, col2: 0.81 },
-    { stress: 0.3, col1: 0.99, col2: 1.0 },
-    { stress: 0.4, col1: 1.1, col2: 1.2 },
-    { stress: 0.5, col1: 1.2, col2: 1.5 },
-    { stress: 0.6, col1: 1.4, col2: 1.8 },
-    { stress: 0.7, col1: 1.5, col2: 2.3 },
-    { stress: 0.8, col1: 1.7, col2: 2.8 },
-    { stress: 0.9, col1: 1.9, col2: 3.4 }
-  ];
 
   // Quality factors
   const qualityFactors = [
@@ -124,15 +82,13 @@ const ResistorCalculation = () => {
 
   const [selectedResistor, setSelectedResistor] = useState(resistorTypes[0]);
   const [temperature, setTemperature] = useState(30);
-  const [powerDissipation, setPowerDissipation] = useState(1.0);
+  const [powerDissipation, setPowerDissipation] = useState(0.001);
+    const [powerDissipations, setPowerDissipations] = useState(0.001);
   const [ratedPower, setRatedPower] = useState(1.0);
   const [selectedQuality, setSelectedQuality] = useState(qualityFactors[0]);
   const [selectedEnvironment, setSelectedEnvironment] = useState(environmentFactors[0]);
   const [results, setResults] = useState([]);
-  const [components, setComponents] = useState({
-    
-    
-});
+  const [components, setComponents] = useState([]);
   const [showResults, setShowResults] = useState(false);
 
   //  const systemMetrics = calculateSystemMetrics(components);
@@ -146,39 +102,93 @@ const ResistorCalculation = () => {
 
 
   // Calculate πT (Temperature Factor)
-  const calculatePiT = () => {
-    // Check if πT is N/A (then return 1)
-    if (selectedResistor.πTColumn === "N/A (πT=1)") return 1.0;
+ const tempFactors = [
+  { temp: 20, col1: 0.88, col2: 0.95 },
+  { temp: 30, col1: 1.1, col2: 1.1 },
+  { temp: 40, col1: 1.5, col2: 1.2 },
+  { temp: 50, col1: 1.8, col2: 1.3 },
+  { temp: 60, col1: 2.3, col2: 1.4 },
+  { temp: 70, col1: 2.8, col2: 1.5 },
+  { temp: 80, col1: 3.4, col2: 1.6 },
+  { temp: 90, col1: 4.0, col2: 1.7 },
+  { temp: 100, col1: 4.8, col2: 1.9 },
+  { temp: 110, col1: 5.6, col2: 2.0 },
+  { temp: 120, col1: 6.6, col2: 2.1 },
+  { temp: 130, col1: 7.6, col2: 2.3 },
+  { temp: 140, col1: 8.7, col2: 2.4 },
+  { temp: 150, col1: 10, col2: 2.5 }
+];
 
-    // Find the closest temperature in the table
-    const closestTemp = tempFactors.reduce((prev, curr) =>
-      Math.abs(curr.temp - temperature) < Math.abs(prev.temp - temperature) ? curr : prev
-    );
+const calculatePiT = () => {
+  // Return 1 if no temperature factor calculation needed
+  if (!selectedResistor || selectedResistor.πTColumn === "N/A (πT=1)") {
+    return 1.0;
+  }
 
-    // Use the appropriate column based on the resistor type
-    return selectedResistor.πTColumn === 1 ? closestTemp.col1 : closestTemp.col2;
-  };
+  // Use formula if temperature is outside table range (20-150)
+  if (temperature < 20 || temperature > 150) {
+    const Ea = selectedResistor.πTColumn === 1 ? 0.2 : 0.08;
+    const k = 8.617e-5; // Boltzmann constant in eV/K
+    const T = temperature + 273; // Convert to Kelvin
+    return Math.exp((-Ea/k) * ((1/T) - (1/298)));
+  }
+
+  // Find the closest temperature in the table
+  const closestTemp = tempFactors.reduce((prev, curr) =>
+    Math.abs(curr.temp - temperature) < Math.abs(prev.temp - temperature) ? curr : prev
+  );
+
+  // Use the appropriate column based on the resistor type
+  return selectedResistor.πTColumn === 1 ? closestTemp.col1 : closestTemp.col2;
+};
+
+// In your component render:
+
 
   // Calculate πS (Power Stress Factor)
-  const calculatePiS = () => {
-    // Check if πS is N/A (then return 1)
-    if (selectedResistor.πSColumn === "N/A (πS=1)") return 1.0;
+ const powerStressTable = [
+  { stress: 0.1, col1: 0.79, col2: 0.66 },
+  { stress: 0.2, col1: 0.88, col2: 0.81 },
+  { stress: 0.3, col1: 0.99, col2: 1.0 },
+  { stress: 0.4, col1: 1.1,  col2: 1.2 },
+  { stress: 0.5, col1: 1.2,  col2: 1.5 },
+  { stress: 0.6, col1: 1.4,  col2: 1.8 },
+  { stress: 0.7, col1: 1.5,  col2: 2.3 },
+  { stress: 0.8, col1: 1.7,  col2: 2.8 },
+  { stress: 0.9, col1: 1.9,  col2: 3.4 }
+];
 
-    // Calculate power stress ratio (S)
-    const S = powerDissipation / ratedPower;
+const calculatePiS = () => {
+  // Return 1 if no power stress calculation needed
+  if (!selectedResistor || selectedResistor.πSColumn === "N/A (πS=1)") {
+    return 1.0;
+  }
 
-    // Find the closest stress in the table
-    const closestStress = powerStressFactors.reduce((prev, curr) =>
-      Math.abs(curr.stress - S) < Math.abs(prev.stress - S) ? curr : prev
-    );
+  // Calculate power stress ratio (S)
+  const S = powerDissipation / ratedPower;
+  
+  // Use formula if S is outside table range (0.1-0.9)
+  if (S < 0.1 || S > 0.9) {
+    return selectedResistor.πSColumn === 1 
+      ? 0.71 * Math.exp(1.1 * S)  // Column 1 formula
+      : 0.54 * Math.exp(2.04 * S); // Column 2 formula
+  }
 
-    // Use the appropriate column based on the resistor type
-    return selectedResistor.πSColumn === 1 ? closestStress.col1 : closestStress.col2;
-  };
+  // Find the closest stress in the table
+  const closestStress = powerStressTable.reduce((prev, curr) =>
+    Math.abs(curr.stress - S) < Math.abs(prev.stress - S) ? curr : prev
+  );
+
+  // Use the appropriate column based on the resistor type
+  return selectedResistor.πSColumn === 1 ? closestStress.col1 : closestStress.col2;
+};
+
+// In your component render:
+
 
   // Calculate πR (Power Dissipation Factor)
   const calculatePiP = () => {
-    return Math.pow(powerDissipation, 0.39);
+    return Math.pow(powerDissipations, 0.39);
   };
 
   // Calculate failure rate
@@ -309,7 +319,7 @@ const ResistorCalculation = () => {
                 value: type,
                 label: `${type.style} - ${type.description} (${type.spec})`
               }))}
-              placeholder="Select type"
+              // placeholder="Select type"
               className="basic-select"
               classNamePrefix="select"
             />
@@ -368,61 +378,89 @@ const ResistorCalculation = () => {
           </div>
         </Col>
       </Row>
-      <Row className="mb-3">
+      <Row>
+ <label>Power Stress Factor (π<sub>S</sub>):</label>
 
-        <Col md={4}>
-          <div className="form-group">
-            <label>Power Factor (Watts) (π<sub>P</sub>):</label>
-            <input
-              type="number"
-              value={ratedPower}
-              onChange={(e) => setRatedPower(parseFloat(e.target.value))}
-              min="0.001"
-              step="0.001"
-              style={{
-                width: "100%",
-                padding: "0.375rem 0.75rem",
-                fontSize: "1rem",
-                lineHeight: "1.5",
-                color: "#495057",
-                backgroundColor: "#fff",
-                border: "1px solid #ced4da",
-                borderRadius: "0.25rem"
-              }}
-            />
-          </div>
-        </Col>
-        <Col md={4}>
-          <div className="form-group">
-            <label>Temperature (°C) (π<sub>T</sub>):</label>
-            <input
-              type="number"
-              value={temperature}
-              onChange={(e) => setTemperature(parseFloat(e.target.value))}
-              min="20"
-              max="150"
-              step="1"
-              style={{
-                width: "100%",
-                padding: "0.375rem 0.75rem",
-                fontSize: "1rem",
-                lineHeight: "1.5",
-                color: "#495057",
-                backgroundColor: "#fff",
-                border: "1px solid #ced4da",
-                borderRadius: "0.25rem"
-              }}
-            />
-          </div>
+     <Col md={4}>
+    <div className="form-group">
+       <label>Rated power for  π<sub>S</sub>:</label>
+     
+      <input
+        type="number"
+        className="form-group"
+        value={ratedPower}
+        onChange={(e) => setRatedPower(Math.max(0.001, parseFloat(e.target.value) || 0.001))}
+        min="0.001"
+        step="0.001"
+        placeholder="Rated Power"
+      />
+        </div>
+   
+      
+       <div className="form-group">
+  <label>Temperature (°C) (π<sub>T</sub>):</label>
+  <input
+    type="number"
+    className="form-control"
+    value={temperature}
+    onChange={(e) => {
+      const value = parseFloat(e.target.value);
+      setTemperature(isNaN(value) ? 20 : Math.max(20, Math.min(150, value)));
+    }}
+    min="20"
+    max="150"
+    step="1"
+    placeholder="Enter temperature (20-150°C)"
+  />
+  {selectedResistor?.πTColumn && (
+    <div className="mt-2">
+      <strong>Calculated π<sub>T</sub>:</strong> {calculatePiT().toFixed(3)}
+      <br/>
+      <small>
+        Using {selectedResistor.πTColumn === 1 ? 'Column 1' : 'Column 2'} 
+        {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
+      </small>
+    </div>
+  )}
+</div>
+
+    </Col>
+      <Col md={4}>
+  
+                  <div className="form-group">
+         <label>Power dissipation for π<sub>S</sub>:</label>
+            
+      <input
+        type="number"
+        className="form-group"
+        value={powerDissipation}
+        onChange={(e) => setPowerDissipation(Math.max(0, parseFloat(e.target.value) || 0))}
+        min="0"
+        step="0.001"
+        placeholder="Actual Power"
+      />
+  </div>
+    <small className="text-muted">
+      S = Actual Power dissipation / Rated Power = {(powerDissipation / ratedPower).toFixed(3)}
+    </small>
+    {selectedResistor?.πSColumn && (
+      <div className="mt-2">
+        <strong>Calculated π<sub>S</sub>:</strong> {calculatePiS().toFixed(3)}
+        <br/>
+        <small>
+          Using {selectedResistor.πSColumn === 1 ? 'Column 1' : 'Column 2'} formula
+        </small>
+      </div>
+    )}
         </Col>
         
         <Col md={4}>
           <div className="form-group">
-            <label>Power Stress Factor ( π<sub>S</sub>):</label>
+         <label>Power Factor (Watts) (π<sub>P</sub>):</label>
             <input
               type="number"
-              value={powerDissipation}
-              onChange={(e) => setPowerDissipation(parseFloat(e.target.value))}
+              value={powerDissipations}
+              onChange={(e) => setPowerDissipations(parseFloat(e.target.value))}
               min="0.001"
               step="0.001"
               style={{
@@ -438,6 +476,11 @@ const ResistorCalculation = () => {
             />
           </div>
         </Col>
+          
+  
+      
+ 
+
       </Row>
      
      
@@ -467,7 +510,7 @@ const ResistorCalculation = () => {
             className="ms-auto mt-2"
           >
             <CalculatorIcon
-              style={{ height: '50px', width: '60px' }}
+                style={{ height: '30px', width: '40px' }}
               fontSize="large"
             />
             <Typography
