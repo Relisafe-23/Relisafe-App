@@ -36,7 +36,8 @@ const Quartz = ({ onCalculate }) => {
     { frequency: 90, rate: 0.037 },
     { frequency: 95, rate: 0.037 },
     { frequency: 100, rate: 0.037 },
-    { frequency: 105, rate: 0.038 }
+    { frequency: 105, rate: 0.038 },
+
   ];
 
   // Quality factors
@@ -75,10 +76,16 @@ const Quartz = ({ onCalculate }) => {
   const [showCalculations, setShowCalculations] = useState(false);
 
   // Helper functions
-  const getBaseRate = (frequency) => {
+const getBaseRate = (frequency) => {
+  if (frequency === 'custom') {
+    // Use the formula λb = 0.013(f)^(-0.23) for custom frequency
+    const f = parseFloat(inputs.customFrequency);
+    return f > 0 ? 0.013 * Math.pow(f, 0.23) : 0;
+  } else {
     const selected = baseRates.find(item => item.frequency === parseFloat(frequency));
     return selected ? selected.rate : 0;
-  };
+  }
+};
 
   const getQualityFactor = (quality) => {
     const selected = qualityFactors.find(item => item.type === quality);
@@ -157,30 +164,57 @@ const Quartz = ({ onCalculate }) => {
       <div className='calculator-container'>
         <h2 className="text-center mb-4">Quartz</h2>
         <Row className="mb-3">
-          <Col md={4}>
-            {/* Frequency Selection */}
-            <div className="form-group">
-              <label>Base Failure:</label>
-              <Select
-                styles={customStyles}
-                name="frequency"
-                value={{
-                  value: inputs.frequency,
-                  label: `${inputs.frequency} MHz (λb = ${getBaseRate(inputs.frequency).toFixed(3)})`
-                }}
-                onChange={(selectedOption) => {
-                  setInputs(prev => ({
-                    ...prev,
-                    frequency: selectedOption.value
-                  }));
-                }}
-                options={baseRates.map(item => ({
-                  value: item.frequency,
-                  label: `${item.frequency} MHz (λb = ${item.rate.toFixed(3)})`
-                }))}
-              />
-            </div>
-          </Col>
+        <Col md={4}>
+  {/* Frequency Selection */}
+  <div className="form-group">
+    <label>Base Failure:</label>
+    <Select
+      styles={customStyles}
+      name="frequency"
+      value={{
+        value: inputs.frequency,
+        label: inputs.frequency === 'custom' 
+          ? 'Custom Frequency' 
+          : `${inputs.frequency} MHz (λb = ${getBaseRate(inputs.frequency).toFixed(3)})`
+      }}
+      onChange={(selectedOption) => {
+        setInputs(prev => ({
+          ...prev,
+          frequency: selectedOption.value,
+          customFrequency: selectedOption.value === 'custom' ? prev.customFrequency : ''
+        }));
+      }}
+      options={[
+        ...baseRates.map(item => ({
+          value: item.frequency,
+          label: `${item.frequency} MHz (λb = ${item.rate.toFixed(3)})`
+        })),
+        { value: 'custom', label: 'Custom Frequency' }
+      ]}
+    />
+  </div>
+  
+  {inputs.frequency === 'custom' && (
+    <div className="form-group mt-2">
+      <label>Custom Frequency (f) in MHz:</label>
+      <input
+        type="number"
+        name="customFrequency"
+        min="0.1"
+        step="0.1"
+        value={inputs.customFrequency || ''}
+        onChange={(e) => {
+          setInputs(prev => ({
+            ...prev,
+            customFrequency: e.target.value
+          }));
+        }}
+        className="form-control"
+      />
+      <small className="text-muted">Formula: λb = 0.013 × (f)<sup>0.23</sup></small>
+    </div>
+  )}
+</Col>
 
           <Col md={4}>
             {/* Quality Factor */}
@@ -249,7 +283,7 @@ const Quartz = ({ onCalculate }) => {
                 className="ms-auto mt-2"
               >
                 <CalculatorIcon
-                  style={{ height: '50px', width: '60px' }}
+                  style={{ height: '30px', width: '40px' }}
                   fontSize="large"
                 />
                 <Typography
@@ -290,7 +324,7 @@ const Quartz = ({ onCalculate }) => {
             <h2 className="text-center">Calculation Result</h2>
             <div className="d-flex align-items-center">
               <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-              <span className="ms-2">{result.value} failures/10<sup>6</sup> hours</span>
+              <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
             </div>
           </>
         )}
@@ -375,10 +409,10 @@ const Quartz = ({ onCalculate }) => {
                         Calculation Steps:
                       </Typography>
                       <ul>
-                        <li>λ<sub>b</sub> = {result.parameters.λb}</li>
-                        <li>π<sub>Q</sub> = {result.parameters.πQ}</li>
-                        <li>π<sub>E</sub> = {result.parameters.πE}</li>
-                        <li>λ<sub>p</sub> = {result.parameters.λb} × {result.parameters.πQ} × {result.parameters.πE} = {result.value}</li>
+                        <li>λ<sub>b</sub> = {result?.parameters?.λb}</li>
+                        <li>π<sub>Q</sub> = {result?.parameters?.πQ}</li>
+                        <li>π<sub>E</sub> = {result?.parameters?.πE}</li>
+                        <li>λ<sub>p</sub> = {result?.parameters?.λb} × {result?.parameters?.πQ} × {result?.parameters?.πE} = {result?.value}</li>
                       </ul>
                     </div>
                   </div>

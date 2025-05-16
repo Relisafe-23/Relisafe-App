@@ -1,4 +1,4 @@
-import React, { useState,useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import Select from "react-select";
 import './Switch.css';
 import { Link } from '@material-ui/core';
@@ -19,11 +19,11 @@ import { customStyles } from "./Selector";
 import { Alert } from "@mui/material";
 // Might trigger endlessly if someProp changes often
 const Switches = ({ onCalculate }) => {
-const [currentComponent, setCurrentComponent] = useState({
+  const [currentComponent, setCurrentComponent] = useState({
     type: "Switches,Circuit Breakers",
     switchType: {
-      value: "Microwave (Waveguide)",
-      label: "Microwave (Waveguide) Switch",
+      value:     'Centrifugal (N/A)',
+      label:     'Centrifugal (N/A)',
       baseFailureRate: 1.7
     },
     configurationFactor: 'SPST',
@@ -80,22 +80,43 @@ const [currentComponent, setCurrentComponent] = useState({
     'SF': 0.50, 'MF': 25, 'ML': 66, 'CL': 0
   };
   // Base failure rates (λ_b) from the image
-  const BASE_FAILURE_RATES = {
-    'Centrifugal': 3.4,
-    'Dual-In-line Package Limit': 0.00012,
-    'Limit': 4.3,
-    'Liquid Level': 2.3,
-    'Microwave (Waveguide)': 1.7,
-    'Pressure': 2.8,
-    'Pushbutton': 0.10,
-    'Reed': 0.0010,
-    'Rocket': 0.023,
-    'Rotary': 0.11,
-    'Sensitive': 0.49,
-    'Thermal': 0.031,
-    'Thumbwheel': 0.18,
-    'Toggle': 0.10
-  };
+const BASE_FAILURE_RATES = {
+    'Centrifugal (N/A)': 3.4,
+    'Dual-In-line Package Limit (Mil-S-83504)': 0.00012,
+    'Limit(Mil-S-8805)':4.3,
+    'Liquid Level  (Mil-S-21277)':2.3,
+    'Microwave Waveguide (N/A)':1.7,
+    'Pressure (Mil-S-8932)': 2.8,
+    // 'Pressure ': ,
+    'Pushbutton (Mil-S-8805)': 0.10,
+    // 'Pushbutton (Mil-S-22885)': null,
+    // 'Pushbutton (Mil-S-24317)': null,
+    'Reed (Mil-S-55433)': 0.0010,
+    'Rocker (Mil-S-3950)': 0.023,
+    'Rotary (Mil-S-3786)': 0.11,
+    // 'Rotary (Mil-S-13623)': null,
+    // 'Rotary (Mil-S-15291)': null,
+    // 'Rotary (Mil-S-15743)': null,
+    // 'Rotary (Mil-S-22604)': null,
+    // 'Rotary (Mil-S-22710)': null,
+    // 'Rotary (Mil-S-45885)': null,
+    // 'Sensitive (Mil-S-82359)': null,
+    'Sensitive (Mil-S-8805)': 0.49,
+    // 'Sensitive (Mil-S-13484)': null,
+    // 'Sensitive (Mil-S-22614)': null,
+    'Thermal (Mil-S-12285)': 0.031,
+    // 'Thermal (Mil-S-24286)': null,
+    'Thumbwheel (Mil-S-22710)': 0.18,
+    'Toggle (Mil-S-3950)': 0.10,
+    // 'Toggle (Mil-S-5594)': null,
+    // 'Toggle (Mil-S-8805)': null,
+    // 'Toggle (Mil-S-8834)': null,
+    // 'Toggle (Mil-S-9419)': null,
+    // 'Toggle (Mil-S-13735)': null,
+    // 'Toggle (Mil-S-81551)': null,
+    // 'Toggle (Mil-S-83731)': null
+};
+
   const BASE_FAILURE_RATES1 = {
     'Magnetic': .34,
     'Thermal': .34,
@@ -108,45 +129,29 @@ const [currentComponent, setCurrentComponent] = useState({
   };
 
 
-  const calculateLoadStressFactor = (stressRatio, loadType) => {
-    const s = stressRatio;
+  const calculateLoadStressFactor = (currentComponent, loadType) => {
+    // const s = stressRatio;
+    const s = currentComponent.operatingCurrent / currentComponent.ratedCurrent;
     if (s < 0 || s > 1) return 1.0; // Default if invalid
 
     // Formulas from the image
-    if (loadType === 'resistive') return Math.exp(Math.pow(s / 0.8)^2);
-    if (loadType === 'inductive') return Math.exp(Math.pow(s / 0.4)^2);
-    if (loadType === 'lamp') return Math.exp(Math.pow(s / 0.2)^ 2);
+    if (loadType === 'resistive') return Math.exp(Math.pow((s / 0.8), 2));
+    if (loadType === 'inductive') return Math.exp(Math.pow((s / 0.4), 2));
+    if (loadType === 'lamp') return Math.exp(Math.pow((s / 0.2), 2));
     return 1.0;
   };
 
-  const calculateFailureRatePure = (component) => {
-    if (!component.switchType) throw new Error('Please select a switch type');
-    if (!component.ratedCurrent || component.ratedCurrent <= 0) {
-      throw new Error('Rated current must be positive');
-    }
-  
-    const S = component.operatingCurrent / component.ratedCurrent;
-    if (S < 0 || S > 1) throw new Error('Operating current cannot exceed rated current');
-  
-    const λ_b = BASE_FAILURE_RATES[component.switchType.value];
-    const π_L = calculateLoadStressFactor(S, component.loadType);
-    const π_C = CONTACT_FORM_FACTORS[component.configurationFactor];
-    const π_E = ENVIRONMENT_FACTORS[component.environment];
-    const π_Q = QUALITY_FACTORS[component.quality];
-  
-    return λ_b * π_L * π_C * π_Q * π_E;
-  };
   const calculateFailureRate = () => {
     const λ_b = BASE_FAILURE_RATES[currentComponent.switchType.value];
-    const π_L = calculateLoadStressFactor( currentComponent.stressRatio,currentComponent.loadType);
+    const π_L = calculateLoadStressFactor(currentComponent, currentComponent.loadType);
     const π_C = CONTACT_FORM_FACTORS[currentComponent.configurationFactor];
     const π_E = ENVIRONMENT_FACTORS[currentComponent.environment];
     const π_Q = QUALITY_FACTORS[currentComponent.quality];
-    return λ_b * π_L * π_C * π_Q * π_E; 
+    return λ_b * π_L * π_C * π_Q * π_E;
   };
   const handleCalculate = () => {
     const λ_b = BASE_FAILURE_RATES[currentComponent.switchType.value];
-    const π_L = calculateLoadStressFactor( currentComponent.stressRatio,currentComponent.loadType);
+    const π_L = calculateLoadStressFactor(currentComponent, currentComponent.loadType);
     const π_C = CONTACT_FORM_FACTORS[currentComponent.configurationFactor];
     const π_E = ENVIRONMENT_FACTORS[currentComponent.environment];
     const π_Q = QUALITY_FACTORS[currentComponent.quality];
@@ -179,10 +184,10 @@ const [currentComponent, setCurrentComponent] = useState({
   };
   const tableData = useMemo(() => {
     if (!result) return [];
-    
+
     return [{
       λ_b: BASE_FAILURE_RATES[currentComponent.switchType.value],
-      π_L: calculateLoadStressFactor(currentComponent.stressRatio, currentComponent.loadType),
+      π_L: calculateLoadStressFactor(currentComponent, currentComponent.loadType),
       π_C: CONTACT_FORM_FACTORS[currentComponent.configurationFactor],
       π_E: ENVIRONMENT_FACTORS[currentComponent.environment],
       π_Q: QUALITY_FACTORS[currentComponent.quality],
@@ -190,8 +195,6 @@ const [currentComponent, setCurrentComponent] = useState({
     }];
   }, [currentComponent, result]);
   const calculateFailureRate1 = () => {
-
-
     const λ_b = BASE_FAILURE_RATES1[currentComponent.failureType.value];
     const π_C = CONTACT_FORM_FACTORS1[currentComponent.configurationFactor];
     const π_E = ENVIRONMENT_FACTORS1[currentComponent.environment];
@@ -239,17 +242,17 @@ const [currentComponent, setCurrentComponent] = useState({
   const handleCurrentChange = (e) => {
     const { name, value } = e.target;
     const newValue = parseFloat(value) || 0;
-    
+
     // Calculate stress ratio first
     let stressRatio = currentComponent.stressRatio;
     if (name === 'ratedCurrent' || name === 'operatingCurrent') {
       const rated = name === 'ratedCurrent' ? newValue : currentComponent.ratedCurrent || 1;
-      const operating = name === 'operatingCurrent' 
-        ? Math.min(newValue, rated) 
+      const operating = name === 'operatingCurrent'
+        ? Math.min(newValue, rated)
         : Math.min(currentComponent.operatingCurrent || 0, rated);
       stressRatio = operating / rated;
     }
-  
+
     // Then do a single state update
     setCurrentComponent(prev => ({
       ...prev,
@@ -300,7 +303,7 @@ const [currentComponent, setCurrentComponent] = useState({
     {
       title: <span>π<sub>L</sub></span>,
       field: 'parameters.π_L',
-      render: rowData => rowData.π_L.toFixed(6)  || '-'
+      render: rowData => rowData.π_L?.toFixed(4) || '-'
     },
 
     {
@@ -321,7 +324,7 @@ const [currentComponent, setCurrentComponent] = useState({
     {
       title: "Failure Rate ",
       field: 'λ_p',
-      render: rowData => rowData.λ_p.toFixed(6) || '-'
+      render: rowData => rowData.λ_p?.toFixed(6) || '-'
     }
   ];
 
@@ -351,7 +354,6 @@ const [currentComponent, setCurrentComponent] = useState({
             />
           </div>
         </Col>
-
         {currentComponent.type === "Switches,Circuit Breakers" && (
           <>
             <Col md={4}>
@@ -428,320 +430,319 @@ const [currentComponent, setCurrentComponent] = useState({
           </div>
         </Col>
         {currentComponent.type === "Switches" && (
-    <>
-      <Col md={4}>
-        {/* Quality Factor */}
-        <div className="form-group">
-          <label>Quality Factor (π<sub>Q</sub>):</label>
-          <Select
-            styles={customStyles}
-            name="quality"
-            value={{
-              value: currentComponent.quality,
-              label: `${currentComponent.quality} (${QUALITY_FACTORS[currentComponent.quality]})`
-            }}
-            onChange={(selectedOption) => {
-              setCurrentComponent(prev => ({
-                ...prev,
-                quality: selectedOption.value
-              }));
-            }}
-            options={[
-              { value: 'MIL-SPEC', label: 'MIL-SPEC (1.0)' },
-              { value: 'Lower', label: 'Lower (2.0)' }
-            ]}
-          />
-        </div>
-      </Col>
-    </>
-  )}
-  </Row>
-  {currentComponent.type === "Switches" && (
-    <>
-      <Row className="mb-3">
-        <Col md={4}>
-          {/* Switch Type Selection */}
-          <div className="form-group">
-            <label>Switch Type (λ<sub>b</sub>):</label>
-            <Select
-              styles={customStyles}
-              name="switchType"
-              value={currentComponent.switchType}
-              onChange={(selectedOption) => {
-                setCurrentComponent(prev => ({
-                  ...prev,
-                  switchType: selectedOption
-                }));
-              }}
-              options={[
-                {
-                  value: "Centrifugal",
-                  label: "Centrifugal Switch",
-                  baseFailureRate: 3.4,
-                  description: "N/A specification"
-                },
-                {
-                  value: "Dual-In-line Package Limit",
-                  label: "Dual-In-line Package Limit Switch",
-                  baseFailureRate: 0.00012,
-                  description: "MIL-S-83504 specification"
-                },
-                {
-                  value: "Limit",
-                  label: "Limit",
-                  baseFailureRate: 4.3,
-                  description: "MIL-S-21277 specification"
-                },
-                {
-                  value: "Liquid Level",
-                  label: "Liquid Level Switch",
-                  baseFailureRate: 2.3,
-                  description: "MIL-S-21277 specification"
-                },
-                {
-                  value: "Microwave (Waveguide)",
-                  label: "Microwave (Waveguide) Switch",
-                  baseFailureRate: 1.7,
-                  description: "N/A specification"
-                },
-                {
-                  value: "Pressure",
-                  label: "Pressure Switch",
-                  baseFailureRate: 2.8,
-                  description: "MIL-S-8932 specification"
-                },
-                {
-                  value: "Pushbutton",
-                  label: "Pushbutton Switch",
-                  baseFailureRate: 0.10,
-                  description: "MIL-S-8805 specification"
-                },
-                {
-                  value: "Reed",
-                  label: "Reed Switch",
-                  baseFailureRate: 0.0010,
-                  description: "MIL-S-55433 specification"
-                },
-                {
-                  value: "Rocket",
-                  label: "Rocket Switch",
-                  baseFailureRate: 0.023,
-                  description: "MIL-S-3950 specification"
-                },
-                {
-                  value: "Rotary",
-                  label: "Rotary Switch",
-                  baseFailureRate: 0.11,
-                  description: "MIL-S-3786 specification"
-                },
-                {
-                  value: "Sensitive",
-                  label: "Sensitive Switch",
-                  baseFailureRate: 0.49,
-                  description: "MIL-S-82359 specification"
-                },
-                {
-                  value: "Thermal",
-                  label: "Thermal Switch",
-                  baseFailureRate: 0.031,
-                  description: "MIL-S-12285 specification"
-                },
-                {
-                  value: "Thumbwheel",
-                  label: "Thumbwheel Switch",
-                  baseFailureRate: 0.18,
-                  description: "MIL-S-22710 specification"
-                },
-                {
-                  value: "Toggle",
-                  label: "Toggle Switch",
-                  baseFailureRate: 0.10,
-                  description: "MIL-S-3950 specification"
-                }
-                // ... other switch options
-              ]}
-            />
-          </div>
-        </Col>
-  
-        <Col md={4}>
-          {/* Contact Configuration */}
-          <div className="form-group">
-            <label>Contact Configuration (π<sub>C</sub>):</label>
-            <Select
-              styles={customStyles}
-              name="configurationFactor"
-              value={{
-                value: currentComponent.configurationFactor,
-                label: `${currentComponent.configurationFactor} (${CONTACT_FORM_FACTORS[currentComponent.configurationFactor]})`
-              }}
-              onChange={(selectedOption) => {
-                setCurrentComponent(prev => ({
-                  ...prev,
-                  configurationFactor: selectedOption.value
-                }));
-              }}
-              options={[
-                { value: 'SPST', label: 'SPST (1 contact)' },
-                { value: 'DPST', label: 'DPST (2 contact)' },
-                { value: 'SPDT', label: 'SPDT (2 contact)' },
-                { value: '3PST', label: '3PST (3 contact)' },
-                { value: '4PST', label: '4PST (4 contact)' },
-                { value: 'DPDT', label: 'DPDT (4 contact)' },
-                { value: '3PDT', label: '3PDT (6 contact)' },
-                { value: '4PDT', label: '4PDT (8 contact)' },
-                { value: '6PDT', label: '6PDT (12 contact)' }
-                // ... other configuration options
-              ]}
-            />
-          </div>
-        </Col>
-        
-        <Col md={4}>
-          {/* Load Type */}
-          <div className="form-group">
-            <label>Load Type:</label>
-            <Select
-              styles={customStyles}
-              name="loadType"
-              value={{
-                value: currentComponent.loadType,
-                label: currentComponent.loadType?.charAt(0)?.toUpperCase() + currentComponent.loadType?.slice(1)
-              }}
-              onChange={(selectedOption) => {
-                setCurrentComponent(prev => ({
-                  ...prev,
-                  loadType: selectedOption.value
-                }));
-              }}
-              options={[
-                { value: 'resistive', label: 'Resistive' },
-                { value: 'inductive', label: 'Inductive' },
-                { value: 'lamp', label: 'Lamp' }
-              ]}
-            />
-          </div>
-        </Col>
+          <>
+            <Col md={4}>
+              {/* Quality Factor */}
+              <div className="form-group">
+                <label>Quality Factor (π<sub>Q</sub>):</label>
+                <Select
+                  styles={customStyles}
+                  name="quality"
+                  value={{
+                    value: currentComponent.quality,
+                    label: `${currentComponent.quality} (${QUALITY_FACTORS[currentComponent.quality]})`
+                  }}
+                  onChange={(selectedOption) => {
+                    setCurrentComponent(prev => ({
+                      ...prev,
+                      quality: selectedOption.value
+                    }));
+                  }}
+                  options={[
+                    { value: 'MIL-SPEC', label: 'MIL-SPEC (1.0)' },
+                    { value: 'Lower', label: 'Lower (2.0)' }
+                  ]}
+                />
+              </div>
+            </Col>
+          </>
+        )}
       </Row>
-  
-      <Row className="mb-3">
-        <Col md={4}>
-          {/* Rated Current */}
-          <div className="form-group">
-            <label>Rated Current (A):</label>
-            <input
-              type="number"
-              name="ratedCurrent"
-              min="0.01"
-              step="0.01"
-              value={currentComponent.ratedCurrent || ''}
-              onChange={handleCurrentChange}
-              className="form-control"
-            />
-          </div>
-        </Col>
-  
-        <Col md={4}>
-          {/* Operating Current */}
-          <div className="form-group">
-            <label>Operating Current (A):</label>
-            <input
-              type="number"
-              name="operatingCurrent"
-              min="0"
-              max={currentComponent.ratedCurrent || 0}
-              step="0.01"
-              value={currentComponent.operatingCurrent || ''}
-              onChange={handleCurrentChange}
-              className="form-control"
-            />
-          </div>
-        </Col>
-  
-        <Col md={4}>
-          {/* Stress Ratio */}
-          <div className="form-group">
-            <label>Calculated Stress Ratio (S):</label>
-            <input
-              type="number"
-              readOnly
-              value={currentComponent.stressRatio !== undefined ? currentComponent.stressRatio.toFixed(2) : ''}
-              className="form-control"
-            />
-          </div>
-        </Col>
-      </Row>
-  
-      {/* Calculation Section */}
-       <div className='d-flex justify-content-between align-items-center' >
-     
-                 <div >
-                   {result && (
-     
-                     <div className="system-metrics">
-     
-                       <Box
-                         component="div"
-                         onClick={() => setShowCalculations(!showCalculations)}
-                         sx={{
-                           display: 'flex',
-                           alignItems: 'center',
-                           cursor: 'pointer',
-                           color: 'primary.main',
-                           '&:hover': {
-                             textDecoration: 'underline'
-                           }
-                         }}
-                         className="ms-auto mt-2"
-                       >
-                         <CalculatorIcon
-                           style={{ height: '50px', width: '60px' }}
-                           fontSize="large"
-                         />
-                         <Typography
-                           variant="body1"
-                           sx={{
-                             fontWeight: 'bold',
-                             fontSize: '0.95rem',
-                             ml: 1
-                           }}
-                         >
-                           {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                         </Typography>
-                       </Box>
-     
-                     </div>
-                   )}
-                 </div>
-                 <Button
-                   variant="primary"
-                   onClick={handleCalculate}
-                   className="btn-calculate float-end mt-1 "
-     
-                 >
-                   Calculate Failure Rate
-                 </Button>
-               </div>
-  
-      {error && (
-        <Row>
-          <Col>
-            <Alert variant="danger">{error}</Alert>
-          </Col>
-        </Row>
-      )}
-  
-      {result && (
+      {currentComponent.type === "Switches" && (
         <>
-          <h2 className="text-center">Calculation Result</h2>
-          <div className="d-flex align-items-center">
-            <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-            <span className="ms-2">{result.value} failures/10<sup>6</sup> hours</span>
+          <Row className="mb-3">
+            <Col md={4}>
+              {/* Switch Type Selection */}
+              <div className="form-group">
+                <label>Switch Type (λ<sub>b</sub>):</label>
+                <Select
+                  styles={customStyles}
+                  name="switchType"
+                  value={currentComponent.switchType}
+                  onChange={(selectedOption) => {
+                    setCurrentComponent(prev => ({
+                      ...prev,
+                      switchType: selectedOption
+                    }));
+                  }}
+                  options={[
+                    {
+                      value: 'Centrifugal (N/A)',
+                      label: 'Centrifugal (N/A)',
+                      baseFailureRate: 3.4,
+                      description: "N/A specification"
+                    },
+                    {
+                      value:  'Dual-In-line Package Limit (Mil-S-83504)',
+                      label:  'Dual-In-line Package Limit (Mil-S-83504)',
+                      baseFailureRate: 0.00012,
+                      description: "MIL-S-83504 specification"
+                    },
+                    {
+                      value: 'Limit(Mil-S-8805)',
+                      label: 'Limit(Mil-S-8805)',
+                      baseFailureRate: 4.3,
+                      description: "MIL-S-21277 specification"
+                    },
+                    {
+                      value:'Liquid Level  (Mil-S-21277)',
+                      label:'Liquid Level  (Mil-S-21277)',
+                      baseFailureRate: 2.3,
+                      description: "MIL-S-21277 specification"
+                    },
+                    {
+                      value:  'Microwave Waveguide (N/A)',
+                      label:  'Microwave Waveguide (N/A)',
+                      baseFailureRate: 1.7,
+                      description: "N/A specification"
+                    },
+                    {
+                      value:'Pressure (Mil-S-8932)',
+                      label:'Pressure (Mil-S-8932)',
+                      baseFailureRate: 2.8,
+                      description: "MIL-S-8932 specification"
+                    },
+                    {
+                      value:'Pushbutton (Mil-S-8805)',
+                      label:'Pushbutton (Mil-S-8805)',
+                      baseFailureRate: 0.10,
+                      description: "MIL-S-8805 specification"
+                    },
+                    {
+                      value:'Reed (Mil-S-55433)',
+                      label:'Reed (Mil-S-55433)',
+                      baseFailureRate: 0.0010,
+                      description: "MIL-S-55433 specification"
+                    },
+                    {
+                      value:'Rocker (Mil-S-3950)',
+                      label:'Rocker (Mil-S-3950)',
+                      baseFailureRate: 0.023,
+                      description: "MIL-S-3950 specification"
+                    },
+                    {
+                      value:'Rotary (Mil-S-3786)',
+                      label:'Rotary (Mil-S-3786)',
+                      baseFailureRate: 0.11,
+                      description: "MIL-S-3786 specification"
+                    },
+                    {
+                      value:'Sensitive (Mil-S-8805)',
+                      label:'Sensitive (Mil-S-8805)',
+                      baseFailureRate: 0.49,
+                      description: "MIL-S-82359 specification"
+                    },
+                    {
+                      value:'Thermal (Mil-S-12285)',
+                      label:'Thermal (Mil-S-12285)',
+                      baseFailureRate: 0.031,
+                      description: "MIL-S-12285 specification"
+                    },
+                    {
+                      value:'Thumbwheel (Mil-S-22710)',
+                      label:'Thumbwheel (Mil-S-22710)',
+                      baseFailureRate: 0.18,
+                      description: "MIL-S-22710 specification"
+                    },
+                    {
+                      value:'Toggle (Mil-S-3950)',
+                      label:'Toggle (Mil-S-3950)',
+                      baseFailureRate: 0.10,
+                      description: "MIL-S-3950 specification"
+                    }
+                    // ... other switch options
+                  ]}
+                />
+              </div>
+            </Col>
+
+            <Col md={4}>
+              {/* Contact Configuration */}
+              <div className="form-group">
+                <label>Contact Configuration (π<sub>C</sub>):</label>
+                <Select
+                  styles={customStyles}
+                  name="configurationFactor"
+                  value={{
+                    value: currentComponent.configurationFactor,
+                    label: `${currentComponent.configurationFactor} (${CONTACT_FORM_FACTORS[currentComponent.configurationFactor]})`
+                  }}
+                  onChange={(selectedOption) => {
+                    setCurrentComponent(prev => ({
+                      ...prev,
+                      configurationFactor: selectedOption.value
+                    }));
+                  }}
+                  options={[
+                    { value: 'SPST', label: 'SPST (1 contact)' },
+                    { value: 'DPST', label: 'DPST (2 contact)' },
+                    { value: 'SPDT', label: 'SPDT (2 contact)' },
+                    { value: '3PST', label: '3PST (3 contact)' },
+                    { value: '4PST', label: '4PST (4 contact)' },
+                    { value: 'DPDT', label: 'DPDT (4 contact)' },
+                    { value: '3PDT', label: '3PDT (6 contact)' },
+                    { value: '4PDT', label: '4PDT (8 contact)' },
+                    { value: '6PDT', label: '6PDT (12 contact)' }
+                    // ... other configuration options
+                  ]}
+                />
+              </div>
+            </Col>
+
+            <Col md={4}>
+              {/* Load Type */}
+              <div className="form-group">
+                <label>Load Type:</label>
+                <Select
+                  styles={customStyles}
+                  name="loadType"
+                  value={{
+                    value: currentComponent.loadType,
+                    label: currentComponent.loadType?.charAt(0)?.toUpperCase() + currentComponent.loadType?.slice(1)
+                  }}
+                  onChange={(selectedOption) => {
+                    setCurrentComponent(prev => ({
+                      ...prev,
+                      loadType: selectedOption.value
+                    }));
+                  }}
+                  options={[
+                    { value: 'resistive', label: 'Resistive' },
+                    { value: 'inductive', label: 'Inductive' },
+                    { value: 'lamp', label: 'Lamp' }
+                  ]}
+                />
+              </div>
+            </Col>
+          </Row>
+
+          <Row className="mb-3">
+            <Col md={4}>
+              {/* Operating Current */}
+              <div className="form-group">
+                <label>Operating Current (A):</label>
+                <input
+                  type="number"
+                  name="operatingCurrent"
+                  min="0"
+                  max={currentComponent.ratedCurrent || 0}
+                  step="0.01"
+                  value={currentComponent.operatingCurrent || ''}
+                  onChange={handleCurrentChange}
+                  className="form-control"
+                />
+              </div>
+            </Col>
+            <Col md={4}>
+              {/* Rated Current */}
+              <div className="form-group">
+                <label>Rated Current (A):</label>
+                <input
+                  type="number"
+                  name="ratedCurrent"
+                  min="0.01"
+                  step="0.01"
+                  value={currentComponent.ratedCurrent || ''}
+                  onChange={handleCurrentChange}
+                  className="form-control"
+                />
+              </div>
+            </Col>
+
+            <Col md={4}>
+              {/* Stress Ratio */}
+              <div className="form-group">
+                <label>Calculated Stress Ratio (S):</label>
+                <input
+                  type="number"
+                  readOnly
+                  value={currentComponent.stressRatio !== undefined ? currentComponent.stressRatio.toFixed(2) : ''}
+                  className="form-control"
+                />
+              </div>
+            </Col>
+          </Row>
+
+          {/* Calculation Section */}
+          <div className='d-flex justify-content-between align-items-center' >
+
+            <div >
+              {result && (
+
+                <div className="system-metrics">
+
+                  <Box
+                    component="div"
+                    onClick={() => setShowCalculations(!showCalculations)}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
+                    }}
+                    className="ms-auto mt-2"
+                  >
+                    <CalculatorIcon
+                      style={{ height: '30px', width: '40px' }}
+                      fontSize="large"
+                    />
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem',
+                        ml: 1
+                      }}
+                    >
+                      {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
+                    </Typography>
+                  </Box>
+
+                </div>
+              )}
+            </div>
+            <Button
+              variant="primary"
+              onClick={handleCalculate}
+              className="btn-calculate float-end mt-1 "
+
+            >
+              Calculate Failure Rate
+            </Button>
           </div>
-        </>
-      )}
-  
-  {result && showCalculations && (
+
+          {error && (
+            <Row>
+              <Col>
+                <Alert variant="danger">{error}</Alert>
+              </Col>
+            </Row>
+          )}
+
+          {result && (
+            <>
+              <h2 className="text-center">Calculation Result</h2>
+              <div className="d-flex align-items-center">
+                <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                <span className="ms-2">{result.value} failures/10<sup>6</sup> hours</span>
+              </div>
+            </>
+          )}
+
+          {result && showCalculations && (
             <>
               <Row className="mb-4">
                 <Col>
@@ -822,8 +823,8 @@ const [currentComponent, setCurrentComponent] = useState({
               </Row>
             </>
           )}
-    </>
-  )}
+        </>
+      )}
 
       {currentComponent.type === "Switches,Circuit Breakers" && (
         <>
@@ -930,7 +931,7 @@ const [currentComponent, setCurrentComponent] = useState({
                   className="ms-auto mt-2"
                 >
                   <CalculatorIcon
-                    style={{ height: '50px', width: '60px' }}
+                    style={{ height: '30px', width: '40px' }}
                     fontSize="large"
                   />
                   <Typography

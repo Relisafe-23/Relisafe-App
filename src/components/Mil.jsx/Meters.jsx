@@ -275,23 +275,7 @@ const Meters = ({ onCalculate }) => {
 
         <div >
           {result && (
-            // <Link
-            //   component="button"
-            //   onClick={() => setShowCalculations(!showCalculations)}
-            //   className="ms-auto mt-2"
-            //   sx={{
-            //     color: 'primary.main',
-            //     textDecoration: 'underline',
-            //     cursor: 'pointer',
-            //     fontWeight: 'bold',
-            //     fontSize: '0.95rem',
-            //     '&:hover': {
-            //       textDecoration: 'underline'
-            //     }
-            //   }}
-            // >
-            //   {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-            // </Link>
+        
 
             <Box
               component="div"
@@ -308,7 +292,7 @@ const Meters = ({ onCalculate }) => {
               className="ms-auto mt-2"
             >
               <CalculatorIcon
-                style={{ height: '50px', width: '60px' }}
+                 style={{ height: '30px', width: '40px' }}
                 fontSize="large"
               />
               <Typography

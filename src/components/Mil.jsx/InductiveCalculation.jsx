@@ -19,10 +19,39 @@ import { customStyles } from './Selector';
 const InductiveCalculation =({ onCalculate })  => {
   // Transformer types data
   const transformerTypes = [
-    { type: "TF", spec: "MIL-T-27", description: "Audio, Power and High Power Pulse", λb: 0.014 },
-    { type: "TP", spec: "MIL-T-21038", description: "Low Power Pulse", λb: 0.022 },
-    { type: "IF/RF", spec: "MIL-T-55531", description: "Intermediate Frequency (IF), RF and Discriminator", λb: 0.13 }
+
+          { 
+        type: "Flyback (< 20 Volts)",
+        λb: 0.0054,
+        units: "F/10⁶ hrs."
+      },
+      { 
+        type: "Audio (15 -20K Hz)",
+        λb: 0.014,
+        units: "F/10⁶ hrs."
+      },
+      { 
+        type: "Low Power Pulse (Peak Pwr. < 300W, Avg. Pwr. < 5W)",
+        λb: 0.022,
+        units: "F/10⁶ hrs."
+      },
+      { 
+        type: "High Power, High Power Pulse (Peak Power ≥ 300W, Avg. Pwr. ≥ 5W)",
+        λb: 0.049,
+        units: "F/10⁶ hrs."
+      },
+      { 
+        type: "RF (10K - 10M Hz)",
+        λb: 0.13,
+        units: "F/10⁶ hrs."
+      },
+     
   ];
+
+
+// Transformer Class that uses both formats
+
+// Usage Example
 
   // Inductor types data
   const inductorTypes = [
@@ -31,27 +60,7 @@ const InductiveCalculation =({ onCalculate })  => {
     // { type: "Molded RF", spec: "MIL-C-39010", description: "Molded, RF, Est. Rel.", λb: 0.000030 }
   ];
 
-  // Temperature factors
-  const tempFactors = [
-    { temp: 20, πT: 0.93 },
-    { temp: 30, πT: 1.1 },
-    { temp: 40, πT: 1.2 },
-    { temp: 50, πT: 1.4 },
-    { temp: 60, πT: 1.6 },
-    { temp: 70, πT: 1.8 },
-    { temp: 80, πT: 1.9 },
-    { temp: 90, πT: 2.2 },
-    { temp: 100, πT: 2.4 },
-    { temp: 110, πT: 2.6 },
-    { temp: 120, πT: 2.8 },
-    { temp: 130, πT: 3.1 },
-    { temp: 140, πT: 3.3 },
-    { temp: 150, πT: 3.5 },
-    { temp: 160, πT: 3.8 },
-    { temp: 170, πT: 4.1 },
-    { temp: 180, πT: 4.3 },
-    { temp: 190, πT: 4.6 }
-  ];
+
 
   // Quality factors
   const qualityFactors = [
@@ -106,7 +115,8 @@ const InductiveCalculation =({ onCalculate })  => {
   });
   const [transformerQuality, setTransformerQuality] = useState(qualityFactors[0]);
 
-  const [components, setComponents] = useState([])
+  const [components, setComponents] = useState([]);
+  const [milSpecSheet, setMilSpecSheet] = useState("");
   const [selectedTransformer, setSelectedTransformer] = useState(transformerTypes[0]);
   const [selectedInductor, setSelectedInductor] = useState(inductorTypes[0]);
   const [ambientTemp, setAmbientTemp] = useState(30);
@@ -126,39 +136,89 @@ const InductiveCalculation =({ onCalculate })  => {
   const removeComponent = (id) => {
     setResults(results.filter(comp => comp.id !== id));
   };
-
+  // Temperature factors
+  const tempFactors = [
+    { temp: 20, πT: 0.93 },
+    { temp: 30, πT: 1.1 },
+    { temp: 40, πT: 1.2 },
+    { temp: 50, πT: 1.4 },
+    { temp: 60, πT: 1.6 },
+    { temp: 70, πT: 1.8 },
+    { temp: 80, πT: 1.9 },
+    { temp: 90, πT: 2.2 },
+    { temp: 100, πT: 2.4 },
+    { temp: 110, πT: 2.6 },
+    { temp: 120, πT: 2.8 },
+    { temp: 130, πT: 3.1 },
+    { temp: 140, πT: 3.3 },
+    { temp: 150, πT: 3.5 },
+    { temp: 160, πT: 3.8 },
+    { temp: 170, πT: 4.1 },
+    { temp: 180, πT: 4.3 },
+    { temp: 190, πT: 4.6 }
+  ];
   // Calculate hot spot temperature
-  const calculateHotSpotTemp = () => {
-    let ΔT = tempRise;
+const calculateHotSpotTemp = () => {
+  let ΔT = tempRise; // Default to specified ΔT if no method matches
 
-    if (tempRiseMethod === "caseArea" && powerLoss > 0) {
-      const caseArea = caseAreas.find(c => c.case === caseType)?.area || 1;
-      ΔT = 125 * powerLoss / caseArea;
-    } else if (tempRiseMethod === "powerLossWeight" && powerLoss > 0 && weight > 0) {
-      ΔT = 11.5 * powerLoss / Math.pow(weight, 0.6766);
-    } else if (tempRiseMethod === "inputPowerWeight" && inputPower > 0 && weight > 0) {
-      ΔT = 2.1 * inputPower / Math.pow(weight, 0.6766);
+  // Method 1: MIL-C-39010 Slash Sheet (if applicable)
+  if (tempRiseMethod === "milSpec") {
+    if (["1C", "3C", "5C", "7C", "9A", "10A", "13", "14"].includes(milSpecSheet)) {
+      ΔT = 15;
+    } else if (["4C", "6C", "8A", "11", "12"].includes(milSpecSheet)) {
+      ΔT = 35;
     }
+  }
+  // Method 2: Case Area Method (Power Loss / Area)
+  else if (tempRiseMethod === "caseArea" && powerLoss > 0) {
+    const caseArea = caseAreas.find(c => c.case === caseType)?.area;
+    if (!caseArea) throw new Error("Invalid case type selected");
+    ΔT = 125 * powerLoss / caseArea; // Note: area in in² per spec
+  }
+  // Method 3: Power Loss / Weight
+  else if (tempRiseMethod === "powerLossWeight" && powerLoss > 0 && weight > 0) {
+    ΔT = 11.5 * powerLoss / Math.pow(weight, 0.6766); // Weight in lbs
+  }
+  // Method 4: Input Power / Weight (assumes 80% efficiency)
+  else if (tempRiseMethod === "inputPowerWeight" && inputPower > 0 && weight > 0) {
+    ΔT = 2.1 * inputPower / Math.pow(weight, 0.6766); // Weight in lbs
+  }
 
-    return ambientTemp + 1.1 * ΔT;
-  };
+  // Final calculation (T_HS = T_A + 1.1ΔT)
+  return ambientTemp + 1.1 * ΔT;
+};
 
-  // Calculate πT (Temperature Factor)
-  const calculatePiT = () => {
-    const hotSpotTemp = calculateHotSpotTemp();
-    const closestTemp = tempFactors.reduce((prev, curr) =>
-      Math.abs(curr.temp - hotSpotTemp) < Math.abs(prev.temp - hotSpotTemp) ? curr : prev
-    );
-    return closestTemp.πT;
-  };
+
+  // const calculatePiT = () => {
+  //   const hotSpotTemp = calculateHotSpotTemp();
+  //   const closestTemp = tempFactors.reduce((prev, curr) => 
+  //     Math.abs(curr.temp - hotSpotTemp) < Math.abs(prev.temp - hotSpotTemp) ? curr : prev
+  //   );
+  //   return closestTemp.πT;
+  // };
+const hotSpotTemp = calculateHotSpotTemp();
+const calculatePiT = (hotSpotTemp) => {
+  // Constants from the formula
+  const ACTIVATION_ENERGY = 0.11; // eV
+  const BOLTZMANN_CONSTANT = 8.617e-5; // eV/K
+  const REFERENCE_TEMP = 298; // K (25°C)
+
+  // Fall back to Arrhenius equation calculation
+  const tempInKelvin = hotSpotTemp + 273;
+  const exponent = (-ACTIVATION_ENERGY / BOLTZMANN_CONSTANT) *
+                  ((1 / tempInKelvin) - (1 / REFERENCE_TEMP));
+  return parseFloat(Math.exp(exponent)?.toFixed(3)); // Round to 3 decimal places
+};
+
+
+ // You should already have this
 
   // Calculate failure rate
   const calculateFailureRate = () => {
     const λb = deviceType === "transformer" ? selectedTransformer.λb : selectedInductor.λb;
-    const πT = calculatePiT();
+    const πT = calculatePiT(hotSpotTemp)?.toFixed(4);
     const πQ = selectedQuality.πQ;
     const πE = selectedEnvironment.πE;
-
     return λb * πT * πQ * πE;
   };
 
@@ -177,7 +237,7 @@ const InductiveCalculation =({ onCalculate })  => {
       quality: selectedQuality.quality,
       environment: selectedEnvironment.env,
       λb: deviceType === "transformer" ? selectedTransformer.λb : selectedInductor.λb,
-      πT: calculatePiT(),
+      πT: calculatePiT(hotSpotTemp, tempFactors)?.toFixed(4),
       πQ: selectedQuality.πQ,
       πE: selectedEnvironment.πE,
       λp: calculateFailureRate()
@@ -205,7 +265,7 @@ const InductiveCalculation =({ onCalculate })  => {
     {
       title: <span>π<sub>T</sub></span>,
       field: 'πT',
-      render: rowData => rowData.πT?.toFixed(3)
+      render: rowData => rowData?.πT?.toFixed(6)
     },
     {
       title: <span>π<sub>Q</sub></span>,
@@ -341,14 +401,7 @@ const InductiveCalculation =({ onCalculate })  => {
               </Col>
             )}
 
-
-
-
-
-
           </>
-
-
           <Col md={4}>
             <div className="form-group">
               <label>{deviceType === "transformer" ? "Transformer Type:" : "Inductor Type:"}</label>
@@ -365,7 +418,7 @@ const InductiveCalculation =({ onCalculate })  => {
                 }}
                 options={transformerTypes.map(type => ({
                   value: type,
-                  label: `${type.type}-(${type.spec})-${type.description}`
+                  label: `${type.type}`
                 }))
 
                 }
@@ -516,7 +569,7 @@ const InductiveCalculation =({ onCalculate })  => {
               <label>Temperature Factor (πT):</label>
               <input
                 type="text"
-                value={calculatePiT().toFixed(3)}
+                value={calculatePiT(hotSpotTemp, tempFactors)}
                 readOnly
                 className="readonly-field"
               />
@@ -547,7 +600,7 @@ const InductiveCalculation =({ onCalculate })  => {
                 className="ms-auto mt-2"
               >
                 <CalculatorIcon
-                  style={{ height: '50px', width: '60px' }}
+                    style={{ height: '30px', width: '40px' }}
                   fontSize="large"
                 />
                 <Typography
@@ -580,7 +633,7 @@ const InductiveCalculation =({ onCalculate })  => {
             Calculation Result
           </h2>
           <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-          {results[results.length - 1].λp.toFixed(6)} failures/10<sup>6</sup> hours
+          {results[results.length - 1].λp?.toFixed(6)} failures/10<sup>6</sup> hours
 
 
         </div>
@@ -593,7 +646,7 @@ const InductiveCalculation =({ onCalculate })  => {
         <div className="results-section">
 
           <div className="hotspot-info">
-            <p>Calculated Hot Spot Temperature: {results[results.length - 1]?.hotSpotTemp.toFixed(1)}°C</p>
+            <p>Calculated Hot Spot Temperature: {results[results.length - 1]?.hotSpotTemp?.toFixed(2)}°C</p>
           </div>
 
           {/* // In your component's render: */}
@@ -603,15 +656,13 @@ const InductiveCalculation =({ onCalculate })  => {
               <MaterialTable
                 columns={calculationColumns}
                 data={[
-
-                  {
-                    λb: deviceType === "transformer" ? selectedTransformer.λb : selectedInductor.λb,
-                    πT: calculatePiT(),
-                    πQ: selectedQuality.πQ,
-                    πE: selectedEnvironment.πE,
-                    λp: calculateFailureRate()
-
-                  }
+{
+  λb: deviceType === "transformer" ? selectedTransformer.λb : selectedInductor.λb,
+  πT: calculatePiT(hotSpotTemp), // Pass required arguments
+  πQ: selectedQuality.πQ,
+  πE: selectedEnvironment.πE,
+  λp: calculateFailureRate()
+}
                 ]}  // Changed from components to results to match your original table
                 options={{
                   search: false,

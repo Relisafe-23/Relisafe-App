@@ -183,7 +183,7 @@ const ConnectionCalculation = ({ onCalculate }) => {
                     className="ms-auto mt-2"
                   >
                     <CalculatorIcon
-                      style={{ height: '50px', width: '60px' }}
+                         style={{ height: '30px', width: '40px' }}
                       fontSize="large"
                     />
                     <Typography

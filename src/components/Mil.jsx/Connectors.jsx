@@ -2,11 +2,15 @@ import React, { useState } from 'react';
 import { Row, Col, Button, Alert, Form } from 'react-bootstrap';
 import Select from 'react-select';
 import Link from '@mui/material/Link';
+import { CalculatorIcon } from '@heroicons/react/24/outline'; // or /24/solid
+
+import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography';
 import MaterialTable from 'material-table';
 import Paper from '@mui/material/Paper';
 
-const Connectors = () => {
+const Connectors = ({ onCalculate }) => {
   const [currentComponent, setCurrentComponent] = useState({
     type:"Connectors General"
   })
@@ -16,11 +20,11 @@ const Connectors = () => {
     { type: 'Card Edge (PCB)', specs: '21097, 55302', rate: 0.040 },
     { type: 'Hexagonal', specs: '24055, 24056', rate: 0.15 },
     { type: 'Rack and Panel', specs: '24308, 28731, 28748, 83515', rate: 0.021 },
-    { type: 'Rectangular', specs: '21617, 24308, 28748, 28604, 81659, 83513, 83527, 83733, 85028', rate: 0.046 },
+    { type: 'Rectangular', specs: '21617, 24308, 28748, 2804, 81659, 83513, 83527, 83733, 85028', rate: 0.046 },
     { type: 'RF Coaxial', specs: '3607, 15370, 3643, 25516, 3650, 26637, 3655, 39012, 55235, 83517', rate: 0.00041 },
-    { type: 'Telephone', specs: '55074, 22992', rate: 0.0075 },
-    { type: 'Power', specs: '49142', rate: 0.0036 },
-    { type: 'Triaxial', specs: '', rate: 0.00041 } // Assuming same as RF Coaxial
+    { type: 'Telephone', specs: '55074', rate: 0.0075 },
+    { type: 'Power', specs: '22992', rate: 0.0070 },
+    { type: 'Triaxial', specs: '', rate: 0.0036 } // Assuming same as RF Coaxial
   ];
 
   // Temperature factors
@@ -81,7 +85,7 @@ const Connectors = () => {
     { gauge: 22, current: 8, rise: 46 },
     { gauge: 22, current: 9, rise: 57 },
     { gauge: 22, current: 10, rise: 70 },
-    { gauge: 20, current: 2, rise: 5 },
+    { gauge: 20, current: 2, rise: 2 },
     { gauge: 20, current: 3, rise: 5 },
     { gauge: 20, current: 4, rise: 8 },
     { gauge: 20, current: 5, rise: 13 },
@@ -95,7 +99,7 @@ const Connectors = () => {
     { gauge: 16, current: 3, rise: 2 },
     { gauge: 16, current: 4, rise: 4 },
     { gauge: 16, current: 5, rise: 5 },
-    { gauge: 16, current: 6, rise: 9 },
+    { gauge: 16, current: 6, rise: 8 },
     { gauge: 16, current: 7, rise: 10 },
     { gauge: 16, current: 8, rise: 13 },
     { gauge: 16, current: 9, rise: 16 },
@@ -155,7 +159,7 @@ const Connectors = () => {
 
   // State for form inputs
   const [inputs, setInputs] = useState({
-    connectorType: baseRatesGeneral[0],
+    connectorType:baseRatesGeneral[0],
     ambientTemp: 25,
     contactGauge: 20,
     currentPerContact: 1,
@@ -185,6 +189,7 @@ const Connectors = () => {
   ];
   const [inputData, setInputData] = useState({
     componentType: baseRatesSocket[0],
+    
     quality: qualityFactorsSocket[0],
     environment: environmentFactorsSocket[0],
     activePins: 1
@@ -197,7 +202,9 @@ const Connectors = () => {
       const activePinsFactorSocket = calculateActivePinsFactorSocket(inputData.activePins);
 
       const failureRate = baseRateSocket * activePinsFactorSocket * qualityFactorSocket * environmentFactorsSocket;
-
+      if (onCalculate) {
+        onCalculate(failureRate);
+      }
       setResult({
         value: failureRate.toFixed(6),
         parameters: {
@@ -301,6 +308,8 @@ const Connectors = () => {
       // Adjust for single connector if needed
       if (inputs.isSingleConnector) {
         failureRate = failureRate / 2;
+      }   if (onCalculate) {
+        onCalculate(failureRate);
       }
 
       setResult({
@@ -350,7 +359,7 @@ const Connectors = () => {
 
   return (
     <>
-      <h2 clapsName="text-center mb-4">Connector </h2>
+      <h2 className="text-center">Connector </h2>
       <Row>
         <Col md={6}>
           {/* Component Type Selection */}
@@ -380,7 +389,17 @@ const Connectors = () => {
                 <label>Active Pins Factor (π<sub>p</sub>):</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-group"
+                  style={{
+                    width: "100%",
+                    padding: "0.375rem 0.75rem",
+                    fontSize: "1rem",
+                    lineHeight: "1.5",
+                    color: "#495057",
+                    backgroundColor: "#fff",
+                    border: "1px solid #ced4da",
+                    borderRadius: "0.25rem"
+                }}
                   readOnly
                   value={calculateActivePinsFactorSocket(inputData.activePins).toFixed(4)}
                 />
@@ -398,7 +417,7 @@ const Connectors = () => {
                 <label>Connector Type (λ<sub>b</sub>):</label>
                 <Select
                   styles={customStyles}
-                  options={baseRatesSocket.map(item => ({
+                  options={baseRatesGeneral.map(item => ({
                     value: item,
                     label: `${item.type} (λb = ${item.rate})`
                   }))}
@@ -426,7 +445,17 @@ const Connectors = () => {
                 <label>Ambient Temperature (°C):</label>
                 <input
                   type="number"
-                  className="form-control"
+                  className="form-group"
+                  style={{
+                    width: "100%",
+                    padding: "0.375rem 0.75rem",
+                    fontSize: "1rem",
+                    lineHeight: "1.5",
+                    color: "#495057",
+                    backgroundColor: "#fff",
+                    border: "1px solid #ced4da",
+                    borderRadius: "0.25rem"
+                }}
                   value={inputs.ambientTemp}
                   onChange={(e) => setInputs(prev => ({
                     ...prev,
@@ -467,7 +496,17 @@ const Connectors = () => {
                 <label>Current per Contact (A):</label>
                 <input
                   type="number"
-                  className="form-control"
+                  className="form-group"
+                  style={{
+                    width: "100%",
+                    padding: "0.375rem 0.75rem",
+                    fontSize: "1rem",
+                    lineHeight: "1.5",
+                    color: "#495057",
+                    backgroundColor: "#fff",
+                    border: "1px solid #ced4da",
+                    borderRadius: "0.25rem"
+                }}
                   min="1"
                   max="40"
                   step="0.1"
@@ -557,8 +596,17 @@ const Connectors = () => {
                 <label>Temperature Rise (ΔT °C):</label>
                 <input
                   type="text"
-                  className="form-control"
-
+                  className="form-group"
+                  style={{
+                    width: "100%",
+                    padding: "0.375rem 0.75rem",
+                    fontSize: "1rem",
+                    lineHeight: "1.5",
+                    color: "#495057",
+                    backgroundColor: "#fff",
+                    border: "1px solid #ced4da",
+                    borderRadius: "0.25rem"
+                }}
                   value={calculateTempRiseGeneral().toFixed(1)}
                 />
               </div>
@@ -568,8 +616,17 @@ const Connectors = () => {
                 <label>Operating Temperature (°C):</label>
                 <input
                   type="text"
-                  className="form-control"
-
+                  className="form-group"
+                  style={{
+                    width: "100%",
+                    padding: "0.375rem 0.75rem",
+                    fontSize: "1rem",
+                    lineHeight: "1.5",
+                    color: "#495057",
+                    backgroundColor: "#fff",
+                    border: "1px solid #ced4da",
+                    borderRadius: "0.25rem"
+                }}
                   value={calculateOperatingTempGeneral().toFixed(1)}
                 />
               </div>
@@ -635,26 +692,41 @@ const Connectors = () => {
             </Col>
           </Row>
 
-          <div className='Button'>
+          <div className='d-flex justify-content-between align-items-center' >
+
+<div >
             {result && (
-              <Link
-                component="button"
-                onClick={() => setShowCalculations(!showCalculations)}
-                className="ms-auto mt-2"
-                sx={{
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                  fontSize: '0.95rem',
-                  '&:hover': {
-                    textDecoration: 'underline'
-                  }
-                }}
-              >
-                {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-              </Link>
+               <Box
+               component="div"
+               onClick={() => setShowCalculations(!showCalculations)}
+               sx={{
+                 display: 'flex',
+                 alignItems: 'center',
+                 cursor: 'pointer',
+                 color: 'primary.main',
+                 '&:hover': {
+                   textDecoration: 'underline'
+                 }
+               }}
+               className="ms-auto mt-2"
+             >
+               <CalculatorIcon
+                  style={{ height: '30px', width: '40px' }}
+                 fontSize="large"
+               />
+               <Typography
+                 variant="body1"
+                 sx={{
+                   fontWeight: 'bold',
+                   fontSize: '0.95rem',
+                   ml: 1
+                 }}
+               >
+                 {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
+               </Typography>
+             </Box>
             )}
+            </div>
             <Button
               variant="primary"
               onClick={calculateGeneralFailureRate}
@@ -1036,17 +1108,6 @@ const Connectors = () => {
             </>
           )}
         </>
-
-
-
-
-
-
-
-
-
-
-
       )}
 
     </>
