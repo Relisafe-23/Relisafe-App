@@ -67,11 +67,42 @@ const ElectronicFilters = ({ onCalculate }) => {
 
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const[selectedFilterType, setSelectedFilterType] = useState(null);
+  const[selectedQualityFactor, setSelectedQualityFactor] = useState(null);   
+  const[selectedEnvironmentFactor, setSelectedEnvironmentFactor] = useState(null); 
+  const[errors, setErrors] = useState({
+    filterType: '',
+    quality: '',
+    environment: ''
+  });
   const [showCalculations, setShowCalculations] = useState(false);
+
+const validateForm = () => {
+    let isValid = true;
+    const newErrors = {}
+    if (!selectedFilterType) {
+      newErrors.filterType = 'Filter type is required';
+      isValid = false;
+    }
+    if (!selectedQualityFactor) {
+      newErrors.quality = 'Quality factor is required';
+      isValid = false;
+    }
+    if (!selectedEnvironmentFactor) {
+      newErrors.environment = 'Environment factor is required';
+      isValid = false;
+    }
+    setErrors(newErrors);
+    return isValid;
+  };
+
+
 
   // Calculate the failure rate
   const calculateFailureRate = () => {
-    try {
+if (!validateForm()) {
+    return;
+}
       const baseRate = inputs.filterType.rate;
       const qualityFactor = inputs.quality.factor;
       const environmentFactor = inputs.environment.factor;
@@ -91,37 +122,56 @@ const ElectronicFilters = ({ onCalculate }) => {
       if (onCalculate) {
         onCalculate(failureRate);
       }
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    }
+ 
   };
 
   // Custom styles for Select components
   const customStyles = {
-    control: (provided) => ({
-      ...provided,
-      minHeight: '38px',
-      height: '38px'
-    }),
-    valueContainer: (provided) => ({
-      ...provided,
-      height: '38px',
-      padding: '0 6px'
-    }),
-    input: (provided) => ({
-      ...provided,
-      margin: '0px'
-    }),
-    indicatorsContainer: (provided) => ({
-      ...provided,
-      height: '38px'
-    }),
-    menu: (provided) => ({
-      ...provided,
-      zIndex: 9999 
-    })
-  };
+  control: (provided) => ({
+    ...provided,
+    minHeight: '38px',
+    height: '38px',
+    fontSize: '14px',
+    borderColor: '#ced4da',
+  }),
+  valueContainer: (provided) => ({
+    ...provided,
+    height: '38px',
+    padding: '0 12px',
+  }),
+  input: (provided) => ({
+    ...provided,
+    margin: '0px',
+    padding: '0px',
+  }),
+  indicatorsContainer: (provided) => ({
+    ...provided,
+    height: '38px',
+  }),
+  dropdownIndicator: (provided) => ({
+    ...provided,
+    padding: '8px',
+  }),
+  clearIndicator: (provided) => ({
+    ...provided,
+    padding: '8px',
+  }),
+  option: (provided) => ({
+    ...provided,
+    padding: '8px 12px',
+    fontSize: '14px',
+  }),
+  menu: (provided) => ({
+    ...provided,
+    marginTop: '2px',
+    zIndex: 9999,
+  }),
+  menuList: (provided) => ({
+    ...provided,
+    maxHeight: '150px',
+    overflowY: 'auto',
+  }),
+};
 
   return (
     <>
@@ -134,15 +184,16 @@ const ElectronicFilters = ({ onCalculate }) => {
             <Select
               styles={customStyles}
               name="filterType"
-              value={{
-                value: inputs.filterType,
-                label: `${inputs.filterType.type} (λb = ${inputs.filterType.rate})`
-              }}
+              value={selectedFilterType}
+              isInvalid={!!errors.filterType}
+              placeholder="Select Filter Type"
               onChange={(selectedOption) => {
                 setInputs(prev => ({
                   ...prev,
                   filterType: selectedOption.value
                 }));
+                setSelectedFilterType(selectedOption);
+                setErrors({ ...errors, filterType: '' });
               }}
               options={baseRates.map(item => ({
                 value: item,
@@ -151,6 +202,7 @@ const ElectronicFilters = ({ onCalculate }) => {
             />
     
           </div>
+               {errors.filterType && <small className="text-danger">{errors.filterType}</small>}
         </Col>
 
         <Col md={4}>
@@ -160,15 +212,16 @@ const ElectronicFilters = ({ onCalculate }) => {
             <Select
               styles={customStyles}
               name="quality"
-              value={{
-                value: inputs.quality,
-                label: `${inputs.quality.type} (πQ = ${inputs.quality.factor})`
-              }}
+              value={selectedQualityFactor}
+              isInvalid={!!errors.quality}
+              placeholder="Select Quality Factor"
               onChange={(selectedOption) => {
                 setInputs(prev => ({
                   ...prev,
                   quality: selectedOption.value
                 }));
+                setSelectedQualityFactor(selectedOption);
+             setErrors({ ...errors, quality: '' });
               }}
               options={qualityFactors.map(item => ({
                 value: item,
@@ -176,6 +229,7 @@ const ElectronicFilters = ({ onCalculate }) => {
               }))}
             />
           </div>
+         {errors.quality && <small className="text-danger">{errors.quality}</small>}
         </Col>
         <Col md={4}>
           {/* Environment Factor */}
@@ -184,15 +238,15 @@ const ElectronicFilters = ({ onCalculate }) => {
             <Select
               styles={customStyles}
               name="environment"
-              value={{
-                value: inputs.environment,
-                label: `${inputs.environment.label} (πE = ${inputs.environment.factor})`
-              }}
+              value={selectedEnvironmentFactor}
+              isInvalid={!!errors.environment}
               onChange={(selectedOption) => {
                 setInputs(prev => ({
                   ...prev,
                   environment: selectedOption.value
                 }));
+                setSelectedEnvironmentFactor(selectedOption);
+                setErrors({ ...errors, environment: '' });
               }}
               options={environmentFactors.map(item => ({
                 value: item,
@@ -200,6 +254,7 @@ const ElectronicFilters = ({ onCalculate }) => {
               }))}
             />
           </div>
+          {errors.environment && <small className="text-danger">{errors.environment}</small>}
         </Col>
       </Row>
 
@@ -223,7 +278,7 @@ const ElectronicFilters = ({ onCalculate }) => {
              className="ms-auto mt-2"
            >
              <CalculatorIcon
-               style={{ height: '50px', width: '60px' }}
+                 style={{ height: '30px', width: '40px' }}
                fontSize="large"
              />
              <Typography

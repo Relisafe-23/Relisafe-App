@@ -77,29 +77,51 @@ const Fuses = ({ onCalculate }) => {
 
   // Custom styles for Select components
   const customStyles = {
-    control: (provided) => ({
-      ...provided,
-      minHeight: '38px',
-      height: '38px'
-    }),
-    valueContainer: (provided) => ({
-      ...provided,
-      height: '38px',
-      padding: '0 6px'
-    }),
-    input: (provided) => ({
-      ...provided,
-      margin: '0px'
-    }),
-    indicatorsContainer: (provided) => ({
-      ...provided,
-      height: '38px'
-    }),
-    menu: (provided) => ({
-      ...provided,
-      zIndex: 9999 
-    })
-  };
+  control: (provided) => ({
+    ...provided,
+    minHeight: '38px',
+    height: '38px',
+    fontSize: '14px',
+    borderColor: '#ced4da',
+  }),
+  valueContainer: (provided) => ({
+    ...provided,
+    height: '38px',
+    padding: '0 12px',
+  }),
+  input: (provided) => ({
+    ...provided,
+    margin: '0px',
+    padding: '0px',
+  }),
+  indicatorsContainer: (provided) => ({
+    ...provided,
+    height: '38px',
+  }),
+  dropdownIndicator: (provided) => ({
+    ...provided,
+    padding: '8px',
+  }),
+  clearIndicator: (provided) => ({
+    ...provided,
+    padding: '8px',
+  }),
+  option: (provided) => ({
+    ...provided,
+    padding: '8px 12px',
+    fontSize: '14px',
+  }),
+  menu: (provided) => ({
+    ...provided,
+    marginTop: '2px',
+    zIndex: 9999,
+  }),
+  menuList: (provided) => ({
+    ...provided,
+    maxHeight: '150px',
+    overflowY: 'auto',
+  }),
+};
 
   return (
     <>
@@ -176,7 +198,7 @@ const Fuses = ({ onCalculate }) => {
          className="ms-auto mt-2"
        >
          <CalculatorIcon
-           style={{ height: '50px', width: '60px' }}
+            style={{ height: '30px', width: '40px' }}
            fontSize="large"
          />
          <Typography

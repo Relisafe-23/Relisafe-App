@@ -14,15 +14,43 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles'
 import { CalculatorIcon } from '@heroicons/react/24/outline'; // or /24/solid
 import DeleteIcon from '@material-ui/icons/Delete';
-import { options } from '../ProjectList/currencyvalue';
-import { customStyles } from './Selector';
-const InductiveCalculation =({ onCalculate })  => {
+
+const InductiveCalculation = ({ onCalculate }) => {
   // Transformer types data
   const transformerTypes = [
-    { type: "TF", spec: "MIL-T-27", description: "Audio, Power and High Power Pulse", λb: 0.014 },
-    { type: "TP", spec: "MIL-T-21038", description: "Low Power Pulse", λb: 0.022 },
-    { type: "IF/RF", spec: "MIL-T-55531", description: "Intermediate Frequency (IF), RF and Discriminator", λb: 0.13 }
+
+    {
+      type: "Flyback (< 20 Volts)",
+      λb: 0.0054,
+      units: "F/10⁶ hrs."
+    },
+    {
+      type: "Audio (15 -20K Hz)",
+      λb: 0.014,
+      units: "F/10⁶ hrs."
+    },
+    {
+      type: "Low Power Pulse (Peak Pwr. < 300W, Avg. Pwr. < 5W)",
+      λb: 0.022,
+      units: "F/10⁶ hrs."
+    },
+    {
+      type: "High Power, High Power Pulse (Peak Power ≥ 300W, Avg. Pwr. ≥ 5W)",
+      λb: 0.049,
+      units: "F/10⁶ hrs."
+    },
+    {
+      type: "RF (10K - 10M Hz)",
+      λb: 0.13,
+      units: "F/10⁶ hrs."
+    },
+
   ];
+
+
+  // Transformer Class that uses both formats
+
+  // Usage Example
 
   // Inductor types data
   const inductorTypes = [
@@ -31,27 +59,7 @@ const InductiveCalculation =({ onCalculate })  => {
     // { type: "Molded RF", spec: "MIL-C-39010", description: "Molded, RF, Est. Rel.", λb: 0.000030 }
   ];
 
-  // Temperature factors
-  const tempFactors = [
-    { temp: 20, πT: 0.93 },
-    { temp: 30, πT: 1.1 },
-    { temp: 40, πT: 1.2 },
-    { temp: 50, πT: 1.4 },
-    { temp: 60, πT: 1.6 },
-    { temp: 70, πT: 1.8 },
-    { temp: 80, πT: 1.9 },
-    { temp: 90, πT: 2.2 },
-    { temp: 100, πT: 2.4 },
-    { temp: 110, πT: 2.6 },
-    { temp: 120, πT: 2.8 },
-    { temp: 130, πT: 3.1 },
-    { temp: 140, πT: 3.3 },
-    { temp: 150, πT: 3.5 },
-    { temp: 160, πT: 3.8 },
-    { temp: 170, πT: 4.1 },
-    { temp: 180, πT: 4.3 },
-    { temp: 190, πT: 4.6 }
-  ];
+
 
   // Quality factors
   const qualityFactors = [
@@ -101,69 +109,154 @@ const InductiveCalculation =({ onCalculate })  => {
 
 
   // State for form inputs
-  const [deviceType, setDeviceType] = useState({
-    type:"Transformer",
-  });
+  const [deviceType, setDeviceType] = useState(null)
+
   const [transformerQuality, setTransformerQuality] = useState(qualityFactors[0]);
 
-  const [components, setComponents] = useState([])
-  const [selectedTransformer, setSelectedTransformer] = useState(transformerTypes[0]);
-  const [selectedInductor, setSelectedInductor] = useState(inductorTypes[0]);
-  const [ambientTemp, setAmbientTemp] = useState(30);
+  const [components, setComponents] = useState([]);
+  const [milSpecSheet, setMilSpecSheet] = useState("");
+  const [selectedTransformer, setSelectedTransformer] = useState()
+  const [selectedInductor, setSelectedInductor] = useState();
+  const [ambientTemp, setAmbientTemp] = useState(0);
   const [tempRiseMethod, setTempRiseMethod] = useState("spec");
   const [tempRise, setTempRise] = useState(15);
   const [caseType, setCaseType] = useState("AF");
-  const [currentComponent, setCurrentComponent] = useState({ type: "transformer" })
-  const [powerLoss, setPowerLoss] = useState(0);
-  const [inputPower, setInputPower] = useState(0);
-  const [casesTypes, setCasesTypes] = useState(caseAreas[0])
-  const [weight, setWeight] = useState(0);
-  const [selectedQuality, setSelectedQuality] = useState(qualityFactors[0]);
-  const [selectedEnvironment, setSelectedEnvironment] = useState(environmentFactors[0]);
+  const [currentComponent, setCurrentComponent] = useState({ type: "Transformer" })
+  const [powerLoss, setPowerLoss] = useState(null);
+  const [inputPower, setInputPower] = useState(null);
+  const [casesTypes, setCasesTypes] = useState(null)
+  const [weight, setWeight] = useState(null);
+  const [selectedDeviceType,setSelectedDeviceType] = useState (null)
+  const [selectedQuality, setSelectedQuality] = useState(null);
+  const [selectedEnvironment, setSelectedEnvironment] = useState(null);
   const [results, setResults] = useState([]);
+  const[selectedDevice, setSelectedDevice] = useState ({value: "Transformer"});
   const [showResults, setShowResults] = useState(false);
-  const [showCalculations, setShowCalculations] = useState();
+  const [errors,setErrors] = useState ({
+ quality:"",
+ environment:"",
+ ambientTemp:'',
+
+
+  })
+  const [showCalculations, setShowCalculations] = useState(false);
   const removeComponent = (id) => {
     setResults(results.filter(comp => comp.id !== id));
   };
+  // Temperature factors
+  const tempFactors = [
+    { temp: 20, πT: 0.93 },
+    { temp: 30, πT: 1.1 },
+    { temp: 40, πT: 1.2 },
+    { temp: 50, πT: 1.4 },
+    { temp: 60, πT: 1.6 },
+    { temp: 70, πT: 1.8 },
+    { temp: 80, πT: 1.9 },
+    { temp: 90, πT: 2.2 },
+    { temp: 100, πT: 2.4 },
+    { temp: 110, πT: 2.6 },
+    { temp: 120, πT: 2.8 },
+    { temp: 130, πT: 3.1 },
+    { temp: 140, πT: 3.3 },
+    { temp: 150, πT: 3.5 },
+    { temp: 160, πT: 3.8 },
+    { temp: 170, πT: 4.1 },
+    { temp: 180, πT: 4.3 },
+    { temp: 190, πT: 4.6 }
+  ];
 
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+    // Add your validation logic here, for example:
+  if(!selectedDevice){
+    newErrors.deviceType = "Device Type is required";
+    isValid= false;
+  }
+
+   if(selectedDevice?.value === "Transformer"){
+  if (!selectedQuality) {
+      newErrors.quality = "Quality factor is required";
+      isValid = false;
+    }
+   if(!selectedDeviceType){
+    newErrors.transformer = " Choose the Transformer Type";
+    isValid = false ;
+   }
+  }
+  if(selectedDevice?.value === "Coil"){
+   if (!selectedQuality) {
+      newErrors.quality = "Quality factor is required";
+      isValid = false;
+    } 
+  }
+    if (!selectedEnvironment) {
+      newErrors.environment = "Environment is required"
+      isValid = false;
+    }
+    if(!ambientTemp){
+      newErrors.ambientTemp = "Valid Ambient Temperature is required"
+    }
+    setErrors(newErrors);
+    return isValid;
+  }
   // Calculate hot spot temperature
   const calculateHotSpotTemp = () => {
-    let ΔT = tempRise;
+    let ΔT = tempRise; // Default to specified ΔT if no method matches
 
-    if (tempRiseMethod === "caseArea" && powerLoss > 0) {
-      const caseArea = caseAreas.find(c => c.case === caseType)?.area || 1;
-      ΔT = 125 * powerLoss / caseArea;
-    } else if (tempRiseMethod === "powerLossWeight" && powerLoss > 0 && weight > 0) {
-      ΔT = 11.5 * powerLoss / Math.pow(weight, 0.6766);
-    } else if (tempRiseMethod === "inputPowerWeight" && inputPower > 0 && weight > 0) {
-      ΔT = 2.1 * inputPower / Math.pow(weight, 0.6766);
+    // Method 1: MIL-C-39010 Slash Sheet (if applicable)
+    if (tempRiseMethod === "milSpec") {
+      if (["1C", "3C", "5C", "7C", "9A", "10A", "13", "14"].includes(milSpecSheet)) {
+        ΔT = 15;
+      } else if (["4C", "6C", "8A", "11", "12"].includes(milSpecSheet)) {
+        ΔT = 35;
+      }
+    }
+    // Method 2: Case Area Method (Power Loss / Area)
+    else if (tempRiseMethod === "caseArea" && powerLoss > 0) {
+      const caseArea = caseAreas.find(c => c.case === caseType)?.area;
+      if (!caseArea) throw new Error("Invalid case type selected");
+      ΔT = 125 * powerLoss / caseArea; // Note: area in in² per spec
+    }
+    // Method 3: Power Loss / Weight
+    else if (tempRiseMethod === "powerLossWeight" && powerLoss > 0 && weight > 0) {
+      ΔT = 11.5 * powerLoss / Math.pow(weight, 0.6766); // Weight in lbs
+    }
+    // Method 4: Input Power / Weight (assumes 80% efficiency)
+    else if (tempRiseMethod === "inputPowerWeight" && inputPower > 0 && weight > 0) {
+      ΔT = 2.1 * inputPower / Math.pow(weight, 0.6766); // Weight in lbs
     }
 
+    // Final calculation (T_HS = T_A + 1.1ΔT)
     return ambientTemp + 1.1 * ΔT;
   };
 
-  // Calculate πT (Temperature Factor)
-  const calculatePiT = () => {
-    const hotSpotTemp = calculateHotSpotTemp();
-    const closestTemp = tempFactors.reduce((prev, curr) =>
-      Math.abs(curr.temp - hotSpotTemp) < Math.abs(prev.temp - hotSpotTemp) ? curr : prev
-    );
-    return closestTemp.πT;
-  };
+  const hotSpotTemp = calculateHotSpotTemp();
+  const calculatePiT = (hotSpotTemp) => {
+    // Constants from the formula
+    const ACTIVATION_ENERGY = 0.11; // eV
+    const BOLTZMANN_CONSTANT = 8.617e-5; // eV/K
+    const REFERENCE_TEMP = 298; // K (25°C)
 
+    // Fall back to Arrhenius equation calculation
+    const tempInKelvin = hotSpotTemp + 273;
+    const exponent = (-ACTIVATION_ENERGY / BOLTZMANN_CONSTANT) *
+      ((1 / tempInKelvin) - (1 / REFERENCE_TEMP));
+    return parseFloat(Math.exp(exponent)?.toFixed(3)); // Round to 3 decimal places
+  };
   // Calculate failure rate
   const calculateFailureRate = () => {
     const λb = deviceType === "transformer" ? selectedTransformer.λb : selectedInductor.λb;
-    const πT = calculatePiT();
+    const πT = calculatePiT(hotSpotTemp)?.toFixed(4);
     const πQ = selectedQuality.πQ;
     const πE = selectedEnvironment.πE;
-
     return λb * πT * πQ * πE;
   };
 
-
   const handleCalculate = () => {
+    if(!validateForm()){
+      return;
+    }
     const hotSpotTemp = calculateHotSpotTemp();
     const newResult = {
       id: Date.now(),
@@ -177,22 +270,66 @@ const InductiveCalculation =({ onCalculate })  => {
       quality: selectedQuality.quality,
       environment: selectedEnvironment.env,
       λb: deviceType === "transformer" ? selectedTransformer.λb : selectedInductor.λb,
-      πT: calculatePiT(),
+      πT: calculatePiT(hotSpotTemp, tempFactors)?.toFixed(4),
       πQ: selectedQuality.πQ,
       πE: selectedEnvironment.πE,
       λp: calculateFailureRate()
     };
-    // setResults([...results, newResult]);
-    // setShowResults(true);
+  
     setResults([...results, newResult]);
-    setShowResults(true); // Show Predicted Failure Rate
-    // Hide detailed calculations by default
+    setShowResults(true); 
+
     if (onCalculate) {
       onCalculate(calculateFailureRate());
     }
   };
 
-
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      minHeight: '38px',
+      height: '38px',
+      fontSize: '14px',
+      borderColor: '#ced4da',
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      height: '38px',
+      padding: '0 12px',
+    }),
+    input: (provided) => ({
+      ...provided,
+      margin: '0px',
+      padding: '0px',
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      height: '38px',
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      padding: '8px',
+    }),
+    clearIndicator: (provided) => ({
+      ...provided,
+      padding: '8px',
+    }),
+    option: (provided) => ({
+      ...provided,
+      padding: '8px 12px',
+      fontSize: '14px',
+    }),
+    menu: (provided) => ({
+      ...provided,
+      marginTop: '2px',
+      zIndex: 9999,
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      maxHeight: '150px',
+      overflowY: 'auto',
+    }),
+  };
 
 
   const calculationColumns = [
@@ -205,7 +342,7 @@ const InductiveCalculation =({ onCalculate })  => {
     {
       title: <span>π<sub>T</sub></span>,
       field: 'πT',
-      render: rowData => rowData.πT?.toFixed(3)
+      render: rowData => rowData?.πT?.toFixed(6)
     },
     {
       title: <span>π<sub>Q</sub></span>,
@@ -228,9 +365,6 @@ const InductiveCalculation =({ onCalculate })  => {
 
   ];
 
-
-
-
   return (
     <div className="calculator-container">
       <h2 className="text-center">Inductive Device</h2>
@@ -240,12 +374,14 @@ const InductiveCalculation =({ onCalculate })  => {
           <div className="form-group">
             <label>Part Type:</label>
             <Select
-              style={customStyles}
+              styles={customStyles}
               name="type"
-              placeholder="Select"
-              
+              placeholder="Select..."
+              value={selectedDevice}
+              isInvalid = {!!errors.deviceType}
               onChange={(selectedOption) => {
-                setDeviceType({ ...deviceType, type: selectedOption.value });
+                setSelectedDevice(selectedOption);
+                   setErrors({ ...errors, deviceType: '' });
               }}
 
               options={[
@@ -253,145 +389,159 @@ const InductiveCalculation =({ onCalculate })  => {
                 { value: "Coil", label: "Coil" }
               ]}
             />
-
+           {errors.deviceType && <small style={{ color: 'red' }}>{errors.deviceType}</small>}
           </div>
-          </Col>
-          <Col md={4}>
-          {deviceType.type === "Transformer" && (
-            <div className="form-group">
-              <label>Quality Factor:</label>
-              <Select
-                styles={customStyles}
-                name="transformerQuality"
+        </Col>
+    
             
-                onChange={(selectedOption) => {
-                  setTransformerQuality(selectedOption.value);
-                }}
-                options={qualityFactors1.map(item => ({
-                  value: item,
-                  label: item.quality
-                }))}
-              />
-            </div>
-          )}
+               {selectedDevice?.value === "Coil" && (
+                <>
+                  <Col md={4}>
+                <div className="form-group">
+                  <label>Quality Factor</label>
+                  <Select
+                    styles={customStyles}
+                       isInvalid ={!!errors.quality}
+                    value={selectedQuality}
+                    onChange={(selectedOption) => {setSelectedQuality(selectedOption);
+                        setErrors({ ...errors, quality: '' });
+                    }}
+                    options={qualityFactors.map(factor => ({
+                      value: factor,
+                      label: `${factor.quality} (${factor.πQ})` // Show both quality name and value
+                    }))}
+                    className="quality-factor-select"
+                    classNamePrefix="select"
+                    placeholder="Select Quality Factor..."
+               
 
-          {deviceType.type === "Coil" && (
+                  />
+                  {errors.quality && <small style={{ color: 'red' }}>{errors.quality}</small>}
+                </div>
+                </Col>
+                <Col md={4}>
+            <label>Inductor Type</label>
+            <div>
+                    <Select
+                           styles={customStyles}
+                isInvalid = {!!errors.deviceTypes}
+                value={selectedDeviceType}
+                         onChange={(selectedOption) => {
+                          setSelectedDeviceType(selectedOption)
+                          setErrors({ ...errors, devicesTypes: '' });
+                }}
+                options={inductorTypes.map(type => ({
+                  value: type,
+                  label: `${type.type}`
+                }))
+
+                }
+                />
+            </div>
+         </Col>
+            </>
+                    )}
+
+             {selectedDevice?.value === "Transformer" && (
+              <>
+                   <Col md={4}>
             <div className="form-group">
               <label>Quality Factor:</label>
               <Select
                 styles={customStyles}
                 name="coilQuality"
-                value={{
-                  value: selectedQuality,
-                  label: selectedQuality?.quality || "Select Quality"
-                }}
+                placeholder= "select..."
+                isInvalid ={!!errors.quality}
+                value={selectedQuality}
                 onChange={(selectedOption) => {
-                  setSelectedQuality(selectedOption.value);
+                  setSelectedQuality(selectedOption);
+                     setErrors({ ...errors, quality: '' });
                 }}
                 options={qualityFactors1.map(item => ({
                   value: item,
                   label: item.quality
                 }))}
               />
+                     {errors.quality && <small style={{ color: 'red' }}>{errors.quality}</small>}
             </div>
-          )}
-</Col>
+            </Col>
+              <Col md={4}>
+         
+           <div className="form-group">
+               <label>Transformer Type</label>
+                <Select
+                styles={customStyles}
+                isInvalid = {!!errors.transformerTypes}
+                value={selectedDeviceType}
+                         onChange={(selectedOption) => {
+                          setSelectedDeviceType(selectedOption);
+                          setErrors({ ...errors, transformerTypes: '' });
+                }}
+                options={transformerTypes.map(type => ({
+                  value: type,
+                  label: `${type.type}`
+                }))
+
+                }
+                />
+                {errors.transformerTypes && <small style={{ color: 'red' }}>{errors.transformerTypes}</small>}
+        </div>
+            </Col>
+          
       
+        </>
+          )}
+     </Row>
+<Row>
         <Col md={4}>
           <div className="form-group">
             <label>Environment (π<sub>E</sub>):</label>
             <Select
-              value={environmentFactors.find(option => option.value === selectedEnvironment)}
-              onChange={(selectedOption) => setSelectedEnvironment(selectedOption.value)}
+              styles={customStyles}
+              value={selectedEnvironment}
+              onChange={(selectedOption) => {setSelectedEnvironment(selectedOption);
+                setErrors({...errors, environment: "" });
+              }}
               className="basic-select"
+              isInvalid = {!!errors.environment}
               classNamePrefix="select"
               options={environmentFactors.map(type => ({
                 value: type,
                 label: `${type.env} (${type.πE})`
               }))}
             />
+                {errors.environment && <small style={{ color: 'red' }}>{errors.environment}</small>}
           </div>
-
         </Col>
-      </Row>
+      
 
-      <div>
-        <Row>
+      
+   
 
-          <>
-            {deviceType === "transformer" && (
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Quality Factor</label>
-                  <Select
-                    value={qualityFactors.find(option => option.value === selectedQuality)}
-                    onChange={(selectedOption) => setSelectedQuality(selectedOption.value)}
-                    options={qualityFactors.map(factor => ({
-                      value: factor,
-                      label: `${factor.quality} (${factor.value})` // Show both quality name and value
-                    }))}
-                    className="quality-factor-select"
-                    classNamePrefix="select"
-                    placeholder="Select Quality Factor..."
-                    isSearchable={true}
-                    styles={customStyles}
-
-                  />
-                </div>
-              </Col>
-            )}
-
-
-
-
-
-
-          </>
-
-
-          <Col md={4}>
-            <div className="form-group">
-              <label>{deviceType === "transformer" ? "Transformer Type:" : "Inductor Type:"}</label>
-              <Select
-                value={deviceType === "transformer"
-                  ? transformerTypes.find(option => option.value === deviceType)
-                  : inductorTypes.find(i => i.value === selectedInductor)}
-                onChange={(selectedOption) => {
-                  if (deviceType === "transformer") {
-                    setSelectedTransformer(selectedOption.value);
-                  } else {
-                    setSelectedInductor(selectedOption.value);
-                  }
-                }}
-                options={transformerTypes.map(type => ({
-                  value: type,
-                  label: `${type.type}-(${type.spec})-${type.description}`
-                }))
-
-                }
-              />
-
-
-            </div>
-          </Col>
           <Col md={4}>
             <div className="form-group">
               <label>Ambient Temperature (°C) T_A :</label>
               <input
                 type="number"
                 value={ambientTemp}
-                onChange={(e) => setAmbientTemp(parseFloat(e.target.value))}
+                isInvalid={!!errors.ambientTemp}
+                placeholder="Enter the temperature"
+                onChange={(e) => {setAmbientTemp(parseFloat(e.target.value));
+                      setErrors({ ...errors, ambientTemp: '' });
+                }}
                 min="20"
                 max="190"
                 step="1"
               />
+              
+            {errors.ambientTemp && <small style={{ color: 'red' }}>{errors.ambientTemp}</small>}
             </div>
           </Col>
           <Col md={4}>
             <div className="form-group">
               <label>Temperature Rise Method ΔT:</label>
               <Select
-
+                styles={customStyles}
                 name="tempRiseMethod"
                 placeholder="Select Temperature Rise Method"
                 value={{
@@ -409,11 +559,12 @@ const InductiveCalculation =({ onCalculate })  => {
                   { value: "inputPowerWeight", label: "Input Power & Weight" }
                 ]}
               />
+                 
             </div>
           </Col>
-        </Row>
+       </Row> 
         <Row>
-          
+
           <Col md={4}>
             {tempRiseMethod === "spec" && (
               <div className="form-group">
@@ -432,6 +583,8 @@ const InductiveCalculation =({ onCalculate })  => {
                 <div className="form-group ">
                   <label>Case Type:</label>
                   <Select
+                    styles={customStyles}
+
                     value={caseAreas.find(option => option.value === casesTypes)}
                     onChange={(selectedOption) => setCasesTypes(selectedOption.value)}
                     options={caseAreas.map(factor => ({
@@ -516,7 +669,7 @@ const InductiveCalculation =({ onCalculate })  => {
               <label>Temperature Factor (πT):</label>
               <input
                 type="text"
-                value={calculatePiT().toFixed(3)}
+                value={calculatePiT(hotSpotTemp, tempFactors)}
                 readOnly
                 className="readonly-field"
               />
@@ -524,7 +677,7 @@ const InductiveCalculation =({ onCalculate })  => {
           </Col>
         </Row>
 
-      </div>
+      
       <br />
 
       <div className='d-flex justify-content-between align-items-center' >
@@ -547,7 +700,7 @@ const InductiveCalculation =({ onCalculate })  => {
                 className="ms-auto mt-2"
               >
                 <CalculatorIcon
-                  style={{ height: '50px', width: '60px' }}
+                  style={{ height: '30px', width: '40px' }}
                   fontSize="large"
                 />
                 <Typography
@@ -580,20 +733,17 @@ const InductiveCalculation =({ onCalculate })  => {
             Calculation Result
           </h2>
           <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-          {results[results.length - 1].λp.toFixed(6)} failures/10<sup>6</sup> hours
+          {results[results.length - 1].λp?.toFixed(6)} failures/10<sup>6</sup> hours
 
 
         </div>
       )}
 
-
-
-
       {showCalculations && (
         <div className="results-section">
 
           <div className="hotspot-info">
-            <p>Calculated Hot Spot Temperature: {results[results.length - 1]?.hotSpotTemp.toFixed(1)}°C</p>
+            <p>Calculated Hot Spot Temperature: {results[results.length - 1]?.hotSpotTemp?.toFixed(2)}°C</p>
           </div>
 
           {/* // In your component's render: */}
@@ -603,14 +753,12 @@ const InductiveCalculation =({ onCalculate })  => {
               <MaterialTable
                 columns={calculationColumns}
                 data={[
-
                   {
                     λb: deviceType === "transformer" ? selectedTransformer.λb : selectedInductor.λb,
-                    πT: calculatePiT(),
+                    πT: calculatePiT(hotSpotTemp), // Pass required arguments
                     πQ: selectedQuality.πQ,
                     πE: selectedEnvironment.πE,
                     λp: calculateFailureRate()
-
                   }
                 ]}  // Changed from components to results to match your original table
                 options={{

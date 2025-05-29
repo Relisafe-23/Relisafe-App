@@ -10,6 +10,17 @@ import Paper from '@mui/material/Paper';
 import { CalculatorIcon } from '@heroicons/react/24/outline'; // or /24/solid
 
 const Meters = ({ onCalculate }) => {
+  const [selectedEnvironment, setSelectedEnvironment] = useState(null);
+  const [selectedQuality,setSelectedQuality] = useState(null);
+  const [selectedApplication, setSelectedApplication] = useState (null);
+  const [selectedFunction, setSelectedFunction] = useState (null);
+  const [errors ,setErrors] = useState({
+    meterType: '',
+    application: '',
+    function: '',
+    quality: '',
+    environment: ''
+  });
   // Base failure rate data
   const baseRates = [
     { type: 'All', rate: 0.090 }
@@ -65,10 +76,55 @@ const Meters = ({ onCalculate }) => {
   const [error, setError] = useState(null);
   const [showCalculations, setShowCalculations] = useState(false);
 
+const validateForm = () => {
+      const { quality,application,environment } = inputs;
+  const newErrors = {};
+  let isValid = true;
+
+  if (!selectedApplication) {  
+    newErrors.application = 'Application factor is required';
+    isValid = false;
+  }
+  if (!selectedFunction) {
+    newErrors.function = 'Function factor is required';
+    isValid = false;
+  }
+  if (!selectedQuality) {
+    newErrors.quality = 'Quality factor is required';
+    isValid = false;
+  }
+  if (!selectedEnvironment) {
+    newErrors.environment = 'Environment factor is required';
+    isValid = false;
+  }
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return false;
+  }
+  setErrors(newErrors);
+  return isValid;
+};
+
+
+  
+
+
+
   // Calculate the failure rate
   const calculateFailureRate = () => {
-    try {
-      const baseRate = inputs.meterType.rate;
+
+    if (!validateForm()) {
+     
+      return;
+    }
+    // Reset error state
+    setError(null);
+    // Check if all inputs are selected
+    // if (!inputs.meterType || !inputs.application || !inputs.function || !inputs.quality || !inputs.environment) {
+    //   setError('Please select all required factors.');
+    //   return;
+    // }
+      const baseRates = inputs.meterType.rate;
       const applicationFactor = inputs.application.factor;
       const functionFactor = inputs.function.factor;
       const qualityFactor = inputs.quality.factor;
@@ -80,12 +136,12 @@ const Meters = ({ onCalculate }) => {
       }
 
       // Calculate final failure rate
-      const failureRate = baseRate * applicationFactor * functionFactor * qualityFactor * environmentFactor;
+      const failureRate = baseRates * applicationFactor * functionFactor * qualityFactor * environmentFactor;
 
       setResult({
         value: failureRate.toFixed(6),
         parameters: {
-          λb: baseRate.toFixed(6),
+          λb: baseRates.toFixed(6),
           πA: applicationFactor.toFixed(6),
           πF: functionFactor.toFixed(6),
           πQ: qualityFactor.toFixed(6),
@@ -96,42 +152,59 @@ const Meters = ({ onCalculate }) => {
       if (onCalculate) {
         onCalculate(failureRate);
       }
-    }
-     catch (err) {
-      setError(err.message);
-      setResult(null);
-      
-    }
+  
     if (onCalculate) {
       onCalculate(null);
     }
   };
 
   // Custom styles for Select components
-  const customStyles = {
-    control: (provided) => ({
-      ...provided,
-      minHeight: '38px',
-      height: '38px'
-    }),
-    valueContainer: (provided) => ({
-      ...provided,
-      height: '38px',
-      padding: '0 6px'
-    }),
-    input: (provided) => ({
-      ...provided,
-      margin: '0px'
-    }),
-    indicatorsContainer: (provided) => ({
-      ...provided,
-      height: '38px'
-    }),
-    menu: (provided) => ({
-      ...provided,
-      zIndex: 9999 
-    })
-  };
+   const customStyles = {
+  control: (provided) => ({
+    ...provided,
+    minHeight: '38px',
+    height: '38px',
+    fontSize: '14px',
+    borderColor: '#ced4da',
+  }),
+  valueContainer: (provided) => ({
+    ...provided,
+    height: '38px',
+    padding: '0 12px',
+  }),
+  input: (provided) => ({
+    ...provided,
+    margin: '0px',
+    padding: '0px',
+  }),
+  indicatorsContainer: (provided) => ({
+    ...provided,
+    height: '38px',
+  }),
+  dropdownIndicator: (provided) => ({
+    ...provided,
+    padding: '8px',
+  }),
+  clearIndicator: (provided) => ({
+    ...provided,
+    padding: '8px',
+  }),
+  option: (provided) => ({
+    ...provided,
+    padding: '8px 12px',
+    fontSize: '14px',
+  }),
+  menu: (provided) => ({
+    ...provided,
+    marginTop: '2px',
+    zIndex: 9999,
+  }),
+  menuList: (provided) => ({
+    ...provided,
+    maxHeight: '150px',
+    overflowY: 'auto',
+  }),
+};
 
   return (
     <>
@@ -141,28 +214,28 @@ const Meters = ({ onCalculate }) => {
       <Row className="mb-3">
         <Col md={6}>
           {/* Meter Type Selection */}
-          <div className="form-group">
-            <label>Base Failure (λ<sub>b</sub>):</label>
-            <Select
-              styles={customStyles}
-              name="meterType"
-              read only
-              value={{
-                value: inputs.meterType,
-                label: `${inputs.meterType.type} (λb = ${inputs.meterType.rate})`
-              }}
-              onChange={(selectedOption) => {
-                setInputs(prev => ({
-                  ...prev,
-                  meterType: selectedOption.value
-                }));
-              }}
-              options={baseRates.map(item => ({
-                value: item,
-                label: `${item.type} (λb = ${item.rate})`
-              }))}
-            />
-          </div>
+           <div className="form-group">
+                    <label>Base Failure (λ<sub>b</sub>):</label>
+                    <Select
+                      styles={customStyles}
+                      name="meterType"
+                      read only
+                      value={{
+                        value: inputs.meterType,
+                        label: `${inputs.meterType.type} (λb = ${inputs.meterType.rate})`
+                      }}
+                      onChange={(selectedOption) => {
+                        setInputs(prev => ({
+                          ...prev,
+                          meterType: selectedOption.value
+                        }));
+                      }}
+                      options={baseRates.map(item => ({
+                        value: item,
+                        label: `${item.type} (λb = ${item.rate})`
+                      }))}
+                    />
+                  </div>
         </Col>
         <Col md={6}>
           {/* Environment Factor */}
@@ -171,21 +244,22 @@ const Meters = ({ onCalculate }) => {
             <Select
               styles={customStyles}
               name="environment"
-              value={{
-                value: inputs.environment,
-                label: `${inputs.environment.label} (πE = ${inputs.environment.factor})`
-              }}
+              isInvalid={!!errors.environment}
+              value={selectedEnvironment}
               onChange={(selectedOption) => {
-                setInputs(prev => ({
+                    setInputs(prev => ({
                   ...prev,
                   environment: selectedOption.value
                 }));
+                setSelectedEnvironment(selectedOption)
+                setErrors({ ...errors, environment: '' });
               }}
               options={environmentFactors.map(item => ({
                 value: item,
                 label: `${item.label} (πE = ${item.factor})`
               }))}
             />
+             {errors.environment && <small style={{ color: 'red' }}>{errors.environment}</small>}
           </div>
         </Col>
 
@@ -193,8 +267,6 @@ const Meters = ({ onCalculate }) => {
       </Row>
 
       <Row className="mb-3">
-
-
         <Col md={4}>
           {/* Quality Factor */}
           <div className="form-group">
@@ -202,15 +274,15 @@ const Meters = ({ onCalculate }) => {
             <Select
               styles={customStyles}
               name="quality"
-              value={{
-                value: inputs.quality,
-                label: `${inputs.quality.type} (πQ = ${inputs.quality.factor})`
-              }}
+             value={selectedQuality}
+             isInvalid = {!!errors.quality}
               onChange={(selectedOption) => {
-                setInputs(prev => ({
+                    setInputs(prev => ({
                   ...prev,
                   quality: selectedOption.value
                 }));
+                setSelectedQuality(selectedOption)
+              setErrors({ ...errors, quality: '' });
               }}
               options={qualityFactors.map(item => ({
                 value: item,
@@ -218,6 +290,7 @@ const Meters = ({ onCalculate }) => {
               }))}
             />
           </div>
+               {errors.quality && <small style={{ color: 'red' }}>{errors.quality}</small>}
         </Col>
         <Col md={4}>
           {/* Application Factor */}
@@ -226,15 +299,15 @@ const Meters = ({ onCalculate }) => {
             <Select
               styles={customStyles}
               name="application"
-              value={{
-                value: inputs.application,
-                label: `${inputs.application.type} (πA = ${inputs.application.factor})`
-              }}
+              isInvalid ={!!errors.application}
+            value = {selectedApplication}
               onChange={(selectedOption) => {
-                setInputs(prev => ({
+                    setInputs(prev => ({
                   ...prev,
                   application: selectedOption.value
                 }));
+              setSelectedApplication(selectedOption)
+             setErrors({ ...errors, application: '' });
               }}
               options={applicationFactors.map(item => ({
                 value: item,
@@ -242,6 +315,7 @@ const Meters = ({ onCalculate }) => {
               }))}
             />
           </div>
+          {errors.application && <small style={{ color: 'red' }}>{errors.application}</small>}
         </Col>
         <Col md={4}>
           {/* Function Factor */}
@@ -250,15 +324,15 @@ const Meters = ({ onCalculate }) => {
             <Select
               styles={customStyles}
               name="function"
-              value={{
-                value: inputs.function,
-                label: `${inputs.function.type} (πF = ${inputs.function.factor})`
-              }}
+         value={selectedFunction}
+         isInvalid={!!errors.function}
               onChange={(selectedOption) => {
-                setInputs(prev => ({
+                    setInputs(prev => ({
                   ...prev,
                   function: selectedOption.value
                 }));
+              setSelectedFunction(selectedOption)
+              setErrors({ ...errors, function: '' });
               }}
               options={functionFactors.map(item => ({
                 value: item,
@@ -266,6 +340,7 @@ const Meters = ({ onCalculate }) => {
               }))}
             />
           </div>
+           {errors.function && <small style={{ color: 'red' }}>{errors.function}</small>}
         </Col>
 
 
@@ -275,23 +350,7 @@ const Meters = ({ onCalculate }) => {
 
         <div >
           {result && (
-            // <Link
-            //   component="button"
-            //   onClick={() => setShowCalculations(!showCalculations)}
-            //   className="ms-auto mt-2"
-            //   sx={{
-            //     color: 'primary.main',
-            //     textDecoration: 'underline',
-            //     cursor: 'pointer',
-            //     fontWeight: 'bold',
-            //     fontSize: '0.95rem',
-            //     '&:hover': {
-            //       textDecoration: 'underline'
-            //     }
-            //   }}
-            // >
-            //   {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-            // </Link>
+        
 
             <Box
               component="div"
@@ -308,7 +367,7 @@ const Meters = ({ onCalculate }) => {
               className="ms-auto mt-2"
             >
               <CalculatorIcon
-                style={{ height: '50px', width: '60px' }}
+                 style={{ height: '30px', width: '40px' }}
                 fontSize="large"
               />
               <Typography
@@ -352,7 +411,7 @@ const Meters = ({ onCalculate }) => {
           <h2 className="text-center">Calculation Result</h2>
           <div className="d-flex align-items-center">
             <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-            <span className="ms-2">{result.value} failures/10<sup>6</sup> hours</span>
+            <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
           </div>
         </>
       )}
@@ -368,11 +427,11 @@ const Meters = ({ onCalculate }) => {
                   <div className="table-responsive">
                     <MaterialTable
                       columns={[
-                        {
-                          title: <span>λ<sub>b</sub></span>,
-                          field: 'λb',
-                          render: rowData => rowData.λb || '-'
-                        },
+                        // {
+                        //   title: <span>λ<sub>b</sub></span>,
+                        //   field: 'λb',
+                        //   render: rowData => rowData.λb || '-'
+                        // },
                         {
                           title: <span>π<sub>A</sub></span>,
                           field: 'πA',
@@ -401,13 +460,13 @@ const Meters = ({ onCalculate }) => {
                       ]}
                       data={[
                         {
-                          λb: result.parameters.λb,
+                          // λb: result.parameters.λb,
                           πA: result.parameters.πA,
                           πF: result.parameters.πF,
                           πQ: result.parameters.πQ,
                           πE: result.parameters.πE,
                           λp: result.value,
-                          description: inputs.meterType.type
+                       
                         }
                       ]}
                       options={{
