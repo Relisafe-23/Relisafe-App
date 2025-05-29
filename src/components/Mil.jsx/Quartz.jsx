@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 import { Row, Col, Button, Alert } from 'react-bootstrap';
 import Select from 'react-select';
 import Link from '@mui/material/Link';
-
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles'
 import Typography from '@mui/material/Typography';
-import { CalculatorIcon } from '@heroicons/react/24/outline'; // or /24/solid
+import { CalculatorIcon } from '@heroicons/react/24/outline';
 import MaterialTable from 'material-table';
 import Paper from '@mui/material/Paper';
-
 const Quartz = ({ onCalculate }) => {
-
   // Base failure rate data (frequency in MHz)
   const baseRates = [
     { frequency: 0.5, rate: 0.011 },
@@ -36,15 +33,13 @@ const Quartz = ({ onCalculate }) => {
     { frequency: 90, rate: 0.037 },
     { frequency: 95, rate: 0.037 },
     { frequency: 100, rate: 0.037 },
-    { frequency: 105, rate: 0.038 }
+    { frequency: 105, rate: 0.038 },
   ];
-
   // Quality factors
   const qualityFactors = [
     { type: 'MIL-SPEC', factor: 1.0 },
     { type: 'Lower', factor: 2.1 }
   ];
-
   // Environment factors
   const environmentFactors = [
     { env: 'GB', label: 'Ground, Benign', factor: 1.0 },
@@ -62,176 +57,273 @@ const Quartz = ({ onCalculate }) => {
     { env: 'ML', label: 'Missile, Launch', factor: 32 },
     { env: 'CL', label: 'Cannon, Launch', factor: 500 }
   ];
-
   // State for form inputs
-  const [inputs, setInputs] = useState({
-    frequency: 0.5,
-    quality: 'MIL-SPEC',
-    environment: 'GB'
+  const [inputs, setInputs] = useState({  
+    frequency: null,
+    quality: null,
+    environment: null,
+    customFrequency: ''
   });
-
   const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [selectedQuality, setSelectedQuality] = useState(null);
+  const [selectedEnvironment, setSelectedEnvironment] = useState(null);
+  const [selectedFrequency, setSelectedFrequency] = useState(null);
+  const [customFrequency, setCustomFrequency] = useState(null);
+  const [errors, setErrors] = useState({
+    frequency: "",
+    quality: " ",
+    environment: " ",
+    customFrequency: ''
+  });
   const [showCalculations, setShowCalculations] = useState(false);
-
   // Helper functions
   const getBaseRate = (frequency) => {
-    const selected = baseRates.find(item => item.frequency === parseFloat(frequency));
-    return selected ? selected.rate : 0;
+    if (frequency === 'custom') {
+      const f = parseFloat(inputs.customFrequency);
+      return f > 0 ? 0.013 * Math.pow(f, 0.23) : 0;
+    } else {
+      const selected = baseRates.find(item => item.frequency === parseFloat(frequency));
+      return selected ? selected.rate : 0;
+    }
   };
-
   const getQualityFactor = (quality) => {
     const selected = qualityFactors.find(item => item.type === quality);
     return selected ? selected.factor : 0;
   };
-
   const getEnvironmentFactor = (environment) => {
     const selected = environmentFactors.find(item => item.env === environment);
     return selected ? selected.factor : 0;
   };
-
   const getEnvironmentLabel = (environment) => {
     const selected = environmentFactors.find(item => item.env === environment);
     return selected ? selected.label : '';
   };
-
-  // Calculate the failure rate
-  const calculateFailureRate = () => {
-    try {
-      const baseRate = getBaseRate(inputs.frequency);
-      const qualityFactor = getQualityFactor(inputs.quality);
-      const environmentFactor = getEnvironmentFactor(inputs.environment);
-
-      // Calculate final failure rate
-      const failureRate = baseRate * qualityFactor * environmentFactor;
-
-      setResult({
-        value: failureRate.toFixed(6),
-        parameters: {
-          λb: baseRate.toFixed(6),
-          πQ: qualityFactor.toFixed(1),
-          πE: environmentFactor.toFixed(1)
-        }
-      });
-      setError(null);
-      if (onCalculate) {
-        onCalculate(failureRate);
-      }
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-      if (onCalculate) {
-        onCalculate(null); // or 0 if you prefer
+  const validateForm = () => {
+    const { frequency, quality, environment, customFrequency } = inputs;
+    const newErrors = {};
+    let isValid = true;
+    const value = selectedFrequency ? selectedFrequency.value : frequency;
+    if (!selectedFrequency) {
+      newErrors.frequency = 'Please select a frequency.';
+      isValid = false;
+    } else if (value === 'custom') {
+      if (!customFrequency) {
+        newErrors.customFrequency = 'Please enter a custom frequency.';
+        isValid = false;
+      } else if (isNaN(customFrequency)) {
+        newErrors.customFrequency = 'Custom frequency must be a number.';
+        isValid = false;
+      } else if (parseFloat(customFrequency) <= 0) {
+        newErrors.customFrequency = 'Custom frequency must be greater than 0.';
+        isValid = false;
+      } else if (parseFloat(customFrequency) < 0.1) {
+        newErrors.customFrequency = 'Custom frequency must be at least 0.1 MHz.';
+        isValid = false;
+      } else if (parseFloat(customFrequency) > 100) {
+        newErrors.customFrequency = 'Custom frequency must be less than or equal to 100 MHz.';
+        isValid = false;
       }
     }
+    if (!selectedQuality) {
+      newErrors.quality = 'Please select a quality factor.';
+      isValid = false;
+    }
+    if (!selectedEnvironment) {
+      newErrors.environment = 'Please select an environment factor.';
+      isValid = false;
+    }
+    setErrors(newErrors);
+    if (!isValid) {
+      setResult(null);
+    }
+    return isValid;
   };
-
+  // Calculate the failure rate
+  const calculateFailureRate = () => {
+    if (!validateForm()) {
+      return;
+    }
+    const baseRate = getBaseRate(inputs.frequency);
+    const qualityFactor = getQualityFactor(inputs.quality);
+    const environmentFactor = getEnvironmentFactor(inputs.environment);
+    // Calculate final failure rate
+    const failureRate = baseRate * qualityFactor * environmentFactor;
+    setResult({
+      value: failureRate.toFixed(6),
+      parameters: {
+        λb: baseRate.toFixed(6),
+        πQ: qualityFactor.toFixed(1),
+        πE: environmentFactor.toFixed(1)
+      }
+    });
+    if (onCalculate) {
+      onCalculate(failureRate);
+    }
+  };
   // Custom styles for Select components
   const customStyles = {
     control: (provided) => ({
       ...provided,
       minHeight: '38px',
-      height: '38px'
+      height: '38px',
+      fontSize: '14px',
+      borderColor: '#ced4da',
     }),
     valueContainer: (provided) => ({
       ...provided,
       height: '38px',
-      padding: '0 6px'
+      padding: '0 12px',
     }),
     input: (provided) => ({
       ...provided,
-      margin: '0px'
+      margin: '0px',
+      padding: '0px',
     }),
     indicatorsContainer: (provided) => ({
       ...provided,
-      height: '38px'
+      height: '38px',
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      padding: '8px',
+    }),
+    clearIndicator: (provided) => ({
+      ...provided,
+      padding: '8px',
+    }),
+    option: (provided) => ({
+      ...provided,
+      padding: '8px 12px',
+      fontSize: '14px',
     }),
     menu: (provided) => ({
       ...provided,
-      zIndex: 9999 
-    })
+      marginTop: '2px',
+      zIndex: 9999,
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      maxHeight: '150px',
+      overflowY: 'auto',
+    }),
   };
-
   return (
     <>
       <div className='calculator-container'>
         <h2 className="text-center mb-4">Quartz</h2>
         <Row className="mb-3">
           <Col md={4}>
-            {/* Frequency Selection */}
             <div className="form-group">
               <label>Base Failure:</label>
               <Select
                 styles={customStyles}
                 name="frequency"
-                value={{
-                  value: inputs.frequency,
-                  label: `${inputs.frequency} MHz (λb = ${getBaseRate(inputs.frequency).toFixed(3)})`
-                }}
+                value={selectedFrequency}
+                isInvalid={!!errors.frequency}
+                classNamePrefix="select"
+                placeholder="Select Frequency"
                 onChange={(selectedOption) => {
+                  setSelectedFrequency(selectedOption);
                   setInputs(prev => ({
                     ...prev,
-                    frequency: selectedOption.value
+                    frequency: selectedOption.value,
+                    customFrequency: selectedOption.value === 'custom' ? prev.customFrequency : ''
                   }));
+                  setErrors({ ...errors, frequency: '' });
                 }}
-                options={baseRates.map(item => ({
-                  value: item.frequency,
-                  label: `${item.frequency} MHz (λb = ${item.rate.toFixed(3)})`
-                }))}
+                options={[
+                  ...baseRates.map(item => ({
+                    value: item.frequency,
+                    label: `${item.frequency} MHz (λb = ${item.rate?.toFixed(3)})`
+                  })),
+                  { value: 'custom', label: 'Custom Frequency' }
+                ]}
               />
+              {errors.frequency && <small className="text-danger">{errors.frequency}</small>}
             </div>
+            {selectedFrequency?.value === 'custom' && (
+              <div className="form-group mt-2">
+                <label>Custom Frequency (f) in MHz:</label>
+                <input
+                  type="number"
+                  name="customFrequency"
+                  min="0.1"
+                  max="100"
+                  step="0.1"
+                  value={inputs.customFrequency || ''}
+                  onChange={(e) => {
+                    setInputs(prev => ({
+                      ...prev,
+                      customFrequency: e.target.value
+                    }));
+                    setErrors({ ...errors, customFrequency: '' });
+                  }}
+                  className={`form-control ${errors.customFrequency ? 'is-invalid' : ''}`}
+                />
+                {errors.customFrequency && <small className="text-danger">{errors.customFrequency}</small>}
+                <small className="text-muted">Formula: λb = 0.013 × (f)<sup>0.23</sup></small>
+              </div>
+            )}
           </Col>
-
           <Col md={4}>
-            {/* Quality Factor */}
             <div className="form-group">
               <label>Quality Factor (π<sub>Q</sub>):</label>
               <Select
                 styles={customStyles}
                 name="quality"
-                value={{
-                  value: inputs.quality,
-                  label: `${inputs.quality} (πQ = ${getQualityFactor(inputs.quality)})`
-                }}
+                value={selectedQuality}
+                isInvalid={!!errors.quality}
+                classNamePrefix="select"
+                placeholder="Select Quality"
                 onChange={(selectedOption) => {
-                  setInputs(prev => ({
+                        setInputs(prev => ({
                     ...prev,
                     quality: selectedOption.value
                   }));
+                  setSelectedQuality(selectedOption)
+                  setErrors({ ...errors, quality: '' });
                 }}
+
                 options={qualityFactors.map(item => ({
                   value: item.type,
                   label: `${item.type} (πQ = ${item.factor})`
                 }))}
               />
+              {errors.quality && <small className="text-danger">{errors.quality}</small>}
             </div>
+            {errors.quality && <small className="text-danger">{errors.quality}</small>}
           </Col>
           <Col md={4}>
-            {/* Environment Factor */}
             <div className="form-group">
               <label>Environment Factor (π<sub>E</sub>):</label>
               <Select
                 styles={customStyles}
                 name="environment"
-                value={{
-                  value: inputs.environment,
-                  label: `${getEnvironmentLabel(inputs.environment)} (πE = ${getEnvironmentFactor(inputs.environment)})`
-                }}
+                placeholder="Select Environment"
+                classNamePrefix="select"
+                value={selectedEnvironment}
+                isInvalid={!!errors.environment}
+              
                 onChange={(selectedOption) => {
+                  
                   setInputs(prev => ({
                     ...prev,
                     environment: selectedOption.value
                   }));
+                  setSelectedEnvironment(selectedOption);
+                  setErrors({ ...errors, environment: '' });
                 }}
                 options={environmentFactors.map(item => ({
                   value: item.env,
                   label: `${item.label} (πE = ${item.factor})`
                 }))}
               />
+                {errors.environment && <small className="text-danger">{errors.environment}</small>}
             </div>
+            {errors.environment && <small className="text-danger">{errors.environment}</small>}
           </Col>
         </Row>
-        <div className='d-flex justify-content-between align-items-center' >
+        <div className='d-flex justify-content-between align-items-center'>
           <div>
             {result && (
               <Box
@@ -249,7 +341,7 @@ const Quartz = ({ onCalculate }) => {
                 className="ms-auto mt-2"
               >
                 <CalculatorIcon
-                  style={{ height: '50px', width: '60px' }}
+                  style={{ height: '30px', width: '40px' }}
                   fontSize="large"
                 />
                 <Typography
@@ -275,36 +367,23 @@ const Quartz = ({ onCalculate }) => {
             </Button>
           </div>
         </div>
-
-        {error && (
-          <Row>
-            <Col>
-              <Alert variant="danger">{error}</Alert>
-            </Col>
-          </Row>
-        )}
-      </div>
-      <div >
         {result && (
           <>
-            <h2 className="text-center">Calculation Result</h2>
-            <div className="d-flex align-items-center">
+            <h2 className="text-center mt-4">Calculation Result</h2>
+            <div >
               <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-              <span className="ms-2">{result.value} failures/10<sup>6</sup> hours</span>
+              <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
             </div>
           </>
         )}
-        <br />
         {result && showCalculations && (
           <>
-            <Row className="mb-4">
+            <Row className="mb-4 mt-3">
               <Col>
                 <div className="card">
                   <div className="card-body">
-
                     <div className="table-responsive">
                       <MaterialTable
-                        
                         columns={[
                           {
                             title: <span>λ<sub>b</sub></span>,
@@ -333,7 +412,7 @@ const Quartz = ({ onCalculate }) => {
                             πQ: result.parameters.πQ,
                             πE: result.parameters.πE,
                             λp: result.value,
-                            description: `From frequency ${inputs.frequency} MHz`
+                            description: `From frequency ${inputs.frequency === 'custom' ? inputs.customFrequency + ' MHz (custom)' : inputs.frequency + ' MHz'}`
                           }
                         ]}
                         options={{
@@ -388,9 +467,7 @@ const Quartz = ({ onCalculate }) => {
           </>
         )}
       </div>
-
     </>
   );
 };
-
 export default Quartz;

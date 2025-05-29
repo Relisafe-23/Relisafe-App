@@ -9,7 +9,8 @@ import { useTheme } from '@mui/material/styles'
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import Paper from '@mui/material/Paper';
 
-const Laser = () => {
+const Laser = ({ onCalculate }) => {
+
   // Lasing Media Failure Rate data
   const lasingMediaRates = [
     { type: 'He/Ne', rate: 84 },
@@ -29,10 +30,10 @@ const Laser = () => {
     { env: 'AUC', label: 'Airborne, Uninhabited Cargo', factor: 7.0 },
     { env: 'AUF', label: 'Airborne, Uninhabited Fighter', factor: 9.0 },
     { env: 'ARW', label: 'Airborne, Rotary Wing', factor: 5.0 },
-    { env: 'SF', label: 'Space, Flight', factor: 0.50 },
-    { env: 'MF', label: 'Missile, Flight', factor: 10 },
-    { env: 'ML', label: 'Missile, Launch', factor: 27 },
-    { env: 'CL', label: 'Cannon, Launch', factor: 490 }
+    { env: 'SF', label: 'Space, Flight', factor: 0.10 },
+    { env: 'MF', label: 'Missile, Flight', factor: 3.0 },
+    { env: 'ML', label: 'Missile, Launch', factor: 8.0 },
+    { env: 'CL', label: 'Cannon, Launch', factor: 'N/A' }
   ];
   const environmentFactorsCO2 = [
     { env: 'GB', label: 'Ground, Benign', factor: 0.30 },
@@ -113,32 +114,16 @@ const Laser = () => {
       factor: 60
     }
   ];
-  // Environment Factors
 
-
-  // State for form laser CO2 sealed
-  const [inputData, setInputData] = useState({
-    tubeCurrent: lasingMediaRatesCO2[0],
-    overfill: overfillFactors[0],
-    ballast: ballastFactors[0],
-    opticalSurfaces: opticalSurfaceFactors[0],
-    environment: environmentFactorsCO2[0]
-  });
-
-  // Custom styles for Select components
 
   // Coupling Failure Rates
   const couplingRates = [
     { type: 'Helium', rate: 0 },
     { type: 'Argon', rate: 6 }
   ];
-
-  // State for form laser helium and argon
-  const [inputs, setInputs] = useState({
-    lasingMedia: lasingMediaRates[0],
-    environment: environmentFactors[0],
-    coupling: couplingRates[0]
-  });
+  const [current, setCurrent] = useState(10);
+  const [overfillPercent, setOverfillPercent] = useState(0.0);
+  const [volumeIncrease, setVolumeIncrease] = useState(0.0);
 
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -147,17 +132,18 @@ const Laser = () => {
   })
   const [showCalculations, setShowCalculations] = useState(false);
 
-
   const calculateMediaFailureRateSolid = () => {
     if (input2.mediaType.type === 'Ruby') {
       return 3600 * input2.rubyPPS * (43.5 * input2.F ** 2.52);
     }
     return 0; // ND:YAG
   };
-
-
+  const calculateTO = () => {
+    if (error || overfillPercent === '' || isNaN(overfillPercent)) return 'N/A';
+    const percent = parseFloat(overfillPercent);
+    return (1 - 0.01 * percent)?.toFixed(4); // Calculates T_O = 1 - 0.01*(%Overfill)
+  };
   // Pump types
-
   const pumpTypes = [
     { value: 'xenon', label: 'Xenon Flashlamp' },
     { value: 'krypton', label: 'Krypton Flashlamp' }
@@ -178,31 +164,6 @@ const Laser = () => {
     { type: 'Liquid Cooled', factor: 0.1 },
     { type: 'Air/Gas Cooled', factor: 1.0 }
   ];
-  // State for form laser solid state
-  const [input2, setInput2] = useState({
-    pumpType: pumpTypes[0],
-    mediaType: mediaTypes[0],
-    cooling: coolingFactors[0],
-    opticalSurfaces: opticalSurfaceFactors[0],
-    environment: environmentFactors[0],
-    couplingCleanliness: couplingCleanlinessFactors[0],
-
-    // Xenon parameters
-    pps: 1,
-    ej: 40,
-    d: 4,
-    L: 2,
-    t: 100,
-
-    // Krypton parameters
-    P: 4,
-    kryptonL: 5,
-
-    // Ruby media parameters
-    rubyPPS: 1,
-    F: 1
-  });
-
   // Custom styles for Select components
   const customStyles = {
     control: (provided) => ({
@@ -222,6 +183,10 @@ const Laser = () => {
     indicatorsContainer: (provided) => ({
       ...provided,
       height: '38px'
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999
     })
   };
   // State for form laser CO2 sealed
@@ -230,28 +195,170 @@ const Laser = () => {
     opticalSurfaces: opticalSurfaceFactors[0],
     environment: environmentFactorsCO2[0]
   });
+
+  const [inputData, setInputData] = useState({
+    // tubeCurrent: lasingMediaRatesCO2[0],
+    overfill: overfillFactors[0],
+    ballast: ballastFactors[0],
+    opticalSurfaces: opticalSurfaceFactors[0],
+    environment: environmentFactorsCO2[0]
+  });
+  // State for form laser helium and argon
+  const [inputs, setInputs] = useState({
+    lasingMedia: lasingMediaRates[0],
+    environment: environmentFactors[0],
+    coupling: couplingRates[0]
+  });
+  // State for form laser solid state
+  const [input2, setInput2] = useState({
+    pumpType: pumpTypes[0],
+    mediaType: mediaTypes[0],
+    cooling: coolingFactors[0],
+    opticalSurfaces: opticalSurfaceFactors[0],
+    environment: environmentFactors[0],
+    couplingCleanliness: couplingCleanlinessFactors[0],
+
+    // Xenon parameters
+    pps: 1,
+    ej: 40,
+    d: 4,
+    L: 2,
+    t: 100,
+
+    // Krypton parameters
+    P: 4,
+    kryptonL: 2,
+
+    // Ruby media parameters
+    rubyPPS: '',
+    F: 1
+  });
   const couplingRates1 = [
     { power: 0.01, rate: 3 },
     { power: 0.1, rate: 30 },
     { power: 1.0, rate: 300 }
   ];
 
+  const handleChange1 = (e) => {
+    const value = e.target.value;
+    setOverfillPercent(value);
 
+    // Clear error when empty
+    if (value === '') {
+      setError('');
+      return;
+    }
 
+    // Validate input is a number
+    if (isNaN(value)) {
+      setError('Please enter a valid number');
+      return;
+    }
 
+    const numValue = parseFloat(value);
 
-
-  const calculatePumpFailureRateSolid = () => {
-    if (input2.pumpType.value === 'xenon') {
-      const ej = Math.max(30, input2.ej);
-      const denominator = input2.d * input2.L * Math.sqrt(input2.t);
-      const term = 2000 * (ej / denominator) ** 8.58;
-      return 3600 * input2.pps * term * input2.cooling.factor;
-    } else { // krypton
-      const term = 10 ** 10.9 * (input2.P / input2.kryptonL);
-      return 625 * term * input2.cooling.factor;
+    // Validate range (0-100%)
+    if (numValue < 0) {
+      setError('Percentage cannot be negative');
+    } else if (numValue > 100) {
+      setError('Percentage cannot exceed 100%');
+    } else {
+      setError('');
     }
   };
+  const handleChange2 = (e) => {
+    const value = e.target.value;
+    setVolumeIncrease(value);
+
+    // Clear error when empty
+    if (value === '') {
+      setError('');
+      return;
+    }
+
+    // Validate input is a number
+    if (isNaN(value)) {
+      setError('Please enter a valid number');
+      return;
+    }
+
+    const numValue = parseFloat(value);
+
+    // Validate range (0-100% is typical, but adjust if needed)
+    if (numValue < 0) {
+      setError('Percentage cannot be negative');
+    } else {
+      setError('');
+    }
+  };
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setCurrent(value);
+
+    // Clear previous errors when empty
+    if (value === '') {
+      setError('');
+      return;
+    }
+
+    // Validate input is a number
+    if (isNaN(value) || value === '') {
+      setError('Please enter a valid number');
+      return;
+    }
+
+    const numValue = parseFloat(value);
+
+    // Validate range
+    if (numValue < 10) {
+      setError('Tube current must be ≥ 10 mA');
+    } else if (numValue > 150) {
+      setError('Tube current must be ≤ 150 mA');
+    } else {
+      setError('');
+    }
+  };
+  const calculatePiB = () => {
+    if (error || volumeIncrease === '' || isNaN(volumeIncrease)) return 'N/A';
+    const percent = parseFloat(volumeIncrease);
+    return Math.pow((1 / 3), (percent / 100)).toFixed(4); // Calculates πB = (1/3) * (%Vol.Inc./100)
+  };
+  const calculateLambda = () => {
+    if (error || current === '' || isNaN(current)) return 'N/A';
+    const l = parseFloat(current);
+    return (69 * l - 450).toFixed(2);
+  };
+  // const calculatePumpFailureRateSolid = () => {
+  //   if (input2.pumpType.value === 'xenon') {
+  //     const ej = Math.max(30, input2.ej);
+  //     const denominator = input2.d * input2.L * Math.sqrt(input2.t);
+  //     const term = Math.pow ((2000 *((ej / denominator) ,8.58)));
+  //     return 3600 * input2.pps * term * input2.cooling.factor;
+  //   } else { // krypton
+  //     const term = Math.pow(10, (0.9 * (input2.P / input2.kryptonL)));
+  //     return 625 * term * input2.cooling.factor;
+  //   }
+  // };
+  const calculatePumpFailureRateSolid = () => {
+  if (input2.pumpType.value === 'xenon') {
+    const ej = Math.max(30, input2.ej); 
+    // console.log("Ej..",ej) // Using Ei instead of ej to match formula
+    const denominator = input2.d * input2.L * Math.sqrt(input2.t);
+    // console.log("denominator...",denominator)
+    const term = 2000 * Math.pow((ej / denominator) , 8.58); 
+    // console.log("term...",term)
+    const calculate = 3600 * input2.pps * term * input2.cooling.factor;
+    // console.log("calculate...",calculate)// Corrected Math.pow usage
+    return calculate;
+  } else { // krypton
+    const term = Math.pow(10, (0.9 * (input2.P / input2.kryptonL)));
+    const calculatePump = 625 * term * input2.cooling.factor;
+      // console.log ("calculatePump..",calculatePump)
+    return calculatePump;
+  }
+
+};
+
   // Calculate the failure rate for laser CO2 sealed
   const calculateFailureRateCO2 = () => {
     try {
@@ -260,20 +367,22 @@ const Laser = () => {
         setResult({
           value: 'N/A',
           parameters: {
-            λMEDIA: inputData.tubeCurrent.rate.toFixed(2),
-            πO: inputData.overfill.factor.toFixed(2),
-            πB: inputData.ballast.factor.toFixed(2),
-            πOS: inputData.opticalSurfaces.factor.toFixed(2),
+            λMEDIA: calculateLambda(),
+            πO: calculateTO(),
+            πB: calculatePiB(),
+            πOS: inputData.opticalSurfaces?.factor?.toFixed(2),
             πE: 'N/A',
             formula: 'λp = λMEDIA × πO × πB × πE + 10 × πOS × πE'
+
           }
         });
+
         setError(null);
         return;
       }
-      const mediaRate = inputData.tubeCurrent.rate;
-      const overfillFactor = inputData.overfill.factor;
-      const ballastFactor = inputData.ballast.factor;
+      const mediaRate = calculateLambda();
+      const overfillFactor = calculateTO();
+      const ballastFactor = calculatePiB();
       const opticalFactor = inputData.opticalSurfaces.factor;
       const envFactor = inputData.environment.factor;
 
@@ -282,25 +391,27 @@ const Laser = () => {
         (10 * opticalFactor * envFactor);
 
       setResult({
-        value: failureRate.toFixed(2),
+        value: failureRate?.toFixed(2),
         parameters: {
-          λMEDIA: mediaRate.toFixed(2),
-          πO: overfillFactor.toFixed(2),
-          πB: ballastFactor.toFixed(2),
-          πOS: opticalFactor.toFixed(2),
-          πE: envFactor.toFixed(2),
+          λMEDIA: mediaRate,
+          πO: overfillFactor,
+          πB: ballastFactor,
+          πOS: opticalFactor?.toFixed(2),
+          πE: envFactor?.toFixed(2),
           formula: 'λp = λMEDIA × πO × πB × πE + 10 × πOS × πE'
         }
       });
       setError(null);
+      if (onCalculate) {
+        onCalculate(failureRate);
+        // Pass the calculated failure rate
+      }
     } catch (err) {
       setError(err.message);
       setResult(null);
     }
   };
   // Calculate the failure rate for laser solid state
-
-
   const calculateFailureRateSolid = () => {
     try {
       // Skip calculation if environment is CL (N/A)
@@ -308,7 +419,7 @@ const Laser = () => {
         setResult({
           value: 'N/A',
           parameters: {
-            λPUMP: calculatePumpFailureRateSolid()?.toFixed(2),
+            λPUMP: calculatePumpFailureRateSolid(),
             λMEDIA: calculateMediaFailureRateSolid()?.toFixed(2),
             πOS: input2.opticalSurfaces.factor?.toFixed(2),
             πC: input2.couplingCleanliness.factor?.toFixed(2),
@@ -330,23 +441,30 @@ const Laser = () => {
       const failureRate = (pumpRate + mediaRate + (16.3 * couplingCleanliness * opticalFactor)) * envFactor;
 
       setResult({
-        value: failureRate.toFixed(2),
+        value: failureRate?.toFixed(2),
         parameters: {
-          λPUMP: pumpRate.toFixed(2),
-          λMEDIA: mediaRate.toFixed(2),
-          πOS: opticalFactor.toFixed(2),
-          πC: couplingCleanliness.toFixed(2),
-          πE: envFactor.toFixed(2),
+          λPUMP: pumpRate?.toFixed(2),
+          λMEDIA: mediaRate?.toFixed(2),
+          πOS: opticalFactor?.toFixed(2),
+          πC: couplingCleanliness?.toFixed(2),
+          πE: envFactor?.toFixed(2),
           formula: 'λp = (λPUMP + λMEDIA + 16.3 × πC × πOS) × πE'
         }
       });
       setError(null);
+      if (onCalculate) {
+        onCalculate(failureRate);
+        // Pass the calculated failure rate
+      }
     } catch (err) {
       setError(err.message);
       setResult(null);
     }
   };
   // Calculate the failure rate for laser CO2 flowing
+  const calculateCouplingRate = (power) => {
+    return 300 * power; // λCOUPLING = 300P
+  };
 
   const calculateFailureRate1 = () => {
     try {
@@ -355,8 +473,8 @@ const Laser = () => {
         setResult({
           value: 'N/A',
           parameters: {
-            λCOUPLING: input.power.rate.toFixed(2),
-            πOS: input.opticalSurfaces.factor.toFixed(2),
+            λCOUPLING: input.power.rate?.toFixed(2),
+            πOS: input.opticalSurfaces.factor?.toFixed(2),
             πE: 'N/A',
             formula: 'λp = λCOUPLING × πOS × πE'
           }
@@ -373,15 +491,19 @@ const Laser = () => {
       const failureRate = couplingRate * opticalFactor * envFactor;
 
       setResult({
-        value: failureRate.toFixed(2),
+        value: failureRate?.toFixed(2),
         parameters: {
-          λCOUPLING: couplingRate.toFixed(2),
-          πOS: opticalFactor.toFixed(2),
-          πE: envFactor.toFixed(2),
+          λCOUPLING: couplingRate?.toFixed(2),
+          πOS: opticalFactor?.toFixed(2),
+          πE: envFactor?.toFixed(2),
           formula: 'λp = λCOUPLING × πOS × πE'
         }
       });
       setError(null);
+      if (onCalculate) {
+        onCalculate(failureRate);
+        // Pass the calculated failure rate
+      }
     } catch (err) {
       setError(err.message);
       setResult(null);
@@ -398,15 +520,19 @@ const Laser = () => {
       const failureRate = (lasingRate * envFactor) + (couplingRate * envFactor);
 
       setResult({
-        value: failureRate.toFixed(2),
+        value: failureRate?.toFixed(2),
         parameters: {
-          λMEDIA: lasingRate.toFixed(2),
-          λCOUPLING: couplingRate.toFixed(2),
-          πE: envFactor.toFixed(2),
+          λMEDIA: lasingRate?.toFixed(2),
+          λCOUPLING: couplingRate?.toFixed(2),
+          πE: envFactor?.toFixed(2),
           formula: 'λp = λMEDIA × πE + λCOUPLING × πE'
         }
       });
       setError(null);
+      if (onCalculate) {
+        onCalculate(failureRate);
+        // Pass the calculated failure rate
+      }
     } catch (err) {
       setError(err.message);
       setResult(null);
@@ -656,38 +782,38 @@ const Laser = () => {
           </Row>
 
           <div className='d-flex justify-content-between align-items-center' >
-          <div>
-            {result && (
-              <Box
-                component="div"
-                onClick={() => setShowCalculations(!showCalculations)}
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  '&:hover': {
-                    textDecoration: 'underline'
-                  }
-                }}
-                className="ms-auto mt-2"
-              >
-                <CalculatorIcon
-                  style={{ height: '50px', width: '60px' }}
-                  fontSize="large"
-                />
-                <Typography
-                  variant="body1"
+            <div>
+              {result && (
+                <Box
+                  component="div"
+                  onClick={() => setShowCalculations(!showCalculations)}
                   sx={{
-                    fontWeight: 'bold',
-                    fontSize: '0.95rem',
-                    ml: 1
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    '&:hover': {
+                      textDecoration: 'underline'
+                    }
                   }}
+                  className="ms-auto mt-2"
                 >
-                  {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                </Typography>
-              </Box>
-            )}
+                  <CalculatorIcon
+                    style={{ height: '30px', width: '40px' }}
+                    fontSize="large"
+                  />
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      fontWeight: 'bold',
+                      fontSize: '0.95rem',
+                      ml: 1
+                    }}
+                  >
+                    {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
+                  </Typography>
+                </Box>
+              )}
             </div>
             <Button
               variant="primary"
@@ -816,108 +942,116 @@ const Laser = () => {
         {currentComponent.type === "Laser, CO2, Sealed" && (
           <>
             <Row className="mb-3">
+
               <Col md={4}>
-                {/* Tube Current Selection */}
                 <div className="form-group">
-                  <label>Tube Current (mA) (λ<sub>MEDIA</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    options={lasingMediaRatesCO2.map(item => ({
-                      value: item,
-                      label: `${item.current} mA (λMEDIA = ${item.rate})`
-                    }))}
-                    value={{
-                      value: inputData.tubeCurrent,
-                      label: `${inputData.tubeCurrent.current} mA (λMEDIA = ${inputData.tubeCurrent.rate})`
-                    }}
-                    onChange={(selectedOption) => setInputData(prev => ({
-                      ...prev,
-                      tubeCurrent: selectedOption.value
-                    }))}
+                  <label htmlFor="tube-current">Tube Current (mA) λ<sub>MEDIA</sub>:</label>
+                  <input
+                    id="tube-current"
+                    type="number"
+                    value={current}
+                    onChange={handleChange}
+                    min="10"
+                    max="150"
+                    step="0.1"
+                    className={`form-control ${error ? 'is-invalid' : ''}`}
+                    placeholder="Enter value between 10 and 150"
                   />
+                  {error && <div className="invalid-feedback">{error}</div>}
+
+                  <div className="mt-2 form-group">
+                    <label>Calculated λ<sub>MEDIA</sub>: {calculateLambda()} </label>
+                  </div>
+
+                  <div className="form-text">
+                    Valid range: 10 ≤ l ≤ 150 mA
+                  </div>
                 </div>
               </Col>
-
               <Col md={4}>
                 {/* CO₂ Overfill Factor */}
                 <div className="form-group">
-                  <label>CO₂ Overfill (%) (π<sub>O</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    options={overfillFactors.map(item => ({
-                      value: item,
-                      label: `${item.overfill}% (πO = ${item.factor})`
-                    }))}
-                    value={{
-                      value: inputData.overfill,
-                      label: `${inputData.overfill.overfill}% (πO = ${inputData.overfill.factor})`
-                    }}
-                    onChange={(selectedOption) => setInputData(prev => ({
-                      ...prev,
-                      overfill: selectedOption.value
-                    }))}
+                  <label htmlFor="overfill-percent">% Gas Overfill Factor (π<sub>O</sub>):</label>
+                  <input
+                    id="overfill-percent"
+                    type="number"
+                    value={overfillPercent}
+                    onChange={handleChange1}
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    className={`form-control ${error ? 'is-invalid' : ''}`}
+                    placeholder="Enter percentage (0-100)"
                   />
+                  {error && <div className="invalid-feedback">{error}</div>}
+
+                  <div className="mt-2 form-group">
+                    <label> Calculated T<sub>O</sub>: {calculateTO()}</label>
+                  </div>
+
+                  <div className="form-text">
+                    Formula: T<sub>O</sub> = 1 - 0.01 × (% Overfill)
+                  </div>
                 </div>
               </Col>
-
               <Col md={4}>
-                {/* Ballast Factor */}
                 <div className="form-group">
-                  <label>Ballast Vol. Increase (%) (π<sub>B</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    options={ballastFactors.map(item => ({
-                      value: item,
-                      label: `${item.ballast}% (πB = ${item.factor})`
-                    }))}
-                    value={{
-                      value: inputData.ballast,
-                      label: `${inputData.ballast.ballast}% (πB = ${inputData.ballast.factor})`
-                    }}
-                    onChange={(selectedOption) => setInputData(prev => ({
-                      ...prev,
-                      ballast: selectedOption.value
-                    }))}
+                  <label htmlFor="volume-increase"> Ballast Factor (% Volume Increase)  π<sub>B</sub> :</label>
+                  <input
+                    id="volume-increase"
+                    type="number"
+                    value={volumeIncrease}
+                    onChange={handleChange2}
+                    min="0"
+                    step="0.1"
+                    className={`form-control ${error ? 'is-invalid' : ''}`}
+                    placeholder="Enter percentage volume increase"
                   />
+                  {error && <div className="invalid-feedback">{error}</div>}
+
+                  <div className="mt-2 form-group">
+                    <label>Calculated π<sub>B</sub>:{calculatePiB()}</label>
+                  </div>
+
+                  <div className="form-text">
+                    Formula: π<sub>B</sub> = (1/3)<sup>(% Volume Increase/100)</sup>
+                  </div>
                 </div>
               </Col>
             </Row>
-
-
-
             <div className='d-flex justify-content-between align-items-center' >
-            <div>
-              {result && (
-                <Box
-                  component="div"
-                  onClick={() => setShowCalculations(!showCalculations)}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    '&:hover': {
-                      textDecoration: 'underline'
-                    }
-                  }}
-                  className="ms-auto mt-2"
-                >
-                  <CalculatorIcon
-                    style={{ height: '50px', width: '60px' }}
-                    fontSize="large"
-                  />
-                  <Typography
-                    variant="body1"
+              <div>
+                {result && (
+                  <Box
+                    component="div"
+                    onClick={() => setShowCalculations(!showCalculations)}
                     sx={{
-                      fontWeight: 'bold',
-                      fontSize: '0.95rem',
-                      ml: 1
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
                     }}
+                    className="ms-auto mt-2"
                   >
-                    {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                  </Typography>
-                </Box>
-              )}
+                    <CalculatorIcon
+                      style={{ height: '30px', width: '40px' }}
+                      fontSize="large"
+                    />
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem',
+                        ml: 1
+                      }}
+                    >
+                      {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
+                    </Typography>
+                  </Box>
+                )}
               </div>
               <Button
                 variant="primary"
@@ -1039,7 +1173,7 @@ const Laser = () => {
                             <li>π<sub>OS</sub> = Optical surface factor</li>
                             <li>π<sub>E</sub> = Environment factor</li>
                           </ul>
-                   
+
                         </div>
                       </div>
                     </div>
@@ -1050,69 +1184,84 @@ const Laser = () => {
           </>
         )}
 
-
         {currentComponent.type === "Laser, CO2,Flowing" && (
           <>
-
-
             <Row className="mb-3">
               <Col md={4}>
                 {/* Power Selection */}
                 <div className="form-group">
                   <label>Power (KW) (λ<sub>COUPLING</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    options={couplingRates1.map(item => ({
-                      value: item,
-                      label: `${item.power} KW (λCOUPLING = ${item.rate})`
-                    }))}
-                    value={{
-                      value: input.power,
-                      label: `${input.power.power} KW (λCOUPLING = ${input.power.rate})`
-                    }}
-                    onChange={(selectedOption) => setInput(prev => ({
-                      ...prev,
-                      power: selectedOption.value
-                    }))}
-                  />
+                  <div className="input-group">
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={input.power.power || ''}
+                      onChange={(e) => {
+                        const powerValue = parseFloat(e.target.value);
+                        // Validate power range (0.01 ≤ P ≤ 1.0)
+                        const validatedPower = Math.min(Math.max(powerValue, 0.01), 1.0);
+                        setInput(prev => ({
+                          ...prev,
+                          power: {
+                            power: isNaN(powerValue) ? 0 : validatedPower,
+                            rate: isNaN(powerValue) ? 0 : calculateCouplingRate(validatedPower)
+                          }
+                        }));
+                      }}
+                      min="0.01"
+                      max="1.0"
+                      step="0.01"
+                      placeholder="Enter power (0.01-1.0 KW)"
+                    />
+                  </div>
+
                 </div>
               </Col>
+              <>
+                <span>
+                  λ<sub>COUPLING</sub> = {input.power.rate || ''}
+                </span>
+              </>
+              {input.power.power > 1.0 || input.power.power < 0.01 ? (
+                <div className="text-danger small">
+                  Power must be between 0.01 and 1.0 KW
+                </div>
+              ) : null}
 
             </Row>
             <div className='d-flex justify-content-between align-items-center' >
               <div>
-            <div className='Button'>
-              {result && (
-                <Box
-                  component="div"
-                  onClick={() => setShowCalculations(!showCalculations)}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    '&:hover': {
-                      textDecoration: 'underline'
-                    }
-                  }}
-                  className="ms-auto mt-2"
-                >
-                  <CalculatorIcon
-                    style={{ height: '50px', width: '60px' }}
-                    fontSize="large"
-                  />
-                  <Typography
-                    variant="body1"
+                {result && (
+                  <Box
+                    component="div"
+                    onClick={() => setShowCalculations(!showCalculations)}
                     sx={{
-                      fontWeight: 'bold',
-                      fontSize: '0.95rem',
-                      ml: 1
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
                     }}
+                    className="ms-auto mt-2"
                   >
-                    {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                  </Typography>
-                </Box>
-              )}
+                    <CalculatorIcon
+                      style={{ height: '30px', width: '40px' }}
+                      fontSize="large"
+                    />
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem',
+                        ml: 1
+                      }}
+                    >
+                      {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
+                    </Typography>
+                  </Box>
+                )}
               </div>
               <Button
                 variant="primary"
@@ -1121,8 +1270,8 @@ const Laser = () => {
               >
                 Calculate Failure Rate
               </Button>
-              </div>
             </div>
+
 
             {error && (
               <Row>
@@ -1243,9 +1392,6 @@ const Laser = () => {
             )}
 
             {/* Additional Information Section */}
-
-
-
           </>
         )}
 
@@ -1315,43 +1461,22 @@ const Laser = () => {
             </Row>
             <Row className="mb-3">
               <Col md={4}>
-
-
                 <div className="form-group">
                   <label>Coupling Cleanliness Factor (π<sub>C</sub>):</label>
                   <Select
-                    style={customStyles}
-                    name="couplingCleanliness"
-                    placeholder="Select Cleanliness Level"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        couplingCleanliness: selectedOption.value
-                      });
-                    }}
-                    options={couplingCleanlinessFactors.map(factor => ({
-                      value: factor.factor,
-                      label: `${factor.type} (πC = ${factor.factor})`,
-
+                    styles={customStyles}
+                    options={couplingCleanlinessFactors.map(item => ({
+                      value: item,
+                      label: `${item.type} (πC = ${item.factor})`
                     }))}
-                    formatOptionLabel={option => (
-                      <div>
-                        <div style={{ fontWeight: 500 }}>{`${option.value === 1 ? "Rigorous" : "Minimal"} (πC = ${option.value})`}</div>
-                        <div style={{ fontSize: 12, color: '#667' }}>
-                          {option.description}
-                        </div>
-                      </div>
-                    )}
-                    value={currentComponent.couplingCleanliness ?
-                      couplingCleanlinessFactors.find(f => f.factor === currentComponent?.couplingCleanliness) ? {
-                        value: currentComponent.couplingCleanliness,
-                        label: `${currentComponent?.couplingCleanliness === 1 ? "Rigorous cleanliness" :
-                            currentComponent?.couplingCleanliness === 30 ? "Minimal precautions with bellows" :
-                              "Minimal precautions without bellows"
-                          } (πC = ${currentComponent?.couplingCleanliness})`,
-                      } : null
-                      : null
-                    }
+                    value={{
+                      value: input2.couplingCleanliness,
+                      label: `${input2.couplingCleanliness.type} (πC = ${input2.couplingCleanliness.factor})`
+                    }}
+                    onChange={(selectedOption) => setInput2(prev => ({
+                      ...prev,
+                      couplingCleanliness: selectedOption.value
+                    }))}
                   />
                 </div>
               </Col>
@@ -1359,7 +1484,7 @@ const Laser = () => {
                 <>
                   <Col md={4}>
                     <div className="form-group">
-                      <label>PPS (pulses/sec):</label>
+                      <label>PPS (pulses/sec) for (λ<sub>MEDIA</sub>):</label>
                       <input
                         type="number"
                         className="form-group"
@@ -1377,7 +1502,7 @@ const Laser = () => {
                         }}
                         onChange={(e) => setInput2(prev => ({
                           ...prev,
-                          rubyPPS: parseFloat(e.target.value) || 1
+                          rubyPPS: parseFloat(e.target.value)
                         }))}
                       />
                     </div>
@@ -1415,13 +1540,14 @@ const Laser = () => {
                 <>
                   <Col md={4}>
                     <div className="form-group">
-                      <label>PPS (pulses/sec):</label>
+                      <label>PPS (pulses/sec) for (λ<sub>PUMP</sub>):</label>
                       <input
                         type="number"
-                        className="form-group"
+                        className="form-control"  
                         min="1"
                         max="20"
-                        value={input2.pps}
+                        step="1" 
+                        value={input2.pps } 
                         style={{
                           width: "100%",
                           padding: "0.375rem 0.75rem",
@@ -1432,11 +1558,30 @@ const Laser = () => {
                           border: "1px solid #ced4da",
                           borderRadius: "0.25rem"
                         }}
-                        onChange={(e) => setInput2(prev => ({
-                          ...prev,
-                          pps: parseFloat(e.target.value) || 1
-                        }))}
+                        onChange={(e) => {
+                          let value = parseFloat(e.target.value);
+                          // Validate range (1-20)
+                          if (isNaN(value));  // Default to 1 if invalid
+                          // value = Math.max(1, Math.min(20, value));  // Clamp between 1 and 20
+                          setInput2(prev => ({
+                            ...prev,
+                            pps: value
+                          }));
+                        }}
+                        onBlur={(e) => {  // Additional validation when field loses focus
+                          if (!e.target.value || e.target.value < 1) {
+                            setInput2(prev => ({
+                              ...prev,
+                              pps: 1
+                            }));
+                          }
+                        }}
                       />
+                      {input2.pps < 1 || input2.pps > 20 ? (
+                        <div className="text-danger small mt-1">
+                          PPS must be between 1 and 20 pulses per second
+                        </div>
+                      ) : null}
                     </div>
                   </Col>
                   <Col md={4}>
@@ -1570,7 +1715,7 @@ const Laser = () => {
                         value={input2.kryptonL}
                         onChange={(e) => setInput2(prev => ({
                           ...prev,
-                          kryptonL: parseFloat(e.target.value) || 5
+                          kryptonL: parseFloat(e.target.value) || 2
                         }))}
                       />
                     </div>
@@ -1579,45 +1724,39 @@ const Laser = () => {
               )}
             </Row>
             {/* Ruby Media Parameters */}
-
-
-
-
-
-
             <div className='d-flex justify-content-between align-items-center' >
-            <div>
-              {result && (
-                <Box
-                  component="div"
-                  onClick={() => setShowCalculations(!showCalculations)}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    color: 'primary.main',
-                    '&:hover': {
-                      textDecoration: 'underline'
-                    }
-                  }}
-                  className="ms-auto mt-2"
-                >
-                  <CalculatorIcon
-                    style={{ height: '50px', width: '60px' }}
-                    fontSize="large"
-                  />
-                  <Typography
-                    variant="body1"
+              <div>
+                {result && (
+                  <Box
+                    component="div"
+                    onClick={() => setShowCalculations(!showCalculations)}
                     sx={{
-                      fontWeight: 'bold',
-                      fontSize: '0.95rem',
-                      ml: 1
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
                     }}
+                    className="ms-auto mt-2"
                   >
-                    {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                  </Typography>
-                </Box>
-              )}
+                    <CalculatorIcon
+                      style={{ height: '30px', width: '40px' }}
+                      fontSize="large"
+                    />
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem',
+                        ml: 1
+                      }}
+                    >
+                      {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
+                    </Typography>
+                  </Box>
+                )}
               </div>
               <Button
                 variant="primary"
@@ -1626,8 +1765,8 @@ const Laser = () => {
               >
                 Calculate Failure Rate
               </Button>
-              </div>
-            
+            </div>
+
 
             {error && (
               <Row>
@@ -1658,7 +1797,7 @@ const Laser = () => {
                   <Col>
                     <div className="card">
                       <div className="card-body">
-                      
+
                         <div className="table-responsive">
                           <MaterialTable
                             columns={[
@@ -1729,7 +1868,7 @@ const Laser = () => {
                             Calculation Formula
                           </Typography>
                           <Typography variant="body1" paragraph>
-                            λ<sub>p</sub> = (λ<sub>PUMP</sub> + λ<sub>MEDIA</sub> + 16.3 × π<sub>OS</sub>) × π<sub>E</sub>
+                            λ<sub>p</sub> = (λ<sub>PUMP</sub> + λ<sub>MEDIA</sub> + 16.3 × π<sub>C</sub> × π<sub>OS</sub>) × π<sub>E</sub>
                           </Typography>
                           <Typography variant="body1" paragraph>Where:</Typography>
                           <ul>

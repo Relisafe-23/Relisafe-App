@@ -71,14 +71,20 @@ import Fuses from "../Mil.jsx/Fuses.jsx";
 import Laser from "../Mil.jsx/Laser.jsx";
 import Meters from "../Mil.jsx/Meters.jsx";
 import Connectors from "../Mil.jsx/Connectors.jsx";
+import Tubes from "../Mil.jsx/Tubes.jsx";
+import Interconnection from "../Mil.jsx/Interconnection.jsx";
+import Diode from "../Mil.jsx/Diode.jsx";
+import MiscellaneousPartsCalculator from "../Mil.jsx/MiscellaneousPartsCalculator.jsx";
+import RotatingDevice from "../Mil.jsx/RotatingDevice.jsx";
+import Relay from "../Mil.jsx/Relay.jsx";
 
 function Index(props) {
   const projectId = props?.location?.state?.projectId
     ? props?.location?.state?.projectId
     : props?.match?.params?.id;
   const [currentComponent, setCurrentComponent] = useState({
-    type:'Resistor'
-  })
+    type: "Resistor",
+  });
   const [category, setCategory] = useState("");
   const [environment, setEnvironment] = useState("");
   const [show, setShow] = useState(false);
@@ -113,9 +119,10 @@ function Index(props) {
   const [frpValueNprd2016Data, setFrpValueNprd2016Data] = useState([]);
   const [permission, setPermission] = useState();
   const [predicted, setPredicted] = useState();
+  const [frUnit, setFrUnit] = useState(null);
+  const [standard, setStandard] = useState(null);
   const [componentData, setComponentData] = useState({
     resistor: null,
-
   });
 
   const token = localStorage.getItem("sessionId");
@@ -135,58 +142,88 @@ function Index(props) {
       partTypeQuality?.label &&
       environment?.label
       ? nprdFRP.find((item) => {
-        return (
-          item?.PartTypeId === partTypeNprd?.value &&
-          item?.Quality === partTypeQuality?.label &&
-          item?.Environment === environment?.label &&
-          item?.PartDescrId === partTypeDescr?.value
-        );
-      })?.FR
+          return (
+            item?.PartTypeId === partTypeNprd?.value &&
+            item?.Quality === partTypeQuality?.label &&
+            item?.Environment === environment?.label &&
+            item?.PartDescrId === partTypeDescr?.value
+          );
+        })?.FR
       : ""
   );
 
   const [FR, setFR] = useState();
 
+  // useEffect(() => {
+  //   if (partTypeNprd?.value && partTypeDescr?.value && environment?.label) {
+  //     const filteredData = nprdFRP.filter((item) => {
+  //       return (
+  //         item?.PartTypeId === partTypeNprd?.value &&
+  //         item?.PartDescrId === partTypeDescr?.value &&
+  //         item?.Environment === environment?.label
+  //       );
+  //     });
 
+  //     if (filteredData) {
+  //       setData(filteredData);
+  //     } else {
+  //       setData([]);
+  //     }
+  //   }
+  // }, [partTypeNprd?.value, partTypeDescr?.value]);
+
+  // Inside your component:
   useEffect(() => {
+    // 1. Handle NPRD data filtering (existing logic)
     if (partTypeNprd?.value && partTypeDescr?.value && environment?.label) {
-      const filteredData = nprdFRP.filter((item) => {
-        return (
+      const filteredData = nprdFRP.filter(
+        (item) =>
           item?.PartTypeId === partTypeNprd?.value &&
           item?.PartDescrId === partTypeDescr?.value &&
           item?.Environment === environment?.label
-        );
-      });
-
-      if (filteredData) {
-        setData(filteredData);
-      } else {
-        setData([]);
-      }
+      );
+      setData(filteredData || []);
     }
-  }, [partTypeNprd?.value, partTypeDescr?.value]);
+
+    // 2. Auto-select "Failure Per Power On Hour" if standard is MIL
+    // if (
+    //   standard?.value === "MIL" &&
+    //   frUnit?.value !== "Failure Per Power On Hour"
+    // ) {
+    //   setFrUnit({
+    //     value: "Failure Per Power On Hour",
+    //     label: "Failure Per Power On Hour",
+    //   });
+    // }
+  }, [
+    partTypeNprd?.value,
+    partTypeDescr?.value,
+    environment?.label,
+    standard, // Changed from values.standard to standard
+    frUnit, // Changed from values.frUnit to frUnit
+  ]);
 
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-      ? props?.location?.state?.productId
-      : initialProductID;
+    ? props?.location?.state?.productId
+    : initialProductID;
 
   const treeStructure = props?.location?.state?.parentId
     ? props?.location?.state?.parentId
     : initialTreeStructure;
   const [field, setField] = useState();
-  
+
   const [dutyCycle, setDutyCycle] = useState(1);
   const [frDistribution, setFrDistribution] = useState();
   const [allocated, setAllocated] = useState();
   const [otherFr, setOtherFr] = useState();
   const [frRemarks, setFrRemarks] = useState();
-  const [standard, setStandard] = useState();
+
   const [frOffset, setFrOffSet] = useState();
   const [operand, setOperand] = useState();
   const [frOffsetOperand, setOffSetOperand] = useState();
-  const [frUnit, setFrUnit] = useState();
+
   const [frpId, setFrpId] = useState();
   const [source, setSource] = useState({
     value: "Predicted",
@@ -272,7 +309,7 @@ function Index(props) {
   let [failures, setFailures] = useState(500);
   let predictedValue =
     lambdaB * resistanceFactor * qualityFactor * enviromentFactor;
-  let valueInDecimal = predictedValue.toFixed(5);
+  let valueInDecimal = predictedValue.toFixed(6);
   const constant = 4.5e-9;
   const exponent1 = (343 / 12) * (298 / 273);
   const exponent2 = (6 * 273 * 1000) / (0.00031 * 298 * 1000);
@@ -307,7 +344,30 @@ function Index(props) {
         }
       });
   };
-
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      minHeight: "38px",
+      height: "38px",
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      height: "38px",
+      padding: "0 6px",
+    }),
+    input: (provided) => ({
+      ...provided,
+      margin: "0px",
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      height: "38px",
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999,
+    }),
+  };
   const projectSidebar = () => {
     Api.get(`/api/v1/projectCreation/${projectId}`, {
       headers: {
@@ -497,7 +557,7 @@ function Index(props) {
           item?.PartDescrId === partTypeDescr.value
         );
       });
-      console.log("nprdFRPFiltered.....", nprdFRPFiltered)
+      console.log("nprdFRPFiltered.....", nprdFRPFiltered);
       setNprdFR(nprdFRPFiltered);
       setData(nprdFRPFiltered);
     } else {
@@ -508,7 +568,7 @@ function Index(props) {
           item?.PartDescrId === partTypeDescr.value
         );
       });
-      console.log("nprdFRPFiltered.....2....", nprdFRPFiltered)
+      console.log("nprdFRPFiltered.....2....", nprdFRPFiltered);
       setNprdFR(nprdFRPFiltered);
       setData(nprdFRPFiltered);
     }
@@ -707,24 +767,13 @@ function Index(props) {
                     <fieldset
                       disabled={
                         writePermission === true ||
-                          writePermission === "undefined" ||
-                          role === "admin" ||
-                          (isOwner === true && createdBy === userId)
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
                           ? null
                           : "disabled"
                       }
                     >
-                      {/* <Projectname projectId={projectId} />
-                    <Row>
-                      <Col xs={12} sm={9} className="projectName">
-                        <Dropdown
-                          value={projectId}
-                          productId={productId}
-                          data={treeTableData}
-                        />
-                      </Col>
-                      <Col></Col>
-                    </Row> */}
                       <div
                         style={{
                           display: "flex",
@@ -793,7 +842,7 @@ function Index(props) {
                                         placeholder="Part Number"
                                         onBlur={handleBlur}
                                         value={partNumber}
-                                      // onChange={handleChange}
+                                        // onChange={handleChange}
                                       />
                                       <ErrorMessage
                                         className="error text-danger"
@@ -817,7 +866,7 @@ function Index(props) {
                                         placeholder="Quantity"
                                         value={quantity}
                                         onBlur={handleBlur}
-                                      // onChange={handleChange}
+                                        // onChange={handleChange}
                                       />
                                       <ErrorMessage
                                         className="error text-danger"
@@ -837,7 +886,7 @@ function Index(props) {
                                         value={reference}
                                         name="reference"
                                         onBlur={handleBlur}
-                                      // onChange={handleChange}
+                                        // onChange={handleChange}
                                       />
                                       <ErrorMessage
                                         className="error text-danger"
@@ -897,7 +946,7 @@ function Index(props) {
                                   </Col>
                                   <Col>
                                     {values.category?.value === "Mechanical" ||
-                                      values.category?.value === "Electronic" ? (
+                                    values.category?.value === "Electronic" ? (
                                       <div>
                                         <Form.Group className="mt-3">
                                           <Label notify={true}>Part Type</Label>
@@ -925,23 +974,23 @@ function Index(props) {
                                             className="mt-1"
                                             options={[
                                               values.category?.value ===
-                                                "Electronic"
+                                              "Electronic"
                                                 ? {
-                                                  options: Electronic.map(
-                                                    (list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })
-                                                  ),
-                                                }
+                                                    options: Electronic.map(
+                                                      (list) => ({
+                                                        value: list.value,
+                                                        label: list.label,
+                                                      })
+                                                    ),
+                                                  }
                                                 : {
-                                                  options: Mechanical.map(
-                                                    (list) => ({
-                                                      value: list.value,
-                                                      label: list.label,
-                                                    })
-                                                  ),
-                                                },
+                                                    options: Mechanical.map(
+                                                      (list) => ({
+                                                        value: list.value,
+                                                        label: list.label,
+                                                      })
+                                                    ),
+                                                  },
                                             ]}
                                           />
                                           <ErrorMessage
@@ -1001,10 +1050,10 @@ function Index(props) {
                                       type="select"
                                       value={environment}
                                       onBlur={handleBlur}
-                                    // onChange={(e) => {
-                                    //   setFieldValue("environment", e);
-                                    //   setEnvironment(e.value);
-                                    // }}
+                                      // onChange={(e) => {
+                                      //   setFieldValue("environment", e);
+                                      //   setEnvironment(e.value);
+                                      // }}
                                     />
                                     <ErrorMessage
                                       className="error text-danger"
@@ -1026,7 +1075,7 @@ function Index(props) {
                                       placeholder="Temperature"
                                       value={temperature}
                                       onBlur={handleBlur}
-                                    // onChange={handleChange}
+                                      // onChange={handleChange}
                                     />
                                     <ErrorMessage
                                       className="error text-danger"
@@ -1204,7 +1253,7 @@ function Index(props) {
                                         placeholder="Duty Cycle"
                                         value={values.dutyCycle}
                                         onBlur={handleBlur}
-                                      // onChange={handleChange}
+                                        // onChange={handleChange}
                                       />
                                       <ErrorMessage
                                         className="error text-danger"
@@ -1225,10 +1274,10 @@ function Index(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1325,10 +1374,10 @@ function Index(props) {
                                         placeholder="Select"
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1373,6 +1422,7 @@ function Index(props) {
                                     </Form.Group>
                                   </Col>
                                 </Row>
+
                                 <Row className="mt-3">
                                   <Col>
                                     <Label>FR Offset Operand</Label>
@@ -1384,10 +1434,10 @@ function Index(props) {
                                         styles={customStyles}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1452,8 +1502,24 @@ function Index(props) {
                                       <Select
                                         id="frUnit"
                                         styles={customStyles}
+                                        // onChange={(event) => {
+                                        //   setFieldValue("frUnit", event);
+                                        // }}
                                         onChange={(event) => {
-                                          setFieldValue("frUnit", event);
+                                          // Auto-correct to "Failure Per Power On Hour" if MIL is selected
+                                          const selectedValue =
+                                            values.standard?.value === "MIL"
+                                              ? {
+                                                  value:
+                                                    "Failure Per Power On Hour",
+                                                  label:
+                                                    "Failure Per Power On Hour",
+                                                }
+                                              : event;
+                                          setFieldValue(
+                                            "frUnit",
+                                            selectedValue
+                                          );
                                         }}
                                         onBlur={handleBlur}
                                         name="frUnit"
@@ -1467,7 +1533,16 @@ function Index(props) {
                                         //     ? null
                                         //     : "disabled"
                                         // }
-                                        value={values.frUnit}
+                                        value={
+                                          values.standard?.value === "MIL"
+                                            ? {
+                                                value:
+                                                  "Failure Per Power On Hour",
+                                                label:
+                                                  "Failure Per Power On Hour",
+                                              }
+                                            : values.frUnit
+                                        }
                                         options={[
                                           {
                                             options: FrUnit.map((list) => ({
@@ -1586,13 +1661,13 @@ function Index(props) {
                                                             isDisabled={
                                                               writePermission ===
                                                                 true ||
-                                                                writePermission ===
+                                                              writePermission ===
                                                                 "undefined" ||
-                                                                role ===
+                                                              role ===
                                                                 "admin" ||
-                                                                (isOwner ===
-                                                                  true &&
-                                                                  createdBy ===
+                                                              (isOwner ===
+                                                                true &&
+                                                                createdBy ===
                                                                   userId)
                                                                 ? null
                                                                 : "disabled"
@@ -1646,13 +1721,13 @@ function Index(props) {
                                                               isDisabled={
                                                                 writePermission ===
                                                                   true ||
-                                                                  writePermission ===
+                                                                writePermission ===
                                                                   "undefined" ||
-                                                                  role ===
+                                                                role ===
                                                                   "admin" ||
-                                                                  (isOwner ===
-                                                                    true &&
-                                                                    createdBy ===
+                                                                (isOwner ===
+                                                                  true &&
+                                                                  createdBy ===
                                                                     userId)
                                                                   ? null
                                                                   : "disabled"
@@ -1713,11 +1788,11 @@ function Index(props) {
                                                             value={
                                                               partTypeQuality
                                                                 ? {
-                                                                  label:
-                                                                    partTypeQuality,
-                                                                  value:
-                                                                    partTypeQuality,
-                                                                }
+                                                                    label:
+                                                                      partTypeQuality,
+                                                                    value:
+                                                                      partTypeQuality,
+                                                                  }
                                                                 : values.quality
                                                             }
                                                             onBlur={handleBlur}
@@ -1773,8 +1848,8 @@ function Index(props) {
                                                     </Col> */}
                                                     </Row>
                                                     {partTypeNprd?.value &&
-                                                      partTypeDescr?.value &&
-                                                      !rowClicked ? (
+                                                    partTypeDescr?.value &&
+                                                    !rowClicked ? (
                                                       <div className="mt-3 p-2">
                                                         <ThemeProvider
                                                           theme={tableTheme}
@@ -2054,13 +2129,13 @@ function Index(props) {
                                                             isDisabled={
                                                               writePermission ===
                                                                 true ||
-                                                                writePermission ===
+                                                              writePermission ===
                                                                 "undefined" ||
-                                                                role ===
+                                                              role ===
                                                                 "admin" ||
-                                                                (isOwner ===
-                                                                  true &&
-                                                                  createdBy ===
+                                                              (isOwner ===
+                                                                true &&
+                                                                createdBy ===
                                                                   userId)
                                                                 ? null
                                                                 : "disabled"
@@ -2118,13 +2193,13 @@ function Index(props) {
                                                               isDisabled={
                                                                 writePermission ===
                                                                   true ||
-                                                                  writePermission ===
+                                                                writePermission ===
                                                                   "undefined" ||
-                                                                  role ===
+                                                                role ===
                                                                   "admin" ||
-                                                                  (isOwner ===
-                                                                    true &&
-                                                                    createdBy ===
+                                                                (isOwner ===
+                                                                  true &&
+                                                                  createdBy ===
                                                                     userId)
                                                                   ? null
                                                                   : "disabled"
@@ -2185,11 +2260,11 @@ function Index(props) {
                                                             value={
                                                               partType2016Quality
                                                                 ? {
-                                                                  label:
-                                                                    partType2016Quality,
-                                                                  value:
-                                                                    partType2016Quality,
-                                                                }
+                                                                    label:
+                                                                      partType2016Quality,
+                                                                    value:
+                                                                      partType2016Quality,
+                                                                  }
                                                                 : values.quality2016
                                                             }
                                                             onBlur={handleBlur}
@@ -2218,8 +2293,8 @@ function Index(props) {
                                                       </Col>
                                                     </Row>
                                                     {partType2016Nprd?.value &&
-                                                      partType2016Descr?.value &&
-                                                      !rowClicked ? (
+                                                    partType2016Descr?.value &&
+                                                    !rowClicked ? (
                                                       <div className="mt-3 p-2">
                                                         <ThemeProvider
                                                           theme={tableTheme}
@@ -2350,70 +2425,158 @@ function Index(props) {
                                     dialogClassName="custom-modal-width" // Custom class for additional width control
                                     backdrop="static" // Prevent closing by clicking outside
                                   >
-                                    <Modal.Body className="p-0"> {/* Remove default padding */}
+                                    <Modal.Body className="p-0">
+                                      {" "}
+                                      {/* Remove default padding */}
                                       <div className="modal-content">
                                         {/* Improved Close Button */}
                                         <div className="text-center mt-1">
-                                          <h3 className="modal-title "><strong>MIL-HDBK-217F</strong></h3>
+                                          <h3 className="modal-title ">
+                                            <strong>MIL-HDBK-217F</strong>
+                                          </h3>
 
                                           <FontAwesomeIcon
                                             icon={faCircleXmark}
                                             fontSize={"40px"}
                                             color="#1D5460"
                                             onClick={() => {
-                                              const savedResult = localStorage.getItem("milValue"); 
+                                              const savedResult =
+                                                localStorage.getItem(
+                                                  "milValue"
+                                                );
                                               if (savedResult) {
-                                                let result = JSON.parse(savedResult); 
-                                                result = Math.floor(result * 1000000) / 1000000;
+                                                let result =
+                                                  JSON.parse(savedResult);
+                                                result =
+                                                  Math.floor(result * 1000000) /
+                                                  1000000;
                                                 setPredicted(result);
-                                                formik.setFieldValue("predicted", result);
+                                                formik.setFieldValue(
+                                                  "predicted",
+                                                  result
+                                                );
                                               }
                                               setShowModal(false);
                                             }}
                                             className="close-icon"
                                           />
-
                                         </div>
 
                                         <div className="classical-group mb-2">
                                           {/* Component Type Selector */}
                                           <div className="form-group">
-                                            <label><strong>Component Type:</strong></label>
+                                            <label>
+                                              <strong>Component Type:</strong>
+                                            </label>
                                             <Select
                                               styles={{
                                                 ...customStyles,
                                                 control: (base) => ({
                                                   ...base,
-                                                  minHeight: '50px',
-                                                  fontSize: '1rem'
-                                                })
+                                                  minHeight: "50px",
+                                                  fontSize: "1rem",
+                                                }),
                                               }}
                                               name="type"
                                               placeholder="Select component type..."
-                                              value={currentComponent.type ?
-                                                { value: currentComponent.type, label: currentComponent.type } : null}
+                                              value={
+                                                currentComponent.type
+                                                  ? {
+                                                      value:
+                                                        currentComponent.type,
+                                                      label:
+                                                        currentComponent.type,
+                                                    }
+                                                  : null
+                                              }
                                               onChange={(selectedOption) => {
-                                                localStorage.removeItem("milValue");
+                                                localStorage.removeItem(
+                                                  "milValue"
+                                                );
                                                 setCurrentComponent({
                                                   ...currentComponent,
-                                                  type: selectedOption.value
+                                                  type: selectedOption.value,
                                                 });
                                               }}
                                               options={[
-                                                // { value: "Microcircuits", label: "Microcircuits" },
-                                                // { value: "Resistor", label: "Resistor" },
-                                                // { value: "Tubes", label: "Tubes" },
-                                                { value: "Switches", label: "Switches"},
-                                                {value:"Capacitor",label:"Capacitor"},
-                                                {value:"Inductive",label:"Inductive"},
-                                                {value:"Connections",label:"Connections"},
-                                                {value:"Lamps" ,label:"Lamps"},
-                                                {value:"Quartz", label:"Quartz"},
-                                                {value:"ElectronicFilters" ,label:" Electronic Filters"},
-                                                {value:"Fuses" ,label:"Fuses"},
-                                                {value:"Meters",label:"Meters"},
-                                                // {value:"Laser",label:"Laser"},
-                                                {value:"Connectors",label:"Connectors"},
+                                                {
+                                                  value: "Microcircuits",
+                                                  label: "Microcircuits",
+                                                },
+                                                {
+                                                  value: "Resistor",
+                                                  label: "Resistor",
+                                                },
+                                                {
+                                                  value: "Tubes",
+                                                  label: "Tubes",
+                                                },
+                                                {
+                                                  value: "Switches",
+                                                  label: "Switches",
+                                                },
+                                                {
+                                                  value: "Capacitor",
+                                                  label: "Capacitor",
+                                                },
+                                                {
+                                                  value: "Inductive",
+                                                  label: "Inductive",
+                                                },
+                                                {
+                                                  value: "Connections",
+                                                  label: "Connections",
+                                                },
+                                                {
+                                                  value: "Lamps",
+                                                  label: "Lamps",
+                                                },
+                                                {
+                                                  value: "Relay",
+                                                  label: "Relay",
+                                                },
+                                                {
+                                                  value: "Quartz",
+                                                  label: "Quartz",
+                                                },
+                                                {
+                                                  value: "Electronic Filters",
+                                                  label: "Electronic Filters",
+                                                },
+                                                {
+                                                  value: "Fuses",
+                                                  label: "Fuses",
+                                                },
+                                                {
+                                                  value: "Meters",
+                                                  label: "Meters",
+                                                },
+                                                {
+                                                  value: "Laser",
+                                                  label: "Laser",
+                                                },
+                                                {
+                                                  value: "Connectors",
+                                                  label: "Connectors",
+                                                },
+                                                {
+                                                  value:
+                                                    "Discrete Semiconductor",
+                                                  label:
+                                                    "Discrete Semiconductor",
+                                                },
+                                                {
+                                                  value: "Rotating Device",
+                                                  label: "Rotating Device",
+                                                },
+                                                {
+                                                  value: "Interconnection",
+                                                  label: "Interconnection",
+                                                },
+                                                {
+                                                  value: "Miscellaneous",
+                                                  label: "Miscellaneous",
+                                                },
                                               ]}
                                               className="mt-2"
                                             />
@@ -2421,144 +2584,387 @@ function Index(props) {
 
                                           {/* Dynamic Component Render */}
                                           <div className="component-container mt-4">
-                                            {currentComponent.type === "Microcircuits" && <MicrocircuitsCalculation />}
-                                            {currentComponent.type === "Switches" && <Switches
-                                                   onCalculate={(value) => {
-                                                    // Round the value to 4 decimal places
-                                                    const roundedValue = Math.floor(value * 1000000) / 1000000;
+                                            {currentComponent.type ===
+                                              "Microcircuits" && (
+                                              <MicrocircuitsCalculation
+                                                onCalculate={(value) => {
+                                                  // Round the value to 6 decimal places
+                                                  const roundedValue =
+                                                    parseFloat(
+                                                      value.toFixed(6)
+                                                    );
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Relay" && (
+                                              <Relay
+                                                onCalculate={(value) => {
+                                                  // Round the value to 4 decimal places
+                                                  const roundedValue =
+                                                    Math.floor(
+                                                      value * 1000000
+                                                    ) / 1000000;
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Rotating Device" && (
+                                              <RotatingDevice
+                                                onCalculate={(value) => {
+                                                  // Round the value to 4 decimal places
+                                                  const roundedValue =
+                                                    Math.floor(
+                                                      value * 1000000
+                                                    ) / 1000000;
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Switches" && (
+                                              <Switches
+                                                onCalculate={(value) => {
+                                                  // Round the value to 4 decimal places
+                                                  const roundedValue =
+                                                    Math.floor(
+                                                      value * 1000000
+                                                    ) / 1000000;
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Resistor" && (
+                                              <ResistorCalculation
+                                              // onCalculate={(value) => {
+                                              //   const roundedValue = Math.floor(value * 10000) / 10000;
+                                              //   formik.setFieldValue("predicted", roundedValue);
+                                              //   setShowModal(false);
+                                              // }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Capacitor" && (
+                                              <CapacitorCalculation
+                                                onCalculate={(failureRate) => {
+                                                  // Round to 6 decimal places
+                                                  const roundedValue =
+                                                    parseFloat(
+                                                      failureRate.toFixed(6)
+                                                    );
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Inductive" && (
+                                              <InductiveCalculation
+                                                onCalculate={(value) => {
+                                                  // Round the value to 4 decimal places
+                                                  const roundedValue =
+                                                    Math.floor(
+                                                      value * 1000000
+                                                    ) / 1000000;
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal after calculation
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Connections" && (
+                                              <ConnectionCalculation
+                                                onCalculate={(failureRate) => {
+                                                  // Round to 6 decimal places
+                                                  const roundedValue =
+                                                    parseFloat(
+                                                      failureRate.toFixed(6)
+                                                    );
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Lamps" && (
+                                              <Lamps
+                                                onCalculate={(failureRate) => {
+                                                  if (failureRate !== null) {
+                                                    // Round to 4 decimal places
+                                                    const roundedValue =
+                                                      Math.floor(
+                                                        failureRate * 1000000
+                                                      ) / 1000000;
                                                     // Update the predicted field
                                                     setPredicted(roundedValue);
-                                                    formik.setFieldValue("predicted", roundedValue);
+                                                    formik.setFieldValue(
+                                                      "predicted",
+                                                      roundedValue
+                                                    );
                                                     // Optionally close the modal
                                                     // setShowModal(false);
-                                                  }}
-                                            
-                                            />}
-                                            {currentComponent.type === "Resistor" && <ResistorCalculation 
-                                                // onCalculate={(value) => {
-                                                //   const roundedValue = Math.floor(value * 10000) / 10000;
-                                                //   formik.setFieldValue("predicted", roundedValue);
-                                                //   setShowModal(false);
-                                                // }}
-                                            
-                                            
-                                            
-                                            />}
-        {currentComponent.type === "Capacitor" && 
-  <CapacitorCalculation 
-    onCalculate={(failureRate) => {
-      // Round to 4 decimal places
-      const roundedValue = Math.floor(failureRate * 1000000) / 1000000;
-      // Update the predicted field
-      setPredicted(roundedValue);
-      formik.setFieldValue("predicted", roundedValue);
-      // Optionally close the modal
-      // setShowModal(false);
-    }}
-  />
-}
-                                          {currentComponent.type === "Inductive" && 
-  <InductiveCalculation 
-    onCalculate={(value) => {
-      // Round the value to 4 decimal places
-      const roundedValue = Math.floor(value * 1000000) / 1000000;
-      setPredicted(roundedValue);
-      formik.setFieldValue("predicted", roundedValue);
-      // Optionally close the modal after calculation
-      // setShowModal(false);
-    }}
-  />
-}
-{currentComponent.type === "Connections" && 
-  <ConnectionCalculation 
-    onCalculate={(failureRate) => {
-      // Round to 6 decimal places
-      const roundedValue = parseFloat(failureRate.toFixed(6));
-      // Update the predicted field
-      setPredicted(roundedValue);
-      formik.setFieldValue("predicted", roundedValue);
-      // Optionally close the modal
-      // setShowModal(false);
-    }}
-  />
-}
-                                            {currentComponent.type === "Lamps" && 
-  <Lamps 
-    onCalculate={(failureRate) => {
-      if (failureRate !== null) {
-        // Round to 4 decimal places
-        const roundedValue = Math.floor(failureRate * 1000000) / 1000000;
-        // Update the predicted field
-        setPredicted(roundedValue);
-        formik.setFieldValue("predicted", roundedValue);
-        // Optionally close the modal
-        // setShowModal(false);
-      }
-    }}
-  />
-}
-                                          {currentComponent.type === "Quartz" && 
-  <Quartz 
-    onCalculate={(value) => {
-      if (value !== null) {
-        // Round the value to 4 decimal places
-        const roundedValue = Math.floor(value * 1000000) / 1000000;
-        setPredicted(roundedValue);
-        formik.setFieldValue("predicted", roundedValue);
-        // Optionally close the modal after calculation
-        // setShowModal(false);
-      }
-    }}
-  />
-}
-                                          {currentComponent.type === "Laser" && <Laser/>}
-                                          {currentComponent.type === "ElectronicFilters" && <ElectronicFilters
-                                              onCalculate={(value) => {
-                                                // Round the value to 4 decimal places
-                                                const roundedValue = Math.floor(value * 1000000) / 1000000;
-                                                // Update the predicted field
-                                                setPredicted(roundedValue);
-                                                formik.setFieldValue("predicted", roundedValue);
-                                                // Optionally close the modal
-                                                // setShowModal(false);
-                                              }}/>}
-                                          {currentComponent.type === "Fuses" && 
-  <Fuses 
-    onCalculate={(failureRate) => {
-      if (failureRate !== null) {
-        // Round to 4 decimal places
-        const roundedValue = Math.floor(failureRate * 1000000) / 1000000;
-        // Update the predicted field
-        setPredicted(roundedValue);
-        formik.setFieldValue("predicted", roundedValue);
-        // Optionally close the modal
-        // setShowModal(false);
-      }
-    }}
-  />
-}
-                                          {currentComponent.type === "Meters" && 
-  <Meters 
-    onCalculate={(value) => {
-      if (value !== null) {
-        // Round the value to 4 decimal places
-        const roundedValue = Math.floor(value * 1000000) / 1000000;
-        setPredicted(roundedValue);
-        formik.setFieldValue("predicted", roundedValue);
-        // Optionally close the modal after calculation
-        // setShowModal(false);
-      }
-    }}
-  />
-}
-                                          {currentComponent.type === "Connectors" && <Connectors/>}
-
+                                                  }
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Quartz" && (
+                                              <Quartz
+                                                onCalculate={(value) => {
+                                                  if (value !== null) {
+                                                    // Round the value to 4 decimal places
+                                                    const roundedValue =
+                                                      Math.floor(
+                                                        value * 1000000
+                                                      ) / 1000000;
+                                                    setPredicted(roundedValue);
+                                                    formik.setFieldValue(
+                                                      "predicted",
+                                                      roundedValue
+                                                    );
+                                                    // Optionally close the modal after calculation
+                                                    // setShowModal(false);
+                                                  }
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Laser" && (
+                                              <Laser
+                                                onCalculate={(value) => {
+                                                  // Round the value to 4 decimal places
+                                                  const roundedValue =
+                                                    Math.floor(
+                                                      value * 1000000
+                                                    ) / 1000000;
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Electronic Filters" && (
+                                              <ElectronicFilters
+                                                onCalculate={(value) => {
+                                                  // Round the value to 4 decimal places
+                                                  const roundedValue =
+                                                    Math.floor(
+                                                      value * 1000000
+                                                    ) / 1000000;
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Fuses" && (
+                                              <Fuses
+                                                onCalculate={(failureRate) => {
+                                                  if (failureRate !== null) {
+                                                    // Round to 4 decimal places
+                                                    const roundedValue =
+                                                      Math.floor(
+                                                        failureRate * 1000000
+                                                      ) / 1000000;
+                                                    // Update the predicted field
+                                                    setPredicted(roundedValue);
+                                                    formik.setFieldValue(
+                                                      "predicted",
+                                                      roundedValue
+                                                    );
+                                                    // Optionally close the modal
+                                                    // setShowModal(false);
+                                                  }
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Meters" && (
+                                              <Meters
+                                                onCalculate={(value) => {
+                                                  if (value !== null) {
+                                                    // Round the value to 4 decimal places
+                                                    const roundedValue =
+                                                      Math.floor(
+                                                        value * 1000000
+                                                      ) / 1000000;
+                                                    setPredicted(roundedValue);
+                                                    formik.setFieldValue(
+                                                      "predicted",
+                                                      roundedValue
+                                                    );
+                                                    // Optionally close the modal after calculation
+                                                    // setShowModal(false);
+                                                  }
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Connectors" && (
+                                              <Connectors
+                                                onCalculate={(value) => {
+                                                  // Round the value to 6 decimal places
+                                                  const roundedValue =
+                                                    parseFloat(
+                                                      value.toFixed(6)
+                                                    );
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Discrete Semiconductor" && (
+                                              <Diode
+                                                onCalculate={(value) => {
+                                                  // Round the value to 6 decimal places
+                                                  const roundedValue =
+                                                    parseFloat(
+                                                      value.toFixed(6)
+                                                    );
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Tubes" && (
+                                              <Tubes
+                                                onCalculate={(value) => {
+                                                  // Round the value to 6 decimal places
+                                                  const roundedValue =
+                                                    parseFloat(
+                                                      value.toFixed(6)
+                                                    );
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Interconnection" && (
+                                              <Interconnection
+                                                onCalculate={(value) => {
+                                                  // Round the value to 6 decimal places
+                                                  const roundedValue =
+                                                    parseFloat(
+                                                      value.toFixed(6)
+                                                    );
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
+                                            {currentComponent.type ===
+                                              "Miscellaneous" && (
+                                              <MiscellaneousPartsCalculator
+                                                onCalculate={(value) => {
+                                                  // Round the value to 6 decimal places
+                                                  const roundedValue =
+                                                    parseFloat(
+                                                      value.toFixed(6)
+                                                    );
+                                                  // Update the predicted field
+                                                  setPredicted(roundedValue);
+                                                  formik.setFieldValue(
+                                                    "predicted",
+                                                    roundedValue
+                                                  );
+                                                  // Optionally close the modal
+                                                  // setShowModal(false);
+                                                }}
+                                              />
+                                            )}
                                           </div>
                                         </div>
                                       </div>
                                     </Modal.Body>
                                   </Modal>
-                                </div>  
+                                </div>
                               </div>
                             </Col>
                           </Row>
