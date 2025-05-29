@@ -2841,7 +2841,7 @@ function Index(props) {
               <Tooltip placement="right" title="Import">
                 <div style={{ marginRight: "8px" }}>
                   <label htmlFor="file-input" className="import-export-btn">
-                    <FontAwesomeIcon icon={faFileDownload} />
+                    <FontAwesomeIcon icon={faFileUpload } />
                   </label>
                   <input
                     type="file"
@@ -2853,15 +2853,16 @@ function Index(props) {
                 </div>
               </Tooltip>
               <Tooltip placement="left" title="Export">
-                <Button
-                  className="import-export-btn"
+                <button
+                  className="import-export-btn "
+                  style={{marginTop:'-2px'}}
                   onClick={() => DownloadExcel()}
                 >
                   <FontAwesomeIcon
-                    icon={faFileUpload}
+                    icon={faFileDownload}
                     style={{ width: "15px" }}
                   />
-                </Button>
+                </button>
               </Tooltip>
             </div>
           </div>

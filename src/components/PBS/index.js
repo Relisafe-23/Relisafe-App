@@ -756,12 +756,12 @@ export default function PBS(props) {
                     >
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <Tooltip placement="left" title="Import">
-                          <div>
+                          <div style={{marginTop:7}}>
                             <label
                               htmlFor="file-input"
                               className="add-product-btn"
                             >
-                              <FontAwesomeIcon icon={faFileDownload} />
+                              <FontAwesomeIcon icon={faFileUpload} style={{width:'20px'}} />
                             </label>
                             <input
                               type="file"
@@ -781,8 +781,9 @@ export default function PBS(props) {
                           </div>
                         </Tooltip>
                         <Tooltip placement="right" title="Export">
-                          <Button
+                          <button
                             className="add-product-btn"
+                            style={{marginLeft: "10px", borderStyle:"none" }}
                             onClick={() => {
                               DownloadExcel();
                             }}
@@ -795,13 +796,12 @@ export default function PBS(props) {
                                 ? "disabled" // If any of these conditions are met, disable the button
                                 : null // Otherwise, the button is enabled
                             }
-                            style={{ marginLeft: "10px" }}
                           >
                             <FontAwesomeIcon
-                              icon={faFileUpload}
-                              style={{ width: "15px" }}
+                              icon={faFileDownload}
+                              
                             />
-                          </Button>
+                          </button>
                         </Tooltip>
                       </div>
                       <Tooltip placement="top" title="Create Product">
