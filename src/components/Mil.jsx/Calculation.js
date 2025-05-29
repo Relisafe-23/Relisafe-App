@@ -2,93 +2,212 @@
 
 // Package failure rate lookup
 export const getFailureRate = (packageType, pinCount) => {
-  const rates = {
-    Hermetic_DIPs_SolderWeldSeal: {
-      3: 0.00092, 4: 0.0013, 6: 0.0019, 8: 0.0026, 10: 0.0034,
-      12: 0.0041, 14: 0.0048, 16: 0.0056, 18: 0.0064, 22: 0.0079,
-      24: 0.0087, 28: 0.010, 36: 0.013, 40: 0.015, 64: 0.025,
-      80: 0.032, 128: 0.053, 180: 0.076, 224: 0.097
-    },
-    DIPs_GlassSeal: {
-      3: 0.00047, 4: 0.00073, 6: 0.0013, 8: 0.0021, 10: 0.0029,
-      12: 0.0038, 14: 0.0048, 16: 0.0059, 18: 0.0071, 22: 0.0096,
-      24: 0.011, 28: 0.014, 36: 0.020, 40: 0.024, 64: 0.048
-    },
-    Flatpacks_AxialLeads: {
-      3: 0.00022, 4: 0.00037, 6: 0.00078, 8: 0.0013, 10: 0.0020,
-      12: 0.0028, 14: 0.0037, 16: 0.0047, 18: 0.0058, 22: 0.0083,
-      24: 0.0098
-    },
-    Cans: {
-      3: 0.00027, 4: 0.00049, 6: 0.0011, 8: 0.0020, 10: 0.0031,
-      12: 0.0044, 14: 0.0060, 16: 0.0079
-    },
-    Nonhermetic_DIPs_PGA_SMT: {
-      3: 0.0012, 4: 0.0016, 6: 0.0025, 8: 0.0034, 10: 0.0043,
-      12: 0.0053, 14: 0.0062, 16: 0.0072, 18: 0.0082, 22: 0.010,
-      24: 0.011, 28: 0.013, 36: 0.017, 40: 0.019, 64: 0.032,
-      80: 0.041, 128: 0.068, 180: 0.098, 224: 0.12
-    }
+  // Validate input
+  if (typeof pinCount !== 'number' || pinCount <= 0) return 0;
+
+  // Calculate C2 based on the given formula and pin count (Np)
+  const calculateC2 = (coefficient, exponent, Np) => {
+    return coefficient * Math.pow(Np, exponent);
   };
-  return rates[packageType]?.[pinCount] || 0;
+
+  switch (packageType) {
+    case 'Hermetic_DIPs_SolderWeldSeal':
+      // Formula: C2 = 2.8 × 10⁻⁴ × (Np)^1.08
+      return calculateC2(2.8e-4, 1.08, pinCount);
+
+    case 'DIPs_GlassSeal':
+          // Formula: C2 = 9.0 × 10⁻⁵ × (Np)^1.51
+      return calculateC2(9.0e-5, 1.51, pinCount);
+   
+
+    case 'Flatpacks_AxialLeads':
+           // Formula: C2 = 3.0 × 10⁻⁵ × (Np)^1.82
+      return calculateC2(3.0e-5, 1.82, pinCount);
+    
+
+    case 'Cans':
+           // Formula: C2 = 3.0 × 10⁻⁵ × (Np)^2.01
+      return calculateC2(3.0e-5, 2.01, pinCount);
+
+
+    case 'Nonhermetic_DIPs_PGA_SMT':
+   // Formula: C2 = 3.6 × 10⁻⁴ × (Np)^1.08
+      return calculateC2(3.6e-4, 1.08, pinCount);
+
+    default:
+      return 0; // Unknown package type
+  }
 };
 
+// Corrected getBValueForTemp function
+export const getBValueForTemp = (memoryTech, memorySize, temperature, factorType) => {
+  // Validate inputs
+  if (!memoryTech || !memorySize || temperature === undefined) return null;
+  
+  const T_j = temperature + 273; // Convert to Kelvin
+  const k = 8.63e-5; // Boltzmann's constant in eV/K
 
+  // Calculate based on technology type and factor
+  switch (memoryTech) {
+    case 'Flotox':
+      if (factorType === 'B1') {
+        const B_normalized = memorySize / 16000;
+        const exponent = -.15 * k * (1/T_j - 1/333);
+        return Math.pow(B_normalized, 0.5) * Math.exp(exponent);
+      }
+      return null;
+    
+    case 'Textured-Poly-B1':
+      if (factorType === 'B1') {
+        const B_normalized = memorySize / 64000;
+        const exponent = -.12 * k * (1/T_j - 1/303);
+        return Math.pow(B_normalized, 0.25) * Math.exp(exponent);
+      }
+      return null;
+    
+    case 'Textured-Poly-B2':
+      if (factorType === 'B2') {
+        const B_normalized = memorySize / 64000;
+        const exponent = .1 * k * (1/T_j - 1/303);
+        return Math.pow(B_normalized, 0.25) * Math.exp(exponent);
+      }
+      return null;
+    
+    default:
+      return null;
+  }
+};
+
+// Corrected calculateLambdaCyc function
+
+// export const getBValueForTemp = (memoryTech, memorySizeB1,memorySizeB2, temperature, factorType) => {
+//   // Validate inputs
+//   if (!memoryTech || !memorySizeB1 || temperature === undefined) return null;
+  
+//   const T_j = temperature + 273; // Convert to Kelvin (from °C)
+//   const k = 8.63e-5; // Boltzmann's constant in eV/K (matches image)
+  
+//   console.log(`Calculating B value for:`);
+//   console.log(`- Technology: ${memoryTech}`);
+//   console.log(`- Memory Size: ${memorySizeB1} bits`);
+//   console.log(`- Temperature: ${temperature}°C (${T_j}K)`);
+//   console.log(`- Factor Type: ${factorType}`);
+  
+//   // Calculate based on technology type and factor
+//   switch (memoryTech) {
+//     case 'Flotox':
+//       if (factorType === 'B1') {
+//         const B_normalized = memorySizeB1 / 16000;
+        
+//         const exponent = -15 * k * (1/T_j - 1/333);
+//         const result = Math.pow(B_normalized, .5) * Math.exp(exponent);
+        
+//         console.log('Flotox B₁ Calculation:');
+//         console.log(`- B_normalized: ${memorySizeB2}/16000 = ${B_normalized}`);
+//         console.log(`- Exponent: -15 * ${k} * (1/${T_j} - 1/333) = ${exponent}`);
+//         console.log(`- Result: ${B_normalized}^5 * e^(${exponent}) = ${result}`);
+        
+//         return result;
+//       }
+//       return null;
+    
+//     case 'Textured-Poly-B1':
+//       if (factorType === 'B1') {
+//         const B_normalized = memorySizeB1 / 84000;
+//         const exponent = -12 * k * (1/T_j - 1/303);
+//         const result = Math.pow(B_normalized, .25) * Math.exp(exponent);
+        
+//         // console.log('Textured-Poly B₁ Calculation:');
+//         // console.log(`- B_normalized: ${memorySize}/84000 = ${B_normalized}`);
+//         // console.log(`- Exponent: -12 * ${k} * (1/${T_j} - 1/303) = ${exponent}`);
+//         // console.log(`- Result: ${B_normalized}^25 * e^(${exponent}) = ${result}`);
+        
+//         return result;
+//       }
+//       return null;
+    
+//     case 'Textured-Poly-B2':
+//       if (factorType === 'B2') {
+//         const B_normalized = memorySizeB2 / 84000;
+//         const exponent = -1 * k * (1/T_j - 1/303);
+//         const result = Math.pow(B_normalized, .25) * Math.exp(exponent);
+        
+//         // console.log('Textured-Poly B₂ Calculation:');
+//         // console.log(`- B_normalized: ${memorySize}/84000 = ${B_normalized}`);
+//         // console.log(`- Exponent: -1 * ${k} * (1/${T_j} - 1/303) = ${exponent}`);
+//         // console.log(`- Result: ${B_normalized}^25 * e^(${exponent}) = ${result}`);
+        
+//         return result;
+//       }
+//       return null;
+    
+//     default:
+//       return null;
+//   }
+// };
 // Temperature factor calculation
-export const calculatePiT = (technology, temperature, Ea = 0.7) => {
+export const calculatePiT = (technology, temperature, Ea = 1.5) => {
   const T = temperature + 273; // Convert to Kelvin
   const k = 8.617e-5; // Boltzmann's constant in eV/K
-  
+
   switch (technology) {
-    case 'Bipolar':
-      return 0.1 * Math.exp(3091 * (1/298 - 1/T));
-    case 'MOS':
-      return 0.1 * Math.exp(4172 * (1/298 - 1/T));
-    case 'BiCMOS':
-      return 3.205e-8 * Math.exp(14179 * (1/298 - 1/T));
-    case 'GaAs':
-      return 1.5 * Math.exp(Ea/k * (1/298 - 1/T));
+    // Silicon Devices
+    case 'TTL,ASTTL,CML':
+      return 0.1 * Math.exp((0.4 / 8.617e-5) * (1 / 298 - 1 / T));
+    case "F,LTTL,STTL":
+      return 0.1 * Math.exp((0.45 / 8.617e-5) * (1 / 298 - 1 / T));
+    case "BiCMOS":
+      return 0.1 * Math.exp((0.5 / 8.617e-5) * (1 / 298 - 1 / T));
+    case "III,f¹,ISL":
+      return 0.1 * Math.exp((0.6 / 8.617e-5) * (1 / 298 - 1 / T));
+    case 'Digital MOS':
+      return 0.1 * Math.exp((0.35 / 8.617e-5) * (1 / 298 - 1 / T));
     case 'Linear':
-      return 0.65 * Math.exp(Ea/k * (1/298 - 1/T));
+      return 0.1 * Math.exp((0.65 / 8.617e-5) * (1 / 298 - 1 / T));
+    case 'Memories':
+      return 0.1 * Math.exp((0.6 / 8.617e-5) * (1 / 298 - 1 / T));
+    //GaAs Devices
+    case 'GaAs MMIC':
+      return 0.1 * Math.exp(Ea / k * (1 / 423 - 1 / T));
+
+
+    case 'GaAs Digital':
+      return 0.1 * Math.exp((1.4 / 8.617e-5) * (1 / 423 - 1 / T));
+
     default:
       return 1.0;
   }
 };
 
-
-// Environment factor
-
-// Environment factor lookup function
-
 // Quality factor
 export const getQualityFactor = (quality) => {
-  const factors = {
-    MIL_M_38510_ClassS: 0.25,
-    MIL_I_38535_ClassU: 0.25,
-    MIL_H_38534_ClassS_Hybrid: 0.25,
-    MIL_M_38510_ClassB: 1.0,
-    MIL_I_38535_ClassQ: 1.0,
-    MIL_H_38534_ClassB_Hybrid: 1.0,
-    MIL_STD_883_ClassB1: 2.0,
-    Commercial: 5.0
+  console.log("quality..9999...", quality)
+  const QUALITY_FACTORS = {
+    MIL_M_38510_ClassS: { value: 0.25, label: "MIL-M-38510 Class S" },
+    MIL_I_38535_ClassU: { value: 0.25, label: "MIL-I-38535 Class U" },
+    MIL_H_38534_ClassS_Hybrid: { value: 0.25, label: "MIL-H-38534 Class S Hybrid" },
+    MIL_M_38510_ClassB: { value: 1.0, label: "MIL-M-38510 Class B" },
+    MIL_I_38535_ClassQ: { value: 1.0, label: "MIL-I-38535 Class Q" },
+    MIL_H_38534_ClassB_Hybrid: { value: 1.0, label: "MIL-H-38534 Class B Hybrid" },
+    MIL_STD_883_ClassB1: { value: 2.0, label: "MIL-STD-883 Class B1" },
+    Commercial: { value: 5.0, label: "Commercial" },
+
   };
-  return factors[quality] || 1.0;
+
+  // Example usage
+
+  return QUALITY_FACTORS[quality]?.value ?? NaN;
 };
 
 // Learning factor
 export const calculateLearningFactor = (years) => {
-  return years >= 2 ? 1.0 : 
+  return years >= 2 ? 1.0 :
     years >= 1.5 ? 1.2 :
-    years >= 1.0 ? 1.5 :
-    years >= 0.5 ? 1.8 : 2.0;
+      years >= 1.0 ? 1.5 :
+        years >= 0.5 ? 1.8 : 2.0;
 };
-// memoryFailureRates.js
 
-/**
- * Calculate MOS ROM failure rate (C₁)
- * @param {string} memorySize - Memory size category
- * @returns {number} C₁ value
- */
+// memoryFailureRates.js
 export const calculateMosRomC1 = (memorySize) => {
   const c1Values = {
     'Up to 16K': 0.00065,
@@ -99,11 +218,6 @@ export const calculateMosRomC1 = (memorySize) => {
   return c1Values[memorySize] || 0;
 };
 
-/**
- * Calculate MOS PROM/UVEPROM/EEPROM/EAPROM failure rate (C₁)
- * @param {string} memorySize - Memory size category
- * @returns {number} C₁ value
- */
 export const calculateMosPromC1 = (memorySize) => {
   const c1Values = {
     'Up to 16K': 0.00085,
@@ -114,11 +228,7 @@ export const calculateMosPromC1 = (memorySize) => {
   return c1Values[memorySize] || 0;
 };
 
-/**
- * Calculate MOS DRAM failure rate (C₁)
- * @param {string} memorySize - Memory size category
- * @returns {number} C₁ value
- */
+
 export const calculateMosDramC1 = (memorySize) => {
   const c1Values = {
     'Up to 16K': 0.0013,
@@ -129,11 +239,7 @@ export const calculateMosDramC1 = (memorySize) => {
   return c1Values[memorySize] || 0;
 };
 
-/**
- * Calculate Bipolar ROM/PROM failure rate (C₁)
- * @param {string} memorySize - Memory size category
- * @returns {number} C₁ value
- */
+
 export const calculateBipolarRomC1 = (memorySize) => {
   const c1Values = {
     'Up to 16K': 0.0094,
@@ -144,11 +250,7 @@ export const calculateBipolarRomC1 = (memorySize) => {
   return c1Values[memorySize] || 0;
 };
 
-/**
- * Calculate Bipolar SRAM failure rate (C₁)
- * @param {string} memorySize - Memory size category
- * @returns {number} C₁ value
- */
+
 export const calculateBipolarSramC1 = (memorySize) => {
   const c1Values = {
     'Up to 16K': 0.0052,
@@ -159,11 +261,57 @@ export const calculateBipolarSramC1 = (memorySize) => {
   return c1Values[memorySize] || 0;
 };
 
-/**
- * Calculate MOS/BiMOS SRAM failure rate (C₁)
- * @param {string} memorySize - Memory size category
- * @returns {number} C₁ value
- */
+
+export const calculateHybridFailureRate = (component) => {
+  // Validate input
+  if (!component || !component.components) {
+    console.error('Invalid component data');
+    return 0;
+  }
+
+  // Sum of (Nc × λc) for all components
+  const componentSum = calculateComponentSum(component.components);
+
+  // Get all the π factors with proper defaults
+  const piE = getEnvironmentFactor(component.environment) || 1;
+  const piF = component.piF || getCircuitFunctionFactor(component.circuitType) || 1;
+  const piQ = component.piQ || getQualityFactor(component.quality) || 1;
+  const piL = component.piL || calculateLearningFactor(component.yearsInProduction) || 1;
+
+  // Get the environmental stress factor (E) with default 0 if not provided
+  const environmentalStress = Number(component.environmentalStress) || 0;
+
+  // Apply the hybrid formula from the image
+  // Corrected formula based on MIL-HDBK-217: λp = 1.2 × Σ(Nc × λc) × (1 + 2.7E) × πE × πF × πQ × πL
+  const failureRate = 1.2 * componentSum * (1 + 2.7 * environmentalStress) * piE * piF * piQ * piL;
+
+  // Debug logging
+  console.log("Calculation Parameters:", {
+    componentSum,
+    environmentalStress,
+    piE,
+    piF,
+    piQ,
+    piL,
+    failureRate
+  });
+
+  return failureRate;
+};
+
+export const calculateComponentSum = (components = []) => {
+  if (!Array.isArray(components)) {
+    console.warn('Expected array, got:', components);
+    return 0;
+  }
+
+  return components.reduce((sum, comp) => {
+    const rate = Number(comp.failureRate) || 0;
+    const qty = Math.max(1, Number(comp.quantity)) || 1;
+    return sum + (rate * qty);
+  }, 0);
+};
+
 export const calculateMosBimosSramC1 = (memorySize) => {
   const c1Values = {
     'Up to 16K': 0.0078,
@@ -185,48 +333,134 @@ export const getMemorySizeCategory = (bitCount) => {
 };
 // GATE/LOGIC ARRAYS CALCULATION
 export const calculateMicrocircuitsAndMicroprocessorsFailureRate = (component) => {
+  console.log("component...yearsInProduction....", component.quality)
   const C1 = calculateGateArrayC1(component);
+  console.log("Final C1 value:", C1);
+ 
   const C2 = getFailureRate(component.packageType, component.pinCount);
   const piT = calculatePiT(component.technology, component.temperature);
   const piE = getEnvironmentFactor(component.environment);
   const piQ = getQualityFactor(component.quality);
   const piL = calculateLearningFactor(component.yearsInProduction);
 
+ 
+  console.log("C2......", C2);
+  console.log("piT......", piT);
+  console.log("piE......", piE);
+  console.log("piQ......", piQ);
+  console.log("C1......", C1);
+
+
+  console.log("final environment......", getEnvironmentFactor(component.environment))
+
+  console.log("final formulae......", (C1 * piT + C2 * piE) * piQ * piL)
+
   return (C1 * piT + C2 * piE) * piQ * piL;
 };
 
 
+// export const calculateGateArrayC1 = (complexFailure, technology) => {
+//   if (!component.complexFailure || !component.gateCount) return 0;
+
+//   // Parse gate count (handle ranges and "Up to" cases)
+//   let gateCount = parseGateCount(component.gateCount);
+//   if (isNaN(gateCount)) return 0;
+
+//   // Special case for MOS digital with >60,000 gates
+//   if (component.technology === 'MOS' &&
+//     component.complexFailure === 'Digital' &&
+//     gateCount > 60000) {
+//     return 'Use VHSIC/VHSIC-Like model';
+//   }
+//   // Get the appropriate data set based on technology
+//   const data = component.devices === 'bipolarData'
+//     ? bipolarData
+//     : component.devices === 'mosData'
+//       ? mosData
+//       : microprocessorData;
+//   console.log("data....", data)
+//   const category = component.complexFailure.toLowerCase();
+//   const categoryData = data[category === 'pla/pal' ? 'pla' : category];
+
+//   if (!categoryData) return 0;
+
+//   // Find matching range
+//   const matchedRange = categoryData.find(
+//     item => gateCount >= item.min && gateCount <= item.max
+//   );
+
+//   return matchedRange ? matchedRange.c1 : 0;
+// };
+
 export const calculateGateArrayC1 = (component) => {
-  if (!component.complexFailure || !component.gateCount) return 0;
+  // Debug: Log the input component
+  console.log("Input component:", component);
+
+  // Validate input
+  if (!component || !component.complexFailure || !component.gateCount) {
+    console.log("Missing required fields (complexFailure or gateCount)");
+    return 11;
+  }
 
   // Parse gate count (handle ranges and "Up to" cases)
   let gateCount = parseGateCount(component.gateCount);
-  if (isNaN(gateCount)) return 0;
+  if (isNaN(gateCount)) {
+    console.log("Invalid gateCount:", component.gateCount);
+    return 10;
+  }
+
+  // Debug: Log parsed gate count
+  console.log("Parsed gateCount:", gateCount);
 
   // Special case for MOS digital with >60,000 gates
-  if (component.technology === 'MOS' && 
-      component.complexFailure === 'Digital' && 
+  if (component.technology === 'MOS' &&
+      component.complexFailure === 'Digital' &&
       gateCount > 60000) {
+    console.log("Special case: MOS Digital with >60,000 gates");
     return 'Use VHSIC/VHSIC-Like model';
   }
-console.log("component.technology..",component)
+
   // Get the appropriate data set based on technology
-  const data = component.devices === 'bipolarData' 
-  ? bipolarData 
-  : component.devices === 'mosData' 
-    ? mosData 
-    : microprocessorData;
-  const category = component.complexFailure.toLowerCase();
-  const categoryData = data[category === 'pla/pal' ? 'pla' : category];
+  let data;
+  switch (component.devices) {
+    case 'bipolarData':
+      data = bipolarData;
+      break;
+    case 'mosData':
+      data = mosData;
+      break;
+    default:
+      data = microprocessorData;
+  }
 
-  if (!categoryData) return 0;
+  // Debug: Log selected dataset
+  console.log("Selected dataset:", data);
 
-  // Find matching range
+  // Normalize category name
+  let category = component.complexFailure;
+  if (category === 'pla/pal') {
+    category = 'pla';
+  }
+
+  // Debug: Log category
+  console.log("Category:", category);
+
+  const categoryData = data[category];
+  console.log("Category data:",categoryData);
+  if (!categoryData) {
+    console.log("No data found for category:", category);
+    return 12;
+  }
+  console.log("Category data:",categoryData);
   const matchedRange = categoryData.find(
     item => gateCount >= item.min && gateCount <= item.max
   );
+  console.log("Matched range:", matchedRange);
 
-  return matchedRange ? matchedRange.c1 : 0;
+  // 8. Return result
+  const result = matchedRange ? matchedRange.c1 : 0;
+  console.log("Final C1 value:", result);
+  return result;
 };
 
 // Helper function to parse gate count input
@@ -290,21 +524,19 @@ const mosData = {
   ]
 };
 
-
-
 const microprocessorData = {
- Bipolar:{  
- "Up to 8": 0.060,
- "Up to 16": 0.12,
- "Up to 32": 0.24,
-},
-  MOS:{
-   "Up to 8": 0.14,
-   "Up to 16": 0.28,
-   "Up to 32": 0.56,
-  }
+  bipolar: [
+    { min: 1, max: 8, c1: 0.060 }, // c1 parameter included
+    { min: 8, max: 16, c1: 0.12 },
+    { min: 16, max: 32, c1: 0.24 }
+  ],
+  mos: [
+    { min: 1, max: 8, c1: 0.14 },
+    { min: 8, max: 16, c1: 0.28 },
+    { min: 16, max: 32, c1: 0.56 }
+  ]
 };
-
+console.log("microprocessorData....", microprocessorData)
 // MEMORIES CALCULATION
 
 export const calculateMemoriesFailureRate = (component) => {
@@ -334,7 +566,7 @@ export const calculateMemoriesFailureRate = (component) => {
 
 const calculateMemoryC1 = (component) => {
   if (!component.memoryType) return 0;
-  
+
   // Handle both numeric and range inputs for capacity
   let capacity = 0;
   if (typeof component.capacity === 'string' && component.capacity.includes('-')) {
@@ -354,7 +586,7 @@ const calculateMemoryC1 = (component) => {
     case 'MOS_ROM': return getMOSROMC1(getSizeCategory(component.memorySize));
     case 'MOS_PROM': return getMOSPROMC1(getSizeCategory(component.memorySize));
     case 'MOS_DRAM': return getMOSDRAMC1(getSizeCategory(component.memorySize));
-    case 'MOS_SRAM':return getMOSSRAMC1(getSizeCategory(component.memorySize));
+    case 'MOS_SRAM': return getMOSSRAMC1(getSizeCategory(component.memorySize));
     case 'BIPOLAR_ROM': return getBipolarROMC1(getSizeCategory(component.memorySize));
     case 'BIPOLAR_SRAM': return getBipolarSRAMC1(getSizeCategory(component.memorySize));
     default: return 0;
@@ -398,16 +630,16 @@ const calculateEEPROMCyclingFailure = (params) => {
     // B1 would be implemented if values were available
   } else if (eepromType === 'TexturedPoly') {
     A1 = calculateTexturedPolyLambdaCyc(programmingCycles);
-    A2 = programmingCycles > 300000 ? 
-         (programmingCycles > 400000 ? 2.3 : 1.1) : 0;
+    A2 = programmingCycles > 300000 ?
+      (programmingCycles > 400000 ? 2.3 : 1.1) : 0;
     // B1 and B2 would be implemented if values were available
   }
 
   // Calculate cycling failure rate
-  const lambdaCyc = (A1 * lifetimeAdjustment + 
-                    B1 * lifetimeAdjustment + 
-                    (A2 * B2 * lifetimeAdjustment) / qualityFactor) * 
-                   eccFactor;
+  const lambdaCyc = (A1 * lifetimeAdjustment +
+    B1 * lifetimeAdjustment +
+    (A2 * B2 * lifetimeAdjustment) / qualityFactor) *
+    eccFactor;
 
   return {
     lambdaCyc,
@@ -536,7 +768,7 @@ export const calculateTexturedPolyLambdaCyc = (cycles) => {
 // SYSTEM METRICS
 export const calculateSystemMetrics = (components) => {
   const totalFailureRate = components.reduce(
-    (sum, comp) => sum + comp.totalFailureRate, 
+    (sum, comp) => sum + comp.totalFailureRate,
     0
   );
   const mtbf = totalFailureRate > 0 ? (1000000 / totalFailureRate) : Infinity;
@@ -557,8 +789,10 @@ export const QUALITY_FACTORS = [
     label: "None beyond best commercial practices",
     value: 1.0,
     screeningLevel: "Standard"
-  }
+  },
 ];
+
+console.log("value1...", QUALITY_FACTORS)
 // Environment Factors Configuration
 export const ENVIRONMENTAL_FACTORS = {
   GB: { label: "Ground Benign", value: 0.50 },
@@ -576,44 +810,38 @@ export const ENVIRONMENTAL_FACTORS = {
   ML: { label: "Missile Launch", value: 12 },
   CL: { label: "Cannon Launch", value: 220 }
 };
+export const CIRCUIT_FUNCTION_FACTORS = {
+  Digital: { label: "Digital", value: 1.0 },
+  Video: { label: "Video (10 MHz < f < 1 GHz)", value: 1.2 },
+  Microwave: { label: "Microwave (f > 1 GHz)", value: 2.6 },
+  Linear: { label: "Linear (f < 10 MHz)", value: 5.8 },
+  Power: { label: "Power", value: 21 }
+};
 
+export const getCircuitFunctionFactor = (circuitType) => {
+  return CIRCUIT_FUNCTION_FACTORS[circuitType]?.value || 1.0;
+};
 // Base failure rate constant
 export const BASE_FAILURE_RATE = 2.1;
 
-/**
- * Get environment factor value
- * @param {string} environment - Environment code (e.g. 'GB', 'GF')
- * @returns {number} πE value
- */
+
 export const getEnvironmentFactor = (environment) => {
   return ENVIRONMENTAL_FACTORS[environment]?.value || 1.0;
 };
 
-/**
- * Get environment label
- * @param {string} envCode - Environment code
- * @returns {string} Environment label
- */
+
 export const getEnvironmentLabel = (envCode) => {
   return ENVIRONMENTAL_FACTORS[envCode]?.label || '';
 };
 
-/**
- * Calculate failure rate (λₚ)
- * @param {number} qualityFactor - πQ value
- * @param {string} environment - Environment code
- * @returns {number} Failure rate in failures per 10^6 hours
- */
+
 export const calculateSawDeviceFailureRate = (qualityFactor, environment) => {
   const piQ = qualityFactor || 1.0;
   const piE = getEnvironmentFactor(environment || 'GB');
   return BASE_FAILURE_RATE * piQ * piE;
 };
 
-/**
- * Get environmental factor options for dropdown
- * @returns {Array} Array of options for Select component
- */
+
 export const getEnvironmentalOptions = () => {
   return Object.entries(ENVIRONMENTAL_FACTORS).map(([key, env]) => ({
     value: key,

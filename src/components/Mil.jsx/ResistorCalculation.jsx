@@ -2,20 +2,8 @@ import React, { useState } from 'react';
 import './Resistor.css';
 import { Row, Col, Button } from 'react-bootstrap'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
   Typography,
-
-  IconButton,
-  Tooltip,
-  List,
-  ListItem,
-  ListItemText
 } from '@material-ui/core';
 import { Link } from '@material-ui/core';
 import Box from '@mui/material/Box';
@@ -61,36 +49,6 @@ const ResistorCalculation = () => {
     { style: "RVC", spec: "MIL-R-23285", description: "Resistor, Variable, Nonwirewound", λb: 0.0037, πTColumn: 1, πSColumn: 1 }
   ];
 
-  // Temperature factors
-  const tempFactors = [
-    { temp: 20, col1: 0.88, col2: 0.95 },
-    { temp: 30, col1: 1.1, col2: 1.1 },
-    { temp: 40, col1: 1.5, col2: 1.2 },
-    { temp: 50, col1: 1.8, col2: 1.3 },
-    { temp: 60, col1: 2.3, col2: 1.4 },
-    { temp: 70, col1: 2.8, col2: 1.5 },
-    { temp: 80, col1: 3.4, col2: 1.6 },
-    { temp: 90, col1: 4.0, col2: 1.7 },
-    { temp: 100, col1: 4.8, col2: 1.9 },
-    { temp: 110, col1: 5.6, col2: 2.0 },
-    { temp: 120, col1: 6.6, col2: 2.1 },
-    { temp: 130, col1: 7.6, col2: 2.3 },
-    { temp: 140, col1: 8.7, col2: 2.4 },
-    { temp: 150, col1: 10, col2: 2.5 }
-  ];
-
-  // Power stress factors
-  const powerStressFactors = [
-    { stress: 0.1, col1: 0.79, col2: 0.66 },
-    { stress: 0.2, col1: 0.88, col2: 0.81 },
-    { stress: 0.3, col1: 0.99, col2: 1.0 },
-    { stress: 0.4, col1: 1.1, col2: 1.2 },
-    { stress: 0.5, col1: 1.2, col2: 1.5 },
-    { stress: 0.6, col1: 1.4, col2: 1.8 },
-    { stress: 0.7, col1: 1.5, col2: 2.3 },
-    { stress: 0.8, col1: 1.7, col2: 2.8 },
-    { stress: 0.9, col1: 1.9, col2: 3.4 }
-  ];
 
   // Quality factors
   const qualityFactors = [
@@ -122,18 +80,84 @@ const ResistorCalculation = () => {
 
   // State for form inputs
 
-  const [selectedResistor, setSelectedResistor] = useState(resistorTypes[0]);
-  const [temperature, setTemperature] = useState(30);
-  const [powerDissipation, setPowerDissipation] = useState(1.0);
-  const [ratedPower, setRatedPower] = useState(1.0);
-  const [selectedQuality, setSelectedQuality] = useState(qualityFactors[0]);
-  const [selectedEnvironment, setSelectedEnvironment] = useState(environmentFactors[0]);
+  const [selectedResistor, setSelectedResistor] = useState(null);
+  const [temperature, setTemperature] = useState(null);
+  const [powerDissipation, setPowerDissipation] = useState(null);
+  const [powerFactor, setPowerFactor] = useState(null);
+  const [ratedPower, setRatedPower] = useState(null);
+  const [selectedQuality, setSelectedQuality] = useState(null);
+  const [selectedEnvironment, setSelectedEnvironment] = useState(null);
   const [results, setResults] = useState([]);
-  const [components, setComponents] = useState({
-    
-    
-});
+  const [components, setComponents] = useState([]);
   const [showResults, setShowResults] = useState(false);
+
+  //Validation
+  // function ValidationForm(values){
+  //   const errors = {};
+
+  //   if(!values.name.trim()){
+  //     errors.name = "Name is required."
+  //   }
+  // }
+
+  const [errors, setErrors] = useState({
+    resistorType: '',
+    quality: '',
+    environment: '',
+    ratedPower: '',
+    powerDissipation: '',
+    temperature: '',
+    powerFactor: ''
+  });
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    if (!selectedResistor) {
+      newErrors.resistorType = 'Resistor type is required';
+      isValid = false;
+    }
+
+    if (!selectedQuality) {
+      newErrors.quality = 'Quality factor is required';
+      isValid = false;
+    }
+
+    if (!selectedEnvironment) {
+      newErrors.environment = 'Environment factor is required';
+      isValid = false;
+    }
+
+    if (!ratedPower || isNaN(ratedPower) || ratedPower <= 0) {
+      newErrors.ratedPower = 'Valid rated power is required';
+      isValid = false;
+    }
+
+    if (!powerDissipation || isNaN(powerDissipation) || powerDissipation < 0) {
+      newErrors.powerDissipation = 'Valid power dissipation is required';
+      isValid = false;
+    }
+
+    if (!temperature || isNaN(temperature) || temperature < 20 || temperature > 150) {
+      newErrors.temperature = 'Temperature must be between 20°C and 150°C';
+      isValid = false;
+    }
+
+    if (!powerFactor || isNaN(powerFactor) || powerFactor <= 0) {
+      newErrors.powerFactor = 'Valid power factor is required';
+      isValid = false;
+    }
+
+    // Additional validation for power stress ratio
+    if (ratedPower && powerDissipation && (powerDissipation / ratedPower) > 1) {
+      newErrors.powerDissipation = 'Power dissipation cannot exceed rated power';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   //  const systemMetrics = calculateSystemMetrics(components);
   const calculateSystemMetrics = (components) => {
@@ -146,9 +170,36 @@ const ResistorCalculation = () => {
 
 
   // Calculate πT (Temperature Factor)
+  const tempFactors = [
+    { temp: 20, col1: 0.88, col2: 0.95 },
+    { temp: 30, col1: 1.1, col2: 1.1 },
+    { temp: 40, col1: 1.5, col2: 1.2 },
+    { temp: 50, col1: 1.8, col2: 1.3 },
+    { temp: 60, col1: 2.3, col2: 1.4 },
+    { temp: 70, col1: 2.8, col2: 1.5 },
+    { temp: 80, col1: 3.4, col2: 1.6 },
+    { temp: 90, col1: 4.0, col2: 1.7 },
+    { temp: 100, col1: 4.8, col2: 1.9 },
+    { temp: 110, col1: 5.6, col2: 2.0 },
+    { temp: 120, col1: 6.6, col2: 2.1 },
+    { temp: 130, col1: 7.6, col2: 2.3 },
+    { temp: 140, col1: 8.7, col2: 2.4 },
+    { temp: 150, col1: 10, col2: 2.5 }
+  ];
+
   const calculatePiT = () => {
-    // Check if πT is N/A (then return 1)
-    if (selectedResistor.πTColumn === "N/A (πT=1)") return 1.0;
+    // Return 1 if no temperature factor calculation needed
+    if (!selectedResistor || selectedResistor.πTColumn === "N/A (πT=1)") {
+      return 1.0;
+    }
+
+    // Use formula if temperature is outside table range (20-150)
+    if (temperature < 20 || temperature > 150) {
+      const Ea = selectedResistor.πTColumn === 1 ? 0.2 : 0.08;
+      const k = 8.617e-5; // Boltzmann constant in eV/K
+      const T = temperature + 273; // Convert to Kelvin
+      return Math.exp((-Ea / k) * ((1 / T) - (1 / 298)));
+    }
 
     // Find the closest temperature in the table
     const closestTemp = tempFactors.reduce((prev, curr) =>
@@ -159,22 +210,49 @@ const ResistorCalculation = () => {
     return selectedResistor.πTColumn === 1 ? closestTemp.col1 : closestTemp.col2;
   };
 
+  // In your component render:
+
+
   // Calculate πS (Power Stress Factor)
+  const powerStressTable = [
+    { stress: 0.1, col1: 0.79, col2: 0.66 },
+    { stress: 0.2, col1: 0.88, col2: 0.81 },
+    { stress: 0.3, col1: 0.99, col2: 1.0 },
+    { stress: 0.4, col1: 1.1, col2: 1.2 },
+    { stress: 0.5, col1: 1.2, col2: 1.5 },
+    { stress: 0.6, col1: 1.4, col2: 1.8 },
+    { stress: 0.7, col1: 1.5, col2: 2.3 },
+    { stress: 0.8, col1: 1.7, col2: 2.8 },
+    { stress: 0.9, col1: 1.9, col2: 3.4 }
+  ];
+
   const calculatePiS = () => {
-    // Check if πS is N/A (then return 1)
-    if (selectedResistor.πSColumn === "N/A (πS=1)") return 1.0;
+    // Return 1 if no power stress calculation needed
+    if (!selectedResistor || selectedResistor.πSColumn === "N/A (πS=1)") {
+      return 1.0;
+    }
 
     // Calculate power stress ratio (S)
     const S = powerDissipation / ratedPower;
 
+    // Use formula if S is outside table range (0.1-0.9)
+    if (S < 0.1 || S > 0.9) {
+      return selectedResistor.πSColumn === 1
+        ? 0.71 * Math.exp(1.1 * S)  // Column 1 formula
+        : 0.54 * Math.exp(2.04 * S); // Column 2 formula
+    }
+
     // Find the closest stress in the table
-    const closestStress = powerStressFactors.reduce((prev, curr) =>
+    const closestStress = powerStressTable.reduce((prev, curr) =>
       Math.abs(curr.stress - S) < Math.abs(prev.stress - S) ? curr : prev
     );
 
     // Use the appropriate column based on the resistor type
     return selectedResistor.πSColumn === 1 ? closestStress.col1 : closestStress.col2;
   };
+
+  // In your component render:
+
 
   // Calculate πR (Power Dissipation Factor)
   const calculatePiP = () => {
@@ -183,19 +261,26 @@ const ResistorCalculation = () => {
 
   // Calculate failure rate
   const calculateFailureRate = () => {
-    const λb = selectedResistor.λb;
+    const λb = selectedResistor.value.λb;
     const πT = calculatePiT();
     const πS = calculatePiS();
     const πP = calculatePiP();
-    const πQ = selectedQuality.πQ;
-    const πE = selectedEnvironment.πE;
+    const πQ = selectedQuality.value.πQ;
+    const πE = selectedEnvironment.value.πE;
 
     return λb * πT * πS * πP * πQ * πE;
   };
+
+
   const handleCalculate = () => {
+    if (!validateForm()) {
+      return; // Don't proceed if validation fails
+    }
+
     const metrics = calculateSystemMetrics(components);
     setSystemMetrics(metrics);
     setShowMetrics(true);
+
     const newResult = {
       id: Date.now(),
       resistorType: selectedResistor.style,
@@ -212,10 +297,9 @@ const ResistorCalculation = () => {
       πE: selectedEnvironment.πE,
       λp: calculateFailureRate()
     };
-    
-          localStorage.setItem("milValue", JSON.stringify(newResult.λp));
 
-    setResults([...results, newResult]);    
+    localStorage.setItem("milValue", JSON.stringify(newResult.λp));
+    setResults([...results, newResult]);
     setShowResults(true);
   };
 
@@ -285,7 +369,7 @@ const ResistorCalculation = () => {
     }),
     menu: (provided) => ({
       ...provided,
-      zIndex: 9999 
+      zIndex: 9999
     })
   };
 
@@ -296,34 +380,44 @@ const ResistorCalculation = () => {
     <div className="calculator-container1">
 
       <h2 className='text-center'>Resistor </h2>
-    
+
       <Row className="mb-3">
         <Col md={4}>
           <div className="form-group">
             <label>Part Type:</label>
             <Select
-             styles={customStyles}
-              value={resistorTypes.find(option => option.value === selectedResistor)}
-              onChange={(selectedOption) => setSelectedResistor(selectedOption.value)}
+              styles={customStyles}
+              name='partType'
+              value={selectedResistor}
+              onChange={(selectedOption) => {
+                setSelectedResistor(selectedOption);
+                setErrors({ ...errors, resistorType: '' });
+              }}
+              // onChange={(selectedOption) => setSelectedResistor(selectedOption.value)}
               options={resistorTypes.map(type => ({
                 value: type,
                 label: `${type.style} - ${type.description} (${type.spec})`
               }))}
-              placeholder="Select type"
+              // placeholder="Select type"
               className="basic-select"
               classNamePrefix="select"
+              isInvalid={!!errors.resistorType}
             />
+            {errors.resistorType && <small style={{ color: 'red' }}>{errors.resistorType}</small>}
           </div>
 
         </Col>
         <Col md={4}>
-
-
           <div className="form-group">
             <label>Quality ( π<sub>Q</sub>):</label>
             <Select
-              value={qualityFactors.find(q => q.value === selectedQuality)}
-              onChange={(selectedOption) => setSelectedQuality(selectedOption.value)}
+              value={selectedQuality}
+              onChange={(selectedOption) => {
+                setSelectedQuality(selectedOption)
+                setErrors({ ...errors, quality: '' });
+              }
+              }
+              name='quality'
               style={{
                 width: "100%",
                 padding: "0.375rem 0.75rem",
@@ -340,26 +434,34 @@ const ResistorCalculation = () => {
                 value: type,
                 label: `${type.quality} (${type.πQ})`
               }))}
+              isInvalid={!!errors.quality}
+
             />
-
-
+            {errors.quality && <small style={{ color: 'red' }}>{errors.quality}</small>}
           </div>
         </Col>
-       
+
 
         <Col md={4}>
           <div className="form-group">
             <label>Environment  (π<sub>E</sub>) :</label>
             <Select
-              value={environmentFactors.find(option => option.value === selectedEnvironment)}
-              onChange={(selectedOption) => setSelectedEnvironment(selectedOption.value)}
+              value={selectedEnvironment}
+              name='environment'
+              onChange={(selectedOption) => {
+                setSelectedEnvironment(selectedOption);
+                setErrors({ ...errors, environment: '' });
+              }
+              }
               className="basic-select1"
               classNamePrefix="select"
+              isInvalid={!!errors.environment}
               options={environmentFactors.map(type => ({
                 value: type,
                 label: `${type.env} (${type.πE})`
               }))}
             />
+            {errors.environment && <small style={{ color: 'red' }}>{errors.environment}</small>}
 
             {/* {environmentFactors.map((env, index) => (
                 <option key={index} value={index}>{env.env}</option>
@@ -368,61 +470,126 @@ const ResistorCalculation = () => {
           </div>
         </Col>
       </Row>
-      <Row className="mb-3">
+      <Row>
+        {/* <label>Power Stress Factor (π<sub>S</sub>):</label> */}
 
         <Col md={4}>
           <div className="form-group">
-            <label>Power Factor (Watts) (π<sub>P</sub>):</label>
+            <label>Rated power for  π<sub>S</sub>:</label>
             <input
               type="number"
+              name='ratedPower'
+              className={`form-control ${errors.ratedPower ? 'is-invalid' : ''}`}
               value={ratedPower}
-              onChange={(e) => setRatedPower(parseFloat(e.target.value))}
+              onChange={(e) => {
+                setRatedPower(Math.max(0.001, parseFloat(e.target.value) || 0.001))
+                setErrors({ ...errors, ratedPower: '' });
+              }
+              }
               min="0.001"
               step="0.001"
-              style={{
-                width: "100%",
-                padding: "0.375rem 0.75rem",
-                fontSize: "1rem",
-                lineHeight: "1.5",
-                color: "#495057",
-                backgroundColor: "#fff",
-                border: "1px solid #ced4da",
-                borderRadius: "0.25rem"
-              }}
+              placeholder="Rated Power"
             />
+            {errors.ratedPower && <small style={{ color: 'red' }}>{errors.ratedPower}</small>}
           </div>
         </Col>
+
+
         <Col md={4}>
+          <div className="form-group">
+            <label>Power dissipation for π<sub>S</sub>:</label>
+            <input
+              type="number"
+              name='powerDissipation'
+              className={`form-control ${errors.powerDissipation ? 'is-invalid' : ''}`}
+              value={powerDissipation}
+              onChange={(e) => {
+                setPowerDissipation(Math.max(0, parseFloat(e.target.value) || 0))
+                setErrors({ ...errors, powerDissipation: '' });
+              }
+              }
+              min="0"
+              step="0.001"
+              placeholder="Actual Power"
+            />
+            {errors.powerDissipation && <small style={{ color: 'red' }}>{errors.powerDissipation}</small>}
+            <br />
+            <small className="text-muted">
+              S = Actual Power dissipation / Rated Power = {(powerDissipation / ratedPower).toFixed(3)}
+            </small>
+            {selectedResistor?.value.πSColumn && (
+              <div className="mt-2">
+                Calculated π<sub>S</sub>: {calculatePiS()?.toFixed(3)}
+                <br />
+                <small>
+                  Using {selectedResistor.πSColumn === 1 ? 'Column 1' : 'Column 2'} formula
+                </small>
+              </div>
+            )}
+          </div>
+        </Col>
+
+        <Col md={4} >
           <div className="form-group">
             <label>Temperature (°C) (π<sub>T</sub>):</label>
             <input
               type="number"
+              name='temperature'
+              className={`form-control ${errors.temperature ? 'is-invalid' : ''}`}
               value={temperature}
-              onChange={(e) => setTemperature(parseFloat(e.target.value))}
+              onChange={(e) => {
+                const value = parseFloat(e.target.value);
+                setTemperature(isNaN(value) ? 20 : Math.max(20, Math.min(150, value)));
+                setErrors({ ...errors, temperature: '' });
+              }}
               min="20"
               max="150"
               step="1"
-              style={{
-                width: "100%",
-                padding: "0.375rem 0.75rem",
-                fontSize: "1rem",
-                lineHeight: "1.5",
-                color: "#495057",
-                backgroundColor: "#fff",
-                border: "1px solid #ced4da",
-                borderRadius: "0.25rem"
-              }}
+              placeholder="Enter temperature (20-150°C)"
+
             />
+            {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
+               {/* options={resistorTypes.map(type => ({
+                value: type,
+                label: `${type.style} - ${type.description} (${type.spec})`
+              }))} */}
+
+            {selectedResistor?.value.πTColumn && resistorTypes.some(type => type.πTColumn === selectedResistor.πTColumn) && (
+              <div className="mt-2">
+                Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
+                <br />
+                <small>
+                  Using {selectedResistor.πTColumn === 1 ? 'Column 1' : 'Column 2'}
+                  {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
+                </small>
+              </div>
+            )}
+            {selectedResistor?.value.πTColumn && resistorTypes.some(type => type.id === selectedResistor.typeId) && (
+  <div className="mt-2">
+    Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
+    <br />
+    <small>
+      Using {resistorTypes.find(type => type.id === selectedResistor.typeId)?.πTColumn === 1 ? 'Column 1' : 'Column 2'}
+      {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
+    </small>
+  </div>
+)}
           </div>
         </Col>
-        
-        <Col md={4}>
+
+        <Col md={4} style={{ marginTop: '0px' }}>
           <div className="form-group">
-            <label>Power Stress Factor ( π<sub>S</sub>):</label>
+            <label>Power Factor (Watts) (π<sub>P</sub>):</label>
             <input
               type="number"
-              value={powerDissipation}
-              onChange={(e) => setPowerDissipation(parseFloat(e.target.value))}
+              name='powerFactor'
+              className={`form-control ${errors.powerFactor ? 'is-invalid' : ''}`}
+              value={powerFactor}
+              onChange={(e) => {
+                setPowerFactor(parseFloat(e.target.value))
+                setErrors({ ...errors, powerFactor: '' })
+              }
+              }
               min="0.001"
               step="0.001"
               style={{
@@ -436,143 +603,145 @@ const ResistorCalculation = () => {
                 borderRadius: "0.25rem"
               }}
             />
+            {errors.powerFactor && <small style={{ color: 'red' }}>{errors.powerFactor}</small>}
           </div>
         </Col>
+
+
+
       </Row>
-     
-     
-    
+
+
+
       {/* </div> */}
       <div className='d-flex justify-content-between align-items-center' >
-      <div>
-      {/* // In your return statement: */}
-    
-      {showMetrics && (
+        <div>
+          {/* // In your return statement: */}
 
-      <>
+          {showMetrics && (
+            <>
+              <Box
+                component="div"
+                onClick={() => setShowCalculations(!showCalculations)}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }}
+                className="ms-auto mt-2"
+              >
+                <CalculatorIcon
+                  style={{ height: '30px', width: '40px' }}
+                  fontSize="large"
+                />
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontWeight: 'bold',
+                    fontSize: '0.95rem',
+                    ml: 1
+                  }}
+                >
+                  {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
+                </Typography>
+              </Box>
 
+            </>
+          )}
+        </div>
 
-          <Box
-            component="div"
-            onClick={() => setShowCalculations(!showCalculations)}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-              color: 'primary.main',
-              '&:hover': {
-                textDecoration: 'underline'
-              }
-            }}
-            className="ms-auto mt-2"
-          >
-            <CalculatorIcon
-              style={{ height: '50px', width: '60px' }}
-              fontSize="large"
-            />
-            <Typography
-              variant="body1"
-              sx={{
-                fontWeight: 'bold',
-                fontSize: '0.95rem',
-                ml: 1
-              }}
-            >
-              {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-            </Typography>
-          </Box>
-        
-          </>
-      )}
-      </div>
-      
-      <Button  className="btn-calculate float-end mt-1" onClick={handleCalculate}>
-        Calculate Failure Rate
-      </Button>
+        <Button className="btn-calculate float-end mt-1" onClick={handleCalculate}>
+          Calculate Failure Rate
+        </Button>
       </div>
       <div >
-          {showResults && results.length > 0 && (
-            <div>
-  <h2 className='text-center'>
-            Calculation Result
-          </h2>
-              <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-              {results[results.length - 1].λp.toFixed(6)} failures/10<sup>6</sup> hours
+        {showResults && results.length > 0 && (
+          <div>
+            <h2 className='text-center'>
+              Calculation Result
+            </h2>
+            <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+            {results[results.length - 1].λp.toFixed(6)} failures/10<sup>6</sup> hours
 
 
-            </div>
-          )}
-    
-  <br/>
+          </div>
+        )}
 
-      {/* // Your calculation function remains the same */}
+        <br />
 
-      {showCalculations && (
+        {/* // Your calculation function remains the same */}
 
-        <>
-          {/* // In your component's return statement: */}
-          <div className="card">
-            <div className="card-body">
+        {showCalculations && (
 
-              <MaterialTable
-                columns={calculationColumns}
-                data={[
-                  {
-                    λb: selectedResistor.λb,
-                    πT: calculatePiT(),
-                    πS: calculatePiS(),
-                    πP: calculatePiP(),
-                    πQ: selectedQuality.πQ,
-                    πE: selectedEnvironment.πE,
-                    λp: calculateFailureRate()
-                  }
-                ]}
-                options={{
-                  search: false,
-                  paging: components.length > 10,
-                  pageSize: 10,
-                  pageSizeOptions: [10, 20, 50],
-                  toolbar: false,
-                  headerStyle: {
-                    backgroundColor: '#CCE6FF',
-                    fontWeight: 'bold',
-                    whiteSpace: 'nowrap'
-                  },
-                  rowStyle: {
-                    backgroundColor: '#FFF'
-                  },
-                  cellStyle: {
-                    padding: '8px 16px'
-                  }
-                }}
-                components={{
-                  Container: props => <Paper {...props} elevation={2} />
-                }}
-              />
+          <>
+            {/* // In your component's return statement: */}
+            <div className="card">
+              <div className="card-body">
+ {console.log("calculateFailureRate", calculateFailureRate())}
+                <MaterialTable
+                  columns={calculationColumns}
+                 
+                  data={[
+                    {
+                      λb: selectedResistor.value.λb,
+                      πT: calculatePiT(),
+                      πS: calculatePiS(),
+                      πP: calculatePiP(),
+                      πQ: selectedQuality.value.πQ,
+                      πE: selectedEnvironment.value.πE,
+                      λp: calculateFailureRate()
+                    }
+                  ]}
+                  options={{
+                    search: false,
+                    paging: components.length > 10,
+                    pageSize: 10,
+                    pageSizeOptions: [10, 20, 50],
+                    toolbar: false,
+                    headerStyle: {
+                      backgroundColor: '#CCE6FF',
+                      fontWeight: 'bold',
+                      whiteSpace: 'nowrap'
+                    },
+                    rowStyle: {
+                      backgroundColor: '#FFF'
+                    },
+                    cellStyle: {
+                      padding: '8px 16px'
+                    }
+                  }}
+                  components={{
+                    Container: props => <Paper {...props} elevation={2} />
+                  }}
+                />
 
-              <div className="formula-section" style={{ marginTop: '24px' }}>
-                <Typography variant="h6" gutterBottom>
-                  Calculation Formula
-                </Typography>
-                <Typography variant="body1" paragraph>
-                  λ<sub>p</sub> = λ<sub>b</sub> × π<sub>T</sub> × π<sub>S</sub> × π<sub>P</sub> × π<sub>Q</sub> × π<sub>E</sub>
-                </Typography>
-                <Typography variant="body1" paragraph>Where:</Typography>
+                <div className="formula-section" style={{ marginTop: '24px' }}>
+                  <Typography variant="h6" gutterBottom>
+                    Calculation Formula
+                  </Typography>
+                  <Typography variant="body1" paragraph>
+                    λ<sub>p</sub> = λ<sub>b</sub> × π<sub>T</sub> × π<sub>S</sub> × π<sub>P</sub> × π<sub>Q</sub> × π<sub>E</sub>
+                  </Typography>
+                  <Typography variant="body1" paragraph>Where:</Typography>
 
-                <ul>
-                  <li>λ<sub>p</sub> = Predicted failure rate (Failures/10<sup>6</sup> Hours)</li>
-                  <li>λ<sub>b</sub> = Base failure rate</li>
-                  <li>π<sub>T</sub> = Temperature factor</li>
-                  <li>π<sub>S</sub> = Power stress factor</li>
-                  <li>π<sub>P</sub> = Power dissipation factor (π<sub>P</sub>= (Power Dissipation)<sup>0.39</sup>)</li>
-                  <li>π<sub>Q</sub> = Quality factor</li>
-                  <li>π<sub>E</sub> = Environment factor</li>
-                </ul>
+                  <ul>
+                    <li>λ<sub>p</sub> = Predicted failure rate (Failures/10<sup>6</sup> Hours)</li>
+                    <li>λ<sub>b</sub> = Base failure rate</li>
+                    <li>π<sub>T</sub> = Temperature factor</li>
+                    <li>π<sub>S</sub> = Power stress factor</li>
+                    <li>π<sub>P</sub> = Power dissipation factor (π<sub>P</sub>= (Power Dissipation)<sup>0.39</sup>)</li>
+                    <li>π<sub>Q</sub> = Quality factor</li>
+                    <li>π<sub>E</sub> = Environment factor</li>
+                  </ul>
+                </div>
               </div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
       </div>
     </div>
 
