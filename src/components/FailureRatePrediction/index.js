@@ -1403,12 +1403,12 @@ function Index(props) {
                                           },
                                           {
                                             value: "MIL",
-                                            label: "MIL",
+                                            label: "MIL-HDBK-217F",
                                           },
-                                          {
-                                            value: "IEC",
-                                            label: "IEC",
-                                          },
+                                          // {
+                                          //   value: "IEC",
+                                          //   label: "IEC",
+                                          // },
                                           {
                                             value: "NPRD11",
                                             label: "NPRD 2011",
@@ -1511,9 +1511,9 @@ function Index(props) {
                                             values.standard?.value === "MIL"
                                               ? {
                                                   value:
-                                                    "Failure Per Power On Hour",
+                                                    "Failure Per Million Operating Hours",
                                                   label:
-                                                    "Failure Per Power On Hour",
+                                                    "Failure Per Million Operating Hours",
                                                 }
                                               : event;
                                           setFieldValue(
@@ -1537,9 +1537,9 @@ function Index(props) {
                                           values.standard?.value === "MIL"
                                             ? {
                                                 value:
-                                                  "Failure Per Power On Hour",
+                                                  "Failure Per Million Operating Hours",
                                                 label:
-                                                  "Failure Per Power On Hour",
+                                                  "Failure Per Million Operating Hours",
                                               }
                                             : values.frUnit
                                         }
