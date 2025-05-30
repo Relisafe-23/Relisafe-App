@@ -421,7 +421,7 @@ const InductiveCalculation = ({ onCalculate }) => {
                 </Col>
                 <Col md={4}>
             <label>Inductor Type</label>
-            <div>
+             <div className="form-group">
                     <Select
                            styles={customStyles}
                 isInvalid = {!!errors.deviceTypes}
