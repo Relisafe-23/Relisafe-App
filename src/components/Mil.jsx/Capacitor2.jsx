@@ -148,12 +148,12 @@ function CapacitorCalculation({ onCalculate }) {
     { env: "CL (Cannon, Launch)", πE: 570 }
   ];
   const seriesResistanceOptions = [
-    { value: 0.66, label: ">0.8 (πSR = 0.66)" },
-    { value: 1.0, label: ">0.6 to 0.8 (πSR = 1.0)" },
-    { value: 1.3, label: ">0.4 to 0.6 (πSR = 1.3)" },
-    { value: 2.0, label: ">0.2 to 0.4 (πSR = 2.0)" },
-    { value: 2.7, label: ">0.1 to 0.2 (πSR = 2.7)" },
-    { value: 3.3, label: "0 to 0.1 (πSR = 3.3)" }
+    { value: 0.9, label: ">0.8 (πSR = 0.66)" },
+    { value: 0.7, label: ">0.6 to 0.8 (πSR = 1.0)" },
+    { value: 0.5, label: ">0.4 to 0.6 (πSR = 1.3)" },
+    { value: 0.3, label: ">0.2 to 0.4 (πSR = 2.0)" },
+    { value: 0.15, label: ">0.1 to 0.2 (πSR = 2.7)" },
+    { value: 0.05, label: "0 to 0.1 (πSR = 3.3)" }
   ];
   // ... (rest of your factor arrays)
 
@@ -192,7 +192,9 @@ function CapacitorCalculation({ onCalculate }) {
   });
 
 
-
+  // useEffect(() => {
+ 
+  // }, []);
 
     const calculatePiT = () => {
     // Constants from the image
@@ -331,7 +333,6 @@ function CapacitorCalculation({ onCalculate }) {
       // Manual selection mode - use the value from circuitResistance directly
       return circuitResistance;
     }
-    
   };
 
   const customStyles = {
@@ -375,181 +376,153 @@ function CapacitorCalculation({ onCalculate }) {
     return failureRate;
   };
   // Validation function
-  const validateForm = () => {
+ const validateField = (name, value) => {
+  let error = '';
+  
+  switch(name) {
+    case 'capacitorType':
+      if (!value) error = 'Capacitor type is required';
+      break;
+    case 'environment':
+      if (!value) error = 'Environment is required';
+      break;
+    case 'quality':
+      if (!value) error = 'Quality is required';
+      break;
+    case 'temperature':
+      if (!value) error = 'Temperature is required';
+      break;
+    case 'capacitance':
+      if (!value) {
+        error = 'Capacitance is required';
+      } else if (isNaN(value) || value <= 0) {
+        error = 'Capacitance must be greater than 0 μF';
+      }
+      break;
+    case 'dcVoltageApplied':
+      if (!value && value !== 0) {
+        error = 'DC Voltage is required';
+      } else if (isNaN(value) || value < 0) {
+        error = 'DC Voltage must be ≥ 0 V';
+      }
+      break;
+    case 'acVoltageApplied':
+      if (!value && value !== 0) {
+        error = 'AC Voltage is required';
+      } else if (isNaN(value) || value < 0) {
+        error = 'AC Voltage must be ≥ 0 Vrms';
+      }
+      break;
+    case 'dcVoltageRated':
+      if (!value) {
+        error = 'Rated Voltage is required';
+      } else if (isNaN(value) || value <= 0) {
+        error = 'Rated Voltage must be > 0 V';
+      }
+      break;
+    case 'seriesResistance':
+      if (selectedCapacitor?.πsrColumn === "See πSR Table" && (!value && value !== 0)) {
+        error = 'Series Resistance is required';
+      } else if (isNaN(value) || value < 0) {
+        error = 'Series Resistance must be ≥ 0 ohms/volt';
+      }
+      break;
+    case 'circuitResistance':
+      if (!shouldCalculateCR && (!value && value !== 0)) {
+        error = 'Circuit Resistance is required';
+      } else if (isNaN(value) || value < 0) {
+        error = 'Circuit Resistance must be ≥ 0 ohms';
+      }
+      break;
+    case 'effectiveResistance':
+      if (shouldCalculateCR && (!value && value !== 0)) {
+        error = 'Effective Resistance is required';
+      } else if (isNaN(value) || value < 0) {
+        error = 'Effective Resistance must be ≥ 0 ohms';
+      }
+      break;
+    case 'voltageApplied':
+      if (shouldCalculateCR && (!value && value !== 0)) {
+        error = 'Applied Voltage is required';
+      } else if (isNaN(value) || value <= 0) {
+        error = 'Applied Voltage must be > 0 V';
+      }
+      break;
+    default:
+      break;
+  }
+  
+  setErrors(prev => ({ ...prev, [name]: error }));
+  return error === '';
+};
 
-      const newErrors = {};
-    let isValid = true;
-    if(!selectedEnvironment){
-      newErrors.environment ='Environment is required';
-          isValid = false;
-    }
-    if(!selectedCapacitor){
-      newErrors.capacitorType ='Select the Capacitor Type ';
-      isValid = false;
-    }
-    if(!selectedQuality){
-       newErrors.quality ='Quality is required';
-            isValid = false;
-    }
-if(!dcVoltageApplied){
-  newErrors.dcVoltageApplied ='DC Voltage is required';
-  isValid = false;
-}
-       setErrors(newErrors);
+const validateForm = () => {
+  const validations = [
+    validateField('capacitorType', selectedCapacitor),
+    validateField('environment', selectedEnvironment),
+    validateField('quality', selectedQuality),
+    validateField('temperature', temperature),
+    validateField('capacitance', capacitance),
+    validateField('dcVoltageApplied', dcVoltageApplied),
+    validateField('acVoltageApplied', acVoltageApplied),
+    validateField('dcVoltageRated', dcVoltageRated),
+    validateField('seriesResistance', seriesResistance),
+    !shouldCalculateCR || validateField('circuitResistance', circuitResistance),
+    shouldCalculateCR || validateField('effectiveResistance', effectiveResistance),
+    shouldCalculateCR || validateField('voltageApplied', voltageApplied)
+  ];
 
-    if (!isValid) {
-      setResults(null);
-    }
+  return validations.every(Boolean);
+};
 
-    return isValid;
-    // switch(name) {
-    //   case 'capacitorType':
-    //     if (!value) error = 'Capacitor type is required';
-    //     break;
-    //   case 'environment':
-    //     if (!value) error = 'Environment is required';
-    //     break;
-    //   case 'quality':
-    //     if (!value) error = 'Quality is required';
-    //     break;
-    //   case 'temperature':
-    //     if (!value) {
-    //       error = 'Temperature is required';
-    //     } 
-    //     break;
-    //   case 'capacitance':
-    //     if (!value) {
-    //       error = 'Capacitance is required';
-    //     } else if (isNaN(value) || value <= 0) {
-    //       error = 'Capacitance must be greater than 0 μF';
-    //     }
-    //     break;
-    //   case 'dcVoltageApplied':
-    //     if (!value && value !== 0) {
-    //       error = 'DC Voltage is required';
-    //     } else if (isNaN(value) || value < 0) {
-    //       error = 'DC Voltage must be ≥ 0 V';
-    //     }
-    //     break;
-    //   case 'acVoltageApplied':
-    //     if (!value && value !== 0) {
-    //       error = 'AC Voltage is required';
-    //     } else if (isNaN(value) || value < 0) {
-    //       error = 'AC Voltage must be ≥ 0 Vrms';
-    //     }
-    //     break;
-    //   case 'dcVoltageRated':
-    //     if (!value) {
-    //       error = 'Rated Voltage is required';
-    //     } else if (isNaN(value) || value <= 0) {
-    //       error = 'Rated Voltage must be > 0 V';
-    //     }
-    //     break;
-    //   case 'seriesResistance':
-    //     if (selectedCapacitor?.πsrColumn === "See πSR Table" && (!value && value !== 0)) {
-    //       error = 'Series Resistance is required';
-    //     } else if (isNaN(value) || value < 0) {
-    //       error = 'Series Resistance must be ≥ 0 ohms/volt';
-    //     }
-    //     break;
-    //   case 'circuitResistance':
-    //     if (!shouldCalculateCR && (!value && value !== 0)) {
-    //       error = 'Circuit Resistance is required';
-    //     } else if (isNaN(value) || value < 0) {
-    //       error = 'Circuit Resistance must be ≥ 0 ohms';
-    //     }
-    //     break;
-    //   case 'effectiveResistance':
-    //     if (shouldCalculateCR && (!value && value !== 0)) {
-    //       error = 'Effective Resistance is required';
-    //     } else if (isNaN(value) || value < 0) {
-    //       error = 'Effective Resistance must be ≥ 0 ohms';
-    //     }
-    //     break;
-    //   case 'voltageApplied':
-    //     if (shouldCalculateCR && (!value && value !== 0)) {
-    //       error = 'Applied Voltage is required';
-    //     } else if (isNaN(value) || value <= 0) {
-    //       error = 'Applied Voltage must be > 0 V';
-    //     }
-    //     break;
-    //   default:
-    //     break;
-    // }
-    
-    // setErrors(prev => ({ ...prev, [name]: error }));
-    // return error === '';
-  };
-
-  // const validateForm = () => {
-  //   const isValid = [
-  //     validateField('capacitorType', selectedCapacitor),
-  //     validateField('environment', selectedEnvironment),
-  //     validateField('quality', selectedQuality),
-  //     validateField('temperature', temperature),
-  //     validateField('capacitance', capacitance),
-  //     validateField('dcVoltageApplied', dcVoltageApplied),
-  //     validateField('acVoltageApplied', acVoltageApplied),
-  //     validateField('dcVoltageRated', dcVoltageRated),
-  //     validateField('seriesResistance', seriesResistance),
-  //     !shouldCalculateCR || validateField('circuitResistance', circuitResistance),
-  //     shouldCalculateCR || validateField('effectiveResistance', effectiveResistance),
-  //     shouldCalculateCR || validateField('voltageApplied', voltageApplied)
-  //   ].every(Boolean);
-
-  //   return isValid;
-  // };
-
-  // ... (rest of your calculation functions)
-
-  const handleCalculate = () => {
-   console.log("1. Starting calculation..."); // Debug log
+const handleCalculate = () => {
+  console.log("1. Starting calculation..."); // Debug log
   
   if (!validateForm()) {
     console.log("2. Validation failed - exiting"); // Debug log
     return;
   }
-  console.log("3. Validation passed - proceeding with calculation");
-    const λb = selectedCapacitor?.value.λb;
-    const πT = calculatePiT();
-    const πC = calculatePiC();
-    const πV = calculatePiV();
-    const πSR = calculatePiSR();
-    const πQ = selectedQuality.value.πQ;
-    const πE = selectedEnvironment.value.πE;
-    const λp = calculateFailureRate();
 
-    const newResult = {
-      id: Date.now(),
-      value: λp?.toFixed(10),
-      capacitorType: selectedCapacitor.style,
-      temperature,
-      capacitance,
-      dcVoltageApplied,
-      acVoltageApplied,
-      dcVoltageRated,
-      seriesResistance,
-      quality: selectedQuality.value.quality,
-      environment: selectedEnvironment.value.env,
-      parameters: {
-        λb,
-        πT,
-        πC,
-        πV,
-        πSR,
-        πQ,
-        πE,
-        λp
-      }
-    };
-  
-    setResults([...results, newResult]);
-    setShowResults(true);
+  const λb = selectedCapacitor?.value.λb;
+  const πT = calculatePiT();
+  const πC = calculatePiC();
+  const πV = calculatePiV();
+  const πSR = calculatePiSR();
+  const πQ = selectedQuality.value.πQ;
+  const πE = selectedEnvironment.value.πE;
+  const λp = calculateFailureRate();
 
-    if (onCalculate) {
-      onCalculate(λp);
+  const newResult = {
+    id: Date.now(),
+    λb,
+    πT,
+    πC,
+    πV,
+    πSR,
+    πQ,
+    πE,
+    λp,
+    parameters: {
+      λb,
+      πT,
+      πC,
+      πV,
+      πSR,
+      πQ,
+      πE,
+      λp
     }
   };
+
+  setResults([...results, newResult]);
+  setShowResults(true);
+
+  if (onCalculate) {
+    onCalculate(λp);
+  }
+};
+
+
 
   // ... (rest of your component code)
 
@@ -566,8 +539,7 @@ if(!dcVoltageApplied){
                 value={selectedCapacitor}
                 onChange={(selectedOption) => {
                   setSelectedCapacitor(selectedOption);
-                  setErrors({ ...errors, capacitorType: '' });
-           
+                  validateField('capacitorType', selectedOption);
                 }}
                 options={capacitorTypes.map(type => ({
                   value: type,
@@ -588,8 +560,7 @@ if(!dcVoltageApplied){
                 value={selectedEnvironment}
                 onChange={(selectedOption) => {
                   setSelectedEnvironment(selectedOption);
-                       setErrors({ ...errors, environment: '' });
-                
+                  validateField('environment', selectedOption);
                 }}
                 options={environmentFactors.map(type => ({
                   value: type,
@@ -607,7 +578,7 @@ if(!dcVoltageApplied){
                 value={selectedQuality}
                 onChange={(selectedOption) => {
                   setSelectedQuality(selectedOption);
-                    setErrors({ ...errors, quality: '' });
+                  validateField('quality', selectedOption);
                 }}
                 options={qualityFactors.map(type => ({
                   value: type,
@@ -630,7 +601,7 @@ if(!dcVoltageApplied){
                 onChange={(e) => {
                   const value = e.target.value === '' ? '' : parseFloat(e.target.value);
                   setDcVoltageApplied(value);
-                  // validateField('dcVoltageApplied', value);
+                  validateField('dcVoltageApplied', value);
                 }}
                 min="0"
                 step="1"
@@ -647,7 +618,7 @@ if(!dcVoltageApplied){
                 onChange={(e) => {
                   const value = e.target.value === '' ? '' : parseFloat(e.target.value);
                   setAcVoltageApplied(value);
-                  // validateField('acVoltageApplied', value);
+                  validateField('acVoltageApplied', value);
                 }}
                 min="0"
                 step="1"
@@ -664,7 +635,7 @@ if(!dcVoltageApplied){
                 onChange={(e) => {
                   const value = e.target.value === '' ? '' : parseFloat(e.target.value);
                   setDcVoltageRated(value);
-                  // validateField('dcVoltageRated', value);
+                  validateField('dcVoltageRated', value);
                 }}
                 min="1"
                 step="1"
@@ -683,7 +654,7 @@ if(!dcVoltageApplied){
               onChange={(e) => {
                 const value = e.target.value === '' ? '' : parseFloat(e.target.value);
                 setSeriesResistance(value);
-                // validateField('seriesResistance', value);
+                validateField('seriesResistance', value);
               }}
               min="0"
               step="0.1"
@@ -702,7 +673,7 @@ if(!dcVoltageApplied){
                 onChange={(e) => {
                   const value = e.target.value === '' ? '' : parseFloat(e.target.value);
                   setTemperature(value);
-                  // validateField('temperature', value);
+                  validateField('temperature', value);
                 }}
                 min="20"
                 max="150"
@@ -721,7 +692,7 @@ if(!dcVoltageApplied){
                 onChange={(e) => {
                   const value = e.target.value === '' ? '' : parseFloat(e.target.value);
                   setCapacitance(value);
-                  // validateField('capacitance', value);
+                  validateField('capacitance', value);
                 }}
                 min="0.000001"
                 step="0.000001"
@@ -741,7 +712,7 @@ if(!dcVoltageApplied){
                 onChange={(selectedOption) => {
                   const value = selectedOption.value;
                   setCircuitResistance(value);
-                  // validateField('circuitResistance', value);
+                  validateField('circuitResistance', value);
                   const CR = calculateCR(value, voltageApplied);
                   setPiSR(calculatePiSRFromCR(CR));
                 }}
@@ -791,7 +762,7 @@ if(!dcVoltageApplied){
                     onChange={(e) => {
                       const value = e.target.value === '' ? '' : parseFloat(e.target.value);
                       setEffectiveResistance(value);
-                      // validateField('effectiveResistance', value);
+                      validateField('effectiveResistance', value);
                     }}
                     min="0"
                     step="0.1"
@@ -810,7 +781,7 @@ if(!dcVoltageApplied){
                     onChange={(e) => {
                       const value = e.target.value === '' ? '' : parseFloat(e.target.value);
                       setVoltageApplied(value);
-                      // validateField('voltageApplied', value);
+                      validateField('voltageApplied', value);
                     }}
                     min="0"
                     step="0.1"
@@ -867,7 +838,7 @@ if(!dcVoltageApplied){
   className="btn-calculate float-end mt-1" 
   onClick={() => {
     handleCalculate();
-   
+   setShowResults(true);
   }}
 >
   Calculate Failure Rate
@@ -876,7 +847,7 @@ if(!dcVoltageApplied){
       </div>
       <br />
       <div>
-       { results && showResults && (
+             { results && showResults && (
           <div>
             <h2 className='text-center'>Calculation Result</h2>
             <div className="d-flex align-items-center">
