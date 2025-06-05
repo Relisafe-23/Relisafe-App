@@ -83,7 +83,7 @@ function Index(props) {
     ? props?.location?.state?.projectId
     : props?.match?.params?.id;
   const [currentComponent, setCurrentComponent] = useState({
-    type: "Resistor",
+    type: "Capacitor",
   });
   const [category, setCategory] = useState("");
   const [environment, setEnvironment] = useState("");
@@ -2499,85 +2499,87 @@ function Index(props) {
                                                 });
                                               }}
                                               options={[
-                                                {
-                                                  value: "Microcircuits",
-                                                  label: "Microcircuits",
-                                                },
-                                                {
-                                                  value: "Resistor",
-                                                  label: "Resistor",
-                                                },
-                                                {
-                                                  value: "Tubes",
-                                                  label: "Tubes",
-                                                },
-                                                {
-                                                  value: "Switches",
-                                                  label: "Switches",
-                                                },
-                                                {
+                                                  {
                                                   value: "Capacitor",
                                                   label: "Capacitor",
                                                 },
-                                                {
-                                                  value: "Inductive",
-                                                  label: "Inductive",
-                                                },
-                                                {
+                                                   {
                                                   value: "Connections",
                                                   label: "Connections",
                                                 },
-                                                {
-                                                  value: "Lamps",
-                                                  label: "Lamps",
-                                                },
-                                                {
-                                                  value: "Relay",
-                                                  label: "Relay",
-                                                },
-                                                {
-                                                  value: "Quartz",
-                                                  label: "Quartz",
-                                                },
-                                                {
-                                                  value: "Electronic Filters",
-                                                  label: "Electronic Filters",
-                                                },
-                                                {
-                                                  value: "Fuses",
-                                                  label: "Fuses",
-                                                },
-                                                {
-                                                  value: "Meters",
-                                                  label: "Meters",
-                                                },
-                                                {
-                                                  value: "Laser",
-                                                  label: "Laser",
-                                                },
-                                                {
+                                                   {
                                                   value: "Connectors",
                                                   label: "Connectors",
                                                 },
-                                                {
+                                                  {
                                                   value:
                                                     "Discrete Semiconductor",
                                                   label:
                                                     "Discrete Semiconductor",
                                                 },
-                                                {
-                                                  value: "Rotating Device",
-                                                  label: "Rotating Device",
+                                                   {
+                                                  value: "Electronic Filters",
+                                                  label: "Electronic Filters",
                                                 },
-                                                {
+                                                 {
+                                                  value: "Fuses",
+                                                  label: "Fuses",
+                                                },
+                                                   {
                                                   value: "Interconnection",
                                                   label: "Interconnection",
                                                 },
+                                                   {
+                                                  value: "Inductive",
+                                                  label: "Inductive",
+                                                },
+                                                
                                                 {
+                                                  value: "Lamps",
+                                                  label: "Lamps",
+                                                },
+                                                  {
+                                                  value: "Laser",
+                                                  label: "Laser",
+                                                },
+                                                   {
+                                                  value: "Meters",
+                                                  label: "Meters",
+                                                },
+                                                {
+                                                  value: "Microcircuits",
+                                                  label: "Microcircuits",
+                                                },
+                                                  {
                                                   value: "Miscellaneous",
                                                   label: "Miscellaneous",
                                                 },
-                                              ]}
+                                                 {
+                                                  value: "Quartz",
+                                                  label: "Quartz",
+                                                },
+                                                {
+                                                  value: "Resistor",
+                                                  label: "Resistor",
+                                                },
+                                                
+                                                 {
+                                                  value: "Relay",
+                                                  label: "Relay",
+                                                },
+                                                   {
+                                                  value: "Rotating Device",
+                                                  label: "Rotating Device",
+                                                },
+                                                  {
+                                                  value: "Switches",
+                                                  label: "Switches",
+                                                },
+                                                {
+                                                  value: "Tubes",
+                                                  label: "Tubes",
+                                                },
+                                                 ]}
                                               className="mt-2"
                                             />
                                           </div>
