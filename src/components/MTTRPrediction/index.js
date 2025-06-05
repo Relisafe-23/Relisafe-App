@@ -89,6 +89,9 @@ const MTTRPrediction = (props, active) => {
   const [mergedData, setMergedData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [companyId, setCompanyId] = useState();
+    const [selectedField, setSelectedField] = useState(null);
+    const [selectedFunction, setSelectedFunction] = useState();
+  
   const [data, setData] = useState({
     toolType: "",
     time: "",
@@ -100,15 +103,19 @@ const MTTRPrediction = (props, active) => {
   });
 
   const handleInputChange = (selectedItems, name) => {
-    setData((prevData) => ({
-      ...prevData,
-      [name]: selectedItems ? selectedItems.value : "", // Assuming you want to store the selected value
-    }));
-  };
+  setData((prevData) => ({
+    ...prevData,
+    [name]: selectedItems ? selectedItems.value : "",
+  }));
+};
 
-  const getAllSeprateLibraryData = async () => {
+
+
+ const getAllSeprateLibraryData = async () => {
+  // console.log("getAllSeprateLibraryData called",);
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
+    console.log("companyId in getAllSeprateLibraryData", companyId);
     Api.get("api/v1/library/get/all/separate/value", {
       params: {
         projectId: projectId,
@@ -118,6 +125,7 @@ const MTTRPrediction = (props, active) => {
         (item) => item?.moduleName === "MTTR"
       );
       setAllSepareteData(filteredData);
+      console.log("allSepareteData", filteredData);
       const merged = [...tableData, ...filteredData];
       setMergedData(merged);
     });
@@ -345,10 +353,15 @@ const MTTRPrediction = (props, active) => {
   };
 
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
+    // console.log("getAllConnectedLibrary called", fieldValue, fieldName);
+    console.log("project id....",projectId);
+    console.log("fieldValue in getAllConnectedLibrary", fieldValue);
+    console.log("fieldName in getAllConnectedLibrary", fieldName);
+
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
-        moduleName: "PMMRA",
+        moduleName: "MTTR",
         sourceName: fieldName,
         sourceValue: fieldValue.value,
       },
@@ -428,64 +441,69 @@ const MTTRPrediction = (props, active) => {
       title: "S.No",
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
     },
-    {
-      title: "TaskType",
-      field: "taskType",
-      type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "110px" },
-      validate: (rowData) => {
-        if (rowData?.taskType === undefined || rowData?.taskType === "") {
-          return "required";
-        }
-        return true;
-      },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "TaskType") ||
-          [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "TaskType"
-          ) || [];
 
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="TaskType"
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="Task Type"
-              style={{ height: "40px", borderRadius: "4px", width: "80px" }}
-              title="Enter Task Type"
-            />
-          );
-        }
-        return (
-          <Select
-            name="TaskType"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "TaskType");
-              getAllConnectedLibrary(selectedItems, "TaskType");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
+{
+  title: "TaskType",
+  field: "taskType",
+  type: "string",
+  headerStyle: { textAlign: "center" },
+  cellStyle: { minWidth: "110px" },
+  validate: (rowData) => {
+    if (rowData?.taskType === undefined || rowData?.taskType === "") {
+      return "required";
+    }
+    return true;
+  },
+  editComponent: ({ value, onChange }) => {
+    const seperateFilteredData =
+      allSepareteData?.filter((item) => item?.sourceName === "TaskType") || [];
+    const conncetedFilteredData =
+      allConnectedData?.filter((item) => item?.destinationName === "TaskType") || [];
+
+    const options =
+      conncetedFilteredData.length > 0
+        ? conncetedFilteredData?.map((item) => ({
+            value: item?.destinationValue,
+            label: item?.destinationValue,
+          }))
+        : seperateFilteredData?.map((item) => ({
+            value: item?.sourceValue,
+            label: item?.sourceValue,
+          }));
+
+    const selectedOption = options.find(opt => opt.value === value) || null;
+
+    if (!options || options.length === 0) {
+      return (
+        <input
+          type="text"
+          name="TaskType"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Task Type"
+          style={{ height: "40px", borderRadius: "4px", width: "80px" }}
+          title="Enter Task Type"
+        />
+      );
+    }
+    
+    return (
+      <Select
+        name="TaskType"
+        value={selectedOption}
+        onChange={(selectedItems) => {
+          const newValue = selectedItems ? selectedItems.value : "";
+          onChange(newValue);
+          handleInputChange(selectedItems, "taskType");
+          getAllConnectedLibrary(selectedItems, "TaskType");
+        }}
+        options={options}
+        isClearable
+        styles={customStyles}
+      />
+    );
+  },
+},
     {
       title: "Average Task Time(Hours)",
       field: "time",
@@ -493,7 +511,7 @@ const MTTRPrediction = (props, active) => {
       headerStyle: { textAlign: "center" },
       cellStyle: { minWidth: "110px" },
       validate: (rowData) => {
-        if (rowData.time === undefined || rowData.time === "") {
+        if (rowData?.time === undefined || rowData?.time === "") {
           return "required";
         }
         return true;
@@ -516,6 +534,8 @@ const MTTRPrediction = (props, active) => {
                 value: item?.sourceValue,
                 label: item?.sourceValue,
               }));
+              
+    const selectedOption = options.find(opt => opt.value === value) || null;
         if (!options || options.length === 0) {
           return (
             <input
@@ -532,17 +552,31 @@ const MTTRPrediction = (props, active) => {
         return (
           <Select
             name="time"
-            value={value ? { label: value, value: value } : ""}
+        value={selectedOption}
             onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
+              const newValue = selectedItems ? selectedItems.value : ""; 
+            onChange(newValue);
               handleInputChange(selectedItems, "time");
               getAllConnectedLibrary(selectedItems, "time");
             }}
             options={options}
+               isClearable
+        styles={customStyles}
           />
         );
       },
     },
+    
+
+
+
+
+
+
+
+
+
+
     {
       title: "No of Labours",
       field: "totalLabour",
@@ -884,40 +918,83 @@ const MTTRPrediction = (props, active) => {
       });
   };
 
-  const updateProcedureData = (value) => {
-    const companyId = localStorage.getItem("companyId");
-    const rowId = value?.id;
+  // const updateProcedureData = (value) => {
+  //   const companyId = localStorage.getItem("companyId");
+  //   const rowId = value?.id;
 
-    const userId = localStorage.getItem("userId");
+  //   const userId = localStorage.getItem("userId");
 
-    Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, {
-      time: value.time,
-      totalLabour: value.totalLabour,
-      skill: value.skill,
-      tools: value.tools,
-      partNo: value.partNo,
-      toolType: value.toolType,
-      taskType: value.taskType,
-      projectId: projectId,
-      productId: productId,
-      companyId: companyId,
-      treeStructureId: treeStructure,
-      token: token,
-      userId: userId,
-    })
-      .then((response) => {
-        getProcedureData();
-        toast.success("Procedure Updated Successfully");
-      })
-      .catch((error) => {
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
+  //   Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, {
+  //     time: value.time,
+  //     totalLabour: value.totalLabour,
+  //     skill: value.skill,
+  //     tools: value.tools,
+  //     partNo: value.partNo,
+  //     toolType: value.toolType,
+  //     taskType: value.taskType,
+  //     projectId: projectId,
+  //     productId: productId,
+  //     companyId: companyId,
+  //     treeStructureId: treeStructure,
+  //     token: token,
+  //     userId: userId,
+  //   })
+  //     .then((response) => {
+  //       getProcedureData();
+  //       toast.success("Procedure Updated Successfully");
+  //     })
+  //     .catch((error) => {
+  //       const errorStatus = error?.response?.status;
+  //       if (errorStatus === 401) {
+  //         logout();
+  //       }
+  //     });
+  // };
+
+
+const updateProcedureData = (value) => {
+  console.log("value in updateProcedureData", value);
+  const companyId = localStorage.getItem("companyId");
+  const rowId = value?.id;
+  const userId = localStorage.getItem("userId");
+console.log("rowId in updateProcedureData", rowId);
+  // Prepare the data object with all required fields
+  const requestData = {
+    
+    time: value.time || "",
+    totalLabour: value.totalLabour || "",
+    skill: value.skill || "",
+    tools: value.tools || "",
+    partNo: value.partNo || "",
+    toolType: value.toolType || "",
+    taskType: value.taskType || "",
+    projectId: projectId,
+    productId: productId,
+    companyId: companyId,
+    treeStructureId: treeStructure,
+    token: token,
+    userId: userId,
+    console: console.log("requestData in updateProcedureData", requestData),
   };
 
-  const getProcedureData = () => {
+
+  Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, requestData)
+    .then((response) => {
+      getProcedureData();
+      toast.success("Procedure Updated Successfully");
+    })
+    .catch((error) => {
+      console.error("Error updating procedure:", error);
+      const errorStatus = error?.response?.status;
+      if (errorStatus === 401) {
+        logout();
+      } else {
+        toast.error("Failed to update procedure");
+      }
+    });
+};
+
+ const getProcedureData = () => {
     const companyId = localStorage.getItem("companyId");
     const userId = localStorage.getItem("userId");
     Api.get("/api/v1/mttrPrediction/get/procedure/", {

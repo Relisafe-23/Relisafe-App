@@ -14,6 +14,7 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles'
 import { CalculatorIcon } from '@heroicons/react/24/outline'; // or /24/solid
 import DeleteIcon from '@material-ui/icons/Delete';
+import { initAsyncCompiler } from 'sass';
 
 const InductiveCalculation = ({ onCalculate }) => {
   // Transformer types data
@@ -109,7 +110,9 @@ const InductiveCalculation = ({ onCalculate }) => {
 
 
   // State for form inputs
-  const [deviceType, setDeviceType] = useState(null)
+  const [deviceType, setDeviceType] = useState("Transformer"); // Default to transformer
+  const [selectedDeviceType, setSelectedDeviceType] = useState("Transformer Type");
+  const [selectedTransformerType, setSelectedTransformerType] = useState(null);
 
   const [transformerQuality, setTransformerQuality] = useState(qualityFactors[0]);
 
@@ -126,11 +129,12 @@ const InductiveCalculation = ({ onCalculate }) => {
   const [inputPower, setInputPower] = useState(null);
   const [casesTypes, setCasesTypes] = useState(null)
   const [weight, setWeight] = useState(null);
-  const [selectedDeviceType,setSelectedDeviceType] = useState (null)
+  // const [selectedDeviceType,setSelectedDeviceType] = useState (null)
   const [selectedQuality, setSelectedQuality] = useState(null);
   const [selectedEnvironment, setSelectedEnvironment] = useState(null);
   const [results, setResults] = useState([]);
-  const[selectedDevice, setSelectedDevice] = useState ({value: "Transformer"});
+  const[selectedDevice, setSelectedDevice] = useState ("Transformer");
+ 
   const [showResults, setShowResults] = useState(false);
   const [errors,setErrors] = useState ({
  quality:"",
