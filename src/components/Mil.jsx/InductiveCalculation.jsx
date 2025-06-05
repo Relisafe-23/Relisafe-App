@@ -108,7 +108,9 @@ const InductiveCalculation = ({ onCalculate }) => {
 
 
   // State for form inputs
-  const [deviceType, setDeviceType] = useState(null)
+  const [deviceType, setDeviceType] = useState("Transformer"); // Default to transformer
+  const [selectedDeviceType, setSelectedDeviceType] = useState("Transformer Type");
+  const [selectedTransformerType, setSelectedTransformerType] = useState(null);
 
   const [transformerQuality, setTransformerQuality] = useState(qualityFactors[0]);
 
@@ -125,11 +127,12 @@ const InductiveCalculation = ({ onCalculate }) => {
   const [inputPower, setInputPower] = useState(null);
   const [casesTypes, setCasesTypes] = useState(null)
   const [weight, setWeight] = useState(null);
-  const [selectedDeviceType,setSelectedDeviceType] = useState (null)
+  // const [selectedDeviceType,setSelectedDeviceType] = useState (null)
   const [selectedQuality, setSelectedQuality] = useState(null);
   const [selectedEnvironment, setSelectedEnvironment] = useState(null);
   const [results, setResults] = useState([]);
-  const[selectedDevice, setSelectedDevice] = useState ({value: "Transformer"});
+  const[selectedDevice, setSelectedDevice] = useState ("Transformer");
+ 
   const [showResults, setShowResults] = useState(false);
   const [errors,setErrors] = useState ({
  quality:"",
@@ -420,7 +423,7 @@ const InductiveCalculation = ({ onCalculate }) => {
                 </Col>
                 <Col md={4}>
             <label>Inductor Type</label>
-            <div>
+             <div className="form-group">
                     <Select
                            styles={customStyles}
                 isInvalid = {!!errors.deviceTypes}
