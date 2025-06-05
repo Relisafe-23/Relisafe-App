@@ -11,6 +11,9 @@ import { faEllipsisV, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icon
 import { Button, Col, Form, Modal, Row, Table, InputGroup, Dropdown, Card, FormControl } from "react-bootstrap";
 import * as Yup from "yup";
 import { customStyles } from "../core/select";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faPen } from "@fortawesome/free-solid-svg-icons";
+
 import { useHistory } from "react-router-dom";
 
 function Company() {
@@ -28,6 +31,9 @@ function Company() {
   const [companyId, setCompanyId] = useState([]);
   const history = useHistory();
   const userId = localStorage.getItem("userId");
+    const [editMode, setEditMode] = useState(false);
+  const [currentCompany, setCurrentCompany] = useState(null);
+  const [editCompanyName, setEditCompanyName] = useState("");
 
   const togglePasswordVisiblity = () => {
     setPasswordShown(passwordShown ? false : true);
@@ -152,7 +158,78 @@ function Company() {
         }
       });
   };
+   
+  
+  
+const deleteCompany = (id) => {
+    Api.delete(`/api/v1/company/${id}`, {
+      headers: {
+        userId: userId,
+      }
+      
+    })
+      .then((res) => {
+        const message = res?.data?.message;
+        
+        setSuccessIcon(true);
+        setSuccessMessage("Company deleted successfully");
+        setShowMessage();
+        getAllCompanyData();
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        } else {
+          setDeniedIcon(true);
+          setSuccessMessage("Failed to delete company");
+          setShowMessage();
+        }
+      });
+  };
 
+ const handleEditCompany = (company) => {
+  setCurrentCompany(company);
+  setEditCompanyName(company.companyName);
+  setEditMode(true);
+}; 
+
+
+const handleUpdateCompany = () => {
+
+
+  Api.patch(`/api/v1/company/${currentCompany.id}`, {
+    companyName: editCompanyName,
+    userId: userId
+  }, {
+    headers: {
+   userId: userId
+    }
+  })
+  .then((res) => {
+    console.log("Update response:", res);
+    if (res.status === 200 || res.status === 201) {
+      setSuccessIcon(true);
+      setSuccessMessage(res.data?.message || "Company updated successfully");
+      setShowMessage();
+      setEditMode(false);
+      setEditCompanyName("");
+      setCurrentCompany(null);
+      getAllCompanyData();
+    }
+  })
+  .catch((error) => {
+    console.error("Update error:", error);
+    const errorStatus = error?.response?.status;
+    if (errorStatus === 401) {
+      logout();
+    } else {
+      setDeniedIcon(true);
+      setSuccessMessage(error.response?.data?.message || "Failed to update company");
+      setShowMessage();
+    }
+  });
+};
   useEffect(() => {
     getAllCompanyData();
   }, []);
@@ -242,8 +319,7 @@ function Company() {
                           <Col>
                             <Form.Group className="mt-3">
                               <Label notify={true}>Username</Label>
-                              <Form.Control
-                                type="text"
+                              <Form.Control                                type="text"
                                 name="name"
                                 autoComplete="off"
                                 value={values.name}
@@ -406,6 +482,7 @@ function Company() {
               <tr>
                 <th>S.No</th>
                 <th>Company Name</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -413,7 +490,22 @@ function Company() {
                 data?.map((list, key) => (
                   <tr>
                     <td>{key + 1}</td>
+                    
                     <td>{list?.companyName}</td>
+                <td>
+    <FontAwesomeIcon 
+              icon={faTrash} 
+              style={{color: "#e60f45", cursor: "pointer"}} 
+              className="me-2"
+              onClick={() => deleteCompany(list.id)} 
+            />
+<FontAwesomeIcon 
+  icon={faPen} 
+  style={{color: "#1D5460", cursor: "pointer"}}
+  size="xl"
+  onClick={() => handleEditCompany(list)}
+/>
+</td>
                   </tr>
                 ))
               ) : (
@@ -458,6 +550,7 @@ function Company() {
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
+
             <Row style={{ borderTop: 0, width: "101%" }} className="me-0 pe-0">
               <Col className="d-flex justify-content-end me-0 pe-0 ">
                 <Button
@@ -486,6 +579,30 @@ function Company() {
           </Modal.Footer>
         </Form>
       </Modal>
+      <Modal show={editMode} onHide={() => setEditMode(false)} centered>
+  <Modal.Header closeButton>
+    <Modal.Title>Edit Company</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Form.Group>
+      <Label>Company Name</Label>
+      <Form.Control
+        type="text"
+        value={editCompanyName}
+        onChange={(e) => setEditCompanyName(e.target.value)}
+        placeholder="Enter company name"
+      />
+    </Form.Group>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setEditMode(false)}>
+      Cancel
+    </Button>
+    <Button variant="primary" onClick={handleUpdateCompany}>
+      Save Changes
+    </Button>
+  </Modal.Footer>
+</Modal>
     </div>
   );
 }

@@ -2259,7 +2259,7 @@ function Index(props) {
               />
             </ThemeProvider>
           </div>
-          <Modal show={show} centered className="user-delete-modal">
+          {/* <Modal show={show} centered className="user-delete-modal">
             <Modal.Body className="modal-body-user">
               <div>
                 <h4 className="d-flex justify-content-center">
@@ -2279,7 +2279,7 @@ function Index(props) {
                 ok
               </Button>
             </Modal.Footer>
-          </Modal>
+          </Modal> */}
           <Modal show={show} centered>
             <div className="d-flex justify-content-center mt-5">
               <FontAwesomeIcon

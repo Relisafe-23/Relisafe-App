@@ -294,7 +294,6 @@ const Quartz = ({ onCalculate }) => {
               />
               {errors.quality && <small className="text-danger">{errors.quality}</small>}
             </div>
- 
           </Col>
           <Col md={4}>
             <div className="form-group">
@@ -323,7 +322,6 @@ const Quartz = ({ onCalculate }) => {
               />
                 {errors.environment && <small className="text-danger">{errors.environment}</small>}
             </div>
-           
           </Col>
         </Row>
         <div className='d-flex justify-content-between align-items-center'>
