@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import Select from "react-select";
 import {
   calculateMicrocircuitsAndMicroprocessorsFailureRate,
@@ -34,8 +34,6 @@ import { Button, Container, Row, Col, Table, Collapse } from 'react-bootstrap';
 import Box from '@mui/material/Box';
 import { Alert } from "@mui/material";
 import MicroCapacitor from './MicroCapacitor.jsx';
-import Microcircuits from './Microcircuits.jsx';
-import MicroDiode from './MicroDiode.jsx';
 import './Microcircuits.css'
 import MaterialTable from "material-table";
 import { tableIcons } from "../core/TableIcons";
@@ -43,21 +41,17 @@ import { createTheme } from "@mui/material";
 import { ThemeProvider } from "@material-ui/core";
 
 
-const MicrocircuitsCalculation = ({ onCalculate }) => {
-
-
+const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDevice, handleCalculateMemories, handleCalculateVhsic, handleCalculateGaAs, handleCalculateBubble }) => {
   const [showCalculations, setShowCalculations] = useState(false);
-  const [mainInitialRate, setMainInitialRate] = useState("")
   const [components, setComponents] = useState([]);
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [currentDevice, setCurrentDevice] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [selectedOption, setSelectedOption] = useState();
   const [results, setResults] = useState(false)
-  const [quantity, setQuantity] = useState(null)
   const [currentComponents, setCurrentComponents] = useState(null);
   const [mode, setMode] = useState('A1');
-  const [numberOfPins, setNumberOfPins] = useState(null);
+  const [numberOfPins, setNumberOfPins] = useState(0);
   const [selectedECC, setSelectedECC] = React.useState(null);// 'A1' or 'C'
   const [currentComponent, setCurrentComponent] = useState({
     type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
@@ -67,7 +61,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     environment: '',
     data: "microprocessorData",
     quality: 'M',
-    quantity: 0,
+    quantity: 1,
     microprocessorData: "",
     gateCount: 1000,
     technology: '',
@@ -95,8 +89,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     basePiT: 0.1,
     calculatedPiT: null
   });
-
-
   const eccOptions = [
     { value: 'none', label: 'No On-Chip ECC', factor: 1.0 },
     { value: 'hamming', label: 'On-Chip Hamming Code', factor: 0.72 },
@@ -128,25 +120,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     }));
   };
 
-  const c1Values = {
-    MMIC: [
-      { range: '1-100', value: 4.5 },
-      { range: '101-1000', value: 7.2 }
-    ],
-    Digital: [
-      { range: '1-1000', value: 25 },
-      { range: '1001-10000', value: 51 }
-    ]
-  };
-
-  const getQualityLabel = (piQ) => {
-    const qualityOptions = [
-      { piQ: 0.25, label: "Class S (MIL-M-38510)" },
-      { piQ: 1.0, label: "Class B (MIL-M-38510)" },
-      { piQ: 2.0, label: "Class B-1 (MIL-STD-883)" }
-    ];
-    return qualityOptions.find(q => q.piQ === parseFloat(piQ))?.label || 'Unknown';
-  };
 
   const getEnvironmentFactor = (envValue) => {
     if (!environmentOptions || !Array.isArray(environmentOptions)) return 1.0;
@@ -350,28 +323,17 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
   ];
 
   const QUALITY_FACTORS = [
-    {
-      label: "10 Temperature Cycles (-55°C to +125°C) with end point electrical tests",
-      value: 0.10,
-      screeningLevel: "High"
-    },
+    // {
+    //   label: "10 Temperature Cycles (-55°C to +125°C) with end point electrical tests",
+    //   value: 0.10,
+    //   screeningLevel: "High"
+    // },
     {
       label: "None beyond best commercial practices",
       value: 1.0,
       screeningLevel: "Standard"
     }
   ];
-
-  const calculateComponentSum = (newQuantity, currentComponent) => {
-    const parsedQuantity = Math.max(1, parseInt(newQuantity));
-    setQuantity(parsedQuantity);
-
-    const baseLambda = currentComponent?.baseFailureRate || mainInitialRate || 0;
-    const componentSum = parsedQuantity * baseLambda;
-
-    console.log("Component Sum (Nₙ * λₙ):", componentSum);
-    return componentSum;
-  };
 
   const [inputs, setInputs] = useState({
     memoryType: dieComplexityRates[0],
@@ -531,46 +493,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     }
   };
 
-
-  const calculateHybridFailureRate = (component) => {
-    // Validate input
-    if (!component || !component.components) {
-      console.error('Invalid component data');
-      return 0;
-    }
-
-    // Sum of (Nc × λc) for all components
-    const componentSum = calculateComponentSum();
-    console.log("componentSum", componentSum)
-
-    // Get all the π factors with proper defaults
-    const piE = getEnvironmentFactor(component.environment) || 1;
-    console.log("piE", piE)
-    const piF = component.piF || getCircuitFunctionFactor(component.circuitType) || 1;
-    const piQ = component.piQ || getQualityFactor(component.quality) || 1;
-    const piL = component.piL || calculateLearningFactor(component.yearsInProduction) || 1;
-
-    // Get the environmental stress factor (E) with default 0 if not provided
-    const environmentalStress = Number(component.environmentalStress) || 0;
-
-
-    // Corrected formula based on MIL-HDBK-217: λp = 1.2 × Σ(Nc × λc) × (1 + 2.7E) × πE × πF × πQ × πL
-    const failureRate = 1.2 * componentSum * (1 + 2.7 * environmentalStress) * piE * piF * piQ * piL;
-
-    // Debug logging
-    console.log("Calculation Parameters:", {
-      componentSum,
-      environmentalStress,
-      piE,
-      piF,
-      piQ,
-      piL,
-      failureRate
-    });
-
-    return failureRate;
-  };
-
   const addComponent = () => {
     let calculation = {};
     let failureRate = 0;
@@ -583,7 +505,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 
         calculationParams = {
           C1: calculateGateArrayC1(currentComponent),
-          C2: getFailureRate(currentComponent.packageType, currentComponent.pinCount),
+          C2: 0,
           piT: calculatePiT(currentComponent.technology, currentComponent.temperature),
           piE: getEnvironmentFactor(currentComponent?.environment),
           piQ: getQualityFactor(currentComponent.quality),
@@ -592,27 +514,8 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
         };
         break;
 
-      case "Microcircuits,Hybrids":
-        // Calculate component sum (Σ N₀ λ_c)
-        const componentSum = calculateComponentSum(quantity, currentComponent);
-        const piE = getEnvironmentFactor(currentComponent.environment) || 1;
-        const piQ = currentComponent.quality?.value || getQualityFactor('MIL_M_38510_ClassB') || 1;
-        const piF = getCircuitFunctionFactor(currentComponent.circuitType) || 1;
-        const piL = calculateLearningFactor(currentComponent.yearsInProduction) || 1;
-
-        // Apply formula: λ_p = [Σ N₀ λ_c] (1 + 2 π_E) π_F π_Q π_L
-        const failureRate = componentSum * (1 + 2 * piE) * piF * piQ * piL;
-        calculationParams = {
-          componentSum,
-          piE,
-          piQ,
-          piF,
-          piL,
-          λp: failureRate
-        };
-        console.log("Calculation Parameters:", calculationParams);
-
-
+      default:
+        calculation = { error: 'Unsupported component type' };
     }
 
     const totalFailureRate = failureRate * currentComponent;
@@ -624,6 +527,11 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 
     ]);
 
+
+    // Update the components array
+
+
+    // Also set results for display
     setResults({
       failureRate,
       totalFailureRate,
@@ -670,9 +578,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     return inputs.partType === 'Logic' ? 0.16 : 0.24;
   };
 
-  const handleCalculateSawDevice = (values) => {
-    setMainInitialRate(values)
-  }
+
   const manufacturingProcessTypes = [
     { value: 'QML', factor: 0.55 },
     { value: 'QPL', factor: 0.55 },
@@ -812,7 +718,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     // ... rest of your options (same structure for all)
   ];
   const calculateLambdaBP = () => {
-    return 0.0022 + (1.72 * Math.pow(10, -5) * numberOfPins);
+    return 0;
   };
   const getESDFailureRate = () => {
     const selected = esdLevels?.find(e => e.value === inputs.esdSusceptibility);
@@ -865,32 +771,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
       currentTemperature: temperature
     };
   };
-  const handleCalculateBubble = (values) => {
-    setMainInitialRate(values)
-  }
-
-  const handleCalculateGaAs = (values) => {
-    setMainInitialRate(values)
-  }
-
-  const handleCalculateVhsic = (value) => {
-    setMainInitialRate(value)
-  }
-  const handleCalculateMemories = (value) => {
-    setMainInitialRate(value)
-  }
-  const handleCalculateGate = (value) => {
-    setMainInitialRate(value)
-  }
-  const handleCalculateFailure = (value) => {
-    setMainInitialRate(value)
-  }
-  const handleInitialRate = (initialRate) => {
-    setMainInitialRate(initialRate)
-  }
-
-  console.log(mainInitialRate)
-
 
   const calculateVhsicFailureRate = () => {
     try {
@@ -996,8 +876,8 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
         : inputs.memorySize.bipolar;
 
       // Get C2 (Package Failure Rate)
-      const c2 = getFailureRate(currentComponent.packageType, currentComponent.pinCount)
-
+      const c2 = 0
+      console.log("C2", c2)
       // Calculate λcyc
 
       const lambdaCyc = calculateLambdaCyc();
@@ -1086,7 +966,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
       const piA = currentComponent.piA;
 
       // Get C2 (package factor)
-      const c2 = getFailureRate(currentComponent.packageType, currentComponent.pinCount)
+      const c2 = 0
 
       // Get πE (environment factor)
       const piE = currentComponent.piE;
@@ -1155,7 +1035,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
       const C22 = 0.00001 * Math.pow(N2, 0.3);
 
       // Package factor (already set in packageType selection)
-      const C2 = currentComponent.c2;
+      const C2 = 0;
 
 
       // Temperature factors
@@ -1252,7 +1132,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                 options={[
                   { value: "Microcircuits,Gate/Logic Arrays And Microprocessors", label: "Microcircuits,Gate/Logic Arrays And Microprocessors" },
                   { value: "Microcircuits,Memories", label: "Microcircuits,Memories" },
-                  { value: "Microcircuits,Hybrids", label: "Microcircuits,Hybrids" },
                   { value: "Microcircuits,Saw Devices", label: "Microcircuits,Saw Devices" },
                   { value: "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS", label: "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS" },
                   { value: "Microcircuit,GaAs MMIC and Digital Devices", label: "Microcircuit,GaAs MMIC and Digital Devices" },
@@ -1300,13 +1179,12 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
               <Col md={4}>
                 <div className="form-group">
                   <label>Number of Package Pins (λ<sub>BP</sub>):</label>
+
                   <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={numberOfPins}
+                    styles={customStyles}
+                    placeholder="Select"
+                    value={0} // Fixed value set to 0
                     onChange={(e) => setNumberOfPins(parseInt(e.target.value) || 0)}
-                    className="form-control"
                   />
                 </div>
               </Col>
@@ -1434,37 +1312,37 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     }}
                     options={[
                       // Class S Categories (πQ = 0.25)
-                      {
-                        value: "MIL_M_38510_ClassS",
-                        label: "Class S (MIL-M-38510, Class S)",
-                        piQ: 0.25, // Store πQ for calculations
-                        description: "Procured in full accordance with MIL-M-38510, Class S requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassU",
-                        label: "Class S (MIL-I-38535, Class U)",
-                        piQ: 0.25,
-                        description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
-                      },
-                      {
-                        value: "MIL_H_38534_ClassS_Hybrid",
-                        label: "Class S Hybrid (MIL-H-38534, Level K)",
-                        piQ: 0.25,
-                        description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
-                      },
+                      // {
+                      //   value: "MIL_M_38510_ClassS",
+                      //   label: "Class S (MIL-M-38510, Class S)",
+                      //   piQ: 0.25, // Store πQ for calculations
+                      //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
+                      // },
+                      // {
+                      //   value: "MIL_I_38535_ClassU",
+                      //   label: "Class S (MIL-I-38535, Class U)",
+                      //   piQ: 0.25,
+                      //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
+                      // },
+                      // {
+                      //   value: "MIL_H_38534_ClassS_Hybrid",
+                      //   label: "Class S Hybrid (MIL-H-38534, Level K)",
+                      //   piQ: 0.25,
+                      //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
+                      // },
 
                       // Class B Categories (πQ = 1.0)
                       {
                         value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B)",
+                        label: "Class B (MIL-M-38510, Class B)πQ = 1.0",
                         piQ: 1.0,
                         description: "Procured in full accordance with MIL-M-38510, Class B requirements."
                       },
                       {
                         value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q)",
+                        label: "Class B (MIL-I-38535, Class Q) πQ = 1.0",
                         piQ: 1.0,
-                        description: "Procured in full accordance with MIL-I-38535 (Class Q)."
+                        description: "Procured in full accordance with MIL-I-38535 (Class Q) "
                       },
                       {
                         value: "MIL_H_38534_ClassB_Hybrid",
@@ -1474,12 +1352,12 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       },
 
                       // Class B-1 Category (πQ = 2.0)
-                      {
-                        value: "MIL_STD_883_ClassB1",
-                        label: "Class B-1 (MIL-STD-883)",
-                        piQ: 2.0,
-                        description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
-                      }
+                      // {
+                      //   value: "MIL_STD_883_ClassB1",
+                      //   label: "Class B-1 (MIL-STD-883)",
+                      //   piQ: 2.0,
+                      //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
+                      // }
                     ]}
                   />
                 </div>
@@ -1594,532 +1472,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
               </div>
             </Col>
           )}
-          {currentComponent.type === "Microcircuits,Hybrids" && (
-            <>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Learning Factor (π<sub>L</sub>):</label>
-                  <Select
-                    style={customStyles}
-                    name="learningFactor"
-                    placeholder="Select Years in Production"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        yearsInProduction: selectedOption.value,
-                        piL: selectedOption.piL
-                      });
-                    }}
-                    options={[
-                      {
-                        value: 5.1,
-                        label: "≤ 0.5 years",
-                        piL: 2.0, // Direct value from table
-                        description: "Early production phase (highest learning factor)"
-                      },
-                      {
-                        value: 0.5,
-                        label: "0.5 years",
-                        piL: 1.8,
-                        description: "Initial production ramp-up"
-                      },
-                      {
-                        value: 1.0,
-                        label: "1.0 year",
-                        piL: 1.5,
-                        description: "Moderate experience"
-                      },
-                      {
-                        value: 1.5,
-                        label: "1.5 years",
-                        piL: 1.2,
-                        description: "Stabilizing production"
-                      },
-                      {
-                        value: 2.0,
-                        label: "≥ 2.0 years",
-                        piL: 1.0,
-                        description: "Mature production (lowest learning factor)"
-                      }
-                    ]}
-                  />
-                </div>
-              </Col>
 
-              {/* Component Type Selection */}
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Component Type:</label>
-
-                  <Select
-                    style={customStyles}
-                    name="componentType"
-                    placeholder="Select Component Type"
-                    value={selectedComponent}
-                    onChange={(selectedOption) => {
-                      setSelectedComponent(selectedOption)
-
-                      // Predefined failure rate
-
-                    }}
-                    options={[
-                      {
-                        value: "Microcircuit",
-                        label: "Microcircuit",
-                      },
-                      {
-                        value: "DiscreteSemiconductor",
-                        label: "Discrete Semiconductor",
-
-
-                      },
-                      {
-                        value: "Capacitor",
-                        label: "Capacitor",
-
-                      },
-                      {
-                        value: "Other",
-                        label: "Other (λₙ = 0)",
-
-                      }
-                    ]}
-                  />
-                </div>
-              </Col>
-              {selectedComponent?.value === "Capacitor" && (
-
-                <MicroCapacitor handleCalculateFailure={handleCalculateFailure} />
-
-              )}
-
-              {selectedComponent?.value === "Microcircuit" && (
-
-                <Microcircuits
-                  handleCalculateSawDevice={handleCalculateSawDevice}
-                  handleCalculateGate={handleCalculateGate}
-                  handleCalculateMemories={handleCalculateMemories}
-                  handleCalculateVhsic={handleCalculateVhsic}
-                  handleCalculateGaAs={handleCalculateGaAs}
-                  handleCalculateBubble={handleCalculateBubble} />
-
-              )}
-
-              {selectedComponent?.value === "DiscreteSemiconductor" && (
-                <>
-                  <MicroDiode handleInitialRate={handleInitialRate} />
-
-                </>
-              )}
-              <br />
-              <>
-                <Col md={4}>
-                  <div className="results">
-                    <label>Failure Rate (λₙ):</label>
-                    <div className="input-group">
-                      <input
-                        type="string"
-                        step="0.000001"
-                        min="0"
-                        value={mainInitialRate}
-                        placeholder="Props value will appear here"
-                      />
-                      <span className="unit">failures/10<sup>6</sup> hours</span>
-                    </div>
-                  </div>
-                </Col>
-              </>
-
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Quality Factor (π<sub>Q</sub>):</label>
-                  <Select
-                    style={customStyles}
-
-                    name="qualityFactor"
-                    placeholder="Select Quality Factor (πQ)"
-
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        quality: selectedOption.value,
-                        piQ: selectedOption.piQ
-                      });
-                    }}
-                    options={[
-                      {
-                        value: "MIL_M_38510_ClassS",
-                        label: "MIL-M-38510 Class S",
-                        piQ: 0.25,
-                        description: "Highest reliability military grade"
-                      },
-                      {
-                        value: "MIL_I_38535_ClassU",
-                        label: "MIL-I-38535 Class U",
-                        piQ: 0.25,
-                        description: "High reliability hybrid microcircuits"
-                      },
-                      {
-                        value: "MIL_H_38534_ClassS_Hybrid",
-                        label: "MIL-H-38534 Class S Hybrid",
-                        piQ: 0.25,
-                        description: "High reliability hybrid circuits"
-                      },
-                      {
-                        value: "MIL_M_38510_ClassB",
-                        label: "MIL-M-38510 Class B",
-                        piQ: 1.0,
-                        description: "Standard military grade"
-                      },
-                      {
-                        value: "MIL_I_38535_ClassQ",
-                        label: "MIL-I-38535 Class Q",
-                        piQ: 1.0,
-                        description: "Standard hybrid microcircuits"
-                      },
-                      {
-                        value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "MIL-H-38534 Class B Hybrid",
-                        piQ: 1.0,
-                        description: "Standard hybrid circuits"
-                      },
-                      {
-                        value: "MIL_STD_883_ClassB1",
-                        label: "MIL-STD-883 Class B1",
-                        piQ: 2.0,
-                        description: "Screened commercial grade"
-                      },
-                      {
-                        value: "Commercial",
-                        label: "Commercial",
-                        piQ: 5.0,
-                        description: "Standard commercial grade (lowest reliability)"
-                      }
-                    ]}
-                    className="factor-select"
-                  />
-
-                </div>
-              </Col>
-              {/* Quantity Input (Nₙ) */}
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Quantity (Nₙ):</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    min="1"
-                    value={quantity}
-                    onChange={(e) => {
-                      setQuantity(e.target.value);
-                      calculateComponentSum(e.target.value)
-                    }}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Environment (π<sub>E</sub>):</label>
-                  <Select
-                    style={customStyles}
-                    name="environment"
-                    placeholder="Select Environment"
-
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        environment: selectedOption.value,
-                        piE: selectedOption.piE
-                      });
-                    }}
-
-                    options={[
-                      {
-                        value: "GB",
-                        label: "Ground, Benign (GB)",
-                        piE: 0.50,
-                        description: "Controlled laboratory or office environment"
-                      },
-                      {
-                        value: "GF",
-                        label: "Ground, Fixed (GF)",
-                        piE: 2.0,
-                        description: "Permanent ground installations with environmental controls"
-                      },
-                      {
-                        value: "GM",
-                        label: "Ground, Mobile (GM)",
-                        piE: 4.0,
-                        description: "Vehicles operating on improved roads"
-                      },
-                      {
-                        value: "NS",
-                        label: "Naval, Sheltered (NS)",
-                        piE: 4.0,
-                        description: "Below decks in harbor or calm seas"
-                      },
-                      {
-                        value: "NU",
-                        label: "Naval, Unsheltered (NU)",
-                        piE: 6.0,
-                        description: "On deck or in rough seas"
-                      },
-                      {
-                        value: "AIC",
-                        label: "Airborne, Inhabited Cargo (AIC)",
-                        piE: 4.0,
-                        description: "Cargo aircraft with human occupants"
-                      },
-                      {
-                        value: "AIF",
-                        label: "Airborne, Inhabited Fighter (AIF)",
-                        piE: 5.0,
-                        description: "Manned fighter/trainer aircraft"
-                      },
-                      {
-                        value: "AUC",
-                        label: "Airborne, Uninhabited Cargo (AUC)",
-                        piE: 5.0,
-                        description: "Unmanned cargo aircraft"
-                      },
-                      {
-                        value: "AUF",
-                        label: "Airborne, Uninhabited Fighter (AUF)",
-                        piE: 8.0,
-                        description: "Unmanned fighter aircraft"
-                      },
-                      {
-                        value: "ARW",
-                        label: "Airborne, Rotary Wing (ARW)",
-                        piE: 8.0,
-                        description: "Helicopters and other rotary aircraft"
-                      },
-                      {
-                        value: "SF",
-                        label: "Space, Flight (SF)",
-                        piE: 0.50,
-                        description: "Spacecraft in flight (not launch/re-entry)"
-                      },
-                      {
-                        value: "MF",
-                        label: "Missile, Flight (MF)",
-                        piE: 5.0,
-                        description: "Missiles during flight phase"
-                      },
-                      {
-                        value: "ML",
-                        label: "Missile, Launch (ML)",
-                        piE: 12,
-                        description: "Missiles during launch phase"
-                      },
-                      {
-                        value: "CL",
-                        label: "Cannon, Launch (CL)",
-                        piE: 220,
-                        description: "Gun-launched projectiles during firing"
-                      }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Circuit Function (π<sub>F</sub>):</label>
-                  <Select
-                    style={customStyles}
-                    name="circuitFunction"
-                    placeholder="Select Circuit Function"
-
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        circuitFunction: selectedOption.value,
-                        piF: selectedOption.piF
-                      });
-                    }}
-                    options={[
-                      { value: "Digital", label: "Digital", piF: 1.0 },
-                      { value: "Video", label: "Video (10MHz < f < 1GHz)", piF: 1.2 },
-                      { value: "Microwave", label: "Microwave (f > 1GHz)", piF: 2.6 },
-                      { value: "Linear", label: "Linear (f < 10MHz)", piF: 5.8 },
-                      { value: "Power", label: "Power", piF: 21 }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <div className='d-flex justify-content-between align-items-center'>
-                <div>
-                  {results && (
-                    <Box
-                      component="div"
-                      onClick={() => setShowCalculations(!showCalculations)}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                        color: 'primary.main',
-                        '&:hover': {
-                          textDecoration: 'underline'
-                        }
-                      }}
-                      className="ms-auto mt-2"
-                    >
-                      <CalculatorIcon
-                        style={{ height: '30px', width: '40px' }}
-                        fontSize="large"
-                      />
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontWeight: 'bold',
-                          fontSize: '0.95rem',
-                          ml: 1
-                        }}
-                      >
-                        {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                      </Typography>
-                    </Box>
-                  )}
-                </div>
-
-                {/* Calculation Button */}
-                <div className="text-end mt-3">
-                  <Button
-                    className="btn btn-primary"
-                    onClick={addComponent}
-                  >
-                    Calculate Failure Rate
-                  </Button>
-                </div>
-              </div>
-
-
-              {results && (
-                <>
-                  <h2 className="text-center">Calculation Result</h2>
-                  <div className="d-flex flex-column gap-2">
-                    <div className="d-flex align-items-center">
-                      <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                      <span className="ms-2">
-                        {results?.calculationParams?.λp} failures/10<sup>6</sup> hours
-                        {console.log("far..", results?.calculationParams?.λp)}
-                      </span>
-                    </div>
-                    {results?.parameters?.formula && (
-                      <div className="mt-2">
-                        <strong>Formula:</strong>
-                        <span className="ms-2 font-monospace">{result?.parameters?.formula}</span>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* Detailed Calculations Table */}
-              {results && showCalculations && (
-                <Row className="mb-4 mt-3">
-                  <Col>
-                    <div className="card">
-                      <div className="card-body">
-                        <MaterialTable
-                          columns={[
-                            {
-                              title: 'Component Type',
-                              field: 'type',
-                              render: rowData => (rowData?.currentComponent?.type || 'Hybrid Microcircuit')
-                            },
-                            {
-                              title: 'Quantity (Nₙ)',
-                              field: 'quantity',
-                              render: rowData => (rowData?.quantity || 1)
-                            },
-                            {
-                              title: 'Contribution (Nₙ × λₙ)',
-                              field: 'contribution',
-                              render: rowData => (rowData?.componentSum?.toFixed(6) || '0.000000')
-                            },
-                            {
-                              title: <span>π<sub>E</sub></span>,
-                              field: 'piE',
-                              render: rowData => (rowData?.piE?.toFixed(4) || '1.0000')
-                            },
-                            {
-                              title: <span>π<sub>Q</sub></span>,
-                              field: 'piQ',
-                              render: rowData => (rowData?.piQ?.toFixed(4) || '1.0000')
-                            },
-                            {
-                              title: <span>π<sub>F</sub></span>,
-                              field: 'piF',
-                              render: rowData => (rowData?.piF?.toFixed(4) || '1.0000')
-                            },
-                            {
-                              title: <span>π<sub>L</sub></span>,
-                              field: 'piL',
-                              render: rowData => (rowData?.piL?.toFixed(4) || '1.0000')
-                            },
-                            {
-                              title: "Total λₚ",
-                              field: 'totalFailureRate',
-                              render: rowData => (
-                                <strong>{(rowData?.λp?.toFixed(6) || '0.000000')}</strong>
-                              )
-                            }
-                          ]}
-                          data={[results?.calculationParams]}
-                          options={{
-                            search: false,
-                            paging: false,
-                            toolbar: false,
-                            headerStyle: {
-                              backgroundColor: '#CCE6FF',
-                              fontWeight: 'bold'
-                            },
-                            rowStyle: {
-                              backgroundColor: '#FFF'
-                            }
-                          }}
-                          components={{
-                            Container: props => <Paper {...props} elevation={2} style={{ borderRadius: 8 }} />
-                          }}
-                        />
-
-
-                        <div className="formula-section mt-4">
-                          <Typography variant="h6" gutterBottom>
-                            Calculation Formula
-                          </Typography>
-                          <div className="alert alert-light">
-                            <code className="fs-5">
-                              λ<sub>p</sub> = 1.2 × Σ(N<sub>c</sub> × λ<sub>c</sub>) × (1 + 2.7E) × π<sub>E</sub> × π<sub>F</sub> × π<sub>Q</sub> × π<sub>L</sub>
-                            </code>
-                          </div>
-                          <Typography variant="body1" paragraph>Where:</Typography>
-                          <ul>
-                            <li><strong>λ<sub>p</sub></strong> = Predicted failure rate (Failures/10<sup>6</sup> Hours)</li>
-                           
-                            <li><strong>Σ(N<sub>c</sub> × λ<sub>c</sub>)</strong> = Sum of component contributions</li>
-                              <li><strong>λ<sub>c</sub></strong> = Failure Rate of each particular component</li>
-                                <li><strong>N<sub>c</sub></strong> = Number of each particular component</li>
-                            <li><strong>E</strong> = Environmental stress factor</li>
-                            <li><strong>π<sub>E</sub></strong> = Environment factor</li>
-                            <li><strong>π<sub>F</sub></strong> = Circuit function factor</li>
-                            <li><strong>π<sub>Q</sub></strong> = Quality factor</li>
-                            <li><strong>π<sub>L</sub></strong> = Learning factor</li>
-                          </ul>
-                          <div className="alert alert-info mt-3">
-                            <strong>Note:</strong> Only microcircuits, discrete semiconductors, and capacitors contribute significantly to the failure rate. Other components are assumed to have λ<sub>c</sub> = 0.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-              )}
-            </>
-          )}
 
           {currentComponent.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
             <>
@@ -2267,6 +1620,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                         value={currentComponent.temperature}
                         onChange={handleInputChange}
                       />
+                        <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
                     </div>
                   </Col>
 
@@ -2360,191 +1714,35 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     </div>
                   </Col>
                 </Row>
-                <div className='d-flex justify-content-between align-items-center'>
-                  <div>
-                    {result && (
-                      <Box
-                        component="div"
-                        onClick={() => setShowCalculations(!showCalculations)}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          cursor: 'pointer',
-                          color: 'primary.main',
-                          '&:hover': {
-                            textDecoration: 'underline'
-                          }
-                        }}
-                        className="ms-auto mt-2"
-                      >
-                        <CalculatorIcon
-                          style={{ height: '30px', width: '40px' }}
-                          fontSize="large"
-                        />
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            fontWeight: 'bold',
-                            fontSize: '0.95rem',
-                            ml: 1
-                          }}
-                        >
-                          {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                        </Typography>
-                      </Box>
-                    )}
-                  </div>
-                  <Button
-                    variant="primary"
-                    onClick={calculateVhsicFailureRate}
-                    className="btn-calculate float-end mt-1"
-                  >
-                    Calculate Failure Rate
-                  </Button>
-                </div>
 
-                {error && (
-                  <Row>
-                    <Col>
-                      <Alert variant="danger">{error}</Alert>
-                    </Col>
-                  </Row>
+
+                <Button
+                  variant="primary"
+                  onClick={calculateVhsicFailureRate}
+                  className="btn-calculate float-end mt-1"
+                >
+                  Calculate Failure Rate
+                </Button>
+
+
+                {result && (
+                  handleCalculateVhsic(result?.value)
+
                 )}
 
-                <div>
-                  {result && (
-                    <>
-                      <h2 className="text-center">Calculation Result</h2>
-                      <div className="d-flex align-items-center">
-                        <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                        <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
-                      </div>
-                    </>
-                  )}
-                  {console.log("values...", result?.value)}
-                  <br />
+                {result && (
+                  <>
 
-                  {result && showCalculations && (
-                    <>
-                      <Row className="mb-4">
-                        <Col>
-                          <div className="card">
-                            <div className="card-body">
-                              <div className="table-responsive">
-                                <MaterialTable
-                                  columns={[
-                                    {
-                                      title: <span>λ<sub>BD</sub></span>,
-                                      field: 'λBD',
-                                      render: rowData => rowData?.λBD || '-'
-                                    },
-                                    {
-                                      title: <span>π<sub>MFG</sub></span>,
-                                      field: 'πMFG',
-                                      render: rowData => rowData?.πMFG || '-'
-                                    },
-                                    {
-                                      title: <span>π<sub>prT</sub></span>,
-                                      field: 'πprT',
-                                      render: rowData => rowData?.πprT || '-'
-                                    },
-                                    {
-                                      title: <span>π<sub>CD</sub></span>,
-                                      field: 'πCD',
-                                      render: rowData => rowData?.πCD || '-'
-                                    },
-                                    {
-                                      title: <span>π<sub>Q</sub></span>,
-                                      field: 'πQ',
-                                      render: rowData => rowData?.πQ || '-'
-                                    },
-                                    {
-                                      title: <span>π<sub>E</sub></span>,
-                                      field: 'πE',
-                                      render: rowData =>( rowData?.inputs.environment?.factor || '-' ) // Display the stored factor
-                                    },
-                                    {
-                                      title: <span>π<sub>T</sub></span>,
-                                      field: 'πT',
-                                      render: rowData => rowData?.πT || '-'
-                                    },
-                                    {
-                                      title: <span>λ<sub>BP</sub></span>,
-                                      field: 'λBP',
-                                      render: rowData => rowData?.λBP || '-'
-                                    },
-                                    {
-                                      title: <span>λ<sub>EOS</sub></span>,
-                                      field: 'λEOS',
-                                      render: rowData => rowData?.λEOS || '-'
-                                    },
-                                    {
-                                      title: "Failure Rate",
-                                      field: 'λp',
-                                      render: rowData => rowData?.λp ? `${Number(rowData.λp)?.toFixed(6)}` : '-',
-                                    }
-                                  ]}
-                                  data={[
-                                    {
-                                      λBD: result?.parameters?.λBD,
-                                      πMFG: result?.parameters?.πMFG,
-                                      πprT: result?.parameters?.πprT,
-                                      πCD: result?.parameters?.πCD,
-                                      λBP: result?.parameters?.λBP,
-                                      λEOS: result?.parameters?.λEOS,
-                                      πE: result?.parameters?.πE,    // Added missing parameter
-                                      πT: result?.parameters?.πT,    // Added missing parameter
-                                      πQ: result?.parameters?.πQ,    // Added missing parameter
-                                      λp: result?.value
-                                    }
-                                  ]}
-                                  options={{
-                                    search: false,
-                                    paging: false,
-                                    toolbar: false,
-                                    headerStyle: {
-                                      backgroundColor: '#CCE6FF',
-                                      fontWeight: 'bold',
-                                      whiteSpace: 'nowrap'
-                                    },
-                                    rowStyle: {
-                                      backgroundColor: '#FFF',
-                                      '&:hover': {
-                                        backgroundColor: '#f5f5f5'
-                                      }
-                                    }
-                                  }}
-                                  components={{
-                                    Container: props => <Paper {...props} elevation={2} style={{ borderRadius: 8 }} />
-                                  }}
-                                />
-                              </div>
-                              <div className="formula-section" style={{ marginTop: '24px', marginBottom: '24px' }}>
-                                <Typography variant="h6" gutterBottom>
-                                  Calculation Formula
-                                </Typography>
-                                <Typography variant="body1" paragraph>
-                                  λ<sub>p</sub> = (λ<sub>BD</sub> × π<sub>MFG</sub>× π<sub>T</sub>× π<sub>CD</sub>) + (λ<sub>BP</sub>× π<sub>E</sub>× π<sub>Q</sub> × π<sub>prT</sub>) + λ<sub>EOS</sub>
-                                </Typography>
-                                <Typography variant="body1" paragraph>Where:</Typography>
-                                <ul>
-                                  <li>λ<sub>p</sub> = Predicted failure rate (Failures/10<sup>6</sup> Hours)</li>
-                                  <li>λ<sub>BD</sub> = Die base failure rate</li>
-                                  <li>π<sub>MFG</sub> = Manufacturing process correction factor</li>
-                                  <li>π<sub>prT</sub> = Package type correction factor</li>
-                                  <li>π<sub>CD</sub> = Die complexity correction factor</li>
-                                  <li>λ<sub>BP</sub> = Package base failure rate</li>
-                                  <li>λ<sub>EOS</sub> = Electrical overstress failure rate</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        </Col>
-                      </Row>
-                    </>
-                  )}
-                </div>
+                    <div className="d-flex align-items-center">
+                      <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                      <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
+                    </div>
+                  </>
+                )}
+
+
               </div>
+
 
             </>
           )}
@@ -2568,52 +1766,52 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     }}
                     options={[
                       // Class S Categories (πQ = 0.25)
-                      {
-                        value: "MIL_M_38510_ClassS",
-                        label: "Class S (MIL-M-38510, Class S)",
-                        piQ: 0.25, // Store πQ for calculations
-                        description: "Procured in full accordance with MIL-M-38510, Class S requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassU",
-                        label: "Class S (MIL-I-38535, Class U)",
-                        piQ: 0.25,
-                        description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
-                      },
-                      {
-                        value: "MIL_H_38534_ClassS_Hybrid",
-                        label: "Class S Hybrid (MIL-H-38534, Level K)",
-                        piQ: 0.25,
-                        description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
-                      },
+                      // {
+                      //   value: "MIL_M_38510_ClassS",
+                      //   label: "Class S (MIL-M-38510, Class S)",
+                      //   piQ: 0.25, // Store πQ for calculations
+                      //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
+                      // },
+                      // {
+                      //   value: "MIL_I_38535_ClassU",
+                      //   label: "Class S (MIL-I-38535, Class U)",
+                      //   piQ: 0.25,
+                      //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
+                      // },
+                      // {
+                      //   value: "MIL_H_38534_ClassS_Hybrid",
+                      //   label: "Class S Hybrid (MIL-H-38534, Level K)",
+                      //   piQ: 0.25,
+                      //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
+                      // },
 
                       // Class B Categories (πQ = 1.0)
                       {
                         value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B)",
+                        label: "Class B (MIL-M-38510, Class B) πQ = 1.0",
                         piQ: 1.0,
                         description: "Procured in full accordance with MIL-M-38510, Class B requirements."
                       },
                       {
                         value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q)",
+                        label: "Class B (MIL-I-38535, Class Q) πQ = 1.0",
                         piQ: 1.0,
                         description: "Procured in full accordance with MIL-I-38535 (Class Q)."
                       },
                       {
                         value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "Class B Hybrid (MIL-H-38534, Level H)",
+                        label: "Class B Hybrid (MIL-H-38534, Level H) πQ = 1.0",
                         piQ: 1.0,
                         description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
                       },
 
                       // Class B-1 Category (πQ = 2.0)
-                      {
-                        value: "MIL_STD_883_ClassB1",
-                        label: "Class B-1 (MIL-STD-883)",
-                        piQ: 2.0,
-                        description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
-                      }
+                      // {
+                      //   value: "MIL_STD_883_ClassB1",
+                      //   label: "Class B-1 (MIL-STD-883)",
+                      //   piQ: 2.0,
+                      //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
+                      // }
                     ]}
                   />
                 </div>
@@ -2870,14 +2068,14 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       updateComponentInList(updatedComponent);
                     }}
                     options={[
+                      // {
+                      //   label: "10 Temperature Cycles (-55°C to +125°C) with end point electrical tests",
+                      //   value: 0.10,
+                      //   screeningLevel: "High",
+                      //   piQ: 0.10,
+                      // },
                       {
-                        label: "10 Temperature Cycles (-55°C to +125°C) with end point electrical tests",
-                        value: 0.10,
-                        screeningLevel: "High",
-                        piQ: 0.10,
-                      },
-                      {
-                        label: "None beyond best commercial practices",
+                        label: "None beyond best commercial practices (πQ = 1.0)",
                         value: 1.0,
                         screeningLevel: "Standard",
                         piQ: 1.0,
@@ -2913,151 +2111,46 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                   />
                 </div>
               </Col>
+  <div  >
+              <Button
+                variant="primary"
+                className="btn-calculate float-end mt-1"
+                onClick={() => {
+                  const failureRate = calculateSawDeviceFailureRate(currentComponent);
 
+                  const updatedComponent = {
 
-              <div className='d-flex justify-content-between align-items-center mt-3'>
+                    ...currentComponent,
+                    calculatedFailureRate: failureRate,
+                    environmentLabel: currentComponent.environment?.description,
+                    qualityLabel: currentComponent.qualityFactor?.label
 
-                <div>
-                  {currentComponent.calculatedFailureRate && (
-                    <Box
-                      component="div"
-                      onClick={() => setShowCalculations(!showCalculations)}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                        color: 'primary.main',
-                        '&:hover': {
-                          textDecoration: 'underline'
-                        }
-                      }}
-                    >
-                      <CalculatorIcon style={{ height: '30px', width: '40px' }} fontSize="large" />
-                      <Typography variant="body1" sx={{ fontWeight: 'bold', ml: 1 }}>
-                        {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                      </Typography>
-                    </Box>
-                  )}
-                </div>
-                <Button
-                  variant="primary"
-                  className="btn-calculate float-end "
-                  style={{
-                    backgroundColor: '#1e88e5',
-                    borderColor: '#0d47a1',
-                    fontWeight: 'bold',
-                    padding: '8px 20px'
-                  }}
-                  onClick={() => {
-                    const failureRate = calculateSawDeviceFailureRate(currentComponent);
+                  };
 
-                    const updatedComponent = {
+                  setCurrentComponent(updatedComponent);
+                  addOrUpdateComponent(updatedComponent);
 
-                      ...currentComponent,
-                      calculatedFailureRate: failureRate,
-                      environmentLabel: currentComponent.environment?.description,
-                      qualityLabel: currentComponent.qualityFactor?.label
-
-                    };
-
-                    setCurrentComponent(updatedComponent);
-                    addOrUpdateComponent(updatedComponent);
-                    // Hide calculations initially after new calculation
-
-
-                  }
-
-                  }
-
-
-                >
-                  Calculate Failure Rate
-                </Button>
+                }
+                }
+              >
+                Calculate Failure Rate
+              </Button>
               </div>
+              {currentComponent.calculatedFailureRate && (
+                handleCalculateSawDevice(currentComponent?.calculatedFailureRate)
+              )}
 
-              {currentComponent?.calculatedFailureRate && (
+              {currentComponent.calculatedFailureRate && (
                 <div>
-                  <h2 className="text-center">Calculation Result</h2>
+
                   <div className="d-flex align-items-center">
                     <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
                     <span className="ms-2 fw-bold">
                       {currentComponent?.calculatedFailureRate} failures/10<sup>6</sup> hours
                     </span>
                   </div>
-                  <br />
-                  {showCalculations && (
-                    <>
-                      <Row className="mb-4">
-                        <Col>
-                          <div className="card">
-                            <div className="card-body">
-                              <MaterialTable
-                                columns={[
-                                  {
-                                    title: <span>Base Rate</span>,
-                                    field: 'baseRate',
-                                    render: () => BASE_FAILURE_RATE?.toFixed(4)
-                                  },
-                                  {
-                                    title: <span>Quality (π<sub>Q</sub>)</span>,
-                                    field: 'piQ',
-                                    render: () => (
-                                      <div>
 
-                                        <span>{currentComponent.piQ?.toFixed(4) || 'Not calculated'}</span>
-                                      </div>
-                                    )
-                                  },
-                                  {
-                                    title: <span>Environment (π<sub>E</sub>)</span>,
-                                    field: 'piE',
-                                    render: () => (
-                                      <div>
 
-                                        <span>{currentComponent.piE?.toFixed(4) || 'Not calculated'}</span>
-                                      </div>
-                                    )
-                                  },
-                                  {
-                                    title: 'Failure Rate (λₚ)',
-                                    field: 'failureRate',
-                                    render: () => currentComponent.calculatedFailureRate || 'Not calculated',
-                                    cellStyle: { fontWeight: 'bold' }
-                                  }
-                                ]}
-                                data={[currentComponent]}
-                                options={{
-                                  search: false,
-                                  paging: false,
-                                  toolbar: false,
-                                  headerStyle: {
-                                    backgroundColor: '#CCE6FF',
-                                    fontWeight: 'bold'
-                                  },
-                                  rowStyle: { backgroundColor: '#FFF' }
-                                }}
-                                components={{
-                                  Container: props => <Paper {...props} elevation={2} />
-                                }}
-                              />
-                            </div>
-
-                            <div className="formula-section mt-4 p-3 bg-light rounded">
-                              <h4>Calculation Formula</h4>
-                              <p className="mb-1">λ<sub>p</sub> = Base Rate × π<sub>Q</sub> × π<sub>E</sub></p>
-                              <p className="mb-1">Where:</p>
-                              <ul className="mb-0">
-                                <li>Base Rate = {BASE_FAILURE_RATE} (standard for SAW devices)</li>
-                                <li>π<sub>Q</sub> = Quality factor (from selected quality grade)</li>
-                                <li>π<sub>E</sub> = Environment factor (from selected environment)</li>
-                              </ul>
-                            </div>
-                          </div>
-
-                        </Col>
-                      </Row>
-                    </>
-                  )}
                 </div>
               )}
             </>
@@ -3176,10 +2269,10 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       }));
                     }}
                     options={[
-                      { value: 0.1, label: "≤ 0.1 years (πL = 2.0)", piL: 2.0 },
-                      { value: 0.5, label: "0.5 years (πL = 1.8)", piL: 1.8 },
-                      { value: 1.0, label: "1.0 year (πL = 1.5)", piL: 1.5 },
-                      { value: 1.5, label: "1.5 years (πL = 1.2)", piL: 1.2 },
+                      // { value: 0.1, label: "≤ 0.1 years (πL = 2.0)", piL: 2.0 },
+                      // { value: 0.5, label: "0.5 years (πL = 1.8)", piL: 1.8 },
+                      // { value: 1.0, label: "1.0 year (πL = 1.5)", piL: 1.5 },
+                      // { value: 1.5, label: "1.5 years (πL = 1.2)", piL: 1.2 },
                       { value: 2.0, label: "≥ 2.0 years (πL = 1.0)", piL: 1.0 }
                     ]}
                   />
@@ -3411,53 +2504,21 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
             </Row>
             {/* Package and Pins Section */}
             <Row className="mb-2">
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Package Type for (C<sub>2</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="packageType"
-                    placeholder="Select Package Type"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        packageType: selectedOption.value
-                      });
-                    }}
-                    options={[
-                      { value: "Hermetic_DIPs_SolderWeldSeal", label: "Hermetic: DIPs w/Solder or Weld Seal, PGA, SMT" },
-                      { value: "DIPs_GlassSeal", label: "DIPs with Glass Seal" },
-                      { value: "Flatpacks_AxialLeads", label: "Flatpacks with Axial Leads" },
-                      { value: "Cans", label: "Cans" },
-                      { value: "Nonhermetic_DIPs_PGA_SMT", label: "Nonhermetic: DIPs, PGA, SMT" }
-                    ]}
-                  />
-                </div>
-              </Col>
+
               <Col md={4}>
                 <div className="form-group">
                   <label>No. of Functional Pins for (C<sub>2</sub>):</label>
                   <input
-                    className="form-group"
-                    style={{
-                      width: "100%",
-                      padding: "0.375rem 0.75rem",
-                      fontSize: "1rem",
-                      lineHeight: "1.5",
-                      color: "#495057",
-                      backgroundColor: "#fff",
-                      border: "1px solid #ced4da",
-                      borderRadius: "0.25rem"
+                    styles={customStyles}
+                    placeholder="Select"
+                    value={0} // Fixed value set to 0
+                    onChange={(selectedOption) => {
+                      setCurrentComponent(prev => ({
+                        ...prev,
+                        packageType: selectedOption.value,
+                        c2: selectedOption.c2
+                      }));
                     }}
-                    type="number"
-                    name="pinCount"
-                    min="3"
-                    max="224"
-                    value={currentComponent.pinCount || ''}
-                    onChange={(e) => setCurrentComponent({
-                      ...currentComponent,
-                      pinCount: parseInt(e.target.value)
-                    })}
                   />
                 </div>
               </Col>
@@ -3480,59 +2541,57 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     }}
                     options={[
                       // Class S Categories (πQ = 0.25)
-                      {
-                        value: "MIL_M_38510_ClassS",
-                        label: "Class S (MIL-M-38510, Class S)",
-                        piQ: 0.25, // Store πQ for calculations
-                        description: "Procured in full accordance with MIL-M-38510, Class S requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassU",
-                        label: "Class S (MIL-I-38535, Class U)",
-                        piQ: 0.25,
-                        description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
-                      },
-                      {
-                        value: "MIL_H_38534_ClassS_Hybrid",
-                        label: "Class S Hybrid (MIL-H-38534, Level K)",
-                        piQ: 0.25,
-                        description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
-                      },
+                      // {
+                      //   value: "MIL_M_38510_ClassS",
+                      //   label: "Class S (MIL-M-38510, Class S)",
+                      //   piQ: 0.25, // Store πQ for calculations
+                      //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
+                      // },
+                      // {
+                      //   value: "MIL_I_38535_ClassU",
+                      //   label: "Class S (MIL-I-38535, Class U)",
+                      //   piQ: 0.25,
+                      //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
+                      // },
+                      // {
+                      //   value: "MIL_H_38534_ClassS_Hybrid",
+                      //   label: "Class S Hybrid (MIL-H-38534, Level K)",
+                      //   piQ: 0.25,
+                      //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
+                      // },
 
                       // Class B Categories (πQ = 1.0)
                       {
                         value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B)",
+                        label: "Class B (MIL-M-38510, Class B) (πQ = 1.0)",
                         piQ: 1.0,
                         description: "Procured in full accordance with MIL-M-38510, Class B requirements."
                       },
                       {
                         value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q)",
+                        label: "Class B (MIL-I-38535, Class Q) (πQ = 1.0)",
                         piQ: 1.0,
                         description: "Procured in full accordance with MIL-I-38535 (Class Q)."
                       },
                       {
                         value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "Class B Hybrid (MIL-H-38534, Level H)",
+                        label: "Class B Hybrid (MIL-H-38534, Level H) (πQ = 1.0)",
                         piQ: 1.0,
                         description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
                       },
 
                       // Class B-1 Category (πQ = 2.0)
-                      {
-                        value: "MIL_STD_883_ClassB1",
-                        label: "Class B-1 (MIL-STD-883)",
-                        piQ: 2.0,
-                        description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
-                      }
+                      // {
+                      //   value: "MIL_STD_883_ClassB1",
+                      //   label: "Class B-1 (MIL-STD-883)",
+                      //   piQ: 2.0,
+                      //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
+                      // }
                     ]}
                   />
                 </div>
               </Col>
-            </Row>
-            {/* Technology and Temperature */}
-            <Row className="mb-2">
+
               <Col md={4}>
                 <div className="form-group">
                   <label>Learning Factor (π<sub>L</sub>):</label>
@@ -3548,33 +2607,33 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       });
                     }}
                     options={[
-                      {
-                        value: 5.1,
-                        label: "≤ 0.5 years",
-                        piL: 2.0, // Direct value from table
-                        description: "Early production phase (highest learning factor)"
-                      },
-                      {
-                        value: 0.5,
-                        label: "0.5 years",
-                        piL: 1.8,
-                        description: "Initial production ramp-up"
-                      },
-                      {
-                        value: 1.0,
-                        label: "1.0 year",
-                        piL: 1.5,
-                        description: "Moderate experience"
-                      },
-                      {
-                        value: 1.5,
-                        label: "1.5 years",
-                        piL: 1.2,
-                        description: "Stabilizing production"
-                      },
+                      // {
+                      //   value: 5.1,
+                      //   label: "≤ 0.5 years",
+                      //   piL: 2.0, // Direct value from table
+                      //   description: "Early production phase (highest learning factor)"
+                      // },
+                      // {
+                      //   value: 0.5,
+                      //   label: "0.5 years",
+                      //   piL: 1.8,
+                      //   description: "Initial production ramp-up"
+                      // },
+                      // {
+                      //   value: 1.0,
+                      //   label: "1.0 year",
+                      //   piL: 1.5,
+                      //   description: "Moderate experience"
+                      // },
+                      // {
+                      //   value: 1.5,
+                      //   label: "1.5 years",
+                      //   piL: 1.2,
+                      //   description: "Stabilizing production"
+                      // },
                       {
                         value: 2.0,
-                        label: "≥ 2.0 years",
+                        label: "≥ 2.0 years (πL = 1.0)",
                         piL: 1.0,
                         description: "Mature production (lowest learning factor)"
                       }
@@ -3683,142 +2742,41 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     value={currentComponent.temperature}
                     onChange={handleInputChange}
                   />
+                  <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
                 </div>
               </Col>
             </Row>
 
-            {/* Calculate Button */}
-            <div className='d-flex justify-content-between align-items-center'>
-              <div >
-                {results && (
-                  <>
+            <Button
+                className="btn-calculate float-end mt-1"
+              onClick={addComponent}
+            >
+              Calculate Failure Rate
+            </Button>
 
-                    <Box
-                      component="div"
-                      onClick={() => setShowCalculations(!showCalculations)}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                        color: 'primary.main',
-                        '&:hover': {
-                          textDecoration: 'underline'
-                        }
-                      }}
-                      className="ms-auto mt-2"
-                    >
-                      <CalculatorIcon
-                        style={{ height: '30px', width: '40px' }}
-                        fontSize="large"
-                      />
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontWeight: 'bold',
-                          fontSize: '0.95rem',
-                          ml: 1
-                        }}
-                      >
-                        {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                      </Typography>
-                    </Box>
-                  </>
-                )}
-              </div>
-              <button
-                className="btn btn-primary"
-                onClick={addComponent}
-              >
-                Calculate Failure Rate
-              </button>
-            </div>
             <br />
+
+            {results && (
+
+              handleCalculateGate(calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)?.toFixed(4))
+            )}
             {results && (
               <>
-                <h2 className="text-center">Calculation Result</h2>
-                <div className="d-flex justify-content-between align-items-center">
 
-                  <div>
-                    <p className="mb-1">
-                      <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                      {calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)?.toFixed(4)}failures/10<sup>6</sup> hours
-                    </p>
 
-                  </div>
+
+                <div>
+                  <p className="mb-1">
+                    <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                    {calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)?.toFixed(4)}failures/10<sup>6</sup> hours
+                  </p>
+
                 </div>
 
+
               </>
             )}
 
-
-            {showCalculations && (
-              <>
-                <div className="card ">
-                  <div className="card-body">
-
-                    <div className="component-list">
-
-                      {console.log("currentComponent.......", currentComponent)}
-
-                      {components.length === 0 ? (
-                        <Typography variant="body1">No components added yet</Typography>
-                      ) : (
-
-                        <MaterialTable
-                          columns={componentColumns}
-                          data={[{
-                            C1: calculateGateArrayC1(currentComponent),
-                            C2: getFailureRate(currentComponent.packageType, currentComponent.pinCount),
-                            piT: calculatePiT(currentComponent.technology, currentComponent.temperature),
-                            piE: getEnvironmentFactor(currentComponent.environment),
-                            piQ: getQualityFactor(currentComponent.quality),
-                            piL: calculateLearningFactor(currentComponent.yearsInProduction),
-                            λp: calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)
-                          }]}
-                          options={{
-                            search: false,
-                            paging: false,
-                            toolbar: false,
-                            headerStyle: {
-                              backgroundColor: '#CCE6FF',
-                              fontWeight: 'bold',
-                              whiteSpace: 'nowrap'
-                            },
-                            rowStyle: {
-                              backgroundColor: '#FFF',
-                              '&:hover': {
-                                backgroundColor: '#f5f5f5'
-                              }
-                            }
-                          }}
-                          components={{
-                            Container: props => <Paper {...props} elevation={2} />,
-                          }}
-                        />
-                      )}
-                      <br />
-                    </div>
-
-                    <h3>Calculation Formulas</h3>
-                    <div className="formula-section">
-                      {currentComponent.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
-                        <>
-                          <p>FR = (C<sub>1</sub> × π<sub>T</sub> + C<sub>2</sub> × π<sub>E</sub>) × π<sub>Q</sub> × π<sub>L</sub></p>
-                          <p>Where:</p>
-                          <ul>
-                            <li>C<sub>1</sub> = Base failure rate (depends on gate count and complexity)</li>
-                            <li>C<sub>2</sub> = Package failure rate (from MIL-HDBK-217 tables)</li>
-                            <li>π<sub>T</sub> = Temperature factor (technology dependent)</li>
-                            <li>π<sub>E</sub> = Environment factor (GB, GF, GM, etc.)</li>
-                            <li>π<sub>Q</sub> = Quality factor (MIL-SPEC grade)</li>
-                            <li>π<sub>L</sub> = Learning factor (years in production)</li>
-                          </ul>
-                        </>
-                      )}
-                    </div>
-                  </div></div>
-              </>
-            )}
           </>
         )}
 
@@ -3863,7 +2821,11 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                         label: "Textured-Poly (B₁)",
                         description: "Textured-Poly with B₁ factor"
                       },
-               
+                      // {
+                      //   value: "Textured-Poly-B2",
+                      //   label: "Textured-Poly (B₂)",
+                      //   description: "Textured-Poly with B₂ factor"
+                      // }
                     ]}
                     className="factor-select"
                   />
@@ -4203,62 +3165,31 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     min="-40"
                     max="175"
                     value={currentComponent.temperature}
-                    onChange={handleInputChange}
+                    onChange={handleInputChange}    
                   />
+                    <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
                 </div>
               </Col>
 
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Package Type for (C<sub>2</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="packageType"
-                    placeholder="Select Package Type"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        packageType: selectedOption.value
-                      });
-                    }}
-                    options={[
-                      { value: "Hermetic_DIPs_SolderWeldSeal", label: "Hermetic: DIPs w/Solder or Weld Seal, PGA, SMT" },
-                      { value: "DIPs_GlassSeal", label: "DIPs with Glass Seal" },
-                      { value: "Flatpacks_AxialLeads", label: "Flatpacks with Axial Leads" },
-                      { value: "Cans", label: "Cans" },
-                      { value: "Nonhermetic_DIPs_PGA_SMT", label: "Nonhermetic: DIPs, PGA, SMT" }
-                    ]}
-                  />
-                </div>
-              </Col>
+
               <Col md={4}>
                 <div className="form-group">
                   <label>No. of Functional Pins for (C<sub>2</sub>):</label>
                   <input
-                    className="form-group"
-                    style={{
-                      width: "100%",
-                      padding: "0.375rem 0.75rem",
-                      fontSize: "1rem",
-                      lineHeight: "1.5",
-                      color: "#495057",
-                      backgroundColor: "#fff",
-                      border: "1px solid #ced4da",
-                      borderRadius: "0.25rem"
+                    styles={customStyles}
+                    placeholder="Select"
+                    value={0} // Fixed value set to 0
+                    onChange={(selectedOption) => {
+                      setCurrentComponent(prev => ({
+                        ...prev,
+                        packageType: selectedOption.value,
+                        c2: selectedOption.c2
+                      }));
                     }}
-                    type="number"
-                    name="pinCount"
-                    min="3"
-                    max="224"
-                    value={currentComponent.pinCount || ''}
-                    onChange={(e) => setCurrentComponent({
-                      ...currentComponent,
-                      pinCount: parseInt(e.target.value)
-                    })}
                   />
                 </div>
               </Col>
-                 <Col md={4}>
+              <Col md={4}>
                 <div className="form-group">
                   <label>Learning Factor (π<sub>L</sub>):</label>
                   <Select
@@ -4273,33 +3204,33 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       });
                     }}
                     options={[
-                      {
-                        value: 5.1,
-                        label: "≤ 0.5 years",
-                        piL: 2.0, // Direct value from table
-                        description: "Early production phase (highest learning factor)"
-                      },
-                      {
-                        value: 0.5,
-                        label: "0.5 years",
-                        piL: 1.8,
-                        description: "Initial production ramp-up"
-                      },
-                      {
-                        value: 1.0,
-                        label: "1.0 year",
-                        piL: 1.5,
-                        description: "Moderate experience"
-                      },
-                      {
-                        value: 1.5,
-                        label: "1.5 years",
-                        piL: 1.2,
-                        description: "Stabilizing production"
-                      },
+                      // {
+                      //   value: 5.1,
+                      //   label: "≤ 0.5 years",
+                      //   piL: 2.0, // Direct value from table
+                      //   description: "Early production phase (highest learning factor)"
+                      // },
+                      // {
+                      //   value: 0.5,
+                      //   label: "0.5 years",
+                      //   piL: 1.8,
+                      //   description: "Initial production ramp-up"
+                      // },
+                      // {
+                      //   value: 1.0,
+                      //   label: "1.0 year",
+                      //   piL: 1.5,
+                      //   description: "Moderate experience"
+                      // },
+                      // {
+                      //   value: 1.5,
+                      //   label: "1.5 years",
+                      //   piL: 1.2,
+                      //   description: "Stabilizing production"
+                      // },
                       {
                         value: 2.0,
-                        label: "≥ 2.0 years",
+                        label: "≥ 2.0 years (πL = 1.0)",
                         piL: 1.0,
                         description: "Mature production (lowest learning factor)"
                       }
@@ -4308,167 +3239,31 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                 </div>
               </Col>
             </Row>
-            <div className='d-flex justify-content-between align-items-center'>
-              <div>
-                {result && (
-                  <Box
-                    component="div"
-                    onClick={() => setShowCalculations(!showCalculations)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      color: 'primary.main',
-                      '&:hover': {
-                        textDecoration: 'underline'
-                      }
-                    }}
-                    className="ms-auto mt-2"
-                  >
-                    <CalculatorIcon
-                      style={{ height: '30px', width: '40px' }}
-                      fontSize="large"
-                    />
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontWeight: 'bold',
-                        fontSize: '0.95rem',
-                        ml: 1
-                      }}
-                    >
-                      {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                    </Typography>
-                  </Box>
-                )}
-              </div>
-              <Button
-                variant="primary"
-                onClick={calculateMemoriesFailureRate}
 
-                className="btn-calculate float-end mt-1"
-              >
-                Calculate Failure Rate
-              </Button>
-            </div>
 
-            {error && (
-              <Row>
-                <Col>
-                  <Alert variant="danger">{error}</Alert>
-                </Col>
-              </Row>
+            <Button
+              variant="primary"
+              onClick={calculateMemoriesFailureRate}
+
+              className="btn-calculate float-end mt-1"
+            >
+              Calculate Failure Rate
+            </Button>
+            {result && (
+              handleCalculateMemories(result?.value)
             )}
+
 
             {result && (
               <>
-                <h2 className="text-center">Calculation Result</h2>
+
                 <div className="d-flex align-items-center">
                   <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                  <span className="ms-2">{result.value} failures/10<sup>6</sup> hours</span>
+                  <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
                 </div>
               </>
             )}
 
-            {result && showCalculations && (
-              <div className="card mt-3">
-                <div className="card-body">
-                  <MaterialTable
-                    columns={[
-                      {
-                        title: <span>C<sub>1</sub></span>,
-                        field: 'c1',
-                        render: rowData => rowData?.c1 || '-'
-                      },
-                      {
-                        title: <span>π<sub>T</sub></span>,
-                        field: 'piT',
-                        render: rowData => rowData?.piT || '-'
-                      },
-                      {
-                        title: <span>C<sub>2</sub></span>,
-                        field: 'c2',
-                        render: rowData => rowData?.c2 || '-'
-                      },
-                      {
-                        title: <span>π<sub>E</sub></span>,
-                        field: 'piE',
-                        render: rowData => (
-                          <div>
-                            <div>{rowData.piE}</div>
-                            <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                              {rowData?.piELabel}
-                            </div>
-                          </div>
-                        )
-                      },
-                      {
-                        title: <span>λ<sub>cyc</sub></span>,
-                        field: 'lambdaCyc',
-                        render: rowData => rowData?.lambdaCyc || '-'
-                      },
-                      {
-                        title: <span>π<sub>Q</sub></span>,
-                        field: 'πQ',
-                        render: rowData => rowData?.πQ || '-'
-                      },
-                      {
-                        title: <span>π<sub>L</sub></span>,
-                        field: 'piL',
-                        render: rowData => rowData?.piL || '-'
-                      },
-                      {
-                        title: "Failure Rate",
-                        field: 'λp',
-                        render: rowData => rowData?.λp || '-'
-                      }
-                    ]}
-                    data={[{
-                      c1: result?.parameters?.c1,
-                      piT: result?.parameters?.piT,
-                      c2: result?.parameters?.c2,
-                      piE: result?.parameters?.piE,
-
-                      lambdaCyc: result?.parameters?.lambdaCyc,
-                      // piQ: result?.parameters?.piQ,
-                      πQ: (() => {
-                        const piQValue = result?.parameters?.πQ;
-                        console.log('piQ value:', piQValue);
-                        return piQValue;
-                      })(),
-                      piL: result?.parameters?.piL,
-                      λp: result?.value
-                    }]}
-                    options={{
-                      search: false,
-                      paging: false,
-                      toolbar: false,
-                      headerStyle: { backgroundColor: '#CCE6FF', fontWeight: 'bold' }
-                    }}
-                    components={{
-                      Container: props => <Paper {...props} elevation={2} />
-                    }}
-                  />
-
-                  <div className="mt-3">
-                    <h5>Calculation Formula</h5>
-                    <p>λ<sub>p</sub> = (C<sub>1</sub> × π<sub>T</sub> + C<sub>2</sub> × π<sub>E</sub> + λ<sub>cyc</sub>) × π<sub>Q</sub>× π<sub>L</sub></p>
-
-                    <h5>Where:</h5>
-                    <ul>
-                      <li>C<sub>1</sub> = Die complexity failure rate (from memory type and size)</li>
-                      <li>π<sub>T</sub> = Temperature factor (based on junction temperature)</li>
-                      <li>C<sub>2</sub> = Package failure rate (from package type and pin count)</li>
-                      <li>π<sub>E</sub> = Environment factor</li>
-                      {inputs.memoryType.type.includes('EEPROM') && (
-                        <li>λ<sub>cyc</sub> = Read/write cycling induced failure rate (for EEPROMs)</li>
-                      )}
-                      <li>π<sub>Q</sub> = Quality factor</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
           </>
         )}
         {currentComponent.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
@@ -4512,51 +3307,18 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 
               <Col md={4}>
                 <div className="form-group">
-                  <label>Package Type for (C<sub>2</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="packageType"
-                    placeholder="Select Package Type"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        packageType: selectedOption.value
-                      });
-                    }}
-                    options={[
-                      { value: "Hermetic_DIPs_SolderWeldSeal", label: "Hermetic: DIPs w/Solder or Weld Seal, PGA, SMT" },
-                      { value: "DIPs_GlassSeal", label: "DIPs with Glass Seal" },
-                      { value: "Flatpacks_AxialLeads", label: "Flatpacks with Axial Leads" },
-                      { value: "Cans", label: "Cans" },
-                      { value: "Nonhermetic_DIPs_PGA_SMT", label: "Nonhermetic: DIPs, PGA, SMT" }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
                   <label>No. of Functional Pins for (C<sub>2</sub>):</label>
                   <input
-                    className="form-group"
-                    style={{
-                      width: "100%",
-                      padding: "0.375rem 0.75rem",
-                      fontSize: "1rem",
-                      lineHeight: "1.5",
-                      color: "#495057",
-                      backgroundColor: "#fff",
-                      border: "1px solid #ced4da",
-                      borderRadius: "0.25rem"
+                    styles={customStyles}
+                    placeholder="Select"
+                    value={0} // Fixed value set to 0
+                    onChange={(selectedOption) => {
+                      setCurrentComponent(prev => ({
+                        ...prev,
+                        packageType: selectedOption.value,
+                        c2: selectedOption.c2
+                      }));
                     }}
-                    type="number"
-                    name="pinCount"
-                    min="3"
-                    max="224"
-                    value={currentComponent.pinCount || ''}
-                    onChange={(e) => setCurrentComponent({
-                      ...currentComponent,
-                      pinCount: parseInt(e.target.value)
-                    })}
                   />
                 </div>
               </Col>
@@ -4599,10 +3361,10 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       }));
                     }}
                     options={[
-                      { value: 0.5, label: "≤ 0.5 years (πL = 2.0)", piL: 2.0 },
-                      { value: 0.5, label: "0.5 years (πL = 1.8)", piL: 1.8 },
-                      { value: 1.0, label: "1.0 year (πL = 1.5)", piL: 1.5 },
-                      { value: 1.5, label: "1.5 years (πL = 1.2)", piL: 1.2 },
+                      // { value: 0.5, label: "≤ 0.5 years (πL = 2.0)", piL: 2.0 },
+                      // { value: 0.5, label: "0.5 years (πL = 1.8)", piL: 1.8 },
+                      // { value: 1.0, label: "1.0 year (πL = 1.5)", piL: 1.5 },
+                      // { value: 1.5, label: "1.5 years (πL = 1.2)", piL: 1.2 },
                       { value: 2.0, label: "≥ 2.0 years (πL = 1.0)", piL: 1.0 }
                     ]}
                   />
@@ -4624,57 +3386,55 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     }}
                     options={[
                       // Class S Categories (πQ = 0.25)
-                      {
-                        value: "MIL_M_38510_ClassS",
-                        label: "Class S (MIL-M-38510, Class S)",
-                        piQ: 0.25,
-                        description: "Procured in full accordance with MIL-M-38510, Class S requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassU",
-                        label: "Class S (MIL-I-38535, Class U)",
-                        piQ: 0.25,
-                        description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
-                      },
-                      {
-                        value: "MIL_H_38534_ClassS_Hybrid",
-                        label: "Class S Hybrid (MIL-H-38534, Level K)",
-                        piQ: 0.25,
-                        description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
-                      },
+                      // {
+                      //   value: "MIL_M_38510_ClassS",
+                      //   label: "Class S (MIL-M-38510, Class S)",
+                      //   piQ: 0.25,
+                      //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
+                      // },
+                      // {
+                      //   value: "MIL_I_38535_ClassU",
+                      //   label: "Class S (MIL-I-38535, Class U)",
+                      //   piQ: 0.25,
+                      //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
+                      // },
+                      // {
+                      //   value: "MIL_H_38534_ClassS_Hybrid",
+                      //   label: "Class S Hybrid (MIL-H-38534, Level K) ",
+                      //   piQ: 0.25,
+                      //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
+                      // },
                       // Class B Categories (πQ = 1.0)
                       {
                         value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B)",
+                        label: "Class B (MIL-M-38510, Class B) (πQ = 1.0)",
                         piQ: 1.0,
                         description: "Procured in full accordance with MIL-M-38510, Class B requirements."
                       },
                       {
                         value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q)",
+                        label: "Class B (MIL-I-38535, Class Q) (πQ = 1.0)",
                         piQ: 1.0,
                         description: "Procured in full accordance with MIL-I-38535 (Class Q)."
                       },
                       {
                         value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "Class B Hybrid (MIL-H-38534, Level H)",
+                        label: "Class B Hybrid (MIL-H-38534, Level H) (πQ = 1.0)",
                         piQ: 1.0,
                         description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
                       },
                       // Class B-1 Category (πQ = 2.0)
-                      {
-                        value: "MIL_STD_883_ClassB1",
-                        label: "Class B-1 (MIL-STD-883)",
-                        piQ: 2.0,
-                        description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
-                      }
+                      // {
+                      //   value: "MIL_STD_883_ClassB1",
+                      //   label: "Class B-1 (MIL-STD-883)",
+                      //   piQ: 2.0,
+                      //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
+                      // }
                     ]}
                   />
                 </div>
               </Col>
-            </Row>
 
-            <Row className="mb-3">
               <Col md={4}>
                 <div className="form-group">
                   <label>Technology Type for (π<sub>T</sub>):</label>
@@ -4776,183 +3536,36 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     value={currentComponent.temperature}
                     onChange={handleInputChange}
                   />
+                    <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
                 </div>
               </Col>
 
             </Row>
 
-            <div className='d-flex justify-content-between align-items-center'>
-              <div>
-                {result && (
-                  <Box
-                    component="div"
-                    onClick={() => setShowCalculations(!showCalculations)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      color: 'primary.main',
-                      '&:hover': {
-                        textDecoration: 'underline'
-                      }
-                    }}
-                    className="ms-auto mt-2"
-                  >
-                    <CalculatorIcon
-                      style={{ height: '30px', width: '40px' }}
-                      fontSize="large"
-                    />
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontWeight: 'bold',
-                        fontSize: '0.95rem',
-                        ml: 1
-                      }}
-                    >
-                      {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                    </Typography>
-                  </Box>
-                )}
-              </div>
 
-              <div>
-                <Button
-                  variant="primary"
-                  onClick={calculateGaAsFailureRate}
-                  className="btn-calculate float-end mb-4"
-                >
-                  Calculate Failure Rate
-                </Button>
-              </div>
-            </div>
+            <Button
+              variant="primary"
+              onClick={calculateGaAsFailureRate}
+              className="btn-calculate float-end mb-4"
+            >
+              Calculate Failure Rate
+            </Button>
 
-            {error && (
-              <Row>
-                <Col>
-                  <Alert variant="danger">{error}</Alert>
-                </Col>
-              </Row>
+            {result && (
+              handleCalculateGaAs(result?.value)
             )}
-            <br />
+
 
             {result && (
               <>
-                <h2 className="text-center">Calculation Result</h2>
+
                 <div className="d-flex align-items-center">
                   <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                  <span className="ms-3">{result.value} failures/10<sup>6</sup> hours</span>
+                  <span className="ms-3">{result?.value} failures/10<sup>6</sup> hours</span>
                 </div>
               </>
             )}
-            <br />
 
-            {result && showCalculations && (
-              <>
-                <Row className="mb-4">
-                  <Col>
-                    <div className="card">
-                      <div className="card-body">
-                        <div className="table-responsive">
-                          <MaterialTable
-                            columns={[
-                              {
-                                title: <span>C<sub>1</sub></span>,
-                                field: 'c1',
-                                render: rowData => rowData.c1 || '-'
-                              },
-                              {
-                                title: <span>π<sub>T</sub></span>,
-                                field: 'piT',
-                                render: rowData => rowData.piT || '-'
-                              },
-                              {
-                                title: <span>π<sub>A</sub></span>,
-                                field: 'piA',
-                                render: rowData => rowData.piA || '-'
-                              },
-                              {
-                                title: <span>C<sub>2</sub></span>,
-                                field: 'c2',
-                                render: rowData => rowData.c2 || '-'
-                              },
-                              {
-                                title: <span>π<sub>E</sub></span>,
-                                field: 'piE',
-                                render: rowData => rowData.piE || '-'
-                              },
-                              {
-                                title: <span>π<sub>L</sub></span>,
-                                field: 'piL',
-                                render: rowData => rowData.piL || '-'
-                              },
-                              {
-                                title: <span>π<sub>Q</sub></span>,
-                                field: 'piQ',
-                                render: rowData => rowData.piQ || '-'
-                              },
-                              {
-                                title: "Failure Rate",
-                                field: 'λp',
-                                render: rowData => rowData.λp || '-',
-                              }
-                            ]}
-                            data={[{
-                              c1: result.parameters.c1,
-                              piT: result.parameters.piT,
-                              piA: result.parameters.piA,
-                              c2: result.parameters.c2,
-                              piE: result.parameters.piE,
-                              piL: result.parameters.piL,
-                              piQ: result.parameters.piQ,
-                              λp: result.value
-                            }]}
-                            options={{
-                              search: false,
-                              paging: false,
-                              toolbar: false,
-                              headerStyle: {
-                                backgroundColor: '#CCE6FF',
-                                fontWeight: 'bold',
-                                whiteSpace: 'nowrap'
-                              },
-                              rowStyle: {
-                                backgroundColor: '#FFF',
-                                '&:hover': {
-                                  backgroundColor: '#f5f5f5'
-                                }
-                              }
-                            }}
-                            components={{
-                              Container: props => <Paper {...props} elevation={2} style={{ borderRadius: 8 }} />
-                            }}
-                          />
-                        </div>
-                        <div className="formula-section" style={{ marginTop: '24px', marginBottom: '24px' }}>
-                          <Typography variant="h6" gutterBottom>
-                            Calculation Formula
-                          </Typography>
-                          <Typography variant="body1" paragraph>
-                            λ<sub>p</sub> = [C<sub>1</sub> × π<sub>T</sub> × π<sub>A</sub> + C<sub>2</sub> × π<sub>E</sub>] × π<sub>L</sub> × π<sub>Q</sub>
-                          </Typography>
-                          <Typography variant="body1" paragraph>Where:</Typography>
-                          <ul>
-                            <li>λ<sub>p</sub> = Predicted failure rate (Failures/10^6 Hours)</li>
-                            <li>C<sub>1</sub> = Die complexity failure rate</li>
-                            <li>π<sub>T</sub> = Temperature factor</li>
-                            <li>π<sub>A</sub> = Application factor</li>
-                            <li>C<sub>2</sub> = Package failure rate</li>
-                            <li>π<sub>E</sub> = Environment factor</li>
-                            <li>π<sub>L</sub> = Learning factor</li>
-                            <li>π<sub>Q</sub> = Quality factor</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-              </>
-            )}
           </>
         )}
         <br />
@@ -5005,12 +3618,14 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
             </Row>
 
             <Row className="mb-3">
+
               <Col md={4}>
                 <div className="form-group">
-                  <label>Package Type (C<sub>2</sub>):</label>
-                  <Select
+                  <label>No. of Functional Pins for (C<sub>2</sub>):</label>
+                  <input
                     styles={customStyles}
                     placeholder="Select"
+                    value={0} // Fixed value set to 0
                     onChange={(selectedOption) => {
                       setCurrentComponent(prev => ({
                         ...prev,
@@ -5018,40 +3633,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                         c2: selectedOption.c2
                       }));
                     }}
-                    options={[
-                      { value: "Hermetic_DIPs_SolderWeldSeal", label: "Hermetic: DIPs w/Solder or Weld Seal", c2: 0.00092 },
-                      { value: "DIPs_GlassSeal", label: "DIPs with Glass Seal", c2: 0.00047 },
-                      { value: "Flatpacks_AxialLeads", label: "Flatpacks with Axial Leads", c2: 0.00022 },
-                      { value: "Cans", label: "Cans", c2: 0.00027 },
-                      { value: "Nonhermetic_DIPs", label: "Nonhermetic: DIPs", c2: 0.0012 }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>No. of Functional Pins for (C<sub>2</sub>):</label>
-                  <input
-                    className="form-group"
-                    style={{
-                      width: "100%",
-                      padding: "0.375rem 0.75rem",
-                      fontSize: "1rem",
-                      lineHeight: "1.5",
-                      color: "#495057",
-                      backgroundColor: "#fff",
-                      border: "1px solid #ced4da",
-                      borderRadius: "0.25rem"
-                    }}
-                    type="number"
-                    name="pinCount"
-                    min="3"
-                    max="224"
-                    value={currentComponent.pinCount || ''}
-                    onChange={(e) => setCurrentComponent({
-                      ...currentComponent,
-                      pinCount: parseInt(e.target.value)
-                    })}
                   />
                 </div>
               </Col>
@@ -5089,52 +3670,52 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     }}
                     options={[
                       // Class S Categories (πQ = 0.25)
-                      {
-                        value: "MIL_M_38510_ClassS",
-                        label: "Class S (MIL-M-38510, Class S)",
-                        piQ: 0.25, // Store πQ for calculations
-                        description: "Procured in full accordance with MIL-M-38510, Class S requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassU",
-                        label: "Class S (MIL-I-38535, Class U)",
-                        piQ: 0.25,
-                        description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
-                      },
-                      {
-                        value: "MIL_H_38534_ClassS_Hybrid",
-                        label: "Class S Hybrid (MIL-H-38534, Level K)",
-                        piQ: 0.25,
-                        description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
-                      },
+                      // {
+                      //   value: "MIL_M_38510_ClassS",
+                      //   label: "Class S (MIL-M-38510, Class S)",
+                      //   piQ: 0.25, // Store πQ for calculations
+                      //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
+                      // },
+                      // {
+                      //   value: "MIL_I_38535_ClassU",
+                      //   label: "Class S (MIL-I-38535, Class U)",
+                      //   piQ: 0.25,
+                      //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
+                      // },
+                      // {
+                      //   value: "MIL_H_38534_ClassS_Hybrid",
+                      //   label: "Class S Hybrid (MIL-H-38534, Level K)",
+                      //   piQ: 0.25,
+                      //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
+                      // },
 
                       // Class B Categories (πQ = 1.0)
                       {
                         value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B)",
+                        label: "Class B (MIL-M-38510, Class B) (πQ = 1.0)",
                         piQ: 1.0,
                         description: "Procured in full accordance with MIL-M-38510, Class B requirements."
                       },
                       {
                         value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q)",
+                        label: "Class B (MIL-I-38535, Class Q) (πQ = 1.0)",
                         piQ: 1.0,
                         description: "Procured in full accordance with MIL-I-38535 (Class Q)."
                       },
                       {
                         value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "Class B Hybrid (MIL-H-38534, Level H)",
+                        label: "Class B Hybrid (MIL-H-38534, Level H) (πQ = 1.0)",
                         piQ: 1.0,
                         description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
                       },
 
                       // Class B-1 Category (πQ = 2.0)
-                      {
-                        value: "MIL_STD_883_ClassB1",
-                        label: "Class B-1 (MIL-STD-883)",
-                        piQ: 2.0,
-                        description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
-                      }
+                      // {
+                      //   value: "MIL_STD_883_ClassB1",
+                      //   label: "Class B-1 (MIL-STD-883)",
+                      //   piQ: 2.0,
+                      //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
+                      // }
                     ]}
                   />
                 </div>
@@ -5169,9 +3750,8 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     value={currentComponent.tcase ? Number(currentComponent.tcase) + 10 : ''}
                     readOnly
                   />
-                  <small className="form-text text-muted">
-                    T<sub>J</sub> = T<sub>CASE</sub> + 10°C (automatically calculated)
-                  </small>
+                    <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+                
                 </div>
               </Col>
 
@@ -5207,53 +3787,23 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                 </div>
               </Col>
             </Row>
-            <div className="d-flex justify-content-between align-items-center">
-              <div >
-                {result && (
-                  <Box
-                    component="div"
-                    onClick={() => setShowCalculations(!showCalculations)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      color: 'primary.main',
-                      '&:hover': {
-                        textDecoration: 'underline'
-                      }
-                    }}
-                    className="ms-auto mt-2"
-                  >
-                    <CalculatorIcon
-                      style={{ height: '30px', width: '40px' }}
-                      fontSize="large"
-                    />
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        fontWeight: 'bold',
-                        fontSize: '0.95rem',
-                        ml: 1
-                      }}
-                    >
-                      {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                    </Typography>
-                  </Box>
 
-                )}
-              </div>
-              <Button
-                variant="primary"
-                onClick={calculateBubbleMemoryFailureRate}
-                className="btn-calculate float-end mb-4"
-              >
-                Calculate Failure Rate
-              </Button>
-            </div>
+
+            <Button
+              variant="primary"
+              onClick={calculateBubbleMemoryFailureRate}
+              className="btn-calculate float-end mb-4"
+            >
+              Calculate Failure Rate
+            </Button>
+
+            {result && (
+              handleCalculateBubble(result?.value)
+            )}
 
             {result && (
               <>
-                <h2 className="text-center">Calculation Result</h2>
+
                 <div className="d-flex align-items-center">
                   <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
                   <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
@@ -5261,141 +3811,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
               </>
             )}
 
-
-            {result && showCalculations && (
-              <>
-                <div className="table-responsive mt-4">
-                  <MaterialTable
-                    columns={[
-                      {
-                        title: <span>C<sub>11</sub></span>,
-                        field: 'c11',
-                        render: rowData => rowData?.c11?.toFixed(6) || '-'
-                      },
-                      {
-                        title: <span>C<sub>21</sub></span>,
-                        field: 'c21',
-                        render: rowData => rowData?.c21?.toFixed(6) || '-'
-                      },
-                      {
-                        title: <span>C<sub>12</sub></span>,
-                        field: 'c12',
-                        render: rowData => rowData?.c12?.toFixed(6) || '-'
-                      },
-                      {
-                        title: <span>C<sub>22</sub></span>,
-                        field: 'c22',
-                        render: rowData => rowData?.c22?.toFixed(6) || '-'
-                      },
-                      {
-                        title: <span>C<sub>2</sub></span>,
-                        field: 'c2',
-                        render: rowData => rowData?.c2?.toFixed(6) || '-'
-                      },
-                      {
-                        title: <span>π<sub>T1</sub></span>,
-                        field: 'piT1',
-                        render: rowData => rowData?.piT1?.toFixed(6) || '-'
-                      },
-                      {
-                        title: <span>π<sub>T2</sub></span>,
-                        field: 'piT2',
-                        render: rowData => rowData?.piT2?.toFixed(6) || '-'
-                      },
-                      {
-                        title: <span>π<sub>W</sub></span>,
-                        field: 'piW',
-                        render: rowData => rowData?.piW?.toFixed(4) || '-'
-                      },
-                      {
-                        title: <span>π<sub>D</sub></span>,
-                        field: 'piD',
-                        render: rowData => rowData.piD?.toFixed(6) || '-'
-                      },
-                      {
-                        title: <span>π<sub>E</sub></span>,
-                        field: 'piE',
-                        render: rowData => rowData?.piE?.toFixed(6) || '-'
-                      },
-                      {
-                        title: <span>π<sub>L</sub></span>,
-                        field: 'piL',
-                        render: rowData => rowData?.piL?.toFixed(6) || '-'
-                      },
-                      {
-                        title: <span>π<sub>Q</sub></span>,
-                        field: 'piQ',
-                        render: rowData => rowData?.piQ?.toFixed(6) || '-'
-                      },
-                      {
-                        title: "λ₁ (Control)",
-                        field: 'lambda1',
-                        render: rowData => rowData?.lambda1?.toFixed(6) || '-',
-                      },
-                      {
-                        title: "λ₂ (Memory)",
-                        field: 'lambda2',
-                        render: rowData => rowData?.lambda2?.toFixed(6) || '-',
-                      },
-                      {
-                        title: "λₚ (Total)",
-                        field: 'lambdaP',
-                        render: rowData => rowData?.lambdaP || '-', // Display the full formatted string
-                      }
-                    ]}
-
-                    data={[{
-                      c11: result?.parameters?.c11,
-                      c21: result?.parameters?.c21,
-                      c12: result?.parameters?.c12,
-                      c22: result?.parameters?.c22,
-                      c2: result?.parameters?.c2,
-                      piT1: result?.parameters?.piT1,
-                      piT2: result?.parameters?.piT2,
-                      piW: result?.parameters?.piW,
-                      piD: result?.parameters?.piD,
-                      piE: result?.parameters?.piE,
-                      piL: result?.parameters?.piL,
-                      piQ: result?.parameters?.piQ,
-                      lambda1: result?.parameters?.lambda1,
-                      lambda2: result?.parameters?.lambda2,
-                      lambdaP: result?.value
-                    }]}
-                    options={{
-                      search: false,
-                      paging: false,
-                      toolbar: false,
-                      headerStyle: {
-                        backgroundColor: '#CCE6FF',
-                        fontWeight: 'bold',
-                        whiteSpace: 'nowrap'
-                      },
-                      rowStyle: {
-                        backgroundColor: '#FFF',
-                        '&:hover': {
-                          backgroundColor: '#f5f5f5'
-                        }
-                      },
-                      cellStyle: {
-                        textAlign: 'center'
-                      }
-                    }}
-                    components={{
-                      Container: props => <Paper {...props} elevation={2} style={{ borderRadius: 8 }} />
-                    }}
-
-                  />
-                </div>
-
-                <div className="formula-section mt-3">
-                  <h5>Calculation Formula</h5>
-                  <p>λ<sub>p</sub> = λ<sub>1</sub> + λ<sub>2</sub></p>
-                  <p>Where:</p>
-                  <p>λ<sub>1</sub> = π<sub>Q</sub>[N<sub>C</sub>C<sub>11</sub>π<sub>T1</sub>π<sub>W</sub> + (N<sub>C</sub>C<sub>21</sub> + C<sub>2</sub>)π<sub>E</sub>]π<sub>D</sub>π<sub>L</sub></p>
-                  <p>λ<sub>2</sub> = π<sub>Q</sub>N<sub>C</sub>(C<sub>12</sub>π<sub>T2</sub> + C<sub>22</sub>π<sub>E</sub>)π<sub>L</sub></p>
-                </div>
-              </>
-            )}
           </>
 
         )}
@@ -5404,4 +3819,4 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
   );
 };
 
-export default MicrocircuitsCalculation;
+export default Microcircuits;

@@ -232,11 +232,12 @@ const Quartz = ({ onCalculate }) => {
                   setErrors({ ...errors, frequency: '' });
                 }}
                 options={[
+                   
                   ...baseRates.map(item => ({
                     value: item.frequency,
                     label: `${item.frequency} MHz (λb = ${item.rate?.toFixed(3)})`
                   })),
-                  { value: 'custom', label: 'Custom Frequency' }
+                 { value: 'custom', label: 'Custom Frequency' }
                 ]}
               />
               {errors.frequency && <small className="text-danger">{errors.frequency}</small>}
@@ -260,7 +261,9 @@ const Quartz = ({ onCalculate }) => {
                   }}
                   className={`form-control ${errors.customFrequency ? 'is-invalid' : ''}`}
                 />
+              
                 {errors.customFrequency && <small className="text-danger">{errors.customFrequency}</small>}
+                  <br/>
                 <small className="text-muted">Formula: λb = 0.013 × (f)<sup>0.23</sup></small>
               </div>
             )}

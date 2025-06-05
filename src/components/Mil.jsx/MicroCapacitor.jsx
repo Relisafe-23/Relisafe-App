@@ -17,7 +17,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 
 
 
-function CapacitorCalculation({ onCalculate }) {
+function MicroCapacitor({ onCalculate, handleCalculateFailure }) {
   
 
   // Capacitor types data
@@ -51,23 +51,7 @@ function CapacitorCalculation({ onCalculate }) {
     { style: "CT", spec: "MIL-C-92", description: "Capacitor, Variable, Air Dielectric (Trimmer)", λb: 0.0000072, πtColumn: 2, πcColumn: 1, πvColumn: 5, πsrColumn: 1 },
     { style: "CG", spec: "MIL-C-23183", description: "Capacitor, Fixed or Variable, Vacuum Dielectric", λb: 0.0060, πtColumn: 1, πcColumn: 1, πvColumn: 5, πsrColumn: 1 }
   ];
-  // Temperature factors
-  // const tempFactors = [
-  //   { temp: 20, col1: 0.91, col2: 0.79 },
-  //   { temp: 30, col1: 1.1, col2: 1.3 },
-  //   { temp: 40, col1: 1.3, col2: 1.9 },
-  //   { temp: 50, col1: 1.6, col2: 2.9 },
-  //   { temp: 60, col1: 1.8, col2: 4.2 },
-  //   { temp: 70, col1: 2.2, col2: 6.0 },
-  //   { temp: 80, col1: 2.5, col2: 8.4 },
-  //   { temp: 90, col1: 2.8, col2: 11 },
-  //   { temp: 100, col1: 3.2, col2: 15 },
-  //   { temp: 110, col1: 3.7, col2: 21 },
-  //   { temp: 120, col1: 4.1, col2: 27 },
-  //   { temp: 130, col1: 4.6, col2: 35 },
-  //   { temp: 140, col1: 5.1, col2: 44 },
-  //   { temp: 150, col1: 5.6, col2: 56 }
-  // ];
+
 
   // Capacitance factors
   const capacitanceFactors = [
@@ -93,59 +77,34 @@ function CapacitorCalculation({ onCalculate }) {
     { capacitance: 120000, col1: 2.9, col2: 15 }
   ];
 
-  // Voltage stress factors
-  // const voltageStressFactors = [
-  //   { stress: 0.1, col1: 1.0, col2: 1.0, col3: 1.0, col4: 1.0, col5: 1.0 },
-  //   { stress: 0.2, col1: 1.0, col2: 1.0, col3: 1.0, col4: 1.0, col5: 1.1 },
-  //   { stress: 0.3, col1: 1.0, col2: 1.0, col3: 1.1, col4: 1.0, col5: 1.2 },
-  //   { stress: 0.4, col1: 1.1, col2: 1.0, col3: 1.3, col4: 1.0, col5: 1.5 },
-  //   { stress: 0.5, col1: 1.4, col2: 1.2, col3: 1.6, col4: 1.0, col5: 2.0 },
-  //   { stress: 0.6, col1: 2.0, col2: 2.0, col3: 2.0, col4: 2.0, col5: 2.7 },
-  //   { stress: 0.7, col1: 3.2, col2: 5.7, col3: 2.6, col4: 15, col5: 3.7 },
-  //   { stress: 0.8, col1: 5.2, col2: 19, col3: 3.4, col4: 130, col5: 5.1 },
-  //   { stress: 0.9, col1: 8.6, col2: 59, col3: 4.4, col4: 990, col5: 6.8 },
-  //   { stress: 1, col1: 14, col2: 166, col3: 5.6, col4: 5900, col5: 9.0 }
-  // ];
-
-  // Series resistance factors (for Tantalum CSR Style Capacitors)
-  // const seriesResistanceFactors = [
-  //   { resistance: 0.8, πsr: 0.66 },
-  //   { resistance: 0.6, πsr: 1.0 },
-  //   { resistance: 0.4, πsr: 1.3 },
-  //   { resistance: 0.2, πsr: 2.0 },
-  //   { resistance: 0.1, πsr: 2.7 },
-  //   { resistance: 0.0, πsr: 3.3 }
-  // ];
-
-  // Quality factors
   const qualityFactors = [
-    { quality: "Established Reliability (D)", πQ: 0.001 },
-    { quality: "Established Reliability (C)", πQ: 0.01 },
-    { quality: "Established Reliability (S, B)", πQ: 0.03 },
-    { quality: "Established Reliability (R)", πQ: 0.1 },
-    { quality: "Established Reliability (P)", πQ: 0.3 },
-    { quality: "Established Reliability (M)", πQ: 1.0 },
-    { quality: "Established Reliablity (L)", πQ: 1.5 },
-    { quality: "Non-Established Reliability", πQ: 3.0 },
-    { quality: "Commercial/Unknown", πQ: 10.0 }
+    // { quality: "Established Reliability (D)", πQ: 0.001 },
+    // { quality: "Established Reliability (C)", πQ: 0.01 },
+    // { quality: "Established Reliability (S, B)", πQ: 0.03 },
+    // { quality: "Established Reliability (R)", πQ: 0.1 },
+    // { quality: "Established Reliability (P)", πQ: 0.3 },
+    { quality: "Established Reliability (M) πQ = 1.0", πQ: 1.0 },
+    // { quality: "Established Reliablity (L)", πQ: 1.5 },
+    // { quality: "Non-Established Reliability", πQ: 3.0 },
+    // { quality: "Commercial/Unknown", πQ: 10.0 }
   ];
 
   // Environment factors
   const environmentFactors = [
-    { env: "GB (Ground, Benign)", πE: 1.0 },
-    { env: "GF (Ground, Fixed)", πE: 10 },
-    { env: "GM (Ground, Mobile)", πE: 20 },
-    { env: "NS (Naval, Sheltered)", πE: 7.0 },
-    { env: "NU (Naval, Unsheltered)", πE: 15 },
-    { env: "AIC (Airborne, Inhabited, Cargo)", πE: 12 },
-    { env: "AIF (Airborne, Inhabited, Fighter)", πE: 15 },
-    { env: "AUC (Airborne, Uninhabited, Cargo)", πE: 25 },
-    { env: "AUF (Airborne, Uninhabited, Fighter)", πE: 30 },
-    { env: "ARW (Airborne, Rotary Wing)", πE: 40 },
-    { env: "SF (Space, Flight)", πE: 0.50 },
-    { env: "MF (Missile, Flight)", πE: 20 },
-    { env: "ML (Missile, Launch)", πE: 50 },
-    { env: "CL (Cannon, Launch)", πE: 570 }
+    { env: "GB (Ground, Benign) πE = 1.0", πE: 1.0 },
+    // { env: "GF (Ground, Fixed)", πE: 10 },
+    // { env: "GM (Ground, Mobile)", πE: 20 },
+    // { env: "NS (Naval, Sheltered)", πE: 7.0 },
+    // { env: "NU (Naval, Unsheltered)", πE: 15 },
+    // { env: "AIC (Airborne, Inhabited, Cargo)", πE: 12 },
+    // { env: "AIF (Airborne, Inhabited, Fighter)", πE: 15 },
+    // { env: "AUC (Airborne, Uninhabited, Cargo)", πE: 25 },
+    // { env: "AUF (Airborne, Uninhabited, Fighter)", πE: 30 },
+    // { env: "ARW (Airborne, Rotary Wing)", πE: 40 },
+    // { env: "SF (Space, Flight)", πE: 0.50 },
+    // { env: "MF (Missile, Flight)", πE: 20 },
+    // { env: "ML (Missile, Launch)", πE: 50 },
+    // { env: "CL (Cannon, Launch)", πE: 570 }
   ];
   const seriesResistanceOptions = [
     { value: 0.66, label: ">0.8 (πSR = 0.66)" },
@@ -155,8 +114,7 @@ function CapacitorCalculation({ onCalculate }) {
     { value: 2.7, label: ">0.1 to 0.2 (πSR = 2.7)" },
     { value: 3.3, label: "0 to 0.1 (πSR = 3.3)" }
   ];
-  // ... (rest of your factor arrays)
-
+  
   // State for form inputs
   const [selectedCapacitor, setSelectedCapacitor] = useState(null);
   const [temperature, setTemperature] = useState(null);
@@ -314,8 +272,6 @@ function CapacitorCalculation({ onCalculate }) {
     return piV;
   };
 
-  // Function to calculate πSR from CR (Capacitance-Resistance product)
-
   function calculateCR(effectiveResistance, voltage) {
     if (!voltage || voltage === 0) return 0;
     return effectiveResistance / voltage;
@@ -333,10 +289,10 @@ function CapacitorCalculation({ onCalculate }) {
   const PiSRvalue = calculatePiSRFromCR(effectiveResistance / voltageApplied)
   const calculatePiSR = () => {
     if (shouldCalculateCR) {
-      // Automatic calculation mode
+     
       return calculatePiSRFromCR(effectiveResistance / voltageApplied);
     } else {
-      // Manual selection mode - use the value from circuitResistance directly
+     
       return circuitResistance;
     }
     
@@ -644,6 +600,7 @@ const newResult = {
                 max="150"
                 step="1"
               />
+              <small>T<sub>A</sub>= Hybrid Case Temperature</small>
               {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
             </div>
           </Col>
@@ -816,91 +773,25 @@ const newResult = {
       </div>
       <br />
       <div>
+         {results && showResults && (
+          handleCalculateFailure(calculateFailureRate()?.toFixed(10))
+
+         )}
        { results && showResults && (
-          <div>
-            <h2 className='text-center'>Calculation Result</h2>
+        
             <div className="d-flex align-items-center">
               <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
               <span className="ms-2">
                 {calculateFailureRate()?.toFixed(10)} failures/10<sup>6</sup> hours
               </span>
             </div>
-          </div>
+       
         )}
         <br />
-
-        {showCalculations && (
-          <>
-            <Row className="mb-4">
-              <Col>
-                <div className="card">
-                  <div className="card-body">
-
-                    <div className="table-responsive">
-                      <MaterialTable
-                        columns={calculationColumns}
-                        data={[{
-                          λb: selectedCapacitor?.value.λb,
-                          πT: calculatePiT(),
-                          πC: calculatePiC(),
-                          πV: calculatePiV(),
-                          πSR: calculatePiSR(),
-                          πQ: selectedQuality?.value.πQ,
-                          πE: selectedEnvironment?.value.πE,
-                          λp: calculateFailureRate(),
-                        }]}
-                        options={{
-                          search: false,
-                          paging: false,
-                          toolbar: false,
-                          headerStyle: {
-                            backgroundColor: '#CCE6FF',
-                            fontWeight: 'bold',
-                            whiteSpace: 'nowrap'
-                          },
-                          rowStyle: {
-                            backgroundColor: '#FFF',
-                            '&:hover': {
-                              backgroundColor: '#f5f5f5'
-                            }
-                          }
-                        }}
-                        components={{
-                          Container: props => <Paper {...props} elevation={2} style={{ borderRadius: 8 }} />
-                        }}
-
-                      />
-                    </div>
-                  </div>
-                </div>
-              </Col>
-            </Row>
-            <div className="formula-section" style={{ marginTop: '24px', marginBottom: '24px' }}>
-              <Typography variant="h6" gutterBottom>
-                Calculation Formula
-              </Typography>
-              <Typography variant="body1" paragraph>
-                λ<sub>p</sub> = λ<sub>b</sub> × π<sub>T</sub> × π<sub>C</sub> × π<sub>V</sub> × π<sub>SR</sub> × π<sub>Q</sub> × π<sub>E</sub>
-              </Typography>
-              <Typography variant="body1" paragraph>Where:</Typography>
-              <ul>
-                <li>λ<sub>p</sub> = Predicted failure rate (Failures/10<sup>6</sup> Hours)</li>
-                <li>λ<sub>b</sub> = Base failure rate (from capacitor type)</li>
-                <li>π<sub>T</sub> = Temperature factor</li>
-                <li>π<sub>C</sub> = Capacitance factor</li>
-                <li>π<sub>V</sub> = Voltage stress factor</li>
-                <li>π<sub>SR</sub> = Series resistance factor (for Tantalum capacitors)</li>
-                <li>π<sub>Q</sub> = Quality factor</li>
-                <li>π<sub>E</sub> = Environment factor</li>
-              </ul>
-            </div>
-          </>
-        )}
         </div>
-     
       </div>
     </div>
   );
 }
 
-export default CapacitorCalculation;
+export default MicroCapacitor;

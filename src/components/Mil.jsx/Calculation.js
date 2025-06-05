@@ -52,7 +52,7 @@ export const getBValueForTemp = (memoryTech, memorySize, temperature, factorType
     case 'Flotox':
       if (factorType === 'B1') {
         const B_normalized = memorySize / 16000;
-        const exponent = -.15 * k * (1/T_j - 1/333);
+        const exponent = -.15 /k * (1/T_j - 1/333);
         return Math.pow(B_normalized, 0.5) * Math.exp(exponent);
       }
       return null;
@@ -60,7 +60,7 @@ export const getBValueForTemp = (memoryTech, memorySize, temperature, factorType
     case 'Textured-Poly-B1':
       if (factorType === 'B1') {
         const B_normalized = memorySize / 64000;
-        const exponent = -.12 * k * (1/T_j - 1/303);
+        const exponent = -.12 / k * (1/T_j - 1/303);
         return Math.pow(B_normalized, 0.25) * Math.exp(exponent);
       }
       return null;
@@ -68,7 +68,7 @@ export const getBValueForTemp = (memoryTech, memorySize, temperature, factorType
     case 'Textured-Poly-B2':
       if (factorType === 'B2') {
         const B_normalized = memorySize / 64000;
-        const exponent = .1 * k * (1/T_j - 1/303);
+        const exponent = .1 / k * (1/T_j - 1/303);
         return Math.pow(B_normalized, 0.25) * Math.exp(exponent);
       }
       return null;
@@ -78,74 +78,6 @@ export const getBValueForTemp = (memoryTech, memorySize, temperature, factorType
   }
 };
 
-// Corrected calculateLambdaCyc function
-
-// export const getBValueForTemp = (memoryTech, memorySizeB1,memorySizeB2, temperature, factorType) => {
-//   // Validate inputs
-//   if (!memoryTech || !memorySizeB1 || temperature === undefined) return null;
-  
-//   const T_j = temperature + 273; // Convert to Kelvin (from °C)
-//   const k = 8.63e-5; // Boltzmann's constant in eV/K (matches image)
-  
-//   console.log(`Calculating B value for:`);
-//   console.log(`- Technology: ${memoryTech}`);
-//   console.log(`- Memory Size: ${memorySizeB1} bits`);
-//   console.log(`- Temperature: ${temperature}°C (${T_j}K)`);
-//   console.log(`- Factor Type: ${factorType}`);
-  
-//   // Calculate based on technology type and factor
-//   switch (memoryTech) {
-//     case 'Flotox':
-//       if (factorType === 'B1') {
-//         const B_normalized = memorySizeB1 / 16000;
-        
-//         const exponent = -15 * k * (1/T_j - 1/333);
-//         const result = Math.pow(B_normalized, .5) * Math.exp(exponent);
-        
-//         console.log('Flotox B₁ Calculation:');
-//         console.log(`- B_normalized: ${memorySizeB2}/16000 = ${B_normalized}`);
-//         console.log(`- Exponent: -15 * ${k} * (1/${T_j} - 1/333) = ${exponent}`);
-//         console.log(`- Result: ${B_normalized}^5 * e^(${exponent}) = ${result}`);
-        
-//         return result;
-//       }
-//       return null;
-    
-//     case 'Textured-Poly-B1':
-//       if (factorType === 'B1') {
-//         const B_normalized = memorySizeB1 / 84000;
-//         const exponent = -12 * k * (1/T_j - 1/303);
-//         const result = Math.pow(B_normalized, .25) * Math.exp(exponent);
-        
-//         // console.log('Textured-Poly B₁ Calculation:');
-//         // console.log(`- B_normalized: ${memorySize}/84000 = ${B_normalized}`);
-//         // console.log(`- Exponent: -12 * ${k} * (1/${T_j} - 1/303) = ${exponent}`);
-//         // console.log(`- Result: ${B_normalized}^25 * e^(${exponent}) = ${result}`);
-        
-//         return result;
-//       }
-//       return null;
-    
-//     case 'Textured-Poly-B2':
-//       if (factorType === 'B2') {
-//         const B_normalized = memorySizeB2 / 84000;
-//         const exponent = -1 * k * (1/T_j - 1/303);
-//         const result = Math.pow(B_normalized, .25) * Math.exp(exponent);
-        
-//         // console.log('Textured-Poly B₂ Calculation:');
-//         // console.log(`- B_normalized: ${memorySize}/84000 = ${B_normalized}`);
-//         // console.log(`- Exponent: -1 * ${k} * (1/${T_j} - 1/303) = ${exponent}`);
-//         // console.log(`- Result: ${B_normalized}^25 * e^(${exponent}) = ${result}`);
-        
-//         return result;
-//       }
-//       return null;
-    
-//     default:
-//       return null;
-//   }
-// };
-// Temperature factor calculation
 export const calculatePiT = (technology, temperature, Ea = 1.5) => {
   const T = temperature + 273; // Convert to Kelvin
   const k = 8.617e-5; // Boltzmann's constant in eV/K
@@ -262,55 +194,9 @@ export const calculateBipolarSramC1 = (memorySize) => {
 };
 
 
-export const calculateHybridFailureRate = (component) => {
-  // Validate input
-  if (!component || !component.components) {
-    console.error('Invalid component data');
-    return 0;
-  }
 
-  // Sum of (Nc × λc) for all components
-  const componentSum = calculateComponentSum(component.components);
 
-  // Get all the π factors with proper defaults
-  const piE = getEnvironmentFactor(component.environment) || 1;
-  const piF = component.piF || getCircuitFunctionFactor(component.circuitType) || 1;
-  const piQ = component.piQ || getQualityFactor(component.quality) || 1;
-  const piL = component.piL || calculateLearningFactor(component.yearsInProduction) || 1;
 
-  // Get the environmental stress factor (E) with default 0 if not provided
-  const environmentalStress = Number(component.environmentalStress) || 0;
-
-  // Apply the hybrid formula from the image
-  // Corrected formula based on MIL-HDBK-217: λp = 1.2 × Σ(Nc × λc) × (1 + 2.7E) × πE × πF × πQ × πL
-  const failureRate = 1.2 * componentSum * (1 + 2.7 * environmentalStress) * piE * piF * piQ * piL;
-
-  // Debug logging
-  console.log("Calculation Parameters:", {
-    componentSum,
-    environmentalStress,
-    piE,
-    piF,
-    piQ,
-    piL,
-    failureRate
-  });
-
-  return failureRate;
-};
-
-export const calculateComponentSum = (components = []) => {
-  if (!Array.isArray(components)) {
-    console.warn('Expected array, got:', components);
-    return 0;
-  }
-
-  return components.reduce((sum, comp) => {
-    const rate = Number(comp.failureRate) || 0;
-    const qty = Math.max(1, Number(comp.quantity)) || 1;
-    return sum + (rate * qty);
-  }, 0);
-};
 
 export const calculateMosBimosSramC1 = (memorySize) => {
   const c1Values = {
@@ -359,38 +245,6 @@ export const calculateMicrocircuitsAndMicroprocessorsFailureRate = (component) =
 };
 
 
-// export const calculateGateArrayC1 = (complexFailure, technology) => {
-//   if (!component.complexFailure || !component.gateCount) return 0;
-
-//   // Parse gate count (handle ranges and "Up to" cases)
-//   let gateCount = parseGateCount(component.gateCount);
-//   if (isNaN(gateCount)) return 0;
-
-//   // Special case for MOS digital with >60,000 gates
-//   if (component.technology === 'MOS' &&
-//     component.complexFailure === 'Digital' &&
-//     gateCount > 60000) {
-//     return 'Use VHSIC/VHSIC-Like model';
-//   }
-//   // Get the appropriate data set based on technology
-//   const data = component.devices === 'bipolarData'
-//     ? bipolarData
-//     : component.devices === 'mosData'
-//       ? mosData
-//       : microprocessorData;
-//   console.log("data....", data)
-//   const category = component.complexFailure.toLowerCase();
-//   const categoryData = data[category === 'pla/pal' ? 'pla' : category];
-
-//   if (!categoryData) return 0;
-
-//   // Find matching range
-//   const matchedRange = categoryData.find(
-//     item => gateCount >= item.min && gateCount <= item.max
-//   );
-
-//   return matchedRange ? matchedRange.c1 : 0;
-// };
 
 export const calculateGateArrayC1 = (component) => {
   // Debug: Log the input component
