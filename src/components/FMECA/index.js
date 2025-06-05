@@ -1,13 +1,12 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
-import MaterialTable from "material-table";
 import { Modal, Button, Row, Col } from "react-bootstrap";
 import "../../css/FMECA.scss";
 import Api from "../../Api";
 import { tableIcons } from "../core/TableIcons";
-import { ThemeProvider } from "@material-ui/core/styles";
-import { createTheme } from "@material-ui/core/styles";
+// import { ThemeProvider } from "@material-ui/core/styles";
+// import { createTheme } from "@material-ui/core/styles";
 // import Tree from "../Tree";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
@@ -31,8 +30,12 @@ import { FaExclamationCircle } from "react-icons/fa";
 import { TextField } from "@material-ui/core";
 import { useHistory } from "react-router-dom";
 import Dropdown from "../Company/Dropdown";
-import { Tooltip, TableCell } from "@material-ui/core";
+import Tooltip from '@mui/material/Tooltip';
+import TableCell from '@mui/material/TableCell';
 import { customStyles } from "../core/select";
+import { ButtonBase, createTheme, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, Table, TableBody, TableContainer, TableHead, TableRow, ThemeProvider } from "@mui/material";
+import MaterialTable from "material-table";
+
 function Index(props) {
   const [initialProductID, setInitialProductID] = useState();
   const [initialTreeStructure, setInitialTreeStructure] = useState();
@@ -41,8 +44,8 @@ function Index(props) {
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-    ? props?.location?.state?.productId
-    : initialProductID;
+      ? props?.location?.state?.productId
+      : initialProductID;
   const treeStructure = props?.location?.props?.mainData?.id
     ? props?.location?.props?.mainData?.id
     : initialTreeStructure;
@@ -571,36 +574,36 @@ function Index(props) {
 
   const createDropdownEditComponent =
     (fieldName) =>
-    ({ value, onChange }) => {
-      const options = dropdownOptions[fieldName] || [];
-      const connectedValue = connectedValues[0]?.destinationData?.find(
-        (item) => item?.destinationName === fieldName
-      )?.destinationValue;
+      ({ value, onChange }) => {
+        const options = dropdownOptions[fieldName] || [];
+        const connectedValue = connectedValues[0]?.destinationData?.find(
+          (item) => item?.destinationName === fieldName
+        )?.destinationValue;
 
-      const isAnyDropdownSelected = selectedField !== null;
+        const isAnyDropdownSelected = selectedField !== null;
 
-      if (isAnyDropdownSelected || options.length === 0) {
+        if (isAnyDropdownSelected || options.length === 0) {
+          return (
+            <TextField
+              onChange={(e) => onChange(connectedValue || e.target.value)}
+              value={connectedValue || value}
+              multiline
+            />
+          );
+        }
+
         return (
-          <TextField
-            onChange={(e) => onChange(connectedValue || e.target.value)}
-            value={connectedValue || value}
-            multiline
+          <Select
+            value={options.find((option) => option.value === value)}
+            onChange={(selectedOption) => {
+              onChange(selectedOption.value);
+              setSelectedField(fieldName);
+              setSelectedFunction(selectedOption);
+            }}
+            options={options}
           />
         );
-      }
-
-      return (
-        <Select
-          value={options.find((option) => option.value === value)}
-          onChange={(selectedOption) => {
-            onChange(selectedOption.value);
-            setSelectedField(fieldName);
-            setSelectedFunction(selectedOption);
-          }}
-          options={options}
-        />
-      );
-    };
+      };
 
   // ...
 
@@ -610,18 +613,17 @@ function Index(props) {
   };
 
   const columns = [
+
     {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
       title: "FMECA ID",
-      cellStyle: { minWidth: "140px", textAlign: "center" },
-      headerStyle: { textAlign: "center" },
     },
     {
       field: "operatingPhase",
       title: "Operating  Phase",
       type: "string",
-      cellStyle: { minWidth: "200px", textAlign: "center" },
-      headerStyle: { textAlign: "center", minWidth: "150px" },
+      // cellStyle: { minWidth: "200px", textAlign: "center" },
+      // headerStyle: { textAlign: "center", minWidth: "150px" },
       onCellClick: () => handleDropdownSelection("operatingPhase"),
       editComponent: ({ value, onChange, rowData }) => {
         const filteredData =
@@ -657,6 +659,13 @@ function Index(props) {
                 getAllConnectedLibrary(selectedItems, "operatingPhase");
               }}
               options={options}
+              styles={{
+                container: (base) => ({
+                  ...base,
+                  width: "100%",
+                  minHeight: "40px"
+                })
+              }}
             />
           );
         }
@@ -666,8 +675,8 @@ function Index(props) {
       field: "function",
       title: "Function*",
       type: "string",
-      cellStyle: { minWidth: "50px", textAlign: "center" },
-      headerStyle: { textAlign: "center" },
+      // cellStyle: { minWidth: "50px", textAlign: "center" },
+      // headerStyle: { textAlign: "center" },
       onCellClick: () => handleDropdownSelection("function"),
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -681,13 +690,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -722,8 +731,8 @@ function Index(props) {
       field: "failureMode",
       title: "Failure Mode*",
       type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
+      // headerStyle: { textAlign: "center" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -737,13 +746,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -834,8 +843,8 @@ function Index(props) {
       field: "failureModeRatioAlpha",
       title: "Failure Mode Ratio Alpha*",
       type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
+      // headerStyle: { textAlign: "center" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -849,13 +858,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -890,7 +899,7 @@ function Index(props) {
       field: "detectableMeansDuringOperation",
       title: "Cause",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "cause") || [];
@@ -902,13 +911,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -944,8 +953,8 @@ function Index(props) {
       field: "subSystemEffect",
       title: "Sub System effect*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      // cellStyle: { minWidth: "230px" },
+      // headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -959,13 +968,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1000,8 +1009,8 @@ function Index(props) {
       field: "systemEffect",
       title: "System Effect*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      // cellStyle: { minWidth: "230px" },
+      // headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1015,13 +1024,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1056,8 +1065,8 @@ function Index(props) {
       field: "endEffect",
       title: "End Effect*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      // cellStyle: { minWidth: "230px" },
+      // headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "endEffect") ||
@@ -1070,13 +1079,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1111,8 +1120,8 @@ function Index(props) {
       field: "endEffectRatioBeta",
       title: "End Effect ratio Beta*(must be equal to 1)",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      // cellStyle: { minWidth: "230px" },
+      // headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1126,13 +1135,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1167,8 +1176,8 @@ function Index(props) {
       field: "safetyImpact",
       title: "Safety Impact*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      // cellStyle: { minWidth: "230px" },
+      // headerStyle: { textAlign: "center" },
       // validate: (rowData) => {
       //   if (rowData.safetyImpact === undefined || rowData.safetyImpact === "") {
       //     return "required";
@@ -1188,13 +1197,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1229,7 +1238,7 @@ function Index(props) {
       field: "referenceHazardId",
       title: "Reference Hazard ID",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1243,13 +1252,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1284,8 +1293,8 @@ function Index(props) {
       field: "realibilityImpact",
       title: "Reliability Impact*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
-      headerStyle: { textAlign: "center" },
+      // cellStyle: { minWidth: "230px" },
+      // headerStyle: { textAlign: "center" },
       // validate: (rowData) => {
       //   if (rowData.realibilityImpact === undefined || rowData.realibilityImpact === "") {
       //     return "required";
@@ -1305,13 +1314,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1346,8 +1355,8 @@ function Index(props) {
       field: "serviceDisruptionTime",
       title: "Service Disruption Time(minutes)",
       type: "numeric",
-      cellStyle: { minWidth: "230px", textAlign: "left" },
-      headerStyle: { textAlign: "left" },
+      // cellStyle: { minWidth: "230px", textAlign: "left" },
+      // headerStyle: { textAlign: "left" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1361,13 +1370,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1402,7 +1411,7 @@ function Index(props) {
       field: "frequency",
       title: "Frequency",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "frequency") ||
@@ -1415,13 +1424,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1456,7 +1465,7 @@ function Index(props) {
       field: "severity",
       title: "Severity",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "severity") ||
@@ -1469,13 +1478,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1510,7 +1519,7 @@ function Index(props) {
       field: "riskIndex",
       title: "Risk Index",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "riskIndex") ||
@@ -1523,13 +1532,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1564,7 +1573,7 @@ function Index(props) {
       field: "detectableMeansDuringOperation",
       title: "Detectable Means during operation",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1578,13 +1587,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1625,7 +1634,7 @@ function Index(props) {
       field: "detectableMeansToMaintainer",
       title: "Detectable Means to Maintainer",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1639,13 +1648,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1683,7 +1692,7 @@ function Index(props) {
       field: "BuiltInTest",
       title: "Built-in Test",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1697,13 +1706,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1739,7 +1748,7 @@ function Index(props) {
       field: "designControl",
       title: "Design Control",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1753,13 +1762,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1794,7 +1803,7 @@ function Index(props) {
       field: "maintenanceControl",
       title: "Maintenance Control",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1808,13 +1817,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1849,7 +1858,7 @@ function Index(props) {
       field: "exportConstraints",
       title: "Export constraints",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1863,13 +1872,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1904,7 +1913,7 @@ function Index(props) {
       field: "immediteActionDuringOperationalPhase",
       title: "Immediate Action during operational Phases",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1920,13 +1929,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1967,7 +1976,7 @@ function Index(props) {
       field: "immediteActionDuringNonOperationalPhase",
       title: "Immediate Action during Non-operational Phases",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1984,13 +1993,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2031,7 +2040,7 @@ function Index(props) {
       field: "userField1",
       title: "User field 1",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2045,13 +2054,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2086,7 +2095,7 @@ function Index(props) {
       field: "userField2",
       title: "User field 2",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2100,13 +2109,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2141,7 +2150,7 @@ function Index(props) {
       field: "userField3",
       title: "User field 3",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2155,13 +2164,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2196,7 +2205,7 @@ function Index(props) {
       field: "userField4",
       title: "User field 4",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2210,13 +2219,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2251,7 +2260,7 @@ function Index(props) {
       field: "userField5",
       title: "User field 5",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2265,13 +2274,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2306,7 +2315,7 @@ function Index(props) {
       field: "userField6",
       title: "User field 6",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2320,13 +2329,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2361,7 +2370,7 @@ function Index(props) {
       field: "userField7",
       title: "User field 7",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2375,13 +2384,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2416,7 +2425,7 @@ function Index(props) {
       field: "userField8",
       title: "User field 8",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2430,13 +2439,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2471,7 +2480,7 @@ function Index(props) {
       field: "userField9",
       title: "User field 9",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2485,13 +2494,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2526,7 +2535,7 @@ function Index(props) {
       field: "userField10",
       title: "User field 10",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      // cellStyle: { minWidth: "230px" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2540,13 +2549,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2578,6 +2587,7 @@ function Index(props) {
       },
     },
   ];
+
 
   const createFmeca = (values) => {
     if (productId) {
@@ -2768,6 +2778,16 @@ function Index(props) {
 
   const role = localStorage.getItem("role");
 
+
+  const handleDelete = (index) => {
+    const row = tableData[index];
+    const newData = tableData.filter((_, i) => i !== index);
+    setTableData(newData);
+    deleteFmecaData(row);
+  };
+
+
+
   return (
     <div className="mx-4 mt-5">
       {isLoading ? (
@@ -2841,7 +2861,7 @@ function Index(props) {
               <Tooltip placement="right" title="Import">
                 <div style={{ marginRight: "8px" }}>
                   <label htmlFor="file-input" className="import-export-btn">
-                    <FontAwesomeIcon icon={faFileDownload} />
+                    <FontAwesomeIcon icon={faFileUpload} />
                   </label>
                   <input
                     type="file"
@@ -2853,15 +2873,16 @@ function Index(props) {
                 </div>
               </Tooltip>
               <Tooltip placement="left" title="Export">
-                <Button
-                  className="import-export-btn"
+                <button
+                  className="import-export-btn "
+                  style={{ marginTop: '-2px' }}
                   onClick={() => DownloadExcel()}
                 >
                   <FontAwesomeIcon
-                    icon={faFileUpload}
+                    icon={faFileDownload}
                     style={{ width: "15px" }}
                   />
-                </Button>
+                </button>
               </Tooltip>
             </div>
           </div>
@@ -2875,53 +2896,76 @@ function Index(props) {
                   editable={{
                     onRowAdd:
                       writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
                         ? (newRow) =>
-                            new Promise((resolve, reject) => {
-                              createFmeca(newRow);
-                              resolve();
-                            })
+                          new Promise((resolve, reject) => {
+                            createFmeca(newRow);
+                            resolve();
+                          })
                         : null,
                     onRowUpdate:
                       writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
                         ? (newRow, oldData) =>
-                            new Promise((resolve, reject) => {
-                              updateFmeca(newRow);
+                          new Promise((resolve, reject) => {
+                            updateFmeca(newRow);
 
-                              resolve();
-                            })
+                            resolve();
+                          })
                         : null,
 
                     onRowDelete:
                       writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
                         ? (selectedRow) =>
-                            new Promise((resolve, reject) => {
-                              deleteFmecaData(selectedRow);
-                              resolve();
-                            })
+                          new Promise((resolve, reject) => {
+                            deleteFmecaData(selectedRow);
+                            resolve();
+                          })
                         : null,
                   }}
                   title="FMECA"
                   icons={tableIcons}
                   columns={columns}
                   data={tableData}
+                  // options={{
+                  //   cellStyle: { border: "1px solid #eee" },
+                  //   addRowPosition: "first",
+                  //   actionsColumnIndex: -1,
+                  //   headerStyle: {
+                  //     backgroundColor: "#CCE6FF",
+                  //     border: "1px solid red",
+                  //     height: '10px',
+
+                  //   },
+                  // exportButton: { csv: true },
+                  // }}
                   options={{
-                    cellStyle: { border: "1px solid #eee" },
+                    cellStyle: {
+                      border: "1px solid #eee",
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden'
+                    },
                     addRowPosition: "first",
                     actionsColumnIndex: -1,
+                    pageSize: 5,
+                    pageSizeOptions: [5, 10, 20, 50],
                     headerStyle: {
                       backgroundColor: "#CCE6FF",
+                      fontWeight: "bold",
                       zIndex: 0,
+                      whiteSpace: 'nowrap',       // prevent line wrap
+                      minWidth: 200,              // or width: 200
+                      maxWidth: 300,
                     },
-                    // exportButton: { csv: true },
+
                   }}
                   localization={{
                     toolbar: { function: "Placeholder" },

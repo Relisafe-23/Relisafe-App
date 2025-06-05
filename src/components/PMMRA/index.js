@@ -112,8 +112,8 @@ export default function PMMRA(props) {
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-    ? props?.location?.state?.productId
-    : initialProductId;
+      ? props?.location?.state?.productId
+      : initialProductId;
   const [reference, setReference] = useState();
   const [pmmraData, setpmmraData] = useState([]);
   const [fmecaData, setFmecaData] = useState([]);
@@ -455,6 +455,8 @@ export default function PMMRA(props) {
       const filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "PMMRA"
       );
+
+      // console.log(filteredData)
       setAllSepareteData(filteredData);
       // const merged = [...tableData, ...filteredData];
       const merged = [...(tableData || []), ...filteredData];
@@ -763,7 +765,7 @@ export default function PMMRA(props) {
           : values?.latitudeFrequency,
       scheduleMaintenceTsk:
         values?.scheduledMaintenanceTask &&
-        values?.scheduledMaintenanceTask?.value
+          values?.scheduledMaintenanceTask?.value
           ? values?.scheduledMaintenanceTask?.value
           : values?.scheduledMaintenanceTask,
       tskInteralDetermination:
@@ -1084,33 +1086,33 @@ export default function PMMRA(props) {
     endeffect: fmecaFillterData?.endEffect
       ? fmecaFillterData.endEffect
       : importExcelData?.endEffect
-      ? importExcelData.endEffect
-      : "",
+        ? importExcelData.endEffect
+        : "",
     reliability: fmecaFillterData?.realibilityImpact
       ? fmecaFillterData.realibilityImpact
       : importExcelData?.reliabilityImpact
-      ? importExcelData.reliabilityImpact
-      : "",
+        ? importExcelData.reliabilityImpact
+        : "",
     severity: fmecaFillterData?.severity
       ? fmecaFillterData.severity
       : importExcelData?.severity
-      ? importExcelData.severity
-      : "",
+        ? importExcelData.severity
+        : "",
     safetyimpact: fmecaFillterData?.safetyImpact
       ? fmecaFillterData.safetyImpact
       : importExcelData?.safetyImpact
-      ? importExcelData.safetyImpact
-      : "",
+        ? importExcelData.safetyImpact
+        : "",
     frequency: fmecaFillterData?.frequency
       ? fmecaFillterData.frequency
       : importExcelData?.frequency
-      ? importExcelData.frequency
-      : "",
+        ? importExcelData.frequency
+        : "",
     riskindex: fmecaFillterData?.riskIndex
       ? fmecaFillterData.riskIndex
       : importExcelData?.riskIndex
-      ? importExcelData.riskIndex
-      : "",
+        ? importExcelData.riskIndex
+        : "",
 
     // endeffect: pmmraData?.endEffect
     //   ? pmmraData?.endEffect
@@ -1177,211 +1179,211 @@ export default function PMMRA(props) {
     scheduledMaintenanceTask: pmmraData?.scheduleMaintenceTsk
       ? pmmraData?.scheduleMaintenceTsk
       : //   : importExcelData?.scheduleMaintenceTsk
-        //   ? importExcelData.scheduleMaintenceTsk
-        //   : "",
-        // taskDescription: pmmraData?.taskDesc
-        //   ? pmmraData?.taskDesc
-        //   : importExcelData?.taskDesc
-        //   ? importExcelData.taskDesc
-        //   : "",
-        // tasktimeML1: pmmraData?.tskTimeML1
-        //   ? pmmraData?.tskTimeML1
-        //   : importExcelData?.tskTimeML1
-        //   ? importExcelData.tskTimeML1
-        //   : "",
-        // tasktimeML2: pmmraData?.tskTimeML2
-        //   ? pmmraData?.tskTimeML2
-        //   : importExcelData?.tskTimeML2
-        //   ? importExcelData.tskTimeML2
-        //   : "",
-        // tasktimeML3: pmmraData?.tskTimeML3
-        //   ? pmmraData?.tskTimeML3
-        //   : importExcelData?.tskTimeML3
-        //   ? importExcelData.tskTimeML3
-        //   : "",
-        // tasktimeML4: pmmraData?.tskTimeML4
-        //   ? pmmraData?.tskTimeML4
-        //   : importExcelData?.tskTimeML4
-        //   ? importExcelData.tskTimeML4
-        //   : "",
-        // tasktimeML5: pmmraData?.tskTimeML5
-        //   ? pmmraData?.tskTimeML5
-        //   : importExcelData?.tskTimeML5
-        //   ? importExcelData.tskTimeML5
-        //   : "",
-        // tasktimeML6: pmmraData?.tskTimeML6
-        //   ? pmmraData?.tskTimeML6
-        //   : importExcelData?.tskTimeML6
-        //   ? importExcelData.tskTimeML6
-        //   : "",
-        // tasktimeML7: pmmraData?.tskTimeML7
-        //   ? pmmraData?.tskTimeML7
-        //   : importExcelData?.tskTimeML7
-        //   ? importExcelData.tskTimeML7
-        //   : "",
+      //   ? importExcelData.scheduleMaintenceTsk
+      //   : "",
+      // taskDescription: pmmraData?.taskDesc
+      //   ? pmmraData?.taskDesc
+      //   : importExcelData?.taskDesc
+      //   ? importExcelData.taskDesc
+      //   : "",
+      // tasktimeML1: pmmraData?.tskTimeML1
+      //   ? pmmraData?.tskTimeML1
+      //   : importExcelData?.tskTimeML1
+      //   ? importExcelData.tskTimeML1
+      //   : "",
+      // tasktimeML2: pmmraData?.tskTimeML2
+      //   ? pmmraData?.tskTimeML2
+      //   : importExcelData?.tskTimeML2
+      //   ? importExcelData.tskTimeML2
+      //   : "",
+      // tasktimeML3: pmmraData?.tskTimeML3
+      //   ? pmmraData?.tskTimeML3
+      //   : importExcelData?.tskTimeML3
+      //   ? importExcelData.tskTimeML3
+      //   : "",
+      // tasktimeML4: pmmraData?.tskTimeML4
+      //   ? pmmraData?.tskTimeML4
+      //   : importExcelData?.tskTimeML4
+      //   ? importExcelData.tskTimeML4
+      //   : "",
+      // tasktimeML5: pmmraData?.tskTimeML5
+      //   ? pmmraData?.tskTimeML5
+      //   : importExcelData?.tskTimeML5
+      //   ? importExcelData.tskTimeML5
+      //   : "",
+      // tasktimeML6: pmmraData?.tskTimeML6
+      //   ? pmmraData?.tskTimeML6
+      //   : importExcelData?.tskTimeML6
+      //   ? importExcelData.tskTimeML6
+      //   : "",
+      // tasktimeML7: pmmraData?.tskTimeML7
+      //   ? pmmraData?.tskTimeML7
+      //   : importExcelData?.tskTimeML7
+      //   ? importExcelData.tskTimeML7
+      //   : "",
 
-        // skill1contribution: pmmraData?.skillOneContribution
-        //   ? pmmraData?.skillOneContribution
-        //   : importExcelData?.skillOneContribution
-        //   ? importExcelData.skillOneContribution
-        //   : "",
+      // skill1contribution: pmmraData?.skillOneContribution
+      //   ? pmmraData?.skillOneContribution
+      //   : importExcelData?.skillOneContribution
+      //   ? importExcelData.skillOneContribution
+      //   : "",
 
-        // skill1nos: pmmraData?.skillOneNos
-        //   ? pmmraData?.skillOneNos
-        //   : importExcelData?.skillOneNos
-        //   ? importExcelData.skillOneNos
-        //   : "",
-        // skill1: pmmraData?.skill1 ? pmmraData?.skill1 : importExcelData?.skill1 ? importExcelData.skill1 : "",
-        // skill2contribution: pmmraData?.skillTwoContribution
-        //   ? pmmraData?.skillTwoContribution
-        //   : importExcelData?.skillTwoContribution
-        //   ? importExcelData.skillTwoContribution
-        //   : "",
-        // skill2nos: pmmraData?.skillTwoNos
-        //   ? pmmraData?.skillTwoNos
-        //   : importExcelData?.skillTwoNos
-        //   ? importExcelData.skillTwoNos
-        //   : "",
-        // skill2: pmmraData?.skill2 ? pmmraData?.skill2 : importExcelData?.skill2 ? importExcelData.skill2 : "",
-        // skill3contribution: pmmraData?.skillThreeContribution
-        //   ? pmmraData?.skillThreeContribution
-        //   : importExcelData?.skillThreeContribution
-        //   ? importExcelData.skillThreeContribution
-        //   : "",
-        // skill3nos: pmmraData?.skillThreeNos
-        //   ? pmmraData?.skillThreeNos
-        //   : importExcelData?.skillThreeNos
-        //   ? importExcelData.skillThreeNos
-        //   : "",
-        // skill3: pmmraData?.skill3 ? pmmraData?.skill3 : importExcelData?.skill3 ? importExcelData.skill3 : "",
+      // skill1nos: pmmraData?.skillOneNos
+      //   ? pmmraData?.skillOneNos
+      //   : importExcelData?.skillOneNos
+      //   ? importExcelData.skillOneNos
+      //   : "",
+      // skill1: pmmraData?.skill1 ? pmmraData?.skill1 : importExcelData?.skill1 ? importExcelData.skill1 : "",
+      // skill2contribution: pmmraData?.skillTwoContribution
+      //   ? pmmraData?.skillTwoContribution
+      //   : importExcelData?.skillTwoContribution
+      //   ? importExcelData.skillTwoContribution
+      //   : "",
+      // skill2nos: pmmraData?.skillTwoNos
+      //   ? pmmraData?.skillTwoNos
+      //   : importExcelData?.skillTwoNos
+      //   ? importExcelData.skillTwoNos
+      //   : "",
+      // skill2: pmmraData?.skill2 ? pmmraData?.skill2 : importExcelData?.skill2 ? importExcelData.skill2 : "",
+      // skill3contribution: pmmraData?.skillThreeContribution
+      //   ? pmmraData?.skillThreeContribution
+      //   : importExcelData?.skillThreeContribution
+      //   ? importExcelData.skillThreeContribution
+      //   : "",
+      // skill3nos: pmmraData?.skillThreeNos
+      //   ? pmmraData?.skillThreeNos
+      //   : importExcelData?.skillThreeNos
+      //   ? importExcelData.skillThreeNos
+      //   : "",
+      // skill3: pmmraData?.skill3 ? pmmraData?.skill3 : importExcelData?.skill3 ? importExcelData.skill3 : "",
 
-        // addReplacespare1: pmmraData?.addiReplaceSpare1
-        //   ? pmmraData?.addiReplaceSpare1
-        //   : importExcelData?.addiReplaceSpare1
-        //   ? importExcelData.addiReplaceSpare1
-        //   : "",
+      // addReplacespare1: pmmraData?.addiReplaceSpare1
+      //   ? pmmraData?.addiReplaceSpare1
+      //   : importExcelData?.addiReplaceSpare1
+      //   ? importExcelData.addiReplaceSpare1
+      //   : "",
 
-        // addReplacespare2: pmmraData?.addiReplaceSpare2
-        //   ? pmmraData?.addiReplaceSpare2
-        //   : importExcelData?.addiReplaceSpare2
-        //   ? importExcelData.addiReplaceSpare2
-        //   : "",
+      // addReplacespare2: pmmraData?.addiReplaceSpare2
+      //   ? pmmraData?.addiReplaceSpare2
+      //   : importExcelData?.addiReplaceSpare2
+      //   ? importExcelData.addiReplaceSpare2
+      //   : "",
 
-        // addReplacespare3: pmmraData?.addiReplaceSpare3
-        //   ? pmmraData?.addiReplaceSpare3
-        //   : importExcelData?.addiReplaceSpare3
-        //   ? importExcelData.addiReplaceSpare3
-        //   : "",
+      // addReplacespare3: pmmraData?.addiReplaceSpare3
+      //   ? pmmraData?.addiReplaceSpare3
+      //   : importExcelData?.addiReplaceSpare3
+      //   ? importExcelData.addiReplaceSpare3
+      //   : "",
 
-        // Consumable1: pmmraData?.consumable1
-        //   ? pmmraData?.consumable1
-        //   : importExcelData?.consumable1
-        //   ? importExcelData.consumable1
-        //   : "",
+      // Consumable1: pmmraData?.consumable1
+      //   ? pmmraData?.consumable1
+      //   : importExcelData?.consumable1
+      //   ? importExcelData.consumable1
+      //   : "",
 
-        // Consumable2: pmmraData?.consumable2
-        //   ? pmmraData?.consumable2
-        //   : importExcelData?.consumable2
-        //   ? importExcelData.consumable2
-        //   : "",
+      // Consumable2: pmmraData?.consumable2
+      //   ? pmmraData?.consumable2
+      //   : importExcelData?.consumable2
+      //   ? importExcelData.consumable2
+      //   : "",
 
-        // Consumable3: pmmraData?.consumable3
-        //   ? pmmraData?.consumable3
-        //   : importExcelData?.consumable3
-        //   ? importExcelData.consumable3
-        //   : "",
+      // Consumable3: pmmraData?.consumable3
+      //   ? pmmraData?.consumable3
+      //   : importExcelData?.consumable3
+      //   ? importExcelData.consumable3
+      //   : "",
 
-        // Consumable4: pmmraData?.consumable4
-        //   ? pmmraData?.consumable4
-        //   : importExcelData?.consumable4
-        //   ? importExcelData.consumable4
-        //   : "",
+      // Consumable4: pmmraData?.consumable4
+      //   ? pmmraData?.consumable4
+      //   : importExcelData?.consumable4
+      //   ? importExcelData.consumable4
+      //   : "",
 
-        // Consumable5: pmmraData?.consumable5
-        //   ? pmmraData?.consumable5
-        //   : importExcelData?.consumable5
-        //   ? importExcelData.consumable5
-        //   : "",
+      // Consumable5: pmmraData?.consumable5
+      //   ? pmmraData?.consumable5
+      //   : importExcelData?.consumable5
+      //   ? importExcelData.consumable5
+      //   : "",
 
-        // addReplacespare1qty: pmmraData?.addiReplaceSpare1Qty
-        //   ? pmmraData?.addiReplaceSpare1Qty
-        //   : importExcelData?.addiReplaceSpare1Qty
-        //   ? importExcelData.addiReplaceSpare1Qty
-        //   : "",
+      // addReplacespare1qty: pmmraData?.addiReplaceSpare1Qty
+      //   ? pmmraData?.addiReplaceSpare1Qty
+      //   : importExcelData?.addiReplaceSpare1Qty
+      //   ? importExcelData.addiReplaceSpare1Qty
+      //   : "",
 
-        // addReplacespare2qty: pmmraData?.addiReplaceSpare2Qty
-        //   ? pmmraData?.addiReplaceSpare2Qty
-        //   : importExcelData?.addiReplaceSpare2Qty
-        //   ? importExcelData.addiReplaceSpare2Qty
-        //   : "",
+      // addReplacespare2qty: pmmraData?.addiReplaceSpare2Qty
+      //   ? pmmraData?.addiReplaceSpare2Qty
+      //   : importExcelData?.addiReplaceSpare2Qty
+      //   ? importExcelData.addiReplaceSpare2Qty
+      //   : "",
 
-        // addReplacespare3qty: pmmraData?.addiReplaceSpare3Qty
-        //   ? pmmraData?.addiReplaceSpare3Qty
-        //   : importExcelData?.addiReplaceSpare3Qty
-        //   ? importExcelData.addiReplaceSpare3Qty
-        //   : "",
+      // addReplacespare3qty: pmmraData?.addiReplaceSpare3Qty
+      //   ? pmmraData?.addiReplaceSpare3Qty
+      //   : importExcelData?.addiReplaceSpare3Qty
+      //   ? importExcelData.addiReplaceSpare3Qty
+      //   : "",
 
-        // Consumable1qty: pmmraData?.consumable1Qty
-        //   ? pmmraData?.consumable1Qty
-        //   : importExcelData?.consumable1Qty
-        //   ? importExcelData.consumable1Qty
-        //   : "",
+      // Consumable1qty: pmmraData?.consumable1Qty
+      //   ? pmmraData?.consumable1Qty
+      //   : importExcelData?.consumable1Qty
+      //   ? importExcelData.consumable1Qty
+      //   : "",
 
-        // Consumable2qty: pmmraData?.consumable2Qty
-        //   ? pmmraData?.consumable2Qty
-        //   : importExcelData?.consumable2Qty
-        //   ? importExcelData.consumable2Qty
-        //   : "",
+      // Consumable2qty: pmmraData?.consumable2Qty
+      //   ? pmmraData?.consumable2Qty
+      //   : importExcelData?.consumable2Qty
+      //   ? importExcelData.consumable2Qty
+      //   : "",
 
-        // Consumable3qty: pmmraData?.consumable3Qty
-        //   ? pmmraData?.consumable3Qty
-        //   : importExcelData?.consumable3Qty
-        //   ? importExcelData.consumable3Qty
-        //   : "",
+      // Consumable3qty: pmmraData?.consumable3Qty
+      //   ? pmmraData?.consumable3Qty
+      //   : importExcelData?.consumable3Qty
+      //   ? importExcelData.consumable3Qty
+      //   : "",
 
-        // Consumable4qty: pmmraData?.consumable4Qty
-        //   ? pmmraData?.consumable4Qty
-        //   : importExcelData?.consumable4Qty
-        //   ? importExcelData.consumable4Qty
-        //   : "",
+      // Consumable4qty: pmmraData?.consumable4Qty
+      //   ? pmmraData?.consumable4Qty
+      //   : importExcelData?.consumable4Qty
+      //   ? importExcelData.consumable4Qty
+      //   : "",
 
-        // Consumable5qty: pmmraData?.consumable5Qty
-        //   ? pmmraData?.consumable5Qty
-        //   : importExcelData?.consumable5Qty
-        //   ? importExcelData.consumable5Qty
-        //   : "",
+      // Consumable5qty: pmmraData?.consumable5Qty
+      //   ? pmmraData?.consumable5Qty
+      //   : importExcelData?.consumable5Qty
+      //   ? importExcelData.consumable5Qty
+      //   : "",
 
-        // userfield1: pmmraData?.userField1
-        //   ? pmmraData?.userField1
-        //   : importExcelData?.userField1
-        //   ? importExcelData.userField1
-        //   : "",
+      // userfield1: pmmraData?.userField1
+      //   ? pmmraData?.userField1
+      //   : importExcelData?.userField1
+      //   ? importExcelData.userField1
+      //   : "",
 
-        // userfield2: pmmraData?.userField2
-        //   ? pmmraData?.userField2
-        //   : importExcelData?.userField2
-        //   ? importExcelData.userField2
-        //   : "",
+      // userfield2: pmmraData?.userField2
+      //   ? pmmraData?.userField2
+      //   : importExcelData?.userField2
+      //   ? importExcelData.userField2
+      //   : "",
 
-        // userfield3: pmmraData?.userField3
-        //   ? pmmraData?.userField3
-        //   : importExcelData?.userField3
-        //   ? importExcelData.userField3
-        //   : "",
+      // userfield3: pmmraData?.userField3
+      //   ? pmmraData?.userField3
+      //   : importExcelData?.userField3
+      //   ? importExcelData.userField3
+      //   : "",
 
-        // userfield4: pmmraData?.userField4
-        //   ? pmmraData?.userField4
-        //   : importExcelData?.userField4
-        //   ? importExcelData.userField4
-        //   : "",
+      // userfield4: pmmraData?.userField4
+      //   ? pmmraData?.userField4
+      //   : importExcelData?.userField4
+      //   ? importExcelData.userField4
+      //   : "",
 
-        // userfield5: pmmraData?.userField5
-        //   ? pmmraData?.userField5
-        //   : importExcelData?.userField5
-        //   ? importExcelData.userField5
-        //   : "",
-        // Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
-        "",
+      // userfield5: pmmraData?.userField5
+      //   ? pmmraData?.userField5
+      //   : importExcelData?.userField5
+      //   ? importExcelData.userField5
+      //   : "",
+      // Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
+      "",
     taskDescription: pmmraData?.taskDesc ? pmmraData?.taskDesc : "",
     tasktimeML1: pmmraData?.tskTimeML1 ? pmmraData?.tskTimeML1 : "",
     tasktimeML2: pmmraData?.tskTimeML2 ? pmmraData?.tskTimeML2 : "",
@@ -1443,9 +1445,9 @@ export default function PMMRA(props) {
       : "",
     condition: pmmraData?.conditionMonitrTsk
       ? {
-          label: pmmraData?.conditionMonitrTsk,
-          value: pmmraData?.conditionMonitrTsk,
-        }
+        label: pmmraData?.conditionMonitrTsk,
+        value: pmmraData?.conditionMonitrTsk,
+      }
       : "",
     failure: pmmraData?.failureFindTsk
       ? { label: pmmraData?.failureFindTsk, value: pmmraData?.failureFindTsk }
@@ -1455,27 +1457,27 @@ export default function PMMRA(props) {
       : "",
     acceptable: pmmraData?.criticalityAccept
       ? {
-          label: pmmraData?.criticalityAccept,
-          value: pmmraData?.criticalityAccept,
-        }
+        label: pmmraData?.criticalityAccept,
+        value: pmmraData?.criticalityAccept,
+      }
       : "",
     lubrication: pmmraData?.LubricationservceTsk
       ? {
-          label: pmmraData?.LubricationservceTsk,
-          value: pmmraData?.LubricationservceTsk,
-        }
+        label: pmmraData?.LubricationservceTsk,
+        value: pmmraData?.LubricationservceTsk,
+      }
       : "",
     task: pmmraData?.restoreDiscrdTsk
       ? {
-          label: pmmraData?.restoreDiscrdTsk,
-          value: pmmraData?.restoreDiscrdTsk,
-        }
+        label: pmmraData?.restoreDiscrdTsk,
+        value: pmmraData?.restoreDiscrdTsk,
+      }
       : "",
     combination: pmmraData?.combinationOfTsk
       ? {
-          label: pmmraData?.combinationOfTsk,
-          value: pmmraData?.combinationOfTsk,
-        }
+        label: pmmraData?.combinationOfTsk,
+        value: pmmraData?.combinationOfTsk,
+      }
       : "",
   };
   return (
@@ -1619,9 +1621,9 @@ export default function PMMRA(props) {
                       <fieldset
                         disabled={
                           writePermission === true ||
-                          writePermission === "undefined" ||
-                          role === "admin" ||
-                          (isOwner === true && createdBy === userId)
+                            writePermission === "undefined" ||
+                            role === "admin" ||
+                            (isOwner === true && createdBy === userId)
                             ? null
                             : "disabled"
                         }
@@ -1642,9 +1644,9 @@ export default function PMMRA(props) {
                                 value={
                                   values?.fmecaId
                                     ? {
-                                        label: values?.fmecaId,
-                                        value: values?.fmecaId,
-                                      }
+                                      label: values?.fmecaId,
+                                      value: values?.fmecaId,
+                                    }
                                     : ""
                                 }
                                 style={{ backgroundColor: "red" }}
@@ -1653,9 +1655,9 @@ export default function PMMRA(props) {
                                 onBlur={handleBlur}
                                 isDisabled={
                                   writePermission === true ||
-                                  writePermission === "undefined" ||
-                                  role === "admin" ||
-                                  (isOwner === true && createdBy === userId)
+                                    writePermission === "undefined" ||
+                                    role === "admin" ||
+                                    (isOwner === true && createdBy === userId)
                                     ? null
                                     : "disabled"
                                 }
@@ -1825,11 +1827,11 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData?.length > 0
                                         ? connectedFilteredData?.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
+                                          (item) => ({
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          })
+                                        )
                                         : null;
 
                                     return (
@@ -1840,9 +1842,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Evident1
                                             ? {
-                                                label: values?.Evident1,
-                                                value: values?.Evident1,
-                                              }
+                                              label: values?.Evident1,
+                                              value: values?.Evident1,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -1851,10 +1853,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1876,9 +1878,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.Evident1
                                         ? {
-                                            label: values?.Evident1,
-                                            value: values?.Evident1,
-                                          }
+                                          label: values?.Evident1,
+                                          value: values?.Evident1,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -1890,9 +1892,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -1926,13 +1928,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -1942,9 +1944,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Items
                                             ? {
-                                                label: values?.Items,
-                                                value: values?.Items,
-                                              }
+                                              label: values?.Items,
+                                              value: values?.Items,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -1953,10 +1955,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1978,9 +1980,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.Items
                                         ? {
-                                            label: values?.Items,
-                                            value: values?.Items,
-                                          }
+                                          label: values?.Items,
+                                          value: values?.Items,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -1992,9 +1994,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2028,13 +2030,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2044,9 +2046,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.condition
                                             ? {
-                                                label: values?.condition,
-                                                value: values?.condition,
-                                              }
+                                              label: values?.condition,
+                                              value: values?.condition,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2055,10 +2057,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2080,9 +2082,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.condition
                                         ? {
-                                            label: values?.condition,
-                                            value: values?.condition,
-                                          }
+                                          label: values?.condition,
+                                          value: values?.condition,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2094,9 +2096,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2132,13 +2134,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2148,9 +2150,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.failure
                                             ? {
-                                                label: values?.failure,
-                                                value: values?.failure,
-                                              }
+                                              label: values?.failure,
+                                              value: values?.failure,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2159,10 +2161,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2184,9 +2186,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.failure
                                         ? {
-                                            label: values?.failure,
-                                            value: values?.failure,
-                                          }
+                                          label: values?.failure,
+                                          value: values?.failure,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2198,9 +2200,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2235,13 +2237,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2251,9 +2253,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.redesign
                                             ? {
-                                                label: values?.redesign,
-                                                value: values?.redesign,
-                                              }
+                                              label: values?.redesign,
+                                              value: values?.redesign,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2262,10 +2264,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2287,9 +2289,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.redesign
                                         ? {
-                                            label: values?.redesign,
-                                            value: values?.redesign,
-                                          }
+                                          label: values?.redesign,
+                                          value: values?.redesign,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2301,9 +2303,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2342,13 +2344,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2358,9 +2360,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.acceptable
                                             ? {
-                                                label: values?.acceptable,
-                                                value: values?.acceptable,
-                                              }
+                                              label: values?.acceptable,
+                                              value: values?.acceptable,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2369,10 +2371,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2394,9 +2396,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.acceptable
                                         ? {
-                                            label: values?.acceptable,
-                                            value: values?.acceptable,
-                                          }
+                                          label: values?.acceptable,
+                                          value: values?.acceptable,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2408,9 +2410,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2448,13 +2450,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2464,9 +2466,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.lubrication
                                             ? {
-                                                label: values?.lubrication,
-                                                value: values?.lubrication,
-                                              }
+                                              label: values?.lubrication,
+                                              value: values?.lubrication,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2475,10 +2477,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2500,9 +2502,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.lubrication
                                         ? {
-                                            label: values?.lubrication,
-                                            value: values?.lubrication,
-                                          }
+                                          label: values?.lubrication,
+                                          value: values?.lubrication,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2514,9 +2516,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2552,13 +2554,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2568,9 +2570,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.task
                                             ? {
-                                                label: values?.task,
-                                                value: values?.task,
-                                              }
+                                              label: values?.task,
+                                              value: values?.task,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2579,10 +2581,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2604,9 +2606,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.task
                                         ? {
-                                            label: values?.task,
-                                            value: values?.task,
-                                          }
+                                          label: values?.task,
+                                          value: values?.task,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2618,9 +2620,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2655,13 +2657,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2671,9 +2673,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.combination
                                             ? {
-                                                label: values?.combination,
-                                                value: values?.combination,
-                                              }
+                                              label: values?.combination,
+                                              value: values?.combination,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2682,10 +2684,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2707,9 +2709,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.combination
                                         ? {
-                                            label: values?.combination,
-                                            value: values?.combination,
-                                          }
+                                          label: values?.combination,
+                                          value: values?.combination,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2721,9 +2723,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2758,13 +2760,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2774,9 +2776,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.rcmnotes
                                             ? {
-                                                label: values?.rcmnotes,
-                                                value: values?.rcmnotes,
-                                              }
+                                              label: values?.rcmnotes,
+                                              value: values?.rcmnotes,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2785,10 +2787,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2810,9 +2812,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.rcmnotes
                                         ? {
-                                            label: values?.rcmnotes,
-                                            value: values?.rcmnotes,
-                                          }
+                                          label: values?.rcmnotes,
+                                          value: values?.rcmnotes,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2824,9 +2826,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2871,17 +2873,17 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                              value: item?.sourceValue,
+                                              label: item?.sourceValue,
+                                            })
+                                          );
 
                                       return (
                                         <Select
@@ -2891,9 +2893,9 @@ export default function PMMRA(props) {
                                           value={
                                             values?.pmtaskid
                                               ? {
-                                                  label: values?.pmtaskid,
-                                                  value: values?.pmtaskid,
-                                                }
+                                                label: values?.pmtaskid,
+                                                value: values?.pmtaskid,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -2902,10 +2904,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -2961,17 +2963,17 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                              value: item?.sourceValue,
+                                              label: item?.sourceValue,
+                                            })
+                                          );
 
                                       return (
                                         <Select
@@ -2981,9 +2983,9 @@ export default function PMMRA(props) {
                                           value={
                                             values?.PMtasktype
                                               ? {
-                                                  label: values?.PMtasktype,
-                                                  value: values?.PMtasktype,
-                                                }
+                                                label: values?.PMtasktype,
+                                                value: values?.PMtasktype,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -2992,10 +2994,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3036,7 +3038,7 @@ export default function PMMRA(props) {
                                   {allSepareteData.some(
                                     (item) =>
                                       item.sourceName ===
-                                        "taskintervalFrequency" &&
+                                      "taskintervalFrequency" &&
                                       item.sourceValue
                                   ) ? (
                                     (() => {
@@ -3055,17 +3057,17 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                              value: item?.sourceValue,
+                                              label: item?.sourceValue,
+                                            })
+                                          );
 
                                       return (
                                         <Select
@@ -3075,11 +3077,11 @@ export default function PMMRA(props) {
                                           value={
                                             values?.taskintervalFrequency
                                               ? {
-                                                  label:
-                                                    values?.taskintervalFrequency,
-                                                  value:
-                                                    values?.taskintervalFrequency,
-                                                }
+                                                label:
+                                                  values?.taskintervalFrequency,
+                                                value:
+                                                  values?.taskintervalFrequency,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3088,10 +3090,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3148,17 +3150,17 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                              value: item?.sourceValue,
+                                              label: item?.sourceValue,
+                                            })
+                                          );
 
                                       return (
                                         <Select
@@ -3168,11 +3170,11 @@ export default function PMMRA(props) {
                                           value={
                                             values?.taskIntervalunit
                                               ? {
-                                                  label:
-                                                    values?.taskIntervalunit,
-                                                  value:
-                                                    values?.taskIntervalunit,
-                                                }
+                                                label:
+                                                  values?.taskIntervalunit,
+                                                value:
+                                                  values?.taskIntervalunit,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3181,10 +3183,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3240,17 +3242,17 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                              value: item?.sourceValue,
+                                              label: item?.sourceValue,
+                                            })
+                                          );
 
                                       return (
                                         <Select
@@ -3258,11 +3260,11 @@ export default function PMMRA(props) {
                                           className="mt-1"
                                           placeholder="Task Interval"
                                           value={
-                                            values?.endeffect
+                                            values?.taskInterval
                                               ? {
-                                                  label: values?.taskInterval,
-                                                  value: values?.taskInterval,
-                                                }
+                                                label: values?.taskInterval,
+                                                value: values?.taskInterval,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3271,10 +3273,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3313,7 +3315,7 @@ export default function PMMRA(props) {
                                   {allSepareteData.some(
                                     (item) =>
                                       item.sourceName ===
-                                        "scheduledMaintenanceTask" &&
+                                      "scheduledMaintenanceTask" &&
                                       item.sourceValue
                                   ) ? (
                                     (() => {
@@ -3332,17 +3334,17 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                              value: item?.sourceValue,
+                                              label: item?.sourceValue,
+                                            })
+                                          );
 
                                       return (
                                         <Select
@@ -3350,13 +3352,13 @@ export default function PMMRA(props) {
                                           className="mt-1"
                                           placeholder="Scheduled Maintenance Task"
                                           value={
-                                            values?.endeffect
+                                            values?.scheduledMaintenanceTask
                                               ? {
-                                                  label:
-                                                    values?.scheduledMaintenanceTask,
-                                                  value:
-                                                    values?.scheduledMaintenanceTask,
-                                                }
+                                                label:
+                                                  values?.scheduledMaintenanceTask,
+                                                value:
+                                                  values?.scheduledMaintenanceTask,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3365,10 +3367,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3425,17 +3427,17 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                              value: item?.sourceValue,
+                                              label: item?.sourceValue,
+                                            })
+                                          );
 
                                       return (
                                         <Select
@@ -3445,11 +3447,11 @@ export default function PMMRA(props) {
                                           value={
                                             values?.taskDescription
                                               ? {
-                                                  label:
-                                                    values?.taskDescription,
-                                                  value:
-                                                    values?.taskDescription,
-                                                }
+                                                label:
+                                                  values?.taskDescription,
+                                                value:
+                                                  values?.taskDescription,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3458,10 +3460,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3523,13 +3525,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -3539,9 +3541,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML1
                                             ? {
-                                                label: values?.tasktimeML1,
-                                                value: values?.tasktimeML1,
-                                              }
+                                              label: values?.tasktimeML1,
+                                              value: values?.tasktimeML1,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3550,10 +3552,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3602,13 +3604,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -3618,9 +3620,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML2
                                             ? {
-                                                label: values?.tasktimeML2,
-                                                value: values?.tasktimeML2,
-                                              }
+                                              label: values?.tasktimeML2,
+                                              value: values?.tasktimeML2,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3629,10 +3631,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3681,13 +3683,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -3697,9 +3699,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML3
                                             ? {
-                                                label: values?.tasktimeML3,
-                                                value: values?.tasktimeML3,
-                                              }
+                                              label: values?.tasktimeML3,
+                                              value: values?.tasktimeML3,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3708,10 +3710,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3760,13 +3762,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -3776,9 +3778,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML4
                                             ? {
-                                                label: values?.tasktimeML4,
-                                                value: values?.tasktimeML4,
-                                              }
+                                              label: values?.tasktimeML4,
+                                              value: values?.tasktimeML4,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3787,10 +3789,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3841,13 +3843,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -3857,9 +3859,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML5
                                             ? {
-                                                label: values?.tasktimeML5,
-                                                value: values?.tasktimeML5,
-                                              }
+                                              label: values?.tasktimeML5,
+                                              value: values?.tasktimeML5,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3868,10 +3870,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3920,13 +3922,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -3936,9 +3938,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML6
                                             ? {
-                                                label: values?.tasktimeML6,
-                                                value: values?.tasktimeML6,
-                                              }
+                                              label: values?.tasktimeML6,
+                                              value: values?.tasktimeML6,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3947,10 +3949,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3999,13 +4001,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4015,9 +4017,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML7
                                             ? {
-                                                label: values?.tasktimeML7,
-                                                value: values?.tasktimeML7,
-                                              }
+                                              label: values?.tasktimeML7,
+                                              value: values?.tasktimeML7,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4026,10 +4028,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4069,8 +4071,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>Skill 1</Label>
                                 {allSepareteData.some(
                                   (item) =>
-                                    item.sourceName === "skill1" &&
-                                    item.sourceValue
+                                    item.sourceName === "skill1" && item.sourceValue
                                 ) ? (
                                   (() => {
                                     const seperateFilteredData =
@@ -4085,48 +4086,48 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
-                                      <Select
-                                        name="skill1"
-                                        className="mt-1"
-                                        placeholder="Skill 1"
-                                        value={
-                                          values?.endeffect
-                                            ? {
+                                      <>
+                                        <Select
+                                          name="skill1"
+                                          className="mt-1"
+                                          placeholder="Skill 1"
+                                          value={
+                                            values?.skill1
+                                              ? {
                                                 label: values?.skill1,
                                                 value: values?.skill1,
                                               }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("skill1", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "skill1"
-                                          );
-                                        }}
-                                      />
+                                              : ""
+                                          }
+                                          style={{ backgroundColor: "red" }}
+                                          options={options}
+                                          styles={customStyles}
+                                          onBlur={handleBlur}
+                                          isDisabled={
+                                            writePermission === true ||
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
+                                              ? null
+                                              : "disabled"
+                                          }
+                                          onChange={(e) => {
+                                            console.log("valueof eeee", e)
+                                            setFieldValue("skill1", e.value);
+                                            getAllConnectedLibrary(e.value,"skill1");
+                                          }}
+                                        />
+                                      </>
                                     );
                                   })()
                                 ) : (
@@ -4163,13 +4164,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4179,9 +4180,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill1nos
                                             ? {
-                                                label: values?.skill1nos,
-                                                value: values?.skill1nos,
-                                              }
+                                              label: values?.skill1nos,
+                                              value: values?.skill1nos,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4190,10 +4191,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4245,13 +4246,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4261,11 +4262,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill1contribution
                                             ? {
-                                                label:
-                                                  values?.skill1contribution,
-                                                value:
-                                                  values?.skill1contribution,
-                                              }
+                                              label:
+                                                values?.skill1contribution,
+                                              value:
+                                                values?.skill1contribution,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4274,10 +4275,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4329,13 +4330,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4345,9 +4346,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill2
                                             ? {
-                                                label: values?.skill2,
-                                                value: values?.skill2,
-                                              }
+                                              label: values?.skill2,
+                                              value: values?.skill2,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4356,10 +4357,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4407,13 +4408,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4423,9 +4424,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill2nos
                                             ? {
-                                                label: values?.skill2nos,
-                                                value: values?.skill2nos,
-                                              }
+                                              label: values?.skill2nos,
+                                              value: values?.skill2nos,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4434,10 +4435,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4489,13 +4490,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4505,11 +4506,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill2contribution
                                             ? {
-                                                label:
-                                                  values?.skill2contribution,
-                                                value:
-                                                  values?.skill2contribution,
-                                              }
+                                              label:
+                                                values?.skill2contribution,
+                                              value:
+                                                values?.skill2contribution,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4518,10 +4519,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4575,13 +4576,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4591,9 +4592,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill3
                                             ? {
-                                                label: values?.skill3,
-                                                value: values?.skill3,
-                                              }
+                                              label: values?.skill3,
+                                              value: values?.skill3,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4602,10 +4603,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4653,13 +4654,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4669,9 +4670,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill3nos
                                             ? {
-                                                label: values?.skill3nos,
-                                                value: values?.skill3nos,
-                                              }
+                                              label: values?.skill3nos,
+                                              value: values?.skill3nos,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4680,10 +4681,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4735,13 +4736,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4751,11 +4752,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill3contribution
                                             ? {
-                                                label:
-                                                  values?.skill3contribution,
-                                                value:
-                                                  values?.skill3contribution,
-                                              }
+                                              label:
+                                                values?.skill3contribution,
+                                              value:
+                                                values?.skill3contribution,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4764,10 +4765,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4832,13 +4833,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4848,9 +4849,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare1
                                             ? {
-                                                label: values?.addReplacespare1,
-                                                value: values?.addReplacespare1,
-                                              }
+                                              label: values?.addReplacespare1,
+                                              value: values?.addReplacespare1,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4859,10 +4860,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4920,13 +4921,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4936,11 +4937,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare1qty
                                             ? {
-                                                label:
-                                                  values?.addReplacespare1qty,
-                                                value:
-                                                  values?.addReplacespare1qty,
-                                              }
+                                              label:
+                                                values?.addReplacespare1qty,
+                                              value:
+                                                values?.addReplacespare1qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4949,10 +4950,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5011,13 +5012,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5027,9 +5028,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare2
                                             ? {
-                                                label: values?.addReplacespare2,
-                                                value: values?.addReplacespare2,
-                                              }
+                                              label: values?.addReplacespare2,
+                                              value: values?.addReplacespare2,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5038,10 +5039,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5098,13 +5099,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5114,11 +5115,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare2qty
                                             ? {
-                                                label:
-                                                  values?.addReplacespare2qty,
-                                                value:
-                                                  values?.addReplacespare2qty,
-                                              }
+                                              label:
+                                                values?.addReplacespare2qty,
+                                              value:
+                                                values?.addReplacespare2qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5127,10 +5128,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5189,13 +5190,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5205,9 +5206,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare3
                                             ? {
-                                                label: values?.addReplacespare3,
-                                                value: values?.addReplacespare3,
-                                              }
+                                              label: values?.addReplacespare3,
+                                              value: values?.addReplacespare3,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5216,10 +5217,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5277,13 +5278,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5293,11 +5294,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare3qty
                                             ? {
-                                                label:
-                                                  values?.addReplacespare3qty,
-                                                value:
-                                                  values?.addReplacespare3qty,
-                                              }
+                                              label:
+                                                values?.addReplacespare3qty,
+                                              value:
+                                                values?.addReplacespare3qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5306,10 +5307,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5365,13 +5366,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5381,9 +5382,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable1
                                             ? {
-                                                label: values?.Consumable1,
-                                                value: values?.Consumable1,
-                                              }
+                                              label: values?.Consumable1,
+                                              value: values?.Consumable1,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5392,10 +5393,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5446,13 +5447,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5462,9 +5463,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable1qty
                                             ? {
-                                                label: values?.Consumable1qty,
-                                                value: values?.Consumable1qty,
-                                              }
+                                              label: values?.Consumable1qty,
+                                              value: values?.Consumable1qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5473,10 +5474,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5533,13 +5534,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5549,9 +5550,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable2
                                             ? {
-                                                label: values?.Consumable2,
-                                                value: values?.Consumable2,
-                                              }
+                                              label: values?.Consumable2,
+                                              value: values?.Consumable2,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5560,10 +5561,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5614,13 +5615,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5630,9 +5631,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable2qty
                                             ? {
-                                                label: values?.Consumable2qty,
-                                                value: values?.Consumable2qty,
-                                              }
+                                              label: values?.Consumable2qty,
+                                              value: values?.Consumable2qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5641,10 +5642,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5700,13 +5701,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5716,9 +5717,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable3
                                             ? {
-                                                label: values?.Consumable3,
-                                                value: values?.Consumable3,
-                                              }
+                                              label: values?.Consumable3,
+                                              value: values?.Consumable3,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5727,10 +5728,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5781,13 +5782,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5797,9 +5798,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable3qty
                                             ? {
-                                                label: values?.Consumable3qty,
-                                                value: values?.Consumable3qty,
-                                              }
+                                              label: values?.Consumable3qty,
+                                              value: values?.Consumable3qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5808,10 +5809,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5868,13 +5869,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5884,9 +5885,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable4
                                             ? {
-                                                label: values?.Consumable4,
-                                                value: values?.Consumable4,
-                                              }
+                                              label: values?.Consumable4,
+                                              value: values?.Consumable4,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5895,10 +5896,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5949,13 +5950,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5965,9 +5966,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable4qty
                                             ? {
-                                                label: values?.Consumable4qty,
-                                                value: values?.Consumable4qty,
-                                              }
+                                              label: values?.Consumable4qty,
+                                              value: values?.Consumable4qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5976,10 +5977,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6036,13 +6037,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -6052,9 +6053,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable5
                                             ? {
-                                                label: values?.Consumable5,
-                                                value: values?.Consumable5,
-                                              }
+                                              label: values?.Consumable5,
+                                              value: values?.Consumable5,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6063,10 +6064,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6117,13 +6118,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -6133,9 +6134,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable5qty
                                             ? {
-                                                label: values?.Consumable5qty,
-                                                value: values?.Consumable5qty,
-                                              }
+                                              label: values?.Consumable5qty,
+                                              value: values?.Consumable5qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6144,10 +6145,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6210,13 +6211,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -6226,9 +6227,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.userfield1
                                             ? {
-                                                label: values?.userfield1,
-                                                value: values?.userfield1,
-                                              }
+                                              label: values?.userfield1,
+                                              value: values?.userfield1,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6237,10 +6238,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6288,13 +6289,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -6304,9 +6305,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.userfield2
                                             ? {
-                                                label: values?.userfield2,
-                                                value: values?.userfield2,
-                                              }
+                                              label: values?.userfield2,
+                                              value: values?.userfield2,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6315,10 +6316,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6366,13 +6367,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -6382,9 +6383,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.userfield3
                                             ? {
-                                                label: values?.userfield3,
-                                                value: values?.userfield3,
-                                              }
+                                              label: values?.userfield3,
+                                              value: values?.userfield3,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6393,10 +6394,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6446,13 +6447,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -6462,9 +6463,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.userfield4
                                             ? {
-                                                label: values?.userfield4,
-                                                value: values?.userfield4,
-                                              }
+                                              label: values?.userfield4,
+                                              value: values?.userfield4,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6473,10 +6474,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6524,13 +6525,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -6540,9 +6541,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.userfield5
                                             ? {
-                                                label: values?.userfield5,
-                                                value: values?.userfield5,
-                                              }
+                                              label: values?.userfield5,
+                                              value: values?.userfield5,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6551,10 +6552,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }

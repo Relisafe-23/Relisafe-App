@@ -47,7 +47,7 @@ export default function PBS(props) {
   const [productId, setProductId] = useState();
   const [treeId, setTreeId] = useState();
   const [deleteId, setDeleteId] = useState();
-  const [productIndexCount, setProductIndexCount] = useState();  
+  const [productIndexCount, setProductIndexCount] = useState();
   const [deleteTreeId, setDeleteTreeId] = useState();
   const [isMainSubmit, setIsMainSubmit] = useState(false);
   const [category, setCategory] = useState({
@@ -230,18 +230,18 @@ export default function PBS(props) {
   const importExcel = (e) => {
     const file = e.target.files[0];
 
-     // Check if the file is an Excel file by checking the extension
-  const fileName = file.name;
-  const validExtensions = ['xlsx', 'xls']; // Allowed file extensions
-  const fileExtension = fileName.split('.').pop().toLowerCase(); // Get file extension
+    // Check if the file is an Excel file by checking the extension
+    const fileName = file.name;
+    const validExtensions = ['xlsx', 'xls']; // Allowed file extensions
+    const fileExtension = fileName.split('.').pop().toLowerCase(); // Get file extension
 
-  if (!validExtensions.includes(fileExtension)) {
-    // alert('Please upload a valid Excel file (either .xlsx or .xls)');
-    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-      position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
-    });
-    return; // Exit the function if the file is not an Excel file
-  }
+    if (!validExtensions.includes(fileExtension)) {
+      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+      });
+      return; // Exit the function if the file is not an Excel file
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -265,7 +265,7 @@ export default function PBS(props) {
     reader.readAsBinaryString(file);
   };
 
- 
+
 
   const userId = localStorage.getItem("userId");
   const getProjectPermission = () => {
@@ -695,6 +695,8 @@ export default function PBS(props) {
   // Sort the data array using the custom sort function
   const sortedData = data.slice().sort(customSort);
 
+  console.log("sortedData", sortedData)
+
   return (
     <div className="pbs-main px-4" style={{ marginTop: "90px" }}>
       {isLoading ? (
@@ -731,8 +733,8 @@ export default function PBS(props) {
                 patchModal === true
                   ? patchForm(values, { resetForm })
                   : subProduct === true
-                  ? subProductForm(values, { resetForm })
-                  : mainProductForm(values, { resetForm });
+                    ? subProductForm(values, { resetForm })
+                    : mainProductForm(values, { resetForm });
               }}
             >
               {(formik) => {
@@ -756,12 +758,12 @@ export default function PBS(props) {
                     >
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <Tooltip placement="left" title="Import">
-                          <div>
+                          <div style={{ marginTop: 7 }}>
                             <label
                               htmlFor="file-input"
                               className="add-product-btn"
                             >
-                              <FontAwesomeIcon icon={faFileDownload} />
+                              <FontAwesomeIcon icon={faFileUpload} style={{ width: '20px' }} />
                             </label>
                             <input
                               type="file"
@@ -770,9 +772,9 @@ export default function PBS(props) {
                               onChange={importExcel}
                               disabled={
                                 permission?.write === true ||
-                                permission?.write === "undefined" ||
-                                role === "admin" ||
-                                (isOwner === true && createdBy === userId)
+                                  permission?.write === "undefined" ||
+                                  role === "admin" ||
+                                  (isOwner === true && createdBy === userId)
                                   ? null
                                   : "disabled"
                               }
@@ -781,27 +783,27 @@ export default function PBS(props) {
                           </div>
                         </Tooltip>
                         <Tooltip placement="right" title="Export">
-                          <Button
+                          <button
                             className="add-product-btn"
+                            style={{ marginLeft: "10px", borderStyle: "none" }}
                             onClick={() => {
                               DownloadExcel();
                             }}
                             disabled={
                               data.length === 0 || // Disable if no data
-                              (permission?.write !== true &&
-                                permission?.write !== undefined &&
-                                role !== "admin" &&
-                                !(isOwner === true && createdBy === userId)) // Enable only if all these conditions are false
+                                (permission?.write !== true &&
+                                  permission?.write !== undefined &&
+                                  role !== "admin" &&
+                                  !(isOwner === true && createdBy === userId)) // Enable only if all these conditions are false
                                 ? "disabled" // If any of these conditions are met, disable the button
                                 : null // Otherwise, the button is enabled
                             }
-                            style={{ marginLeft: "10px" }}
                           >
                             <FontAwesomeIcon
-                              icon={faFileUpload}
-                              style={{ width: "15px" }}
+                              icon={faFileDownload}
+
                             />
-                          </Button>
+                          </button>
                         </Tooltip>
                       </div>
                       <Tooltip placement="top" title="Create Product">
@@ -815,9 +817,9 @@ export default function PBS(props) {
                           }}
                           disabled={
                             permission?.write === true ||
-                            permission?.write === "undefined" ||
-                            role === "admin" ||
-                            (isOwner === true && createdBy === userId)
+                              permission?.write === "undefined" ||
+                              role === "admin" ||
+                              (isOwner === true && createdBy === userId)
                               ? null
                               : "disabled"
                           }
@@ -975,11 +977,11 @@ export default function PBS(props) {
                                           category
                                             ? category
                                             : patchCategory
-                                            ? {
+                                              ? {
                                                 label: patchCategory,
                                                 value: patchCategory,
                                               }
-                                            : ""
+                                              : ""
                                         }
                                         name="category"
                                         placeholder="Select Category"
@@ -1032,29 +1034,29 @@ export default function PBS(props) {
                                             options={[
                                               category.value === "Electronic"
                                                 ? {
-                                                    options: Electronic.map(
-                                                      (list) => ({
-                                                        value: list.value,
-                                                        label: list.label,
-                                                      })
-                                                    ).sort((a, b) =>
-                                                      a.label.localeCompare(
-                                                        b.label
-                                                      )
-                                                    ),
-                                                  }
+                                                  options: Electronic.map(
+                                                    (list) => ({
+                                                      value: list.value,
+                                                      label: list.label,
+                                                    })
+                                                  ).sort((a, b) =>
+                                                    a.label.localeCompare(
+                                                      b.label
+                                                    )
+                                                  ),
+                                                }
                                                 : {
-                                                    options: Mechanical.map(
-                                                      (list) => ({
-                                                        value: list.value,
-                                                        label: list.label,
-                                                      })
-                                                    ).sort((a, b) =>
-                                                      a.label.localeCompare(
-                                                        b.label
-                                                      )
-                                                    ),
-                                                  },
+                                                  options: Mechanical.map(
+                                                    (list) => ({
+                                                      value: list.value,
+                                                      label: list.label,
+                                                    })
+                                                  ).sort((a, b) =>
+                                                    a.label.localeCompare(
+                                                      b.label
+                                                    )
+                                                  ),
+                                                },
                                             ]}
                                           />
                                           <ErrorMessage
@@ -1265,7 +1267,7 @@ export default function PBS(props) {
           </div>
           <div className="mt-3 ">
             <ThemeProvider theme={tableTheme}>
-              <div className="header-container" style={{ overflowX: "auto" }}>
+              {/* <div className="header-container" style={{ overflowX: "auto" }}>
                 <table className="material-table">
                   <thead>
                     <tr>
@@ -1293,21 +1295,21 @@ export default function PBS(props) {
                     </tr>
                   </thead>
                 </table>
-              </div>
-              <div className="table-container">
+              </div> */}
                 <MaterialTable
-                  title=""
-                  columns={columns.map((col, index) => ({
-                    ...col,
-                    cellStyle: {
-                      textAlign: col.align,
-                    },
-                    headerStyle: {
-                      backgroundColor:
-                        columnsTitle[index]?.backgroundColor || "#fff", // Match header color
-                      color: "#000", // Header text color
-                    },
-                  }))}
+                  title="PBS"
+                  columns={[
+                    // { title: "", field: "", width: "5%", align: "center" },
+                    { title: "S.No", field: "indexCount", width: "7%", align: "center" },
+                    { title: "Product Name", field: "productName", width: "18%", align: "center" },
+                    { title: "Category", field: "category", width: "10%", align: "center" },
+                    { title: "Part Number", field: "partNumber", width: "15%", align: "center" },
+                    { title: "Part Type", field: "partType", width: "15%", align: "center" },
+                    { title: "FR", field: "fr", width: "5%", align: "center" },
+                    { title: "MTTR", field: "mttr", width: "5%", align: "center" },
+                    { title: "MCT", field: "mct", width: "5%", align: "center" },
+                    { title: "MLH", field: "mlh", width: "5%", align: "center" },
+                  ]}
                   data={sortedData}
                   icons={tableIcons}
                   parentChildData={(row, rows) =>
@@ -1319,20 +1321,20 @@ export default function PBS(props) {
                         icon: () => (
                           <Dropdown>
                             {permission?.write === true ||
-                            permission?.write === "undefined" ||
-                            role === "admin" ||
-                            (isOwner === true && createdBy === userId) ? (
+                              permission?.write === "undefined" ||
+                              role === "admin" ||
+                              (isOwner === true && createdBy === userId) ? (
                               <Dropdown.Toggle className="dropdown">
                                 <FaEllipsisV className="icon" />
                               </Dropdown.Toggle>
                             ) : null}
                             {permission?.write === true ||
-                            permission?.write === "undefined" ||
-                            role === "admin" ||
-                            (isOwner === true && createdBy === userId) ? (
+                              permission?.write === "undefined" ||
+                              role === "admin" ||
+                              (isOwner === true && createdBy === userId) ? (
                               <Dropdown.Menu right>
                                 {rowData.category === "Electronic" ||
-                                rowData.category === "Mechanical" ? null : (
+                                  rowData.category === "Mechanical" ? null : (
                                   <Tooltip
                                     title="create sub product"
                                     placement="top"
@@ -1355,7 +1357,7 @@ export default function PBS(props) {
                                         setChildProductCriteria(false);
                                       }}
                                     >
-                                    <span style={{ color: 'blue' }}>Add Child Part</span>
+                                      <span style={{ color: 'blue' }}>Add Child Part</span>
 
                                     </Dropdown.Item>
                                   </Tooltip>
@@ -1389,14 +1391,14 @@ export default function PBS(props) {
                                     setCategory(
                                       rowData.category
                                         ? {
-                                            value: rowData.category,
-                                            label: rowData.category,
-                                          }
+                                          value: rowData.category,
+                                          label: rowData.category,
+                                        }
                                         : ""
                                     );
                                   }}
                                 >
-                                <span style={{ color: 'blue' }}>Edit</span>
+                                  <span style={{ color: 'blue' }}>Edit</span>
                                 </Dropdown.Item>
                                 <hr
                                   style={{
@@ -1416,7 +1418,7 @@ export default function PBS(props) {
                                     setDeleteMessage(true);
                                   }}
                                 >
-                                 <span style={{ color: 'blue' }}>Delete</span>
+                                  <span style={{ color: 'blue' }}>Delete</span>
                                 </Dropdown.Item>
                                 <hr
                                   style={{
@@ -1462,7 +1464,7 @@ export default function PBS(props) {
                                     setParentsId(rowData?.productId);
                                   }}
                                 >
-                                 <span style={{ color: 'blue' }}>Paste</span>
+                                  <span style={{ color: 'blue' }}>Paste</span>
                                 </Dropdown.Item>
                               </Dropdown.Menu>
                             ) : null}
@@ -1475,21 +1477,41 @@ export default function PBS(props) {
                       };
                     },
                   ]}
+                  // options={{
+                  //   actionsColumnIndex: -1,
+                  //   addRowPosition: "last",
+                  //   headerStyle: {
+                  //     backgroundColor: "#cce6ff",
+                  //     fontWeight: "bold",
+                  //     zIndex: 0,
+                  //   },
+                  //   defaultExpanded: true,
+                  //   rowStyle,
+                  //   header: false,
+                  //   search: false,
+                  // }}
                   options={{
-                    actionsColumnIndex: -1,
+                    cellStyle: {
+                      border: "1px solid #eee",
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden'
+                    },
                     addRowPosition: "last",
+                    actionsColumnIndex: -1,
+                    pageSize: 5,
+                    pageSizeOptions: [5, 10, 20, 50],
                     headerStyle: {
-                      backgroundColor: "#cce6ff",
+                      backgroundColor: "#CCE6FF",
                       fontWeight: "bold",
                       zIndex: 0,
+                      whiteSpace: 'nowrap',       // prevent line wrap
+                      minWidth: 200,              // or width: 200
+                      maxWidth: 300,
                     },
-                    defaultExpanded: true,
-                    rowStyle,
-                    header: false,
-                    search: false,
+
                   }}
                 />
-              </div>
             </ThemeProvider>
           </div>
         </div>

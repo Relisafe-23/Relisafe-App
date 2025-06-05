@@ -443,6 +443,7 @@ function Index(props) {
         setReference(data?.reference);
         setName(data?.productName);
         setPartNumber(data?.partNumber);
+        console.log(data)
         setEnvironment(
           data?.environment
             ? { label: data?.environment, value: data?.environment }
