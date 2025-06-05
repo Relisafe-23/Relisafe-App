@@ -13,7 +13,6 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles'
 import Select from "react-select";
 import { CalculatorIcon } from '@heroicons/react/24/outline';
-import DeleteIcon from '@material-ui/icons/Delete';
 
 
 
@@ -825,6 +824,8 @@ function CapacitorCalculation({ onCalculate }) {
                 style={{ height: '30px', width: '40px' }}
                 fontSize="large"
               />
+
+              
               <Typography
                 variant="body1"
                 sx={{

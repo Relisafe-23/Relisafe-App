@@ -13,7 +13,6 @@ import {
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles'
 import { CalculatorIcon } from '@heroicons/react/24/outline'; // or /24/solid
-import DeleteIcon from '@material-ui/icons/Delete';
 
 const InductiveCalculation = ({ onCalculate }) => {
   // Transformer types data

@@ -3,20 +3,20 @@ import Select from "react-select";
 import './Switch.css';
 import { Link } from '@material-ui/core';
 import MaterialTable from "material-table";
-import {
-  Paper,
-  Typography,
-  IconButton,
-  Tooltip
-} from '@material-ui/core';
-import DeleteIcon from '@material-ui/icons/Delete';
+// import {
+//   Paper,
+//   Typography,
+//   IconButton,
+//   Tooltip
+// } from '@material-ui/core';
+// import DeleteIcon from '@material-ui/icons/Delete';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles'
 
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { Button, Container, Row, Col, Table, Collapse } from 'react-bootstrap';
 import { customStyles } from "./Selector";
-import { Alert } from "@mui/material";
+import { Alert, Paper, Typography } from "@mui/material";
 // Might trigger endlessly if someProp changes often
 const Switches = ({ onCalculate }) => {
   const [currentComponent, setCurrentComponent] = useState({

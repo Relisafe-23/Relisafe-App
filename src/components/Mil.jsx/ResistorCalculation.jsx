@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import './Resistor.css';
 import { Row, Col, Button } from 'react-bootstrap'
-import {
-  Paper,
-  Typography,
-} from '@material-ui/core';
-import { Link } from '@material-ui/core';
+// import {
+//   Paper,
+//   Typography,
+// } from '@material-ui/core';
+// import { Link } from '@material-ui/core';
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles'
 import { CalculatorIcon } from '@heroicons/react/24/outline'; // or /24/solid
 
-import DeleteIcon from '@material-ui/icons/Delete';
-import MaterialTable from "material-table";
+// import DeleteIcon from '@material-ui/icons/Delete';
+// import MaterialTable from "material-table";
 import { tableIcons } from "../core/TableIcons";
-import { createTheme } from "@mui/material";
-import { ThemeProvider } from "@material-ui/core";
+import { createTheme, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from "@mui/material";
+// import { ThemeProvider } from "@material-ui/core";
 import Select from "react-select";
 const ResistorCalculation = () => {
   const [showCalculations, setShowCalculations] = useState(false)
@@ -261,12 +261,12 @@ const ResistorCalculation = () => {
 
   // Calculate failure rate
   const calculateFailureRate = () => {
-    const λb = selectedResistor.value.λb;
+    const λb = selectedResistor?.value?.λb;
     const πT = calculatePiT();
     const πS = calculatePiS();
     const πP = calculatePiP();
-    const πQ = selectedQuality.value.πQ;
-    const πE = selectedEnvironment.value.πE;
+    const πQ = selectedQuality?.value?.πQ;
+    const πE = selectedEnvironment?.value?.πE;
 
     return λb * πT * πS * πP * πQ * πE;
   };
@@ -302,6 +302,18 @@ const ResistorCalculation = () => {
     setResults([...results, newResult]);
     setShowResults(true);
   };
+
+  const data = [
+    {
+      λb: selectedResistor?.value?.λb,
+      πT: calculatePiT(),
+      πS: calculatePiS(),
+      πP: calculatePiP(),
+      πQ: selectedQuality?.value?.πQ,
+      πE: selectedEnvironment?.value?.πE,
+      λp: calculateFailureRate()
+    }
+  ]
 
   const calculationColumns = [
     {
@@ -371,6 +383,15 @@ const ResistorCalculation = () => {
       ...provided,
       zIndex: 9999
     })
+  };
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const handleChangePage = (event, newPage) => setPage(newPage);
+  const handleChangeRowsPerPage = event => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   // Clear results
@@ -549,7 +570,7 @@ const ResistorCalculation = () => {
 
             />
             {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
-               {/* options={resistorTypes.map(type => ({
+            {/* options={resistorTypes.map(type => ({
                 value: type,
                 label: `${type.style} - ${type.description} (${type.spec})`
               }))} */}
@@ -565,15 +586,15 @@ const ResistorCalculation = () => {
               </div>
             )}
             {selectedResistor?.value.πTColumn && resistorTypes.some(type => type.id === selectedResistor.typeId) && (
-  <div className="mt-2">
-    Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
-    <br />
-    <small>
-      Using {resistorTypes.find(type => type.id === selectedResistor.typeId)?.πTColumn === 1 ? 'Column 1' : 'Column 2'}
-      {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
-    </small>
-  </div>
-)}
+              <div className="mt-2">
+                Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
+                <br />
+                <small>
+                  Using {resistorTypes.find(type => type.id === selectedResistor.typeId)?.πTColumn === 1 ? 'Column 1' : 'Column 2'}
+                  {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
+                </small>
+              </div>
+            )}
           </div>
         </Col>
 
@@ -681,10 +702,8 @@ const ResistorCalculation = () => {
             {/* // In your component's return statement: */}
             <div className="card">
               <div className="card-body">
- {console.log("calculateFailureRate", calculateFailureRate())}
-                <MaterialTable
+                {/* <MaterialTable
                   columns={calculationColumns}
-                 
                   data={[
                     {
                       λb: selectedResistor.value.λb,
@@ -717,7 +736,50 @@ const ResistorCalculation = () => {
                   components={{
                     Container: props => <Paper {...props} elevation={2} />
                   }}
-                />
+                /> */}
+
+                <Paper elevation={2}>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
+                        <TableRow>
+                          {calculationColumns.map(col => (
+                            <TableCell
+                              key={col.field}
+                              sx={{ backgroundColor: '#CCE6FF', fontWeight: 'bold', whiteSpace: 'nowrap', padding: '8px 16px' }}
+                            >
+                              {col.title}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {data.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, index) => (
+                          <TableRow key={index} sx={{ backgroundColor: '#FFF' }}>
+                            {calculationColumns.map(col => (
+                              <TableCell key={col.field} sx={{ padding: '8px 16px' }}>
+                                {row[col.field]}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+
+                  {components.length > 10 && (
+                    <TablePagination
+                      rowsPerPageOptions={[10, 20, 50]}
+                      component="div"
+                      count={data.length}
+                      rowsPerPage={rowsPerPage}
+                      page={page}
+                      onPageChange={handleChangePage}
+                      onRowsPerPageChange={handleChangeRowsPerPage}
+                    />
+                  )}
+                </Paper>
+
 
                 <div className="formula-section" style={{ marginTop: '24px' }}>
                   <Typography variant="h6" gutterBottom>
