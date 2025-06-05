@@ -2,15 +2,10 @@ import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, Row, Col, Container, FormGroup } from 'react-bootstrap';
 import './../MIL/Diode.css'
-import MaterialTable from 'material-table';
-import Select from 'react-select';
-import Paper from '@mui/material/Paper';
-import Box from '@mui/material/Box';
-import { Link } from '@mui/material';
-import Typography from '@mui/material/Typography';
-// import { Calculator } from 'bootstrap-icons/react';
-import { CalculatorIcon } from '@heroicons/react/24/outline'; // or /24/solid
-const MicroDiode = ({ onCalculate }) => {
+
+const   MicroDiode = ({ onCalculate, handleInitialRate }) => {
+     // State for the failure rate
+  const [failureRate, setFailureRate] = useState(null);
     // Component types
     // Add this state declaration at the top of your component with other useState hooks
 
@@ -49,7 +44,7 @@ const MicroDiode = ({ onCalculate }) => {
         { temp: 55, pi_T: 2.6 }, { temp: 60, pi_T: 3.0 }, { temp: 65, pi_T: 3.4 },
         { temp: 70, pi_T: 3.9 }, { temp: 75, pi_T: 4.4 }, { temp: 80, pi_T: 5.0 },
         { temp: 85, pi_T: 5.7 }, { temp: 90, pi_T: 6.4 }, { temp: 95, pi_T: 7.2 },
-        { temp: 100, pi_T: 8.0 }, { temp: 105, pi_T: 9.0 }, { temp: 110, pi_T: 10 },
+        { temp: 100, pi_T: 8.0 }, { temp: 105, pi_T: 9.0 },{ temp: 110, pi_T: 10 },
         { temp: 115, pi_T: 11 }, { temp: 120, pi_T: 12 }, { temp: 125, pi_T: 14 },
         { temp: 130, pi_T: 15 }, { temp: 135, pi_T: 16 }, { temp: 140, pi_T: 18 },
         { temp: 145, pi_T: 20 }, { temp: 150, pi_T: 21 }, { temp: 155, pi_T: 23 },
@@ -90,18 +85,18 @@ const MicroDiode = ({ onCalculate }) => {
         { name: 'All Other Diodes', pi_A: 1.0 }
     ];
     const highFreqQualityFactors2 = [
-        { name: 'JANTXV', pi_Q: 0.50 },
+        // { name: 'JANTXV', pi_Q: 0.50 },
         { name: 'JANTX', pi_Q: 1.0 },
-        { name: 'JAN', pi_Q: 1.8 },
-        { name: 'Lower', pi_Q: 2.5 },
+        // { name: 'JAN', pi_Q: 1.8 },
+        // { name: 'Lower', pi_Q: 2.5 },
         // { name: 'Plastic', pi_Q: null } // Plastic is marked with "—" in the image
     ];
     const highFreqQualityFactors1 = [
-        { name: 'JANTXV', pi_Q: 0.50 },
+        // { name: 'JANTXV', pi_Q: 0.50 },
         { name: 'JANTX', pi_Q: 1.0 },
-        { name: 'JAN', pi_Q: 5.0 },  // Updated from 1.8 to 5.0
-        { name: 'Lower', pi_Q: 25 },  // Updated from 2.5 to 25
-        { name: 'Plastic', pi_Q: 50 } // Updated from null to 50
+        // { name: 'JAN', pi_Q: 5.0 },  // Updated from 1.8 to 5.0
+        // { name: 'Lower', pi_Q: 25 },  // Updated from 2.5 to 25
+        // { name: 'Plastic', pi_Q: 50 } // Updated from null to 50
     ];
     // Add these constants with your other constants
     const highFreqDiodeTempFactors1 = [
@@ -173,183 +168,173 @@ const MicroDiode = ({ onCalculate }) => {
     ];
     const highFreqDiodeEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
-        { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
-        { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
-        { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
-        { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
-        { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
-        { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
-        { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
+        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
+        // { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
+        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
+        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
+        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
+        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
+        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
+        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
+        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
+        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
+        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
+        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
+        // { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
     ];
     const lowNoiseEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
-        { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
-        { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
-        { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
-        { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
-        { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
-        { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
-        { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
+        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
+        // { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
+        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
+        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
+        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
+        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
+        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
+        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
+        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
+        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
+        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
+        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
+        // { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
     ];
     const highpowerEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
-        { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
-        { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
-        { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
-        { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
-        { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
-        { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
-        { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
+        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
+        // { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
+        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
+        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
+        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
+        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
+        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
+        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
+        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
+        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
+        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
+        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
+        // { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
     ];
     const gasFETEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
-        { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
-        { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
-        { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
-        { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
-        { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
-        { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
-        { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        { code: 'MF', name: 'Missile, Flight', pi_E: 7.5 },
-        { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
+        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
+        // { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
+        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
+        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
+        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
+        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
+        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
+        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
+        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
+        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
+        // { code: 'MF', name: 'Missile, Flight', pi_E: 7.5 },
+        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
+        // { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
     ];
     const siFETEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
-        { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
-        { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
-        { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
-        { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
-        { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
-        { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
-        { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
+        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
+        // { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
+        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
+        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
+        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
+        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
+        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
+        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
+        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
+        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
+        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
+        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
+        // { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
     ]
     // Common quality factors
     const qualityFactors = [
-        { name: 'JANTXV', pi_Q: 0.7 },
+        // { name: 'JANTXV', pi_Q: 0.7 },
         { name: 'JANTX', pi_Q: 1.0 },
-        { name: 'JAN', pi_Q: 2.4 },
-        { name: 'Lower', pi_Q: 5.5 },
-        { name: 'Plastic', pi_Q: 8.0 }
+        // { name: 'JAN', pi_Q: 2.4 },
+        // { name: 'Lower', pi_Q: 5.5 },
+        // { name: 'Plastic', pi_Q: 8.0 }
     ];
     // Common environment factors
     const environmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        { code: 'GF', name: 'Ground, Fixed', pi_E: 6.0 },
-        { code: 'GM', name: 'Ground, Mobile', pi_E: 9.0 },
-        { code: 'NS', name: 'Naval, Sheltered', pi_E: 9.0 },
-        { code: 'NU', name: 'Naval, Unsheltered', pi_E: 19 },
-        { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 13 },
-        { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 29 },
-        { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 20 },
-        { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 43 },
-        { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 24 },
-        { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        { code: 'MF', name: 'Missile, Flight', pi_E: 14 },
-        { code: 'ML', name: 'Missile, Launch', pi_E: 32 },
-        { code: 'CL', name: 'Cannon, Launch', pi_E: 320 }
+        // { code: 'GF', name: 'Ground, Fixed', pi_E: 6.0 },
+        // { code: 'GM', name: 'Ground, Mobile', pi_E: 9.0 },
+        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 9.0 },
+        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 19 },
+        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 13 },
+        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 29 },
+        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 20 },
+        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 43 },
+        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 24 },
+        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
+        // { code: 'MF', name: 'Missile, Flight', pi_E: 14 },
+        // { code: 'ML', name: 'Missile, Launch', pi_E: 32 },
+        // { code: 'CL', name: 'Cannon, Launch', pi_E: 320 }
     ];
     const lowFrequencyenvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        { code: 'GF', name: 'Ground, Fixed', pi_E: 6.0 },
-        { code: 'GM', name: 'Ground, Mobile', pi_E: 9.0 },
-        { code: 'NS', name: 'Naval, Sheltered', pi_E: 9.0 },
-        { code: 'NU', name: 'Naval, Unsheltered', pi_E: 19 },
-        { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 13 },
-        { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 29 },
-        { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 20 },
-        { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 43 },
-        { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 24 },
-        { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        { code: 'MF', name: 'Missile, Flight', pi_E: 14 },
-        { code: 'ML', name: 'Missile, Launch', pi_E: 32 },
-        { code: 'CL', name: 'Cannon, Launch', pi_E: 320 }
+        // { code: 'GF', name: 'Ground, Fixed', pi_E: 6.0 },
+        // { code: 'GM', name: 'Ground, Mobile', pi_E: 9.0 },
+        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 9.0 },
+        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 19 },
+        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 13 },
+        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 29 },
+        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 20 },
+        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 43 },
+        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 24 },
+        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
+        // { code: 'MF', name: 'Missile, Flight', pi_E: 14 },
+        // { code: 'ML', name: 'Missile, Launch', pi_E: 32 },
+        // { code: 'CL', name: 'Cannon, Launch', pi_E: 320 }
     ];
     const optoElectroEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        { code: 'GM', name: 'Ground, Mobile', pi_E: 8.0 },
-        { code: 'NS', name: 'Naval, Sheltered', pi_E: 5.0 },
-        { code: 'NU', name: 'Naval, Unsheltered', pi_E: 12 },
-        { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 6.0 },
-        { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 6.0 },
-        { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 8.0 },
-        { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 17 },
-        { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        { code: 'CL', name: 'Cannon, Launch', pi_E: 450 }
+        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
+        // { code: 'GM', name: 'Ground, Mobile', pi_E: 8.0 },
+        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 5.0 },
+        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 12 },
+        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
+        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 6.0 },
+        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 6.0 },
+        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 8.0 },
+        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 17 },
+        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
+        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
+        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
+        // { code: 'CL', name: 'Cannon, Launch', pi_E: 450 }
     ];
     const alphaNumericEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        { code: 'GM', name: 'Ground, Mobile', pi_E: 8.0 },
-        { code: 'NS', name: 'Naval, Sheltered', pi_E: 5.0 },
-        { code: 'NU', name: 'Naval, Unsheltered', pi_E: 12 },
-        { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 6.0 },
-        { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 6.0 },
-        { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 8.0 },
-        { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 17 },
-        { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        { code: 'CL', name: 'Cannon, Launch', pi_E: 450 }
+        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
+        // { code: 'GM', name: 'Ground, Mobile', pi_E: 8.0 },
+        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 5.0 },
+        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 12 },
+        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
+        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 6.0 },
+        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 6.0 },
+        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 8.0 },
+        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 17 },
+        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
+        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
+        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
+        // { code: 'CL', name: 'Cannon, Launch', pi_E: 450 }
     ];
     const laserEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        { code: 'GM', name: 'Ground, Mobile', pi_E: 8.0 },
-        { code: 'NS', name: 'Naval, Sheltered', pi_E: 5.0 },
-        { code: 'NU', name: 'Naval, Unsheltered', pi_E: 12 },
-        { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 6.0 },
-        { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 6.0 },
-        { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 8.0 },
-        { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 17 },
-        { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        { code: 'CL', name: 'Cannon, Launch', pi_E: 450 }
+        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
+        // { code: 'GM', name: 'Ground, Mobile', pi_E: 8.0 },
+        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 5.0 },
+        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 12 },
+        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
+        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 6.0 },
+        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 6.0 },
+        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 8.0 },
+        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 17 },
+        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
+        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
+        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
+        // { code: 'CL', name: 'Cannon, Launch', pi_E: 450 }
     ];
-    // Add this with your other constant definitions
-    // const highFreqPowerFactors = [
-        
-    //     { power: 'Pr ≤ 10W', pi_R: 0.50 },
-    //     { power: '10W < Pr ≤ 100W', pi_R: 1.3 },
-    //     { power: '100W < Pr ≤ 1000W', pi_R: 2.0 },
-    //     { power: '1000W < Pr ≤ 3000W', pi_R: 2.4 },
-    //     { power: 'All Other Diodes', pi_R: 1.0 }
-
-    // ];
     const highFreqPowerFactors = [
     { power: 'PIN Diodes (Pr ≤ 10W)', pi_R: 0.50 },
     { power: 'PIN Diodes (10W < Pr ≤ 100W)', pi_R: 1.3 },
@@ -468,10 +453,10 @@ const MicroDiode = ({ onCalculate }) => {
         { temp: 175, pi_T: 16 }
     ];
     const lowNoiseHighFreqQualityFactors = [
-        { name: 'JANTXV', pi_Q: 0.50 },
+        // { name: 'JANTXV', pi_Q: 0.50 },
         { name: 'JANTX', pi_Q: 1.0 },
-        { name: 'JAN', pi_Q: 2.0 },
-        { name: 'Lower', pi_Q: 5.0 }
+        // { name: 'JAN', pi_Q: 2.0 },
+        // { name: 'Lower', pi_Q: 5.0 }
     ];
     const lowNoiseHighFreqPowerFactors = [
         { power: 'Pr ≤ 0.1', pi_R: 0.43 },
@@ -540,10 +525,10 @@ const MicroDiode = ({ onCalculate }) => {
         { name: 'None', pi_M: 4.0 }
     ];
     const gaAsQualityFactors = [
-        { name: 'JANTXV', pi_Q: 0.50 },
+        // { name: 'JANTXV', pi_Q: 0.50 },
         { name: 'JANTX', pi_Q: 1.0 },
-        { name: 'JAN', pi_Q: 2.0 },
-        { name: 'Lower', pi_Q: 5.0 }
+        // { name: 'JAN', pi_Q: 2.0 },
+        // { name: 'Lower', pi_Q: 5.0 }
     ];
     const getHighPowerHighFreqTempFactor = (junctionTemp, voltageRatio, metalizationType) => {
         // Convert voltage ratio to percentage (0-100)
@@ -567,9 +552,6 @@ const MicroDiode = ({ onCalculate }) => {
             [0.52, 1.0, 1.6, 2.1]  // 200°C
         ];
 
-        // Aluminum table is same as gold in this specification
-        // const aluminumTable = goldTable;
-        // Gold metallization table
         const aluminumTable = [
             [0.38, 0.75, 1.1, 1.5],    // 100°C
             [0.57, 1.1, 1.7, 2.3],    // 110°C
@@ -679,10 +661,10 @@ const MicroDiode = ({ onCalculate }) => {
         { temp: 175, pi_T: 8.7 },
     ];
     const siFETQualityFactors = [
-        { name: 'JANTXV', pi_Q: 0.50 },
+        // { name: 'JANTXV', pi_Q: 0.50 },
         { name: 'JANTX', pi_Q: 1.0 },
-        { name: 'JAN', pi_Q: 2.0 },
-        { name: 'Lower', pi_Q: 5.0 }
+        // { name: 'JAN', pi_Q: 2.0 },
+        // { name: 'Lower', pi_Q: 5.0 }
     ];
     const thyristorTypes = [
         { name: 'All Types', lambda_b: 0.0022 }
@@ -774,11 +756,11 @@ const MicroDiode = ({ onCalculate }) => {
         { name: 'Infrared Light Emitting Diode (IRLD)', lambda_0: 0.00023 }
     ];
     const optoQualityFactors = [
-        { name: 'JANTXY', pi_Q: 0.70 },
+        // { name: 'JANTXY', pi_Q: 0.70 },
         { name: 'JANTX', pi_Q: 1.0 },
-        { name: 'JAN', pi_Q: 2.4 },
-        { name: 'Lower', pi_Q: 5.5 },
-        { name: 'Plastic', pi_Q: 8.0 }
+        // { name: 'JAN', pi_Q: 2.4 },
+        // { name: 'Lower', pi_Q: 5.5 },
+        // { name: 'Plastic', pi_Q: 8.0 }
     ];
     // Temperature factors table for optoelectronics
     const optoTempFactors = [
@@ -857,6 +839,11 @@ const voltageStressFactors = [
         { count: 14, withLogic: false },
         { count: 15, withLogic: false }
     ];
+  const handleRateChange = (newRate) => {
+    //   console.log("Failure rate updated to:", newRate);
+    setFailureRate(newRate);
+    // console.log("newRate7..",newRate)
+  };
 
     const getBaseFailureRate = (count, displayType, withLogic = false) => {
         const rates = {
@@ -912,7 +899,7 @@ const voltageStressFactors = [
     const laserDiodeQualityFactors = [
         { name: 'Hermetic Package', pi_Q: 1.0 },
         { name: 'Nonhermetic with Facet Coating', pi_Q: 1.0 },
-        { name: 'Nonhermetic without Facet Coating', pi_Q: 3.3 }
+        // { name: 'Nonhermetic without Facet Coating', pi_Q: 3.3 }
     ];
     const laserDiodeCurrentFactors = [
         { current: 0.050, pi_I: 0.13 },
@@ -1139,10 +1126,6 @@ const displayBaseFailureRates = {
         pi_Q = qualityFactor ? qualityFactor.pi_Q : 1;
         calculationDetails.push({ name: 'Quality Factor (πQ)', value: pi_Q });
 
-        // Get environment factor
-        // const envFactor = environmentFactors.find(e => e.code === formData.environment);
-        // pi_E = envFactor ? envFactor.pi_E : 1;
-        // calculationDetails.push({ name: 'Environment Factor (πE)', value: pi_E });
 
         const envFactor = lowFrequencyenvironmentFactors.find(e => e.code === formData.environment);
         pi_E = envFactor ? envFactor.pi_E : 1;
@@ -1156,14 +1139,6 @@ const displayBaseFailureRates = {
             }
             calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
 
-            // Temperature factor (simplified linear approximation for demo)
-            // let tempFactors;
-            // if (formData.diodeType.includes('Voltage Regulator') ||
-            //     formData.diodeType.includes('Current Regulator')) {
-            //     tempFactors = lowFreqDiodeTempFactors2;
-            // } else {
-            //     tempFactors = lowFreqDiodeTempFactors1;
-            // }
             const calculatePiT = (diodeType, junctionTemp) => {
     const Tj = parseFloat(junctionTemp);
     
@@ -1233,8 +1208,7 @@ calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T.toFixed(
                             
     const Tj = parseFloat(junctionTemp);
             if (formData.highFreqDiodeType === 'SI IMPATT (≤ 35 GHz)') {
-                // formData.highFreqDiodeType === 'Gunn/Bulk Effect'
-                // Use the second table (higher temperature factors)
+               
               return Math.exp(-5260 * ((1/(Tj + 273)) - (1/298)));
     } else {
         // For General Purpose, Switching, Fast Recovery, etc.
@@ -1337,14 +1311,9 @@ calculationDetails.push({
         value: pi_T.toFixed(4),
         description: tempDescription
     });
-
-
-            // Application factor
             const appFactor = transistorAppFactors.find(a => a.name === formData.transistorAppFactor);
             pi_A = appFactor ? appFactor.pi_A : 1;
             calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
-
-
  let pi_R = 1;
     let powerRatingDescription1 = '';
 
@@ -1366,8 +1335,6 @@ calculationDetails.push({
         value: pi_R.toFixed(4),
         description: powerRatingDescription1
     });
- 
-
 let pi_S = 1;
 let voltageStressDescription3 = '';
 
@@ -1514,9 +1481,6 @@ calculationDetails.push({
         value: pi_T.toFixed(4),
         description: tempDescription6
     });
-
-// lowNoiseHighFreqPowerFactors
-            
 let powerRatingDescription1
  if (formData.powerRating) {
         // Use dropdown value if selected
@@ -1585,89 +1549,8 @@ calculationDetails.push({
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
         } else if (formData.componentType === 'transistorsHighPowerHighFrequencyBipolar') {
-            // 6.7 Transistors, High Power, High Frequency, Bipolar calculation
-
-            // Get base failure rate from table or formula
-//             const frequency = parseFloat(formData.frequencyGHz);
-//             const power = parseFloat(formData.outputPowerWatts);
-//             let lambda_b = 0;
-
-//             // Find the appropriate row in the frequency/power table
-//             if (frequency <= 0.5) {
-//                 if (power <= 1.0) lambda_b = 0.038;
-//                 else if (power <= 5.0) lambda_b = 0.039;
-//                 else if (power <= 10) lambda_b = 0.040;
-//                 else if (power <= 50) lambda_b = 0.050;
-//                 else if (power <= 100) lambda_b = 0.67;
-//                 else if (power <= 200) lambda_b = 0.12;
-//                 else if (power <= 300) lambda_b = 0.20;
-//                 else if (power <= 400) lambda_b = 0.36;
-//                 else if (power <= 500) lambda_b = 0.62;
-//                 // else if (power <= 600) lambda_b = 1.1;
-//                 else lambda_b = 1.1;
-//             } else if (frequency <= 1) {
-//                 if (power <= 1.0) lambda_b = 0.046;
-//                 else if (power <= 5.0) lambda_b = 0.047;
-//                 else if (power <= 10) lambda_b = 0.048;
-//                 else if (power <= 50) lambda_b = 0.060;
-//                 else if (power <= 100) lambda_b = 0.080;
-//                 else if (power <= 200) lambda_b = 0.14;
-//                 else if (power <= 300) lambda_b = 0.24;
-//                 else if (power <= 400) lambda_b = 0.42;
-//                 else if (power <= 500) lambda_b = 0.74;
-//                 else if (power <= 600) lambda_b = 1.3;
-//                 else lambda_b = 1.3;
-//             } else if (frequency <= 2) {
-//                 if (power <= 1.0) lambda_b = 0.065;
-//                 else if (power <= 5.0) lambda_b = 0.067;
-//                 else if (power <= 10) lambda_b = 0.069;
-//                 else if (power <= 50) lambda_b = 0.086;
-//                 else if (power <= 100) lambda_b = 0.11;
-//                 else if (power <= 200) lambda_b = 0.20;
-//                 else if (power <= 300) lambda_b = 0.35;
-//                 else lambda_b = 0.35;
-//             } else if (frequency <= 3) {
-//                 if (power <= 1.0) lambda_b = 0.093;
-//                 else if (power <= 5.0) lambda_b = 0.095;
-//                 else if (power <= 10) lambda_b = 0.098;
-//                 else if (power <= 50) lambda_b = 0.12;
-//                 else if (power <= 100) lambda_b = 0.16;
-//                 else if (power <= 200) lambda_b = 0.28;
-
-//                 else lambda_b = 0.28;
-//             } else if (frequency <= 4) {
-//                 if (power <= 1.0) lambda_b = 0.13;
-//                 else if (power <= 5.0) lambda_b = 0.14;
-//                 else if (power <= 10) lambda_b = 0.14;
-//                 else if (power <= 50) lambda_b = 0.17;
-//                 else lambda_b = 0.23;
-//             } if (frequency <= 5) {
-//                 if (power <= 1.0) lambda_b = 0.19;
-//                 else if (power <= 5.0) lambda_b = 0.19;
-//                 else if (power <= 10) lambda_b = 0.20;
-//                 else if (power <= 50) lambda_b = 0.25;
-//             } else {
-//         // For frequencies not in the table or power ranges not covered, use the formula
-//  lambda_b = 0.032 * Math.exp(354 * frequency + 0.00558 * power);
-//         console.log('Calculated λb:', lambda_b);
-//     }
-    
-//     calculationDetails.push({ 
-//         name: 'Base Failure Rate (λb)', 
-//         value: lambda_b.toFixed(6),
-//         description: frequency >= 1 && frequency <= 10 ? 
-//             `From table: F=${frequency}GHz, P=${power}W` : 
-//             `Calculated from formula: 0.032 * exp(354*${frequency} + 0.0058*${power}) = ${lambda_b.toFixed(6)}`
-//     });
-    // else {
-    //             // For frequencies > 4GHz, use the formula
-    //             lambda_b = 0.032 * Math.exp(354 * frequency + 0.00558 * power);
-    //         }
-
-    //         calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b?.toFixed(6) });
 
 
-    // Get base failure rate from table or formula
     const frequency = parseFloat(formData.frequencyGHz);
     const power = parseFloat(formData.outputPowerWatts);
     let lambda_b = 0;
@@ -2463,6 +2346,7 @@ if (formData.laserDiodePowerRatio) {
         componentstype: componentTypes[0], // or your default value
         // ...other initial state properties
     });
+
     const customStyles = {
         control: (provided) => ({
             ...provided,
@@ -2543,7 +2427,7 @@ if (formData.laserDiodePowerRatio) {
                                             value={formData.junctionTemp}
                                             onChange={handleInputChange}
                                         />
-       
+          <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                                           <div class="invalid-feedback">
         Please provide a valid city.
       </div>
@@ -2598,6 +2482,7 @@ if (formData.laserDiodePowerRatio) {
                                                     onChange={handleInputChange}
                                                 />
                                             </div>
+                                            
                                         </Col>
                                     
                                 )}
@@ -2791,6 +2676,7 @@ if (formData.laserDiodePowerRatio) {
                                         onChange={handleInputChange}
                                     />
                                     </div>
+                                       <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                                 </Col>
 
                                 <Col md={4}>
@@ -2990,6 +2876,7 @@ if (formData.laserDiodePowerRatio) {
                             </option>
                         ))}
                     </select>
+                       <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                 </div>
             </Col>
             
@@ -3077,6 +2964,7 @@ if (formData.laserDiodePowerRatio) {
                                     </option>
                                 ))}
                             </select>
+                               <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                             </div>
                             </Col>
                             <Col md={4}>
@@ -3166,6 +3054,7 @@ if (formData.laserDiodePowerRatio) {
                                     </option>
                                 ))}
                             </select>
+                               <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                             </div>
                             </Col>
                                <Col md={4}>
@@ -3348,6 +3237,7 @@ if (formData.laserDiodePowerRatio) {
                                 </option>
                             ))}
                         </select>
+                           <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                         </div>
                         </Col>
                         <Col md={4}>
@@ -3439,7 +3329,7 @@ if (formData.laserDiodePowerRatio) {
                                 />
                                 </div>
                             </Col>
-        <Col md={4}>
+                          <Col md={4}>
                             <div className="form-group">
                                 <label>Junction Temperature (°C)</label>
                                 <input
@@ -3451,7 +3341,9 @@ if (formData.laserDiodePowerRatio) {
                                     value={formData.junctionTempHP}
                                     onChange={handleInputChange}
                                 />
+                                 <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                                 </div>
+                                  
                             </Col>
                             <Col md={4}>
                             <div className="form-group">
@@ -3559,10 +3451,10 @@ if (formData.laserDiodePowerRatio) {
                             value={formData.quality}
                             onChange={handleInputChange}
                         >
-                            <option value="JANTXV">JANTXV (πQ = 0.50)</option>
+                            {/* <option value="JANTXV">JANTXV (πQ = 0.50)</option> */}
                             <option value="JANTX">JANTX (πQ = 1.0)</option>
-                            <option value="JAN">JAN (πQ = 2.0)</option>
-                            <option value="Lower">Lower (πQ = 5.0)</option>
+                            {/* <option value="JAN">JAN (πQ = 2.0)</option>
+                            <option value="Lower">Lower (πQ = 5.0)</option> */}
                         </select>
 </div>
 </Col>
@@ -3620,6 +3512,7 @@ if (formData.laserDiodePowerRatio) {
                             </option>
                         ))}
                     </select>
+         <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                 </div>
             </Col>
             
@@ -3747,6 +3640,7 @@ if (formData.laserDiodePowerRatio) {
                                     </option>
                                 ))}
                             </select>
+                               <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                             </div>
                             </Col>
                             <Col md={4}>
@@ -3840,6 +3734,7 @@ if (formData.laserDiodePowerRatio) {
                                     </option>
                                 ))}
                             </select>
+                               <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                             </div>
                             </Col>
                             <Col md={4}>
@@ -4002,6 +3897,7 @@ if (formData.laserDiodePowerRatio) {
                             </option>
                         ))}
                     </select>
+                       <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                 </div>
             </Col>
             
@@ -4057,7 +3953,6 @@ if (formData.laserDiodePowerRatio) {
                         </Row>
                     </>
                 )}
-
                 {formData.componentType === 'alphanumericDisplays' && (
                     <>
                         <Row>
@@ -4120,6 +4015,7 @@ if (formData.laserDiodePowerRatio) {
                                     </option>
                                 ))}
                             </select>
+                               <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                             </div>
                             </Col>
                             <Col md={4}>
@@ -4174,8 +4070,6 @@ if (formData.laserDiodePowerRatio) {
 
                     </>
                 )}
-                
-              
                 {formData.componentType === 'laserDiode' && (
                     <>
                         <Row>
@@ -4387,6 +4281,7 @@ if (formData.laserDiodePowerRatio) {
                                         </option>
                                     ))}
                                 </select>
+                                   <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
                                 </div>
                             </Col>
                               <Col md={4}>
@@ -4408,14 +4303,9 @@ if (formData.laserDiodePowerRatio) {
                         </Row>
                     </>
                 )}
-              
-                {/* Quality & Environment Section */}
 
+                {/* {console.log(parseFloat(results?.failureRate)?.toFixed(6),"printing value")} */}
                 <br />
-
-              
-       
-                   
                     <br />
                     <Button
                         className="btn-calculate float-end mt-1"
@@ -4424,19 +4314,17 @@ if (formData.laserDiodePowerRatio) {
                     >
                         Calculate FR
                     </Button>
-
-
-             
                 {results && (
-                
+                    handleInitialRate(parseFloat(results?.failureRate)?.toFixed(6))
+                )}
+                {results && (
+                        
                         <div className="d-flex align-items-center">
                         <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong> {parseFloat(results?.failureRate)?.toFixed(6)} failures/10<sup>6</sup> hours
                         </div>
                 
                 )}
-                <br />
 
-              
             </div>
         </Container>
     );

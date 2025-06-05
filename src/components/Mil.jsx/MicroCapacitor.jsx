@@ -17,7 +17,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 
 
 
-function MicroCapacitor({ onCalculate }) {
+function MicroCapacitor({ onCalculate, handleCalculateFailure }) {
   
 
   // Capacitor types data
@@ -78,33 +78,33 @@ function MicroCapacitor({ onCalculate }) {
   ];
 
   const qualityFactors = [
-    { quality: "Established Reliability (D)", πQ: 0.001 },
-    { quality: "Established Reliability (C)", πQ: 0.01 },
-    { quality: "Established Reliability (S, B)", πQ: 0.03 },
-    { quality: "Established Reliability (R)", πQ: 0.1 },
-    { quality: "Established Reliability (P)", πQ: 0.3 },
-    { quality: "Established Reliability (M)", πQ: 1.0 },
-    { quality: "Established Reliablity (L)", πQ: 1.5 },
-    { quality: "Non-Established Reliability", πQ: 3.0 },
-    { quality: "Commercial/Unknown", πQ: 10.0 }
+    // { quality: "Established Reliability (D)", πQ: 0.001 },
+    // { quality: "Established Reliability (C)", πQ: 0.01 },
+    // { quality: "Established Reliability (S, B)", πQ: 0.03 },
+    // { quality: "Established Reliability (R)", πQ: 0.1 },
+    // { quality: "Established Reliability (P)", πQ: 0.3 },
+    { quality: "Established Reliability (M) πQ = 1.0", πQ: 1.0 },
+    // { quality: "Established Reliablity (L)", πQ: 1.5 },
+    // { quality: "Non-Established Reliability", πQ: 3.0 },
+    // { quality: "Commercial/Unknown", πQ: 10.0 }
   ];
 
   // Environment factors
   const environmentFactors = [
-    { env: "GB (Ground, Benign)", πE: 1.0 },
-    { env: "GF (Ground, Fixed)", πE: 10 },
-    { env: "GM (Ground, Mobile)", πE: 20 },
-    { env: "NS (Naval, Sheltered)", πE: 7.0 },
-    { env: "NU (Naval, Unsheltered)", πE: 15 },
-    { env: "AIC (Airborne, Inhabited, Cargo)", πE: 12 },
-    { env: "AIF (Airborne, Inhabited, Fighter)", πE: 15 },
-    { env: "AUC (Airborne, Uninhabited, Cargo)", πE: 25 },
-    { env: "AUF (Airborne, Uninhabited, Fighter)", πE: 30 },
-    { env: "ARW (Airborne, Rotary Wing)", πE: 40 },
-    { env: "SF (Space, Flight)", πE: 0.50 },
-    { env: "MF (Missile, Flight)", πE: 20 },
-    { env: "ML (Missile, Launch)", πE: 50 },
-    { env: "CL (Cannon, Launch)", πE: 570 }
+    { env: "GB (Ground, Benign) πE = 1.0", πE: 1.0 },
+    // { env: "GF (Ground, Fixed)", πE: 10 },
+    // { env: "GM (Ground, Mobile)", πE: 20 },
+    // { env: "NS (Naval, Sheltered)", πE: 7.0 },
+    // { env: "NU (Naval, Unsheltered)", πE: 15 },
+    // { env: "AIC (Airborne, Inhabited, Cargo)", πE: 12 },
+    // { env: "AIF (Airborne, Inhabited, Fighter)", πE: 15 },
+    // { env: "AUC (Airborne, Uninhabited, Cargo)", πE: 25 },
+    // { env: "AUF (Airborne, Uninhabited, Fighter)", πE: 30 },
+    // { env: "ARW (Airborne, Rotary Wing)", πE: 40 },
+    // { env: "SF (Space, Flight)", πE: 0.50 },
+    // { env: "MF (Missile, Flight)", πE: 20 },
+    // { env: "ML (Missile, Launch)", πE: 50 },
+    // { env: "CL (Cannon, Launch)", πE: 570 }
   ];
   const seriesResistanceOptions = [
     { value: 0.66, label: ">0.8 (πSR = 0.66)" },
@@ -600,6 +600,7 @@ const newResult = {
                 max="150"
                 step="1"
               />
+              <small>T<sub>A</sub>= Hybrid Case Temperature</small>
               {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
             </div>
           </Col>
@@ -772,6 +773,10 @@ const newResult = {
       </div>
       <br />
       <div>
+         {results && showResults && (
+          handleCalculateFailure(calculateFailureRate()?.toFixed(10))
+
+         )}
        { results && showResults && (
         
             <div className="d-flex align-items-center">
@@ -783,76 +788,7 @@ const newResult = {
        
         )}
         <br />
-
-        {/* {showCalculations && (
-          <>
-            <Row className="mb-4">
-              <Col>
-                <div className="card">
-                  <div className="card-body">
-
-                    <div className="table-responsive">
-                      <MaterialTable
-                        columns={calculationColumns}
-                        data={[{
-                          λb: selectedCapacitor?.value.λb,
-                          πT: calculatePiT(),
-                          πC: calculatePiC(),
-                          πV: calculatePiV(),
-                          πSR: calculatePiSR(),
-                          πQ: selectedQuality?.value.πQ,
-                          πE: selectedEnvironment?.value.πE,
-                          λp: calculateFailureRate(),
-                        }]}
-                        options={{
-                          search: false,
-                          paging: false,
-                          toolbar: false,
-                          headerStyle: {
-                            backgroundColor: '#CCE6FF',
-                            fontWeight: 'bold',
-                            whiteSpace: 'nowrap'
-                          },
-                          rowStyle: {
-                            backgroundColor: '#FFF',
-                            '&:hover': {
-                              backgroundColor: '#f5f5f5'
-                            }
-                          }
-                        }}
-                        components={{
-                          Container: props => <Paper {...props} elevation={2} style={{ borderRadius: 8 }} />
-                        }}
-
-                      />
-                    </div>
-                  </div>
-                </div>
-              </Col>
-            </Row>
-            <div className="formula-section" style={{ marginTop: '24px', marginBottom: '24px' }}>
-              <Typography variant="h6" gutterBottom>
-                Calculation Formula
-              </Typography>
-              <Typography variant="body1" paragraph>
-                λ<sub>p</sub> = λ<sub>b</sub> × π<sub>T</sub> × π<sub>C</sub> × π<sub>V</sub> × π<sub>SR</sub> × π<sub>Q</sub> × π<sub>E</sub>
-              </Typography>
-              <Typography variant="body1" paragraph>Where:</Typography>
-              <ul>
-                <li>λ<sub>p</sub> = Predicted failure rate (Failures/10<sup>6</sup> Hours)</li>
-                <li>λ<sub>b</sub> = Base failure rate (from capacitor type)</li>
-                <li>π<sub>T</sub> = Temperature factor</li>
-                <li>π<sub>C</sub> = Capacitance factor</li>
-                <li>π<sub>V</sub> = Voltage stress factor</li>
-                <li>π<sub>SR</sub> = Series resistance factor (for Tantalum capacitors)</li>
-                <li>π<sub>Q</sub> = Quality factor</li>
-                <li>π<sub>E</sub> = Environment factor</li>
-              </ul>
-            </div>
-          </>
-        )} */}
         </div>
-     
       </div>
     </div>
   );
