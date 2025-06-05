@@ -16,7 +16,7 @@ function CompanyAdmin() {
     name: "",
     email: "",
     password: "",
-    phoneNumber: "",
+    phone: "",
     companyName: "",
   });
       const [editMode, setEditMode] = useState(false);
@@ -37,6 +37,7 @@ function CompanyAdmin() {
       .then((res) => {
         const data = res?.data?.companyUsersList;
         setData(data);
+        console.log(data,"dataa")
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -74,7 +75,7 @@ const deleteUser = (id) => {
       name: user.name,
       email: user.email,
       password: user.password,
-      phoneNumber: user.phoneNumber,
+      phone: user.phone,
       companyName: user.companyName,
     });
     setEditMode(true);
@@ -82,7 +83,7 @@ const deleteUser = (id) => {
  
   const handleEdit = () => {
     const { id, ...userData } = editUser;
-console.log("userData", userData);
+
     Api.patch(`/api/v1/user/${id}`, userData, {
       headers: {
         userId: userId,
@@ -134,12 +135,12 @@ console.log("userData", userData);
             <tbody>
               {data?.length > 0 ? (
                 data?.map((list, key) => (
-                  <tr>
+                  <tr key={list.id}>  
                     <td>{key + 1}</td>
                     <td>{list?.name}</td>
                     <td>{list?.email}</td>
                     <td>{list?.password}</td>
-                    <td>{list?.phoneNumber}</td>
+                    <td>{list?.phone}</td>
                     <td>{list?.companyName}</td>
                     <td>
  <FontAwesomeIcon 
@@ -207,9 +208,9 @@ console.log("userData", userData);
       <Label> Phone Number</Label>
       <Form.Control
         type="text"
-        name="phoneNumber"
-        value={editUser.phoneNumber}
-                  onChange={handleInputChange}
+        name="phone"
+        value={editUser.phone}
+          onChange={handleInputChange}
         placeholder="Enter phone number"
       />
     </Form.Group>

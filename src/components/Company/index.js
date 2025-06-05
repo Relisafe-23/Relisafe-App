@@ -480,7 +480,7 @@ const handleUpdateCompany = () => {
           <Table hover bordered>
             <thead>
               <tr>
-                <th>S.No1</th>
+                <th>S.No</th>
                 <th>Company Name</th>
                 <th>Action</th>
               </tr>
