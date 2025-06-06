@@ -177,8 +177,8 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
         </div>
         <div className="nav-list">
           {role == "SuperAdmin" ? (
-            <div>
-              <div className="menu-list">
+            <div className="mt-5">
+              <div className="menu-list mt-5">
                 <NavLink to={"/company"} activeClassName="main-nav-active">
                   <FontAwesomeIcon
                     icon={faBuildingUser}

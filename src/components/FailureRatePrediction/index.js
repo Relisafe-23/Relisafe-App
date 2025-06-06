@@ -1187,6 +1187,7 @@ function Index(props) {
                                             onBlur={handleBlur}
                                             onChange={handleChange}
                                             value={values.predicted}
+                                            disabled={true}
                                           />
                                           <ErrorMessage
                                             className="error text-danger"
