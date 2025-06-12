@@ -147,7 +147,7 @@ function ConnectedLibrary(props) {
     {
       title: "Destination Module",
       render: (rowData) => (
-        <div>          
+        <div>
           {rowData.destinationModuleName}
         </div>
       ),
@@ -226,7 +226,7 @@ function ConnectedLibrary(props) {
   };
   // update Api
   const updateConnectLibrary = (values) => {
-    console.log("values.....",values.destinationModule.value);
+    console.log("values.....", values.destinationModule.value);
     const comId = localStorage.getItem("companyId");
     Api.put("api/v1/library/update/connect/value", {
       moduleName: values.Module.label,
@@ -337,58 +337,58 @@ function ConnectedLibrary(props) {
               initialValues={{
                 Module: editRowData
                   ? {
-                      label: editRowData.libraryId.moduleName,
-                      value: editRowData.libraryId.moduleName,
-                    }
+                    label: editRowData.libraryId.moduleName,
+                    value: editRowData.libraryId.moduleName,
+                  }
                   : selectModule
-                  ? {
+                    ? {
                       label: selectModule,
                       value: selectModule,
                     }
-                  : "",
+                    : "",
                 destinationModule: editRowData
                   ? {
-                      label: editRowData.destinationModuleName,
-                      value: editRowData.destinationModuleName,
-                    }
+                    label: editRowData.destinationModuleName,
+                    value: editRowData.destinationModuleName,
+                  }
                   : selectDestinationModule
-                  ? {
+                    ? {
                       label: selectDestinationModule,
                       value: selectDestinationModule,
                     }
-                  : "",
+                    : "",
                 Field: editRowData
                   ? {
-                      label: editRowData.sourceName,
-                      value: editRowData.sourceName,
-                    }
+                    label: editRowData.sourceName,
+                    value: editRowData.sourceName,
+                  }
                   : moduleFieldValue
-                  ? {
+                    ? {
                       label: moduleFieldValue,
                       value: moduleFieldValue,
                     }
-                  : "",
+                    : "",
                 Value: editRowData ? editRowData.sourceValue : "",
                 FieldValueAndValue: editRowData
                   ? {
-                      field: editRowData.sourceValue,
-                      value: editRowData.sourceValue,
-                    }
+                    field: editRowData.sourceValue,
+                    value: editRowData.sourceValue,
+                  }
                   : {
-                      field: "",
-                      value: "",
-                    },
+                    field: "",
+                    value: "",
+                  },
                 end: editRowData
                   ? editRowData.destinationData.map((destination) => ({
-                      value: destination.destinationName,
-                      label: destination.destinationName,
-                      id: destination.destinationId,
-                    }))
+                    value: destination.destinationName,
+                    label: destination.destinationName,
+                    id: destination.destinationId,
+                  }))
                   : [],
                 valueEnd: editRowData
                   ? editRowData.destinationData.map(
-                      (destination) => destination.destinationValue
-                    )
+                    (destination) => destination.destinationValue
+                  )
                   : [],
                 FieldValueAndValueEnd: {
                   field: "",
@@ -404,7 +404,7 @@ function ConnectedLibrary(props) {
                     : createConnectLibrary(values, { resetForm });
                 }
               }}
-              //validationSchema={validation}
+            //validationSchema={validation}
             >
               {(Formik) => {
                 const {
@@ -427,7 +427,7 @@ function ConnectedLibrary(props) {
                         <p className=" mb-0 para-tag">Connected Library</p>
                       </div>
                       {writePermission?.[11].write === true ||
-                      role === "admin" ? (
+                        role === "admin" ? (
                         <Card className="mt-2 mttr-card p-4 ">
                           <Row>
                             <Col className="col-lg-4 mt-2">
@@ -437,9 +437,9 @@ function ConnectedLibrary(props) {
                                   value={
                                     values.Module
                                       ? {
-                                          value: values.Module.value,
-                                          label: values.Module.label,
-                                        }
+                                        value: values.Module.value,
+                                        label: values.Module.label,
+                                      }
                                       : null
                                   }
                                   onChange={(e) => {
@@ -491,9 +491,9 @@ function ConnectedLibrary(props) {
                                   value={
                                     values.Field
                                       ? {
-                                          value: values.Field.value,
-                                          label: values.Field.label,
-                                        }
+                                        value: values.Field.value,
+                                        label: values.Field.label,
+                                      }
                                       : null
                                   }
                                   onChange={(e) => {
@@ -516,16 +516,16 @@ function ConnectedLibrary(props) {
                                   options={
                                     selectModule
                                       ? [
-                                          {
-                                            options: moduleData?.map(
-                                              (list) => ({
-                                                value: list.name,
-                                                label: list.key,
-                                                id: list,
-                                              })
-                                            ),
-                                          },
-                                        ]
+                                        {
+                                          options: moduleData?.map(
+                                            (list) => ({
+                                              value: list.name,
+                                              label: list.key,
+                                              id: list,
+                                            })
+                                          ),
+                                        },
+                                      ]
                                       : []
                                   }
                                 />
@@ -541,6 +541,7 @@ function ConnectedLibrary(props) {
                                 <Label>
                                   Enter custom value for {values.Field.label}
                                 </Label>
+                                {console.log("values...",values)}
                                 <Form.Group>
                                   {namesToFilter.includes(
                                     values.Field.value
@@ -549,16 +550,8 @@ function ConnectedLibrary(props) {
                                       name={values.Field.value}
                                       className="mt-1"
                                       placeholder={`Select value for ${values.Field.label}`}
-                                      value={
-                                        values?.FieldValueAndValue.value
-                                          ? {
-                                              label:
-                                                values.FieldValueAndValue.value,
-                                              value:
-                                                values.FieldValueAndValue.value,
-                                            }
-                                          : null
-                                      }
+                                      value={values?.FieldValueAndValue.value ?
+                                        { label: values.FieldValueAndValue.value, value: values.FieldValueAndValue.value, } : null}
                                       options={[
                                         { label: "Yes", value: "Yes" },
                                         { label: "No", value: "No" },
@@ -576,11 +569,11 @@ function ConnectedLibrary(props) {
                                       value={
                                         values.FieldValueAndValue.value !== ""
                                           ? {
-                                              value:
-                                                values.FieldValueAndValue.value,
-                                              label:
-                                                values.FieldValueAndValue.value,
-                                            }
+                                            value:
+                                              values.FieldValueAndValue.value,
+                                            label:
+                                              values.FieldValueAndValue.value,
+                                          }
                                           : null
                                       }
                                       onChange={(
@@ -649,9 +642,9 @@ function ConnectedLibrary(props) {
                                   value={
                                     values.destinationModule
                                       ? {
-                                          value: values.destinationModule.value,
-                                          label: values.destinationModule.label,
-                                        }
+                                        value: values.destinationModule.value,
+                                        label: values.destinationModule.label,
+                                      }
                                       : null
                                   }
                                   onChange={(e) => {
@@ -742,11 +735,10 @@ function ConnectedLibrary(props) {
                                         styles={customStyles}
                                         name={`valueEnd[${index}]`}
                                         type="select"
-                                        aria-label={`Select value for ${
-                                          selectedOption
-                                            ? selectedOption.label
-                                            : ""
-                                        }`}
+                                        aria-label={`Select value for ${selectedOption
+                                          ? selectedOption.label
+                                          : ""
+                                          }`}
                                         onChange={handleChange}
                                         onBlur={handleBlur}
                                         value={values.valueEnd[index] || ""}
@@ -757,7 +749,7 @@ function ConnectedLibrary(props) {
                                       </Form.Select>
                                     ) : separateDestinationData &&
                                       separateDestinationData[index]?.length >
-                                        0 ? (
+                                      0 ? (
                                       <CreatableSelect
                                         onChange={(selectedOption) => {
                                           if (selectedOption.__isNew__) {

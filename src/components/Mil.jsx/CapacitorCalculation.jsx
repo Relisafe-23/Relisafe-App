@@ -440,13 +440,13 @@ if (shouldCalculateCR) {
 
 
   const handleCalculate = () => {
-   console.log("1. Starting calculation..."); // Debug log
+  //  console.log("1. Starting calculation..."); // Debug log
   
   if (!validateForm()) {
-    console.log("2. Validation failed - exiting"); // Debug log
+    // console.log("2. Validation failed - exiting"); // Debug log
     return;
   }
-  console.log("3. Validation passed - proceeding with calculation");
+  // console.log("3. Validation passed - proceeding with calculation");
 
 const newResult = {
   id: Date.now(),

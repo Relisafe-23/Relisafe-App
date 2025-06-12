@@ -2682,16 +2682,17 @@ function Index(props) {
   };
 
   const updateFmeca = (values) => {
+
+    console.log("values...", values)
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
+
     Api.patch("api/v1/FMECA/update", {
       operatingPhase: values.operatingPhase,
       function: values.function,
       failureMode: values.failureMode,
       // searchFM: values.searchFM,
-      failureModeRatioAlpha: values.failureModeRatioAlpha
-        ? values.failureModeRatioAlpha
-        : 0,
+      failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 0,
       cause: values.cause,
       detectableMeansDuringOperation: values.detectableMeansDuringOperation,
       detectableMeansToMaintainer: values.detectableMeansToMaintainer,
@@ -2699,9 +2700,7 @@ function Index(props) {
       subSystemEffect: values.subSystemEffect,
       systemEffect: values.systemEffect,
       endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta
-        ? values.endEffectRatioBeta
-        : 1,
+      endEffectRatioBeta: values.endEffectRatioBeta ? values.endEffectRatioBeta : 1,
       safetyImpact: values.safetyImpact,
       referenceHazardId: values.referenceHazardId,
       realibilityImpact: values.realibilityImpact,
@@ -2712,10 +2711,8 @@ function Index(props) {
       designControl: values.designControl,
       maintenanceControl: values.maintenanceControl,
       exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase:
-        values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase:
-        values.immediteActionDuringNonOperationalPhase,
+      immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase,
+      immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase,
       userField1: values.userField1,
       userField2: values.userField2,
       userField3: values.userField3,
@@ -2739,6 +2736,7 @@ function Index(props) {
         // if (status === 204) {
         //   setFailureModeRatioError(true);
         // }
+        console.log(status)
         getProductData();
         setIsLoading(false);
       })
@@ -2913,7 +2911,6 @@ function Index(props) {
                         ? (newRow, oldData) =>
                           new Promise((resolve, reject) => {
                             updateFmeca(newRow);
-
                             resolve();
                           })
                         : null,
