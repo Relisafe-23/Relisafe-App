@@ -49,6 +49,7 @@ export default function ProjectDetails(props) {
   };
 
   const submitForm = (values) => {
+    console.log("values", values);
     Api.patch(`api/v1/projectCreation/update/details/${projectListId[0]}`, {
       customerName: values.customerName,
       operationalPhase: values.opreationalPhase,

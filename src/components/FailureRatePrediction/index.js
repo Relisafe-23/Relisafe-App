@@ -1187,6 +1187,7 @@ function Index(props) {
                                             onBlur={handleBlur}
                                             onChange={handleChange}
                                             value={values.predicted}
+                                            disabled={true}
                                           />
                                           <ErrorMessage
                                             className="error text-danger"
@@ -2684,7 +2685,7 @@ function Index(props) {
                                                   // Round to 6 decimal places
                                                   const roundedValue =
                                                     parseFloat(
-                                                      failureRate.toFixed(6)
+                                                      failureRate?.toFixed(10)
                                                     );
                                                   // Update the predicted field
                                                   setPredicted(roundedValue);
@@ -2889,7 +2890,7 @@ function Index(props) {
                                                   // Round the value to 6 decimal places
                                                   const roundedValue =
                                                     parseFloat(
-                                                      value.toFixed(6)
+                                                      value?.toFixed(6)
                                                     );
                                                   // Update the predicted field
                                                   setPredicted(roundedValue);
@@ -2909,7 +2910,7 @@ function Index(props) {
                                                   // Round the value to 6 decimal places
                                                   const roundedValue =
                                                     parseFloat(
-                                                      value.toFixed(6)
+                                                      value?.toFixed(6)
                                                     );
                                                   // Update the predicted field
                                                   setPredicted(roundedValue);
@@ -2929,7 +2930,7 @@ function Index(props) {
                                                   // Round the value to 6 decimal places
                                                   const roundedValue =
                                                     parseFloat(
-                                                      value.toFixed(6)
+                                                      value?.toFixed(7)
                                                     );
                                                   // Update the predicted field
                                                   setPredicted(roundedValue);
@@ -2949,7 +2950,7 @@ function Index(props) {
                                                   // Round the value to 6 decimal places
                                                   const roundedValue =
                                                     parseFloat(
-                                                      value.toFixed(6)
+                                                      value?.toFixed(6)
                                                     );
                                                   // Update the predicted field
                                                   setPredicted(roundedValue);

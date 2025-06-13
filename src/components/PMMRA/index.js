@@ -485,6 +485,7 @@ export default function PMMRA(props) {
     });
   };
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
+    console.log("projectId", projectId)
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
@@ -1070,6 +1071,8 @@ export default function PMMRA(props) {
     value: item?.fmecaId,
     label: item?.fmecaId,
   }));
+
+
 
   const InitialValues = {
     name: name,

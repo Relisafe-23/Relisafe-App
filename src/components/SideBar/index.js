@@ -178,8 +178,18 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
         <div className="nav-list">
           {role == "SuperAdmin" ? (
             <div>
-              <div className="menu-list">
-                <NavLink to={"/company"} activeClassName="main-nav-active">
+              <div className="menu-list mt-5" style={{ marginTop:"20px"}}>
+                <NavLink to={"/company"} 
+              activeClassName="main-nav-active"
+                  style={{
+                    backgroundColor:
+                      selectedModule === "company"
+                        ? "mediumaquamarine"
+                        : "inherit",
+                  }}
+                  onClick={() => setSelectedModule("company")}>
+                  
+                   
                   <FontAwesomeIcon
                     icon={faBuildingUser}
                     size="1x"
@@ -211,6 +221,27 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
                   <span>Users</span>
                 </NavLink>
               </div>
+              {/* <div className="menu-list mt-2">
+                <NavLink
+                  to={"/company"}
+                  activeClassName="main-nav-active"
+                  style={{
+                    backgroundColor:
+                      selectedModule === "user"
+                        ? "mediumaquamarine"
+                        : "inherit",
+                  }}
+                  onClick={() => setSelectedModule("user")}
+                >
+                  <FontAwesomeIcon
+                    icon={faUser}
+                    size="1x"
+                    title="Users"
+                    className="menu-icon"
+                  />
+                  <span>Company</span>
+                </NavLink>
+              </div> */}
             </div>
           ) : role === "admin" || (isOwner === true && createdBy === userId) ? (
             <div>
@@ -1003,7 +1034,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
                                   className="menu-icon"
                                   title="Seprated Library"
                                 />{" "}
-                                <span>Seprated Library</span>
+                                <span> separate library</span>
                               </NavLink>
                             </div>
                           ) : null}

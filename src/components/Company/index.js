@@ -70,6 +70,7 @@ function Company() {
   });
 
   const submitForm = (values, { resetForm }) => {
+    console.log("values", values);
     const email = values.email.toLowerCase();
     Api.post("/api/v1/company", {
       companyName: values.companyName.label,
@@ -196,7 +197,7 @@ const deleteCompany = (id) => {
 
 
 const handleUpdateCompany = () => {
-
+console.log("currentCom.....pany",currentCompany)
 
   Api.patch(`/api/v1/company/${currentCompany.id}`, {
     companyName: editCompanyName,

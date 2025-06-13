@@ -2211,7 +2211,6 @@ function Index(props) {
                   headerStyle: {
                     backgroundColor: "#CCE6FF",
                     zIndex: 0,
-                    whiteSpace: 'nowrap',
                   },
                 }}
                 //Export

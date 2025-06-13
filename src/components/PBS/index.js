@@ -560,7 +560,8 @@ export default function PBS(props) {
       productName: values.name,
       category: category.value,
       reference: values.referenceOrPosition,
-      environment: prefillEnviron.value,
+      // environment: prefillEnviron.value,
+       environment: values.environment?.value || environment,
       temperature: values.temperature,
       partType: values.partType.value,
       partNumber: values.partNumber,
@@ -1085,7 +1086,7 @@ export default function PBS(props) {
                                       <Select
                                         type="select"
                                         styles={customStyles}
-                                        value={values.environment}
+                                        value={values.environment} 
                                         name="environment"
                                         placeholder="Select Environment"
                                         onChange={(e) => {
@@ -1122,7 +1123,9 @@ export default function PBS(props) {
                                         min="0"
                                         step="any"
                                         name="temperature"
-                                        value={values.temperature}
+                                        value={values.temperature}   
+
+
                                         onChange={handleChange}
                                         onBlur={handleBlur}
                                       />
@@ -1299,8 +1302,15 @@ export default function PBS(props) {
                 <MaterialTable
                   title="PBS"
                   columns={[
-                    // { title: "", field: "", width: "5%", align: "center" },
-                    { title: "S.No", field: "indexCount", width: "7%", align: "center" },
+                    // { title: "", field: "", width: "5%", align: "center", marginRight: "20px" },
+                    { title: "S.No", field: "indexCount", width: "7%", align: "center",
+                          cellStyle: {
+      paddingLeft: '20px' // Add left padding for the S.No column
+    },
+                          headerStyle: {
+                            paddingLeft: '20px' // Add left padding for the header
+                          } 
+                    },
                     { title: "Product Name", field: "productName", width: "18%", align: "center" },
                     { title: "Category", field: "category", width: "10%", align: "center" },
                     { title: "Part Number", field: "partNumber", width: "15%", align: "center" },
@@ -1370,7 +1380,7 @@ export default function PBS(props) {
                                   }}
                                 />
 
-                                <Dropdown.Item
+                                {/* <Dropdown.Item
                                   className="user-dropitem-project text-center"
                                   onClick={() => {
                                     setProductId(rowData.id);
@@ -1399,14 +1409,45 @@ export default function PBS(props) {
                                   }}
                                 >
                                   <span style={{ color: 'blue' }}>Edit</span>
+                                </Dropdown.Item> */}
+                                <Dropdown.Item
+                                  className="user-dropitem-project text-center"
+                                  onClick={() => {
+                                    setProductId(rowData.id);
+                                    setTreeId(rowData.parentId);
+                                    setChildProductCriteria(
+                                      rowData?.children?.length > 0
+                                        ? true
+                                        : false
+                                    );
+                                    setMainProductModalOpen(true);
+                                    setPatchModal(true);
+                                    setPatchCategory(rowData.category);
+                                    setPatchPartType(rowData.partType);
+                                    setReference(rowData.referenceOrPosition);
+                                    setQuantity(rowData.quantity);
+                                    setPartNumber(rowData.partNumber);
+                                    setPatchName(rowData.productName);
+                                    setCategory(
+                                      rowData.category
+                                        ? {
+                                          value: rowData.category,
+                                          label: rowData.category,
+                                        }
+                                        : ""
+                                    );
+                                  }}
+                                >
+                                  <span style={{ color: 'blue' }}>Edit</span>
                                 </Dropdown.Item>
                                 <hr
                                   style={{
                                     margin: "0",
                                     border: "1px",
                                     borderBottom: "1px solid #000000",
-                                  }}
+                                  }}  
                                 />
+                              
                                 <Dropdown.Item
                                   className="user-dropitem-project text-center"
                                   onClick={() => {
