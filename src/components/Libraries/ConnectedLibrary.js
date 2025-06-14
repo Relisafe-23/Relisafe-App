@@ -147,7 +147,8 @@ function ConnectedLibrary(props) {
     {
       title: "Destination Module",
       render: (rowData) => (
-        <div>
+        
+        <div>          
           {rowData.destinationModuleName}
         </div>
       ),

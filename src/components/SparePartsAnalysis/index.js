@@ -903,7 +903,7 @@ function Index(props) {
                         <Row>
                           <Col>
                             <Form.Group className="mt-3">
-                              <Label>Price3 MOQ</Label>
+                              <Label>Price1 MOQ</Label>
                               <Form.Control
                                 className="mt-1 "
                                 name="moq_1Price"
@@ -916,7 +916,7 @@ function Index(props) {
                           </Col>
                           <Col>
                             <Form.Group className="mt-3">
-                              <Label>Pricce3 MOQ</Label>
+                              <Label>Price3 MOQ</Label>
                               <Form.Control
                                 className="mt-1 "
                                 name="moq_3Price"
@@ -959,7 +959,7 @@ function Index(props) {
                         <Row>
                           <Col>
                             <Form.Group className="mt-3">
-                              <Label>Price3 MOQ</Label>
+                              <Label>Price2 MOQ</Label>
                               <Form.Control
                                 className="mt-1 "
                                 name="moq_2Price"

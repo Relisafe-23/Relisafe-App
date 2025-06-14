@@ -169,12 +169,27 @@ function Index(props) {
   };
 
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
+   
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
         moduleName: "FMECA",
         sourceName: fieldName,
         sourceValue: fieldValue.value,
+      },
+    }).then((res) => {
+      const data = res?.data?.libraryData;
+      setAllConnectedData(data ? data : perviousColumnValues);
+      setPerviousColumnValues(data);
+    });
+  };
+
+    const getAllConnectedLibraryAfterUpdate = async () => {
+   
+    Api.get("api/v1/library/get/all/source/value", {
+      params: {
+        projectId: projectId,
+        moduleName: "FMECA",
       },
     }).then((res) => {
       const data = res?.data?.libraryData;
@@ -870,14 +885,19 @@ function Index(props) {
             <input
               type="number"
               name="failureModeRatioAlpha"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
+              value={value.failureModeRatioAlpha}
+           
               placeholder="Enter Failure Mode Ratio Alpha"
               style={{ height: "40px", borderRadius: "4px" }}
               title="Enter Failure Mode Ratio Alpha"
+                 onChange={(e) => {
+                createDropdownEditComponent(e.target.value);
+                onChange(e.target.value
+                  
+                
+                );
+                
+              }}
             />
           );
         }
@@ -2577,6 +2597,7 @@ function Index(props) {
             name="userField10"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
+              console.log("",value)
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "userField10");
               getAllConnectedLibrary(selectedItems, "userField10");
@@ -2624,7 +2645,7 @@ function Index(props) {
         safetyImpact: values.safetyImpact
           ? values.safetyImpact
           : data.safetyImpact,
-        referenceHazardId: values.referenceHazardId
+        referenceId: values.referenceHazardId
           ? values.referenceHazardId
           : data.referenceHazardId,
         realibilityImpact: values.realibilityImpact
@@ -2685,6 +2706,7 @@ function Index(props) {
 
     console.log("values...", values)
     const companyId = localStorage.getItem("companyId");
+    console.log("value1",values)
     setIsLoading(true);
 
     Api.patch("api/v1/FMECA/update", {
@@ -2739,6 +2761,7 @@ function Index(props) {
         console.log(status)
         getProductData();
         setIsLoading(false);
+        getAllConnectedLibraryAfterUpdate();
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;

@@ -1185,7 +1185,7 @@ function Index(props) {
                                             placeholder="Predicted"
                                             onBlur={handleBlur}
                                             onChange={handleChange}
-                                            value={predicted}
+                                            value={values.predicted}
                                             disabled={true}
                                           />
                                           <ErrorMessage
