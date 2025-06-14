@@ -566,18 +566,7 @@ const MTTRPrediction = (props, active) => {
         );
       },
     },
-    
-
-
-
-
-
-
-
-
-
-
-    {
+      {
       title: "No of Labours",
       field: "totalLabour",
       type: "string",
@@ -960,7 +949,6 @@ const updateProcedureData = (value) => {
 console.log("rowId in updateProcedureData", rowId);
   // Prepare the data object with all required fields
   const requestData = {
-    
     time: value.time || "",
     totalLabour: value.totalLabour || "",
     skill: value.skill || "",
@@ -974,10 +962,10 @@ console.log("rowId in updateProcedureData", rowId);
     treeStructureId: treeStructure,
     token: token,
     userId: userId,
-    console: console.log("requestData in updateProcedureData", requestData),
+    
   };
 
-
+  console.log("req",requestData) 
   Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, requestData)
     .then((response) => {
       getProcedureData();
