@@ -13,7 +13,6 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles'
 import Select from "react-select";
 import { CalculatorIcon } from '@heroicons/react/24/outline';
-import DeleteIcon from '@material-ui/icons/Delete';
 
 
 
@@ -442,13 +441,13 @@ if (shouldCalculateCR) {
 
 
   const handleCalculate = () => {
-   console.log("1. Starting calculation..."); // Debug log
+  //  console.log("1. Starting calculation..."); // Debug log
   
   if (!validateForm()) {
-    console.log("2. Validation failed - exiting"); // Debug log
+    // console.log("2. Validation failed - exiting"); // Debug log
     return;
   }
-  console.log("3. Validation passed - proceeding with calculation");
+  // console.log("3. Validation passed - proceeding with calculation");
 
 const newResult = {
   id: Date.now(),
@@ -832,6 +831,8 @@ const newResult = {
                 style={{ height: '30px', width: '40px' }}
                 fontSize="large"
               />
+
+              
               <Typography
                 variant="body1"
                 sx={{

@@ -4,17 +4,19 @@ import Select from "react-select";
 import MaterialTable from "material-table";
 import { Link } from '@material-ui/core';
 
-import {
-  Paper,
-  Typography,
-  IconButton,
-  Tooltip
-} from '@material-ui/core';
+// import {
+//   Paper,
+//   Typography,
+//   IconButton,
+//   Tooltip
+// } from '@material-ui/core';
+
+
 import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles'
 
 import { CalculatorIcon } from '@heroicons/react/24/outline';
-import DeleteIcon from '@material-ui/icons/Delete';
+import { Paper, Typography } from '@mui/material';
 
 const ConnectionCalculation = ({ onCalculate }) => { 
   // Data from the tables

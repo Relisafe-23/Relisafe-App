@@ -1,13 +1,12 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
-import MaterialTable from "material-table";
 import { Modal, Button, Row, Col } from "react-bootstrap";
 import "../../css/FMECA.scss";
 import Api from "../../Api";
 import { tableIcons } from "../core/TableIcons";
-import { ThemeProvider } from "@material-ui/core/styles";
-import { createTheme } from "@material-ui/core/styles";
+// import { ThemeProvider } from "@material-ui/core/styles";
+// import { createTheme } from "@material-ui/core/styles";
 // import Tree from "../Tree";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
@@ -31,8 +30,12 @@ import { FaExclamationCircle } from "react-icons/fa";
 import { TextField } from "@material-ui/core";
 import { useHistory } from "react-router-dom";
 import Dropdown from "../Company/Dropdown";
-import { Tooltip, TableCell } from "@material-ui/core";
+import Tooltip from '@mui/material/Tooltip';
+import TableCell from '@mui/material/TableCell';
 import { customStyles } from "../core/select";
+import { ButtonBase, createTheme, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, Table, TableBody, TableContainer, TableHead, TableRow, ThemeProvider } from "@mui/material";
+import MaterialTable from "material-table";
+
 function Index(props) {
   const [initialProductID, setInitialProductID] = useState();
   const [initialTreeStructure, setInitialTreeStructure] = useState();
@@ -41,8 +44,8 @@ function Index(props) {
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-    ? props?.location?.state?.productId
-    : initialProductID;
+      ? props?.location?.state?.productId
+      : initialProductID;
   const treeStructure = props?.location?.props?.mainData?.id
     ? props?.location?.props?.mainData?.id
     : initialTreeStructure;
@@ -166,12 +169,27 @@ function Index(props) {
   };
 
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
+   
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
         moduleName: "FMECA",
         sourceName: fieldName,
         sourceValue: fieldValue.value,
+      },
+    }).then((res) => {
+      const data = res?.data?.libraryData;
+      setAllConnectedData(data ? data : perviousColumnValues);
+      setPerviousColumnValues(data);
+    });
+  };
+
+    const getAllConnectedLibraryAfterUpdate = async () => {
+   
+    Api.get("api/v1/library/get/all/source/value", {
+      params: {
+        projectId: projectId,
+        moduleName: "FMECA",
       },
     }).then((res) => {
       const data = res?.data?.libraryData;
@@ -572,36 +590,36 @@ function Index(props) {
 
   const createDropdownEditComponent =
     (fieldName) =>
-    ({ value, onChange }) => {
-      const options = dropdownOptions[fieldName] || [];
-      const connectedValue = connectedValues[0]?.destinationData?.find(
-        (item) => item?.destinationName === fieldName
-      )?.destinationValue;
+      ({ value, onChange }) => {
+        const options = dropdownOptions[fieldName] || [];
+        const connectedValue = connectedValues[0]?.destinationData?.find(
+          (item) => item?.destinationName === fieldName
+        )?.destinationValue;
 
-      const isAnyDropdownSelected = selectedField !== null;
+        const isAnyDropdownSelected = selectedField !== null;
 
-      if (isAnyDropdownSelected || options.length === 0) {
+        if (isAnyDropdownSelected || options.length === 0) {
+          return (
+            <TextField
+              onChange={(e) => onChange(connectedValue || e.target.value)}
+              value={connectedValue || value}
+              multiline
+            />
+          );
+        }
+
         return (
-          <TextField
-            onChange={(e) => onChange(connectedValue || e.target.value)}
-            value={connectedValue || value}
-            multiline
+          <Select
+            value={options.find((option) => option.value === value)}
+            onChange={(selectedOption) => {
+              onChange(selectedOption.value);
+              setSelectedField(fieldName);
+              setSelectedFunction(selectedOption);
+            }}
+            options={options}
           />
         );
-      }
-
-      return (
-        <Select
-          value={options.find((option) => option.value === value)}
-          onChange={(selectedOption) => {
-            onChange(selectedOption.value);
-            setSelectedField(fieldName);
-            setSelectedFunction(selectedOption);
-          }}
-          options={options}
-        />
-      );
-    };
+      };
 
   // ...
 
@@ -611,18 +629,17 @@ function Index(props) {
   };
 
   const columns = [
+
     {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
       title: "FMECA ID",
-      cellStyle: { minWidth: "140px", textAlign: "center" },
-      headerStyle: { textAlign: "center" },
     },
     {
       field: "operatingPhase",
       title: "Operating  Phase",
       type: "string",
-      cellStyle: { minWidth: "200px", textAlign: "center" },
-      headerStyle: { textAlign: "center", minWidth: "150px" },
+      // cellStyle: { minWidth: "200px", textAlign: "center" },
+      // headerStyle: { textAlign: "center", minWidth: "150px" },
       onCellClick: () => handleDropdownSelection("operatingPhase"),
       editComponent: ({ value, onChange, rowData }) => {
         const filteredData =
@@ -658,6 +675,13 @@ function Index(props) {
                 getAllConnectedLibrary(selectedItems, "operatingPhase");
               }}
               options={options}
+              styles={{
+                container: (base) => ({
+                  ...base,
+                  width: "100%",
+                  minHeight: "40px"
+                })
+              }}
             />
           );
         }
@@ -667,8 +691,8 @@ function Index(props) {
       field: "function",
       title: "Function*",
       type: "string",
-      cellStyle: { minWidth: "50px", textAlign: "center" },
-      headerStyle: { textAlign: "center" },
+      // cellStyle: { minWidth: "50px", textAlign: "center" },
+      // headerStyle: { textAlign: "center" },
       onCellClick: () => handleDropdownSelection("function"),
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -682,13 +706,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -738,13 +762,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -850,26 +874,31 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
               type="number"
               name="failureModeRatioAlpha"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
+              value={value.failureModeRatioAlpha}
+           
               placeholder="Enter Failure Mode Ratio Alpha"
               style={{ height: "40px", borderRadius: "4px" }}
               title="Enter Failure Mode Ratio Alpha"
+                 onChange={(e) => {
+                createDropdownEditComponent(e.target.value);
+                onChange(e.target.value
+                  
+                
+                );
+                
+              }}
             />
           );
         }
@@ -904,13 +933,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -961,13 +990,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1017,13 +1046,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1072,13 +1101,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1128,13 +1157,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1190,13 +1219,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1246,13 +1275,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1308,13 +1337,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1364,13 +1393,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1419,13 +1448,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1474,13 +1503,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1529,13 +1558,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1585,13 +1614,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1647,13 +1676,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1706,13 +1735,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1763,13 +1792,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1819,13 +1848,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1875,13 +1904,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1933,13 +1962,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -1998,13 +2027,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2060,13 +2089,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2116,13 +2145,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2172,13 +2201,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2228,13 +2257,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2284,13 +2313,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2340,13 +2369,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2396,13 +2425,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2452,13 +2481,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2508,13 +2537,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2564,13 +2593,13 @@ function Index(props) {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -2592,6 +2621,7 @@ function Index(props) {
             name="userField10"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
+              console.log("",value)
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "userField10");
               getAllConnectedLibrary(selectedItems, "userField10");
@@ -2602,6 +2632,7 @@ function Index(props) {
       },
     },
   ];
+
 
   const createFmeca = (values) => {
     if (productId) {
@@ -2638,7 +2669,7 @@ function Index(props) {
         safetyImpact: values.safetyImpact
           ? values.safetyImpact
           : data.safetyImpact,
-        referenceHazardId: values.referenceHazardId
+        referenceId: values.referenceHazardId
           ? values.referenceHazardId
           : data.referenceHazardId,
         realibilityImpact: values.realibilityImpact
@@ -2696,16 +2727,18 @@ function Index(props) {
   };
 
   const updateFmeca = (values) => {
+
+    console.log("values...", values)
     const companyId = localStorage.getItem("companyId");
+    console.log("value1",values)
     setIsLoading(true);
+
     Api.patch("api/v1/FMECA/update", {
       operatingPhase: values.operatingPhase,
       function: values.function,
       failureMode: values.failureMode,
       // searchFM: values.searchFM,
-      failureModeRatioAlpha: values.failureModeRatioAlpha
-        ? values.failureModeRatioAlpha
-        : 0,
+      failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 0,
       cause: values.cause,
       detectableMeansDuringOperation: values.detectableMeansDuringOperation,
       detectableMeansToMaintainer: values.detectableMeansToMaintainer,
@@ -2713,9 +2746,7 @@ function Index(props) {
       subSystemEffect: values.subSystemEffect,
       systemEffect: values.systemEffect,
       endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta
-        ? values.endEffectRatioBeta
-        : 1,
+      endEffectRatioBeta: values.endEffectRatioBeta ? values.endEffectRatioBeta : 1,
       safetyImpact: values.safetyImpact,
       referenceHazardId: values.referenceHazardId,
       realibilityImpact: values.realibilityImpact,
@@ -2726,10 +2757,8 @@ function Index(props) {
       designControl: values.designControl,
       maintenanceControl: values.maintenanceControl,
       exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase:
-        values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase:
-        values.immediteActionDuringNonOperationalPhase,
+      immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase,
+      immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase,
       userField1: values.userField1,
       userField2: values.userField2,
       userField3: values.userField3,
@@ -2754,9 +2783,10 @@ function Index(props) {
         // if (status === 204) {
         //   setFailureModeRatioError(true);
         // }
-        // setTableData(status);
+        console.log(status)
         getProductData();
         setIsLoading(false);
+        getAllConnectedLibraryAfterUpdate();
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -2793,6 +2823,16 @@ function Index(props) {
   };
 
   const role = localStorage.getItem("role");
+
+
+  const handleDelete = (index) => {
+    const row = tableData[index];
+    const newData = tableData.filter((_, i) => i !== index);
+    setTableData(newData);
+    deleteFmecaData(row);
+  };
+
+
 
   return (
     <div className="mx-4 mt-5">
@@ -2867,7 +2907,7 @@ function Index(props) {
               <Tooltip placement="right" title="Import">
                 <div style={{ marginRight: "8px" }}>
                   <label htmlFor="file-input" className="import-export-btn">
-                    <FontAwesomeIcon icon={faFileDownload} />
+                    <FontAwesomeIcon icon={faFileUpload} />
                   </label>
                   <input
                     type="file"
@@ -2879,15 +2919,16 @@ function Index(props) {
                 </div>
               </Tooltip>
               <Tooltip placement="left" title="Export">
-                <Button
-                  className="import-export-btn"
+                <button
+                  className="import-export-btn "
+                  style={{ marginTop: '-2px' }}
                   onClick={() => DownloadExcel()}
                 >
                   <FontAwesomeIcon
-                    icon={faFileUpload}
+                    icon={faFileDownload}
                     style={{ width: "15px" }}
                   />
-                </Button>
+                </button>
               </Tooltip>
             </div>
           </div>
@@ -2901,53 +2942,75 @@ function Index(props) {
                   editable={{
                     onRowAdd:
                       writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
                         ? (newRow) =>
-                            new Promise((resolve, reject) => {
-                              createFmeca(newRow);
-                              resolve();
-                            })
+                          new Promise((resolve, reject) => {
+                            createFmeca(newRow);
+                            resolve();
+                          })
                         : null,
                     onRowUpdate:
                       writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
                         ? (newRow, oldData) =>
-                            new Promise((resolve, reject) => {
-                              updateFmeca(newRow);
-
-                              resolve();
-                            })
+                          new Promise((resolve, reject) => {
+                            updateFmeca(newRow);
+                            resolve();
+                          })
                         : null,
 
                     onRowDelete:
                       writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
                         ? (selectedRow) =>
-                            new Promise((resolve, reject) => {
-                              deleteFmecaData(selectedRow);
-                              resolve();
-                            })
+                          new Promise((resolve, reject) => {
+                            deleteFmecaData(selectedRow);
+                            resolve();
+                          })
                         : null,
                   }}
                   title="FMECA"
                   icons={tableIcons}
                   columns={columns}
                   data={tableData}
+                  // options={{
+                  //   cellStyle: { border: "1px solid #eee" },
+                  //   addRowPosition: "first",
+                  //   actionsColumnIndex: -1,
+                  //   headerStyle: {
+                  //     backgroundColor: "#CCE6FF",
+                  //     border: "1px solid red",
+                  //     height: '10px',
+
+                  //   },
+                  // exportButton: { csv: true },
+                  // }}
                   options={{
-                    cellStyle: { border: "1px solid #eee" },
-                    // addRowPosition: "first",
+                    cellStyle: {
+                      border: "1px solid #eee",
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden'
+                    },
+                    addRowPosition: "first",
                     actionsColumnIndex: -1,
+                    pageSize: 5,
+                    pageSizeOptions: [5, 10, 20, 50],
                     headerStyle: {
                       backgroundColor: "#CCE6FF",
+                      fontWeight: "bold",
                       zIndex: 0,
+                      whiteSpace: 'nowrap',       // prevent line wrap
+                      minWidth: 200,              // or width: 200
+                      maxWidth: 300,
                     },
-                    // exportButton: { csv: true },
+
                   }}
                   localization={{
                     toolbar: { function: "Placeholder" },

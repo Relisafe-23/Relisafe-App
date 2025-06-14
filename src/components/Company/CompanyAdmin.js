@@ -16,7 +16,7 @@ function CompanyAdmin() {
     name: "",
     email: "",
     password: "",
-    phone: "",
+    phoneNumber: "",
     companyName: "",
   });
       const [editMode, setEditMode] = useState(false);
@@ -29,6 +29,7 @@ function CompanyAdmin() {
   }
   
   const getAllCompanyUsers = () => {
+    console.log("userId", userId)
     Api.get("/api/v1/user/company/all", {
       headers: {
         userId: userId,
@@ -69,21 +70,21 @@ const deleteUser = (id) => {
     });
   }
     const handleEditClick = (user) => {
-
+// console.log("user", user)
     setEditUser({
       id: user.id,
       name: user.name,
       email: user.email,
       password: user.password,
-      phone: user.phone,
-      companyName: user.companyName,
+       phoneNumber: user.phoneNumber,
+     companyName: user.companyId?.companyName,
     });
     setEditMode(true);
   }
  
   const handleEdit = () => {
     const { id, ...userData } = editUser;
-
+console.log("userData", userData)
     Api.patch(`/api/v1/user/${id}`, userData, {
       headers: {
         userId: userId,
@@ -140,8 +141,8 @@ const deleteUser = (id) => {
                     <td>{list?.name}</td>
                     <td>{list?.email}</td>
                     <td>{list?.password}</td>
-                    <td>{list?.phone}</td>
-                    <td>{list?.companyName}</td>
+                    <td>{list?.phoneNumber}</td>
+                    <td>{list?.companyId?.companyName}</td>
                     <td>
  <FontAwesomeIcon 
               icon={faTrash} 
@@ -208,8 +209,8 @@ const deleteUser = (id) => {
       <Label> Phone Number</Label>
       <Form.Control
         type="text"
-        name="phone"
-        value={editUser.phone}
+        name="phoneNumber"  // Changed to match your data structure
+       value={editUser.phoneNumber}
           onChange={handleInputChange}
         placeholder="Enter phone number"
       />
@@ -222,6 +223,8 @@ const deleteUser = (id) => {
         value={editUser.companyName}
         onChange={handleInputChange}
         placeholder="Enter company name"
+        readOnly
+        disabled = {true} // Make it read-only
       />
     </Form.Group>
   </Modal.Body>

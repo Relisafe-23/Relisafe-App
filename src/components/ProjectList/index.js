@@ -125,6 +125,7 @@ export default function ProjectList(props) {
   };
 
   const getProjectList = () => {
+
     const companyId = localStorage.getItem("companyId");
     Api.get(`/api/v1/projectCreation/company/user`, {
       params: {
@@ -161,9 +162,11 @@ export default function ProjectList(props) {
     // owner: Yup.object().required("Project owner Is required"),
   });
   const submitForm = (values, { resetForm }, id) => {
+    
     const companyId = localStorage.getItem("companyId");
     const userId = localStorage.getItem("userId");
     Api.post("api/v1/projectCreation/", {
+    
       projectName: values.name,
       projectDesc: values.description,
       projectNumber: values.number,
