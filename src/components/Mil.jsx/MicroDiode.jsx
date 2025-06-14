@@ -2375,7 +2375,7 @@ if (formData.laserDiodePowerRatio) {
     return (
         <Container>
             <div className="container mt-4 background">
-                <h2 className="text-center">Diode</h2>
+                <h2 className="text-center" style={{ fontSize: '1.2rem' }}>Discrete Semiconductor</h2>
 
                 {/* Component Selection Section */}
 

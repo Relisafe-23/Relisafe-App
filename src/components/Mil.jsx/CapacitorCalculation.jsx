@@ -25,7 +25,7 @@ function CapacitorCalculation({ onCalculate }) {
     { style: "CP", spec: "MIL-C-25", description: "Capacitor, Fixed, Paper-Dielectric, DC (Hermetically Sealed)", λb: 0.00037, πtColumn: 1, πcColumn: 1, πvColumn: 1, πsrColumn: 1 },
     { style: "CA", spec: "MIL-C-12889", description: "Capacitor, By-Pass, Radio - Maintenance Reduction, Paper Dielectric", λb: 0.00037, πtColumn: 1, πcColumn: 1, πvColumn: 1, πsrColumn: 1 },
     { style: "CZ, CZR", spec: "MIL-C-11693", description: "Capacitor, Fixed, Radio Interference Reduction AC/DC", λb: 0.00037, πtColumn: 1, πcColumn: 1, πvColumn: 1, πsrColumn: 1 },
-    { style: "CO, COR", spec: "MIL-C-19978", description: "Capacitor, Fixed Plastic/Paper-Plastic Dielectric", λb: 0.00051, πtColumn: 1, πcColumn: 1, πvColumn: 1, πsrColumn: 1 },
+    { style: "CQ, CQR", spec: "MIL-C-19978", description: "Capacitor, Fixed Plastic/Paper-Plastic Dielectric", λb: 0.00051, πtColumn: 1, πcColumn: 1, πvColumn: 1, πsrColumn: 1 },
     { style: "CH", spec: "MIL-C-18312", description: "Capacitor, Fixed, Metallized Paper/Plastic Film, DC", λb: 0.00037, πtColumn: 1, πcColumn: 1, πvColumn: 1, πsrColumn: 1 },
     { style: "CHR", spec: "MIL-C-39022", description: "Capacitor, Fixed, Metallized Paper/Plastic Film", λb: 0.00051, πtColumn: 1, πcColumn: 1, πvColumn: 1, πsrColumn: 1 },
     { style: "CFR", spec: "MIL-C-55514", description: "Capacitor, Fixed, Plastic Dielectric, DC in Non-Metal Cases", λb: 0.00051, πtColumn: 1, πcColumn: 1, πvColumn: 1, πsrColumn: 1 },
@@ -196,14 +196,14 @@ function CapacitorCalculation({ onCalculate }) {
 
     const calculatePiT = () => {
     // Constants from the 
-       if (!selectedCapacitor || selectedCapacitor.πtColumn === "N/A (πt=1)") {
+       if (!selectedCapacitor || selectedCapacitor?.value?.πtColumn === "N/A (πt=1)") {
       return 1.0;
     }
     const BOLTZMANN_CONSTANT = 8.617e-5; // eV/K
     const REFERENCE_TEMP = 298; // K (25°C)
 
     // Get activation energy based on column selection
-    const Ea = selectedCapacitor.πtColumn === 1 ? 0.15 : 0.35; // eV (from image columns)
+    const Ea = selectedCapacitor?.value?.πtColumn === 1 ? 0.15 : 0.35; // eV (from image columns)
 
     // Convert temperature to Kelvin
     const tempInKelvin = temperature + 273;
@@ -216,14 +216,14 @@ function CapacitorCalculation({ onCalculate }) {
   };
 
   const calculatePiC = () => {
-     if (!selectedCapacitor || selectedCapacitor.πcColumn === "N/A (πc=1)") {
+     if (!selectedCapacitor || selectedCapacitor?.value?.πcColumn === "N/A (πc=1)") {
       return 1.0;
     }
     const closestCap = capacitanceFactors.reduce((prev, curr) =>
       Math.abs(curr.capacitance - capacitance) < Math.abs(prev.capacitance - capacitance) ? curr : prev
     );
 
-    return selectedCapacitor.πcColumn === 1
+    return selectedCapacitor?.value?.πcColumn === 1
       ? Math.pow(capacitance, 0.09)  // Column 1: C^0.09
       : Math.pow(capacitance, 0.23); // Column 2: C^0.23
   };
@@ -288,24 +288,25 @@ function CapacitorCalculation({ onCalculate }) {
     }
   ];
   const calculatePiV = () => {
-     if (!selectedCapacitor || selectedCapacitor.πvColumn === "N/A (πv=1)") {
+     if (!selectedCapacitor || selectedCapacitor?.value?.πvColumn === "N/A (πv=1)") {
       return 1.0;
     }
     // Calculate stress ratio (S = Operating Voltage / Rated Voltage)
-    const operatingVoltage = dcVoltageApplied + acVoltageApplied;
-    console.log("operatingVoltage...", operatingVoltage);
-    const S = operatingVoltage / dcVoltageRated;
-    console.log("S (Stress Ratio)...", S);
+const operatingVoltage = dcVoltageApplied + Math.sqrt(2) * acVoltageApplied;
+console.log("operatingVoltage...", operatingVoltage);
+
+const S = operatingVoltage / dcVoltageRated;
+console.log("S (Stress Ratio)...", S);
 
   
 
     // Calculate πV based on the selected formula
     const piV =
-      selectedCapacitor.πvColumn === 1 ? Math.pow(S / .6, 5) + 1 :
-        selectedCapacitor.πvColumn === 2 ? Math.pow(S / .6, 10) + 1 :
-          selectedCapacitor.πvColumn === 3 ? Math.pow(S / .6, 3) + 1 :
-            selectedCapacitor.πvColumn === 4 ? Math.pow(S / .6, 17) + 1 :
-              selectedCapacitor.πvColumn === 5 ? Math.pow(S / .5, 3) + 1 :
+      selectedCapacitor?.value?.πvColumn === 1 ? Math.pow(S / .6, 5) + 1 :
+        selectedCapacitor?.value?.πvColumn === 2 ? Math.pow(S / .6, 10) + 1 :
+          selectedCapacitor?.value?.πvColumn === 3 ? Math.pow(S / .6, 3) + 1 :
+            selectedCapacitor?.value?.πvColumn === 4 ? Math.pow(S / .6, 17) + 1 :
+              selectedCapacitor?.value?.πvColumn === 5 ? Math.pow(S / .5, 3) + 1 :
                 1.0;
 
     // Log the final calculated πV value
@@ -568,6 +569,16 @@ const newResult = {
                 step="1"
               />
               {errors.dcVoltageApplied && <small style={{ color: 'red' }}>{errors.dcVoltageApplied}</small>}
+                    {selectedCapacitor?.value?.πvColumn && capacitorTypes.some(type => type.πvColumn === selectedCapacitor?.value?.πvColumn) && (
+              <div className="mt-2">
+                Calculated π<sub>V</sub>: {calculatePiV()?.toFixed(3)}
+                <br />
+                <small>
+                  Using {selectedCapacitor?.value?.πvColumn === 1 ? 'Column 1' : 'Column 2'}
+
+                </small>
+              </div>
+            )}
             </div>
           </Col>
           <Col md={4}>
@@ -608,7 +619,7 @@ const newResult = {
           </Col>
         </Row>
 
-        {selectedCapacitor?.value.πsrColumn === "See πSR Table" && (
+        {/* {selectedCapacitor?.value.πsrColumn === "See πSR Table" && (
           <div className="form-group">
             <label>Series Resistance (ohms/volt):</label>
             <input
@@ -625,7 +636,7 @@ const newResult = {
             />
             {errors.seriesResistance && <small style={{ color: 'red' }}>{errors.seriesResistance}</small>}
           </div>
-        )}
+        )} */}
 
         <Row>
           <Col md={4}>
@@ -646,6 +657,16 @@ const newResult = {
               />
               {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
             </div>
+              {selectedCapacitor?.value?.πtColumn && capacitorTypes.some(type => type.πtColumn === selectedCapacitor?.value.πtColumn) && (
+              <div className="mt-2">
+                Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
+                <br />
+                <small>
+                  Using {selectedCapacitor?.value?.πtColumn === 1 ? 'Column 1' : 'Column 2'}
+                  {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
+                </small>
+              </div>
+            )}
           </Col>
 
           <Col md={4}>
@@ -663,7 +684,18 @@ const newResult = {
                 min="0.000001"
                 step="0.000001"
               />
+         
               {errors.capacitance && <small style={{ color: 'red' }}>{errors.capacitance}</small>}
+                 {selectedCapacitor?.value?.πcColumn && capacitorTypes.some(type => type.πcColumn === selectedCapacitor?.value.πcColumn) && (
+              <div className="mt-2">
+                Calculated π<sub>C</sub>: {calculatePiC()?.toFixed(3)}
+                <br />
+                <small>
+                  Using {selectedCapacitor?.value?.πcColumn === 1 ? 'Column 1' : 'Column 2'}
+ 
+                </small>
+              </div>
+            )}
             </div>
           </Col>
 
@@ -690,6 +722,16 @@ const newResult = {
                 isDisabled={shouldCalculateCR}
               />
               {errors.circuitResistance && !shouldCalculateCR && <small style={{ color: 'red' }}>{errors.circuitResistance}</small>}
+                     {selectedCapacitor?.value?.πsrColumn && capacitorTypes.some(type => type.πsrColumn === selectedCapacitor?.value?.πsrColumn) && (
+              <div className="mt-2">
+                Calculated π<sub>C</sub>: {calculatePiSR()?.toFixed(3)}
+                <br />
+                <small>
+                  Using {selectedCapacitor?.value?.πsrColumn === 1 ? 'Column 1' : 'Column 2'}
+                  {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
+                </small>
+              </div>
+            )}
             </div>
           </Col>
         </Row>
@@ -803,15 +845,13 @@ const newResult = {
             </Box>
           )}
         </div>
-    <Button 
-  className="btn-calculate float-end mt-1" 
-  onClick={() => {
-    handleCalculate();
-    // setShowResults(true);
-  }}
+<button 
+  className="btn btn-primary"
+
+  onClick={handleCalculate}
 >
   Calculate Failure Rate
-</Button>
+</button>
      
       </div>
       <br />

@@ -72,7 +72,8 @@ export const getBValueForTemp = (memoryTech, memorySize, temperature, factorType
         return Math.pow(B_normalized, 0.25) * Math.exp(exponent);
       }
       return null;
-    
+    case 'Flotox & Textured-Poly²':
+      return 0;
     default:
       return null;
   }
@@ -133,10 +134,11 @@ export const getQualityFactor = (quality) => {
 
 // Learning factor
 export const calculateLearningFactor = (years) => {
-  return years >= 2 ? 1.0 :
-    years >= 1.5 ? 1.2 :
-      years >= 1.0 ? 1.5 :
-        years >= 0.5 ? 1.8 : 2.0;
+  return years <= 0.1 ? 2.0 :
+         years >= 2.0 ? 1.0 :
+         years >= 1.5 ? 1.2 :
+         years >= 1.0 ? 1.5 :
+         years >= 0.5 ? 1.8 : 0;
 };
 
 // memoryFailureRates.js
@@ -193,11 +195,6 @@ export const calculateBipolarSramC1 = (memorySize) => {
   return c1Values[memorySize] || 0;
 };
 
-
-
-
-
-
 export const calculateMosBimosSramC1 = (memorySize) => {
   const c1Values = {
     'Up to 16K': 0.0078,
@@ -243,8 +240,6 @@ export const calculateMicrocircuitsAndMicroprocessorsFailureRate = (component) =
 
   return (C1 * piT + C2 * piE) * piQ * piL;
 };
-
-
 
 export const calculateGateArrayC1 = (component) => {
   // Debug: Log the input component
@@ -664,17 +659,8 @@ export const ENVIRONMENTAL_FACTORS = {
   ML: { label: "Missile Launch", value: 12 },
   CL: { label: "Cannon Launch", value: 220 }
 };
-export const CIRCUIT_FUNCTION_FACTORS = {
-  Digital: { label: "Digital", value: 1.0 },
-  Video: { label: "Video (10 MHz < f < 1 GHz)", value: 1.2 },
-  Microwave: { label: "Microwave (f > 1 GHz)", value: 2.6 },
-  Linear: { label: "Linear (f < 10 MHz)", value: 5.8 },
-  Power: { label: "Power", value: 21 }
-};
 
-export const getCircuitFunctionFactor = (circuitType) => {
-  return CIRCUIT_FUNCTION_FACTORS[circuitType]?.value || 1.0;
-};
+
 // Base failure rate constant
 export const BASE_FAILURE_RATE = 2.1;
 

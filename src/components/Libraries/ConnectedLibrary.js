@@ -120,6 +120,7 @@ function ConnectedLibrary(props) {
       projectId: projectId,
       companyId: companyId,
     }).then((response) => {
+      console.log("response",response.data.libraryData.moduleName)
       const data = response?.data?.libraryData;
       setModuleData(data?.moduleData);
     });
@@ -266,6 +267,7 @@ function ConnectedLibrary(props) {
         moduleName: values ? values : "",
       },
     }).then((res) => {
+    
       setIsLoading(false);
       setConnectData(res.data.getData);
     });
@@ -279,7 +281,9 @@ function ConnectedLibrary(props) {
     projectSidebar();
   }, [projectId]);
 
+   console.log("@@@@sdd")
   const getCustomValue = (value) => {
+ 
     Api.get("api/v1/library/get/separate/module/data", {
       params: {
         moduleName: selectModule,
@@ -302,6 +306,7 @@ function ConnectedLibrary(props) {
       )
     )
       .then((responses) => {
+        console.log("response",responses)
         const destinationData = responses.map(
           (response) => response.data.getData
         );

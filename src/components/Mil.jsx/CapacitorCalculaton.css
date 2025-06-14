@@ -54,7 +54,15 @@
     font-weight: bold;
     font-size: 16px;
   }
+  .btn {
+  transition: transform 0.1s;
+}
+
+.btn:active {
+  transform: scale(0.95);
+}
   
+
   .calculate-btn {
     background-color: #4CAF50;
     color: white;

@@ -52,7 +52,7 @@ function Index(props) {
   const [show, setShow] = useState(false);
   const [treeTableData, setTreeTabledata] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [tableData, setTableData] = useState();
+  const [tableData, setTableData] = useState([]);
   const [productModal, setProductModal] = useState(false);
   const handleClose = () => setProductModal(false);
   const handleHide = () => setFailureModeRatioError(false);
@@ -295,6 +295,7 @@ function Index(props) {
       // if (status === 204) {
       //   setFailureModeRatioError(true);
       // }
+    
       getProductData();
       setIsLoading(false);
     });
@@ -723,7 +724,7 @@ function Index(props) {
       title: "Failure Mode*",
       type: "string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px" ,textAlign: "center"  },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -835,7 +836,7 @@ function Index(props) {
       title: "Failure Mode Ratio Alpha*",
       type: "string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"  },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -890,7 +891,8 @@ function Index(props) {
       field: "detectableMeansDuringOperation",
       title: "Cause",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"  },
+       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "cause") || [];
@@ -944,7 +946,7 @@ function Index(props) {
       field: "subSystemEffect",
       title: "Sub System effect*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"  },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -1000,7 +1002,7 @@ function Index(props) {
       field: "systemEffect",
       title: "System Effect*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"  },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -1056,7 +1058,7 @@ function Index(props) {
       field: "endEffect",
       title: "End Effect*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"  },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -1111,7 +1113,7 @@ function Index(props) {
       field: "endEffectRatioBeta",
       title: "End Effect ratio Beta*(must be equal to 1)",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"  },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -1167,7 +1169,7 @@ function Index(props) {
       field: "safetyImpact",
       title: "Safety Impact*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"  },
       headerStyle: { textAlign: "center" },
       // validate: (rowData) => {
       //   if (rowData.safetyImpact === undefined || rowData.safetyImpact === "") {
@@ -1229,7 +1231,8 @@ function Index(props) {
       field: "referenceHazardId",
       title: "Reference Hazard ID",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"  },
+       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1284,7 +1287,7 @@ function Index(props) {
       field: "realibilityImpact",
       title: "Reliability Impact*",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"  },
       headerStyle: { textAlign: "center" },
       // validate: (rowData) => {
       //   if (rowData.realibilityImpact === undefined || rowData.realibilityImpact === "") {
@@ -1346,8 +1349,8 @@ function Index(props) {
       field: "serviceDisruptionTime",
       title: "Service Disruption Time(minutes)",
       type: "numeric",
-      cellStyle: { minWidth: "230px", textAlign: "left" },
-      headerStyle: { textAlign: "left" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1402,7 +1405,8 @@ function Index(props) {
       field: "frequency",
       title: "Frequency",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px" ,textAlign: "center"},
+       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "frequency") ||
@@ -1456,7 +1460,8 @@ function Index(props) {
       field: "severity",
       title: "Severity",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center"  },
+        headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "severity") ||
@@ -1510,7 +1515,8 @@ function Index(props) {
       field: "riskIndex",
       title: "Risk Index",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center" },
+         headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "riskIndex") ||
@@ -1564,7 +1570,8 @@ function Index(props) {
       field: "detectableMeansDuringOperation",
       title: "Detectable Means during operation",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+          headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1625,7 +1632,8 @@ function Index(props) {
       field: "detectableMeansToMaintainer",
       title: "Detectable Means to Maintainer",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"},
+       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1683,7 +1691,8 @@ function Index(props) {
       field: "BuiltInTest",
       title: "Built-in Test",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px" , textAlign: "center" },
+        headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1739,7 +1748,8 @@ function Index(props) {
       field: "designControl",
       title: "Design Control",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center" },
+          headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1794,7 +1804,8 @@ function Index(props) {
       field: "maintenanceControl",
       title: "Maintenance Control",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center"  },
+        headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1849,7 +1860,8 @@ function Index(props) {
       field: "exportConstraints",
       title: "Export constraints",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px" ,textAlign: "center" },
+        headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1904,7 +1916,8 @@ function Index(props) {
       field: "immediteActionDuringOperationalPhase",
       title: "Immediate Action during operational Phases",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center" },
+          headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1967,7 +1980,8 @@ function Index(props) {
       field: "immediteActionDuringNonOperationalPhase",
       title: "Immediate Action during Non-operational Phases",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center" },
+        headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2031,7 +2045,8 @@ function Index(props) {
       field: "userField1",
       title: "User field 1",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center" },
+         headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2086,7 +2101,8 @@ function Index(props) {
       field: "userField2",
       title: "User field 2",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center" },
+         headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2141,7 +2157,8 @@ function Index(props) {
       field: "userField3",
       title: "User field 3",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center"  },
+        headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2196,7 +2213,8 @@ function Index(props) {
       field: "userField4",
       title: "User field 4",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px" ,textAlign: "center" },
+        headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2251,7 +2269,8 @@ function Index(props) {
       field: "userField5",
       title: "User field 5",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center"  },
+         headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2306,7 +2325,8 @@ function Index(props) {
       field: "userField6",
       title: "User field 6",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center" },
+       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2361,7 +2381,8 @@ function Index(props) {
       field: "userField7",
       title: "User field 7",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center" },
+          headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2416,7 +2437,8 @@ function Index(props) {
       field: "userField8",
       title: "User field 8",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center" },
+        headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2471,7 +2493,8 @@ function Index(props) {
       field: "userField9",
       title: "User field 9",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+        headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2526,7 +2549,8 @@ function Index(props) {
       field: "userField10",
       title: "User field 10",
       type: "string",
-      cellStyle: { minWidth: "230px" },
+      cellStyle: { minWidth: "230px",textAlign: "center" },
+         headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2725,10 +2749,12 @@ function Index(props) {
       Alldata: tableData,
     })
       .then((response) => {
+        console.log("response jkh",response);
         const status = response?.status;
         // if (status === 204) {
         //   setFailureModeRatioError(true);
         // }
+        // setTableData(status);
         getProductData();
         setIsLoading(false);
       })
@@ -2915,7 +2941,7 @@ function Index(props) {
                   data={tableData}
                   options={{
                     cellStyle: { border: "1px solid #eee" },
-                    addRowPosition: "first",
+                    // addRowPosition: "first",
                     actionsColumnIndex: -1,
                     headerStyle: {
                       backgroundColor: "#CCE6FF",

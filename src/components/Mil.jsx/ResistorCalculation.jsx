@@ -91,14 +91,7 @@ const ResistorCalculation = () => {
   const [components, setComponents] = useState([]);
   const [showResults, setShowResults] = useState(false);
 
-  //Validation
-  // function ValidationForm(values){
-  //   const errors = {};
-
-  //   if(!values.name.trim()){
-  //     errors.name = "Name is required."
-  //   }
-  // }
+ 
 
   const [errors, setErrors] = useState({
     resistorType: '',
@@ -187,28 +180,39 @@ const ResistorCalculation = () => {
     { temp: 150, col1: 10, col2: 2.5 }
   ];
 
-  const calculatePiT = () => {
-    // Return 1 if no temperature factor calculation needed
-    if (!selectedResistor || selectedResistor.πTColumn === "N/A (πT=1)") {
-      return 1.0;
-    }
+ const calculatePiT = () => {
+  // Return 1 if no resistor selected or if πT is marked as N/A
+  if (!selectedResistor || selectedResistor?.value?.πTColumn === "N/A (πT=1)") {
+    return 1.0;
+  }
 
-    // Use formula if temperature is outside table range (20-150)
-    if (temperature < 20 || temperature > 150) {
-      const Ea = selectedResistor.πTColumn === 1 ? 0.2 : 0.08;
-      const k = 8.617e-5; // Boltzmann constant in eV/K
-      const T = temperature + 273; // Convert to Kelvin
-      return Math.exp((-Ea / k) * ((1 / T) - (1 / 298)));
-    }
+  // Handle case where πTColumn is a string (like "N/A (πT=1)")
+  if (typeof selectedResistor?.value?.πTColumn === 'string') {
+    return 1.0;
+  }
 
-    // Find the closest temperature in the table
-    const closestTemp = tempFactors.reduce((prev, curr) =>
-      Math.abs(curr.temp - temperature) < Math.abs(prev.temp - temperature) ? curr : prev
-    );
+  // Use Arrhenius equation if temperature is outside table range (20-150°C)
+  if (temperature < 20 || temperature > 150) {
+    const Ea = selectedResistor?.value?.πTColumn === 1 ? 0.2 : 0.08; // Activation energy
+    const k = 8.617e-5; // Boltzmann constant in eV/K
+    const T = temperature + 273; // Convert to Kelvin
+    return Math.exp((-Ea / k) * ((1 / T) - (1 / 298)));
+  }
 
-    // Use the appropriate column based on the resistor type
-    return selectedResistor.πTColumn === 1 ? closestTemp.col1 : closestTemp.col2;
-  };
+  // For temperatures within 20-150°C, use the temperature factor table
+  if (!tempFactors || tempFactors.length === 0) {
+    console.error("Temperature factors table is not available");
+    return 1.0; // Fallback value
+  }
+
+  // Find the closest temperature in the table
+  const closestTemp = tempFactors.reduce((prev, curr) => 
+    Math.abs(curr.temp - temperature) < Math.abs(prev.temp - temperature) ? curr : prev
+  );
+
+  // Return the appropriate column value based on πTColumn
+  return selectedResistor?.value?.πTColumn === 1 ? closestTemp.col1 : closestTemp.col2;
+};
 
   // In your component render:
 
@@ -228,7 +232,7 @@ const ResistorCalculation = () => {
 
   const calculatePiS = () => {
     // Return 1 if no power stress calculation needed
-    if (!selectedResistor || selectedResistor.πSColumn === "N/A (πS=1)") {
+    if (!selectedResistor || selectedResistor?.value?.πSColumn === "N/A (πS=1)") {
       return 1.0;
     }
 
@@ -237,7 +241,7 @@ const ResistorCalculation = () => {
 
     // Use formula if S is outside table range (0.1-0.9)
     if (S < 0.1 || S > 0.9) {
-      return selectedResistor.πSColumn === 1
+      return selectedResistor?.value?.πSColumn === 1
         ? 0.71 * Math.exp(1.1 * S)  // Column 1 formula
         : 0.54 * Math.exp(2.04 * S); // Column 2 formula
     }
@@ -248,7 +252,7 @@ const ResistorCalculation = () => {
     );
 
     // Use the appropriate column based on the resistor type
-    return selectedResistor.πSColumn === 1 ? closestStress.col1 : closestStress.col2;
+    return selectedResistor?.value?.πSColumn === 1 ? closestStress.col1 : closestStress.col2;
   };
 
   // In your component render:
@@ -482,7 +486,7 @@ const ResistorCalculation = () => {
               className={`form-control ${errors.ratedPower ? 'is-invalid' : ''}`}
               value={ratedPower}
               onChange={(e) => {
-                setRatedPower(Math.max(0.001, parseFloat(e.target.value) || 0.001))
+                setRatedPower(parseFloat(e.target.value) )
                 setErrors({ ...errors, ratedPower: '' });
               }
               }
@@ -517,12 +521,12 @@ const ResistorCalculation = () => {
             <small className="text-muted">
               S = Actual Power dissipation / Rated Power = {(powerDissipation / ratedPower).toFixed(3)}
             </small>
-            {selectedResistor?.value.πSColumn && (
+            {selectedResistor?.value?.πSColumn && (
               <div className="mt-2">
                 Calculated π<sub>S</sub>: {calculatePiS()?.toFixed(3)}
                 <br />
                 <small>
-                  Using {selectedResistor.πSColumn === 1 ? 'Column 1' : 'Column 2'} formula
+                  Using {selectedResistor?.value?.πSColumn === 1 ? 'Column 1' : 'Column 2'} formula
                 </small>
               </div>
             )}
@@ -537,11 +541,7 @@ const ResistorCalculation = () => {
               name='temperature'
               className={`form-control ${errors.temperature ? 'is-invalid' : ''}`}
               value={temperature}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                setTemperature(isNaN(value) ? 20 : Math.max(20, Math.min(150, value)));
-                setErrors({ ...errors, temperature: '' });
-              }}
+             onChange={(e) => setTemperature(parseFloat(e.target.value))}
               min="20"
               max="150"
               step="1"
@@ -554,26 +554,17 @@ const ResistorCalculation = () => {
                 label: `${type.style} - ${type.description} (${type.spec})`
               }))} */}
 
-            {selectedResistor?.value.πTColumn && resistorTypes.some(type => type.πTColumn === selectedResistor.πTColumn) && (
+            {selectedResistor?.value?.πTColumn && resistorTypes.some(type => type.πTColumn === selectedResistor?.value.πTColumn) && (
               <div className="mt-2">
                 Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
                 <br />
                 <small>
-                  Using {selectedResistor.πTColumn === 1 ? 'Column 1' : 'Column 2'}
+                  Using {selectedResistor?.value?.πTColumn === 1 ? 'Column 1' : 'Column 2'}
                   {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
                 </small>
               </div>
             )}
-            {selectedResistor?.value.πTColumn && resistorTypes.some(type => type.id === selectedResistor.typeId) && (
-  <div className="mt-2">
-    Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
-    <br />
-    <small>
-      Using {resistorTypes.find(type => type.id === selectedResistor.typeId)?.πTColumn === 1 ? 'Column 1' : 'Column 2'}
-      {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
-    </small>
-  </div>
-)}
+ 
           </div>
         </Col>
 
