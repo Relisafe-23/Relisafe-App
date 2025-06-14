@@ -1505,8 +1505,9 @@ export default function PBS(props) {
                       backgroundColor: "#CCE6FF",
                       fontWeight: "bold",
                       zIndex: 0,
+                      textAlign:'center',
                       whiteSpace: 'nowrap',       // prevent line wrap
-                      minWidth: 200,              // or width: 200
+                      // minWidth: 200,              // or width: 200
                       maxWidth: 300,
                     },
 

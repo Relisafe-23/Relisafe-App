@@ -232,6 +232,7 @@ export default function FTA(props) {
     Api.get(`/api/v1/FTA/get/${projectId}`).then((res) => {
       const getLength = res?.data?.nodeData;
       const data = res?.data?.nodeData[0]?.treeStructure;
+      console.log(data,"....")
       setChartData(data);
       setNodeLength(getLength);
       getFullFTAdata(data?.parentId);
