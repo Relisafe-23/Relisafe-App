@@ -108,9 +108,9 @@ const InductiveCalculation = ({ onCalculate }) => {
 
 
   // State for form inputs
-  const [deviceType, setDeviceType] = useState("Transformer"); // Default to transformer
-  const [selectedDeviceType, setSelectedDeviceType] = useState("Transformer Type");
-  const [selectedTransformerType, setSelectedTransformerType] = useState(null);
+  // Default to transformer
+  const [selectedDeviceType, setSelectedDeviceType] = useState("");
+
 
   const [transformerQuality, setTransformerQuality] = useState(qualityFactors[0]);
 
@@ -122,7 +122,6 @@ const InductiveCalculation = ({ onCalculate }) => {
   const [tempRiseMethod, setTempRiseMethod] = useState("spec");
   const [tempRise, setTempRise] = useState(15);
   const [caseType, setCaseType] = useState("AF");
-  const [currentComponent, setCurrentComponent] = useState({ type: "Transformer" })
   const [powerLoss, setPowerLoss] = useState(null);
   const [inputPower, setInputPower] = useState(null);
   const [casesTypes, setCasesTypes] = useState(null)
@@ -175,14 +174,15 @@ const InductiveCalculation = ({ onCalculate }) => {
     newErrors.deviceType = "Device Type is required";
     isValid= false;
   }
-
+console.log("selectedDevice........ttt....",selectedDevice)
    if(selectedDevice?.value === "Transformer"){
   if (!selectedQuality) {
       newErrors.quality = "Quality factor is required";
       isValid = false;
     }
-   if(!selectedDeviceType){
-    newErrors.transformer = " Choose the Transformer Type";
+
+   if(!selectedDeviceType?.value){
+    newErrors.transformerTypes = " Choose the Transformer Type";
     isValid = false ;
    }
   }
@@ -192,6 +192,10 @@ const InductiveCalculation = ({ onCalculate }) => {
       isValid = false;
     } 
   }
+   if(!selectedDeviceType?.value){
+    newErrors.devicesTypes = " Choose the Inductive Type";
+    isValid = false ;
+   }
     if (!selectedEnvironment) {
       newErrors.environment = "Environment is required"
       isValid = false;
@@ -199,6 +203,7 @@ const InductiveCalculation = ({ onCalculate }) => {
     if(!ambientTemp){
       newErrors.ambientTemp = "Valid Ambient Temperature is required"
     }
+   
     setErrors(newErrors);
     return isValid;
   }
@@ -234,6 +239,7 @@ const InductiveCalculation = ({ onCalculate }) => {
   };
 
   const hotSpotTemp = calculateHotSpotTemp();
+
   const calculatePiT = (hotSpotTemp) => {
     // Constants from the formula
     const ACTIVATION_ENERGY = 0.11; // eV
@@ -248,36 +254,44 @@ const InductiveCalculation = ({ onCalculate }) => {
   };
   // Calculate failure rate
   const calculateFailureRate = () => {
-    const λb = deviceType === "transformer" ? selectedTransformer.λb : selectedInductor.λb;
+    // const λb = selectedDevice === "Transformer" ? selectedTransformerType?.value?.λb : selectedDeviceType?.value?.λb;
+    const λb =selectedDeviceType?.value.λb 
+    console.log("λb", selectedDeviceType?.value?.λb)
     const πT = calculatePiT(hotSpotTemp)?.toFixed(4);
-    const πQ = selectedQuality.πQ;
-    const πE = selectedEnvironment.πE;
+    const πQ = selectedQuality?.value?.πQ;
+    const πE = selectedEnvironment?.value?.πE;
     return λb * πT * πQ * πE;
   };
 
   const handleCalculate = () => {
+    console.log("handle calculateion start....")
     if(!validateForm()){
       return;
     }
+    console.log("validation failed....")
     const hotSpotTemp = calculateHotSpotTemp();
+          
     const newResult = {
       id: Date.now(),
-      deviceType,
-      device: deviceType === "transformer" ? selectedTransformer.type : selectedInductor.type,
-      description: deviceType === "transformer" ? selectedTransformer.description : selectedInductor.description,
+    
+      // device: selectedDevice === "Transformer" ? selectedTransformerType?.type : selectedDeviceType?.type,
+      
+      description: selectedDevice === "Transformer" ? selectedTransformer?.description : selectedDeviceType?.description,
       ambientTemp,
       hotSpotTemp,
       tempRiseMethod,
       tempRise,
-      quality: selectedQuality.quality,
+      quality: selectedQuality?.quality,
       environment: selectedEnvironment.env,
-      λb: deviceType === "transformer" ? selectedTransformer.λb : selectedInductor.λb,
+      // λb: selectedDevice === "Transformer" ? selectedTransformerType?.value?.λb : selectedDeviceType?.value?.λb,
+      λb :selectedDeviceType?.value?.λb,
       πT: calculatePiT(hotSpotTemp, tempFactors)?.toFixed(4),
-      πQ: selectedQuality.πQ,
-      πE: selectedEnvironment.πE,
+      πQ: selectedQuality?.value?.πQ,
+      πE: selectedEnvironment?.value?.πE,
       λp: calculateFailureRate()
+
     };
-  
+
     setResults([...results, newResult]);
     setShowResults(true); 
 
@@ -422,8 +436,9 @@ const InductiveCalculation = ({ onCalculate }) => {
                 </div>
                 </Col>
                 <Col md={4}>
-            <label>Inductor Type</label>
-             <div className="form-group">
+                  <div className="form-group">
+                <label>Inductor Type</label>
+           
                     <Select
                            styles={customStyles}
                 isInvalid = {!!errors.deviceTypes}
@@ -439,8 +454,10 @@ const InductiveCalculation = ({ onCalculate }) => {
 
                 }
                 />
+                 {errors.devicesTypes && <small style={{ color: 'red' }}>{errors.devicesTypes}</small>}
             </div>
          </Col>
+         {console.log("selectedValue...",selectedDevice.value)}
             </>
                     )}
 
@@ -469,7 +486,7 @@ const InductiveCalculation = ({ onCalculate }) => {
             </Col>
               <Col md={4}>
          
-           <div className="form-group">
+              <div className="form-group">
                <label>Transformer Type</label>
                 <Select
                 styles={customStyles}
@@ -483,18 +500,16 @@ const InductiveCalculation = ({ onCalculate }) => {
                   value: type,
                   label: `${type.type}`
                 }))
-
                 }
                 />
                 {errors.transformerTypes && <small style={{ color: 'red' }}>{errors.transformerTypes}</small>}
         </div>
             </Col>
           
-      
+      {console.log("selectedDevice...",selectedDevice)}
         </>
           )}
-     </Row>
-<Row>
+
         <Col md={4}>
           <div className="form-group">
             <label>Environment (π<sub>E</sub>):</label>
@@ -515,11 +530,7 @@ const InductiveCalculation = ({ onCalculate }) => {
                 {errors.environment && <small style={{ color: 'red' }}>{errors.environment}</small>}
           </div>
         </Col>
-      
-
-      
-   
-
+    
           <Col md={4}>
             <div className="form-group">
               <label>Ambient Temperature (°C) T_A :</label>
@@ -564,9 +575,7 @@ const InductiveCalculation = ({ onCalculate }) => {
                  
             </div>
           </Col>
-       </Row> 
-        <Row>
-
+     
           <Col md={4}>
             {tempRiseMethod === "spec" && (
               <div className="form-group">
@@ -678,12 +687,9 @@ const InductiveCalculation = ({ onCalculate }) => {
             </div>
           </Col>
         </Row>
-
-      
       <br />
-
       <div className='d-flex justify-content-between align-items-center' >
-
+        {console.log("showResults1.....@@......",showResults)}
         <div>
           {showResults && (
             <>
@@ -751,15 +757,17 @@ const InductiveCalculation = ({ onCalculate }) => {
           {/* // In your component's render: */}
           <div className="card mt-3">
             <div className="card-body">
+              {console.log('selectedDeviceType', selectedDeviceType?.value?.λb)}
 
               <MaterialTable
                 columns={calculationColumns}
                 data={[
                   {
-                    λb: deviceType === "transformer" ? selectedTransformer.λb : selectedInductor.λb,
+                    // λb: selectedDevice === "Transformer" ? selectedTransformerType?.value?.λb : selectedDeviceType?.value?.λb,
+                    λb :selectedDeviceType?.value?.λb,
                     πT: calculatePiT(hotSpotTemp), // Pass required arguments
-                    πQ: selectedQuality.πQ,
-                    πE: selectedEnvironment.πE,
+                    πQ: selectedQuality?.value?.πQ,
+                    πE: selectedEnvironment?.value?.πE,
                     λp: calculateFailureRate()
                   }
                 ]}  // Changed from components to results to match your original table

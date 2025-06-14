@@ -20,30 +20,6 @@ const Interconnection = ({ onCalculate }) => {
     { type: 'Discrete Wiring with Electroless Deposited PTH (5.2 Levels of Circuitry)', rate: 0.00011 }
   ];
 
-  // Complexity factors for PWA
-  // const complexityFactorsPWA = Array.from({ length: 17 }, (_, i) => ({
-  //   planes: i + 1,
-  //   factor: i === 0 ? 1.0 : 
-  //           i === 1 ? 1.0 : 
-  //           i === 2 ? 1.0 : 
-  //           i === 3 ? 1.3 : 
-  //           i === 4 ? 1.6 : 
-  //           i === 5 ? 1.8 : 
-  //           i === 6 ? 2.0 : 
-  //           i === 7 ? 2.2 : 
-  //           i === 8 ? 2.4 : 
-  //           i === 9 ? 2.6 : 
-  //           i === 10 ? 2.8 : 
-  //           i === 11 ? 2.9 : 
-  //           i === 12 ? 3.1 : 
-  //           i === 13 ? 3.3 : 
-  //           i === 14 ? 3.4 : 
-  //           i === 15 ? 3.6 :
-  //           i === 16 ? 3.7 :
-  //           i === 17 ? 3.9 :
-  //           i === 18 ? 4.0 : 
-  //           1
-  // }));
   const complexityFactors = [
     { planes: 1, factor: 1.0 },
     { planes: 2, factor: 1.0 },
@@ -329,17 +305,18 @@ const Interconnection = ({ onCalculate }) => {
     return 1.0;
   };
 
-
-
+const environmentCorrectionFactor =()=>{
+  return smtInputs.ecfValue;
+}
   // Calculate SMT failure rate
   const calculateSmtFailureRate = () => {
     try {
       // Get ΔT from environment
       const deltaT = deltaTValuesSMT.find(d => d.env === smtInputs.environment.env)?.value || 21; // Default to GM if not found
-
+     console.log("deltaT",deltaT)
       // Calculate temperature rise due to power dissipation
       const tempRise = smtInputs.thermalResistance * smtInputs.powerDissipation;
-
+      
       // Calculate distance from center to furthest solder joint (half of package size)
       const d = smtInputs.packageSize / 2;
 
@@ -354,20 +331,24 @@ const Interconnection = ({ onCalculate }) => {
       const πLC = smtInputs.leadConfig.factor;
 
       // Calculate Ni (number of cycles to failure)
-      const strainRange = Math.abs(αS * deltaT - αCC * (deltaT + tempRise)) * 1e-6 .toFixed(6);
-      const Ni = 3.5 * Math.pow(d / (65 * h) * strainRange, -2.26) * πLC;
-
+      const strainRange = Math.abs(αS * deltaT - αCC * (deltaT + tempRise)) * 1e-6 ?.toFixed(6);
+      const Ni = 3.5 * Math.pow((d / (0.65 * h) * strainRange), -2.26) * πLC;
+     console.log("Ni",Ni)
       // Get cycling rate
       const CR = smtInputs.cyclingRate.rate;
-
+      console.log("CR",CR)
       // Calculate characteristic life (αSMT)
       const αSMT = Ni / CR;
-      const ecf = smtInputs.ecfTableSMT.value;
+      console.log("αSMTghj ",αSMT )
+      // const ecf = smtInputs.ecfTableSMT.value;
+      const ecf = environmentCorrectionFactor();
+      console.log("ecf",ecf)
       // Calculate LC/αSMT ratio
       const lifeRatio = (smtInputs.designLife * 8760) / αSMT;
-      const λSMT = (ecf / αSMT);
 
-      const failureRate = λSMT * smtInputs.deviceCount;
+      const λSMT = (ecf/αSMT)?.toFixed(8);
+console.log("λSMTfh",λSMT)
+      const failureRate = λSMT * smtInputs.deviceCount?.toFixed(8);
 
       console.log('Failure Rate:', failureRate);
 
@@ -394,8 +375,9 @@ const Interconnection = ({ onCalculate }) => {
         }
       });
 
-
+   
       console.log('αSMT:', αSMT?.toFixed(0));
+      console.log('ecf:',ecf)
       console.log('Number of Devices:', smtInputs.deviceCount);
       setError(null);
       if (onCalculate) {
@@ -440,29 +422,37 @@ const Interconnection = ({ onCalculate }) => {
         </Col>
         {currentModel?.type === "SMT Model" && (
           <>
-            <Col md={4}>
-              {/* Environmental Correction Factor (ECF) */}
-              <div className="form-group">
-                <label>Environmental Correction Factor (ECF):</label>
-                <Select
-                  styles={customStyles}
-                  options={ecfTableSMT.map(item => ({
-                    value: item.value,
-                    label: `${item.range} (ECF = ${item.value})`
-                  }))}
-                  value={{
-                    value: smtInputs.ecfValue,
-                    label: ecfTableSMT.find(f => f.value === smtInputs.ecfValue)
-                      ? `${ecfTableSMT.find(f => f.value === smtInputs.ecfValue).range} (ECF = ${smtInputs.ecfValue})`
-                      : "Select ECF Range"
-                  }}
-                  onChange={(selectedOption) => setSmtInputs(prev => ({
-                    ...prev,
-                    ecfValue: selectedOption.value
-                  }))}
-                />
-              </div>
-            </Col>
+           <Col md={4}>
+  {/* Environmental Correction Factor (ECF) */}
+  <div className="form-group">
+    <label>Environmental Correction Factor (ECF):</label>
+    <Select
+      styles={customStyles}
+      options={[
+        { range: '0-0.1', value: 0.13, label: '0-0.1 (ECF = 0.13)' },
+        { range: '0.11-0.20', value: 0.15, label: '0.11-0.20 (ECF = 0.15)' },
+        { range: '0.21-0.30', value: 0.23, label: '0.21-0.30 (ECF = 0.23)' },
+        { range: '0.31-0.40', value: 0.31, label: '0.31-0.40 (ECF = 0.31)' },
+        { range: '0.41-0.50', value: 0.41, label: '0.41-0.50 (ECF = 0.41)' },
+        { range: '0.51-0.60', value: 0.51, label: '0.51-0.60 (ECF = 0.51)' },
+        { range: '0.61-0.70', value: 0.61, label: '0.61-0.70 (ECF = 0.61)' },
+        { range: '0.71-0.80', value: 0.68, label: '0.71-0.80 (ECF = 0.68)' },
+        { range: '0.81-0.90', value: 0.76, label: '0.81-0.90 (ECF = 0.76)' },
+        { range: '>0.90', value: 1.0, label: '>0.90 (ECF = 1.0)' }
+      ]}
+      value={{
+        value: smtInputs.ecfValue,
+        label: smtInputs.ecfValue 
+          ? `ECF = ${smtInputs.ecfValue}`
+          : "Select ECF Range"
+      }}
+      onChange={(selectedOption) => setSmtInputs(prev => ({
+        ...prev,
+        ecfValue: selectedOption.value
+      }))}
+    />
+  </div>
+</Col>
 
             <Col md={4}>
               {/* Substrate Material */}
@@ -694,6 +684,15 @@ const Interconnection = ({ onCalculate }) => {
               Calculate Failure Rate
             </Button>
           </div>
+                     {result && (
+        <>
+          <h2 className="text-center">Calculation Result</h2>
+          <div className="d-flex align-items-center">
+            <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+            <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
+          </div>
+        </>
+      )}
         </>
       )}
 
@@ -943,6 +942,15 @@ const Interconnection = ({ onCalculate }) => {
               Calculate Failure Rate
             </Button>
           </div>
+             {result && (
+        <>
+          <h2 className="text-center">Calculation Result</h2>
+          <div className="d-flex align-items-center">
+            <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+            <span className="ms-2">{result?.parameters?.failureRate?.toFixed(7)} failures/10<sup>6</sup> hours</span>
+          </div>
+        </>
+      )}
         </>
       )}
 
@@ -956,15 +964,7 @@ const Interconnection = ({ onCalculate }) => {
       <br />
       <br />
 
-      {result && (
-        <>
-          <h2 className="text-center">Calculation Result</h2>
-          <div className="d-flex align-items-center">
-            <strong>Predicted Failure Rate (λ<sub>{result.model === 'PTH' ? 'p' : 'SMT'}</sub>):</strong>
-            <span className="ms-2">{result?.parameters?.failureRate} failures/10<sup>6</sup> hours</span>
-          </div>
-        </>
-      )}
+   
       <br />
 
       {result && showCalculations && (
@@ -1115,7 +1115,7 @@ const Interconnection = ({ onCalculate }) => {
                               {
                                 title: "Failure Rate (λSMT)",
                                 field: 'failureRate',
-                                render: rowData => rowData?.failureRate || '-',
+                                render: rowData => rowData?.failureRate?.toFixed(7) || '-',
                               }
                             ]}
                             data={[

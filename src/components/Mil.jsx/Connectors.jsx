@@ -159,7 +159,7 @@ const Connectors = ({ onCalculate }) => {
 
   // State for form inputs
   const [inputs, setInputs] = useState({
-    connectorType: baseRatesGeneral[0],
+    connectorType: "",
     ambientTemp: 25,
     contactGauge: 20,
     currentPerContact: 1,
@@ -187,6 +187,7 @@ const Connectors = ({ onCalculate }) => {
     { env: 'ML', label: 'Missile, Launch', factor: 36 },
     { env: 'CL', label: 'Cannon, Launch', factor: 650 }
   ];
+
   const [inputData, setInputData] = useState({
     componentType: baseRatesSocket[0],
 
@@ -194,47 +195,95 @@ const Connectors = ({ onCalculate }) => {
     environment: environmentFactorsSocket[0],
     activePins: 1
   });
-  const calculateSocketFailureRate = () => {
-    try {
-      const baseRateSocket = inputData.componentType.rate;
-      const qualityFactorSocket = inputData.quality.factor;
-      const environmentFactorsSocket = inputData.environment.factor;
-      const activePinsFactorSocket = calculateActivePinsFactorSocket(inputData.activePins);
-
-      const failureRate = baseRateSocket * activePinsFactorSocket * qualityFactorSocket * environmentFactorsSocket;
-      if (onCalculate) {
-        onCalculate(failureRate);
-      }
-      setResult({
-        value: failureRate?.toFixed(6),
-        parameters: {
-          λb: baseRateSocket?.toFixed(6),
-          πp: activePinsFactorSocket?.toFixed(1),
-          πq: qualityFactorSocket?.toFixed(1),
-          πE: environmentFactorsSocket?.toFixed(1),
-          formula: 'λp = λb × πp × πq × πE'
-        }
-      });
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    }
-  };
-
-
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [showCalculations, setShowCalculations] = useState(false);
-  const [showTempFactor,setShowTempFactor] = useState(false);
+  const [showTempFactor, setShowTempFactor] = useState(false);
+  const [selectedConnectorType, setSelectedConnectorType] = useState(null);
+  const [selectedQuality, setSelectedQuality] = useState(null);
+  const [selectedEnvironment, setSelectedEnvironment] = useState(null);
+  const [selectedContactGauge, setSelectedContactGauge] = useState(null);
+  const [selectedMatingCycle, setSelectedMatingCycle] = useState(null);
+  const [currentPerContact, setCurrentPerContact] = useState(null);
+  const [ambientTemp, setAmbientTemp] = useState(null);
+  const [errors, setErrors] = useState({
+    connectorType: "",
+    matingCycle: "",
+    quality: "",
+    environment: "",
+    contactGauge: "",
+    currentPerContact: '',
+    ambientTemp: "",
+  })
   // Calculate active pins factor
   const calculateActivePinsFactorSocket = (numPins) => {
     // Use the formula from the image: πp = exp((N-1)/10)^q where q = 0.39
     return Math.exp(Math.pow((numPins - 1) / 10, 0.39));
   };
 
+  const validateForm1 =()=>{
+  const newErrors = {};
+    let isValid = true;
+       if (!selectedQuality) {
+      newErrors.quality = "Quality Factor  is required"
+      isValid = false;
+    }
+    if (!selectedEnvironment) {
+      newErrors.environment = "Environment Factor is required"
+      isValid = false;
+    }
+      setErrors(newErrors);
+    return isValid;
+  }
+
+  const validateForm = () => {
+    const { connectorType } = inputs;
+    const newErrors = {};
+    let isValid = true;
+
+       if (!selectedQuality) {
+      newErrors.quality = "Quality Factor  is required"
+      isValid = false;
+    }
+    if (!selectedEnvironment) {
+      newErrors.environment = "Environment Factor is required"
+      isValid = false;
+    }
+    
+    if (!selectedConnectorType) {
+      newErrors.connectorType = "Connector Type is required "
+      isValid = false;
+    }
+    if (!selectedMatingCycle) {
+      newErrors.matingCycle = "Mating/Unmating is required"
+      isValid = false;
+    }
+    if (!selectedQuality) {
+      newErrors.quality = "Quality Factor  is required"
+      isValid = false;
+    }
+    if (!selectedEnvironment) {
+      newErrors.environment = "Environment Factor is required"
+      isValid = false;
+    }
+    if (!selectedContactGauge) {
+      newErrors.contactGauge = "Contact Gauge is required"
+      isValid = false;
+    }
+    if (!currentPerContact) {
+      newErrors.currentPerContact = "Enter the correct value"
+      isValid = false;
+    }
+    if (!ambientTemp) {
+      newErrors.ambientTemp = "Enter the Ambient Temperature"
+      isValid = false;
+    }
+    setErrors(newErrors);
+    return isValid;
+  }
   // Calculate temperature rise
   const calculateTempRiseGeneral = () => {
+
     try {
       // Handle RF Coaxial special case first
       if (inputs.connectorType?.type === 'RF Coaxial') {
@@ -289,7 +338,7 @@ const Connectors = ({ onCalculate }) => {
 
   // Get temperature factor
   const getTempFactorGeneral = (temp) => {
-    // Find exact match
+
     const exactMatch = temperatureFactorsGeneral.find(item => item.temp === Math.floor(temp));
     if (exactMatch) return exactMatch.factor;
 
@@ -297,8 +346,41 @@ const Connectors = ({ onCalculate }) => {
     return Math.exp((-14 / (8.617e-5)) * ((1 / (temp + 273)) - (1 / 298)));
   };
 
+  const calculateSocketFailureRate = () => {
+    if (!validateForm1()) {
+      return;
+    }
+    try {
+      const baseRateSocket = inputData.componentType.rate;
+      const qualityFactorSocket = inputData.quality.factor;
+      const environmentFactorsSocket = inputData.environment.factor;
+      const activePinsFactorSocket = calculateActivePinsFactorSocket(inputData.activePins);
+
+      const failureRate = baseRateSocket * activePinsFactorSocket * qualityFactorSocket * environmentFactorsSocket;
+      if (onCalculate) {
+        onCalculate(failureRate);
+      }
+      setResult({
+        value: failureRate?.toFixed(6),
+        parameters: {
+          λb: baseRateSocket?.toFixed(6),
+          πp: activePinsFactorSocket?.toFixed(1),
+          πq: qualityFactorSocket?.toFixed(1),
+          πE: environmentFactorsSocket?.toFixed(1),
+          formula: 'λp = λb × πp × πq × πE'
+        }
+      });
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      setResult(null);
+    }
+  };
   // Calculate the failure rate
   const calculateGeneralFailureRate = () => {
+    if (!validateForm()) {
+      return;
+    }
     try {
       const operatingTemp = calculateOperatingTempGeneral();
       const tempFactor = getTempFactorGeneral(operatingTemp);
@@ -337,51 +419,51 @@ const Connectors = ({ onCalculate }) => {
 
   // Custom styles for Select components
   const customStyles = {
-  control: (provided) => ({
-    ...provided,
-    minHeight: '38px',
-    height: '38px',
-    fontSize: '14px',
-    borderColor: '#ced4da',
-  }),
-  valueContainer: (provided) => ({
-    ...provided,
-    height: '38px',
-    padding: '0 12px',
-  }),
-  input: (provided) => ({
-    ...provided,
-    margin: '0px',
-    padding: '0px',
-  }),
-  indicatorsContainer: (provided) => ({
-    ...provided,
-    height: '38px',
-  }),
-  dropdownIndicator: (provided) => ({
-    ...provided,
-    padding: '8px',
-  }),
-  clearIndicator: (provided) => ({
-    ...provided,
-    padding: '8px',
-  }),
-  option: (provided) => ({
-    ...provided,
-    padding: '8px 12px',
-    fontSize: '14px',
-  }),
-  menu: (provided) => ({
-    ...provided,
-    marginTop: '2px',
-    zIndex: 9999,
-  }),
-  menuList: (provided) => ({
-    ...provided,
-    maxHeight: '150px',
-    overflowY: 'auto',
-  }),
-};
+    control: (provided) => ({
+      ...provided,
+      minHeight: '38px',
+      height: '38px',
+      fontSize: '14px',
+      borderColor: '#ced4da',
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      height: '38px',
+      padding: '0 12px',
+    }),
+    input: (provided) => ({
+      ...provided,
+      margin: '0px',
+      padding: '0px',
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      height: '38px',
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      padding: '8px',
+    }),
+    clearIndicator: (provided) => ({
+      ...provided,
+      padding: '8px',
+    }),
+    option: (provided) => ({
+      ...provided,
+      padding: '8px 12px',
+      fontSize: '14px',
+    }),
+    menu: (provided) => ({
+      ...provided,
+      marginTop: '2px',
+      zIndex: 9999,
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      maxHeight: '150px',
+      overflowY: 'auto',
+    }),
+  };
 
   return (
     <>
@@ -411,26 +493,32 @@ const Connectors = ({ onCalculate }) => {
         {currentComponent?.type === "Connectors Socket" && (
           <>
             <Col md={6}>
+              {/* Quality Factor */}
               <div className="form-group">
-                <label>Active Pins Factor (π<sub>p</sub>):</label>
-                <input
-                  type="text"
-                  className="form-group"
-                  style={{
-                    width: "100%",
-                    padding: "0.375rem 0.75rem",
-                    fontSize: "1rem",
-                    lineHeight: "1.5",
-                    color: "#495057",
-                    backgroundColor: "#fff",
-                    border: "1px solid #ced4da",
-                    borderRadius: "0.25rem"
+                <label>Quality (π<sub>Q</sub>):</label>
+                <Select
+                  styles={customStyles}
+                  options={qualityFactorsSocket.map(item => ({
+                    value: item,
+                    label: `${item.quality} (πq = ${item.factor})`
+                  }))}
+                  value = {selectedQuality}
+                  // value={{
+                  //   value: inputData.quality,
+                  //   label: `${inputData.quality.quality} (πq = ${inputData.quality.factor})`
+                  // }}
+                  onChange={(selectedOption) => {setInputData(prev => ({
+                    ...prev,
+                    quality: selectedOption.value
+                  }))
+                  setSelectedQuality(selectedOption)
+                  setErrors({...errors,quality:""})
                   }}
-                  readOnly
-                  value={calculateActivePinsFactorSocket(inputData.activePins)?.toFixed(1)}
                 />
+                  {errors.quality && <small className="text-danger">{errors.quality}</small>}
               </div>
             </Col>
+         
           </>
         )}
 
@@ -443,20 +531,24 @@ const Connectors = ({ onCalculate }) => {
                 <label>Connector Type (λ<sub>b</sub>):</label>
                 <Select
                   styles={customStyles}
+                  value={selectedConnectorType}
+                  isInvalid={!!errors.connectorType}
+                  onChange={(selectedOption) => {
+                    setInputs(prev => ({
+                      ...prev,
+                      connectorType: selectedOption.value,
+                      isHighPowerRF: false // Reset high power flag when changing type
+                    }))
+                    setSelectedConnectorType(selectedOption)
+                    setErrors({ ...errors, connectorType: '' });
+                  }}
                   options={baseRatesGeneral.map(item => ({
                     value: item,
                     label: `${item.type}- (MIL-C-${item.specs}) (λb = ${item.rate})`
                   }))}
-                  value={{
-                    value: inputs.connectorType,
-                    label: `${inputs.connectorType.type} (λb = ${inputs.connectorType.rate})`
-                  }}
-                  onChange={(selectedOption) => setInputs(prev => ({
-                    ...prev,
-                    connectorType: selectedOption.value,
-                    isHighPowerRF: false // Reset high power flag when changing type
-                  }))}
                 />
+                {errors.connectorType && <small className="text-danger">{errors.connectorType}</small>}
+
               </div>
             </Col>
           </>
@@ -475,15 +567,22 @@ const Connectors = ({ onCalculate }) => {
                     value: item,
                     label: `${item.cycles} (πK = ${item.factor})`
                   }))}
-                  value={{
-                    value: inputs.matingCycles,
-                    label: `${inputs.matingCycles.cycles} (πK = ${inputs.matingCycles.factor})`
+                  value={selectedMatingCycle}
+                  isInvalid={!!errors.matingCycle}
+                  // value={{
+                  //   value: inputs.matingCycles,
+                  //   label: `${inputs.matingCycles.cycles} (πK = ${inputs.matingCycles.factor})`
+                  // }}
+                  onChange={(selectedOption) => {
+                    setInputs(prev => ({
+                      ...prev,
+                      matingCycles: selectedOption.value
+                    }))
+                    setSelectedMatingCycle(selectedOption)
+                    setErrors({ ...errors, matingCycle: '' });
                   }}
-                  onChange={(selectedOption) => setInputs(prev => ({
-                    ...prev,
-                    matingCycles: selectedOption.value
-                  }))}
                 />
+                {errors.matingCycle && <small className="text-danger">{errors.matingCycle}</small>}
               </div>
             </Col>
 
@@ -493,19 +592,27 @@ const Connectors = ({ onCalculate }) => {
                 <label>Quality (π<sub>Q</sub>):</label>
                 <Select
                   styles={customStyles}
+
+                  // value={{
+                  //   value: inputs.quality,
+                  //   label: `${inputs.quality.quality} (πQ = ${inputs.quality.factor})`
+                  // }}
+                  value={selectedQuality}
+                  isInvalid={!!errors.quality}
+                  onChange={(selectedOption) => {
+                    setInputs(prev => ({
+                      ...prev,
+                      quality: selectedOption.value
+                    }))
+                    setSelectedQuality(selectedOption)
+                    setErrors({ ...errors, quality: '' })
+                  }}
                   options={qualityFactorsGeneral.map(item => ({
                     value: item,
                     label: `${item.quality} (πQ = ${item.factor})`
                   }))}
-                  value={{
-                    value: inputs.quality,
-                    label: `${inputs.quality.quality} (πQ = ${inputs.quality.factor})`
-                  }}
-                  onChange={(selectedOption) => setInputs(prev => ({
-                    ...prev,
-                    quality: selectedOption.value
-                  }))}
                 />
+                {errors.quality && <small className="text-danger">{errors.quality}</small>}
               </div>
             </Col>
 
@@ -515,26 +622,33 @@ const Connectors = ({ onCalculate }) => {
                 <label>Environment (π<sub>E</sub>):</label>
                 <Select
                   styles={customStyles}
+                  // value={{
+                  //   value: inputs.environment,
+                  //   label: `${inputs.environment.label} (πE = ${inputs.environment.factor})`
+                  // }}
+                  value={selectedEnvironment}
+                  isInvalid={!!errors.environment}
+                  onChange={(selectedOption) => {
+                    setInputs(prev => ({
+                      ...prev,
+                      environment: selectedOption.value
+                    }))
+                    setSelectedEnvironment(selectedOption)
+                    setErrors({ ...errors, environment: '' })
+                  }}
                   options={environmentFactorsGeneral.map(item => ({
                     value: item,
                     label: `${item.label} (πE = ${item.factor})`
                   }))}
-                  value={{
-                    value: inputs.environment,
-                    label: `${inputs.environment.label} (πE = ${inputs.environment.factor})`
-                  }}
-                  onChange={(selectedOption) => setInputs(prev => ({
-                    ...prev,
-                    environment: selectedOption.value
-                  }))}
                 />
+                {errors.environment && <small className="text-danger">{errors.environment}</small>}
               </div>
             </Col>
 
           </Row>
-           <label>Temperature Factor (π<sub>T</sub>):</label>
+          <label>Temperature Factor (π<sub>T</sub>):</label>
           <Row className="mb-3">
-        
+
             <Col md={4}>
               {/* Contact Gauge */}
               <div className="form-group">
@@ -552,15 +666,22 @@ const Connectors = ({ onCalculate }) => {
                     { value: 16, label: '16 Gauge' },
                     { value: 12, label: '12 Gauge' }
                   ]}
-                  value={{
-                    value: inputs.contactGauge,
-                    label: `${inputs.contactGauge} Gauge`
+                  // value={{
+                  //   value: inputs.contactGauge,
+                  //   label: `${inputs.contactGauge} Gauge`
+                  // }}
+                  value={selectedContactGauge}
+                  isInvalid={!!errors.contactGauge}
+                  onChange={(selectedOption) => {
+                    setInputs(prev => ({
+                      ...prev,
+                      contactGauge: selectedOption.value
+                    }))
+                    setSelectedContactGauge(selectedOption)
+                    setErrors({ ...errors, contactGauge: "" })
                   }}
-                  onChange={(selectedOption) => setInputs(prev => ({
-                    ...prev,
-                    contactGauge: selectedOption.value
-                  }))}
                 />
+                {errors.contactGauge && <small className="text-danger">{errors.contactGauge}</small>}
               </div>
             </Col>
 
@@ -571,6 +692,8 @@ const Connectors = ({ onCalculate }) => {
                 <input
                   type="number"
                   className="form-group"
+                  value={currentPerContact}
+                  placeholder='Enter...'
                   style={{
                     width: "100%",
                     padding: "0.375rem 0.75rem",
@@ -584,16 +707,23 @@ const Connectors = ({ onCalculate }) => {
                   min="1"
                   max="40"
                   step="0.1"
-                  value={inputs.currentPerContact}
-                  onChange={(e) => setInputs(prev => ({
-                    ...prev,
-                    currentPerContact: parseFloat(e.target.value) || 0
-                  }))}
+                  // value={inputs.currentPerContact}
+                  onChange={(e) => {
+                    setInputs(prev => ({
+                      ...prev,
+                      currentPerContact: parseFloat(e.target.value) || 0
+                    }))
+                    setCurrentPerContact(e.target.value)
+                    setErrors({ ...errors, currentPerContact: "" })
+
+                  }}
                   disabled={inputs.connectorType.type === 'RF Coaxial'}
                 />
+                {errors.currentPerContact && <small className="text-danger">{errors.currentPerContact}</small>}
               </div>
             </Col>
-                      <Col md={4}>
+
+            <Col md={4}>
               <div className="form-group">
                 <label>Temperature Rise (ΔT °C):</label>
                 <input
@@ -613,14 +743,14 @@ const Connectors = ({ onCalculate }) => {
                 />
               </div>
             </Col>
-      
 
-               <Col md={4}>
+            <Col md={4}>
               {/* Ambient Temperature */}
               <div className="form-group">
                 <label>Ambient Temperature (°C) for (π<sub>T</sub>):</label>
                 <input
                   type="number"
+                  placeholder='Enter...'
                   className="form-group"
                   style={{
                     width: "100%",
@@ -632,16 +762,21 @@ const Connectors = ({ onCalculate }) => {
                     border: "1px solid #ced4da",
                     borderRadius: "0.25rem"
                   }}
-                  value={inputs.ambientTemp}
-                  onChange={(e) => setInputs(prev => ({
-                    ...prev,
-                    ambientTemp: parseFloat(e.target.value) || 0
-                  }))}
+                  value={ambientTemp}
+                  // value={inputs.ambientTemp}
+                  onChange={(e) => {
+                    setInputs(prev => ({
+                      ...prev,
+                      ambientTemp: parseFloat(e.target.value) || 0
+                    }))
+                    setAmbientTemp(e.target.value)
+                    setErrors({ ...errors, ambientTemp: "" })
+                  }}
                 />
+                {errors.ambientTemp && <small className="text-danger">{errors.ambientTemp}</small>}
               </div>
             </Col>
-        
-         
+
             <Col md={4}>
               <div className="form-group">
                 <label>Operating Temperature (°C) T<sub>o</sub>:</label>
@@ -662,96 +797,96 @@ const Connectors = ({ onCalculate }) => {
                 />
               </div>
             </Col>
-             {showTempFactor && ( <>
-          <Col md={4}>
-              <div className="form-group">
-                <label>Temperature Factor (π<sub>T</sub>):</label>
-                <Select
-                  styles={customStyles}
-                  className="form-group"
-                  value={{
-                    value: temperatureFactorsGeneral.find(item =>
-                      item.temp === Math.floor(inputs.ambientTemp + calculateTempRiseGeneral())
-                    )?.temp || 20,
-                    label: `${temperatureFactorsGeneral.find(item =>
-                      item.temp === Math.floor(inputs.ambientTemp + calculateTempRiseGeneral())
-                    )?.temp || 20}°C (πT=${temperatureFactorsGeneral.find(item =>
-                      item.temp === Math.floor(inputs.ambientTemp + calculateTempRiseGeneral())
-                    )?.factor || 0})`
-                  }}
-                  onChange={(selectedOption) => {
-                    const selectedTemp = selectedOption.value;
-                    setInputs(prev => ({
-                      ...prev,
-                      ambientTemp: selectedTemp - calculateTempRiseGeneral()
-                    }));
-                  }}
-                  options={temperatureFactorsGeneral.map(item => ({
-                    value: item.temp,
-                    label: `${item.temp}°C (πT=${item.factor})`
-                  }))}
-                />
-
-
-              </div>
-            </Col>
-           </>)}
-              </Row>
-
-                 <Row>
-                   <label>Options:</label>      
-                
-   <Col md={4}>
-     <div className='form-group'>
-       <div className='d-flex justify-content-between align-items-center' >
-              <label>
-                <input
-                  className="form-check-input me-3"
-              type="checkbox"
-                  name="type"
-                  checked={showTempFactor}
-                   onChange={(e) => {
-        setShowTempFactor(e.target.checked); // Use the event's checked value
-      }} 
-                />
-                {showTempFactor ? "Hide Temperature Factor": "Show Temperature Factor "  }
-              </label>
-            </div>
-             </div>
-         </Col>  
-          
-            <Col md={4}>
-              {/* Options */}
-          
-              <div className="form-group">
-            
-        
-                  <Form.Check
-                    type="checkbox"
-                    label="Single Connector (divide λp by 2)"
-                    checked={inputs.isSingleConnector}
-                    onChange={(e) => setInputs(prev => ({
-                      ...prev,
-                      isSingleConnector: e.target.checked
+            {showTempFactor && (<>
+              <Col md={4}>
+                <div className="form-group">
+                  <label>Temperature Factor (π<sub>T</sub>):</label>
+                  <Select
+                    styles={customStyles}
+                    className="form-group"
+                    value={{
+                      value: temperatureFactorsGeneral.find(item =>
+                        item.temp === Math.floor(inputs.ambientTemp + calculateTempRiseGeneral())
+                      )?.temp || 20,
+                      label: `${temperatureFactorsGeneral.find(item =>
+                        item.temp === Math.floor(inputs.ambientTemp + calculateTempRiseGeneral())
+                      )?.temp || 20}°C (πT=${temperatureFactorsGeneral.find(item =>
+                        item.temp === Math.floor(inputs.ambientTemp + calculateTempRiseGeneral())
+                      )?.factor || 0})`
+                    }}
+                    onChange={(selectedOption) => {
+                      const selectedTemp = selectedOption.value;
+                      setInputs(prev => ({
+                        ...prev,
+                        ambientTemp: selectedTemp - calculateTempRiseGeneral()
+                      }));
+                    }}
+                    options={temperatureFactorsGeneral.map(item => ({
+                      value: item.temp,
+                      label: `${item.temp}°C (πT=${item.factor})`
                     }))}
                   />
-                  {inputs.connectorType.type === 'RF Coaxial' && (
-                    <Form.Check
-                      type="checkbox"
-                      label="High Power RF (ΔT = 50°C)"
-                      checked={inputs.isHighPowerRF}
-                      onChange={(e) => setInputs(prev => ({
-                        ...prev,
-                        isHighPowerRF: e.target.checked
-                      }))}
-                    />
-                  )}
+
+
                 </div>
-           
+              </Col>
+            </>)}
+          </Row>
+
+          <Row>
+            <label>Options:</label>
+
+            <Col md={4}>
+              <div className='form-group'>
+                <div className='d-flex justify-content-between align-items-center' >
+                  <label>
+                    <input
+                      className="form-check-input me-3"
+                      type="checkbox"
+                      name="type"
+                      checked={showTempFactor}
+                      onChange={(e) => {
+                        setShowTempFactor(e.target.checked); // Use the event's checked value
+                      }}
+                    />
+                    {showTempFactor ? "Hide Temperature Factor" : "Show Temperature Factor "}
+                  </label>
+                </div>
+              </div>
             </Col>
-         
-             </Row>
-       
+
+            <Col md={4}>
+              {/* Options */}
+
+              <div className="form-group">
+
+
+                <Form.Check
+                  type="checkbox"
+                  label="Single Connector (divide λp by 2)"
+                  checked={inputs.isSingleConnector}
+                  onChange={(e) => setInputs(prev => ({
+                    ...prev,
+                    isSingleConnector: e.target.checked
+                  }))}
+                />
+                {inputs.connectorType.type === 'RF Coaxial' && (
+                  <Form.Check
+                    type="checkbox"
+                    label="High Power RF (ΔT = 50°C)"
+                    checked={inputs.isHighPowerRF}
+                    onChange={(e) => setInputs(prev => ({
+                      ...prev,
+                      isHighPowerRF: e.target.checked
+                    }))}
+                  />
+                )}
+              </div>
+
+            </Col>
+
+          </Row>
+
 
           <div className='d-flex justify-content-between align-items-center' >
 
@@ -812,7 +947,7 @@ const Connectors = ({ onCalculate }) => {
               <h2 className="text-center">Calculation Result</h2>
               <div className="d-flex align-items-center">
                 <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                <span className="ms-2">{result.value} failures/10<sup>6</sup> hours</span>
+                <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
               </div>
             </>
           )}
@@ -937,21 +1072,25 @@ const Connectors = ({ onCalculate }) => {
             <Col md={6}>
               {/* Component Type Selection */}
               <div className="form-group">
-                <label>Component Type (λ<sub>b</sub>):</label>
+                <label>Connector Type (λ<sub>b</sub>):</label>
                 <Select
                   styles={customStyles}
+                  // value={{
+                  //   value: inputData.componentType,
+                  //   label: `${inputData.componentType.type} (λb = ${inputData.componentType.rate})`
+                  // }}
+                  value={selectedConnectorType}
                   options={baseRatesSocket.map(item => ({
                     value: item,
                     label: `${item.type} (λb = ${item.rate})`
                   }))}
-                  value={{
-                    value: inputData.componentType,
-                    label: `${inputData.componentType.type} (λb = ${inputData.componentType.rate})`
-                  }}
-                  onChange={(selectedOption) => setInputData(prev => ({
+                  onChange={(selectedOption) => {setInputData(prev => ({
                     ...prev,
                     componentType: selectedOption.value
-                  }))}
+                  }))
+                 setSelectedConnectorType(selectedOption)
+                  setErrors({...errors,connectorType:''})
+                }}
                 />
               </div>
             </Col>
@@ -965,42 +1104,32 @@ const Connectors = ({ onCalculate }) => {
                     value: item,
                     label: `${item.label} (πE = ${item.factor})`
                   }))}
-                  value={{
-                    value: inputData.environment,
-                    label: `${inputData.environment.label} (πE = ${inputData.environment.factor})`
-                  }}
-                  onChange={(selectedOption) => setInputData(prev => ({
+                  value={selectedEnvironment}
+                  // value={{
+                  //   value: inputData.environment,
+                  //   label: `${inputData.environment.label} (πE = ${inputData.environment.factor})`
+                  // }}
+                  onChange={(selectedOption) => {setInputData(prev => ({
                     ...prev,
                     environment: selectedOption.value
-                  }))}
-                />
+                  }))
+                  setSelectedEnvironment(selectedOption)
+                  setErrors({...errors,environment:''})}}
+                //          onChange={(selectedOption) => {setInputs(prev => ({
+                //     ...prev,
+                //     environment: selectedOption.value
+                //   }))
+                //   setSelectedEnvironment(selectedOption)
+                //   setErrors({...errors,environment:''})
+                // }}
+          />
+                {errors.environment && <small className="text-danger">{errors.environment}</small>}
               </div>
             </Col>
           </Row>
 
           <Row className="mb-3">
-            <Col md={6}>
-              {/* Quality Factor */}
-              <div className="form-group">
-                <label>Quality (π<sub>Q</sub>):</label>
-                <Select
-                  styles={customStyles}
-                  options={qualityFactorsSocket.map(item => ({
-                    value: item,
-                    label: `${item.quality} (πq = ${item.factor})`
-                  }))}
-                  value={{
-                    value: inputData.quality,
-                    label: `${inputData.quality.quality} (πq = ${inputData.quality.factor})`
-                  }}
-                  onChange={(selectedOption) => setInputData(prev => ({
-                    ...prev,
-                    quality: selectedOption.value
-                  }))}
-                />
-              </div>
-            </Col>
-
+            
             <Col md={6}>
               {/* Number of Active Pins */}
               <div className="form-group">
@@ -1026,12 +1155,38 @@ const Connectors = ({ onCalculate }) => {
                 )}
               </div>
             </Col>
+             <Col md={6}>
+              <div>
+                <label>Active Pins Factor (π<sub>p</sub>):</label>
+                <input
+                  type="text"
+           className="form-control"
+                     value={calculateActivePinsFactorSocket(inputData.activePins)?.toFixed(1) ||""}
+                        disabled ={true}
+                  style={{
+                    width: "100%",
+                    padding: "0.375rem 0.75rem",
+                    fontSize: "1rem",
+                    lineHeight: "1.5",
+                    color: "#495057",
+                    backgroundColor: "#fff",
+                    border: "1px solid #ced4da",
+                    borderRadius: "0.25rem"
+                  }}
+                  readOnly
+                  // disabled={calculateActivePinsFactorSocket(inputData.activePins)?.toFixed(1)}
+               
+              
+                />
+              </div>
+            </Col>
+
           </Row>
-         <div className='d-flex justify-content-between align-items-center' >
+          <div className='d-flex justify-content-between align-items-center' >
 
             <div >
-            {result && (
-              <Box
+              {result && (
+                <Box
                   component="div"
                   onClick={() => setShowCalculations(!showCalculations)}
                   sx={{
@@ -1060,7 +1215,7 @@ const Connectors = ({ onCalculate }) => {
                     {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
                   </Typography>
                 </Box>
-            )}
+              )}
             </div>
             <Button
               variant="primary"

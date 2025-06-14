@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Select from "react-select";
+
 import {
   calculateMicrocircuitsAndMicroprocessorsFailureRate,
   // calculateMemoriesFailureRate,
@@ -493,16 +494,15 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
     }
   };
 
+  // Constants from your tables
   const addComponent = () => {
-    let calculation = {};
     let failureRate = 0;
     let calculationParams = {};
+    let calculation = {};
 
     switch (currentComponent.type) {
-
       case 'Microcircuits,Gate/Logic Arrays And Microprocessors':
         failureRate = calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent);
-
         calculationParams = {
           C1: calculateGateArrayC1(currentComponent),
           C2: 0,
@@ -513,32 +513,32 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
           λp: calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)
         };
         break;
-
       default:
         calculation = { error: 'Unsupported component type' };
     }
 
-    const totalFailureRate = failureRate * currentComponent;
+
+    const quantity = currentComponent.quantity || 1;
+    const totalFailureRate = failureRate * quantity;
 
 
-    setComponents([...components, failureRate,
+    const newComponent = {
+      ...currentComponent,
+      failureRate,
       totalFailureRate,
-      calculationParams,
-
-    ]);
-
-
-    // Update the components array
+      calculationParams
+    };
 
 
-    // Also set results for display
+    setComponents([...components, newComponent]);
+
+
     setResults({
       failureRate,
       totalFailureRate,
       calculationParams
     });
   };
-  // Constants from your tables
   const partTypes = [
     { value: 'Logic', label: 'Logic and Custom Gate Array (λd = 0.16)' },
     { value: 'Memory', label: 'Memory (λd = 0.24)' }
@@ -850,12 +850,14 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
 
     if (currentComponent.memoryTech.includes('Textured-Poly')) {
       A2 = currentComponent.a2Factor?.a2Value || 0;
-      B2 = currentComponent.B2 || getBValueForTemp(
-        'Textured-Poly-B2',
-        currentComponent.memorySizeB2,
-        currentComponent.techTemperatureB2 || 25,
-        'B2'
-      ) || 0;
+      B2 = currentComponent.memorySizeB2 === 0
+        ? 0  // Explicitly set to 0 for Flotox & Textured-Poly²
+        : (currentComponent.B2 || getBValueForTemp(
+          'Textured-Poly-B2',
+          currentComponent.memorySizeB2,
+          currentComponent.techTemperatureB2 || 25,
+          'B2'
+        ) || 0);
     }
 
     // Get quality and ECC factors
@@ -944,18 +946,18 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
 
       // Determine C1 based on type and complexity range
       let c1;
-      if (currentComponent.type === "MMIC") {
-        if (currentComponent.complexity === "1-100") {
+      if (currentDevice?.type === "MMIC") {
+        if (currentComponent?.complexity === "1-100") {
           c1 = 4.5;
-        } else if (currentComponent.complexity === "101-1000") {
+        } else if (currentComponent?.complexity === "101-1000") {
           c1 = 7.2;
         } else {
           throw new Error("Invalid MMIC complexity range");
         }
       } else { // Digital type
-        if (currentComponent.complexity === "1-1000") {
+        if (currentComponent?.complexity === "1-1000") {
           c1 = 25;
-        } else if (currentComponent.complexity === "1001-10000") {
+        } else if (currentComponent?.complexity === "1001-10000") {
           c1 = 51;
         } else {
           throw new Error("Invalid Digital complexity range");
@@ -1012,9 +1014,10 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
   };
 
   const calculateBubbleMemoryFailureRate = () => {
+    console.log("start@@.....",)
     // Validate required inputs
     if (!currentComponent.bubbleChips || !currentComponent.dissipativeElements ||
-      !currentComponent.numberOfBits || !currentComponent.packageType ||
+      !currentComponent.numberOfBits ||
       !currentComponent.environment || !currentComponent.quality ||
       !currentComponent.temperature) {
       setError("Please fill all required fields");
@@ -1022,6 +1025,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
     }
 
     try {
+      console.log("start try ...")
       // Calculate complexity factors
       const N1 = parseFloat(currentComponent.dissipativeElements);
       const N2 = parseFloat(currentComponent.numberOfBits);
@@ -1042,6 +1046,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
       const TJ = parseFloat(currentComponent.temperature) + 10 + 273; // Convert to Kelvin
       const piT1 = 0.1 * Math.exp((-0.8 / (8.63e-5)) * ((1 / TJ) - (1 / 298)));
       const piT2 = 0.1 * Math.exp((-0.55 / (8.63e-5)) * ((1 / TJ) - (1 / 298)));
+      console.log("piT2,,,,,,", piT2)
 
       // Write duty cycle factor
       const D = currentComponent.writeDutyCycle ? parseFloat(currentComponent.writeDutyCycle) : 0;
@@ -1096,14 +1101,19 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
           lambdaP // Add lambdaP to parameters
         }
       });
-
+      console.log("results", setResult)
       setError(null);
       if (onCalculate) {
         onCalculate(lambdaP);
       }
     } catch (err) {
+      console.log("Error:,", err)
       setError("Error in calculation: " + err.message);
     }
+  };
+
+  const handleAddComponent = () => {
+    setComponents([...components, {}]); // Push a placeholder object
   };
   // Helper functions that should be defined elsewhere in your component
   const getQualityFactor = () => {
@@ -1112,7 +1122,11 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
 
   return (
     <div className="reliability-calculator">
-      <h2 className='text-center'>Microcircuits</h2>
+      <br />
+      <h2 className='text-center' style={{ fontSize: '1.2rem' }}> {currentComponent?.type ? currentComponent.type.replace(/,/g, ' ').trim() : 'Microcircuits Reliability Calculator'}
+
+      </h2>
+
       <div className="component-form">
 
         <Row className="mb-2">
@@ -1472,8 +1486,6 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
               </div>
             </Col>
           )}
-
-
           {currentComponent.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
             <>
               <Col md={4}>
@@ -1620,7 +1632,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                         value={currentComponent.temperature}
                         onChange={handleInputChange}
                       />
-                        <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+                      <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
                     </div>
                   </Col>
 
@@ -1721,7 +1733,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                   onClick={calculateVhsicFailureRate}
                   className="btn-calculate float-end mt-1"
                 >
-                  Calculate Failure Rate
+                  Calculate FR
                 </Button>
 
 
@@ -1748,7 +1760,6 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
           )}
           {currentComponent.type === "Microcircuits,Memories" && (
             <>
-
               <Col md={4}>
                 <div className="form-group">
                   <label>Quality Factor (π<sub>Q</sub>):</label>
@@ -2111,30 +2122,30 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                   />
                 </div>
               </Col>
-  <div  >
-              <Button
-                variant="primary"
-                className="btn-calculate float-end mt-1"
-                onClick={() => {
-                  const failureRate = calculateSawDeviceFailureRate(currentComponent);
+              <div  >
+                <Button
+                  variant="primary"
+                  className="btn-calculate float-end mt-1"
+                  onClick={() => {
+                    const failureRate = calculateSawDeviceFailureRate(currentComponent);
 
-                  const updatedComponent = {
+                    const updatedComponent = {
 
-                    ...currentComponent,
-                    calculatedFailureRate: failureRate,
-                    environmentLabel: currentComponent.environment?.description,
-                    qualityLabel: currentComponent.qualityFactor?.label
+                      ...currentComponent,
+                      calculatedFailureRate: failureRate,
+                      environmentLabel: currentComponent.environment?.description,
+                      qualityLabel: currentComponent.qualityFactor?.label
 
-                  };
+                    };
 
-                  setCurrentComponent(updatedComponent);
-                  addOrUpdateComponent(updatedComponent);
+                    setCurrentComponent(updatedComponent);
+                    addOrUpdateComponent(updatedComponent);
 
-                }
-                }
-              >
-                Calculate Failure Rate
-              </Button>
+                  }
+                  }
+                >
+                  Calculate FR
+                </Button>
               </div>
               {currentComponent.calculatedFailureRate && (
                 handleCalculateSawDevice(currentComponent?.calculatedFailureRate)
@@ -2204,7 +2215,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                       }));
                     }}
                     options={
-                      currentComponent.type === "MMIC"
+                      currentDevice?.type === "MMIC"
                         ? [
                           { value: "1-100", label: "1-100 elements (C₁ = 4.5)" },
                           { value: "101-1000", label: "101-1000 elements (C₁ = 7.2)" }
@@ -2748,10 +2759,10 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
             </Row>
 
             <Button
-                className="btn-calculate float-end mt-1"
+              className="btn-calculate float-end mt-1"
               onClick={addComponent}
             >
-              Calculate Failure Rate
+              Calculate FR
             </Button>
 
             <br />
@@ -2935,7 +2946,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                     styles={customStyles}
                     name="memorySizeB2"
                     placeholder="Select Memory Size"
-                    value={currentComponent.memorySizeB2Option}
+                    value={currentComponent?.memorySizeB2Option}
                     onChange={(selectedOption) => {
                       const updatedComponent = {
                         ...currentComponent,
@@ -2943,6 +2954,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                         memorySizeB2: selectedOption.value,
                         B2: getBValueForTemp(
                           'Textured-Poly-B2',
+
                           selectedOption.value,
                           currentComponent.techTemperatureB2 || 25,
                           'B2'
@@ -2952,6 +2964,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                       updateComponentInList(updatedComponent);
                     }}
                     options={[
+                      { value: 0, label: "Flotox & Textured-Poly²" },
                       { value: 4096, label: "4K" },
                       { value: 16384, label: "16K" },
                       { value: 65536, label: "64K" },
@@ -2961,69 +2974,79 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                     className="factor-select"
                   />
                 </div>
+                {console.log('currentComponent.memorySizeB2', currentComponent.memorySizeB2)}
+
+                {currentComponent.memorySizeB2 == 0 && (
+                  <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                    Calculated B₂: 0
+                  </div>
+                )}
               </Col>
 
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Junction Temperature for B₂ (°C):</label>
-                  <input
-                    name="techTemperatureB2"
-                    type="number"
-                    min="25"
-                    max="175"
-                    step="1"
-                    value={currentComponent.techTemperatureB2 ?? ''}
-                    onChange={(e) => {
-                      const rawValue = e.target.value;
-                      const temp = rawValue === '' ? null : Number(rawValue);
-                      const updatedComponent = {
-                        ...currentComponent,
-                        techTemperatureB2: temp,
-                        B2: (temp !== null && currentComponent.memorySizeB2)
-                          ? getBValueForTemp(
-                            'Textured-Poly-B2',
-                            currentComponent.memorySizeB2,
-                            temp,
-                            'B2'
-                          )
-                          : null
-                      };
-                      setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
-                    onBlur={(e) => {
-                      let temp = currentComponent.techTemperatureB2;
-                      if (temp === null || isNaN(temp)) temp = 25;
-                      else if (temp < 25) temp = 25;
-                      else if (temp > 175) temp = 175;
-                      else temp = Math.round(temp);
 
-                      if (temp !== currentComponent.techTemperatureB2) {
-                        const updatedComponent = {
-                          ...currentComponent,
-                          techTemperatureB2: temp,
-                          B2: currentComponent.memorySizeB2
-                            ? getBValueForTemp(
+              {currentComponent.memorySizeB2 !== 0 && (
+                <Col md={4}>
+                  <div className="form-group">
+                    <label>Junction Temperature for B₂ (°C):</label>
+                    <input
+                      name="techTemperatureB2"
+                      type="number"
+                      min="25"
+                      max="175"
+                      step="1"
+                      value={currentComponent.techTemperatureB2 ?? ''}
+                      onChange={(e) => {
+                        const rawValue = e.target.value;
+                        const temp = rawValue === '' ? null : Number(rawValue);
+
+                        if (temp !== currentComponent.techTemperatureB2) {
+                          const updatedComponent = {
+                            ...currentComponent,
+                            techTemperatureB2: temp,
+                            B2: getBValueForTemp(
                               'Textured-Poly-B2',
                               currentComponent.memorySizeB2,
                               temp,
                               'B2'
                             )
-                            : null
-                        };
-                        setCurrentComponent(updatedComponent);
-                        updateComponentInList(updatedComponent);
-                      }
-                    }}
-                    placeholder="25-175°C"
-                  />
-                  {currentComponent.B2 !== null && (
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                      Calculated B₂: {currentComponent.B2?.toFixed(6)}
-                    </div>
-                  )}
-                </div>
-              </Col>
+                          };
+                          setCurrentComponent(updatedComponent);
+                          updateComponentInList(updatedComponent);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        let temp = currentComponent.techTemperatureB2;
+                        if (temp === null || isNaN(temp)) temp = 25;
+                        else if (temp < 25) temp = 25;
+                        else if (temp > 175) temp = 175;
+                        else temp = Math.round(temp);
+
+                        if (temp !== currentComponent.techTemperatureB2) {
+                          const updatedComponent = {
+                            ...currentComponent,
+                            techTemperatureB2: temp,
+                            B2: getBValueForTemp(
+                              'Textured-Poly-B2',
+                              currentComponent.memorySizeB2,
+                              temp,
+                              'B2'
+                            )
+                          };
+                          setCurrentComponent(updatedComponent);
+                          updateComponentInList(updatedComponent);
+                        }
+                      }}
+                      placeholder="25-175°C"
+                    />
+
+                    {currentComponent.B2 !== null && (
+                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                        Calculated B₂: {currentComponent.B2?.toFixed(6)}
+                      </div>
+                    )}
+                  </div>
+                </Col>
+              )}
               <Col md={4}>
                 <div className="form-group">
                   <label>Memory Type for (C<sub>1</sub>):</label>
@@ -3165,9 +3188,9 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                     min="-40"
                     max="175"
                     value={currentComponent.temperature}
-                    onChange={handleInputChange}    
+                    onChange={handleInputChange}
                   />
-                    <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+                  <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
                 </div>
               </Col>
 
@@ -3247,7 +3270,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
 
               className="btn-calculate float-end mt-1"
             >
-              Calculate Failure Rate
+              Calculate FR
             </Button>
             {result && (
               handleCalculateMemories(result?.value)
@@ -3268,10 +3291,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
         )}
         {currentComponent.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
           <>
-
-
             <Row className="mb-3">
-
               <Col md={4}>
                 <div className="form-group">
                   <label>Environment (π<sub>E</sub>):</label>
@@ -3536,7 +3556,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                     value={currentComponent.temperature}
                     onChange={handleInputChange}
                   />
-                    <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+                  <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
                 </div>
               </Col>
 
@@ -3548,7 +3568,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
               onClick={calculateGaAsFailureRate}
               className="btn-calculate float-end mb-4"
             >
-              Calculate Failure Rate
+              Calculate FR
             </Button>
 
             {result && (
@@ -3626,13 +3646,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                     styles={customStyles}
                     placeholder="Select"
                     value={0} // Fixed value set to 0
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        packageType: selectedOption.value,
-                        c2: selectedOption.c2
-                      }));
-                    }}
+                    readOnly
                   />
                 </div>
               </Col>
@@ -3748,10 +3762,11 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                     min="25"
                     max="175"
                     value={currentComponent.tcase ? Number(currentComponent.tcase) + 10 : ''}
+                    isDisabled={currentComponent.tcase}
                     readOnly
                   />
-                    <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
-                
+                  <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+
                 </div>
               </Col>
 
@@ -3794,7 +3809,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
               onClick={calculateBubbleMemoryFailureRate}
               className="btn-calculate float-end mb-4"
             >
-              Calculate Failure Rate
+              Calculate FR
             </Button>
 
             {result && (
@@ -3815,8 +3830,47 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
 
         )}
       </div>
+     {/* <div>
+       <button onClick={handleAddComponent}>Add Component</button>
+   <h2 className = "text-center">Lambda C</h2>
+
+     {components.map((_, index) => (
+       <Microcircuits key={index}
+         handleCalculateSawDevice={handleCalculateSawDevice}
+         handleCalculateGate={handleCalculateGate}
+         handleCalculateMemories={handleCalculateMemories}
+        handleCalculateVhsic={handleCalculateVhsic}
+        handleCalculateGaAs={handleCalculateGaAs}
+          handleCalculateBubble={handleCalculateBubble} />
+      ))}
+    </div> */}
     </div>
   );
-};
+}
+// const Microcircuits = () => {
+//   const [components, setComponents] = useState([]);
 
+//   const handleAddComponent = () => {
+//     setComponents([...components, {}]); // Push a placeholder object
+//   };
+
+//   return (
+//     <div>
+//       <h2>Repeat Component Example</h2>
+
+//       <button onClick={handleAddComponent}>Add Component</button>
+
+
+//       {components.map((_, index) => (
+//         <Microcircuits1 key={index}
+//           handleCalculateSawDevice={handleCalculateSawDevice}
+//           handleCalculateGate={handleCalculateGate}
+//           handleCalculateMemories={handleCalculateMemories}
+//           handleCalculateVhsic={handleCalculateVhsic}
+//           handleCalculateGaAs={handleCalculateGaAs}
+//           handleCalculateBubble={handleCalculateBubble} />
+//       ))}
+//     </div>
+//   )
+// }
 export default Microcircuits;

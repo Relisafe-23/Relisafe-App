@@ -691,6 +691,7 @@ function Index(props) {
       source: values.source.value,
     })
       .then((response) => {
+        console.log("responghjj",response)
         setSuccessMessage(response.data.message);
         setFrpId(response?.data?.data?.createFailureRatePrediction?.id);
         NextPage();

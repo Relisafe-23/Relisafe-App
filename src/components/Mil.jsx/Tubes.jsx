@@ -94,7 +94,7 @@ const Tubes = ({ onCalculate }) => {
   const validateInputs = () => {
     let isValid = true;
     const newErrors = {
-      twt: { power: '', frequency: '',environment:''},
+      twt: { power: '', frequency: ''},
       magnetron: { power: '', frequency: '', utilization: '',environment:'' }
     };
 
@@ -116,10 +116,10 @@ const Tubes = ({ onCalculate }) => {
         newErrors.twt.frequency = 'Frequency must be greater than 0';
         isValid = false;
       }
-      if(!selectedEnvironment){
-        newErrors.twt.environment = "Environment Factor is required"
-        isValid = false;
-      }
+      // if(!selectedEnvironment){
+      //   newErrors.twt.environment = "Environment Factor is required"
+      //   isValid = false;
+      // }
     } else {
       if (magnetronInputs.type === 'pulsed') {
         if (!magnetronInputs.power || isNaN(magnetronInputs.power)) {
@@ -174,7 +174,8 @@ const Tubes = ({ onCalculate }) => {
       const F = parseFloat(twtInputs.frequency);
       const envFactor = environmentFactors.twt.find(e => e.env === twtInputs.environment);
       const πE = envFactor ? envFactor.factor : 0;
-
+      console.log("Environmebtyvh",πE)
+      // const πE = selectedEnvironment.πE;
       // if (isNaN(P) || isNaN(F)) {
       //   throw new Error('Please enter valid numbers for Power and Frequency');
       // }
@@ -219,7 +220,7 @@ const Tubes = ({ onCalculate }) => {
       const πc = constFactor ? constFactor.factor : 0;
       const envFactor = environmentFactors.magnetron.find(e => e.env === magnetronInputs.environment);
       const πE = envFactor ? envFactor.factor : 0;
-
+      console.log("πE",πE)
       // if (magnetronInputs.type === 'cw' && P >= 5) {
       //   throw new Error('For CW Magnetrons, power must be < 5 KW');
       // }
@@ -352,7 +353,7 @@ const Tubes = ({ onCalculate }) => {
       <Row className="mb-3">
         <Col md={4}>
           <div className="form-group">
-            <label>Power (W):</label>
+            <label>Power (W) for λ<sub>b</sub>:</label>
             <input
               type="number"
               name="power"
@@ -371,7 +372,7 @@ const Tubes = ({ onCalculate }) => {
         </Col>
         <Col md={4}>
           <div className="form-group">
-            <label>Frequency (GHz):</label>
+            <label>Frequency (GHz) for λ<sub>b</sub>:</label>
             <input
               type="number"
               name="frequency"
@@ -390,20 +391,20 @@ const Tubes = ({ onCalculate }) => {
 
         <Col md={4}>
           <div className="form-group">
-            <label>Environment:</label>
+            <label>Environm`ent π<sub>E</sub>:</label>
             <Select
               styles={customStyles}
               name="environment"
               placeholder="select..."
-              value={selectedEnvironment}
-              isInvalid ={!!errors.environment}
-              // value={{
-              //   value: twtInputs.environment,
-              //   label: `${environmentFactors.twt.find(e => e.env === twtInputs.environment)?.label || twtInputs.environment} (πE = ${environmentFactors.twt.find(e => e.env === twtInputs.environment)?.factor || 0})`
-              // }}
+              // value={selectedEnvironment}
+              // isInvalid ={!!errors.environment}
+              value={{
+                value: twtInputs.environment,
+                label: `${environmentFactors.twt.find(e => e.env === twtInputs.environment)?.label || twtInputs.environment} (πE = ${environmentFactors.twt.find(e => e.env === twtInputs.environment)?.factor || 0})`
+              }}
               onChange={(selectedOption) => {
-                setTwtInputs(prev => ({ ...prev, environment: selectedOption }));
-                setSelectedEnvironment(selectedOption);
+                setTwtInputs(prev => ({ ...prev, environment: selectedOption.value }));
+                // setSelectedEnvironment(selectedOption);
                 setErrors({ ...errors, environment: '' });
               }}
               options={environmentFactors.twt.map(item => ({
@@ -411,9 +412,9 @@ const Tubes = ({ onCalculate }) => {
                 label: `${item.label} (πE = ${item.factor})`
               }))}
             />
-              {errors.twt.environment && <small className="text-danger">{errors.twt.environment}</small>}
+              {/* {errors.twt.environment && <small className="text-danger">{errors.twt.environment}</small>} */}
           </div>
-         
+   
         </Col>
       </Row>
     </>
@@ -463,7 +464,7 @@ const Tubes = ({ onCalculate }) => {
           <>
             <Col md={4}>
               <div className="form-group">
-                <label>Power (MW):</label>
+                <label>Power (MW) for λ<sub>b</sub>:</label>
                 <input
                   type="number"
                   name="power"
@@ -483,7 +484,7 @@ const Tubes = ({ onCalculate }) => {
             </Col>
             <Col md={4}>
               <div className="form-group">
-                <label>Frequency (GHz):</label>
+                <label>Frequency (GHz) for λ<sub>b</sub>:</label>
                 <input
                   type="number"
                   name="frequency"
@@ -501,7 +502,7 @@ const Tubes = ({ onCalculate }) => {
             </Col>
             <Col md={4}>
               <div className="form-group">
-                <label>Utilization Ratio :</label>
+                <label>Utilization Ratio  π<sub>U</sub>:</label>
                 <input
                   type="number"
                   name="utilization"
@@ -520,7 +521,7 @@ const Tubes = ({ onCalculate }) => {
           </>
         )}
 
-        {magnetronInputs.type === 'cw' && (
+        {/* {magnetronInputs.type === 'cw' && (
           <>
             <Col md={4}>
               <div className="form-group">
@@ -562,77 +563,13 @@ const Tubes = ({ onCalculate }) => {
               </div>
             </Col>
           </>
-        )}
-
-
-
-
-
-        <>
-          <Col md={4}>
-            <div className="form-group">
-              <label>Power (MW):</label>
-              <input 
-                type="number" 
-                name="power" 
-                value={magnetronInputs.power} 
-                onChange={handleMagnetronInputChange}
-                min="0.01"
-                max="5"
-                step="0.01"
-           
-                  className={`form-control ${errors.magnetron.power ? 'is-invalid' : ''}`}
-
-              />
-              
-                {errors.magnetron.power && <small className="text-danger">{errors.magnetron.power}</small>}
-
-            </div>
-          </Col>
-          <Col md={4}>
-            <div className="form-group">
-              <label>Frequency (GHz):</label>
-              <input 
-                type="number" 
-                name="frequency" 
-                value={magnetronInputs.frequency} 
-                onChange={handleMagnetronInputChange}
-                min="1.5"
-                max="100"
-                step="0.1"
-          className={`form-control ${errors.magnetron.frequency ? 'is-invalid' : ''}`}
-              />
-              
-                {errors.magnetron.frequency && <small className="text-danger">{errors.magnetron.frequency}</small>}
-
-            </div>
-          </Col>
-            <Col md={4}>
-            <div className="form-group">
-              <label>Utilization Ratio :</label>
-              <input 
-                type="number" 
-                name="utilization" 
-                value={magnetronInputs.utilization} 
-                onChange={handleMagnetronInputChange}
-                min="0"
-                max="1"
-                step="0.1"
-                        className={`form-control ${errors.magnetron.utilization ? 'is-invalid' : ''}`}
-    
-              />
-             {errors.magnetron.utilization && <small className="text-danger">{errors.magnetron.utilization}</small>}
-
-            </div>
-          </Col>
-        </>
+        )} */}
   
-
       {magnetronInputs.type === 'cw' && (
        <>
            <Col md={4}>
             <div className="form-group">
-              <label>Power (KW):</label>
+              <label>Power (KW) for λ<sub>b</sub>:</label>
               <input 
                 type="number" 
                 name="power" 
@@ -654,7 +591,7 @@ const Tubes = ({ onCalculate }) => {
 
             <Col md={4}>
             <div className="form-group">
-              <label>Utilization Ratio :</label>
+              <label>Utilization Ratio  π<sub>U</sub> :</label>
               <input 
                 type="number" 
                 name="utilization" 
@@ -671,15 +608,10 @@ const Tubes = ({ onCalculate }) => {
           </Col>
         </>
       )}
-
-    
-       
-    
-   
       <>
           <Col md={4}>
           <div className="form-group">
-            <label>Construction:</label>
+            <label>Construction  π<sub>C</sub>:</label>
             <Select
               styles={customStyles}
               name="construction"
@@ -699,7 +631,7 @@ const Tubes = ({ onCalculate }) => {
         </Col>
         <Col md={4}>
           <div className="form-group">
-            <label>Environment:</label>
+            <label>Environment  π<sub>E</sub>:</label>
             <Select
               styles={customStyles}
               name="environment"
@@ -837,8 +769,6 @@ const Tubes = ({ onCalculate }) => {
         <div>
           {(twtResult || magnetronResult) && (
             <>
-
-
               <Box
                 component="div"
                 onClick={() => setShowCalculations(!showCalculations)}

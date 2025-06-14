@@ -619,14 +619,14 @@ const calculateSynchroFailureRate = () => {
                 />
               </div>
             </Col>
-
+{/* 
             <Col md={12}>
               <div className="form-check">
                 <input
                   type="checkbox"
                   className="form-check-input"
                   id="isCycledTemp"
-                  checked={currentComponent.isCycledTemp}
+                  checked={currentComponent?.isCycledTemp}
                   onChange={(e) => setCurrentComponent(prev => ({
                     ...prev,
                     isCycledTemp: e.target.checked
@@ -636,13 +636,13 @@ const calculateSynchroFailureRate = () => {
                   Use Temperature Cycling
                 </label>
               </div>
-            </Col>
+            </Col> */}
 
             {currentComponent.isCycledTemp && (
               <Col md={12}>
                 <div className="form-group">
                   <label>Temperature Cycles:</label>
-                  {currentComponent.tempCycles.map((cycle, index) => (
+                  {currentComponent?.tempCycles.map((cycle, index) => (
                     <div key={index} className="d-flex mb-2">
                       <input
                         type="number"
@@ -667,7 +667,7 @@ const calculateSynchroFailureRate = () => {
                   <Button
                         variant="danger"
                         onClick={() => removeTempCycle(index)}
-                        disabled={currentComponent.tempCycles.length <= 1}
+                        disabled={currentComponent?.tempCycles.length <= 1}
                       >
                         Remove
                       </Button>  

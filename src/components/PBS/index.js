@@ -253,7 +253,6 @@ export default function PBS(props) {
       const workSheet = workBook.Sheets[workSheetName];
 
       //convert array
-
       const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
       const headers = fileData[0];
       const heads = headers.map((head) => ({ title: head, field: head }));
@@ -278,6 +277,7 @@ export default function PBS(props) {
       },
     })
       .then((res) => {
+        console.log("resmmopjl;",res)
         const data = res?.data?.data;
         setPermission(data?.modules[0]);
       })
@@ -297,6 +297,7 @@ export default function PBS(props) {
         userId: userId,
       },
     }).then((res) => {
+      console.log("resmml;",res)
       setIsOwner(res?.data?.data?.isOwner);
       setCreatedBy(res?.data?.data?.createdBy);
     });
@@ -457,6 +458,7 @@ export default function PBS(props) {
       userId: userId,
     })
       .then((res) => {
+       
         setProductMessage(res?.data?.message);
         setMainProductModalOpen(false);
         resetForm({ values: "" });
@@ -511,6 +513,7 @@ export default function PBS(props) {
       },
     })
       .then((res) => {
+         console.log("res1;",res)
         const treeData = res?.data?.data;
         setData(treeData);
         setISLoading(false);

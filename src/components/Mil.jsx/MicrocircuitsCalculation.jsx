@@ -78,7 +78,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     memoryTech: "Flotox",
     technology: "Digital MOS",
     B1: 0.79,
-    B2: null,
+    B2: 0,
     calculatedPiT: 1.2,
 
 
@@ -361,7 +361,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     const baseLambda = currentComponent?.baseFailureRate || mainInitialRate || 0;
     const componentSum = parsedQuantity * baseLambda;
 
-    console.log("Component Sum (Nₙ * λₙ):", componentSum);
+
     return componentSum;
   };
 
@@ -523,105 +523,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     }
   };
 
-
-  const calculateHybridFailureRate = (component) => {
-    // Validate input
-    if (!component || !component.components) {
-      console.error('Invalid component data');
-      return 0;
-    }
-
-    // Sum of (Nc × λc) for all components
-    const componentSum = calculateComponentSum();
-    console.log("componentSum", componentSum)
-
-    // Get all the π factors with proper defaults
-    const piE = getEnvironmentFactor(component.environment) || 1;
-    console.log("piE", piE)
-    const piF = component.piF || getCircuitFunctionFactor(component.circuitType) || 1;
-    const piQ = component.piQ || getQualityFactor(component.quality) || 1;
-    const piL = component.piL || calculateLearningFactor(component.yearsInProduction) || 1;
-
-    // Get the environmental stress factor (E) with default 0 if not provided
-    const environmentalStress = Number(component.environmentalStress) || 0;
-
-
-    // Corrected formula based on MIL-HDBK-217: λp = 1.2 × Σ(Nc × λc) × (1 + 2.7E) × πE × πF × πQ × πL
-    const failureRate = 1.2 * componentSum * (1 + 2.7 * environmentalStress) * piE * piF * piQ * piL;
-
-    // Debug logging
-    console.log("Calculation Parameters:", {
-      componentSum,
-      environmentalStress,
-      piE,
-      piF,
-      piQ,
-      piL,
-      failureRate
-    });
-
-    return failureRate;
-  };
-
-  const addComponent = () => {
-    let calculation = {};
-    let failureRate = 0;
-    let calculationParams = {};
-
-    switch (currentComponent.type) {
-
-      case 'Microcircuits,Gate/Logic Arrays And Microprocessors':
-        failureRate = calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent);
-
-        calculationParams = {
-          C1: calculateGateArrayC1(currentComponent),
-          C2: getFailureRate(currentComponent.packageType, currentComponent.pinCount),
-          piT: calculatePiT(currentComponent.technology, currentComponent.temperature),
-          piE: getEnvironmentFactor(currentComponent?.environment),
-          piQ: getQualityFactor(currentComponent.quality),
-          piL: calculateLearningFactor(currentComponent.yearsInProduction),
-          λp: calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)
-        };
-        break;
-
-      case "Microcircuits,Hybrids":
-        // Calculate component sum (Σ N₀ λ_c)
-        const componentSum = calculateComponentSum(quantity, currentComponent);
-        const piE = getEnvironmentFactor(currentComponent.environment) || 1;
-        const piQ = currentComponent.quality?.value || getQualityFactor('MIL_M_38510_ClassB') || 1;
-        const piF = getCircuitFunctionFactor(currentComponent.circuitType) || 1;
-        const piL = calculateLearningFactor(currentComponent.yearsInProduction) || 1;
-
-        // Apply formula: λ_p = [Σ N₀ λ_c] (1 + 2 π_E) π_F π_Q π_L
-        const failureRate = componentSum * (1 + 2 * piE) * piF * piQ * piL;
-        calculationParams = {
-          componentSum,
-          piE,
-          piQ,
-          piF,
-          piL,
-          λp: failureRate
-        };
-        console.log("Calculation Parameters:", calculationParams);
-
-
-    }
-
-    const totalFailureRate = failureRate * currentComponent;
-
-
-    setComponents([...components, failureRate,
-      totalFailureRate,
-      calculationParams,
-
-    ]);
-
-    setResults({
-      failureRate,
-      totalFailureRate,
-      calculationParams
-    });
-  };
   // Constants from your tables
   const partTypes = [
     { value: 'Logic', label: 'Logic and Custom Gate Array (λd = 0.16)' },
@@ -962,21 +863,23 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 
     if (currentComponent.memoryTech.includes('Textured-Poly')) {
       A2 = currentComponent.a2Factor?.a2Value || 0;
-      B2 = currentComponent.B2 || getBValueForTemp(
-        'Textured-Poly-B2',
-        currentComponent.memorySizeB2,
-        currentComponent.techTemperatureB2 || 25,
-        'B2'
-      ) || 0;
+    B2 = currentComponent.memorySizeB2 === 0 
+  ? 0  // Explicitly set to 0 for Flotox & Textured-Poly²
+  : (currentComponent.B2 || getBValueForTemp(
+      'Textured-Poly-B2',
+      currentComponent.memorySizeB2,
+      currentComponent.techTemperatureB2 || 25,
+      'B2'
+    ) || 0);
     }
-
+  
     // Get quality and ECC factors
     const piQ = getQualityFactor()?.value || 1;
     const piECC = selectedECC?.factor || 1;
 
     // Calculate λ_cyc
     const lambdaCyc = (A1 * B1 + (A2 * B2) / piQ) * piECC;
-
+   console.log("lambdaCyc",lambdaCyc )
     return lambdaCyc;
   };
 
@@ -1056,18 +959,18 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 
       // Determine C1 based on type and complexity range
       let c1;
-      if (currentComponent.type === "MMIC") {
-        if (currentComponent.complexity === "1-100") {
+      if (currentDevice?.type === "MMIC") {
+        if (currentComponent?.complexity === "1-100") {
           c1 = 4.5;
-        } else if (currentComponent.complexity === "101-1000") {
+        } else if (currentComponent?.complexity === "101-1000") {
           c1 = 7.2;
         } else {
           throw new Error("Invalid MMIC complexity range");
         }
       } else { // Digital type
-        if (currentComponent.complexity === "1-1000") {
+        if (currentComponent?.complexity === "1-1000") {
           c1 = 25;
-        } else if (currentComponent.complexity === "1001-10000") {
+        } else if (currentComponent?.complexity === "1001-10000") {
           c1 = 51;
         } else {
           throw new Error("Invalid Digital complexity range");
@@ -1221,13 +1124,110 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
   const getQualityFactor = () => {
     return currentComponent.piQ; // Assuming this is already set in state
   };
+ const getCircuitFunctionFactor = () =>{
+return currentComponent.piF;
+ }
+    const calculateHybridFailureRate = (component) => {
+    
+    // Validate input
+    // if (!component || !component.components) {
+    //   console.error('Invalid component data');
+    //   return 0;
+    // }
 
+    // Sum of (Nc × λc) for all components
+       const componentSum = calculateComponentSum(quantity, currentComponent);
+    console.log("componentSum6788", componentSum)
+
+       const Nc = quantity
+        const piE = getEnvironmentFactor(currentComponent.environment) || 1;
+        console.log("piE",piE)
+        const piQ = currentComponent.quality?.value || getQualityFactor('MIL_M_38510_ClassB') || 1;
+        console.log("piQ",piQ)
+        const piF = getCircuitFunctionFactor() ;
+        const piL = calculateLearningFactor(currentComponent.yearsInProduction) || 1;
+
+    // Corrected formula based on MIL-HDBK-217: λp = Σ(Nc × λc) × (1 + 0.2 πE)  × πF × πQ × πL
+    const failureRate = componentSum * (1 + 0.2  * piE) * piF * piQ * piL;
+    console.log("failureRate",failureRate)
+    // Debug logging
+    setResults({
+      componentSum,
+      Nc,
+      piE,
+      piF,
+      piQ,
+      piL,
+      failureRate
+    })
+    console.log("Calculation Parameters:", {
+      componentSum,
+      Nc,
+      piE,
+      piF,
+      piQ,
+      piL,
+      failureRate
+    });
+
+    return failureRate;
+  };
+
+
+  const addComponent = () => {
+    let failureRate = 0;
+    let calculationParams = {};
+    let calculation = {};
+
+    switch (currentComponent.type) {
+      case 'Microcircuits,Gate/Logic Arrays And Microprocessors':
+        failureRate = calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent);
+        calculationParams = {
+          C1: calculateGateArrayC1(currentComponent),
+          C2: 0,
+          piT: calculatePiT(currentComponent.technology, currentComponent.temperature),
+          piE: getEnvironmentFactor(currentComponent?.environment),
+          piQ: getQualityFactor(currentComponent.quality),
+          piL: calculateLearningFactor(currentComponent.yearsInProduction),
+          λp: calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)
+        };
+        break;
+
+      default:
+        calculation = { error: 'Unsupported component type' };
+    }
+
+   
+    const quantity = currentComponent.quantity || 1;
+    const totalFailureRate = failureRate * quantity;
+
+    // Create a new component object to add to the array
+    const newComponent = {
+      ...currentComponent,
+      failureRate,
+      totalFailureRate,
+      calculationParams
+    };
+
+   
+    setComponents([...components, newComponent]);
+
+
+    setResults({
+      failureRate,
+      totalFailureRate,
+      calculationParams
+    });
+  };
   return (
     <div className="reliability-calculator">
-      <h2 className='text-center'>Microcircuits</h2>
+      {console.log("current component......",currentComponent)}
+      {/* <h2 >Microcircuits</h2> */}
+<h2 className='text-center'style={{ fontSize: '2.0rem' }}>{currentComponent?.type ? currentComponent.type.replace(/,/g, ' ').trim() : 'Microcircuits Reliability Calculator'}</h2>
       <div className="component-form">
+        
 
-        <Row className="mb-2">
+        <Row className="mb-2"> 
           <Col md={4} >
             <div className="form-group" >
               <label>Part Type:</label>
@@ -1644,14 +1644,12 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                   <label>Component Type:</label>
 
                   <Select
-                    style={customStyles}
+                    styles={customStyles}
                     name="componentType"
                     placeholder="Select Component Type"
                     value={selectedComponent}
                     onChange={(selectedOption) => {
                       setSelectedComponent(selectedOption)
-
-                      // Predefined failure rate
 
                     }}
                     options={[
@@ -1706,28 +1704,26 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
               <br />
               <>
                 <Col md={4}>
-                  <div className="results">
-                    <label>Failure Rate (λₙ):</label>
-                    <div className="input-group">
-                      <input
-                        type="string"
-                        step="0.000001"
-                        min="0"
-                        value={mainInitialRate}
-                        placeholder="Props value will appear here"
-                      />
-                      <span className="unit">failures/10<sup>6</sup> hours</span>
-                    </div>
+                  <div className="form-group">
+                    <label>Failure Rate (λc):</label>
+                    <input
+                      type="string"
+                      step="0.000001"
+                      min="0"
+                      value={mainInitialRate}
+                      placeholder="Props value will appear here"
+                    />
+                    <span className="unit">failures/10<sup>6</sup> hours</span>
+
                   </div>
                 </Col>
               </>
-
 
               <Col md={4}>
                 <div className="form-group">
                   <label>Quality Factor (π<sub>Q</sub>):</label>
                   <Select
-                    style={customStyles}
+                    styles={customStyles}
 
                     name="qualityFactor"
                     placeholder="Select Quality Factor (πQ)"
@@ -1814,10 +1810,10 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                 <div className="form-group">
                   <label>Environment (π<sub>E</sub>):</label>
                   <Select
-                    style={customStyles}
+                    styles={customStyles}
                     name="environment"
                     placeholder="Select Environment"
-
+                   
                     onChange={(selectedOption) => {
                       setCurrentComponent({
                         ...currentComponent,
@@ -1920,14 +1916,14 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                 <div className="form-group">
                   <label>Circuit Function (π<sub>F</sub>):</label>
                   <Select
-                    style={customStyles}
+                    styles={customStyles}
                     name="circuitFunction"
                     placeholder="Select Circuit Function"
-
+               
                     onChange={(selectedOption) => {
                       setCurrentComponent({
                         ...currentComponent,
-                        circuitFunction: selectedOption.value,
+                        // circuitFunction: selectedOption.value,
                         piF: selectedOption.piF
                       });
                     }}
@@ -1980,7 +1976,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                 <div className="text-end mt-3">
                   <Button
                     className="btn btn-primary"
-                    onClick={addComponent}
+                    onClick={calculateHybridFailureRate}
                   >
                     Calculate Failure Rate
                   </Button>
@@ -1995,8 +1991,8 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     <div className="d-flex align-items-center">
                       <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
                       <span className="ms-2">
-                        {results?.calculationParams?.λp} failures/10<sup>6</sup> hours
-                        {console.log("far..", results?.calculationParams?.λp)}
+                        {results?.failureRate?.toFixed(6)} failures/10<sup>6</sup> hours
+                        {console.log("far..", results)}
                       </span>
                     </div>
                     {results?.parameters?.formula && (
@@ -2025,7 +2021,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                             {
                               title: 'Quantity (Nₙ)',
                               field: 'quantity',
-                              render: rowData => (rowData?.quantity || 1)
+                              render: rowData => (rowData?.Nc || 1)
                             },
                             {
                               title: 'Contribution (Nₙ × λₙ)',
@@ -2056,11 +2052,11 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                               title: "Total λₚ",
                               field: 'totalFailureRate',
                               render: rowData => (
-                                <strong>{(rowData?.λp?.toFixed(6) || '0.000000')}</strong>
+                                <strong>{(rowData?.failureRate?.toFixed(6) || '0.000000')}</strong>
                               )
                             }
                           ]}
-                          data={[results?.calculationParams]}
+                          data={[results]}
                           options={{
                             search: false,
                             paging: false,
@@ -2085,17 +2081,16 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                           </Typography>
                           <div className="alert alert-light">
                             <code className="fs-5">
-                              λ<sub>p</sub> = 1.2 × Σ(N<sub>c</sub> × λ<sub>c</sub>) × (1 + 2.7E) × π<sub>E</sub> × π<sub>F</sub> × π<sub>Q</sub> × π<sub>L</sub>
+                              λ<sub>p</sub> = Σ(N<sub>c</sub> × λ<sub>c</sub>) × (1 + 0.2  π<sub>E</sub>) × π<sub>F</sub> × π<sub>Q</sub> × π<sub>L</sub>
                             </code>
                           </div>
                           <Typography variant="body1" paragraph>Where:</Typography>
                           <ul>
                             <li><strong>λ<sub>p</sub></strong> = Predicted failure rate (Failures/10<sup>6</sup> Hours)</li>
-                           
+
                             <li><strong>Σ(N<sub>c</sub> × λ<sub>c</sub>)</strong> = Sum of component contributions</li>
-                              <li><strong>λ<sub>c</sub></strong> = Failure Rate of each particular component</li>
-                                <li><strong>N<sub>c</sub></strong> = Number of each particular component</li>
-                            <li><strong>E</strong> = Environmental stress factor</li>
+                            <li><strong>λ<sub>c</sub></strong> = Failure Rate of each particular component</li>
+                            <li><strong>N<sub>c</sub></strong> = Number of each particular component</li>
                             <li><strong>π<sub>E</sub></strong> = Environment factor</li>
                             <li><strong>π<sub>F</sub></strong> = Circuit function factor</li>
                             <li><strong>π<sub>Q</sub></strong> = Quality factor</li>
@@ -2453,7 +2448,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                                     {
                                       title: <span>π<sub>E</sub></span>,
                                       field: 'πE',
-                                      render: rowData =>( rowData?.inputs.environment?.factor || '-' ) // Display the stored factor
+                                      render: rowData => (rowData?.inputs.environment?.factor || '-') // Display the stored factor
                                     },
                                     {
                                       title: <span>π<sub>T</sub></span>,
@@ -3071,6 +3066,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                           ? "Digital IC"
                           : "Select Device Type"
                     }}
+                   
                     onChange={(selectedOption) => {
                       setCurrentDevice(prev => ({
                         ...prev,
@@ -3103,7 +3099,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       }));
                     }}
                     options={
-                      currentComponent.type === "MMIC"
+                      currentDevice?.type === "MMIC"
                         ? [
                           { value: "1-100", label: "1-100 elements (C₁ = 4.5)" },
                           { value: "101-1000", label: "101-1000 elements (C₁ = 7.2)" }
@@ -3181,7 +3177,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 
             </>)}
         </Row>
-
         {currentComponent.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
           <>
             <Row className="mb-2">
@@ -3541,8 +3536,8 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     }}
                     options={[
                       {
-                        value: 5.1,
-                        label: "≤ 0.5 years",
+                        value: 0.1,
+                        label: "≤ 0.1 years",
                         piL: 2.0, // Direct value from table
                         description: "Early production phase (highest learning factor)"
                       },
@@ -3855,7 +3850,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                         label: "Textured-Poly (B₁)",
                         description: "Textured-Poly with B₁ factor"
                       },
-               
+
                     ]}
                     className="factor-select"
                   />
@@ -3965,7 +3960,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     styles={customStyles}
                     name="memorySizeB2"
                     placeholder="Select Memory Size"
-                    value={currentComponent.memorySizeB2Option}
+                    value={currentComponent?.memorySizeB2Option}
                     onChange={(selectedOption) => {
                       const updatedComponent = {
                         ...currentComponent,
@@ -3973,6 +3968,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                         memorySizeB2: selectedOption.value,
                         B2: getBValueForTemp(
                           'Textured-Poly-B2',
+
                           selectedOption.value,
                           currentComponent.techTemperatureB2 || 25,
                           'B2'
@@ -3982,6 +3978,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       updateComponentInList(updatedComponent);
                     }}
                     options={[
+                      { value: 0, label: "Flotox & Textured-Poly²" },
                       { value: 4096, label: "4K" },
                       { value: 16384, label: "16K" },
                       { value: 65536, label: "64K" },
@@ -3991,69 +3988,79 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     className="factor-select"
                   />
                 </div>
+               { console.log('currentComponent.memorySizeB2', currentComponent.memorySizeB2)}
+                             
+{currentComponent.memorySizeB2 == 0 && (
+        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+          Calculated B₂: 0
+        </div>
+      )}
               </Col>
 
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Junction Temperature for B₂ (°C):</label>
-                  <input
-                    name="techTemperatureB2"
-                    type="number"
-                    min="25"
-                    max="175"
-                    step="1"
-                    value={currentComponent.techTemperatureB2 ?? ''}
-                    onChange={(e) => {
-                      const rawValue = e.target.value;
-                      const temp = rawValue === '' ? null : Number(rawValue);
-                      const updatedComponent = {
-                        ...currentComponent,
-                        techTemperatureB2: temp,
-                        B2: (temp !== null && currentComponent.memorySizeB2)
-                          ? getBValueForTemp(
-                            'Textured-Poly-B2',
-                            currentComponent.memorySizeB2,
-                            temp,
-                            'B2'
-                          )
-                          : null
-                      };
-                      setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
-                    onBlur={(e) => {
-                      let temp = currentComponent.techTemperatureB2;
-                      if (temp === null || isNaN(temp)) temp = 25;
-                      else if (temp < 25) temp = 25;
-                      else if (temp > 175) temp = 175;
-                      else temp = Math.round(temp);
+            
+        {currentComponent.memorySizeB2 !== 0 && (
+  <Col md={4}>
+    <div className="form-group">
+      <label>Junction Temperature for B₂ (°C):</label>
+      <input
+        name="techTemperatureB2"
+        type="number"
+        min="25"
+        max="175"
+        step="1"
+        value={currentComponent.techTemperatureB2 ?? ''}
+        onChange={(e) => {
+          const rawValue = e.target.value;
+          const temp = rawValue === '' ? null : Number(rawValue);
 
-                      if (temp !== currentComponent.techTemperatureB2) {
-                        const updatedComponent = {
-                          ...currentComponent,
-                          techTemperatureB2: temp,
-                          B2: currentComponent.memorySizeB2
-                            ? getBValueForTemp(
-                              'Textured-Poly-B2',
-                              currentComponent.memorySizeB2,
-                              temp,
-                              'B2'
-                            )
-                            : null
-                        };
-                        setCurrentComponent(updatedComponent);
-                        updateComponentInList(updatedComponent);
-                      }
-                    }}
-                    placeholder="25-175°C"
-                  />
-                  {currentComponent.B2 !== null && (
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                      Calculated B₂: {currentComponent.B2?.toFixed(6)}
-                    </div>
-                  )}
-                </div>
-              </Col>
+          if (temp !== currentComponent.techTemperatureB2) {
+            const updatedComponent = {
+              ...currentComponent,
+              techTemperatureB2: temp,
+              B2: getBValueForTemp(
+                'Textured-Poly-B2',
+                currentComponent.memorySizeB2,
+                temp,
+                'B2'
+              )
+            };
+            setCurrentComponent(updatedComponent);
+            updateComponentInList(updatedComponent);
+          }
+        }}
+        onBlur={(e) => {
+          let temp = currentComponent.techTemperatureB2;
+          if (temp === null || isNaN(temp)) temp = 25;
+          else if (temp < 25) temp = 25;
+          else if (temp > 175) temp = 175;
+          else temp = Math.round(temp);
+
+          if (temp !== currentComponent.techTemperatureB2) {
+            const updatedComponent = {
+              ...currentComponent,
+              techTemperatureB2: temp,
+              B2: getBValueForTemp(
+                'Textured-Poly-B2',
+                currentComponent.memorySizeB2,
+                temp,
+                'B2'
+              )
+            };
+            setCurrentComponent(updatedComponent);
+            updateComponentInList(updatedComponent);
+          }
+        }}
+        placeholder="25-175°C"
+      />
+     
+      {currentComponent.B2 !== null && (
+        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+          Calculated B₂: {currentComponent.B2?.toFixed(6)}
+        </div>
+      )}
+    </div>
+  </Col>
+)}
               <Col md={4}>
                 <div className="form-group">
                   <label>Memory Type for (C<sub>1</sub>):</label>
@@ -4250,7 +4257,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                   />
                 </div>
               </Col>
-                 <Col md={4}>
+              <Col md={4}>
                 <div className="form-group">
                   <label>Learning Factor (π<sub>L</sub>):</label>
                   <Select
@@ -4266,8 +4273,8 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     }}
                     options={[
                       {
-                        value: 5.1,
-                        label: "≤ 0.5 years",
+                        value: 0.1,
+                        label: "≤ 0.1 years",
                         piL: 2.0, // Direct value from table
                         description: "Early production phase (highest learning factor)"
                       },
@@ -4465,10 +4472,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
         )}
         {currentComponent.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
           <>
-
-
             <Row className="mb-3">
-
               <Col md={4}>
                 <div className="form-group">
                   <label>Environment (π<sub>E</sub>):</label>
@@ -4679,7 +4683,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                         ...currentComponent,
                         technology: selectedOption.value,
                         technologyType: selectedOption.label,
-                        // Reset calculatedPiT when technology changes
                         calculatedPiT: calculatePiT(
                           selectedOption.value,
                           currentComponent.temperature || 25, // Default to 25°C if not set
@@ -4833,7 +4836,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                 <h2 className="text-center">Calculation Result</h2>
                 <div className="d-flex align-items-center">
                   <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                  <span className="ms-3">{result.value} failures/10<sup>6</sup> hours</span>
+                  <span className="ms-3">{result?.value} failures/10<sup>6</sup> hours</span>
                 </div>
               </>
             )}

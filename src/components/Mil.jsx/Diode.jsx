@@ -2466,17 +2466,6 @@ if (formData.laserDiodePowerRatio) {
     });
 }
 
-
-
-
-
-
-
-
-
-
-
-
             // Calculate final failure rate
             lambda_p = lambda_b * pi_T * pi_Q * pi_I * pi_A * pi_P * pi_E;
             formula = 'λp = λb × πT × πQ × πI × πA × πP × πE';
@@ -2524,7 +2513,7 @@ if (formData.laserDiodePowerRatio) {
     return (
         <Container>
             <div className="container mt-4 background">
-                <h2 className="text-center">Diode</h2>
+                <h2 className="text-center">Discrete Semiconductor</h2>
 
                 {/* Component Selection Section */}
 
