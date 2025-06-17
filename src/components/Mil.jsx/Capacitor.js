@@ -912,4 +912,161 @@
 //   );
 // };
 
-// export default CapacitorCalculation;
+// Add error state at the top of the component
+const [errors, setErrors] = useState({
+  modelType: "",
+  technology: "",
+  automatedPTHs: "",
+  handSolderedPTHs: "",
+  circuitPlanes: "",
+  customPlanes: "",
+  ecf: "",
+  substrateMaterial: "",
+  environment: "",
+  packageSize: "",
+  solderHeight: "",
+  powerDissipation: "",
+  thermalResistance: "",
+  designLife: "",
+  deviceCount: "",
+  cyclingRate: "",
+  leadConfig: "",
+  packageMaterial: ""
+});
+
+// Add validation function
+const validateForm = () => {
+  const newErrors = {};
+  let isValid = true;
+
+  if (!currentModel.type) {
+    newErrors.modelType = "Please select a model type";
+    isValid = false;
+  }
+
+  if (currentModel.type === 'PTH Model') {
+    if (!pwaInputs.technology) {
+      newErrors.technology = "Please select a technology type";
+      isValid = false;
+    }
+    if (isNaN(pwaInputs.automatedPTHs) {
+      newErrors.automatedPTHs = "Please enter a valid number of automated PTHs";
+      isValid = false;
+    }
+    if (isNaN(pwaInputs.handSolderedPTHs)) {
+      newErrors.handSolderedPTHs = "Please enter a valid number of hand soldered PTHs";
+      isValid = false;
+    }
+    if (!pwaInputs.circuitPlanes) {
+      newErrors.circuitPlanes = "Please select number of circuit planes";
+      isValid = false;
+    }
+    if (pwaInputs.circuitPlanes === 'custom' && 
+        (isNaN(pwaInputs.customPlanes) || pwaInputs.customPlanes < 2 || pwaInputs.customPlanes > 18)) {
+      newErrors.customPlanes = "Please enter a valid number of custom planes (2-18)";
+      isValid = false;
+    }
+  } 
+  else if (currentModel.type === 'SMT Model') {
+    if (!smtInputs.ecfValue) {
+      newErrors.ecf = "Please select environmental correction factor";
+      isValid = false;
+    }
+    if (!smtInputs.substrateMaterial) {
+      newErrors.substrateMaterial = "Please select substrate material";
+      isValid = false;
+    }
+    if (!smtInputs.environment) {
+      newErrors.environment = "Please select environment";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.packageSize) || smtInputs.packageSize <= 0) {
+      newErrors.packageSize = "Please enter a valid package size";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.solderHeight) || smtInputs.solderHeight <= 0) {
+      newErrors.solderHeight = "Please enter a valid solder height";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.powerDissipation) || smtInputs.powerDissipation < 0) {
+      newErrors.powerDissipation = "Please enter valid power dissipation";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.thermalResistance) || smtInputs.thermalResistance <= 0) {
+      newErrors.thermalResistance = "Please enter valid thermal resistance";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.designLife) || smtInputs.designLife <= 0) {
+      newErrors.designLife = "Please enter valid design life";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.deviceCount) || smtInputs.deviceCount <= 0) {
+      newErrors.deviceCount = "Please enter valid number of devices";
+      isValid = false;
+    }
+    if (!smtInputs.cyclingRate) {
+      newErrors.cyclingRate = "Please select cycling rate";
+      isValid = false;
+    }
+    if (!smtInputs.leadConfig) {
+      newErrors.leadConfig = "Please select lead configuration";
+      isValid = false;
+    }
+    if (!smtInputs.packageMaterial) {
+      newErrors.packageMaterial = "Please select package material";
+      isValid = false;
+    }
+  }
+
+  setErrors(newErrors);
+  return isValid;
+}
+
+// Modify calculate functions to use validation
+const calculatePwaFailureRate = () => {
+  if (!validateForm()){
+     return null;
+  }
+  // rest of the calculation...
+};
+
+const calculateSmtFailureRate = () => {
+  if (!validateForm()) return null;
+  // rest of the calculation...
+};
+
+// Update the Select components to show errors
+// Example for Model Type selection:
+<Select
+  styles={customStyles}
+  name="type"
+  placeholder="Select"
+  value={currentModel.type ? 
+    { value: currentModel.type, label: currentModel.type } : null}
+  onChange={(selectedOption) => {
+    setCurrentModel({ ...currentModel, type: selectedOption.value });
+    setErrors({...errors, modelType: ""});
+  }}
+  options={[
+    { value: "PTH Model", label: "PTH Model (Through-hole)" },
+    { value: "SMT Model", label: "SMT Model (Surface Mount)" },
+  ]}
+  className={errors.modelType ? 'is-invalid' : ''}
+/>
+{errors.modelType && <small className="text-danger">{errors.modelType}</small>}
+
+// Example for input fields:
+<input
+  type="number"
+  className={`form-control ${errors.automatedPTHs ? 'is-invalid' : ''}`}
+  min="0"
+  value={pwaInputs.automatedPTHs}
+  onChange={(e) => {
+    setPwaInputs(prev => ({
+      ...prev,
+      automatedPTHs: parseInt(e.target.value) || 0
+    }));
+    setErrors({...errors, automatedPTHs: ""});
+  }}
+/>
+{errors.automatedPTHs && <small className="text-danger">{errors.automatedPTHs}</small>}

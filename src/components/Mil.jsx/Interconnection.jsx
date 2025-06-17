@@ -177,6 +177,28 @@ const Interconnection = ({ onCalculate }) => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [showCalculations, setShowCalculations] = useState(false);
+  const [errors, setErrors] = useState({
+    type:"",
+  modelType: "",
+  technology: "",
+  automatedPTHs: "",
+  handSolderedPTHs: "",
+  circuitPlanes: "",
+  customPlanes: "",
+  ecfValue: "",
+  substrateMaterial: "",
+  environment: "",
+  packageSize: "",
+  solderHeight: "",
+  powerDissipation: "",
+  thermalResistance: "",
+  designLife: "",
+  deviceCount: "",
+  cyclingRate: "",
+  leadConfig: "",
+  packageMaterial: ""
+});
+
 
   // Custom styles for Select components
   const customStyles = {
@@ -225,9 +247,97 @@ const Interconnection = ({ onCalculate }) => {
       overflowY: 'auto',
     }),
   };
+const validateForm = () => {
+  const newErrors = {};
+  let isValid = true;
 
+  if (!currentModel.type) {
+    newErrors.type = "Please select a model type";
+    isValid = false;
+  }
+
+  if (currentModel.type === 'PTH Model') {
+    if (!pwaInputs.technology) {
+      newErrors.technology = "Please select a technology type";
+      isValid = false;
+    }
+    if (isNaN(pwaInputs.automatedPTHs)) {
+      newErrors.automatedPTHs = "Please enter a valid number of automated PTHs";
+      isValid = false;
+    }
+    if (isNaN(pwaInputs.handSolderedPTHs)) {
+      newErrors.handSolderedPTHs = "Please enter a valid number of hand soldered PTHs";
+      isValid = false;
+    }
+    if (!pwaInputs.circuitPlanes) {
+      newErrors.circuitPlanes = "Please select number of circuit planes";
+      isValid = false;
+    }
+    if (pwaInputs.circuitPlanes === 'custom' && 
+        (isNaN(pwaInputs.customPlanes) || pwaInputs.customPlanes < 2 || pwaInputs.customPlanes > 18)) {
+      newErrors.customPlanes = "Please enter a valid number of custom planes (2-18)";
+      isValid = false;
+    }
+  } 
+  else if (currentModel.type === 'SMT Model') {
+    if (!smtInputs.ecfValue) {
+      newErrors.ecfValue = "Please select environmental correction factor";
+      isValid = false;
+    }
+    if (!smtInputs.substrateMaterial) {
+      newErrors.substrateMaterial = "Please select substrate material";
+      isValid = false;
+    }
+    if (!smtInputs.environment) {
+      newErrors.environment = "Please select environment";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.packageSize) || smtInputs.packageSize <= 0) {
+      newErrors.packageSize = "Please enter a valid package size";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.solderHeight) || smtInputs.solderHeight <= 0) {
+      newErrors.solderHeight = "Please enter a valid solder height";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.powerDissipation) || smtInputs.powerDissipation < 0) {
+      newErrors.powerDissipation = "Please enter valid power dissipation";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.thermalResistance) || smtInputs.thermalResistance <= 0) {
+      newErrors.thermalResistance = "Please enter valid thermal resistance";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.designLife) || smtInputs.designLife <= 0) {
+      newErrors.designLife = "Please enter valid design life";
+      isValid = false;
+    }
+    if (isNaN(smtInputs.deviceCount) || smtInputs.deviceCount <= 0) {
+      newErrors.deviceCount = "Please enter valid number of devices";
+      isValid = false;
+    }
+    if (!smtInputs.cyclingRate) {
+      newErrors.cyclingRate = "Please select cycling rate";
+      isValid = false;
+    }
+    if (!smtInputs.leadConfig) {
+      newErrors.leadConfig = "Please select lead configuration";
+      isValid = false;
+    }
+    if (!smtInputs.packageMaterial) {
+      newErrors.packageMaterial = "Please select package material";
+      isValid = false;
+    }
+  }
+
+  setErrors(newErrors);
+  return isValid;
+}
   // Calculate PWA failure rate
   const calculatePwaFailureRate = () => {
+    if (!validateForm()){
+     return null;
+  }
     try {
       // Validate required inputs
       if (!pwaInputs.technology?.rate ||
@@ -310,6 +420,9 @@ const environmentCorrectionFactor =()=>{
 }
   // Calculate SMT failure rate
   const calculateSmtFailureRate = () => {
+      if (!validateForm()){
+     return null;
+  }
     try {
       // Get ΔT from environment
       const deltaT = deltaTValuesSMT.find(d => d.env === smtInputs.environment.env)?.value || 21; // Default to GM if not found
@@ -347,7 +460,7 @@ const environmentCorrectionFactor =()=>{
       const lifeRatio = (smtInputs.designLife * 8760) / αSMT;
 
       const λSMT = (ecf/αSMT)?.toFixed(8);
-console.log("λSMTfh",λSMT)
+      console.log("λSMTfh",λSMT)
       const failureRate = λSMT * smtInputs.deviceCount?.toFixed(8);
 
       console.log('Failure Rate:', failureRate);
@@ -404,20 +517,23 @@ console.log("λSMTfh",λSMT)
           {/* Model Type Selection */}
           <div className="form-group">
             <label>Model Type:</label>
-            <Select
-              styles={customStyles}
-              name="type"
-              placeholder="Select"
-              value={currentModel.type ?
-                { value: currentModel.type, label: currentModel.type } : null}
-              onChange={(selectedOption) => {
-                setCurrentModel({ ...currentModel, type: selectedOption.value });
-              }}
-              options={[
-                { value: "PTH Model", label: "PTH Model (Through-hole)" },
-                { value: "SMT Model", label: "SMT Model (Surface Mount)" },
-              ]}
-            />
+   <Select
+  styles={customStyles}
+  name="type"
+  placeholder="Select"
+  value={currentModel.type ? 
+    { value: currentModel.type, label: currentModel.type } : null}
+  onChange={(selectedOption) => {
+    setCurrentModel({ ...currentModel, type: selectedOption.value });
+    setErrors({...errors, type: ""});
+  }}
+  options={[
+    { value: "PTH Model", label: "PTH Model (Through-hole)" },
+    { value: "SMT Model", label: "SMT Model (Surface Mount)" },
+  ]}
+  className={errors.type? 'is-invalid' : ''}
+/>
+{errors.type && <small className="text-danger">{errors.type}</small>}
           </div>
         </Col>
         {currentModel?.type === "SMT Model" && (
@@ -446,11 +562,14 @@ console.log("λSMTfh",λSMT)
           ? `ECF = ${smtInputs.ecfValue}`
           : "Select ECF Range"
       }}
-      onChange={(selectedOption) => setSmtInputs(prev => ({
+      onChange={(selectedOption) => {setSmtInputs(prev => ({
         ...prev,
         ecfValue: selectedOption.value
-      }))}
+      }))
+      
+    setErrors({...errors,ecfValue:""})}}
     />
+    {errors.ecfValue && <small className="text-danger">{errors.ecfValue}</small>}
   </div>
 </Col>
 
@@ -475,8 +594,6 @@ console.log("λSMTfh",λSMT)
                 />
               </div>
             </Col>
-
-
 
           </>
         )}
