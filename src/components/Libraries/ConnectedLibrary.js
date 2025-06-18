@@ -120,7 +120,7 @@ function ConnectedLibrary(props) {
       projectId: projectId,
       companyId: companyId,
     }).then((response) => {
-      console.log("response",response.data.libraryData.moduleName)
+      console.log("response", response.data.libraryData.moduleName)
       const data = response?.data?.libraryData;
       setModuleData(data?.moduleData);
     });
@@ -148,8 +148,8 @@ function ConnectedLibrary(props) {
     {
       title: "Destination Module",
       render: (rowData) => (
-        
-        <div>          
+
+        <div>
           {rowData.destinationModuleName}
         </div>
       ),
@@ -269,7 +269,7 @@ function ConnectedLibrary(props) {
         moduleName: values ? values : "",
       },
     }).then((res) => {
-    
+
       setIsLoading(false);
       setConnectData(res.data.getData);
     });
@@ -283,9 +283,9 @@ function ConnectedLibrary(props) {
     projectSidebar();
   }, [projectId]);
 
-   console.log("@@@@sdd")
+  console.log("@@@@sdd")
   const getCustomValue = (value) => {
- 
+
     Api.get("api/v1/library/get/separate/module/data", {
       params: {
         moduleName: selectModule,
@@ -308,7 +308,7 @@ function ConnectedLibrary(props) {
       )
     )
       .then((responses) => {
-        console.log("response",responses)
+        console.log("response", responses)
         const destinationData = responses.map(
           (response) => response.data.getData
         );
@@ -524,13 +524,17 @@ function ConnectedLibrary(props) {
                                     selectModule
                                       ? [
                                         {
-                                          options: moduleData?.map(
-                                            (list) => ({
+                                          options: moduleData
+                                            ?.filter(
+                                              (item) =>
+                                                item.key !== "Failure Mode Ratio Alpha" &&
+                                                item.name !== "failureModeRatioAlpha"
+                                            )
+                                            .map((list) => ({
                                               value: list.name,
                                               label: list.key,
                                               id: list,
-                                            })
-                                          ),
+                                            })),
                                         },
                                       ]
                                       : []
@@ -548,7 +552,7 @@ function ConnectedLibrary(props) {
                                 <Label>
                                   Enter custom value for {values.Field.label}
                                 </Label>
-                                {console.log("values...",values)}
+                                {console.log("values...", values)}
                                 <Form.Group>
                                   {namesToFilter.includes(
                                     values.Field.value
@@ -709,15 +713,30 @@ function ConnectedLibrary(props) {
                                   }}
                                   placeholder="Select Field"
                                   name="end"
-                                  options={moduleData
-                                    ?.filter((list) => {
-                                      return list.name !== values.Field.label;
-                                    })
-                                    .map((list) => ({
-                                      value: list.name,
-                                      label: list.key,
-                                      id: list._id,
-                                    }))}
+                                  options={
+
+                                    moduleData
+                                      ?.filter(
+                                        (item) =>
+                                          item.key !== "Failure Mode Ratio Alpha" &&
+                                          item.name !== "failureModeRatioAlpha"
+                                      )
+                                      .map((list) => ({
+                                        value: list.name,
+                                        label: list.key,
+                                        id: list,
+                                      }))
+
+                                    // moduleData
+                                    //   ?.filter((list) => {
+                                    //     return list.name !== values.Field.label;
+                                    //   })
+                                    //   .map((list) => ({
+                                    //     value: list.name,
+                                    //     label: list.key,
+                                    //     id: list._id,
+                                    //   }))
+                                  }
                                 />
                                 <ErrorMessage
                                   component="span"

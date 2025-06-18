@@ -637,20 +637,25 @@ function Index(props) {
     },
     {
       field: "operatingPhase",
-      title: "Operating  Phase",
+      title: "Operating  Phases",
       type: "string",
       // cellStyle: { minWidth: "200px", textAlign: "center" },
       // headerStyle: { textAlign: "center", minWidth: "150px" },
       onCellClick: () => handleDropdownSelection("operatingPhase"),
       editComponent: ({ value, onChange, rowData }) => {
         const filteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "operatingPhase"
-          ) || [];
-        const options = filteredData?.map((item) => ({
-          value: item?.sourceValue,
-          label: item?.sourceValue,
+          allSepareteData?.filter((item) => item?.sourceName === "operatingPhase") || [];
+
+        const options = filteredData.map((item) => ({
+          value: item.sourceValue,
+          label: item.sourceValue,
         }));
+
+        const selectedOption = options.find((opt) => opt.value === value);
+
+        const displayOption = selectedOption || (value ? { label: value, value: value } : null);
+
+
         if (options.length === 0) {
           return (
             <input
@@ -666,14 +671,12 @@ function Index(props) {
           return (
             <Select
               name="operatingPhase"
-              value={
-                data.operatingPhase
-                  ? { label: data.operatingPhase, value: data.operatingPhase }
-                  : ""
-              }
-              onChange={(selectedItems) => {
-                handleInputChange(selectedItems, "operatingPhase");
-                getAllConnectedLibrary(selectedItems, "operatingPhase");
+              value={displayOption}
+              onChange={(selectedOption) => {
+                console.log("selectedOptionselectedOption", selectedOption);
+                onChange(selectedOption?.value);
+                handleInputChange(selectedOption, "operatingPhase");
+                getAllConnectedLibrary(selectedOption, "operatingPhase");
               }}
               options={options}
               styles={{
@@ -686,7 +689,8 @@ function Index(props) {
             />
           );
         }
-      },
+      }
+      ,
     },
     {
       field: "function",
@@ -703,6 +707,7 @@ function Index(props) {
           allConnectedData?.filter(
             (item) => item?.destinationName === "function"
           ) || [];
+
 
         const options =
           conncetedFilteredData.length > 0
@@ -2731,16 +2736,12 @@ function Index(props) {
 
 
   const updateFmeca = async (values) => {
-    console.log("values,,,,", values)
     const companyId = localStorage.getItem("companyId");
-
     if (!values.operatingPhase || !values.function || !values.failureMode) {
       toast.error("Operating Phase, Function, and Failure Mode are required.");
       return;
     }
-
     setIsLoading(true);
-
     const payload = {
       operatingPhase: values.operatingPhase,
       function: values.function,
@@ -2784,9 +2785,6 @@ function Index(props) {
       userId: userId,
       Alldata: tableData,
     };
-
-
-    console.log("payload.......", payload)
 
     try {
       const response = await Api.patch("api/v1/FMECA/update", payload);
