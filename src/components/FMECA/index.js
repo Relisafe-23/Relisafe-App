@@ -169,7 +169,7 @@ function Index(props) {
   };
 
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
-   
+
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
@@ -181,11 +181,12 @@ function Index(props) {
       const data = res?.data?.libraryData;
       setAllConnectedData(data ? data : perviousColumnValues);
       setPerviousColumnValues(data);
+      console.log("connected Library data", data)
     });
   };
 
-    const getAllConnectedLibraryAfterUpdate = async () => {
-   
+  const getAllConnectedLibraryAfterUpdate = async () => {
+
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
@@ -266,8 +267,8 @@ function Index(props) {
       failureMode: values.failureMode,
       // searchFM: values.searchFM,
       cause: values.cause,
-      failureModeRatioAlpha: values.failureModeRatioAlpha
-        ? values.failureModeRatioAlpha
+      failureModeRatioAlpha: values?.failureModeRatioAlpha
+        ? values?.failureModeRatioAlpha
         : 0,
       detectableMeansDuringOperation: values.detectableMeansDuringOperation,
       detectableMeansToMaintainer: values.detectableMeansToMaintainer,
@@ -313,7 +314,7 @@ function Index(props) {
       // if (status === 204) {
       //   setFailureModeRatioError(true);
       // }
-    
+
       getProductData();
       setIsLoading(false);
     });
@@ -748,7 +749,7 @@ function Index(props) {
       title: "Failure Mode*",
       type: "string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px" ,textAlign: "center"  },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -860,7 +861,7 @@ function Index(props) {
       title: "Failure Mode Ratio Alpha*",
       type: "string",
       headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px",textAlign: "center"  },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -886,18 +887,18 @@ function Index(props) {
             <input
               type="number"
               name="failureModeRatioAlpha"
-              value={value.failureModeRatioAlpha}
-           
+              value={value?.failureModeRatioAlpha}
+
               placeholder="Enter Failure Mode Ratio Alpha"
               style={{ height: "40px", borderRadius: "4px" }}
               title="Enter Failure Mode Ratio Alpha"
-                 onChange={(e) => {
+              onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value
-                  
-                
+
+
                 );
-                
+
               }}
             />
           );
@@ -920,8 +921,8 @@ function Index(props) {
       field: "detectableMeansDuringOperation",
       title: "Cause",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center"  },
-       headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "cause") || [];
@@ -975,7 +976,7 @@ function Index(props) {
       field: "subSystemEffect",
       title: "Sub System effect*",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center"  },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -1031,7 +1032,7 @@ function Index(props) {
       field: "systemEffect",
       title: "System Effect*",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center"  },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -1087,7 +1088,7 @@ function Index(props) {
       field: "endEffect",
       title: "End Effect*",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center"  },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -1142,7 +1143,7 @@ function Index(props) {
       field: "endEffectRatioBeta",
       title: "End Effect ratio Beta*(must be equal to 1)",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center"  },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -1198,7 +1199,7 @@ function Index(props) {
       field: "safetyImpact",
       title: "Safety Impact*",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center"  },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
       // validate: (rowData) => {
       //   if (rowData.safetyImpact === undefined || rowData.safetyImpact === "") {
@@ -1260,8 +1261,8 @@ function Index(props) {
       field: "referenceHazardId",
       title: "Reference Hazard ID",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center"  },
-       headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1316,7 +1317,7 @@ function Index(props) {
       field: "realibilityImpact",
       title: "Reliability Impact*",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center"  },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
       headerStyle: { textAlign: "center" },
       // validate: (rowData) => {
       //   if (rowData.realibilityImpact === undefined || rowData.realibilityImpact === "") {
@@ -1434,8 +1435,8 @@ function Index(props) {
       field: "frequency",
       title: "Frequency",
       type: "string",
-      cellStyle: { minWidth: "230px" ,textAlign: "center"},
-       headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "frequency") ||
@@ -1489,8 +1490,8 @@ function Index(props) {
       field: "severity",
       title: "Severity",
       type: "string",
-      cellStyle: { minWidth: "230px", textAlign: "center"  },
-        headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "severity") ||
@@ -1544,8 +1545,8 @@ function Index(props) {
       field: "riskIndex",
       title: "Risk Index",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center" },
-         headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "riskIndex") ||
@@ -1600,7 +1601,7 @@ function Index(props) {
       title: "Detectable Means during operation",
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
-          headerStyle: { textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1661,8 +1662,8 @@ function Index(props) {
       field: "detectableMeansToMaintainer",
       title: "Detectable Means to Maintainer",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center"},
-       headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1720,8 +1721,8 @@ function Index(props) {
       field: "BuiltInTest",
       title: "Built-in Test",
       type: "string",
-      cellStyle: { minWidth: "230px" , textAlign: "center" },
-        headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1777,8 +1778,8 @@ function Index(props) {
       field: "designControl",
       title: "Design Control",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center" },
-          headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1833,8 +1834,8 @@ function Index(props) {
       field: "maintenanceControl",
       title: "Maintenance Control",
       type: "string",
-      cellStyle: { minWidth: "230px", textAlign: "center"  },
-        headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1889,8 +1890,8 @@ function Index(props) {
       field: "exportConstraints",
       title: "Export constraints",
       type: "string",
-      cellStyle: { minWidth: "230px" ,textAlign: "center" },
-        headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -1945,8 +1946,8 @@ function Index(props) {
       field: "immediteActionDuringOperationalPhase",
       title: "Immediate Action during operational Phases",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center" },
-          headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2009,8 +2010,8 @@ function Index(props) {
       field: "immediteActionDuringNonOperationalPhase",
       title: "Immediate Action during Non-operational Phases",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center" },
-        headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2074,8 +2075,8 @@ function Index(props) {
       field: "userField1",
       title: "User field 1",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center" },
-         headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2130,8 +2131,8 @@ function Index(props) {
       field: "userField2",
       title: "User field 2",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center" },
-         headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2186,8 +2187,8 @@ function Index(props) {
       field: "userField3",
       title: "User field 3",
       type: "string",
-      cellStyle: { minWidth: "230px", textAlign: "center"  },
-        headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2242,8 +2243,8 @@ function Index(props) {
       field: "userField4",
       title: "User field 4",
       type: "string",
-      cellStyle: { minWidth: "230px" ,textAlign: "center" },
-        headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2298,8 +2299,8 @@ function Index(props) {
       field: "userField5",
       title: "User field 5",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center"  },
-         headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2354,8 +2355,8 @@ function Index(props) {
       field: "userField6",
       title: "User field 6",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center" },
-       headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2410,8 +2411,8 @@ function Index(props) {
       field: "userField7",
       title: "User field 7",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center" },
-          headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2466,8 +2467,8 @@ function Index(props) {
       field: "userField8",
       title: "User field 8",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center" },
-        headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2523,7 +2524,7 @@ function Index(props) {
       title: "User field 9",
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
-        headerStyle: { textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2578,8 +2579,8 @@ function Index(props) {
       field: "userField10",
       title: "User field 10",
       type: "string",
-      cellStyle: { minWidth: "230px",textAlign: "center" },
-         headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "230px", textAlign: "center" },
+      headerStyle: { textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -2621,7 +2622,6 @@ function Index(props) {
             name="userField10"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
-              console.log("",value)
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "userField10");
               getAllConnectedLibrary(selectedItems, "userField10");
@@ -2635,6 +2635,9 @@ function Index(props) {
 
 
   const createFmeca = (values) => {
+
+    console.log("created values", values)
+
     if (productId) {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
@@ -2646,8 +2649,8 @@ function Index(props) {
         failureMode: values.failureMode ? values.failureMode : data.failureMode,
         // searchFM: values.searchFM ? values.searchFM : data.searchFM,
         cause: values.cause ? values.cause : data.cause,
-        failureModeRatioAlpha: values.failureModeRatioAlpha
-          ? values.failureModeRatioAlpha
+        failureModeRatioAlpha: values?.failureModeRatioAlpha
+          ? values?.failureModeRatioAlpha
           : 1,
         detectableMeansDuringOperation: values.detectableMeansDuringOperation
           ? values.detectableMeansDuringOperation
@@ -2726,19 +2729,23 @@ function Index(props) {
     }
   };
 
-  const updateFmeca = (values) => {
 
-    console.log("values...", values)
+  const updateFmeca = async (values) => {
+    console.log("values,,,,", values)
     const companyId = localStorage.getItem("companyId");
-    console.log("value1",values)
+
+    if (!values.operatingPhase || !values.function || !values.failureMode) {
+      toast.error("Operating Phase, Function, and Failure Mode are required.");
+      return;
+    }
+
     setIsLoading(true);
 
-    Api.patch("api/v1/FMECA/update", {
+    const payload = {
       operatingPhase: values.operatingPhase,
       function: values.function,
       failureMode: values.failureMode,
-      // searchFM: values.searchFM,
-      failureModeRatioAlpha: values.failureModeRatioAlpha ? values.failureModeRatioAlpha : 0,
+      failureModeRatioAlpha: values?.failureModeRatioAlpha || 0,
       cause: values.cause,
       detectableMeansDuringOperation: values.detectableMeansDuringOperation,
       detectableMeansToMaintainer: values.detectableMeansToMaintainer,
@@ -2746,7 +2753,7 @@ function Index(props) {
       subSystemEffect: values.subSystemEffect,
       systemEffect: values.systemEffect,
       endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta ? values.endEffectRatioBeta : 1,
+      endEffectRatioBeta: values.endEffectRatioBeta || 1,
       safetyImpact: values.safetyImpact,
       referenceHazardId: values.referenceHazardId,
       realibilityImpact: values.realibilityImpact,
@@ -2776,25 +2783,39 @@ function Index(props) {
       fmecaId: values.id,
       userId: userId,
       Alldata: tableData,
-    })
-      .then((response) => {
-        console.log("response jkh",response);
-        const status = response?.status;
-        // if (status === 204) {
-        //   setFailureModeRatioError(true);
-        // }
-        console.log(status)
+    };
+
+
+    console.log("payload.......", payload)
+
+    try {
+      const response = await Api.patch("api/v1/FMECA/update", payload);
+      if (response?.status === 200) {
+        toast.success("FMECA updated successfully!");
         getProductData();
-        setIsLoading(false);
         getAllConnectedLibraryAfterUpdate();
-      })
-      .catch((error) => {
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
+      } else if (response?.status === 204) {
+        toast.error("Failure Mode Radio Alpha Must be Equal to One !");
+      }
+      else {
+        toast.warning("Update request completed, but status not ideal.");
+        getProductData();
+        getAllConnectedLibraryAfterUpdate();
+      }
+    } catch (error) {
+      const errorStatus = error?.response?.status;
+      if (errorStatus === 401) {
+        logout();
+      } else {
+        toast.error(errorStatus?.response?.status === 422 ? "Failed to update FMECA. Please try again." : "Failure Mode Ratio Alpha must sum to exactly 1");
+        // errorStatus?.message 
+        console.error("Update Error:", errorStatus?.response?.status === 422);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   const deleteFmecaData = (value) => {
     setIsLoading(true);

@@ -247,6 +247,7 @@ function ConnectedLibrary(props) {
   };
   //delete-Api
   const deleteConnectLibarary = (values) => {
+    console.log(values)
     setIsLoading(true);
     const sourceId = values.sourceId;
     Api.delete("api/v1/library/delete/connect/value", {
@@ -343,8 +344,8 @@ function ConnectedLibrary(props) {
               initialValues={{
                 Module: editRowData
                   ? {
-                    label: editRowData.libraryId.moduleName,
-                    value: editRowData.libraryId.moduleName,
+                    label: editRowData?.libraryId?.moduleName,
+                    value: editRowData?.libraryId?.moduleName,
                   }
                   : selectModule
                     ? {
@@ -354,8 +355,8 @@ function ConnectedLibrary(props) {
                     : "",
                 destinationModule: editRowData
                   ? {
-                    label: editRowData.destinationModuleName,
-                    value: editRowData.destinationModuleName,
+                    label: editRowData?.destinationModuleName,
+                    value: editRowData?.destinationModuleName,
                   }
                   : selectDestinationModule
                     ? {
@@ -365,8 +366,8 @@ function ConnectedLibrary(props) {
                     : "",
                 Field: editRowData
                   ? {
-                    label: editRowData.sourceName,
-                    value: editRowData.sourceName,
+                    label: editRowData?.sourceName,
+                    value: editRowData?.sourceName,
                   }
                   : moduleFieldValue
                     ? {
@@ -374,11 +375,11 @@ function ConnectedLibrary(props) {
                       value: moduleFieldValue,
                     }
                     : "",
-                Value: editRowData ? editRowData.sourceValue : "",
+                Value: editRowData ? editRowData?.sourceValue : "",
                 FieldValueAndValue: editRowData
                   ? {
-                    field: editRowData.sourceValue,
-                    value: editRowData.sourceValue,
+                    field: editRowData?.sourceValue,
+                    value: editRowData?.sourceValue,
                   }
                   : {
                     field: "",
