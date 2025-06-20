@@ -299,7 +299,7 @@ console.log("S (Stress Ratio)...", S);
 
   
 
-    // Calculate πV based on the selected formula
+ 
     const piV =
       selectedCapacitor?.value?.πvColumn === 1 ? Math.pow(S / .6, 5) + 1 :
         selectedCapacitor?.value?.πvColumn === 2 ? Math.pow(S / .6, 10) + 1 :

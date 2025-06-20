@@ -221,10 +221,10 @@ const Connectors = ({ onCalculate }) => {
     return Math.exp(Math.pow((numPins - 1) / 10, 0.39));
   };
 
-  const validateForm1 =()=>{
-  const newErrors = {};
+  const validateForm1 = () => {
+    const newErrors = {};
     let isValid = true;
-       if (!selectedQuality) {
+    if (!selectedQuality) {
       newErrors.quality = "Quality Factor  is required"
       isValid = false;
     }
@@ -232,7 +232,7 @@ const Connectors = ({ onCalculate }) => {
       newErrors.environment = "Environment Factor is required"
       isValid = false;
     }
-      setErrors(newErrors);
+    setErrors(newErrors);
     return isValid;
   }
 
@@ -241,7 +241,7 @@ const Connectors = ({ onCalculate }) => {
     const newErrors = {};
     let isValid = true;
 
-       if (!selectedQuality) {
+    if (!selectedQuality) {
       newErrors.quality = "Quality Factor  is required"
       isValid = false;
     }
@@ -249,7 +249,7 @@ const Connectors = ({ onCalculate }) => {
       newErrors.environment = "Environment Factor is required"
       isValid = false;
     }
-    
+
     if (!selectedConnectorType) {
       newErrors.connectorType = "Connector Type is required "
       isValid = false;
@@ -336,13 +336,13 @@ const Connectors = ({ onCalculate }) => {
     return inputs.ambientTemp + calculateTempRiseGeneral();
   };
 
-  // Get temperature factor
+
   const getTempFactorGeneral = (temp) => {
 
     const exactMatch = temperatureFactorsGeneral.find(item => item.temp === Math.floor(temp));
     if (exactMatch) return exactMatch.factor;
 
-    // If not found, use the formula
+
     return Math.exp((-14 / (8.617e-5)) * ((1 / (temp + 273)) - (1 / 298)));
   };
 
@@ -502,23 +502,24 @@ const Connectors = ({ onCalculate }) => {
                     value: item,
                     label: `${item.quality} (πq = ${item.factor})`
                   }))}
-                  value = {selectedQuality}
+                  value={selectedQuality}
                   // value={{
                   //   value: inputData.quality,
                   //   label: `${inputData.quality.quality} (πq = ${inputData.quality.factor})`
                   // }}
-                  onChange={(selectedOption) => {setInputData(prev => ({
-                    ...prev,
-                    quality: selectedOption.value
-                  }))
-                  setSelectedQuality(selectedOption)
-                  setErrors({...errors,quality:""})
+                  onChange={(selectedOption) => {
+                    setInputData(prev => ({
+                      ...prev,
+                      quality: selectedOption.value
+                    }))
+                    setSelectedQuality(selectedOption)
+                    setErrors({ ...errors, quality: "" })
                   }}
                 />
-                  {errors.quality && <small className="text-danger">{errors.quality}</small>}
+                {errors.quality && <small className="text-danger">{errors.quality}</small>}
               </div>
             </Col>
-         
+
           </>
         )}
 
@@ -1084,13 +1085,14 @@ const Connectors = ({ onCalculate }) => {
                     value: item,
                     label: `${item.type} (λb = ${item.rate})`
                   }))}
-                  onChange={(selectedOption) => {setInputData(prev => ({
-                    ...prev,
-                    componentType: selectedOption.value
-                  }))
-                 setSelectedConnectorType(selectedOption)
-                  setErrors({...errors,connectorType:''})
-                }}
+                  onChange={(selectedOption) => {
+                    setInputData(prev => ({
+                      ...prev,
+                      componentType: selectedOption.value
+                    }))
+                    setSelectedConnectorType(selectedOption)
+                    setErrors({ ...errors, connectorType: '' })
+                  }}
                 />
               </div>
             </Col>
@@ -1109,12 +1111,14 @@ const Connectors = ({ onCalculate }) => {
                   //   value: inputData.environment,
                   //   label: `${inputData.environment.label} (πE = ${inputData.environment.factor})`
                   // }}
-                  onChange={(selectedOption) => {setInputData(prev => ({
-                    ...prev,
-                    environment: selectedOption.value
-                  }))
-                  setSelectedEnvironment(selectedOption)
-                  setErrors({...errors,environment:''})}}
+                  onChange={(selectedOption) => {
+                    setInputData(prev => ({
+                      ...prev,
+                      environment: selectedOption.value
+                    }))
+                    setSelectedEnvironment(selectedOption)
+                    setErrors({ ...errors, environment: '' })
+                  }}
                 //          onChange={(selectedOption) => {setInputs(prev => ({
                 //     ...prev,
                 //     environment: selectedOption.value
@@ -1122,14 +1126,14 @@ const Connectors = ({ onCalculate }) => {
                 //   setSelectedEnvironment(selectedOption)
                 //   setErrors({...errors,environment:''})
                 // }}
-          />
+                />
                 {errors.environment && <small className="text-danger">{errors.environment}</small>}
               </div>
             </Col>
           </Row>
 
           <Row className="mb-3">
-            
+
             <Col md={6}>
               {/* Number of Active Pins */}
               <div className="form-group">
@@ -1155,14 +1159,14 @@ const Connectors = ({ onCalculate }) => {
                 )}
               </div>
             </Col>
-             <Col md={6}>
+            <Col md={6}>
               <div>
                 <label>Active Pins Factor (π<sub>p</sub>):</label>
                 <input
                   type="text"
-           className="form-control"
-                     value={calculateActivePinsFactorSocket(inputData.activePins)?.toFixed(1) ||""}
-                        disabled ={true}
+                  className="form-control"
+                  value={calculateActivePinsFactorSocket(inputData.activePins)?.toFixed(1) || ""}
+                  disabled={true}
                   style={{
                     width: "100%",
                     padding: "0.375rem 0.75rem",
@@ -1174,9 +1178,9 @@ const Connectors = ({ onCalculate }) => {
                     borderRadius: "0.25rem"
                   }}
                   readOnly
-                  // disabled={calculateActivePinsFactorSocket(inputData.activePins)?.toFixed(1)}
-               
-              
+                // disabled={calculateActivePinsFactorSocket(inputData.activePins)?.toFixed(1)}
+
+
                 />
               </div>
             </Col>

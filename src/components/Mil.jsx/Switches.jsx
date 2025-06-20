@@ -21,21 +21,14 @@ import { Alert, Paper, Typography } from "@mui/material";
 const Switches = ({ onCalculate }) => {
   const [currentComponent, setCurrentComponent] = useState({
     type: "Switches,Circuit Breakers",
-    switchType: {
-      value:     'Centrifugal (N/A)',
-      label:     'Centrifugal (N/A)',
-      baseFailureRate: 1.7
-    },
-    configurationFactor: 'SPST',
-    loadType: 'resistive',
-    usageFactor: 'not-power',
-    failureType: {
-      value: "Magnetic",
-      label: "Magnetic",
-      baseFailureRate: 0.34
-    },
-    environment: 'AIC',
-    quality: 'MIL-SPEC',
+    switchType: "",
+     
+    configurationFactor: '',
+    loadType:"",
+    usageFactor: "",
+    failureType: "",
+    environment: '',
+    quality: '',
     ratedCurrent: 10,
     operatingCurrent: 1,
     stressRatio: 0.1
@@ -47,18 +40,29 @@ const Switches = ({ onCalculate }) => {
   const [calculation, setCalculation] = useState([])
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState({
+    type: '',
+    switchType: '',
+    failureType: '',
+    environment: '',
+    quality: '',
+    configurationFactor: '',
+    loadType: '',
+    usageFactor: '',
+    ratedCurrent: '',
+    operatingCurrent: ''
+  });
+   
 
-
-  // Quality factors (π_Q) - typical values from MIL-HDBK-217F
   const QUALITY_FACTORS = {
     'MIL-SPEC': 1.0,
-    'Lower': 2.0  // Example value, adjust based on your standard
+    'Lower': 2.0  
   };
   const QUALITY_FACTORS1 = {
     'MIL-SPEC': 1.0,
-    'Lower': 8.4  // Example value, adjust based on your standard
+    'Lower': 8.4  
   };
-  // Contact configuration factors (π_C)
+
   const CONTACT_FORM_FACTORS = {
     'SPST': 1.0, 'DPST': 1.3, 'SPDT': 1.3, '3PST': 1.4,
     '4PST': 1.6, 'DPDT': 1.6, '3PDT': 1.8, '4PDT': 2.0, '6PDT': 2.3
@@ -67,14 +71,14 @@ const Switches = ({ onCalculate }) => {
     'SPST': 1.0, 'DPST': 2.0, '3PST': 3.0,
     '4PST': 4.0,
   };
-  // Environment factors (π_E)
-  const ENVIRONMENT_FACTORS = {
+
+  const ENVIRONMENT_FACTORS1 = {
     'GB': 1.0, 'GF': 3.0, 'GM': 18, 'NS': 8.0, 'NU': 29,
     'AIC': 10, 'AIF': 18, 'AUC': 13, 'AUF': 22, 'ARW': 46,
     'SF': 0.50, 'MF': 25, 'ML': 67, 'CL': 1200
   };
 
-  const ENVIRONMENT_FACTORS1 = {
+  const ENVIRONMENT_FACTORS = {
     'GB': 1.0, 'GF': 2.0, 'GM': 15, 'NS': 8.0, 'NU': 27,
     'AIC': 7.0, 'AIF': 9.0, 'AUC': 11, 'AUF': 12, 'ARW': 46,
     'SF': 0.50, 'MF': 25, 'ML': 66, 'CL': 0
@@ -124,17 +128,85 @@ const BASE_FAILURE_RATES = {
 
   };
   const USAGE_FACTORS = {
-    'not-power': 1.0,    // Not used as power on/off switch
-    'power': 2.5         // Also used as power on/off switch
+    'not-power': 1.0,   
+    'power': 2.5         
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
 
+    if (!currentComponent.type) {
+      newErrors.type = 'Please select a part type.';
+      isValid = false;
+    }
+
+    if (currentComponent.type === "Switches") {
+      if (!currentComponent.switchType) {
+        newErrors.switchType = 'Please select a switch type.';
+        isValid = false;
+      }
+      if (!currentComponent.configurationFactor) {
+        newErrors.configurationFactor = 'Please select a contact configuration.';
+        isValid = false;
+      }
+      if (!currentComponent.loadType) {
+        newErrors.loadType = 'Please select a load type.';
+        isValid = false;
+      }
+      if (!currentComponent.ratedCurrent || currentComponent.ratedCurrent <= 0) {
+        newErrors.ratedCurrent = 'Please enter a valid rated current (must be > 0).';
+        isValid = false;
+      }
+        if (!currentComponent.configurationFactor) {
+        newErrors.configurationFactor = 'Please select a contact configuration.';
+        isValid = false;
+      }
+        if (!currentComponent.quality) {
+      newErrors.quality = 'Please select a quality factor.';
+      isValid = false;
+    }
+      if (!currentComponent.operatingCurrent || currentComponent.operatingCurrent < 0) {
+        newErrors.operatingCurrent = 'Please enter a valid operating current (must be ≥ 0).';
+        isValid = false;
+      }
+      if (currentComponent.operatingCurrent > currentComponent.ratedCurrent) {
+        newErrors.operatingCurrent = 'Operating current cannot exceed rated current.';
+        isValid = false;
+      }
+    } else if (currentComponent.type === "Switches,Circuit Breakers") {
+      if (!currentComponent.failureType) {
+        newErrors.failureType = 'Please select a failure type.';
+        isValid = false;
+      }
+      if (!currentComponent.usageFactor) {
+        newErrors.usageFactor = 'Please select a usage factor.';
+        isValid = false;
+      }
+      if (!currentComponent.configurationFactor) {
+        newErrors.configurationFactor = 'Please select a contact configuration.';
+        isValid = false;
+      }
+    }
+
+    if (!currentComponent.environment) {
+      newErrors.environment = 'Please select an environment.';
+      isValid = false;
+    }
+    if (!currentComponent.quality) {
+      newErrors.quality = 'Please select a quality factor.';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
   const calculateLoadStressFactor = (currentComponent, loadType) => {
     // const s = stressRatio;
     const s = currentComponent.operatingCurrent / currentComponent.ratedCurrent;
-    if (s < 0 || s > 1) return 1.0; // Default if invalid
+    if (s < 0 || s > 1) return 1.0; 
 
-    // Formulas from the image
+ 
     if (loadType === 'resistive') return Math.exp(Math.pow((s / 0.8), 2));
     if (loadType === 'inductive') return Math.exp(Math.pow((s / 0.4), 2));
     if (loadType === 'lamp') return Math.exp(Math.pow((s / 0.2), 2));
@@ -150,6 +222,10 @@ const BASE_FAILURE_RATES = {
     return λ_b * π_L * π_C * π_Q * π_E;
   };
   const handleCalculate = () => {
+        if (!validateForm()) {
+      setResult(null);
+      return;
+    }
     const λ_b = BASE_FAILURE_RATES[currentComponent.switchType.value];
     const π_L = calculateLoadStressFactor(currentComponent, currentComponent.loadType);
     const π_C = CONTACT_FORM_FACTORS[currentComponent.configurationFactor];
@@ -157,7 +233,7 @@ const BASE_FAILURE_RATES = {
     const π_Q = QUALITY_FACTORS[currentComponent.quality];
     const λ_p = λ_b * π_L * π_C * π_Q * π_E;
     const newResult = {
-      id: Date.now(), // unique ID for each calculation
+      id: Date.now(), 
       value: λ_p.toFixed(6),
       parameters: {
         λ_b,
@@ -189,22 +265,26 @@ const BASE_FAILURE_RATES = {
       λ_b: BASE_FAILURE_RATES[currentComponent.switchType.value],
       π_L: calculateLoadStressFactor(currentComponent, currentComponent.loadType),
       π_C: CONTACT_FORM_FACTORS[currentComponent.configurationFactor],
-      π_E: ENVIRONMENT_FACTORS[currentComponent.environment],
+      π_E: ENVIRONMENT_FACTORS1[currentComponent.environment],
       π_Q: QUALITY_FACTORS[currentComponent.quality],
       λ_p: calculateFailureRate()
     }];
   }, [currentComponent, result]);
+
   const calculateFailureRate1 = () => {
     const λ_b = BASE_FAILURE_RATES1[currentComponent.failureType.value];
     const π_C = CONTACT_FORM_FACTORS1[currentComponent.configurationFactor];
     const π_E = ENVIRONMENT_FACTORS1[currentComponent.environment];
     const π_Q = QUALITY_FACTORS1[currentComponent.quality];
     const π_U = USAGE_FACTORS[currentComponent.usageFactor];
-    // Calculate final failure rate
+  
     return λ_b * π_U * π_C * π_Q * π_E;
   }
-
   const handleCalculate1 = () => {
+        if (!validateForm()) {
+      setResult(null);
+      return
+    }
     const λ_b = BASE_FAILURE_RATES1[currentComponent.failureType.value];
     const π_C = CONTACT_FORM_FACTORS1[currentComponent.configurationFactor];
     const π_E = ENVIRONMENT_FACTORS1[currentComponent.environment];
@@ -237,13 +317,11 @@ const BASE_FAILURE_RATES = {
       onCalculate(λ_p);
     }
   }
-
-
   const handleCurrentChange = (e) => {
     const { name, value } = e.target;
     const newValue = parseFloat(value) || 0;
 
-    // Calculate stress ratio first
+ 
     let stressRatio = currentComponent.stressRatio;
     if (name === 'ratedCurrent' || name === 'operatingCurrent') {
       const rated = name === 'ratedCurrent' ? newValue : currentComponent.ratedCurrent || 1;
@@ -253,7 +331,7 @@ const BASE_FAILURE_RATES = {
       stressRatio = operating / rated;
     }
 
-    // Then do a single state update
+  
     setCurrentComponent(prev => ({
       ...prev,
       [name]: newValue,
@@ -265,27 +343,27 @@ const BASE_FAILURE_RATES = {
     {
       title: <span>λ<sub>b</sub></span>,
       field: 'λ_b',
-      render: rowData => rowData.λ_b?.toFixed(6) || '-'
+      render: rowData => rowData.λ_b?.toFixed(2) || '-'
     },
     {
       title: <span>π<sub>U</sub></span>,
       field: 'π_U',
-      render: rowData => rowData.π_U?.toFixed(6) || '-'
+      render: rowData => rowData.π_U?.toFixed(2) || '-'
     },
     {
       title: <span>π<sub>C</sub></span>,
       field: 'π_C',
-      render: rowData => rowData.π_C?.toFixed(6) || '-'
+      render: rowData => rowData.π_C?.toFixed(2) || '-'
     },
     {
       title: <span>π<sub>Q</sub></span>,
       field: 'π_Q',
-      render: rowData => rowData.π_Q?.toFixed(6) || '-'
+      render: rowData => rowData.π_Q?.toFixed(2) || '-'
     },
     {
       title: <span>π<sub>E</sub></span>,
       field: 'π_E',
-      render: rowData => rowData.π_E?.toFixed(6) || '-'
+      render: rowData => rowData.π_E?.toFixed(2) || '-'
     },
     {
       title: <span>λ<sub>p</sub></span>,
@@ -298,28 +376,28 @@ const BASE_FAILURE_RATES = {
     {
       title: <span>λ<sub>b</sub></span>,
       field: 'parameters.λ_b',
-      render: rowData => rowData.λ_b || '-'
+      render: rowData => rowData.λ_b?.toFixed(2) || '-'
     },
     {
       title: <span>π<sub>L</sub></span>,
       field: 'parameters.π_L',
-      render: rowData => rowData.π_L?.toFixed(4) || '-'
+      render: rowData => rowData.π_L?.toFixed(2) || '-'
     },
 
     {
       title: <span>π<sub>C</sub></span>,
       field: 'π_C',
-      render: rowData => rowData.π_C || '-'
+      render: rowData => rowData.π_C?.toFixed(2) || '-'
     },
     {
       title: <span>π<sub>Q</sub></span>,
       field: 'π_Q',
-      render: rowData => rowData.π_Q || '-'
+      render: rowData => rowData.π_Q?.toFixed(2) || '-'
     },
     {
       title: <span>π<sub>E</sub></span>,
       field: 'π_E',
-      render: rowData => rowData.π_E || '-'
+      render: rowData => rowData.π_E?.toFixed(2) || '-'
     },
     {
       title: "Failure Rate ",
@@ -331,29 +409,30 @@ const BASE_FAILURE_RATES = {
 
   return (
     <div className="switch-calculator">
-      <h2 className='text-center'>Switches</h2>
+      <h2 className='text-center'style={{ fontSize: '2.0rem' }}>{currentComponent?.type ? currentComponent.type.replace(/,/g, ' ').trim() :  "Switches,Circuit Breakers"}</h2>
       <Row className="mb-3">
-        <Col md={4}>
-          {/* Component Type Selection */}
-          <div className="form-group" >
-            <label>
-              Part Type:</label>
-            <Select
-              styles={customStyles}
-              name="type"
-              placeholder="Select"
-              value={currentComponent.type ?
-                { value: currentComponent.type, label: currentComponent.type } : null}
-              onChange={(selectedOption) => {
-                setCurrentComponent({ ...currentComponent, type: selectedOption.value });
-              }}
-              options={[
-                { value: "Switches", label: "Switches" },
-                { value: "Switches,Circuit Breakers", label: "Switches,Circuit Breakers" },
-              ]}
-            />
-          </div>
-        </Col>
+          <Col md={4}>
+        <div className="form-group">
+    <label>Part Type:</label>
+    <Select
+      styles={customStyles}
+      name="type"
+      placeholder="Select"
+      value={currentComponent.type ? 
+        { value: currentComponent.type, label: currentComponent.type } : null}
+      onChange={(selectedOption) => {
+        setCurrentComponent({ ...currentComponent, type: selectedOption.value });
+        setErrors({ ...errors, type: '' });
+      }}
+      options={[
+        { value: "Switches", label: "Switches" },
+        { value: "Switches,Circuit Breakers", label: "Switches,Circuit Breakers" },
+      ]}
+      className={errors.type ? 'is-invalid' : ''}
+    />
+    {errors.type && <small className="text-danger">{errors.type}</small>}
+  </div>
+  </Col>
         {currentComponent.type === "Switches,Circuit Breakers" && (
           <>
             <Col md={4}>
@@ -362,13 +441,14 @@ const BASE_FAILURE_RATES = {
                 <Select
                   styles={customStyles}
                   name="failureType"
-
+                  isInvalid={!!errors.failureType}
                   value={currentComponent.failureType}
                   onChange={(selectedOption) => {
                     setCurrentComponent({
                       ...currentComponent,
                       failureType: selectedOption
                     });
+                    setErrors({...errors,failureType:""})
                   }}
                   options={[
                     {
@@ -388,26 +468,70 @@ const BASE_FAILURE_RATES = {
                     }
                   ]}
                 />
+                {errors.failureType && <small className="text-danger">{errors.failureType}</small>}
               </div>
             </Col>
-          </>
-        )}
-        <Col md={4}>
-          {/* Environment */}
+              <Col md={4}>
           <div className="form-group">
             <label>Environment (π<sub>E</sub>):</label>
             <Select
               styles={customStyles}
               name="environment"
+              isInvalid={!!errors.environment}
               value={{
                 value: currentComponent.environment,
-                label: `${currentComponent.environment} (${ENVIRONMENT_FACTORS[currentComponent.environment]})`
+                label: currentComponent.environment? `${currentComponent.environment} (${ENVIRONMENT_FACTORS[currentComponent.environment]})`:"select..."
               }}
               onChange={(selectedOption) => {
                 setCurrentComponent({
                   ...currentComponent,
                   environment: selectedOption.value
                 });
+                setErrors({...errors,environment:""})
+              }}
+              options={[
+                { value: "GB", label: "Ground, Benign (1.0)" },
+                { value: "GF", label: "Ground, Fixed (2.0)" },
+                { value: "GM", label: "Ground, Mobile (15)" },
+                { value: "NS", label: "Naval, Sheltered (8.0)" },
+                { value: "NU", label: "Naval, Unsheltered (27)" },
+                { value: "AIC", label: "Airborne, Inhabited Cargo (7.0)" },
+                { value: "AIF", label: "Airborne, Inhabited Fighter (9.0)" },
+                { value: "AUC", label: "Airborne, Uninhabited Cargo (11)" },
+                { value: "AUF", label: "Airborne, Uninhabited Fighter (12)" },
+                { value: "ARW", label: "Airborne, Rotary Wing (46)" },
+                { value: "SF", label: "Space, Flight (0.50)" },
+                { value: "MF", label: "Missile, Flight (25)" },
+                { value: "ML", label: "Missile, Launch (66)" },
+                { value: "CL", label: "Cannon, Launch (N/A)" }
+              
+              ]}
+            />
+                 {errors.environment && <small className="text-danger">{errors.environment}</small>}
+          </div>
+        </Col>
+          </>
+        )}
+      
+        {currentComponent.type === "Switches" && (
+          <>
+            <Col md={4}>
+          <div className="form-group">
+            <label>Environment (π<sub>E</sub>):</label>
+            <Select
+              styles={customStyles}
+              name="environment"
+              isInvalid={!!errors.environment}
+              value={{
+                value: currentComponent.environment,
+                label: currentComponent.environment? `${currentComponent.environment} (${ENVIRONMENT_FACTORS1[currentComponent.environment]})`:"select..."
+              }}
+              onChange={(selectedOption) => {
+                setCurrentComponent({
+                  ...currentComponent,
+                  environment: selectedOption.value
+                });
+                setErrors({...errors,environment:""})
               }}
               options={[
                 { value: "GB", label: "Ground, Benign (1.0)" },
@@ -415,44 +539,45 @@ const BASE_FAILURE_RATES = {
                 { value: "GM", label: "Ground, Mobile (18)" },
                 { value: "NS", label: "Naval, Sheltered (8.0)" },
                 { value: "NU", label: "Naval, Unsheltered (29)" },
-                { value: "AIC", label: "Airborne, Inhabited Cargo (10)" },
-                { value: "AIF", label: "Airborne, Inhabited Fighter (18)" },
-                { value: "AUC", label: "Airborne, Uninhabited Cargo (13)" },
+                { value: "AIC", label: "Airborne, Inhabited Cargo (10.0)" },
+                { value: "AIF", label: "Airborne, Inhabited Fighter (18.0)" },
+                { value: "AUC", label: "Airborne, Uninhabited Cargo (13.0)" },
                 { value: "AUF", label: "Airborne, Uninhabited Fighter (22)" },
                 { value: "ARW", label: "Airborne, Rotary Wing (46)" },
                 { value: "SF", label: "Space, Flight (0.50)" },
                 { value: "MF", label: "Missile, Flight (25)" },
                 { value: "ML", label: "Missile, Launch (67)" },
                 { value: "CL", label: "Cannon, Launch (1200)" }
-                // ... other environment options
+              
               ]}
             />
+           {errors.environment && <small className="text-danger">{errors.environment}</small>}
           </div>
         </Col>
-        {currentComponent.type === "Switches" && (
-          <>
             <Col md={4}>
-              {/* Quality Factor */}
               <div className="form-group">
                 <label>Quality Factor (π<sub>Q</sub>):</label>
                 <Select
                   styles={customStyles}
+                   isInvalid={!!errors.quality}
                   name="quality"
                   value={{
                     value: currentComponent.quality,
-                    label: `${currentComponent.quality} (${QUALITY_FACTORS[currentComponent.quality]})`
+                    label: currentComponent.quality?`${currentComponent.quality} (${QUALITY_FACTORS[currentComponent.quality]})`:"select..."
                   }}
                   onChange={(selectedOption) => {
                     setCurrentComponent(prev => ({
                       ...prev,
                       quality: selectedOption.value
                     }));
+                    setErrors({...errors,quality:""})
                   }}
                   options={[
                     { value: 'MIL-SPEC', label: 'MIL-SPEC (1.0)' },
                     { value: 'Lower', label: 'Lower (2.0)' }
                   ]}
                 />
+                {errors.quality && <small className="text-danger">{errors.quality}</small>}
               </div>
             </Col>
           </>
@@ -462,18 +587,19 @@ const BASE_FAILURE_RATES = {
         <>
           <Row className="mb-3">
             <Col md={4}>
-              {/* Switch Type Selection */}
               <div className="form-group">
                 <label>Switch Type (λ<sub>b</sub>):</label>
                 <Select
                   styles={customStyles}
                   name="switchType"
+                     isInvalid={!!errors.switchType}
                   value={currentComponent.switchType}
                   onChange={(selectedOption) => {
                     setCurrentComponent(prev => ({
                       ...prev,
                       switchType: selectedOption
                     }));
+                    setErrors({...errors,switchType:""})
                   }}
                   options={[
                     {
@@ -560,14 +686,14 @@ const BASE_FAILURE_RATES = {
                       baseFailureRate: 0.10,
                       description: "MIL-S-3950 specification"
                     }
-                    // ... other switch options
+              
                   ]}
                 />
+                {errors.switchType && <small className="text-danger">{errors.switchType}</small>}
               </div>
             </Col>
 
             <Col md={4}>
-              {/* Contact Configuration */}
               <div className="form-group">
                 <label>Contact Configuration (π<sub>C</sub>):</label>
                 <Select
@@ -575,13 +701,14 @@ const BASE_FAILURE_RATES = {
                   name="configurationFactor"
                   value={{
                     value: currentComponent.configurationFactor,
-                    label: `${currentComponent.configurationFactor} (${CONTACT_FORM_FACTORS[currentComponent.configurationFactor]})`
+                    label: currentComponent.configurationFactor?`${currentComponent.configurationFactor} (${CONTACT_FORM_FACTORS[currentComponent.configurationFactor]})`:"select..."
                   }}
                   onChange={(selectedOption) => {
                     setCurrentComponent(prev => ({
                       ...prev,
                       configurationFactor: selectedOption.value
                     }));
+                    setErrors({...errors,configurationFactor:""})
                   }}
                   options={[
                     { value: 'SPST', label: 'SPST (1 contact)' },
@@ -592,29 +719,29 @@ const BASE_FAILURE_RATES = {
                     { value: 'DPDT', label: 'DPDT (4 contact)' },
                     { value: '3PDT', label: '3PDT (6 contact)' },
                     { value: '4PDT', label: '4PDT (8 contact)' },
-                    { value: '6PDT', label: '6PDT (12 contact)' }
-                    // ... other configuration options
+                    { value: '6PDT', label: '6PDT (12 contact)'}
                   ]}
                 />
+                 {errors.configurationFactor && <small className="text-danger">{errors.configurationFactor}</small>}
               </div>
             </Col>
 
             <Col md={4}>
-              {/* Load Type */}
               <div className="form-group">
-                <label>Load Type:</label>
+                <label>Load Type (π<sub>L</sub>):</label>
                 <Select
                   styles={customStyles}
                   name="loadType"
                   value={{
                     value: currentComponent.loadType,
-                    label: currentComponent.loadType?.charAt(0)?.toUpperCase() + currentComponent.loadType?.slice(1)
+                    label: currentComponent.loadType? currentComponent.loadType?.charAt(0)?.toUpperCase() + currentComponent.loadType?.slice(1):"select..."
                   }}
                   onChange={(selectedOption) => {
                     setCurrentComponent(prev => ({
                       ...prev,
                       loadType: selectedOption.value
                     }));
+                    setErrors({...errors,loadType:""})
                   }}
                   options={[
                     { value: 'resistive', label: 'Resistive' },
@@ -622,6 +749,7 @@ const BASE_FAILURE_RATES = {
                     { value: 'lamp', label: 'Lamp' }
                   ]}
                 />
+                 {errors.loadType && <small className="text-danger">{errors.loadType}</small>}
               </div>
             </Col>
           </Row>
@@ -751,10 +879,6 @@ const BASE_FAILURE_RATES = {
 
                       <div className="table-responsive">
 
-
-                        {/* // Define your columns */}
-
-                        {/* // In your component render: */}
                         <MaterialTable
                           columns={columns}
                           data={tableData}
@@ -838,24 +962,23 @@ const BASE_FAILURE_RATES = {
                   placeholder="Select"
                   value={{
                     value: currentComponent.usageFactor,
-                    label: `${currentComponent.usageFactor} (${USAGE_FACTORS[currentComponent.usageFactor]})`
+                    label:currentComponent.usageFactor? `${currentComponent.usageFactor} (${USAGE_FACTORS[currentComponent.usageFactor]})`:"select..."
                   }}
                   onChange={(selectedOption) => {
                     setCurrentComponent({
                       ...currentComponent,
                       usageFactor: selectedOption.value
                     });
+                    setErrors({...errors,usageFactor:""})
                   }}
                   options={[
                     { value: 'power', label: 'Power' },
                     { value: 'not-power', label: 'Not Power' }
                   ]}
                 />
+               {errors.usageFactor && <small className="text-danger">{errors.usageFactor}</small>}
               </div>
             </Col>
-
-
-
             <Col md={4}>
               <div className="form-group">
                 <label>Quality Factor (π<sub>Q</sub>):</label>
@@ -864,19 +987,21 @@ const BASE_FAILURE_RATES = {
                   name="quality"
                   value={{
                     value: currentComponent.quality,
-                    label: `${currentComponent.quality} (${QUALITY_FACTORS1[currentComponent.quality]})`
+                    label: currentComponent.quality? `${currentComponent.quality} (${QUALITY_FACTORS1[currentComponent.quality]})`:"select..."
                   }}
                   onChange={(selectedOption) => {
                     setCurrentComponent({
                       ...currentComponent,
                       quality: selectedOption.value
                     });
+                    setErrors({...errors,quality:""})
                   }}
                   options={[
                     { value: 'MIL-SPEC', label: 'MIL-SPEC (1.0)' },
                     { value: 'Lower', label: 'Lower (8.4)' }
                   ]}
                 />
+                   {errors.quality && <small className="text-danger">{errors.quality}</small>}
               </div>
             </Col>
             <Col md={4}>
@@ -887,13 +1012,14 @@ const BASE_FAILURE_RATES = {
                   name="configurationFactor"
                   value={{
                     value: currentComponent.configurationFactor,
-                    label: `${currentComponent.configurationFactor} (${CONTACT_FORM_FACTORS1[currentComponent.configurationFactor]})`
+                    label: currentComponent.configurationFactor?`${currentComponent.configurationFactor} (${CONTACT_FORM_FACTORS1[currentComponent.configurationFactor]})`:"select..."
                   }}
                   onChange={(selectedOption) => {
                     setCurrentComponent({
                       ...currentComponent,
                       configurationFactor: selectedOption.value
                     });
+                    setErrors({...errors,configurationFactor:""})
                   }}
                   options={[
                     { value: 'SPST', label: 'SPST' },
@@ -902,6 +1028,7 @@ const BASE_FAILURE_RATES = {
                     { value: '4PST', label: '4PST' }
                   ]}
                 />
+                 {errors.configurationFactor && <small className="text-danger">{errors.configurationFactor}</small>}
               </div>
             </Col>
           </Row>
@@ -968,7 +1095,7 @@ const BASE_FAILURE_RATES = {
                               λ_b: BASE_FAILURE_RATES1[currentComponent.failureType.value],
                               π_C: CONTACT_FORM_FACTORS1[currentComponent.configurationFactor],
                               π_Q: QUALITY_FACTORS1[currentComponent.quality],
-                              π_E: ENVIRONMENT_FACTORS1[currentComponent.environment],
+                              π_E: ENVIRONMENT_FACTORS[currentComponent.environment],
                               π_U: USAGE_FACTORS[currentComponent.usageFactor],
                               λ_p: calculateFailureRate1() // This should match the value shown in results
                             }]}
@@ -1037,5 +1164,4 @@ const BASE_FAILURE_RATES = {
     </div>
   );
 };
-
 export default Switches;

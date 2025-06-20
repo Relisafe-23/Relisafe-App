@@ -164,7 +164,7 @@ const Laser = ({ onCalculate }) => {
     { type: 'Liquid Cooled', factor: 0.1 },
     { type: 'Air/Gas Cooled', factor: 1.0 }
   ];
-  // Custom styles for Select components
+
   const customStyles = {
     control: (provided) => ({
       ...provided,
@@ -191,47 +191,67 @@ const Laser = ({ onCalculate }) => {
   };
   // State for form laser CO2 sealed
   const [input, setInput] = useState({
-    power: couplingRates[0],
-    opticalSurfaces: opticalSurfaceFactors[0],
-    environment: environmentFactorsCO2[0]
+    power: "",
+    opticalSurfaces: "",
+    environment: ""
   });
 
   const [inputData, setInputData] = useState({
     // tubeCurrent: lasingMediaRatesCO2[0],
-    overfill: overfillFactors[0],
-    ballast: ballastFactors[0],
-    opticalSurfaces: opticalSurfaceFactors[0],
-    environment: environmentFactorsCO2[0]
+    overfill: "",
+    ballast: "",
+    opticalSurfaces: "",
+    environment: ""
   });
   // State for form laser helium and argon
   const [inputs, setInputs] = useState({
-    lasingMedia: lasingMediaRates[0],
-    environment: environmentFactors[0],
-    coupling: couplingRates[0]
+    lasingMedia: "",
+    environment: "",
+    coupling: ""
   });
   // State for form laser solid state
   const [input2, setInput2] = useState({
-    pumpType: pumpTypes[0],
-    mediaType: mediaTypes[0],
-    cooling: coolingFactors[0],
-    opticalSurfaces: opticalSurfaceFactors[0],
-    environment: environmentFactors[0],
-    couplingCleanliness: couplingCleanlinessFactors[0],
+    pumpType: "",
+    mediaType: "",
+    cooling: "",
+    opticalSurfaces: "",
+    environment: "",
+    couplingCleanliness:"",
 
-    // Xenon parameters
     pps: 1,
     ej: 40,
     d: 4,
     L: 2,
     t: 100,
-
-    // Krypton parameters
     P: 4,
     kryptonL: 2,
 
-    // Ruby media parameters
     rubyPPS: '',
     F: 1
+  });
+    const [errors, setErrors] = useState({
+    type: '',
+    lasingMedia: '',
+    environment: '',
+    opticalSurfaces: '',
+    coupling: '',
+    tubeCurrent: '',
+    overfillPercent: '',
+    volumeIncrease: '',
+    power: '',
+    pumpType: '',
+    mediaType: '',
+    cooling: '',
+    couplingCleanliness: '',
+    rubyPPS: '',
+    F: '',
+    pps: '',
+    ej: '',
+    d: '',
+    L: '',
+    t: '',
+    P: '',
+    kryptonL: ''
   });
   const couplingRates1 = [
     { power: 0.01, rate: 3 },
@@ -239,84 +259,97 @@ const Laser = ({ onCalculate }) => {
     { power: 1.0, rate: 300 }
   ];
 
+  // const handleChange1 = (e) => {
+  //   const value = e.target.value;
+  //   setOverfillPercent(value);
+
+
+  //   if (value === '') {
+  //     setError('');
+  //     return;
+  //   }
+
+  //   if (isNaN(value)) {
+  //     setError('Please enter a valid number');
+  //     return;
+  //   }
+
+  //   const numValue = parseFloat(value);
+  //   if (numValue < 0) {
+  //     setError('Percentage cannot be negative');
+  //   } else if (numValue > 100) {
+  //     setError('Percentage cannot exceed 100%');
+  //   } else {
+  //     setError('');
+  //   }
+  // };
+  // const handleChange2 = (e) => {
+  //   const value = e.target.value;
+  //   setVolumeIncrease(value);
+
+  
+  //   if (value === '') {
+  //     setError('');
+  //     return;
+  //   }
+
+
+  //   if (isNaN(value)) {
+  //     setError('Please enter a valid number');
+  //     return;
+  //   }
+
+  //   const numValue = parseFloat(value);
+
+    
+  //   if (numValue < 0) {
+  //     setError('Percentage cannot be negative');
+  //   } else {
+  //     setError('');
+  //   }
+  // };
+  // const handleChange = (e) => {
+  //   const value = e.target.value;
+  //   setCurrent(value);
+
+    
+  //   if (value === '') {
+  //     setError('');
+  //     return;
+  //   }
+
+ 
+  //   if (isNaN(value) || value === '') {
+  //     setError('Please enter a valid number');
+  //     return;
+  //   }
+
+  //   const numValue = parseFloat(value);
+
+  //   if (numValue < 10) {
+  //     setError('Tube current must be ≥ 10 mA');
+  //   } else if (numValue > 150) {
+  //     setError('Tube current must be ≤ 150 mA');
+  //   } else {
+  //     setError('');
+  //   }
+  // };
+    const handleChange = (e) => {
+    const value = e.target.value;
+    setCurrent(value);
+    setErrors({...errors, tubeCurrent: ''});
+  };
+
   const handleChange1 = (e) => {
     const value = e.target.value;
     setOverfillPercent(value);
-
-    // Clear error when empty
-    if (value === '') {
-      setError('');
-      return;
-    }
-
-    // Validate input is a number
-    if (isNaN(value)) {
-      setError('Please enter a valid number');
-      return;
-    }
-
-    const numValue = parseFloat(value);
-
-    // Validate range (0-100%)
-    if (numValue < 0) {
-      setError('Percentage cannot be negative');
-    } else if (numValue > 100) {
-      setError('Percentage cannot exceed 100%');
-    } else {
-      setError('');
-    }
+    setErrors({...errors, overfillPercent: ''});
   };
+
   const handleChange2 = (e) => {
     const value = e.target.value;
     setVolumeIncrease(value);
-
-    // Clear error when empty
-    if (value === '') {
-      setError('');
-      return;
-    }
-
-    // Validate input is a number
-    if (isNaN(value)) {
-      setError('Please enter a valid number');
-      return;
-    }
-
-    const numValue = parseFloat(value);
-
-    // Validate range (0-100% is typical, but adjust if needed)
-    if (numValue < 0) {
-      setError('Percentage cannot be negative');
-    } else {
-      setError('');
-    }
-  };
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setCurrent(value);
-
-    // Clear previous errors when empty
-    if (value === '') {
-      setError('');
-      return;
-    }
-
-    // Validate input is a number
-    if (isNaN(value) || value === '') {
-      setError('Please enter a valid number');
-      return;
-    }
-
-    const numValue = parseFloat(value);
-
-    // Validate range
-    if (numValue < 10) {
-      setError('Tube current must be ≥ 10 mA');
-    } else if (numValue > 150) {
-      setError('Tube current must be ≤ 150 mA');
-    } else {
-      setError('');
-    }
+    setErrors({...errors, volumeIncrease: ''});
   };
   const calculatePiB = () => {
     if (error || volumeIncrease === '' || isNaN(volumeIncrease)) return 'N/A';
@@ -358,9 +391,162 @@ const Laser = ({ onCalculate }) => {
   }
 
 };
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
 
+    // Common validations
+    if (!currentComponent.type) {
+      newErrors.type = 'Please select a laser type';
+      isValid = false;
+    }
+
+    if (!inputData.environment) {
+      newErrors.environment = 'Please select an environment';
+      isValid = false;
+    }
+
+    // Type-specific validations
+    if (currentComponent.type === "Laser, Helium and Argon") {
+      if (!inputs.lasingMedia) {
+        newErrors.lasingMedia = 'Please select lasing media';
+        isValid = false;
+      }
+      if (!inputs.coupling) {
+        newErrors.coupling = 'Please select coupling type';
+        isValid = false;
+      }
+    }
+
+    if (currentComponent.type === "Laser, CO2, Sealed") {
+      if (!current || isNaN(current)) {
+        newErrors.tubeCurrent = 'Please enter a valid tube current (10-150 mA)';
+        isValid = false;
+      } else if (current < 10 || current > 150) {
+        newErrors.tubeCurrent = 'Tube current must be between 10 and 150 mA';
+        isValid = false;
+      }
+
+      if (overfillPercent === '' || isNaN(overfillPercent)) {
+        newErrors.overfillPercent = 'Please enter a valid overfill percentage';
+        isValid = false;
+      } else if (overfillPercent < 0 || overfillPercent > 100) {
+        newErrors.overfillPercent = 'Overfill must be between 0% and 100%';
+        isValid = false;
+      }
+
+      if (volumeIncrease === '' || isNaN(volumeIncrease)) {
+        newErrors.volumeIncrease = 'Please enter a valid volume increase';
+        isValid = false;
+      } else if (volumeIncrease < 0) {
+        newErrors.volumeIncrease = 'Volume increase cannot be negative';
+        isValid = false;
+      }
+
+      if (!inputData.opticalSurfaces) {
+        newErrors.opticalSurfaces = 'Please select optical surfaces';
+        isValid = false;
+      }
+    }
+
+    if (currentComponent.type === "Laser, CO2,Flowing") {
+      if (!input.power || input.power.power === '' || isNaN(input.power.power)) {
+        newErrors.power = 'Please enter valid power';
+        isValid = false;
+      } else if (input.power.power < 0.01 || input.power.power > 1.0) {
+        newErrors.power = 'Power must be between 0.01 and 1.0 KW';
+        isValid = false;
+      }
+
+      if (!input.opticalSurfaces) {
+        newErrors.opticalSurfaces = 'Please select optical surfaces';
+        isValid = false;
+      }
+    }
+
+    if (currentComponent.type === "Laser, Solid State,ND:YAG and Ruby Rod") {
+      if (!input2.pumpType) {
+        newErrors.pumpType = 'Please select pump type';
+        isValid = false;
+      }
+      if (!input2.mediaType) {
+        newErrors.mediaType = 'Please select media type';
+        isValid = false;
+      }
+      if (!input2.cooling) {
+        newErrors.cooling = 'Please select cooling type';
+        isValid = false;
+      }
+      if (!input2.couplingCleanliness) {
+        newErrors.couplingCleanliness = 'Please select coupling cleanliness';
+        isValid = false;
+      }
+      if (!input2.opticalSurfaces) {
+        newErrors.opticalSurfaces = 'Please select optical surfaces';
+        isValid = false;
+      }
+
+      // Ruby specific validations
+      if (input2.mediaType.type === 'Ruby') {
+        if (!input2.rubyPPS || isNaN(input2.rubyPPS)) {
+          newErrors.rubyPPS = 'Please enter valid pulses per second';
+          isValid = false;
+        }
+        if (!input2.F || isNaN(input2.F)) {
+          newErrors.F = 'Please enter valid energy density';
+          isValid = false;
+        }
+      }
+
+      // Xenon pump validations
+      if (input2.pumpType.value === 'xenon') {
+        if (!input2.pps || isNaN(input2.pps)) {
+          newErrors.pps = 'Please enter valid pulses per second';
+          isValid = false;
+        } else if (input2.pps < 1 || input2.pps > 20) {
+          newErrors.pps = 'PPS must be between 1 and 20';
+          isValid = false;
+        }
+        if (!input2.ej || isNaN(input2.ej)) {
+          newErrors.ej = 'Please enter valid joules';
+          isValid = false;
+        }
+        if (!input2.d || isNaN(input2.d)) {
+          newErrors.d = 'Please enter valid diameter';
+          isValid = false;
+        }
+        if (!input2.L || isNaN(input2.L)) {
+          newErrors.L = 'Please enter valid length';
+          isValid = false;
+        }
+        if (!input2.t || isNaN(input2.t)) {
+          newErrors.t = 'Please enter valid pulse duration';
+          isValid = false;
+        }
+      }
+
+      // Krypton pump validations
+      if (input2.pumpType.value === 'krypton') {
+        if (!input2.P || isNaN(input2.P)) {
+          newErrors.P = 'Please enter valid power';
+          isValid = false;
+        }
+        if (!input2.kryptonL || isNaN(input2.kryptonL)) {
+          newErrors.kryptonL = 'Please enter valid length';
+          isValid = false;
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
   // Calculate the failure rate for laser CO2 sealed
   const calculateFailureRateCO2 = () => {
+        if (!validateForm()) {
+      setResult(null);
+      return;
+    }
     try {
       // Skip calculation if environment is CL (N/A)
       if (inputData.environment.env === 'CL') {
@@ -413,6 +599,10 @@ const Laser = ({ onCalculate }) => {
   };
   // Calculate the failure rate for laser solid state
   const calculateFailureRateSolid = () => {
+        if (!validateForm()) {
+      setResult(null);
+      return;
+    }
     try {
       // Skip calculation if environment is CL (N/A)
       if (input2.environment.env === 'CL') {
@@ -467,6 +657,10 @@ const Laser = ({ onCalculate }) => {
   };
 
   const calculateFailureRate1 = () => {
+        if (!validateForm()) {
+      setResult(null);
+      return;
+    }
     try {
       // Skip calculation if environment is CL (N/A)
       if (input.environment.env === 'CL') {
@@ -511,6 +705,10 @@ const Laser = ({ onCalculate }) => {
   };
   // Calculate the failure rate for laser helium and argon
   const calculateFailureRate = () => {
+        if (!validateForm()) {
+      setResult(null);
+      return;
+    }
     try {
       const lasingRate = inputs.lasingMedia.rate;
       const couplingRate = inputs.coupling.rate;
@@ -544,7 +742,7 @@ const Laser = ({ onCalculate }) => {
       <h2 className="text-center mb-4"> Lasers</h2>
       <Row>
         <Col md={4}>
-          <div className="form-group" >
+          <div className="form-group">
             <label>
               Part Type:</label>
             <Select
@@ -568,29 +766,32 @@ const Laser = ({ onCalculate }) => {
         {currentComponent.type === "Laser, CO2, Sealed" && (
           <>
             <Col md={4}>
-              {/* Optical Surfaces */}
+           
               <div className="form-group">
                 <label>Active Optical Surfaces (π<sub>OS</sub>):</label>
                 <Select
                   styles={customStyles}
+                  isInvalid={!!errors.opticalSurfaces}
                   options={opticalSurfaceFactors.map(item => ({
                     value: item,
                     label: `${item.surfaces} (πOS = ${item.factor})`
                   }))}
                   value={{
                     value: inputData.opticalSurfaces,
-                    label: `${inputData.opticalSurfaces.surfaces} (πOS = ${inputData.opticalSurfaces.factor})`
+                    label:inputData.opticalSurfaces? `${inputData.opticalSurfaces.surfaces} (πOS = ${inputData.opticalSurfaces.factor})`:"select..."
                   }}
-                  onChange={(selectedOption) => setInputData(prev => ({
+                  onChange={(selectedOption) => {setInputData(prev => ({
                     ...prev,
                     opticalSurfaces: selectedOption.value
-                  }))}
+                  }))
+                setErrors({...errors,opticalSurfaces:""})}}
                 />
+                 {errors.opticalSurfaces && <small className="text-danger">{errors.opticalSurfaces}</small>}
               </div>
             </Col>
 
             <Col md={4}>
-              {/* Environment Factor */}
+            
               <div className="form-group">
                 <label>Environment (π<sub>E</sub>):</label>
                 <Select
@@ -663,7 +864,7 @@ const Laser = ({ onCalculate }) => {
         {currentComponent.type === "Laser, CO2,Flowing" && (
           <>
             <Col md={4}>
-              {/* Optical Surfaces */}
+            
               <div className="form-group">
                 <label>Active Optical Surfaces (π<sub>OS</sub>):</label>
                 <Select
@@ -685,7 +886,7 @@ const Laser = ({ onCalculate }) => {
             </Col>
 
             <Col md={4}>
-              {/* Environment Factor */}
+            
               <div className="form-group">
                 <label>Environment (π<sub>E</sub>):</label>
                 <Select
@@ -1908,7 +2109,7 @@ const Laser = ({ onCalculate }) => {
           </>
         )}
 
-        {/* Additional Information Section */}
+        
 
       </>
 
