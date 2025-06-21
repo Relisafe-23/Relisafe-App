@@ -277,7 +277,6 @@ export default function PBS(props) {
       },
     })
       .then((res) => {
-        console.log("resmmopjl;",res)
         const data = res?.data?.data;
         setPermission(data?.modules[0]);
       })
@@ -297,7 +296,6 @@ export default function PBS(props) {
         userId: userId,
       },
     }).then((res) => {
-      console.log("resmml;",res)
       setIsOwner(res?.data?.data?.isOwner);
       setCreatedBy(res?.data?.data?.createdBy);
     });
@@ -513,9 +511,9 @@ export default function PBS(props) {
       },
     })
       .then((res) => {
-         console.log("res1;",res)
         const treeData = res?.data?.data;
         setData(treeData);
+        console.log("treeDataaa.......................",res)
         setISLoading(false);
       })
       .catch((error) => {
@@ -699,7 +697,6 @@ export default function PBS(props) {
   // Sort the data array using the custom sort function
   const sortedData = data.slice().sort(customSort);
 
-  console.log("sortedData", sortedData)
 
   return (
     <div className="pbs-main px-4" style={{ marginTop: "90px" }}>
@@ -1305,14 +1302,9 @@ export default function PBS(props) {
                 <MaterialTable
                   title="PBS"
                   columns={[
-                    // { title: "", field: "", width: "5%", align: "center", marginRight: "20px" },
                     { title: "S.No", field: "indexCount", width: "7%", align: "center",
-                          cellStyle: {
-      paddingLeft: '20px' // Add left padding for the S.No column
-    },
-                          headerStyle: {
-                            paddingLeft: '20px' // Add left padding for the header
-                          } 
+                      cellStyle: { paddingLeft: '20px'},
+                      headerStyle: { paddingLeft: '20px'} 
                     },
                     { title: "Product Name", field: "productName", width: "18%", align: "center" },
                     { title: "Category", field: "category", width: "10%", align: "center" },
