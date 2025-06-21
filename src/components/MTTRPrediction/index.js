@@ -1078,7 +1078,7 @@ console.log("rowId in updateProcedureData", rowId);
   const patchMttrData = (values) => {
     if (validateData > 0) {
       const companyId = localStorage.getItem("companyId");
-
+console.log("values.....",values)
       Api.patch(`/api/v1/mttrPrediction/${mttrId}`, {
         companyId: companyId,
         projectId: projectId,
@@ -1091,7 +1091,7 @@ console.log("rowId in updateProcedureData", rowId);
         mlh: mlhValue,
         totalLabourHr: totalLabourHr,
         mMax: values.mmax,
-        mttr: values.mttr,
+        mttr: "8899",
         remarks: values.remarks,
         mttrId: mttrId,
         treeStructureId: treeStructure,
@@ -1189,6 +1189,8 @@ console.log("rowId in updateProcedureData", rowId);
             mlh: mlhValue ? mlhValue : "",
             labourHour: totalLabourHr ? totalLabourHr : "",
             mttr: mttrData?.mttr ? mttrData?.mttr : "",
+
+            // mttr: mttrData ? mttrData :"",
 
             remarks: mttrData?.remarks
               ? mttrData?.remarks
@@ -1909,6 +1911,7 @@ console.log("rowId in updateProcedureData", rowId);
                                   title="(Calculated only for family type - Assemblie)"
                                   arrow
                                 >
+                                  
                                   <Form.Control
                                     type="number"
                                     name="mttr"
@@ -1921,6 +1924,7 @@ console.log("rowId in updateProcedureData", rowId);
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                   />
+                       {console.log("mttrkjk...",values.mttr)}
                                 </Tooltip>
                                 <ErrorMessage
                                   className="text-danger"

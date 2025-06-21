@@ -2605,7 +2605,7 @@ function Index(props) {
                                             {currentComponent.type ===
                                               "Microcircuits" && (
                                                 <MicrocircuitsCalculation
-                                                  onCalculate={(value) => {
+                                                  onCalculate={(value,handleSawCalculation) => {
                                                     // Round the value to 6 decimal places
                                                     const roundedValue =
                                                       parseFloat(
@@ -2617,6 +2617,7 @@ function Index(props) {
                                                       "predicted",
                                                       roundedValue
                                                     );
+                                               
                                                     // Optionally close the modal
                                                     // setShowModal(false);
                                                   }}

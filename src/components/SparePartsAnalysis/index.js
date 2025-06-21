@@ -1011,6 +1011,7 @@ function Index(props) {
                                 step="any"
                                 value={values.calculatedSpareQuantity}
                                 onBlur={handleBlur}
+                                disabled={true}
                                 // onChange={handleChange}
                               />
                             </Form.Group>
