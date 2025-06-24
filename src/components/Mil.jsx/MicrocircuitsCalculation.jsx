@@ -52,41 +52,44 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
   const [numberOfPins, setNumberOfPins] = useState(null);
   const [selectedECC, setSelectedECC] = React.useState(null);// 'A1' or 'C'
   const [currentComponent, setCurrentComponent] = useState({
-    type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
-    temperature: 25,
-    devices: "bipolarData",
-    complexFailure: "digital",
+    type: '',
+    tcase: '',
+    tcase1: '',
+    temperature: '',
+    dutyCycle: '',
+    devices: '',
+    complexFailure: '',
     environment: '',
-    data: "microprocessorData",
-    quality: 'M',
-    quantity: 0,
-    microprocessorData: "",
-    gateCount: 1000,
+    data: '',
+    quality: '',
+    quantity: '',
+    microprocessorData: '',
+    gateCount: '',
     technology: '',
     complexity: '',
     application: '',
     packageType: '',
     pinCount: '',
     yearsInProduction: '',
-    quality: '',
-
-    memoryTemperature: 45,   // For B calculations
-    techTemperatureB2: 25,
-    techTemperatureB1: 25,    // For πT calculations
-    memorySizeB1: 1024,
-    memorySizeB2: 1024,
-    memoryTech: "Flotox",
-    technology: "Digital MOS",
-    B1: 0.79,
-    B2: 0,
-    calculatedPiT: 1.2,
-
-
-    piL: 1.0,
-    // piQ: 1.0,
-    basePiT: 0.1,
-    calculatedPiT: null
+    memoryTemperature: '',
+    techTemperatureB1: '',
+    techTemperatureB2: '',
+    writeDutyCycle: '',
+    memorySizeB1: '',
+    memorySizeB2: '',
+    memoryTech: '',
+    memoryTechOption: null,
+    memorySizeB1Option: null,
+    memorySizeB2Option: null,
+    B1: null,
+    B2: null,
+    calculatedPiT: null,
+    basePiT: null,
+    piL: null
   });
+
+
+  const [qualityFactor, setQualityFactor] = useState('')
 
 
   const eccOptions = [
@@ -366,30 +369,57 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
   };
 
   const [inputs, setInputs] = useState({
-    memoryType: dieComplexityRates[0],
-    memorySize: dieComplexityRates[0].rates[0],
-    technology: 'MOS', // MOS or Bipolar
-    packageType: packageRates[0],
+    memoryType: '',
+    memorySize: '',
+    technology: '', // MOS or Bipolar
+    packageType: '',
     pinCount: 3,
-    eepromType: 'Flotox', // Flotox or Textured-Poly
-    programmingCycles: a1Factors[0],
-    a2Factor: a2Factors[0],
-    eccOption: eccOptions[0],
-    quality: QUALITY_FACTORS,
-    environment: getEnvironmentalOptions('AIA'),
+    eepromType: '', // Flotox or Textured-Poly
+    programmingCycles: '',
+    a2Factor: '',
+    eccOption: '',
+    quality: '',
+    environment: '',
     systemLifeHours: 10000,
     junctionTemp: 35,
-    partType: 'Logic',
-    manufacturingProcess: 'QML',
-    packageType: 'DIP',
-    packageHermeticity: 'Hermetic',
+    partType: '',
+    manufacturingProcess: '',
+    packageType: '',
+    packageHermeticity: '',
     featureSize: 1.0,
     dieArea: 0.5,
     pinCount: 24,
-    esdSusceptibility: '0-1000'
+    esdSusceptibility: ''
   });
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+
+  const [errors, setErrors] = useState({
+    memoryType: '',
+    memorySize: '',
+    technology: '',
+    packageType: '',
+    pinCount: 3,
+    eepromType: '',
+    programmingCycles: '',
+    a2Factor: '',
+    eccOption: '',
+    quality: '',
+    environment: '',
+    systemLifeHours: 10000,
+    junctionTemp: 35,
+    partType: '',
+    manufacturingProcess: '',
+    packageType: '',
+    packageHermeticity: '',
+    featureSize: '',
+    dieArea: '',
+    pinCount: 24,
+    esdSusceptibility: '',
+    applicationFactor: '',
+    temperature : '',
+  });
+
   // Calculate temperature factor (πT)
   const calculateTempFactor = (temp) => {
     // Simplified exponential model for πT
@@ -611,6 +641,8 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     return (A / 0.21) * Math.pow(2 / Xs, 2) * 0.64 + 0.36;
   };
 
+
+
   const getPackageBaseRate = () => {
     return 0.0022 + (1.72e-5 * inputs.pinCount);
   };
@@ -742,6 +774,74 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     };
   };
 
+
+  const validateForm1 = () => {
+    const newErrors = {};
+    let isValid = true;
+
+
+
+    if (currentComponent.type === "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS") {
+
+      if (!inputs.packageType) {
+        newErrors.packageType = "Please select Package Type";
+        isValid = false;
+      }
+
+      if (!currentComponent.technology) {
+        newErrors.technology = "Please select Technology Type";
+        isValid = false;
+      }
+
+      if (
+        currentComponent.temperature === undefined ||
+        currentComponent.temperature === null ||
+        currentComponent.temperature < -40 ||
+        currentComponent.temperature > 175 ||
+        !currentComponent.temperature
+      ) {
+        newErrors.temperature = "Enter Junction Temperature between -40°C and 175°C";
+        isValid = false;
+      }
+
+      if (!inputs.featureSize || inputs.featureSize < 0.1) {
+        newErrors.featureSize = "Enter valid Feature Size (≥ 0.1 microns)";
+        isValid = false;
+      }
+
+      if (!inputs.dieArea || inputs.dieArea < 0.4 || inputs.dieArea > 3.0) {
+        newErrors.dieArea = "Die Area must be between 0.4 cm² and 3.0 cm²";
+        isValid = false;
+      }
+
+      if (!inputs.packageHermeticity) {
+        newErrors.packageHermeticity = "Please select Package Hermeticity";
+        isValid = false;
+      }
+
+      if (!inputs.manufacturingProcess) {
+        newErrors.manufacturingProcess = "Please select Manufacturing Process";
+        isValid = false;
+      }
+
+      if (!inputs.environment) {
+        newErrors.environment = "Please select Environment";
+        isValid = false;
+      }
+
+      if (!currentComponent.quality) {
+        newErrors.quality = "Please select Quality Factor";
+        isValid = false;
+      }
+
+
+    }
+
+    setErrors(newErrors);
+    console.log("erorrss.......................", errors)
+    return isValid;
+  };
+
   const getTemperatureFactor = () => {
     // This would include your temperature calculation logic
     // Example implementation (adjust based on your actual formula):
@@ -786,6 +886,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 
 
   const calculateVhsicFailureRate = () => {
+    if (!validateForm1()) return;
     try {
       // Calculate each component
       const λBD = getDieBaseRate();
@@ -863,27 +964,315 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 
     if (currentComponent.memoryTech.includes('Textured-Poly')) {
       A2 = currentComponent.a2Factor?.a2Value || 0;
-    B2 = currentComponent.memorySizeB2 === 0 
-  ? 0  // Explicitly set to 0 for Flotox & Textured-Poly²
-  : (currentComponent.B2 || getBValueForTemp(
-      'Textured-Poly-B2',
-      currentComponent.memorySizeB2,
-      currentComponent.techTemperatureB2 || 25,
-      'B2'
-    ) || 0);
+      B2 = currentComponent.memorySizeB2 === 0
+        ? 0  // Explicitly set to 0 for Flotox & Textured-Poly²
+        : (currentComponent.B2 || getBValueForTemp(
+          'Textured-Poly-B2',
+          currentComponent.memorySizeB2,
+          currentComponent.techTemperatureB2 || 25,
+          'B2'
+        ) || 0);
     }
-  
+
     // Get quality and ECC factors
     const piQ = getQualityFactor()?.value || 1;
     const piECC = selectedECC?.factor || 1;
 
     // Calculate λ_cyc
     const lambdaCyc = (A1 * B1 + (A2 * B2) / piQ) * piECC;
-   console.log("lambdaCyc",lambdaCyc )
+    console.log("lambdaCyc", lambdaCyc)
     return lambdaCyc;
   };
 
+  const validateGaAsForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    if (!currentComponent.environment) {
+      newErrors.environment = "Please select Environment";
+      isValid = false;
+    }
+
+    if (!currentComponent.packageType) {
+      newErrors.packageType = "Please select Package Type";
+      isValid = false;
+    }
+
+    if (
+      !currentComponent.pinCount ||
+      currentComponent.pinCount < 3 ||
+      currentComponent.pinCount > 224
+    ) {
+      newErrors.pinCount = "Enter valid Pin Count (3 to 224)";
+      isValid = false;
+    }
+
+    if (!currentComponent.application) {
+      newErrors.application = "Please select Application Factor";
+      isValid = false;
+    }
+
+    if (!currentComponent.yearsInProduction) {
+      newErrors.yearsInProduction = "Please select Learning Factor";
+      isValid = false;
+    }
+
+    if (!currentComponent.quality) {
+      newErrors.quality = "Please select Quality Factor";
+      isValid = false;
+    }
+
+    if (!currentComponent.technology) {
+      newErrors.technology = "Please select Technology Type";
+      isValid = false;
+    }
+
+    if (
+      currentComponent.temperature === undefined ||
+      currentComponent.temperature === null ||
+      currentComponent.temperature < -40 ||
+      currentComponent.temperature > 175
+    ) {
+      newErrors.temperature = "Enter valid Junction Temperature (-40°C to 175°C)";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+
+  const validateBubbleMemoryFields = () => {
+    const newErrors = {};
+
+    if (!currentComponent.bubbleChips || currentComponent.bubbleChips < 1)
+      newErrors.bubbleChips = 'Enter a valid number of bubble chips (≥ 1).';
+
+    if (!currentComponent.dissipativeElements || currentComponent.dissipativeElements < 1)
+      newErrors.dissipativeElements = 'Enter dissipative elements (≥ 1).';
+
+    if (!currentComponent.numberOfBits || currentComponent.numberOfBits < 1)
+      newErrors.numberOfBits = 'Enter a valid number of bits (≥ 1).';
+
+    if (!currentComponent.packageType)
+      newErrors.packageType = 'Package type is required.';
+
+    if (!currentComponent.pinCount || currentComponent.pinCount < 3)
+      newErrors.pinCount = 'Pin count should be between 3 and 224.';
+
+    if (currentComponent.dutyCycle < 0 || currentComponent.dutyCycle > 1 || currentComponent.dutyCycle === '')
+      newErrors.dutyCycle = 'Duty cycle (πD) must be between 0 and 1.';
+
+    if (!currentComponent.quality)
+      newErrors.quality = 'Select a quality grade (πQ).';
+
+    if (!currentComponent.tcase || currentComponent.tcase < 25 || currentComponent.tcase > 175)
+      newErrors.tcase = 'Case temperature must be between 25°C and 175°C.';
+
+    if (!currentComponent.tcase1)
+      newErrors.tcase1 = 'Enter Junction temperature';
+
+    if (!currentComponent.readsPerWrite || currentComponent.readsPerWrite < 1)
+      newErrors.readsPerWrite = 'Reads per Write must be ≥ 1.';
+
+    if (currentComponent.writeDutyCycle < 0 || currentComponent.writeDutyCycle > 1 || currentComponent.writeDutyCycle === '')
+      newErrors.writeDutyCycle = 'Write Duty Cycle must be between 0 and 1.';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateMicrocircuitFields = () => {
+    const errors = {};
+
+    if (!currentComponent.applicationFactor) {
+      errors.applicationFactor = "Enter Application Factor"
+    }
+
+    if (!inputs.environment) {
+      errors.environment = "Select Environment"
+    }
+
+    if (!currentComponent.devices) {
+      errors.devices = "Enter device type"
+    }
+
+    if (!currentComponent.complexFailure) {
+      errors.complexFailure = "Select type"
+    }
+
+    if (!currentComponent.gateCount) {
+      errors.gateCount = "Select value"
+    }
+
+    if (!currentComponent.packageType) {
+      errors.gateCount = "Select value"
+    }
+
+    if (!currentComponent.packageType) {
+      errors.packageType = "Select value"
+    }
+
+    if (!currentComponent.pinCount) {
+      errors.pinCount = "Select value"
+    }
+
+    if (!currentComponent.quality) {
+      errors.quality = "Select value"
+    }
+
+    if (!currentComponent.yearsInProduction) {
+      errors.yearsInProduction = "Select value"
+    }
+
+    if (!currentComponent.technology) {
+      errors.technology = "Select value"
+    }
+
+    if (!currentComponent.temperature) {
+      errors.temperature = "Temperature must be between -40°C and 175°C.";
+    }
+
+    return errors;
+  };
+
+
+
+
+
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    if (currentComponent.type === "Microcircuits,Memories") {
+      if (!currentComponent.quality) {
+        newErrors.quality = "Please select Quality Factor";
+        isValid = false;
+      }
+
+      if (!inputs.environment) {
+        newErrors.environment = "Please select Environment";
+        isValid = false;
+      }
+
+      if (mode === 'A1' && !currentComponent.programmingCycles) {
+        newErrors.programmingCycles = "Enter Programming Cycles";
+        isValid = false;
+      }
+
+      if (mode === 'C' && !currentComponent.a1Value) {
+        newErrors.a1Value = "Enter A₁ value";
+        isValid = false;
+      }
+
+      if (!currentComponent.a2Factor) {
+        newErrors.a2Factor = "Please select A₂ Factor";
+        isValid = false;
+      }
+
+      if (!selectedECC) {
+        newErrors.eccOption = "Please select ECC Option";
+        isValid = false;
+      }
+
+      // Memory B1
+      if (!currentComponent.memoryTechOption) {
+        newErrors.memoryTech = "Please select Memory Technology for B₁";
+        isValid = false;
+      }
+
+      if (!currentComponent.memorySizeB1Option) {
+        newErrors.memorySizeB1 = "Please select Memory Size for B₁";
+        isValid = false;
+      }
+
+      if (
+        currentComponent.techTemperatureB1 === null ||
+        currentComponent.techTemperatureB1 === '' ||
+        isNaN(currentComponent.techTemperatureB1)
+      ) {
+        newErrors.techTemperatureB1 = "Enter Junction Temperature for B₁";
+        isValid = false;
+      }
+
+      // Memory B2
+      if (!currentComponent.memorySizeB2Option) {
+        newErrors.memorySizeB2 = "Please select Memory Size for B₂";
+        isValid = false;
+      }
+
+      if (
+        currentComponent.memorySizeB2 !== 0 &&
+        (currentComponent.techTemperatureB2 === null ||
+          currentComponent.techTemperatureB2 === '' ||
+          isNaN(currentComponent.techTemperatureB2))
+      ) {
+        newErrors.techTemperatureB2 = "Enter Junction Temperature for B₂";
+        isValid = false;
+      }
+
+      // Memory C1
+      if (!inputs.memoryType || !inputs.memoryType.type) {
+        newErrors.memoryType = "Please select Memory Type for C₁";
+        isValid = false;
+      }
+
+      if (!inputs.memorySize || !inputs.memorySize.size) {
+        newErrors.memorySize = "Please select Memory Size for C₁";
+        isValid = false;
+      }
+
+      // πT
+      if (!currentComponent.technology) {
+        newErrors.technology = "Please select Technology Type (πT)";
+        isValid = false;
+      }
+
+      if (
+        currentComponent.temperature === null ||
+        currentComponent.temperature === '' ||
+        isNaN(currentComponent.temperature)
+      ) {
+        newErrors.temperature = "Enter Junction Temperature for πT";
+        isValid = false;
+      }
+
+      // C2
+      if (!currentComponent.packageType) {
+        newErrors.packageType = "Please select Package Type for C₂";
+        isValid = false;
+      }
+
+      if (
+        currentComponent.pinCount === null ||
+        currentComponent.pinCount === '' ||
+        isNaN(currentComponent.pinCount)
+      ) {
+        newErrors.pinCount = "Enter valid Pin Count for C₂";
+        isValid = false;
+      }
+
+      // πL
+      if (!currentComponent.yearsInProduction) {
+        newErrors.learningFactor = "Please select Learning Factor (πL)";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+
+
+
   const calculateMemoriesFailureRate = () => {
+
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       // Get C1 (Die Complexity Failure Rate)
       const c1 = inputs.technology === 'MOS'
@@ -946,6 +1335,9 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
   }
 
   const calculateGaAsFailureRate = () => {
+    if (!validateGaAsForm()) {
+      return;
+    }
     try {
       // Validate inputs
       if (!currentComponent.type) throw new Error("Please select a device type");
@@ -1124,11 +1516,28 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
   const getQualityFactor = () => {
     return currentComponent.piQ; // Assuming this is already set in state
   };
- const getCircuitFunctionFactor = () =>{
-return currentComponent.piF;
- }
-    const calculateHybridFailureRate = (component) => {
-    
+  const getCircuitFunctionFactor = () => {
+    return currentComponent.piF;
+  }
+  const calculateHybridFailureRate = (component) => {
+
+
+    const newErrors = {};
+
+    if (!currentComponent.yearsInProduction) newErrors.yearsInProduction = "Please select Years in Production.";
+    if (!currentComponent.quality) newErrors.quality = "Please select a Quality Factor.";
+    if (!quantity || quantity <= 0) newErrors.quantity = "Quantity must be greater than 0.";
+    if (!currentComponent.environment) newErrors.environment = "Please select an Environment.";
+    if (!currentComponent.piF) newErrors.piF = "Please select a Circuit Function.";
+    if (!selectedComponent) newErrors.componentType = "Please select a Component Type.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
+
     // Validate input
     // if (!component || !component.components) {
     //   console.error('Invalid component data');
@@ -1136,20 +1545,20 @@ return currentComponent.piF;
     // }
 
     // Sum of (Nc × λc) for all components
-       const componentSum = calculateComponentSum(quantity, currentComponent);
+    const componentSum = calculateComponentSum(quantity, currentComponent);
     console.log("componentSum6788", componentSum)
 
-       const Nc = quantity
-        const piE = getEnvironmentFactor(currentComponent.environment) || 1;
-        console.log("piE",piE)
-        const piQ = currentComponent.quality?.value || getQualityFactor('MIL_M_38510_ClassB') || 1;
-        console.log("piQ",piQ)
-        const piF = getCircuitFunctionFactor() ;
-        const piL = calculateLearningFactor(currentComponent.yearsInProduction) || 1;
+    const Nc = quantity
+    const piE = getEnvironmentFactor(currentComponent.environment) || 1;
+    console.log("piE", piE)
+    const piQ = currentComponent.quality?.value || getQualityFactor('MIL_M_38510_ClassB') || 1;
+    console.log("piQ", piQ)
+    const piF = getCircuitFunctionFactor();
+    const piL = calculateLearningFactor(currentComponent.yearsInProduction) || 1;
 
     // Corrected formula based on MIL-HDBK-217: λp = Σ(Nc × λc) × (1 + 0.2 πE)  × πF × πQ × πL
-    const failureRate = componentSum * (1 + 0.2  * piE) * piF * piQ * piL;
-    console.log("failureRate",failureRate)
+    const failureRate = componentSum * (1 + 0.2 * piE) * piF * piQ * piL;
+    console.log("failureRate", failureRate)
     // Debug logging
     setResults({
       componentSum,
@@ -1197,7 +1606,7 @@ return currentComponent.piF;
         calculation = { error: 'Unsupported component type' };
     }
 
-   
+
     const quantity = currentComponent.quantity || 1;
     const totalFailureRate = failureRate * quantity;
 
@@ -1209,7 +1618,7 @@ return currentComponent.piF;
       calculationParams
     };
 
-   
+
     setComponents([...components, newComponent]);
 
 
@@ -1219,15 +1628,17 @@ return currentComponent.piF;
       calculationParams
     });
   };
+
+
   return (
     <div className="reliability-calculator">
-      {console.log("current component......",currentComponent)}
+      {console.log("current component......", currentComponent)}
       {/* <h2 >Microcircuits</h2> */}
-<h2 className='text-center'style={{ fontSize: '2.0rem' }}>{currentComponent?.type ? currentComponent.type.replace(/,/g, ' ').trim() : 'Microcircuits Reliability Calculator'}</h2>
+      <h2 className='text-center' style={{ fontSize: '2.0rem' }}>{currentComponent?.type ? currentComponent.type.replace(/,/g, ' ').trim() : 'Microcircuits Reliability Calculator'}</h2>
       <div className="component-form">
-        
 
-        <Row className="mb-2"> 
+
+        <Row className="mb-2">
           <Col md={4} >
             <div className="form-group" >
               <label>Part Type:</label>
@@ -1407,6 +1818,7 @@ return currentComponent.piF;
                       }
                     ]}
                   />
+                  {/* {errors.environment && <small className='text-danger'>{errors.environment}</small>} */}
                 </div>
               </Col>
               <Col md={4}>
@@ -1583,527 +1995,193 @@ return currentComponent.piF;
                     }
                   ]}
                 />
+                {errors.environment && <small className='text-danger'>{errors.environment}</small>}
               </div>
             </Col>
           )}
           {currentComponent.type === "Microcircuits,Hybrids" && (
             <>
-              <Col md={4}>
-                <div className="form-group">
+              <Row>
+                <Col md={4}>
                   <label>Learning Factor (π<sub>L</sub>):</label>
                   <Select
-                    style={customStyles}
-                    name="learningFactor"
+                    name="yearsInProduction"
+                    styles={customStyles}
                     placeholder="Select Years in Production"
-                    onChange={(selectedOption) => {
+                    onChange={(option) =>
                       setCurrentComponent({
                         ...currentComponent,
-                        yearsInProduction: selectedOption.value,
-                        piL: selectedOption.piL
-                      });
-                    }}
+                        yearsInProduction: option.value,
+                        piL: option.piL
+                      })
+                    }
                     options={[
-                      {
-                        value: 5.1,
-                        label: "≤ 0.5 years",
-                        piL: 2.0, // Direct value from table
-                        description: "Early production phase (highest learning factor)"
-                      },
-                      {
-                        value: 0.5,
-                        label: "0.5 years",
-                        piL: 1.8,
-                        description: "Initial production ramp-up"
-                      },
-                      {
-                        value: 1.0,
-                        label: "1.0 year",
-                        piL: 1.5,
-                        description: "Moderate experience"
-                      },
-                      {
-                        value: 1.5,
-                        label: "1.5 years",
-                        piL: 1.2,
-                        description: "Stabilizing production"
-                      },
-                      {
-                        value: 2.0,
-                        label: "≥ 2.0 years",
-                        piL: 1.0,
-                        description: "Mature production (lowest learning factor)"
-                      }
+                      { value: 5.1, label: "≤ 0.5 years", piL: 2.0 },
+                      { value: 0.5, label: "0.5 years", piL: 1.8 },
+                      { value: 1.0, label: "1.0 year", piL: 1.5 },
+                      { value: 1.5, label: "1.5 years", piL: 1.2 },
+                      { value: 2.0, label: "≥ 2.0 years", piL: 1.0 }
                     ]}
                   />
-                </div>
-              </Col>
+                  {errors.yearsInProduction && (
+                    <div className="text-danger small mt-1">{errors.yearsInProduction}</div>
+                  )}
+                </Col>
 
-              {/* Component Type Selection */}
-              <Col md={4}>
-                <div className="form-group">
+                <Col md={4}>
                   <label>Component Type:</label>
-
                   <Select
-                    styles={customStyles}
                     name="componentType"
+                    styles={customStyles}
                     placeholder="Select Component Type"
                     value={selectedComponent}
-                    onChange={(selectedOption) => {
-                      setSelectedComponent(selectedOption)
-
-                    }}
+                    onChange={(option) => setSelectedComponent(option)}
                     options={[
-                      {
-                        value: "Microcircuit",
-                        label: "Microcircuit",
-                      },
-                      {
-                        value: "DiscreteSemiconductor",
-                        label: "Discrete Semiconductor",
-
-
-                      },
-                      {
-                        value: "Capacitor",
-                        label: "Capacitor",
-
-                      },
-                      {
-                        value: "Other",
-                        label: "Other (λₙ = 0)",
-
-                      }
+                      { value: "Microcircuit", label: "Microcircuit" },
+                      { value: "DiscreteSemiconductor", label: "Discrete Semiconductor" },
+                      { value: "Capacitor", label: "Capacitor" },
+                      { value: "Other", label: "Other (λₙ = 0)" }
                     ]}
                   />
-                </div>
-              </Col>
-              {selectedComponent?.value === "Capacitor" && (
-
-                <MicroCapacitor handleCalculateFailure={handleCalculateFailure} />
-
-              )}
-
-              {selectedComponent?.value === "Microcircuit" && (
-
-                <Microcircuits
-                  handleCalculateSawDevice={handleCalculateSawDevice}
-                  handleCalculateGate={handleCalculateGate}
-                  handleCalculateMemories={handleCalculateMemories}
-                  handleCalculateVhsic={handleCalculateVhsic}
-                  handleCalculateGaAs={handleCalculateGaAs}
-                  handleCalculateBubble={handleCalculateBubble} />
-
-              )}
-
-              {selectedComponent?.value === "DiscreteSemiconductor" && (
-                <>
-                  <MicroDiode handleInitialRate={handleInitialRate} />
-
-                </>
-              )}
-              <br />
-              <>
-                <Col md={4}>
-                  <div className="form-group">
-                    <label>Failure Rate (λc):</label>
-                    <input
-                      type="string"
-                      step="0.000001"
-                      min="0"
-                      value={mainInitialRate}
-                      placeholder="Props value will appear here"
-                    />
-                    <span className="unit">failures/10<sup>6</sup> hours</span>
-
-                  </div>
+                  {errors.componentType && (
+                    <div className="text-danger small mt-1">{errors.componentType}</div>
+                  )}
                 </Col>
-              </>
 
-              <Col md={4}>
-                <div className="form-group">
+                <Col md={4}>
                   <label>Quality Factor (π<sub>Q</sub>):</label>
                   <Select
+                    name="quality"
                     styles={customStyles}
-
-                    name="qualityFactor"
-                    placeholder="Select Quality Factor (πQ)"
-
-                    onChange={(selectedOption) => {
+                    placeholder="Select Quality"
+                    onChange={(option) =>
                       setCurrentComponent({
                         ...currentComponent,
-                        quality: selectedOption.value,
-                        piQ: selectedOption.piQ
-                      });
-                    }}
+                        quality: option.value,
+                        piQ: option.piQ
+                      })
+                    }
                     options={[
-                      {
-                        value: "MIL_M_38510_ClassS",
-                        label: "MIL-M-38510 Class S",
-                        piQ: 0.25,
-                        description: "Highest reliability military grade"
-                      },
-                      {
-                        value: "MIL_I_38535_ClassU",
-                        label: "MIL-I-38535 Class U",
-                        piQ: 0.25,
-                        description: "High reliability hybrid microcircuits"
-                      },
-                      {
-                        value: "MIL_H_38534_ClassS_Hybrid",
-                        label: "MIL-H-38534 Class S Hybrid",
-                        piQ: 0.25,
-                        description: "High reliability hybrid circuits"
-                      },
-                      {
-                        value: "MIL_M_38510_ClassB",
-                        label: "MIL-M-38510 Class B",
-                        piQ: 1.0,
-                        description: "Standard military grade"
-                      },
-                      {
-                        value: "MIL_I_38535_ClassQ",
-                        label: "MIL-I-38535 Class Q",
-                        piQ: 1.0,
-                        description: "Standard hybrid microcircuits"
-                      },
-                      {
-                        value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "MIL-H-38534 Class B Hybrid",
-                        piQ: 1.0,
-                        description: "Standard hybrid circuits"
-                      },
-                      {
-                        value: "MIL_STD_883_ClassB1",
-                        label: "MIL-STD-883 Class B1",
-                        piQ: 2.0,
-                        description: "Screened commercial grade"
-                      },
-                      {
-                        value: "Commercial",
-                        label: "Commercial",
-                        piQ: 5.0,
-                        description: "Standard commercial grade (lowest reliability)"
-                      }
+                      { value: "Class S", label: "Class S", piQ: 0.25 },
+                      { value: "Class B", label: "Class B", piQ: 1.0 },
+                      { value: "Commercial", label: "Commercial", piQ: 5.0 }
                     ]}
-                    className="factor-select"
                   />
+                  {errors.quality && (
+                    <div className="text-danger small mt-1">{errors.quality}</div>
+                  )}
+                </Col>
 
-                </div>
-              </Col>
-              {/* Quantity Input (Nₙ) */}
-              <Col md={4}>
-                <div className="form-group">
+                <Col md={4}>
                   <label>Quantity (Nₙ):</label>
                   <input
+                    name="quantity"
                     type="number"
                     className="form-control"
                     min="1"
                     value={quantity}
-                    onChange={(e) => {
-                      setQuantity(e.target.value);
-                      calculateComponentSum(e.target.value)
-                    }}
+                    onChange={(e) => setQuantity(e.target.value)}
                   />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
+                  {errors.quantity && (
+                    <div className="text-danger small mt-1">{errors.quantity}</div>
+                  )}
+                </Col>
+
+                <Col md={4}>
                   <label>Environment (π<sub>E</sub>):</label>
                   <Select
-                    styles={customStyles}
                     name="environment"
+                    styles={customStyles}
                     placeholder="Select Environment"
-                   
-                    onChange={(selectedOption) => {
+                    onChange={(option) =>
                       setCurrentComponent({
                         ...currentComponent,
-                        environment: selectedOption.value,
-                        piE: selectedOption.piE
-                      });
-                    }}
-
+                        environment: option.value,
+                        piE: option.piE
+                      })
+                    }
                     options={[
-                      {
-                        value: "GB",
-                        label: "Ground, Benign (GB)",
-                        piE: 0.50,
-                        description: "Controlled laboratory or office environment"
-                      },
-                      {
-                        value: "GF",
-                        label: "Ground, Fixed (GF)",
-                        piE: 2.0,
-                        description: "Permanent ground installations with environmental controls"
-                      },
-                      {
-                        value: "GM",
-                        label: "Ground, Mobile (GM)",
-                        piE: 4.0,
-                        description: "Vehicles operating on improved roads"
-                      },
-                      {
-                        value: "NS",
-                        label: "Naval, Sheltered (NS)",
-                        piE: 4.0,
-                        description: "Below decks in harbor or calm seas"
-                      },
-                      {
-                        value: "NU",
-                        label: "Naval, Unsheltered (NU)",
-                        piE: 6.0,
-                        description: "On deck or in rough seas"
-                      },
-                      {
-                        value: "AIC",
-                        label: "Airborne, Inhabited Cargo (AIC)",
-                        piE: 4.0,
-                        description: "Cargo aircraft with human occupants"
-                      },
-                      {
-                        value: "AIF",
-                        label: "Airborne, Inhabited Fighter (AIF)",
-                        piE: 5.0,
-                        description: "Manned fighter/trainer aircraft"
-                      },
-                      {
-                        value: "AUC",
-                        label: "Airborne, Uninhabited Cargo (AUC)",
-                        piE: 5.0,
-                        description: "Unmanned cargo aircraft"
-                      },
-                      {
-                        value: "AUF",
-                        label: "Airborne, Uninhabited Fighter (AUF)",
-                        piE: 8.0,
-                        description: "Unmanned fighter aircraft"
-                      },
-                      {
-                        value: "ARW",
-                        label: "Airborne, Rotary Wing (ARW)",
-                        piE: 8.0,
-                        description: "Helicopters and other rotary aircraft"
-                      },
-                      {
-                        value: "SF",
-                        label: "Space, Flight (SF)",
-                        piE: 0.50,
-                        description: "Spacecraft in flight (not launch/re-entry)"
-                      },
-                      {
-                        value: "MF",
-                        label: "Missile, Flight (MF)",
-                        piE: 5.0,
-                        description: "Missiles during flight phase"
-                      },
-                      {
-                        value: "ML",
-                        label: "Missile, Launch (ML)",
-                        piE: 12,
-                        description: "Missiles during launch phase"
-                      },
-                      {
-                        value: "CL",
-                        label: "Cannon, Launch (CL)",
-                        piE: 220,
-                        description: "Gun-launched projectiles during firing"
-                      }
+                      { value: "GB", label: "Ground, Benign", piE: 0.5 },
+                      { value: "GF", label: "Ground, Fixed", piE: 2.0 },
+                      { value: "GM", label: "Ground, Mobile", piE: 4.0 }
                     ]}
                   />
-                </div>
-              </Col>
+                  {errors.environment && (
+                    <div className="text-danger small mt-1">{errors.environment}</div>
+                  )}
+                </Col>
 
-              <Col md={4}>
-                <div className="form-group">
+                <Col md={4}>
                   <label>Circuit Function (π<sub>F</sub>):</label>
                   <Select
+                    name="piF"
                     styles={customStyles}
-                    name="circuitFunction"
                     placeholder="Select Circuit Function"
-               
-                    onChange={(selectedOption) => {
+                    onChange={(option) =>
                       setCurrentComponent({
                         ...currentComponent,
-                        // circuitFunction: selectedOption.value,
-                        piF: selectedOption.piF
-                      });
-                    }}
+                        piF: option.piF
+                      })
+                    }
                     options={[
                       { value: "Digital", label: "Digital", piF: 1.0 },
-                      { value: "Video", label: "Video (10MHz < f < 1GHz)", piF: 1.2 },
-                      { value: "Microwave", label: "Microwave (f > 1GHz)", piF: 2.6 },
-                      { value: "Linear", label: "Linear (f < 10MHz)", piF: 5.8 },
-                      { value: "Power", label: "Power", piF: 21 }
+                      { value: "Video", label: "Video", piF: 1.2 },
+                      { value: "Linear", label: "Linear", piF: 5.8 }
                     ]}
                   />
-                </div>
-              </Col>
-              <div className='d-flex justify-content-between align-items-center'>
-                <div>
-                  {results && (
-                    <Box
-                      component="div"
-                      onClick={() => setShowCalculations(!showCalculations)}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                        color: 'primary.main',
-                        '&:hover': {
-                          textDecoration: 'underline'
-                        }
-                      }}
-                      className="ms-auto mt-2"
-                    >
-                      <CalculatorIcon
-                        style={{ height: '30px', width: '40px' }}
-                        fontSize="large"
-                      />
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          fontWeight: 'bold',
-                          fontSize: '0.95rem',
-                          ml: 1
-                        }}
-                      >
-                        {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
-                      </Typography>
-                    </Box>
+                  {errors.piF && (
+                    <div className="text-danger small mt-1">{errors.piF}</div>
                   )}
-                </div>
+                </Col>
+              </Row>
 
-                {/* Calculation Button */}
-                <div className="text-end mt-3">
-                  <Button
-                    className="btn btn-primary"
-                    onClick={calculateHybridFailureRate}
-                  >
-                    Calculate Failure Rate
-                  </Button>
-                </div>
+              <div className="text-end mt-3">
+                <Button className="btn btn-primary" onClick={calculateHybridFailureRate}>
+                  Calculate Failure Rate
+                </Button>
               </div>
-
 
               {results && (
                 <>
-                  <h2 className="text-center">Calculation Result</h2>
-                  <div className="d-flex flex-column gap-2">
-                    <div className="d-flex align-items-center">
-                      <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                      <span className="ms-2">
-                        {results?.failureRate?.toFixed(6)} failures/10<sup>6</sup> hours
-                        {console.log("far..", results)}
-                      </span>
-                    </div>
-                    {results?.parameters?.formula && (
-                      <div className="mt-2">
-                        <strong>Formula:</strong>
-                        <span className="ms-2 font-monospace">{result?.parameters?.formula}</span>
-                      </div>
-                    )}
+                  <Typography variant="h6" className="mt-4">Calculation Result</Typography>
+                  <p>
+                    Predicted Failure Rate (λ<sub>p</sub>): <strong>{results.failureRate.toFixed(6)}</strong> failures/10<sup>6</sup> hours
+                  </p>
+
+                  <MaterialTable
+                    columns={[
+                      { title: 'Component Type', field: 'type', render: () => 'Hybrid Microcircuit' },
+                      { title: 'Quantity (Nₙ)', field: 'Nc', render: () => results.Nc },
+                      { title: 'Contribution (Nₙ × λₙ)', field: 'componentSum', render: () => results.componentSum.toFixed(6) },
+                      { title: 'πE', field: 'piE', render: () => results.piE?.toFixed(2) },
+                      { title: 'πQ', field: 'piQ', render: () => results.piQ?.toFixed(2) },
+                      { title: 'πF', field: 'piF', render: () => results.piF?.toFixed(2) },
+                      { title: 'πL', field: 'piL', render: () => results.piL?.toFixed(2) },
+                      { title: 'Total λₚ', field: 'failureRate', render: () => <strong>{results.failureRate.toFixed(6)}</strong> },
+                    ]}
+                    data={[results]}
+                    options={{
+                      search: false,
+                      paging: false,
+                      toolbar: false,
+                      headerStyle: {
+                        backgroundColor: '#CCE6FF',
+                        fontWeight: 'bold'
+                      },
+                      rowStyle: {
+                        backgroundColor: '#FFF'
+                      }
+                    }}
+                    components={{
+                      Container: props => <Paper {...props} elevation={2} style={{ borderRadius: 8 }} />
+                    }}
+                  />
+
+                  <div className="mt-3">
+                    <strong>Formula Used:</strong><br />
+                    <code>{results.parameters.formula}</code>
                   </div>
                 </>
-              )}
-
-              {/* Detailed Calculations Table */}
-              {results && showCalculations && (
-                <Row className="mb-4 mt-3">
-                  <Col>
-                    <div className="card">
-                      <div className="card-body">
-                        <MaterialTable
-                          columns={[
-                            {
-                              title: 'Component Type',
-                              field: 'type',
-                              render: rowData => (rowData?.currentComponent?.type || 'Hybrid Microcircuit')
-                            },
-                            {
-                              title: 'Quantity (Nₙ)',
-                              field: 'quantity',
-                              render: rowData => (rowData?.Nc || 1)
-                            },
-                            {
-                              title: 'Contribution (Nₙ × λₙ)',
-                              field: 'contribution',
-                              render: rowData => (rowData?.componentSum?.toFixed(6) || '0.000000')
-                            },
-                            {
-                              title: <span>π<sub>E</sub></span>,
-                              field: 'piE',
-                              render: rowData => (rowData?.piE?.toFixed(4) || '1.0000')
-                            },
-                            {
-                              title: <span>π<sub>Q</sub></span>,
-                              field: 'piQ',
-                              render: rowData => (rowData?.piQ?.toFixed(4) || '1.0000')
-                            },
-                            {
-                              title: <span>π<sub>F</sub></span>,
-                              field: 'piF',
-                              render: rowData => (rowData?.piF?.toFixed(4) || '1.0000')
-                            },
-                            {
-                              title: <span>π<sub>L</sub></span>,
-                              field: 'piL',
-                              render: rowData => (rowData?.piL?.toFixed(4) || '1.0000')
-                            },
-                            {
-                              title: "Total λₚ",
-                              field: 'totalFailureRate',
-                              render: rowData => (
-                                <strong>{(rowData?.failureRate?.toFixed(6) || '0.000000')}</strong>
-                              )
-                            }
-                          ]}
-                          data={[results]}
-                          options={{
-                            search: false,
-                            paging: false,
-                            toolbar: false,
-                            headerStyle: {
-                              backgroundColor: '#CCE6FF',
-                              fontWeight: 'bold'
-                            },
-                            rowStyle: {
-                              backgroundColor: '#FFF'
-                            }
-                          }}
-                          components={{
-                            Container: props => <Paper {...props} elevation={2} style={{ borderRadius: 8 }} />
-                          }}
-                        />
-
-
-                        <div className="formula-section mt-4">
-                          <Typography variant="h6" gutterBottom>
-                            Calculation Formula
-                          </Typography>
-                          <div className="alert alert-light">
-                            <code className="fs-5">
-                              λ<sub>p</sub> = Σ(N<sub>c</sub> × λ<sub>c</sub>) × (1 + 0.2  π<sub>E</sub>) × π<sub>F</sub> × π<sub>Q</sub> × π<sub>L</sub>
-                            </code>
-                          </div>
-                          <Typography variant="body1" paragraph>Where:</Typography>
-                          <ul>
-                            <li><strong>λ<sub>p</sub></strong> = Predicted failure rate (Failures/10<sup>6</sup> Hours)</li>
-
-                            <li><strong>Σ(N<sub>c</sub> × λ<sub>c</sub>)</strong> = Sum of component contributions</li>
-                            <li><strong>λ<sub>c</sub></strong> = Failure Rate of each particular component</li>
-                            <li><strong>N<sub>c</sub></strong> = Number of each particular component</li>
-                            <li><strong>π<sub>E</sub></strong> = Environment factor</li>
-                            <li><strong>π<sub>F</sub></strong> = Circuit function factor</li>
-                            <li><strong>π<sub>Q</sub></strong> = Quality factor</li>
-                            <li><strong>π<sub>L</sub></strong> = Learning factor</li>
-                          </ul>
-                          <div className="alert alert-info mt-3">
-                            <strong>Note:</strong> Only microcircuits, discrete semiconductors, and capacitors contribute significantly to the failure rate. Other components are assumed to have λ<sub>c</sub> = 0.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
               )}
             </>
           )}
@@ -2127,16 +2205,16 @@ return currentComponent.piF;
                       { value: "Digital Devices- All Digital Applications", label: "Digital Devices- All Digital Applications" },
                     ]}
                   />
+                  {errors.applicationFactor && <small className='text-danger'>{errors.applicationFactor}</small>}
                 </div>
+
               </Col>
             </>
           )}
           {currentComponent.type === "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS" && (
             <>
-
               <div className='calculator-container'>
                 <Row className="mb-3">
-
                   <Col md={4}>
                     <div className="form-group">
                       <label>Package Type for (π<sub>prT</sub>):</label>
@@ -2152,6 +2230,7 @@ return currentComponent.piF;
                         options={packageTypes}
                       />
                     </div>
+                    {errors.packageType && <small className='text-danger'>{errors.packageType}</small>}
                   </Col>
                   <Col md={4}>
                     <div className="form-group">
@@ -2168,7 +2247,7 @@ return currentComponent.piF;
                             // Reset calculatedPiT when technology changes
                             calculatedPiT: calculatePiT(
                               selectedOption.value,
-                              currentComponent.temperature || 25, // Default to 25°C if not set
+                              currentComponent.technology || 25, // Default to 25°C if not set
                               selectedOption.Ea // Pass the correct Ea for the technology
                             )
                           });
@@ -2231,6 +2310,7 @@ return currentComponent.piF;
                         ]}
                       />
                     </div>
+                    {errors.technology && <small className='text-danger'>{errors.technology}</small>}
                   </Col>
                   <Col md={4}>
                     <div className="form-group">
@@ -2255,6 +2335,7 @@ return currentComponent.piF;
                         onChange={handleInputChange}
                       />
                     </div>
+                    {errors.temperature && <small className='text-danger'>{errors.temperature}</small>}
                   </Col>
 
                   <Col md={4}>
@@ -2274,6 +2355,7 @@ return currentComponent.piF;
                         className="form-control"
                       />
                     </div>
+                    {errors.featureSize && <small className='text-danger'>{errors.featureSize}</small>}
                   </Col>
                   <Col md={4}>
                     <div className="form-group">
@@ -2291,12 +2373,14 @@ return currentComponent.piF;
                         }}
                         className={`form-control ${inputs.dieArea && (inputs.dieArea < 0.4 || inputs.dieArea > 3.0)}`}
                       />
-                      {inputs.dieArea && (inputs.dieArea < 0.4 || inputs.dieArea > 3.0) && (
+                      {/* {inputs.dieArea && (inputs.dieArea < 0.4 || inputs.dieArea > 3.0) && (
                         <div className="invalid-feedback">
                           Die Area (A) must be between 0.4 cm² and 3.0 cm²
                         </div>
-                      )}
+                      )} */}
                     </div>
+                    {errors.dieArea && <small className='text-danger'>{errors.dieArea}</small>}
+
                   </Col>
                   <Col md={4}>
                     <div className="form-group">
@@ -2319,6 +2403,8 @@ return currentComponent.piF;
                         ]}
                       />
                     </div>
+                    {errors.packageHermeticity && <small className='text-danger'>{errors.packageHermeticity}</small>}
+
                   </Col>
                   <Col md={4}>
                     <div className="form-group">
@@ -2345,6 +2431,8 @@ return currentComponent.piF;
                         ]}
                       />
                     </div>
+                    {errors.manufacturingProcess && <div className="invalid-feedback">{errors.manufacturingProcess}</div>}
+
                   </Col>
                 </Row>
                 <div className='d-flex justify-content-between align-items-center'>
@@ -2537,7 +2625,6 @@ return currentComponent.piF;
           )}
           {currentComponent.type === "Microcircuits,Memories" && (
             <>
-
               <Col md={4}>
                 <div className="form-group">
                   <label>Quality Factor (π<sub>Q</sub>):</label>
@@ -2545,13 +2632,16 @@ return currentComponent.piF;
                     styles={customStyles}
                     name="qualityFactor"
                     placeholder="Select Quality Class"
+                    value={currentComponent.quality}
+                    isInvalid={currentComponent.quality}
                     onChange={(selectedOption) => {
-
+                      setQualityFactor(selectedOption)
                       setCurrentComponent({
                         ...currentComponent,
-                        quality: selectedOption.value,
+                        quality: selectedOption?.value,
                         piQ: selectedOption.piQ
                       });
+                      setErrors({ ...errors, quality: "" })
                     }}
                     options={[
                       // Class S Categories (πQ = 0.25)
@@ -2603,9 +2693,9 @@ return currentComponent.piF;
                       }
                     ]}
                   />
+                  {errors.quality && <small className="text-danger">{errors.quality}</small>}
                 </div>
               </Col>
-
               <Col md={4}>
                 <div className="form-group">
                   <label>Environment (π<sub>E</sub>):</label>
@@ -2710,6 +2800,7 @@ return currentComponent.piF;
                     ]}
                   />
                 </div>
+                {errors.environment && <small className="text-danger">{errors.environment}</small>}
               </Col>
               <label>  λ<sub>cyc</sub> :</label>
               <Col md={4}>
@@ -2765,6 +2856,15 @@ return currentComponent.piF;
                     }
                   />
 
+                  {mode === "A1" && errors.programmingCycles && (
+                    <small className="text-danger">{errors.programmingCycles}</small>
+                  )}
+
+                  {mode === "C" && errors.a1Value && (
+                    <small className="text-danger">{errors.a1Value}</small>
+                  )}
+
+
                   {currentComponent.a1Value !== null && mode === 'A1' && (
                     <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
                       Calculated A₁: {currentComponent.a1Value}
@@ -2813,6 +2913,8 @@ return currentComponent.piF;
                     className="factor-select"
                   />
                 </div>
+                {errors.a2Factor && <small className="text-danger">{errors.a2Factor}</small>}
+
               </Col>
               <Col md={4}>
                 <div className="form-group">
@@ -2832,13 +2934,14 @@ return currentComponent.piF;
                     </div>
                   )}
                 </div>
+                {errors.eccOption && <small className="text-danger">{errors.eccOption}</small>}
+
               </Col>
             </>
           )}
           {/* Saw Devices Section */}
           {currentComponent.type === "Microcircuits,Saw Devices" && (
             <>
-
               <Col md={4}>
                 <div className="form-group">
                   <label>Quality Factor (π<sub>Q</sub>):</label>
@@ -2873,6 +2976,7 @@ return currentComponent.piF;
                     className="factor-select"
                   />
                 </div>
+                {errors.qualityFactor && <div className="text-danger mt-1">{errors.qualityFactor}</div>}
               </Col>
 
               <Col md={4}>
@@ -2899,6 +3003,7 @@ return currentComponent.piF;
                     options={environmentOptions}
                   />
                 </div>
+                {errors.environment && <div className="text-danger mt-1">{errors.environment}</div>}
               </Col>
 
 
@@ -2936,25 +3041,36 @@ return currentComponent.piF;
                     padding: '8px 20px'
                   }}
                   onClick={() => {
+                    const newErrors = {};
+
+                    if (!currentComponent.qualityFactor) {
+                      newErrors.qualityFactor = "Please select a Quality Factor (πQ).";
+                    }
+
+                    if (!currentComponent.environment) {
+                      newErrors.environment = "Please select an Environment (πE).";
+                    }
+
+                    if (Object.keys(newErrors).length > 0) {
+                      setErrors(newErrors);
+                      return; // stop calculation
+                    }
+
+                    setErrors({}); // clear previous errors
+
                     const failureRate = calculateSawDeviceFailureRate(currentComponent);
-
-                    const updatedComponent = {
-
-                      ...currentComponent,
-                      calculatedFailureRate: failureRate,
-                      environmentLabel: currentComponent.environment?.description,
-                      qualityLabel: currentComponent.qualityFactor?.label
-
-                    };
-
-                    setCurrentComponent(updatedComponent);
-                    addOrUpdateComponent(updatedComponent);
-                    // Hide calculations initially after new calculation
-
-
-                  }
-
-                  }
+                    if (failureRate) {
+                      onCalculate(failureRate);
+                      const updatedComponent = {
+                        ...currentComponent,
+                        calculatedFailureRate: failureRate,
+                        environmentLabel: currentComponent.environment?.description,
+                        qualityLabel: currentComponent.qualityFactor?.label
+                      };
+                      setCurrentComponent(updatedComponent);
+                      addOrUpdateComponent(updatedComponent);
+                    }
+                  }}
 
 
                 >
@@ -3066,7 +3182,7 @@ return currentComponent.piF;
                           ? "Digital IC"
                           : "Select Device Type"
                     }}
-                   
+
                     onChange={(selectedOption) => {
                       setCurrentDevice(prev => ({
                         ...prev,
@@ -3079,6 +3195,7 @@ return currentComponent.piF;
                       { value: "Digital", label: "Digital IC" }
                     ]}
                   />
+                  {errors.currentDevice && <small className='text-danger'>{errors.currentDevice}</small>}
                 </div>
               </Col>
               <Col md={4}>
@@ -3110,6 +3227,8 @@ return currentComponent.piF;
                         ]
                     }
                   />
+                  {errors.complexity && <small className='text-danger'>{errors.complexity}</small>}
+
                 </div>
               </Col>
 
@@ -3197,6 +3316,7 @@ return currentComponent.piF;
                       { value: "microprocessorData", label: "Microprocessor" }
                     ]}
                   />
+                  {errors.devices && <small className='text-danger'>{errors.devices}</small>}
                 </div>
               </Col>
 
@@ -3222,7 +3342,10 @@ return currentComponent.piF;
                           { value: "pla", label: "PLA/PAL" }
                         ]}
                       />
+                      {errors.complexFailure && <small className='text-danger'>{errors.complexFailure}</small>}
+
                     </div>
+
                   </Col>
                   <Col md={4}>
                     {currentComponent.complexFailure && (
@@ -3262,6 +3385,8 @@ return currentComponent.piF;
                             ]
                           }
                         />
+                        {errors.gateCount && <small className='text-danger'>{errors.gateCount}</small>}
+
                       </div>
 
                     )}
@@ -3419,6 +3544,8 @@ return currentComponent.piF;
                       { value: "Nonhermetic_DIPs_PGA_SMT", label: "Nonhermetic: DIPs, PGA, SMT" }
                     ]}
                   />
+                  {errors.packageType && <small className='text-danger'>{errors.packageType}</small>}
+
                 </div>
               </Col>
               <Col md={4}>
@@ -3446,6 +3573,8 @@ return currentComponent.piF;
                       pinCount: parseInt(e.target.value)
                     })}
                   />
+                  {errors.pinCount && <small className='text-danger'>{errors.pinCount}</small>}
+
                 </div>
               </Col>
 
@@ -3515,6 +3644,8 @@ return currentComponent.piF;
                       }
                     ]}
                   />
+                  {errors.quality && <small className='text-danger'>{errors.quality}</small>}
+
                 </div>
               </Col>
             </Row>
@@ -3567,6 +3698,9 @@ return currentComponent.piF;
                       }
                     ]}
                   />
+
+                  {errors.yearsInProduction && <small className='text-danger'>{errors.yearsInProduction}</small>}
+
                 </div>
               </Col>
               <Col md={4}>
@@ -3646,6 +3780,8 @@ return currentComponent.piF;
                       }
                     ]}
                   />
+                  {errors.technology && <small className='text-danger'>{errors.technology}</small>}
+
                 </div>
               </Col>
               <Col md={4}>
@@ -3670,6 +3806,8 @@ return currentComponent.piF;
                     value={currentComponent.temperature}
                     onChange={handleInputChange}
                   />
+                  {errors.temperature && <small className='text-danger'>{errors.temperature}</small>}
+
                 </div>
               </Col>
             </Row>
@@ -3714,7 +3852,15 @@ return currentComponent.piF;
               </div>
               <button
                 className="btn btn-primary"
-                onClick={addComponent}
+                onClick={() => {
+                  const validationErrors = validateMicrocircuitFields();
+                  if (Object.keys(validationErrors).length > 0) {
+                    setErrors(validationErrors);
+                  } else {
+                    setErrors({});
+                    addComponent();
+                  }
+                }}
               >
                 Calculate Failure Rate
               </button>
@@ -3855,6 +4001,7 @@ return currentComponent.piF;
                     className="factor-select"
                   />
                 </div>
+                {errors.memoryTech && <small className="text-danger">{errors.memoryTech}</small>}
               </Col>
               {/* For B₁ Calculation */}
               <Col md={4}>
@@ -3890,6 +4037,7 @@ return currentComponent.piF;
                     className="factor-select"
                   />
                 </div>
+                {errors.memorySizeB1 && <small className="text-danger">{errors.memorySizeB1}</small>}
               </Col>
               {/* B₁ Temperature Input */}
               <Col md={4}>
@@ -3952,6 +4100,8 @@ return currentComponent.piF;
                     </div>
                   )}
                 </div>
+                {errors.techTemperatureB1 && <small className="text-danger">{errors.techTemperatureB1}</small>}
+
               </Col>
               <Col md={4}>
                 <div className="form-group">
@@ -3988,79 +4138,81 @@ return currentComponent.piF;
                     className="factor-select"
                   />
                 </div>
-               { console.log('currentComponent.memorySizeB2', currentComponent.memorySizeB2)}
-                             
-{currentComponent.memorySizeB2 == 0 && (
-        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-          Calculated B₂: 0
-        </div>
-      )}
+                {console.log('currentComponent.memorySizeB2', currentComponent.memorySizeB2)}
+                {errors.memorySizeB2 && <small className="text-danger">{errors.memorySizeB2}</small>}
+
+                {currentComponent.memorySizeB2 == 0 && (
+                  <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                    Calculated B₂: 0
+                  </div>
+                )}
               </Col>
 
-            
-        {currentComponent.memorySizeB2 !== 0 && (
-  <Col md={4}>
-    <div className="form-group">
-      <label>Junction Temperature for B₂ (°C):</label>
-      <input
-        name="techTemperatureB2"
-        type="number"
-        min="25"
-        max="175"
-        step="1"
-        value={currentComponent.techTemperatureB2 ?? ''}
-        onChange={(e) => {
-          const rawValue = e.target.value;
-          const temp = rawValue === '' ? null : Number(rawValue);
 
-          if (temp !== currentComponent.techTemperatureB2) {
-            const updatedComponent = {
-              ...currentComponent,
-              techTemperatureB2: temp,
-              B2: getBValueForTemp(
-                'Textured-Poly-B2',
-                currentComponent.memorySizeB2,
-                temp,
-                'B2'
-              )
-            };
-            setCurrentComponent(updatedComponent);
-            updateComponentInList(updatedComponent);
-          }
-        }}
-        onBlur={(e) => {
-          let temp = currentComponent.techTemperatureB2;
-          if (temp === null || isNaN(temp)) temp = 25;
-          else if (temp < 25) temp = 25;
-          else if (temp > 175) temp = 175;
-          else temp = Math.round(temp);
+              {currentComponent.memorySizeB2 !== 0 && (
+                <Col md={4}>
+                  <div className="form-group">
+                    <label>Junction Temperature for B₂ (°C):</label>
+                    <input
+                      name="techTemperatureB2"
+                      type="number"
+                      min="25"
+                      max="175"
+                      step="1"
+                      value={currentComponent.techTemperatureB2 ?? ''}
+                      onChange={(e) => {
+                        const rawValue = e.target.value;
+                        const temp = rawValue === '' ? null : Number(rawValue);
 
-          if (temp !== currentComponent.techTemperatureB2) {
-            const updatedComponent = {
-              ...currentComponent,
-              techTemperatureB2: temp,
-              B2: getBValueForTemp(
-                'Textured-Poly-B2',
-                currentComponent.memorySizeB2,
-                temp,
-                'B2'
-              )
-            };
-            setCurrentComponent(updatedComponent);
-            updateComponentInList(updatedComponent);
-          }
-        }}
-        placeholder="25-175°C"
-      />
-     
-      {currentComponent.B2 !== null && (
-        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-          Calculated B₂: {currentComponent.B2?.toFixed(6)}
-        </div>
-      )}
-    </div>
-  </Col>
-)}
+                        if (temp !== currentComponent.techTemperatureB2) {
+                          const updatedComponent = {
+                            ...currentComponent,
+                            techTemperatureB2: temp,
+                            B2: getBValueForTemp(
+                              'Textured-Poly-B2',
+                              currentComponent.memorySizeB2,
+                              temp,
+                              'B2'
+                            )
+                          };
+                          setCurrentComponent(updatedComponent);
+                          updateComponentInList(updatedComponent);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        let temp = currentComponent.techTemperatureB2;
+                        if (temp === null || isNaN(temp)) temp = 25;
+                        else if (temp < 25) temp = 25;
+                        else if (temp > 175) temp = 175;
+                        else temp = Math.round(temp);
+
+                        if (temp !== currentComponent.techTemperatureB2) {
+                          const updatedComponent = {
+                            ...currentComponent,
+                            techTemperatureB2: temp,
+                            B2: getBValueForTemp(
+                              'Textured-Poly-B2',
+                              currentComponent.memorySizeB2,
+                              temp,
+                              'B2'
+                            )
+                          };
+                          setCurrentComponent(updatedComponent);
+                          updateComponentInList(updatedComponent);
+                        }
+                      }}
+                      placeholder="25-175°C"
+                    />
+                    {errors.techTemperatureB2 && <small className="text-danger">{errors.techTemperatureB2}</small>}
+
+                    {currentComponent.B2 !== null && (
+                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                        Calculated B₂: {currentComponent.B2?.toFixed(6)}
+                      </div>
+                    )}
+                  </div>
+                </Col>
+              )}
               <Col md={4}>
                 <div className="form-group">
                   <label>Memory Type for (C<sub>1</sub>):</label>
@@ -4081,6 +4233,8 @@ return currentComponent.piF;
                     }))}
                   />
                 </div>
+                {errors.memoryType && <small className="text-danger">{errors.memoryType}</small>}
+
               </Col>
               <Col md={4}>
                 <div className="form-group">
@@ -4101,6 +4255,8 @@ return currentComponent.piF;
                     }))}
                   />
                 </div>
+                {errors.memorySize && <small className="text-danger">{errors.memorySize}</small>}
+
               </Col>
 
               <Col md={4}>
@@ -4181,6 +4337,8 @@ return currentComponent.piF;
                     ]}
                   />
                 </div>
+                {errors.technology && <small className="text-danger">{errors.technology}</small>}
+
               </Col>
               <Col md={4}>
                 <div className="form-group">
@@ -4205,6 +4363,8 @@ return currentComponent.piF;
                     onChange={handleInputChange}
                   />
                 </div>
+                {errors.temperature && <small className="text-danger">{errors.temperature}</small>}
+
               </Col>
 
               <Col md={4}>
@@ -4213,6 +4373,14 @@ return currentComponent.piF;
                   <Select
                     styles={customStyles}
                     name="packageType"
+                    value={
+                      currentComponent.technology
+                        ? {
+                          value: currentComponent.technology,
+                          label: currentComponent.technologyType
+                        }
+                        : null
+                    }
                     placeholder="Select Package Type"
                     onChange={(selectedOption) => {
                       setCurrentComponent({
@@ -4229,6 +4397,7 @@ return currentComponent.piF;
                     ]}
                   />
                 </div>
+                {errors.packageType && <small className="text-danger">{errors.packageType}</small>}
               </Col>
               <Col md={4}>
                 <div className="form-group">
@@ -4256,6 +4425,8 @@ return currentComponent.piF;
                     })}
                   />
                 </div>
+                {errors.pinCount && <small className="text-danger">{errors.pinCount}</small>}
+
               </Col>
               <Col md={4}>
                 <div className="form-group">
@@ -4305,6 +4476,8 @@ return currentComponent.piF;
                     ]}
                   />
                 </div>
+                {errors.learningFactor && <small className="text-danger">{errors.learningFactor}</small>}
+
               </Col>
             </Row>
             <div className='d-flex justify-content-between align-items-center'>
@@ -4470,6 +4643,9 @@ return currentComponent.piF;
             )}
           </>
         )}
+
+
+        {/* GaAs */}
         {currentComponent.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
           <>
             <Row className="mb-3">
@@ -4503,7 +4679,7 @@ return currentComponent.piF;
                       { value: "CL", label: "Cannon Launch (πE = 220)", piE: 220 }
                     ]}
                   />
-                </div>
+                  {errors.environment && <small className="text-danger">{errors.environment}</small>}                </div>
               </Col>
 
               <Col md={4}>
@@ -4527,6 +4703,7 @@ return currentComponent.piF;
                       { value: "Nonhermetic_DIPs_PGA_SMT", label: "Nonhermetic: DIPs, PGA, SMT" }
                     ]}
                   />
+                  {errors.packageType && <small className="text-danger">{errors.packageType}</small>}
                 </div>
               </Col>
               <Col md={4}>
@@ -4555,6 +4732,7 @@ return currentComponent.piF;
                     })}
                   />
                 </div>
+                {errors.pinCount && <small className="text-danger">{errors.pinCount}</small>}
               </Col>
               <Col md={4}>
                 <div className="form-group">
@@ -4577,6 +4755,7 @@ return currentComponent.piF;
                       { value: "Digital", label: "Digital Applications (πA = 1.0)", piA: 1.0 }
                     ]}
                   />
+                  {errors.application && <small className="text-danger">{errors.application}</small>}
                 </div>
               </Col>
 
@@ -4602,6 +4781,7 @@ return currentComponent.piF;
                       { value: 2.0, label: "≥ 2.0 years (πL = 1.0)", piL: 1.0 }
                     ]}
                   />
+                  {errors.yearsInProduction && <small className="text-danger">{errors.yearsInProduction}</small>}
                 </div>
               </Col>
 
@@ -4666,6 +4846,7 @@ return currentComponent.piF;
                       }
                     ]}
                   />
+                  {errors.quality && <small className="text-danger">{errors.quality}</small>}
                 </div>
               </Col>
             </Row>
@@ -4747,6 +4928,7 @@ return currentComponent.piF;
                       }
                     ]}
                   />
+                  {errors.technology && <small className="text-danger">{errors.technology}</small>}
                 </div>
               </Col>
               <Col md={4}>
@@ -4772,6 +4954,7 @@ return currentComponent.piF;
                     onChange={handleInputChange}
                   />
                 </div>
+                {errors.temperature && <small className="text-danger">{errors.temperature}</small>}
               </Col>
 
             </Row>
@@ -4950,6 +5133,9 @@ return currentComponent.piF;
             )}
           </>
         )}
+
+
+
         <br />
         {currentComponent.type === "Microcircuit,Magnetic Bubble Memories" && (
           <>
@@ -4965,6 +5151,7 @@ return currentComponent.piF;
                     value={currentComponent.bubbleChips || ''}
                     onChange={handleInputChange}
                   />
+                  {errors.bubbleChips && <div className="text-danger">{errors.bubbleChips}</div>}
                 </div>
               </Col>
 
@@ -4980,6 +5167,7 @@ return currentComponent.piF;
                     value={currentComponent.dissipativeElements || ''}
                     onChange={handleInputChange}
                   />
+                  {errors.dissipativeElements && <div className="text-danger">{errors.dissipativeElements}</div>}
                 </div>
               </Col>
 
@@ -4995,10 +5183,10 @@ return currentComponent.piF;
                     value={currentComponent.numberOfBits || ''}
                     onChange={handleInputChange}
                   />
+                  {errors.numberOfBits && <div className="text-danger">{errors.numberOfBits}</div>}
                 </div>
               </Col>
             </Row>
-
             <Row className="mb-3">
               <Col md={4}>
                 <div className="form-group">
@@ -5021,23 +5209,14 @@ return currentComponent.piF;
                       { value: "Nonhermetic_DIPs", label: "Nonhermetic: DIPs", c2: 0.0012 }
                     ]}
                   />
+                  {errors.packageType && <div className="text-danger">{errors.packageType}</div>}
                 </div>
               </Col>
               <Col md={4}>
                 <div className="form-group">
                   <label>No. of Functional Pins for (C<sub>2</sub>):</label>
                   <input
-                    className="form-group"
-                    style={{
-                      width: "100%",
-                      padding: "0.375rem 0.75rem",
-                      fontSize: "1rem",
-                      lineHeight: "1.5",
-                      color: "#495057",
-                      backgroundColor: "#fff",
-                      border: "1px solid #ced4da",
-                      borderRadius: "0.25rem"
-                    }}
+                    className="form-control"
                     type="number"
                     name="pinCount"
                     min="3"
@@ -5048,6 +5227,7 @@ return currentComponent.piF;
                       pinCount: parseInt(e.target.value)
                     })}
                   />
+                  {errors.pinCount && <div className="text-danger">{errors.pinCount}</div>}
                 </div>
               </Col>
               <Col md={4}>
@@ -5063,6 +5243,7 @@ return currentComponent.piF;
                     value={currentComponent.dutyCycle || ''}
                     onChange={handleInputChange}
                   />
+                  {errors.dutyCycle && <div className="text-danger">{errors.dutyCycle}</div>}
                   <small className="form-text text-muted">
                     π<sub>D</sub> = 0.9D + 0.1 (D ≤ 1)
                   </small>
@@ -5133,8 +5314,8 @@ return currentComponent.piF;
                     ]}
                   />
                 </div>
+                {errors.quality && <div className="text-danger">{errors.quality}</div>}
               </Col>
-
               <Col md={4}>
                 <div className="form-group">
                   <label>Case Temperature (°C):</label>
@@ -5147,6 +5328,7 @@ return currentComponent.piF;
                     value={currentComponent.tcase || ''}
                     onChange={handleInputChange}
                   />
+                  {errors.tcase && <div className="text-danger">{errors.tcase}</div>}
                   <small className="form-text text-muted">
                     T<sub>CASE</sub> = Measured case temperature
                   </small>
@@ -5161,15 +5343,12 @@ return currentComponent.piF;
                     name="temperature"
                     min="25"
                     max="175"
-                    value={currentComponent.tcase ? Number(currentComponent.tcase) + 10 : ''}
+                    value={currentComponent.tcase1 ? Number(currentComponent.tcase1) + 10 : ''}
                     readOnly
                   />
-                  <small className="form-text text-muted">
-                    T<sub>J</sub> = T<sub>CASE</sub> + 10°C (automatically calculated)
-                  </small>
+                  {errors.tcase1 && <div className="text-danger">{errors.tcase1}</div>}
                 </div>
               </Col>
-
               <Col md={4}>
                 <div className="form-group">
                   <label>Reads per Write (R/W) for (π<sub>W</sub>):</label>
@@ -5181,6 +5360,8 @@ return currentComponent.piF;
                     value={currentComponent.readsPerWrite || ''}
                     onChange={handleInputChange}
                   />
+                  {errors.readsPerWrite && <div className="text-danger">{errors.readsPerWrite}</div>}
+
                 </div>
               </Col>
               <Col md={4}>
@@ -5196,9 +5377,8 @@ return currentComponent.piF;
                     value={currentComponent.writeDutyCycle || ''}
                     onChange={handleInputChange}
                   />
-                  <small className="form-text text-muted">
-                    D = Avg. Device Data Rate / Mfg. Max. Rated Data Rate (≤ 1)
-                  </small>
+                  {errors.writeDutyCycle && <div className="text-danger">{errors.writeDutyCycle}</div>}
+
                 </div>
               </Col>
             </Row>
@@ -5239,7 +5419,11 @@ return currentComponent.piF;
               </div>
               <Button
                 variant="primary"
-                onClick={calculateBubbleMemoryFailureRate}
+                onClick={() => {
+                  if (validateBubbleMemoryFields()) {
+                    calculateBubbleMemoryFailureRate();
+                  }
+                }}
                 className="btn-calculate float-end mb-4"
               >
                 Calculate Failure Rate

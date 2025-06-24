@@ -75,6 +75,7 @@ const MTTRPrediction = (props, active) => {
   const [mttrId, setMttrId] = useState();
   const [mlhValue, setMlhValue] = useState();
   const [mctValue, setMctValue] = useState();
+  const [mttrCalculatedValue, setMttrCalculatedValue] = useState()
   const [totalLabourHr, setLabourHour] = useState();
   const [iniProductId, setInitialProductId] = useState();
   const [writePermission, setWritePermission] = useState();
@@ -89,9 +90,9 @@ const MTTRPrediction = (props, active) => {
   const [mergedData, setMergedData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [companyId, setCompanyId] = useState();
-    const [selectedField, setSelectedField] = useState(null);
-    const [selectedFunction, setSelectedFunction] = useState();
-  
+  const [selectedField, setSelectedField] = useState(null);
+  const [selectedFunction, setSelectedFunction] = useState();
+
   const [data, setData] = useState({
     toolType: "",
     time: "",
@@ -103,16 +104,16 @@ const MTTRPrediction = (props, active) => {
   });
 
   const handleInputChange = (selectedItems, name) => {
-  setData((prevData) => ({
-    ...prevData,
-    [name]: selectedItems ? selectedItems.value : "",
-  }));
-};
+    setData((prevData) => ({
+      ...prevData,
+      [name]: selectedItems ? selectedItems.value : "",
+    }));
+  };
 
 
 
- const getAllSeprateLibraryData = async () => {
-  // console.log("getAllSeprateLibraryData called",);
+  const getAllSeprateLibraryData = async () => {
+    // console.log("getAllSeprateLibraryData called",);
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
     console.log("companyId in getAllSeprateLibraryData", companyId);
@@ -137,8 +138,8 @@ const MTTRPrediction = (props, active) => {
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-    ? props?.location?.state?.productId
-    : iniProductId;
+      ? props?.location?.state?.productId
+      : iniProductId;
   const token = localStorage.getItem("sessionId");
 
   const handleReset = (resetForm) => {
@@ -354,7 +355,7 @@ const MTTRPrediction = (props, active) => {
 
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
     // console.log("getAllConnectedLibrary called", fieldValue, fieldName);
-    console.log("project id....",projectId);
+    console.log("project id....", projectId);
     console.log("fieldValue in getAllConnectedLibrary", fieldValue);
     console.log("fieldName in getAllConnectedLibrary", fieldName);
 
@@ -395,7 +396,6 @@ const MTTRPrediction = (props, active) => {
     })
       .then((res) => {
         const data = res?.data?.data;
-        console.log("data.......mttr ...", data);
 
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""
@@ -442,68 +442,68 @@ const MTTRPrediction = (props, active) => {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
     },
 
-{
-  title: "TaskType",
-  field: "taskType",
-  type: "string",
-  headerStyle: { textAlign: "center" },
-  cellStyle: { minWidth: "110px" },
-  validate: (rowData) => {
-    if (rowData?.taskType === undefined || rowData?.taskType === "") {
-      return "required";
-    }
-    return true;
-  },
-  editComponent: ({ value, onChange }) => {
-    const seperateFilteredData =
-      allSepareteData?.filter((item) => item?.sourceName === "TaskType") || [];
-    const conncetedFilteredData =
-      allConnectedData?.filter((item) => item?.destinationName === "TaskType") || [];
+    {
+      title: "TaskType",
+      field: "taskType",
+      type: "string",
+      headerStyle: { textAlign: "center" },
+      cellStyle: { minWidth: "110px" },
+      validate: (rowData) => {
+        if (rowData?.taskType === undefined || rowData?.taskType === "") {
+          return "required";
+        }
+        return true;
+      },
+      editComponent: ({ value, onChange }) => {
+        const seperateFilteredData =
+          allSepareteData?.filter((item) => item?.sourceName === "TaskType") || [];
+        const conncetedFilteredData =
+          allConnectedData?.filter((item) => item?.destinationName === "TaskType") || [];
 
-    const options =
-      conncetedFilteredData.length > 0
-        ? conncetedFilteredData?.map((item) => ({
-            value: item?.destinationValue,
-            label: item?.destinationValue,
-          }))
-        : seperateFilteredData?.map((item) => ({
-            value: item?.sourceValue,
-            label: item?.sourceValue,
-          }));
+        const options =
+          conncetedFilteredData.length > 0
+            ? conncetedFilteredData?.map((item) => ({
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
+            : seperateFilteredData?.map((item) => ({
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
 
-    const selectedOption = options.find(opt => opt.value === value) || null;
+        const selectedOption = options.find(opt => opt.value === value) || null;
 
-    if (!options || options.length === 0) {
-      return (
-        <input
-          type="text"
-          name="TaskType"
-          value={value || ""}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Task Type"
-          style={{ height: "40px", borderRadius: "4px", width: "80px" }}
-          title="Enter Task Type"
-        />
-      );
-    }
-    
-    return (
-      <Select
-        name="TaskType"
-        value={selectedOption}
-        onChange={(selectedItems) => {
-          const newValue = selectedItems ? selectedItems.value : "";
-          onChange(newValue);
-          handleInputChange(selectedItems, "taskType");
-          getAllConnectedLibrary(selectedItems, "TaskType");
-        }}
-        options={options}
-        isClearable
-        styles={customStyles}
-      />
-    );
-  },
-},
+        if (!options || options.length === 0) {
+          return (
+            <input
+              type="text"
+              name="TaskType"
+              value={value || ""}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="Task Type"
+              style={{ height: "40px", borderRadius: "4px", width: "80px" }}
+              title="Enter Task Type"
+            />
+          );
+        }
+
+        return (
+          <Select
+            name="TaskType"
+            value={selectedOption}
+            onChange={(selectedItems) => {
+              const newValue = selectedItems ? selectedItems.value : "";
+              onChange(newValue);
+              handleInputChange(selectedItems, "taskType");
+              getAllConnectedLibrary(selectedItems, "TaskType");
+            }}
+            options={options}
+            isClearable
+            styles={customStyles}
+          />
+        );
+      },
+    },
     {
       title: "Average Task Time(Hours)",
       field: "time",
@@ -527,15 +527,15 @@ const MTTRPrediction = (props, active) => {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
-              
-    const selectedOption = options.find(opt => opt.value === value) || null;
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
+
+        const selectedOption = options.find(opt => opt.value === value) || null;
         if (!options || options.length === 0) {
           return (
             <input
@@ -552,21 +552,21 @@ const MTTRPrediction = (props, active) => {
         return (
           <Select
             name="time"
-        value={selectedOption}
+            value={selectedOption}
             onChange={(selectedItems) => {
-              const newValue = selectedItems ? selectedItems.value : ""; 
-            onChange(newValue);
+              const newValue = selectedItems ? selectedItems.value : "";
+              onChange(newValue);
               handleInputChange(selectedItems, "time");
               getAllConnectedLibrary(selectedItems, "time");
             }}
             options={options}
-               isClearable
-        styles={customStyles}
+            isClearable
+            styles={customStyles}
           />
         );
       },
     },
-      {
+    {
       title: "No of Labours",
       field: "totalLabour",
       type: "string",
@@ -591,13 +591,13 @@ const MTTRPrediction = (props, active) => {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -647,13 +647,13 @@ const MTTRPrediction = (props, active) => {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -703,13 +703,13 @@ const MTTRPrediction = (props, active) => {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -760,13 +760,13 @@ const MTTRPrediction = (props, active) => {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -817,13 +817,13 @@ const MTTRPrediction = (props, active) => {
         const options =
           conncetedFilteredData.length > 0
             ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
+              value: item?.destinationValue,
+              label: item?.destinationValue,
+            }))
             : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+              value: item?.sourceValue,
+              label: item?.sourceValue,
+            }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -898,6 +898,7 @@ const MTTRPrediction = (props, active) => {
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
+
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -941,48 +942,48 @@ const MTTRPrediction = (props, active) => {
   // };
 
 
-const updateProcedureData = (value) => {
-  console.log("value in updateProcedureData", value);
-  const companyId = localStorage.getItem("companyId");
-  const rowId = value?.id;
-  const userId = localStorage.getItem("userId");
-console.log("rowId in updateProcedureData", rowId);
-  // Prepare the data object with all required fields
-  const requestData = {
-    time: value.time || "",
-    totalLabour: value.totalLabour || "",
-    skill: value.skill || "",
-    tools: value.tools || "",
-    partNo: value.partNo || "",
-    toolType: value.toolType || "",
-    taskType: value.taskType || "",
-    projectId: projectId,
-    productId: productId,
-    companyId: companyId,
-    treeStructureId: treeStructure,
-    token: token,
-    userId: userId,
-    
+  const updateProcedureData = (value) => {
+    console.log("value in updateProcedureData", value);
+    const companyId = localStorage.getItem("companyId");
+    const rowId = value?.id;
+    const userId = localStorage.getItem("userId");
+    console.log("rowId in updateProcedureData", rowId);
+    // Prepare the data object with all required fields
+    const requestData = {
+      time: value.time || "",
+      totalLabour: value.totalLabour || "",
+      skill: value.skill || "",
+      tools: value.tools || "",
+      partNo: value.partNo || "",
+      toolType: value.toolType || "",
+      taskType: value.taskType || "",
+      projectId: projectId,
+      productId: productId,
+      companyId: companyId,
+      treeStructureId: treeStructure,
+      token: token,
+      userId: userId,
+
+    };
+
+    console.log("req", requestData)
+    Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, requestData)
+      .then((response) => {
+        getProcedureData();
+        toast.success("Procedure Updated Successfully");
+      })
+      .catch((error) => {
+        console.error("Error updating procedure:", error);
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        } else {
+          toast.error("Failed to update procedure");
+        }
+      });
   };
 
-  console.log("req",requestData) 
-  Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, requestData)
-    .then((response) => {
-      getProcedureData();
-      toast.success("Procedure Updated Successfully");
-    })
-    .catch((error) => {
-      console.error("Error updating procedure:", error);
-      const errorStatus = error?.response?.status;
-      if (errorStatus === 401) {
-        logout();
-      } else {
-        toast.error("Failed to update procedure");
-      }
-    });
-};
-
- const getProcedureData = () => {
+  const getProcedureData = () => {
     const companyId = localStorage.getItem("companyId");
     const userId = localStorage.getItem("userId");
     Api.get("/api/v1/mttrPrediction/get/procedure/", {
@@ -1002,6 +1003,12 @@ console.log("rowId in updateProcedureData", rowId);
         setLabourHour(mttrResult?.sumOfTotal);
         setMlhValue(mttrResult?.Totalmlh);
         setMctValue(mttrResult?.sumOfTime);
+
+        const mttrValue = mttrResult?.sumOfTotal && mttrResult?.sumOfTime
+          ? mttrResult.sumOfTime / mttrResult.sumOfTotal
+          : 0;
+          
+        setMttrCalculatedValue(mttrValue);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -1136,17 +1143,17 @@ console.log("rowId in updateProcedureData", rowId);
         setLevelOfRepair(
           data?.levelOfRepair
             ? {
-                label: data?.levelOfRepair,
-                value: data?.levelOfRepair,
-              }
+              label: data?.levelOfRepair,
+              value: data?.levelOfRepair,
+            }
             : ""
         );
         setLevelOfReplace(
           data?.levelOfReplace
             ? {
-                label: data?.levelOfReplace,
-                value: data?.levelOfReplace,
-              }
+              label: data?.levelOfReplace,
+              value: data?.levelOfReplace,
+            }
             : ""
         );
         setSpare(data?.spare ? { label: data?.spare, value: data?.spare } : "");
@@ -1188,13 +1195,13 @@ console.log("rowId in updateProcedureData", rowId);
             mct: mctValue ? mctValue : "",
             mlh: mlhValue ? mlhValue : "",
             labourHour: totalLabourHr ? totalLabourHr : "",
-            mttr: mttrData?.mttr ? mttrData?.mttr : "",
+            mttr: mttrCalculatedValue ? mttrCalculatedValue : '',
 
             remarks: mttrData?.remarks
               ? mttrData?.remarks
               : importExcelData?.remarks
-              ? importExcelData.remarks
-              : "",
+                ? importExcelData.remarks
+                : "",
             mmax: mttrData?.mMax ? mttrData?.mMax : "",
             taskType: "",
             time: "",
@@ -1223,9 +1230,9 @@ console.log("rowId in updateProcedureData", rowId);
                   <fieldset
                     disabled={
                       writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
                         ? null
                         : "disabled"
                     }
@@ -1331,7 +1338,7 @@ console.log("rowId in updateProcedureData", rowId);
                                     value={values.partNumber}
                                     className="mt-1"
                                     onBlur={handleBlur}
-                                    // onChange={handleChange}
+                                  // onChange={handleChange}
                                   />
                                   <ErrorMessage
                                     className="error text-danger"
@@ -1438,7 +1445,7 @@ console.log("rowId in updateProcedureData", rowId);
                               </Col>
                               <Col className="part-type-aln">
                                 {category.value === "Mechanical" ||
-                                category.value === "Electronic" ? (
+                                  category.value === "Electronic" ? (
                                   <div>
                                     <Form.Group>
                                       <Label notify={true}>Part Type</Label>
@@ -1466,21 +1473,21 @@ console.log("rowId in updateProcedureData", rowId);
                                         options={[
                                           category.value === "Electronic"
                                             ? {
-                                                options: Electronic.map(
-                                                  (list) => ({
-                                                    value: list.value,
-                                                    label: list.label,
-                                                  })
-                                                ),
-                                              }
+                                              options: Electronic.map(
+                                                (list) => ({
+                                                  value: list.value,
+                                                  label: list.label,
+                                                })
+                                              ),
+                                            }
                                             : {
-                                                options: Mechanical.map(
-                                                  (list) => ({
-                                                    value: list.value,
-                                                    label: list.label,
-                                                  })
-                                                ),
-                                              },
+                                              options: Mechanical.map(
+                                                (list) => ({
+                                                  value: list.value,
+                                                  label: list.label,
+                                                })
+                                              ),
+                                            },
                                         ]}
                                       />
                                       <ErrorMessage
@@ -1542,15 +1549,15 @@ console.log("rowId in updateProcedureData", rowId);
                                   //   setEnvironment(e);
                                   // }}
                                   onBlur={handleBlur}
-                                  // options={[
-                                  //   { value: null, label: "None" },
-                                  //   {
-                                  //     options: Environment.map((list) => ({
-                                  //       value: list.value,
-                                  //       label: list.label,
-                                  //     })),
-                                  //   },
-                                  // ]}
+                                // options={[
+                                //   { value: null, label: "None" },
+                                //   {
+                                //     options: Environment.map((list) => ({
+                                //       value: list.value,
+                                //       label: list.label,
+                                //     })),
+                                //   },
+                                // ]}
                                 />
                                 <ErrorMessage
                                   className="error text-danger"
@@ -1621,9 +1628,9 @@ console.log("rowId in updateProcedureData", rowId);
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -1674,10 +1681,10 @@ console.log("rowId in updateProcedureData", rowId);
                                       onBlur={handleBlur}
                                       isDisabled={
                                         writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true &&
-                                          createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                           ? null
                                           : "disabled"
                                       }
@@ -1740,9 +1747,9 @@ console.log("rowId in updateProcedureData", rowId);
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -1800,9 +1807,9 @@ console.log("rowId in updateProcedureData", rowId);
                                     value={spare}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2045,10 +2052,10 @@ console.log("rowId in updateProcedureData", rowId);
                               editable={{
                                 onRowAdd: productId
                                   ? (newRow) =>
-                                      new Promise((resolve, reject) => {
-                                        CreateProcedureData(newRow);
-                                        resolve();
-                                      })
+                                    new Promise((resolve, reject) => {
+                                      CreateProcedureData(newRow);
+                                      resolve();
+                                    })
                                   : null,
                                 onRowUpdate: (newRow, oldData) =>
                                   new Promise((resolve, reject) => {
