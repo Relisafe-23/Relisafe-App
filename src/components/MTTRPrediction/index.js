@@ -1098,7 +1098,7 @@ console.log("values.....",values)
         mlh: mlhValue,
         totalLabourHr: totalLabourHr,
         mMax: values.mmax,
-        mttr: "8899",
+        mttr: values.mttr,
         remarks: values.remarks,
         mttrId: mttrId,
         treeStructureId: treeStructure,
