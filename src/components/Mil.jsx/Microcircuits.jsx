@@ -1,51 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Select from "react-select";
-
 import {
   calculateMicrocircuitsAndMicroprocessorsFailureRate,
-  // calculateMemoriesFailureRate,
-  calculateHybridFailureRate,
-  calculateSystemMetrics,
+  calculateSawDeviceFailureRate,
   calculatePiT,
   getEnvironmentFactor,
-  getFailureRate,
-  getCircuitFunctionFactor,
   getQualityFactor,
   getBValueForTemp,
   calculateGateArrayC1,
-  calculateLearningFactor,
-  BASE_FAILURE_RATE,
-  calculateComponentSum,
-  QUALITY_FACTORS,
   getEnvironmentalOptions,
-  getEnvironmentLabel,
-  calculateSawDeviceFailureRate
-
+  calculateLearningFactor,
+  BASE_FAILURE_RATE
 } from './Calculation.js';
-import {
-  Paper,
-  Typography,
-  IconButton,
-  Tooltip
-} from '@material-ui/core';
-import { Link } from '@material-ui/core';
-// import DeleteIcon from '@material-ui/icons/Delete';
-import { CalculatorIcon } from '@heroicons/react/24/outline';
-import { Button, Container, Row, Col, Table, Collapse } from 'react-bootstrap';
-import Box from '@mui/material/Box';
-import { Alert } from "@mui/material";
-import MicroCapacitor from './MicroCapacitor.jsx';
-import './Microcircuits.css'
-import MaterialTable from "material-table";
-import { tableIcons } from "../core/TableIcons";
 import { createTheme } from "@mui/material";
-import { ThemeProvider } from "@material-ui/core";
+import { Button, Container, Row, Col } from 'react-bootstrap';
+import { Alert } from "@mui/material";
 
-
-const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDevice, handleCalculateMemories, handleCalculateVhsic, handleCalculateGaAs, handleCalculateBubble }) => {
-  const [showCalculations, setShowCalculations] = useState(false);
-  const [components, setComponents] = useState([]);
-  const [selectedComponent, setSelectedComponent] = useState(null);
+const Microcircuits = ({ 
+  setSelectedComponent, 
+  onCalculate, 
+  handleCalculateGate, 
+  handleCalculateSawDevice, 
+  handleCalculateMemories, 
+  handleCalculateVhsic, 
+  handleCalculateGaAs, 
+  handleCalculateBubble 
+}) => {
+  const [components, setComponents] = useState([{
+    id: Date.now(),
+    type: '',
+    devices: '',
+    complexFailure: '',
+    gateCount: '',
+    temperature: 25,
+    environment: '',
+    data: "microprocessorData",
+    quality: 'M',
+    quantity: 1,
+    microprocessorData: "",
+    technology: '',
+    complexity: '',
+    application: '',
+    packageType: '',
+    pinCount: '',
+    yearsInProduction: '',
+    memoryTemperature: 45,   
+    techTemperatureB2: 25,
+    techTemperatureB1: 25,    
+    memorySizeB1: 1024,
+    memorySizeB2: 1024,
+    memoryTech: "Flotox",
+    B1: 0.79,
+    B2: null,
+    calculatedPiT: 1.2,
+    piL: 1.0,
+    basePiT: 0.1,
+    failureRate: 0,
+    totalFailureRate: 0
+  }]);
+ const [showCalculations, setShowCalculations] = useState(false);
+  const [component, setComponent] = useState([]);
+  const[nextId, setNextId] = useState(1);
+      //  const [components, setComponents] = useState([]);
+  const [calculatedValues, setCalculatedValues] = useState({});
+  // const [components, setComponents] = useState([]);
+  // const [selectedComponent, setSelectedComponent] = useState(null);
   const [currentDevice, setCurrentDevice] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [selectedOption, setSelectedOption] = useState();
@@ -53,91 +72,9 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
   const [currentComponents, setCurrentComponents] = useState(null);
   const [mode, setMode] = useState('A1');
   const [numberOfPins, setNumberOfPins] = useState(0);
-  const [selectedECC, setSelectedECC] = React.useState(null);// 'A1' or 'C'
-  const [currentComponent, setCurrentComponent] = useState({
-    type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
-    temperature: 25,
-    devices: "bipolarData",
-    complexFailure: "digital",
-    environment: '',
-    data: "microprocessorData",
-    quality: 'M',
-    quantity: 1,
-    microprocessorData: "",
-    gateCount: 1000,
-    technology: '',
-    complexity: '',
-    application: '',
-    packageType: '',
-    pinCount: '',
-    yearsInProduction: '',
-    quality: '',
-
-    memoryTemperature: 45,   // For B calculations
-    techTemperatureB2: 25,
-    techTemperatureB1: 25,    // For πT calculations
-    memorySizeB1: 1024,
-    memorySizeB2: 1024,
-    memoryTech: "Flotox",
-    technology: "Digital MOS",
-    B1: 0.79,
-    B2: null,
-    calculatedPiT: 1.2,
-
-
-    piL: 1.0,
-    // piQ: 1.0,
-    basePiT: 0.1,
-    calculatedPiT: null
-  });
-  const eccOptions = [
-    { value: 'none', label: 'No On-Chip ECC', factor: 1.0 },
-    { value: 'hamming', label: 'On-Chip Hamming Code', factor: 0.72 },
-    { value: 'redundant', label: 'Two-Needs-One Redundant Cell Approach', factor: 0.68 }
-  ];
-
-  const handleChange = (selectedOption) => {
-    setSelectedECC(selectedOption);
-    console.log(`Selected ECC: ${selectedOption.label}, Factor: ${selectedOption.factor}`);
-  };
-
-  const handleA2FactorChange = (selectedOption) => {
-    setCurrentComponent(prev => ({
-      ...prev,
-      a2Factor: selectedOption,
-      a2Value: selectedOption.a2Value,
-      programmingCyclesMax: selectedOption.maxCycles
-    }));
-    console.log(`Selected A₂ Factor: ${selectedOption.label}, Value: ${selectedOption.a2Value}, Max Cycles: ${selectedOption.maxCycles}`);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentComponent(prev => ({
-      ...prev,
-      [name]: name === 'temperature' || name === 'Tj' || name === 'gateCount' || name === 'quantity'
-        ? parseFloat(value)
-        : value
-    }));
-  };
-
-
-  const getEnvironmentFactor = (envValue) => {
-    if (!environmentOptions || !Array.isArray(environmentOptions)) return 1.0;
-
-    const foundEnv = environmentOptions.find(opt => opt?.value === envValue);
-    return foundEnv?.factor ?? 1.0;
-  };
-
-  const calculateSawDeviceFailureRate = (component) => {
-    const baseRate = BASE_FAILURE_RATE;
-    const piQ = component.qualityFactor?.value || 1.0; // Default to 1.0 if not set
-    const piE = getEnvironmentFactor(component?.environment?.value);
-
-    return (baseRate * piQ * piE)?.toFixed(6);
-  };
-  // Application factors (πA)
-  const dieComplexityRates = [
+  const [quantity, setQuantity] = useState(null);
+  const [totalFailureRate, setTotalFaiureRate] = useState([]);
+    const dieComplexityRates = [
     {
       type: ' MOS-ROM',
       rates: [
@@ -195,6 +132,162 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
     }
 
   ];
+
+  const [selectedECC, setSelectedECC] = useState(null);
+const[errors,setErrors]=useState({
+
+})
+ const [currentComponent, setCurrentComponent] = useState({
+    type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
+    temperature: 25,
+    devices: "bipolarData",
+    complexFailure: "digital",
+    environment: '',
+    data: "microprocessorData",
+    quality: 'M',
+    quantity: null,
+    microprocessorData: "",
+    gateCount: 1000,
+    technology: '',
+    complexity: '',
+    application: '',
+    packageType: '',
+    pinCount: '',
+    yearsInProduction: '',
+    quality: '',
+
+    memoryTemperature: 45,   
+    techTemperatureB2: 25,
+    techTemperatureB1: 25,    
+    memorySizeB1: 1024,
+    memorySizeB2: 1024,
+    memoryTech: "Flotox",
+    technology: "Digital MOS",
+    B1: 0.79,
+    B2: null,
+    calculatedPiT: 1.2,
+
+
+    piL: 1.0,
+    // piQ: 1.0,
+    basePiT: 0.1,
+    calculatedPiT: null
+  });
+ 
+  const [error, setError] = useState(null);
+  const [totalSystemFailureRate, setTotalSystemFailureRate] = useState(0);
+  const eccOptions = [
+    { value: 'none', label: 'No On-Chip ECC', factor: 1.0 },
+    { value: 'hamming', label: 'On-Chip Hamming Code', factor: 0.72 },
+    { value: 'redundant', label: 'Two-Needs-One Redundant Cell Approach', factor: 0.68 }
+  ];
+  const [change, setChange] = useState(false);
+   const [result, setResult] = useState(null);
+  const[result1,setResult1] = useState (null);
+     const[result2,setResult2] = useState (null);
+     const[result3,setResult3] = useState (null);
+
+  const handleChange = (selectedOption) => {
+    setSelectedECC(selectedOption);
+
+  };
+
+  const handleA2FactorChange = (selectedOption) => {
+    setCurrentComponent(prev => ({
+      ...prev,
+      a2Factor: selectedOption,
+      a2Value: selectedOption.a2Value,
+      programmingCyclesMax: selectedOption.maxCycles
+    }));
+
+  };
+
+  let totalFrCalculation= [];
+  
+  const calculateSawDevice = () => {
+    const failureRate = calculateSawDeviceFailureRate(currentComponent);
+
+    const updatedComponent = {
+
+      ...currentComponent,
+      calculatedFailureRate: failureRate,
+      environmentLabel: currentComponent.environment?.description,
+      qualityLabel: currentComponent.qualityFactor?.label
+
+    };
+
+    setCurrentComponent(updatedComponent);
+    addOrUpdateComponent(updatedComponent);
+
+  }
+      const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentComponent(prev => ({
+      ...prev,
+      [name]: name === 'temperature' || name === 'Tj' || name === 'gateCount' || name === 'quantity'
+        ? parseFloat(value)
+        : value
+    }));
+  };
+  const handleInputChange1 = (e) => {
+    const { name, value } = e.target;
+    setCurrentComponent(prev => ({
+      ...prev,
+      [name]: name === 'temperature' || name === 'Tj' || name === 'gateCount' || name === 'quantity'
+        ? parseFloat(value)
+        : value
+    }));
+  };
+  const handleInputChange2 = (e) => {
+    const { name, value } = e.target;
+    setCurrentComponent(prev => ({
+      ...prev,
+      [name]: name === 'temperature' || name === 'Tj' || name === 'gateCount' || name === 'quantity'
+        ? parseFloat(value)
+        : value
+    }));
+  };
+    const handleInputChange3 = (e) => {
+    const { name, value } = e.target;
+    setCurrentComponent(prev => ({
+      ...prev,
+      [name]: name === 'temperature' || name === 'Tj' || name === 'gateCount' || name === 'quantity'
+        ? parseFloat(value)
+        : value
+    }));
+  };
+  //   const handleInputChange = (e) => {
+
+     
+  //   console.log("name...@@@@@@.",e?.target)
+    
+  //   const { name, value } = e?.target;
+
+  //   updateComponent( {
+  //     [name]: name === 'temperature' || name === 'Tj' || name === 'gateCount' || name === 'quantity'
+  //       ? parseFloat(value)
+  //       : value
+  //   });
+  // };
+
+  const getEnvironmentFactor = (envValue) => {
+    if (!environmentOptions || !Array.isArray(environmentOptions)) return 1.0;
+
+    const foundEnv = environmentOptions.find(opt => opt?.value === envValue);
+    return foundEnv?.factor ?? 1.0;
+  };
+
+  const calculateSawDeviceFailureRate = (component) => {
+    const baseRate = BASE_FAILURE_RATE;
+    const piQ = component?.qualityFactor?.value || 1.0; // Default to 1.0 if not set
+    const piE = getEnvironmentFactor(component?.environment?.value);
+ 
+    const failureRate =(baseRate * piQ * piE)?.toFixed(6);
+    console.log("failureRate",failureRate)
+    return failureRate;
+  };
+
+
   // A1 Factors for λCycle Calculation
   const a1Factors = [
     { cycles: 'Up to 100', flotox: 0.00070, texturedPoly: 0.0097 },
@@ -324,11 +417,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
   ];
 
   const QUALITY_FACTORS = [
-    // {
-    //   label: "10 Temperature Cycles (-55°C to +125°C) with end point electrical tests",
-    //   value: 0.10,
-    //   screeningLevel: "High"
-    // },
+   
     {
       label: "None beyond best commercial practices",
       value: 1.0,
@@ -336,37 +425,13 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
     }
   ];
 
-  const [inputs, setInputs] = useState({
-    memoryType: dieComplexityRates[0],
-    memorySize: dieComplexityRates[0].rates[0],
-    technology: 'MOS', // MOS or Bipolar
-    packageType: packageRates[0],
-    pinCount: 3,
-    eepromType: 'Flotox', // Flotox or Textured-Poly
-    programmingCycles: a1Factors[0],
-    a2Factor: a2Factors[0],
-    eccOption: eccOptions[0],
-    quality: QUALITY_FACTORS,
-    environment: getEnvironmentalOptions('AIA'),
-    systemLifeHours: 10000,
-    junctionTemp: 35,
-    partType: 'Logic',
-    manufacturingProcess: 'QML',
-    packageType: 'DIP',
-    packageHermeticity: 'Hermetic',
-    featureSize: 1.0,
-    dieArea: 0.5,
-    pinCount: 24,
-    esdSusceptibility: '0-1000'
-  });
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
-  // Calculate temperature factor (πT)
+ 
+
   const calculateTempFactor = (temp) => {
     // Simplified exponential model for πT
     return Math.exp((-14 / (8.617e-5)) * ((1 / (temp + 273)) - (1 / 298)));
   };
-  // In your ReliabilityCalculator.js, update the addComponent function:
+
   const componentColumns = [
 
     {
@@ -413,6 +478,52 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
     },
 
   ];
+
+  const addNewComponent = () => {
+    const newComponent = {
+      id: Date.now(),
+      type: '',
+      devices: '',
+      complexFailure: '',
+      gateCount: '',
+      temperature: 25,
+      environment: '',
+      data: "microprocessorData",
+      quality: 'M',
+      quantity: 1,
+      microprocessorData: "",
+      technology: '',
+      complexity: '',
+      application: '',
+      packageType: '',
+      pinCount: '',
+      yearsInProduction: '',
+      memoryTemperature: 45,   
+      techTemperatureB2: 25,
+      techTemperatureB1: 25,    
+      memorySizeB1: 1024,
+      memorySizeB2: 1024,
+      memoryTech: "Flotox",
+      B1: 0.79,
+      B2: null,
+      calculatedPiT: 1.2,
+      piL: 1.0,
+      basePiT: 0.1,
+      failureRate: 0,
+      totalFailureRate: 0
+    };
+    setComponents([...components, newComponent]);
+  };
+
+  const removeComponent = (id) => {
+    setComponents(components.filter(comp => comp.id !== id));
+  };
+
+  const updateComponent = (id, updatedProps) => {
+    setComponents(components.map(comp => 
+      comp.id === id ? { ...comp, ...updatedProps } : comp
+    ));
+  };
 
   const tableTheme = createTheme({
     overrides: {
@@ -475,7 +586,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
   };
 
   const addOrUpdateComponent = (component) => {
-    setComponents(prev => {
+    setComponent(prev => {
       // If component already exists, update it
       const existingIndex = prev.findIndex(c => c.id === component.id);
       if (existingIndex >= 0) {
@@ -483,62 +594,22 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
         updated[existingIndex] = component;
         return updated;
       }
-      // Otherwise add new component with unique ID
       return [...prev, { ...component, id: Date.now() }];
     });
   };
-
-  const updateComponentInList = (component) => {
-    if (components.some(c => c.id === component.id)) {
+ 
+  
+  const updateComponentInList = (component, componentList) => {
+    if (componentList?.some(c => c.id === component.id)) {
       addOrUpdateComponent(component);
+      
     }
   };
 
-  // Constants from your tables
-  const addComponent = () => {
-    let failureRate = 0;
-    let calculationParams = {};
-    let calculation = {};
+  // useEffect(() => {
+  //   handleFrChange()
+  // }, [change])
 
-    switch (currentComponent.type) {
-      case 'Microcircuits,Gate/Logic Arrays And Microprocessors':
-        failureRate = calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent);
-        calculationParams = {
-          C1: calculateGateArrayC1(currentComponent),
-          C2: 0,
-          piT: calculatePiT(currentComponent.technology, currentComponent.temperature),
-          piE: getEnvironmentFactor(currentComponent?.environment),
-          piQ: getQualityFactor(currentComponent.quality),
-          piL: calculateLearningFactor(currentComponent.yearsInProduction),
-          λp: calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)
-        };
-        break;
-      default:
-        calculation = { error: 'Unsupported component type' };
-    }
-
-
-    const quantity = currentComponent.quantity || 1;
-    const totalFailureRate = failureRate * quantity;
-
-
-    const newComponent = {
-      ...currentComponent,
-      failureRate,
-      totalFailureRate,
-      calculationParams
-    };
-
-
-    setComponents([...components, newComponent]);
-
-
-    setResults({
-      failureRate,
-      totalFailureRate,
-      calculationParams
-    });
-  };
   const partTypes = [
     { value: 'Logic', label: 'Logic and Custom Gate Array (λd = 0.16)' },
     { value: 'Memory', label: 'Memory (λd = 0.24)' }
@@ -573,11 +644,10 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
     { value: '16000+', label: '>16000V ', rate: 0.0027 }
   ];
 
-  // Helper functions
+
   const getDieBaseRate = () => {
     return inputs.partType === 'Logic' ? 0.16 : 0.24;
   };
-
 
   const manufacturingProcessTypes = [
     { value: 'QML', factor: 0.55 },
@@ -715,8 +785,31 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
       description: "Gun-launched projectiles during firing"
     }
 
-    // ... rest of your options (same structure for all)
+
   ];
+    const [inputs, setInputs] = useState({
+    memoryType: dieComplexityRates[0],
+    memorySize: dieComplexityRates[0].rates[0],
+    technology: 'MOS',
+    packageType: packageRates[0],
+    pinCount: 3,
+    eepromType: 'Flotox',
+    programmingCycles: a1Factors[0],
+    a2Factor: a2Factors[0],
+    eccOption: eccOptions[0],
+    quality: QUALITY_FACTORS,
+    environment: getEnvironmentalOptions('AIA'),
+    systemLifeHours: 10000,
+    junctionTemp: 35,
+    partType: 'Logic',
+    manufacturingProcess: 'QML',
+    packageType: 'DIP',
+    packageHermeticity: 'Hermetic',
+    featureSize: 1.0,
+    dieArea: 0.5,
+    pinCount: 24,
+    esdSusceptibility: '0-1000'
+  });
   const calculateLambdaBP = () => {
     return 0;
   };
@@ -772,34 +865,140 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
     };
   };
 
-  const calculateVhsicFailureRate = () => {
+    const getQualityFactor = () => {
+    return currentComponent.piQ; // Assuming this is already set in state
+  };
+
+   const addComponent = () => {
+    const newId = components.length > 0 ? Math.max(...components.map(c => c.id)) + 1 : 1;
+    const newComponent = {
+      id: newId,
+      type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
+      temperature: 25,
+      devices: "bipolarData",
+      complexFailure: "digital",
+      environment: '',
+      data: "microprocessorData",
+      quality: 'M',
+      quantity: 1,
+      microprocessorData: "",
+      gateCount: 1000,
+      technology: '',
+      complexity: '',
+      application: '',
+      packageType: '',
+      pinCount: '',
+      yearsInProduction: '',
+      memoryTemperature: 45,   
+      techTemperatureB2: 25,
+      techTemperatureB1: 25,    
+      memorySizeB1: 1024,
+      memorySizeB2: 1024,
+      memoryTech: "Flotox",
+      technology: "Digital MOS",
+      B1: 0.79,
+      B2: null,
+      calculatedPiT: 1.2,
+      piL: 1.0,
+      basePiT: 0.1,
+      calculatedPiT: null,
+      failureRate: 0,
+      totalFailureRate: 0
+    };
+    setComponents([...components, newComponent]);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    if (!currentComponent.qualityFactor) {
+      newErrors.qualityFactor = 'Please select a quality factor.';
+      isValid = false;
+    }
+
+    if (!currentComponent.environment) {
+      newErrors.environment = 'Please select an environment.';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+  
+  // const handleCalculate = (id,component) => {
+  //   // if (!validateForm()) {
+  //   //   return;
+  //   // }
+  //   const failureRate = calculateSawDeviceFailureRate(currentComponent);
+  //   const updatedComponent = {
+  //     ...currentComponent,
+  //     calculatedFailureRate: failureRate,
+  //     environmentLabel: currentComponent.environment?.description,
+  //     qualityLabel: currentComponent.qualityFactor?.label
+  //   };
+  //  setCalculatedValues((prev) => ({ ...prev, [id]: component }));
+  //  console.log("setCalculatedValue", setCalculatedValues)
+  //   setCurrentComponent(updatedComponent);
+  //   addOrUpdateComponent(updatedComponent);
+    
+  //   if (onCalculate) {
+  //     onCalculate(failureRate);
+  //   }
+  // };
+
+  //     const total = Object.values(calculatedValues).reduce((sum, val) => sum + val, 0);
+  //        console.log("total...",total)
+
+const handleCalculate = (id, component) => {
+  const failureRate = calculateSawDeviceFailureRate(currentComponent); 
+  const updatedComponent = {
+    ...component, 
+    calculatedFailureRate: failureRate,
+  environmentLabel: currentComponent?.environment?.description,
+   qualityLabel: currentComponent?.qualityFactor?.label
+  };
+
+ 
+  // setCalculatedValues((prev) => ({ ...prev, [id]: failureRate })); 
+  
+  setCurrentComponent(updatedComponent);
+  addOrUpdateComponent(updatedComponent);
+  
+  if (onCalculate) {
+    onCalculate(failureRate);
+  }
+};
+
+
+const total = Object.values(calculatedValues).reduce((sum, val) => sum + (val || 0), 0);
+console.log("total...", total);
+
+    const calculateVhsicFailureRate = () => {
     try {
-      // Calculate each component
+    
       const λBD = getDieBaseRate();
       const πMFG = getManufacturingFactor();
       const πprT = getPackageFactor();
-      // console.log("πprT:",πprT)
+ 
       const πCD = getDieComplexityFactor();
       const λBP = getPackageBaseRate();
-      // console.log("λpkg:",λpkg)
+   
       const λEOS = calculateLambdaBP();
       const πE = inputs.environment?.factor || 1.0;
-      console.log("πE:", πE)
-      // const πT = getTemperatureFactor()?.factor;
+   
+
       const πT = calculatePiT(currentComponent.technology, currentComponent.temperature);
       const πQ = getQualityFactor();
-      // console.log("πQ:",πQ)
-
-      // Calculate final failure rate
+ 
       const dieContribution = λBD * πMFG * πT * πCD;
 
       const packageContribution = λBP * πprT * πE * πQ;
-      console.log("packageContribution:", packageContribution)
+    
       const eosContribution = λEOS;
       const totalFailureRate = dieContribution + packageContribution + eosContribution;
-      console.log("totalFailureRate:", totalFailureRate);
-      // Call onCalculate with the failure rate
-
+     
+console.log("totalFailureRate......",totalFailureRate)
       setResult({
         value: totalFailureRate?.toFixed(6),
         parameters: {
@@ -827,7 +1026,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
   const calculateLambdaCyc = () => {
     // Validate required fields
     if (!currentComponent.memoryTech || !currentComponent.memorySizeB1) {
-      console.error("Missing required memory technology or size");
+    
       return 0;
     }
 
@@ -870,7 +1069,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
     return lambdaCyc;
   };
 
-  const calculateMemoriesFailureRate = () => {
+  const calculateMemoriesFailureRate = (id) => {
     try {
       // Get C1 (Die Complexity Failure Rate)
       const c1 = inputs.technology === 'MOS'
@@ -879,33 +1078,29 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
 
       // Get C2 (Package Failure Rate)
       const c2 = 0
-      console.log("C2", c2)
+   
       // Calculate λcyc
 
       const lambdaCyc = calculateLambdaCyc();
-      console.log("λcyc:", lambdaCyc)
-      // Get πT (Temperature Factor)
+
 
       const piT = calculatePiT(currentComponent.technology, currentComponent.temperature);
-      // Get πE (Environment Factor) - now includes both value and label
+      
       const piE = inputs.environment?.factor || 1.0;
       const environmentLabel = inputs.environment?.label || 'Not specified';
 
-      // Get πQ (Quality Factor) - now includes both value and label
-      // const piQ =  getQualityFactor();
+
       const πQ = getQualityFactor();
-      // const qualityLabel = inputs.quality1?.label || 'Not specified';
-      console.log("πQ:", πQ)
+
       // Get πL (Learning Factor)
       const piL = currentComponent.piL;
 
       // Calculate final failure rate
       const failureRate = (c1 * piT + c2 * piE + lambdaCyc) * πQ * piL;
-      //  console.log("Failure Rate:", failureRate);
-      // Call onCalculate with the failure rate
+   
 
 
-      setResult({
+      setResult1({
         value: failureRate?.toFixed(6),
         parameters: {
           c1: c1?.toFixed(6),
@@ -920,6 +1115,14 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
           formula: 'λp = (C1 × πT + C2 × πE + λcyc) × πQ × πL'
         }
       });
+      //  setCalculatedValues((prev) => ({ ...prev, [id]: result })); 
+      setCalculatedValues((prev) => {
+  const newState = { ...prev, [id]: result1 };
+  console.log('Previous state:', prev);
+  console.log('New state:', newState);
+  return newState;
+});
+       
       setError(null);
       if (onCalculate) {
         onCalculate(failureRate);
@@ -932,19 +1135,24 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
 
   }
 
-  const calculateGaAsFailureRate = () => {
+  const calculateGaAsFailureRate = (id) => {
     try {
       // Validate inputs
-      if (!currentComponent.type) throw new Error("Please select a device type");
-      if (!currentComponent.complexity) throw new Error("Please select complexity range");
-      if (!currentComponent.application) throw new Error("Please select an application");
-      if (!currentComponent.packageType) throw new Error("Please select a package type");
-      if (!currentComponent.pinCount) throw new Error("Please enter number of pins");
-      if (!currentComponent.yearsInProduction) throw new Error("Please select years in production");
-      if (!currentComponent.quality) throw new Error("Please select quality class");
-      if (!currentComponent.temperature) throw new Error("Please enter junction temperature");
-
-      // Determine C1 based on type and complexity range
+      // if (!currentComponent.type) throw new Error("Please select a device type");
+      // if (!currentComponent.complexity) throw new Error("Please select complexity range");
+      // if (!currentComponent.application) throw new Error("Please select an application");
+      // if (!currentComponent.packageType) throw new Error("Please select a package type");
+      // if (!currentComponent.pinCount) throw new Error("Please enter number of pins");
+      // if (!currentComponent.yearsInProduction) throw new Error("Please select years in production");
+      // if (!currentComponent.quality) throw new Error("Please select quality class");
+      // if (!currentComponent.temperature) throw new Error("Please enter junction temperature");
+      // console.log("fhkbj@@@")
+      // if (!currentComponent?.type || !currentComponent?.complexity ||
+      //   !currentComponent?.piA || !currentComponent?.piE ||
+      //   !currentComponent?.piL || !currentComponent?.piQ ||
+      //   !currentComponent?.temperature) {
+      //   throw new Error("Missing required parameters for GaAs failure rate calculation");
+      // }
       let c1;
       if (currentDevice?.type === "MMIC") {
         if (currentComponent?.complexity === "1-100") {
@@ -991,7 +1199,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
 
       // Call onCalculate with the failure rate
 
-      setResult({
+      setResult2({
         value: lambdaP?.toFixed(6),
         parameters: {
           c1: c1?.toFixed(4),
@@ -1002,30 +1210,23 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
           piL: piL?.toFixed(4),
           piQ: piQ?.toFixed(4)
         }
-      });
+      }); 
+       setCalculatedValues((prev) => ({ ...prev, [id]: result2 })); 
+
       setError(null);
       if (onCalculate) {
         onCalculate(lambdaP);
       }
     } catch (err) {
       setError(err.message);
-      setResult(null);
+      setResult2(null);
     }
   };
 
-  const calculateBubbleMemoryFailureRate = () => {
-    console.log("start@@.....",)
-    // Validate required inputs
-    if (!currentComponent.bubbleChips || !currentComponent.dissipativeElements ||
-      !currentComponent.numberOfBits ||
-      !currentComponent.environment || !currentComponent.quality ||
-      !currentComponent.temperature) {
-      setError("Please fill all required fields");
-      return;
-    }
+  const calculateBubbleMemoryFailureRate = (id) => {
 
     try {
-      console.log("start try ...")
+     
       // Calculate complexity factors
       const N1 = parseFloat(currentComponent.dissipativeElements);
       const N2 = parseFloat(currentComponent.numberOfBits);
@@ -1038,7 +1239,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
       const C12 = 0.00007 * Math.pow(N2, 0.3);
       const C22 = 0.00001 * Math.pow(N2, 0.3);
 
-      // Package factor (already set in packageType selection)
+    
       const C2 = 0;
 
 
@@ -1046,7 +1247,7 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
       const TJ = parseFloat(currentComponent.temperature) + 10 + 273; // Convert to Kelvin
       const piT1 = 0.1 * Math.exp((-0.8 / (8.63e-5)) * ((1 / TJ) - (1 / 298)));
       const piT2 = 0.1 * Math.exp((-0.55 / (8.63e-5)) * ((1 / TJ) - (1 / 298)));
-      console.log("piT2,,,,,,", piT2)
+  
 
       // Write duty cycle factor
       const D = currentComponent.writeDutyCycle ? parseFloat(currentComponent.writeDutyCycle) : 0;
@@ -1079,9 +1280,9 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
       const lambdaP = lambda1 + lambda2;
       // Call onCalculate with the failure rate
 
-      console.log("lambdaP:", lambdaP)
+
       // Set results
-      setResult({
+      setResult3({
         value: lambdaP?.toFixed(6),
         parameters: {
           c11: C11,
@@ -1101,48 +1302,134 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
           lambdaP // Add lambdaP to parameters
         }
       });
-      console.log("results", setResult)
+         setCalculatedValues(prev => ({ ...prev, [id]: result3 }));
       setError(null);
       if (onCalculate) {
         onCalculate(lambdaP);
       }
     } catch (err) {
-      console.log("Error:,", err)
+    
       setError("Error in calculation: " + err.message);
     }
   };
+    const calculateGateFailureRate = () => {
+    let failureRate = 0;
+    let calculationParams = {};
+    let calculation = {};
 
-  const handleAddComponent = () => {
-    setComponents([...components, {}]); // Push a placeholder object
+    switch (component.type) {
+      case 'Microcircuits,Gate/Logic Arrays And Microprocessors':
+        failureRate = calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent);
+        console.log ("Failure Rate:", failureRate);
+        calculationParams = {
+          C1: calculateGateArrayC1(currentComponent),
+          C2: 0,
+          piT: calculatePiT(currentComponent.technology, currentComponent.temperature),
+          piE: getEnvironmentFactor(currentComponent?.environment),
+          piQ: getQualityFactor(currentComponent.quality),
+          piL: calculateLearningFactor(currentComponent.yearsInProduction),
+
+          λp: calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent),
+ 
+        };
+        break;
+      default:
+        calculation = { error: 'Unsupported component type' };
+    }
+
+
+    const quantity = currentComponent.quantity || 1;
+    const totalFailureRate = failureRate * quantity;
+
+   
+
+    const newComponents = {
+      ...component,
+      failureRate,
+      totalFailureRate,
+      calculationParams
+    };
+  
+  
+    setComponent([...component, newComponents]);
+
+
+    setResults({
+      failureRate,
+      totalFailureRate,
+      calculationParams
+    });
+    
   };
-  // Helper functions that should be defined elsewhere in your component
-  const getQualityFactor = () => {
-    return currentComponent.piQ; // Assuming this is already set in state
+  // // Remove a component
+  // const removeComponent = (id) => {
+  //   setComponents(components.filter(comp => comp.id !== id));
+  // };
+
+ 
+  // const updateComponent = (id, updatedProps) => {
+  //   setComponents(components.map(comp => 
+  //     comp.id === id ? { ...comp, ...updatedProps } : comp
+  //   ));
+  // };
+
+  useEffect(() => {
+    const total = components.reduce((sum, comp) => sum + (comp.totalFailureRate || 0), 0);
+    setTotalSystemFailureRate(total);
+  }, [components]);
+
+    const handleCalculate1 = (id) => {
+      console.log("dgf@@" )
+    const component = components.find(c => c.id === id);
+    let failureRate = 0;
+    
+    // Your calculation logic here based on component.type
+    switch (component.type) {
+      case 'Microcircuits,Gate/Logic Arrays And Microprocessors':
+        failureRate = calculateMicrocircuitsAndMicroprocessorsFailureRate(component);
+        console.log("failureRate...",failureRate)
+        break;
+      case 'Microcircuits,Saw Devices':
+        failureRate = calculateSawDeviceFailureRate(component);
+        break;
+      // Add other cases...
+    }
+
+    const totalFailureRate = failureRate * (component.quantity || 1);
+    
+    updateComponent(id, { 
+      failureRate,
+      totalFailureRate
+    });
   };
 
-  return (
-    <div className="reliability-calculator">
-      <br />
-      <h2 className='text-center' style={{ fontSize: '1.2rem' }}> {currentComponent?.type ? currentComponent.type.replace(/,/g, ' ').trim() : 'Microcircuits Reliability Calculator'}
 
-      </h2>
+  // Render a single component
+  const renderComponent = (component) => {
 
-      <div className="component-form">
-
-        <Row className="mb-2">
-          <Col md={4} >
-            <div className="form-group" >
+    return (
+      <div key={component.id} className="component-container" style={{ 
+        border: '1px solid #ddd', 
+        padding: '15px', 
+        margin: '15px 0', 
+        borderRadius: '5px',
+        position: 'relative'
+      }}>
+        <h3>Component {components.findIndex(c => c.id === component.id) + 1}</h3>
+        
+     
+     <Row className="mb-2">
+          <Col md={4}>
               <label>Part Type:</label>
               <Select
                 styles={customStyles}
                 name="type"
                 placeholder="Select"
-                value={currentComponent.type ?
-                  { value: currentComponent.type, label: currentComponent.type } : null}
+                value={component.type ? 
+                  { value: component.type, label: component.type } : null}
                 onChange={(selectedOption) => {
-                  setCurrentComponent({ ...currentComponent, type: selectedOption.value });
+                  updateComponent(component.id, { type: selectedOption.value });
                 }}
-
                 options={[
                   { value: "Microcircuits,Gate/Logic Arrays And Microprocessors", label: "Microcircuits,Gate/Logic Arrays And Microprocessors" },
                   { value: "Microcircuits,Memories", label: "Microcircuits,Memories" },
@@ -1152,2725 +1439,2735 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
                   { value: "Microcircuit,Magnetic Bubble Memories", label: "Microcircuit,Magnetic Bubble Memories" }
                 ]}
               />
-            </div>
+            
           </Col>
-          {currentComponent.type === "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS" && (
-            <>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Part Type (λ<sub>BD</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    value={partTypes?.find(t => t.value === inputs.partType)}
-                    onChange={(selectedOption) => {
-                      setInputs(prev => ({
-                        ...prev,
-                        partType: selectedOption.value
-                      }));
-                    }}
-                    options={partTypes}
-                  />
-                </div>
-              </Col>
-
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>ESD Susceptibility (V<sub>TH</sub>) (λ<sub>EOS</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    value={esdLevels?.find(e => e.value === inputs.esdSusceptibility)}
-                    onChange={(selectedOption) => {
-                      setInputs(prev => ({
-                        ...prev,
-                        esdSusceptibility: selectedOption.value
-                      }));
-                    }}
-                    options={esdLevels}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Number of Package Pins (λ<sub>BP</sub>):</label>
-
-                  <input
-                    styles={customStyles}
-                    placeholder="Select"
-                    value={0} // Fixed value set to 0
-                    onChange={(e) => setNumberOfPins(parseInt(e.target.value) || 0)}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Environment (π<sub>E</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    value={inputs.environment}
-                    onChange={(selectedOption) => setInputs(prev => ({
-                      ...prev,
-                      environment: {
-                        value: selectedOption.value,
-                        label: selectedOption.label,
-                        factor: selectedOption.piE,  // Store as factor
-                        description: selectedOption.description
-                      },
-                      πE: selectedOption.piE  // Also store directly as πE for easy access
-                    }))}
-
-                    options={[
-                      {
-                        value: "GB",
-                        label: "Ground, Benign (GB)",
-                        piE: 0.50,
-                        description: "Controlled laboratory or office environment"
-                      },
-                      {
-                        value: "GF",
-                        label: "Ground, Fixed (GF)",
-                        piE: 2.0,
-                        description: "Permanent ground installations with environmental controls"
-                      },
-                      {
-                        value: "GM",
-                        label: "Ground, Mobile (GM)",
-                        piE: 4.0,
-                        description: "Vehicles operating on improved roads"
-                      },
-                      {
-                        value: "NS",
-                        label: "Naval, Sheltered (NS)",
-                        piE: 4.0,
-                        description: "Below decks in harbor or calm seas"
-                      },
-                      {
-                        value: "NU",
-                        label: "Naval, Unsheltered (NU)",
-                        piE: 6.0,
-                        description: "On deck or in rough seas"
-                      },
-                      {
-                        value: "AIC",
-                        label: "Airborne, Inhabited Cargo (AIC)",
-                        piE: 4.0,
-                        description: "Cargo aircraft with human occupants"
-                      },
-                      {
-                        value: "AIF",
-                        label: "Airborne, Inhabited Fighter (AIF)",
-                        piE: 5.0,
-                        description: "Manned fighter/trainer aircraft"
-                      },
-                      {
-                        value: "AUC",
-                        label: "Airborne, Uninhabited Cargo (AUC)",
-                        piE: 5.0,
-                        description: "Unmanned cargo aircraft"
-                      },
-                      {
-                        value: "AUF",
-                        label: "Airborne, Uninhabited Fighter (AUF)",
-                        piE: 8.0,
-                        description: "Unmanned fighter aircraft"
-                      },
-                      {
-                        value: "ARW",
-                        label: "Airborne, Rotary Wing (ARW)",
-                        piE: 8.0,
-                        description: "Helicopters and other rotary aircraft"
-                      },
-                      {
-                        value: "SF",
-                        label: "Space, Flight (SF)",
-                        piE: 0.50,
-                        description: "Spacecraft in flight (not launch/re-entry)"
-                      },
-                      {
-                        value: "MF",
-                        label: "Missile, Flight (MF)",
-                        piE: 5.0,
-                        description: "Missiles during flight phase"
-                      },
-                      {
-                        value: "ML",
-                        label: "Missile, Launch (ML)",
-                        piE: 12,
-                        description: "Missiles during launch phase"
-                      },
-                      {
-                        value: "CL",
-                        label: "Cannon, Launch (CL)",
-                        piE: 220,
-                        description: "Gun-launched projectiles during firing"
-                      }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Quality Factor (π<sub>Q</sub>):</label>
-                  <Select
-                    style={customStyles}
-                    name="qualityFactor"
-                    placeholder="Select Quality Class"
-                    onChange={(selectedOption) => {
-
-                      setCurrentComponent({
-                        ...currentComponent,
-                        quality: selectedOption.value,
-                        piQ: selectedOption.piQ
-                      });
-                    }}
-                    options={[
-                      // Class S Categories (πQ = 0.25)
-                      // {
-                      //   value: "MIL_M_38510_ClassS",
-                      //   label: "Class S (MIL-M-38510, Class S)",
-                      //   piQ: 0.25, // Store πQ for calculations
-                      //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
-                      // },
-                      // {
-                      //   value: "MIL_I_38535_ClassU",
-                      //   label: "Class S (MIL-I-38535, Class U)",
-                      //   piQ: 0.25,
-                      //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
-                      // },
-                      // {
-                      //   value: "MIL_H_38534_ClassS_Hybrid",
-                      //   label: "Class S Hybrid (MIL-H-38534, Level K)",
-                      //   piQ: 0.25,
-                      //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
-                      // },
-
-                      // Class B Categories (πQ = 1.0)
-                      {
-                        value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B)πQ = 1.0",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-M-38510, Class B requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q) πQ = 1.0",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-I-38535 (Class Q) "
-                      },
-                      {
-                        value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "Class B Hybrid (MIL-H-38534, Level H)",
-                        piQ: 1.0,
-                        description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
-                      },
-
-                      // Class B-1 Category (πQ = 2.0)
-                      // {
-                      //   value: "MIL_STD_883_ClassB1",
-                      //   label: "Class B-1 (MIL-STD-883)",
-                      //   piQ: 2.0,
-                      //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
-                      // }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-            </>
-          )}
-          {currentComponent.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
-            <Col md={4}>
-              <div className="form-group">
-                <label>Environment (π<sub>E</sub>):</label>
-                <Select
-                  style={customStyles}
-                  name="environment"
-                  placeholder="Select Environment"
-
-                  onChange={(selectedOption) => {
-                    setCurrentComponent({
-                      ...currentComponent,
-                      environment: selectedOption.value,
-                      piE: selectedOption.piE
-                    });
-                  }}
-
-                  options={[
-                    {
-                      value: "GB",
-                      label: "Ground, Benign (GB)",
-                      piE: 0.50,
-                      description: "Controlled laboratory or office environment"
-                    },
-                    {
-                      value: "GF",
-                      label: "Ground, Fixed (GF)",
-                      piE: 2.0,
-                      description: "Permanent ground installations with environmental controls"
-                    },
-                    {
-                      value: "GM",
-                      label: "Ground, Mobile (GM)",
-                      piE: 4.0,
-                      description: "Vehicles operating on improved roads"
-                    },
-                    {
-                      value: "NS",
-                      label: "Naval, Sheltered (NS)",
-                      piE: 4.0,
-                      description: "Below decks in harbor or calm seas"
-                    },
-                    {
-                      value: "NU",
-                      label: "Naval, Unsheltered (NU)",
-                      piE: 6.0,
-                      description: "On deck or in rough seas"
-                    },
-                    {
-                      value: "AIC",
-                      label: "Airborne, Inhabited Cargo (AIC)",
-                      piE: 4.0,
-                      description: "Cargo aircraft with human occupants"
-                    },
-                    {
-                      value: "AIF",
-                      label: "Airborne, Inhabited Fighter (AIF)",
-                      piE: 5.0,
-                      description: "Manned fighter/trainer aircraft"
-                    },
-                    {
-                      value: "AUC",
-                      label: "Airborne, Uninhabited Cargo (AUC)",
-                      piE: 5.0,
-                      description: "Unmanned cargo aircraft"
-                    },
-                    {
-                      value: "AUF",
-                      label: "Airborne, Uninhabited Fighter (AUF)",
-                      piE: 8.0,
-                      description: "Unmanned fighter aircraft"
-                    },
-                    {
-                      value: "ARW",
-                      label: "Airborne, Rotary Wing (ARW)",
-                      piE: 8.0,
-                      description: "Helicopters and other rotary aircraft"
-                    },
-                    {
-                      value: "SF",
-                      label: "Space, Flight (SF)",
-                      piE: 0.50,
-                      description: "Spacecraft in flight (not launch/re-entry)"
-                    },
-                    {
-                      value: "MF",
-                      label: "Missile, Flight (MF)",
-                      piE: 5.0,
-                      description: "Missiles during flight phase"
-                    },
-                    {
-                      value: "ML",
-                      label: "Missile, Launch (ML)",
-                      piE: 12,
-                      description: "Missiles during launch phase"
-                    },
-                    {
-                      value: "CL",
-                      label: "Cannon, Launch (CL)",
-                      piE: 220,
-                      description: "Gun-launched projectiles during firing"
-                    }
-                  ]}
-                />
-              </div>
-            </Col>
-          )}
-          {currentComponent.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
-            <>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Device Application Factor:</label>
-                  <Select
-                    styles={customStyles}
-                    name="applicationFactor"
-                    placeholder="Select"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({ ...currentComponent, applicationFactor: selectedOption.value });
-                    }}
-                    options={[
-                      { value: "MMIC Devices-Low Noise & Low Power", label: "MMIC Devices-Low Noise & Low Power" },
-                      { value: "MMIC Devices-Driver & High Power", label: "MMIC Devices-Driver & High Power" },
-                      { value: "MMIC Devices-Unknown", label: "MMIC Devices-Unknown" },
-                      { value: "Digital Devices- All Digital Applications", label: "Digital Devices- All Digital Applications" },
-                    ]}
-                  />
-                </div>
-              </Col>
-            </>
-          )}
-          {currentComponent.type === "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS" && (
-            <>
-
-              <div className='calculator-container'>
-                <Row className="mb-3">
-
-                  <Col md={4}>
-                    <div className="form-group">
-                      <label>Package Type for (π<sub>prT</sub>):</label>
-                      <Select
-                        styles={customStyles}
-                        value={packageTypes?.find(p => p.value === inputs.packageType)}
-                        onChange={(selectedOption) => {
-                          setInputs(prev => ({
-                            ...prev,
-                            packageType: selectedOption.value
-                          }));
-                        }}
-                        options={packageTypes}
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    <div className="form-group">
-                      <label>Technology Type for (π<sub>T</sub>):</label>
-                      <Select
-                        styles={customStyles}
-                        name="technology"
-                        placeholder="Select Technology Type"
-                        onChange={(selectedOption) => {
-                          setCurrentComponent({
-                            ...currentComponent,
-                            technology: selectedOption.value,
-                            technologyType: selectedOption.label,
-                            // Reset calculatedPiT when technology changes
-                            calculatedPiT: calculatePiT(
-                              selectedOption.value,
-                              currentComponent.temperature || 25, // Default to 25°C if not set
-                              selectedOption.Ea // Pass the correct Ea for the technology
-                            )
-                          });
-                        }}
-                        options={[
-                          {
-                            value: "TTL,ASTTL,CML",
-                            label: "TTL/ASTTL/CML (Bipolar Logic)",
-                            description: "Standard TTL, Advanced Schottky TTL, and Current Mode Logic",
-                            Ea: 0.4
-                          },
-                          {
-                            value: "F,LTTL,STTL",
-                            label: "F/LTTL/STTL (Fast/Low-Power TTL)",
-                            description: "Fast, Low-Power, and Schottky TTL variants",
-                            Ea: 0.45
-                          },
-                          {
-                            value: "BiCMOS",
-                            label: "BiCMOS (Bipolar CMOS Hybrid)",
-                            description: "Combines bipolar and CMOS technologies",
-                            Ea: 0.5
-                          },
-                          {
-                            value: "III,f¹,ISL",
-                            label: "III/f¹/ISL (Advanced Silicon)",
-                            description: "High-speed/radiation-hardened silicon logic",
-                            Ea: 0.6
-                          },
-                          {
-                            value: "Digital MOS",
-                            label: "Digital MOS (CMOS, VHSIC)",
-                            description: "CMOS and VHSIC digital technologies",
-                            Ea: 0.35
-                          },
-                          {
-                            value: "Linear",
-                            label: "Linear Analog (Bipolar/MOS)",
-                            description: "Linear analog circuits (op-amps, regulators)",
-                            Ea: 0.65
-                          },
-                          {
-                            value: "Memories",
-                            label: "Memories (Bipolar/MOS)",
-                            description: "Memory chips (RAM, ROM, etc.)",
-                            Ea: 0.6
-                          },
-                          {
-                            value: "GaAs MMIC",
-                            label: "GaAs MMIC (RF/Microwave)",
-                            description: "Gallium Arsenide microwave/RF components",
-                            Ea: 1.5
-                          },
-                          {
-                            value: "GaAs Digital",
-                            label: "GaAs Digital (High-Speed Logic)",
-                            description: "Gallium Arsenide digital logic",
-                            Ea: 1.4
-                          }
-                        ]}
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    <div className="form-group">
-                      <label>Junction Temperature (°C) (π<sub>T</sub>):</label>
-                      <input
-                        className="form-group"
-                        style={{
-                          width: "100%",
-                          padding: "0.375rem 0.75rem",
-                          fontSize: "1rem",
-                          lineHeight: "1.5",
-                          color: "#495057",
-                          backgroundColor: "#fff",
-                          border: "1px solid #ced4da",
-                          borderRadius: "0.25rem"
-                        }}
-                        type="number"
-                        name="temperature"
-                        min="-40"
-                        max="175"
-                        value={currentComponent.temperature}
-                        onChange={handleInputChange}
-                      />
-                      <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
-                    </div>
-                  </Col>
-
-                  <Col md={4}>
-                    <div className="form-group">
-                      <label>Feature Size (X<sub>S</sub>) microns (π<sub>CD</sub>):</label>
-                      <input
-                        type="number"
-                        min="0.1"
-                        step="0.01"
-                        value={inputs.featureSize}
-                        onChange={(e) => {
-                          setInputs(prev => ({
-                            ...prev,
-                            featureSize: parseFloat(e.target.value)
-                          }));
-                        }}
-                        className="form-control"
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    <div className="form-group">
-                      <label>Die Area (A) in cm² for (π<sub>CD</sub>):</label>
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        value={inputs.dieArea}
-                        onChange={(e) => {
-                          setInputs(prev => ({
-                            ...prev,
-                            dieArea: parseFloat(e.target.value)
-                          }));
-                        }}
-                        className={`form-control ${inputs.dieArea && (inputs.dieArea < 0.4 || inputs.dieArea > 3.0)}`}
-                      />
-                      {inputs.dieArea && (inputs.dieArea < 0.4 || inputs.dieArea > 3.0) && (
-                        <div className="invalid-feedback">
-                          Die Area (A) must be between 0.4 cm² and 3.0 cm²
-                        </div>
-                      )}
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    <div className="form-group">
-                      <label>Package Hermeticity for (π<sub>prT</sub>):</label>
-                      <Select
-                        styles={customStyles}
-                        value={{
-                          value: inputs.packageHermeticity,
-                          label: inputs.packageHermeticity === 'Hermetic' ? 'Hermetic' : 'Nonhermetic'
-                        }}
-                        onChange={(selectedOption) => {
-                          setInputs(prev => ({
-                            ...prev,
-                            packageHermeticity: selectedOption.value
-                          }));
-                        }}
-                        options={[
-                          { value: 'Hermetic', label: 'Hermetic' },
-                          { value: 'Nonhermetic', label: 'Nonhermetic' }
-                        ]}
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    <div className="form-group">
-                      <label>Manufacturing Process (π<sub>MFG</sub>):</label>
-                      <Select
-                        styles={customStyles}
-                        value={{
-                          value: inputs.manufacturingProcess,
-                          label: inputs.manufacturingProcess === 'QML' ? 'QML' :
-                            inputs.manufacturingProcess === 'QPL' ? 'QPL' :
-                              inputs.manufacturingProcess === 'Non-QML' ? 'Non-QML' : 'Non-QPL'
-                        }}
-                        onChange={(selectedOption) => {
-                          setInputs(prev => ({
-                            ...prev,
-                            manufacturingProcess: selectedOption.value
-                          }));
-                        }}
-                        options={[
-                          { value: 'QML', label: 'QML' },
-                          { value: 'QPL', label: 'QPL' },
-                          { value: 'Non-QML', label: 'Non-QML' },
-                          { value: 'Non-QPL', label: 'Non-QPL' }
-                        ]}
-                      />
-                    </div>
-                  </Col>
-                </Row>
-
-
-                <Button
-                  variant="primary"
-                  onClick={calculateVhsicFailureRate}
-                  className="btn-calculate float-end mt-1"
-                >
-                  Calculate FR
-                </Button>
-
-
-                {result && (
-                  handleCalculateVhsic(result?.value)
-
-                )}
-
-                {result && (
-                  <>
-
-                    <div className="d-flex align-items-center">
-                      <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                      <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
-                    </div>
-                  </>
-                )}
-
-
-              </div>
-
-
-            </>
-          )}
-          {currentComponent.type === "Microcircuits,Memories" && (
-            <>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Quality Factor (π<sub>Q</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="qualityFactor"
-                    placeholder="Select Quality Class"
-                    onChange={(selectedOption) => {
-
-                      setCurrentComponent({
-                        ...currentComponent,
-                        quality: selectedOption.value,
-                        piQ: selectedOption.piQ
-                      });
-                    }}
-                    options={[
-                      // Class S Categories (πQ = 0.25)
-                      // {
-                      //   value: "MIL_M_38510_ClassS",
-                      //   label: "Class S (MIL-M-38510, Class S)",
-                      //   piQ: 0.25, // Store πQ for calculations
-                      //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
-                      // },
-                      // {
-                      //   value: "MIL_I_38535_ClassU",
-                      //   label: "Class S (MIL-I-38535, Class U)",
-                      //   piQ: 0.25,
-                      //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
-                      // },
-                      // {
-                      //   value: "MIL_H_38534_ClassS_Hybrid",
-                      //   label: "Class S Hybrid (MIL-H-38534, Level K)",
-                      //   piQ: 0.25,
-                      //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
-                      // },
-
-                      // Class B Categories (πQ = 1.0)
-                      {
-                        value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B) πQ = 1.0",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-M-38510, Class B requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q) πQ = 1.0",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-I-38535 (Class Q)."
-                      },
-                      {
-                        value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "Class B Hybrid (MIL-H-38534, Level H) πQ = 1.0",
-                        piQ: 1.0,
-                        description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
-                      },
-
-                      // Class B-1 Category (πQ = 2.0)
-                      // {
-                      //   value: "MIL_STD_883_ClassB1",
-                      //   label: "Class B-1 (MIL-STD-883)",
-                      //   piQ: 2.0,
-                      //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
-                      // }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Environment (π<sub>E</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    value={inputs.environment}
-                    onChange={(selectedOption) => setInputs(prev => ({
-                      ...prev,
-                      environment: {
-                        value: selectedOption.value,
-                        label: selectedOption.label,
-                        factor: selectedOption.piE,
-                        description: selectedOption.description
-                      }
-                    }))}
-
-                    options={[
-                      {
-                        value: "GB",
-                        label: "Ground, Benign (GB)",
-                        piE: 0.50,
-                        description: "Controlled laboratory or office environment"
-                      },
-                      {
-                        value: "GF",
-                        label: "Ground, Fixed (GF)",
-                        piE: 2.0,
-                        description: "Permanent ground installations with environmental controls"
-                      },
-                      {
-                        value: "GM",
-                        label: "Ground, Mobile (GM)",
-                        piE: 4.0,
-                        description: "Vehicles operating on improved roads"
-                      },
-                      {
-                        value: "NS",
-                        label: "Naval, Sheltered (NS)",
-                        piE: 4.0,
-                        description: "Below decks in harbor or calm seas"
-                      },
-                      {
-                        value: "NU",
-                        label: "Naval, Unsheltered (NU)",
-                        piE: 6.0,
-                        description: "On deck or in rough seas"
-                      },
-                      {
-                        value: "AIC",
-                        label: "Airborne, Inhabited Cargo (AIC)",
-                        piE: 4.0,
-                        description: "Cargo aircraft with human occupants"
-                      },
-                      {
-                        value: "AIF",
-                        label: "Airborne, Inhabited Fighter (AIF)",
-                        piE: 5.0,
-                        description: "Manned fighter/trainer aircraft"
-                      },
-                      {
-                        value: "AUC",
-                        label: "Airborne, Uninhabited Cargo (AUC)",
-                        piE: 5.0,
-                        description: "Unmanned cargo aircraft"
-                      },
-                      {
-                        value: "AUF",
-                        label: "Airborne, Uninhabited Fighter (AUF)",
-                        piE: 8.0,
-                        description: "Unmanned fighter aircraft"
-                      },
-                      {
-                        value: "ARW",
-                        label: "Airborne, Rotary Wing (ARW)",
-                        piE: 8.0,
-                        description: "Helicopters and other rotary aircraft"
-                      },
-                      {
-                        value: "SF",
-                        label: "Space, Flight (SF)",
-                        piE: 0.50,
-                        description: "Spacecraft in flight (not launch/re-entry)"
-                      },
-                      {
-                        value: "MF",
-                        label: "Missile, Flight (MF)",
-                        piE: 5.0,
-                        description: "Missiles during flight phase"
-                      },
-                      {
-                        value: "ML",
-                        label: "Missile, Launch (ML)",
-                        piE: 12,
-                        description: "Missiles during launch phase"
-                      },
-                      {
-                        value: "CL",
-                        label: "Cannon, Launch (CL)",
-                        piE: 220,
-                        description: "Gun-launched projectiles during firing"
-                      }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <label>  λ<sub>cyc</sub> :</label>
-              <Col md={4}>
-                <div className="form-group">
-                  <label style={{ display: 'block', marginBottom: '0.5rem' }}>
-                    {mode === 'A1' ? 'Programming Cycles (C) A1 for λcyc' : 'A₁ Value'}
-                  </label>
-                  <input
-                    className="form-control"
-                    style={{
-                      width: "100%",
-                      padding: "0.375rem 0.75rem",
-                      fontSize: "1rem",
-                      lineHeight: "1.5",
-                      color: "#495057",
-                      backgroundColor: "#fff",
-                      border: "1px solid #ced4da",
-                      borderRadius: "0.25rem",
-                      marginBottom: "1rem"
-                    }}
-                    type="number"
-                    name={mode === 'A1' ? 'programmingCycles' : 'a1Value'}
-                    min={mode === 'A1' ? '1' : '0.000001'}
-                    max={mode === 'A1' ? '500000' : '3.4'}
-                    step={mode === 'A1' ? '1' : '0.000001'}
-                    value={
-                      mode === 'A1'
-                        ? currentComponent.programmingCycles || ''
-                        : currentComponent.a1Value || ''
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value ? parseFloat(e.target.value) : null;
-                      const updatedComponent = {
-                        ...currentComponent,
-                        [mode === 'A1' ? 'programmingCycles' : 'a1Value']: value,
-                        technology: 'Flotox' // Auto-set for calculations
-                      };
-
-                      // Auto-calculate when input changes
-                      if (value !== null) {
-                        updatedComponent[mode === 'A1' ? 'a1Value' : 'programmingCycles'] =
-                          mode === 'A1'
-                            ? 6.817e-6 * value // Calculate A₁ from C
-                            : value / 6.817e-6; // Calculate C from A₁
-                      }
-
-                      setCurrentComponent(updatedComponent);
-                    }}
-                    placeholder={
-                      mode === 'A1'
-                        ? 'Enter cycles (1-500,000)'
-                        : 'Enter A₁ (0.000001-3.4)'
-                    }
-                  />
-
-                  {currentComponent.a1Value !== null && mode === 'A1' && (
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                      Calculated A₁: {currentComponent.a1Value}
-                    </div>
-                  )}
-
-                  {currentComponent.programmingCycles !== null && mode === 'C' && (
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                      Calculated Cycles: {Math.round(currentComponent.programmingCycles)}
-                    </div>
-                  )}
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>A₂ Factor for λ<sub>cyc</sub> (Textured-Poly):</label>
-                  <Select
-                    styles={customStyles}
-                    name="a2Factor"
-                    placeholder="Select A₂ Factor"
-                    value={currentComponent.a2Factor}
-                    onChange={handleA2FactorChange}
-                    options={[
-                      {
-                        label: "Up to 300K cycles - 0",
-                        value: "up_to_300k",
-                        a2Value: 0,
-                        maxCycles: 300000,
-                        technology: "Textured-Poly"
-                      },
-                      {
-                        label: "300K < C ≤ 400K - 1.1",
-                        value: "300k_to_400k",
-                        a2Value: 1.1,
-                        maxCycles: 400000,
-                        technology: "Textured-Poly"
-                      },
-                      {
-                        label: "400K < C ≤ 500K - 2.3",
-                        value: "400k_to_500k",
-                        a2Value: 2.3,
-                        maxCycles: 500000,
-                        technology: "Textured-Poly"
-                      }
-                    ]}
-                    className="factor-select"
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Error Correction Code Options (π<sub>ECC</sub>) for (λ<sub>cyc</sub>) :</label>
-                  <Select
-                    styles={customStyles}
-                    options={eccOptions}
-                    onChange={handleChange}
-                    value={selectedECC}
-                    placeholder="Select ECC Option"
-                    className="ecc-select"
-                  />
-
-                  {selectedECC && (
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                      Selected ECC Factor (ĒCC): {selectedECC.factor}
-                    </div>
-                  )}
-                </div>
-              </Col>
-            </>
-          )}
-          {/* Saw Devices Section */}
-          {currentComponent.type === "Microcircuits,Saw Devices" && (
-            <>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Quality Factor (π<sub>Q</sub>):</label>
-                  <Select
-                    style={customStyles}
-                    name="qualityFactor"
-                    placeholder="Select Quality Factor (πQ)"
-                    value={currentComponent.qualityFactor}
-                    onChange={(selectedOption) => {
-                      const updatedComponent = {
-                        ...currentComponent,
-                        qualityFactor: selectedOption,
-                        piQ: selectedOption.piQ
-                      };
-                      setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
-                    options={[
-                      // {
-                      //   label: "10 Temperature Cycles (-55°C to +125°C) with end point electrical tests",
-                      //   value: 0.10,
-                      //   screeningLevel: "High",
-                      //   piQ: 0.10,
-                      // },
-                      {
-                        label: "None beyond best commercial practices (πQ = 1.0)",
-                        value: 1.0,
-                        screeningLevel: "Standard",
-                        piQ: 1.0,
-                      }
-                    ]}
-                    className="factor-select"
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Environment (π<sub>E</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="environment"
-                    placeholder="Select Environment"
-                    value={environmentOptions.find(opt => opt.value === currentComponent.environment?.value)}
-                    onChange={(selectedOption) => {
-                      const updatedComponent = {
-                        ...currentComponent,
-                        environment: {
-                          value: selectedOption.value,
-                          factor: selectedOption.factor,
-                          description: selectedOption.description
-                        },
-                        piE: selectedOption.factor
-                      };
-                      setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
-                    options={environmentOptions}
-                  />
-                </div>
-              </Col>
-              <div  >
-                <Button
-                  variant="primary"
-                  className="btn-calculate float-end mt-1"
-                  onClick={() => {
-                    const failureRate = calculateSawDeviceFailureRate(currentComponent);
-
-                    const updatedComponent = {
-
-                      ...currentComponent,
-                      calculatedFailureRate: failureRate,
-                      environmentLabel: currentComponent.environment?.description,
-                      qualityLabel: currentComponent.qualityFactor?.label
-
-                    };
-
-                    setCurrentComponent(updatedComponent);
-                    addOrUpdateComponent(updatedComponent);
-
-                  }
-                  }
-                >
-                  Calculate FR
-                </Button>
-              </div>
-              {currentComponent.calculatedFailureRate && (
-                handleCalculateSawDevice(currentComponent?.calculatedFailureRate)
-              )}
-
-              {currentComponent.calculatedFailureRate && (
-                <div>
-
-                  <div className="d-flex align-items-center">
-                    <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                    <span className="ms-2 fw-bold">
-                      {currentComponent?.calculatedFailureRate} failures/10<sup>6</sup> hours
-                    </span>
-                  </div>
-
-
-                </div>
-              )}
-            </>
-          )}
-
-          {currentComponent.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
-            <>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Device Type for (C<sub>1</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="type"
-                    value={{
-                      value: currentDevice.type,
-                      label: currentDevice.type === "MMIC"
-                        ? "MMIC (Microwave IC)"
-                        : currentDevice.type === "Digital"
-                          ? "Digital IC"
-                          : "Select Device Type"
-                    }}
-                    onChange={(selectedOption) => {
-                      setCurrentDevice(prev => ({
-                        ...prev,
-                        type: selectedOption.value,
-                        complexity: ""
-                      }));
-                    }}
-                    options={[
-                      { value: "MMIC", label: "MMIC (Microwave IC)" },
-                      { value: "Digital", label: "Digital IC" }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Complexity (C<sub>1</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    value={{
-                      value: currentComponent.complexity,
-                      label: currentComponent.complexity
-                        ? `${currentComponent.complexity} elements`
-                        : "Select Complexity"
-                    }}
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        complexity: selectedOption.value
-                      }));
-                    }}
-                    options={
-                      currentDevice?.type === "MMIC"
-                        ? [
-                          { value: "1-100", label: "1-100 elements (C₁ = 4.5)" },
-                          { value: "101-1000", label: "101-1000 elements (C₁ = 7.2)" }
-                        ]
-                        : [
-                          { value: "1-1000", label: "1-1000 elements (C₁ = 25)" },
-                          { value: "1001-10000", label: "1001-10000 elements (C₁ = 51)" }
-                        ]
-                    }
-                  />
-                </div>
-              </Col>
-
-
-            </>)}
-          {currentComponent.type === "Microcircuit,Magnetic Bubble Memories" && (
-            <>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Environment Factor (π<sub>E</sub>):</label>
-                  <Select
-                    styles={customStyles}
-
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        environment: selectedOption.value,
-                        piE: selectedOption.piE
-                      }));
-                    }}
-                    options={[
-                      { value: "GB", label: "GB - Ground Benign (πE = 0.50)", piE: 0.50 },
-                      { value: "GF", label: "GF - Ground Fixed (πE = 2.0)", piE: 2.0 },
-                      { value: "GM", label: "GM - Ground Mobile (πE = 4.0)", piE: 4.0 },
-                      { value: "NS", label: "NS - Naval Sheltered (πE = 4.0)", piE: 4.0 },
-                      { value: "NU", label: "NU - Naval Unsheltered (πE = 6.0)", piE: 6.0 },
-                      { value: "AIC", label: "AIC - Airborne Inhabited Cargo (πE = 4.0)", piE: 4.0 },
-                      { value: "AIF", label: "AIF - Airborne Inhabited Fighter (πE = 5.0)", piE: 5.0 },
-                      { value: "AUC", label: "AUC - Airborne Uninhabited Cargo (πE = 5.0)", piE: 5.0 },
-                      { value: "AUF", label: "AUF - Airborne Uninhabited Fighter (πE = 8.0)", piE: 8.0 },
-                      { value: "ARW", label: "ARW - Airborne Rotary Wing (πE = 8.0)", piE: 8.0 },
-                      { value: "SF", label: "SF - Space Flight (πE = 0.50)", piE: 0.50 },
-                      { value: "MF", label: "MF - Missile Flight (πE = 5.0)", piE: 5.0 },
-                      { value: "ML", label: "ML - Missile Launch (πE = 12)", piE: 12 },
-                      { value: "CL", label: "CL - Cannon Launch (πE = 220)", piE: 220 }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Learning Factor (π<sub>L</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    placeholder="Select"
-
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        yearsInProduction: selectedOption.value,
-                        piL: selectedOption.piL
-                      }));
-                    }}
-                    options={[
-                      // { value: 0.1, label: "≤ 0.1 years (πL = 2.0)", piL: 2.0 },
-                      // { value: 0.5, label: "0.5 years (πL = 1.8)", piL: 1.8 },
-                      // { value: 1.0, label: "1.0 year (πL = 1.5)", piL: 1.5 },
-                      // { value: 1.5, label: "1.5 years (πL = 1.2)", piL: 1.2 },
-                      { value: 2.0, label: "≥ 2.0 years (πL = 1.0)", piL: 1.0 }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-
-            </>)}
-        </Row>
-
-        {currentComponent.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
-          <>
-            <Row className="mb-2">
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Device Type for (C<sub>1</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="devices"
-                    placeholder="Select"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({ ...currentComponent, devices: selectedOption.value });
-                    }}
-                    options={[
-                      { value: "bipolarData", label: "Bipolar Digital and Linear Gate" },
-                      { value: "mosData", label: "MOS Digital and Linear Gate" },
-                      { value: "microprocessorData", label: "Microprocessor" }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-              {/* Device-Specific Sections */}
-              {currentComponent.devices === "bipolarData" && (
-                <>
-
-                  <Col md={4}>
-                    <div className="form-group">
-                      <label>Bipolar Devices for (C<sub>1</sub>):</label>
-
-                      <Select
-                        styles={customStyles}
-                        className="mt-1"
-                        name="complexFailure"
-                        placeholder="Select"
-                        onChange={(selectedOption) => {
-                          setCurrentComponent({ ...currentComponent, complexFailure: selectedOption.value });
-                        }}
-                        options={[
-                          { value: "digital", label: "Digital" },
-                          { value: "linear", label: "Linear" },
-                          { value: "pla", label: "PLA/PAL" }
-                        ]}
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    {currentComponent.complexFailure && (
-
-                      <div className="form-group">
-                        <label >
-                          {currentComponent.complexFailure === "linear"
-                            ? "Transistor Count for C1"
-                            : "Gate Count for C1"}
-                        </label>
-                        <Select
-                          styles={customStyles}
-                          className="mt-1"
-                          placeholder="select"
-                          name="gateCount"
-
-                          onChange={(selectedOption) => {
-                            setCurrentComponent({ ...currentComponent, gateCount: selectedOption.value });
-                          }}
-                          options={
-                            currentComponent.complexFailure === "digital" ? [
-                              { value: "1-100", label: "1-100" },
-                              { value: "101-1000", label: "101-1000" },
-                              { value: "1001-3000", label: "1001-3000" },
-                              { value: "3001-10000", label: "3001-10000" },
-                              { value: "10001-30000", label: "10001-30000" },
-                              { value: "30001-60000", label: "30001-60000" },
-                            ] : currentComponent.complexFailure === "linear" ? [
-                              { value: "1-100", label: "1-100" },
-                              { value: "101-300", label: "101-300" },
-                              { value: "301-1000", label: "301-1000" },
-                              { value: "1001-10000", label: "1001-10000" },
-                            ] : [
-                              { value: "1-200", label: "1-200" },
-                              { value: "201-1000", label: "201-1000" },
-                              { value: "1001-5000", label: "1001-5000" },
-                            ]
-                          }
-                        />
-                      </div>
-
-                    )}
-                  </Col>
-                  <Col md={4}>
-
-                  </Col>
-
-                </>
-
-              )}
-
-              {/* MOS Devices Section */}
-              {currentComponent.devices === "mosData" && (
-                <>
-
-                  <Col md={4}>
-                    <div className="form-group">
-                      <label>MOS Devices for (C<sub>1</sub>):</label>
-                      <Select
-                        styles={customStyles}
-                        name="complexFailure"
-                        placeholder="Select"
-                        className="mt-1"
-                        onChange={(selectedOption) => {
-                          setCurrentComponent({ ...currentComponent, complexFailure: selectedOption.value });
-                        }}
-                        options={[
-                          { value: "digital", label: "Digital" },
-                          { value: "linear", label: "Linear" },
-                          { value: "pla", label: "PLA/PAL" }
-                        ]}
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    {currentComponent.complexFailure && (
-                      <div className="form-group">
-                        <label>
-                          {currentComponent.complexFailure === "linear"
-                            ? "Transistor Count for C1"
-                            : "Gate Count for C1"}
-                        </label>
-                        <Select
-                          styles={customStyles}
-                          placeholder="select"
-                          name="gateCount"
-                          className="mt-1"
-                          onChange={(selectedOption) => {
-                            setCurrentComponent({ ...currentComponent, gateCount: selectedOption.value });
-                          }}
-                          options={
-                            currentComponent.complexFailure === "digital" ? [
-                              { value: "1-100", label: "1-100" },
-                              { value: "101-1000", label: "101-1000" },
-                              { value: "1001-3000", label: "1001-3000" },
-                              { value: "3001-10000", label: "3001-10000" },
-                              { value: "10001-30000", label: "10001-30000" },
-                              { value: "30001-60000", label: "30001-60000" },
-                            ] : currentComponent.complexFailure === "linear" ? [
-                              { value: "1-100", label: "1-100" },
-                              { value: "101-300", label: "101-300" },
-                              { value: "301-1000", label: "301-1000" },
-                              { value: "1001-10000", label: "1001-10000" },
-                            ] : [
-                              { value: "1-500", label: "1-200" },
-                              { value: "501-1000", label: "201-1000" },
-                              { value: "2001-5000", label: "1001-5000" },
-                              { value: "5001-20000", label: "5001-20000" }
-                            ]
-                          }
-                        />
-                      </div>
-                    )}
-                  </Col>
-
-                </>
-              )}
-
-              {/* Microprocessor Section */}
-              {currentComponent.devices === "microprocessorData" && (
-                <>
-                  <Col md={4}>
-                    <div className="form-group">
-                      <label>Microprocessor for (C<sub>1</sub>):</label>
-                      <Select
-                        styles={customStyles}
-                        name="complexFailure"
-                        placeholder="Select"
-                        onChange={(selectedOption) => {
-                          setCurrentComponent({
-                            ...currentComponent,
-                            complexFailure: selectedOption.value,
-                          });
-                        }}
-                        options={[
-                          { value: "bipolar", label: "Bipolar" },
-                          { value: "mos", label: "MOS" },
-                        ]}
-                      />
-                    </div>
-                  </Col>
-                  <Col md={4}>
-                    {currentComponent.complexFailure && (
-                      <div className="form-group">
-                        <label>
-                          Microprocessor-{currentComponent.complexFailure} for (C<sub>1</sub>):
-                        </label>
-                        <Select
-                          styles={customStyles}
-                          placeholder="select"
-                          name="gateCount"
-                          onChange={(selectedOption) => {
-                            setCurrentComponent({ ...currentComponent, gateCount: selectedOption.value });
-                          }}
-                          options={
-                            currentComponent.complexFailure === "MOS" ? [
-                              { value: "1-8", label: "1-8" },
-                              { value: "8-16", label: "8-16" },
-                              { value: "16-32", label: "16-32" },
-                            ] : [
-                              { value: "1-8", label: "1-8" },
-                              { value: "8-16", label: "8-16" },
-                              { value: "16-32", label: "16-32" },
-                            ]
-                          }
-                        />
-                      </div>
-                    )}
-                  </Col>
-
-                </>
-              )}
-            </Row>
-            {/* Package and Pins Section */}
-            <Row className="mb-2">
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>No. of Functional Pins for (C<sub>2</sub>):</label>
-                  <input
-                    styles={customStyles}
-                    placeholder="Select"
-                    value={0} // Fixed value set to 0
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        packageType: selectedOption.value,
-                        c2: selectedOption.c2
-                      }));
-                    }}
-                  />
-                </div>
-              </Col>
-
-              {/* Quality and Learning Factors */}
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Quality Factor (π<sub>Q</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="qualityFactor"
-                    placeholder="Select Quality Class"
-                    onChange={(selectedOption) => {
-
-                      setCurrentComponent({
-                        ...currentComponent,
-                        quality: selectedOption.value,
-                        piQ: selectedOption.piQ
-                      });
-                    }}
-                    options={[
-                      // Class S Categories (πQ = 0.25)
-                      // {
-                      //   value: "MIL_M_38510_ClassS",
-                      //   label: "Class S (MIL-M-38510, Class S)",
-                      //   piQ: 0.25, // Store πQ for calculations
-                      //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
-                      // },
-                      // {
-                      //   value: "MIL_I_38535_ClassU",
-                      //   label: "Class S (MIL-I-38535, Class U)",
-                      //   piQ: 0.25,
-                      //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
-                      // },
-                      // {
-                      //   value: "MIL_H_38534_ClassS_Hybrid",
-                      //   label: "Class S Hybrid (MIL-H-38534, Level K)",
-                      //   piQ: 0.25,
-                      //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
-                      // },
-
-                      // Class B Categories (πQ = 1.0)
-                      {
-                        value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B) (πQ = 1.0)",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-M-38510, Class B requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q) (πQ = 1.0)",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-I-38535 (Class Q)."
-                      },
-                      {
-                        value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "Class B Hybrid (MIL-H-38534, Level H) (πQ = 1.0)",
-                        piQ: 1.0,
-                        description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
-                      },
-
-                      // Class B-1 Category (πQ = 2.0)
-                      // {
-                      //   value: "MIL_STD_883_ClassB1",
-                      //   label: "Class B-1 (MIL-STD-883)",
-                      //   piQ: 2.0,
-                      //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
-                      // }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Learning Factor (π<sub>L</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="learningFactor"
-                    placeholder="Select Years in Production"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        yearsInProduction: selectedOption.value,
-                        piL: selectedOption.piL
-                      });
-                    }}
-                    options={[
-                      // {
-                      //   value: 5.1,
-                      //   label: "≤ 0.5 years",
-                      //   piL: 2.0, // Direct value from table
-                      //   description: "Early production phase (highest learning factor)"
-                      // },
-                      // {
-                      //   value: 0.5,
-                      //   label: "0.5 years",
-                      //   piL: 1.8,
-                      //   description: "Initial production ramp-up"
-                      // },
-                      // {
-                      //   value: 1.0,
-                      //   label: "1.0 year",
-                      //   piL: 1.5,
-                      //   description: "Moderate experience"
-                      // },
-                      // {
-                      //   value: 1.5,
-                      //   label: "1.5 years",
-                      //   piL: 1.2,
-                      //   description: "Stabilizing production"
-                      // },
-                      {
-                        value: 2.0,
-                        label: "≥ 2.0 years (πL = 1.0)",
-                        piL: 1.0,
-                        description: "Mature production (lowest learning factor)"
-                      }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Technology Type (π<sub>T</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="technology"
-                    placeholder="Select Technology Type"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        technology: selectedOption.value,
-                        technologyType: selectedOption.label,
-                        // Reset calculatedPiT when technology changes
-                        calculatedPiT: calculatePiT(
-                          selectedOption.value,
-                          currentComponent.temperature || 25, // Default to 25°C if not set
-                          selectedOption.Ea // Pass the correct Ea for the technology
-                        )
-                      });
-                    }}
-                    options={[
-                      {
-                        value: "TTL,ASTTL,CML",
-                        label: "TTL/ASTTL/CML (Bipolar Logic)",
-                        description: "Standard TTL, Advanced Schottky TTL, and Current Mode Logic",
-                        Ea: 0.4
-                      },
-                      {
-                        value: "F,LTTL,STTL",
-                        label: "F/LTTL/STTL (Fast/Low-Power TTL)",
-                        description: "Fast, Low-Power, and Schottky TTL variants",
-                        Ea: 0.45
-                      },
-                      {
-                        value: "BiCMOS",
-                        label: "BiCMOS (Bipolar CMOS Hybrid)",
-                        description: "Combines bipolar and CMOS technologies",
-                        Ea: 0.5
-                      },
-                      {
-                        value: "III,f¹,ISL",
-                        label: "III/f¹/ISL (Advanced Silicon)",
-                        description: "High-speed/radiation-hardened silicon logic",
-                        Ea: 0.6
-                      },
-                      {
-                        value: "Digital MOS",
-                        label: "Digital MOS (CMOS, VHSIC)",
-                        description: "CMOS and VHSIC digital technologies",
-                        Ea: 0.35
-                      },
-                      {
-                        value: "Linear",
-                        label: "Linear Analog (Bipolar/MOS)",
-                        description: "Linear analog circuits (op-amps, regulators)",
-                        Ea: 0.65
-                      },
-                      {
-                        value: "Memories",
-                        label: "Memories (Bipolar/MOS)",
-                        description: "Memory chips (RAM, ROM, etc.)",
-                        Ea: 0.6
-                      },
-                      {
-                        value: "GaAs MMIC",
-                        label: "GaAs MMIC (RF/Microwave)",
-                        description: "Gallium Arsenide microwave/RF components",
-                        Ea: 1.5
-                      },
-                      {
-                        value: "GaAs Digital",
-                        label: "GaAs Digital (High-Speed Logic)",
-                        description: "Gallium Arsenide digital logic",
-                        Ea: 1.4
-                      }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Junction Temperature (°C) for (π<sub>T</sub>):</label>
-                  <input
-                    className="form-group"
-                    style={{
-                      width: "100%",
-                      padding: "0.375rem 0.75rem",
-                      fontSize: "1rem",
-                      lineHeight: "1.5",
-                      color: "#495057",
-                      backgroundColor: "#fff",
-                      border: "1px solid #ced4da",
-                      borderRadius: "0.25rem"
-                    }}
-                    type="number"
-                    name="temperature"
-                    min="-40"
-                    max="175"
-                    value={currentComponent.temperature}
-                    onChange={handleInputChange}
-                  />
-                  <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
-                </div>
-              </Col>
-            </Row>
-
-            <Button
-              className="btn-calculate float-end mt-1"
-              onClick={addComponent}
-            >
-              Calculate FR
-            </Button>
-
+              {component.type === "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS" && (
+                 <>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Part Type (λ<sub>BD</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         value={partTypes?.find(t => t.value === inputs.partType)}
+                         onChange={(selectedOption) => {
+                           setInputs(prev => ({
+                             ...prev,
+                             partType: selectedOption.value
+                           }));
+                         }}
+                         options={partTypes}
+                       />
+                     </div>
+                   </Col>
+     
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>ESD Susceptibility (V<sub>TH</sub>) (λ<sub>EOS</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         value={esdLevels?.find(e => e.value === inputs.esdSusceptibility)}
+                         onChange={(selectedOption) => {
+                           setInputs(prev => ({
+                             ...prev,
+                             esdSusceptibility: selectedOption.value
+                           }));
+                         }}
+                         options={esdLevels}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Number of Package Pins (λ<sub>BP</sub>):</label>
+     
+                       <input
+                         styles={customStyles}
+                         placeholder="Select"
+                         value={0} // Fixed value set to 0
+                         onChange={(e) => setNumberOfPins(parseInt(e?.target?.value) || 0)}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Environment (π<sub>E</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         value={inputs.environment}
+                         onChange={(selectedOption) => setInputs(prev => ({
+                           ...prev,
+                           environment: {
+                             value: selectedOption.value,
+                             label: selectedOption.label,
+                             factor: selectedOption.piE,  // Store as factor
+                             description: selectedOption.description
+                           },
+                           πE: selectedOption.piE  // Also store directly as πE for easy access
+                         }))}
+     
+                         options={[
+                           {
+                             value: "GB",
+                             label: "Ground, Benign (GB)",
+                             piE: 0.50,
+                             description: "Controlled laboratory or office environment"
+                           },
+                           {
+                             value: "GF",
+                             label: "Ground, Fixed (GF)",
+                             piE: 2.0,
+                             description: "Permanent ground installations with environmental controls"
+                           },
+                           {
+                             value: "GM",
+                             label: "Ground, Mobile (GM)",
+                             piE: 4.0,
+                             description: "Vehicles operating on improved roads"
+                           },
+                           {
+                             value: "NS",
+                             label: "Naval, Sheltered (NS)",
+                             piE: 4.0,
+                             description: "Below decks in harbor or calm seas"
+                           },
+                           {
+                             value: "NU",
+                             label: "Naval, Unsheltered (NU)",
+                             piE: 6.0,
+                             description: "On deck or in rough seas"
+                           },
+                           {
+                             value: "AIC",
+                             label: "Airborne, Inhabited Cargo (AIC)",
+                             piE: 4.0,
+                             description: "Cargo aircraft with human occupants"
+                           },
+                           {
+                             value: "AIF",
+                             label: "Airborne, Inhabited Fighter (AIF)",
+                             piE: 5.0,
+                             description: "Manned fighter/trainer aircraft"
+                           },
+                           {
+                             value: "AUC",
+                             label: "Airborne, Uninhabited Cargo (AUC)",
+                             piE: 5.0,
+                             description: "Unmanned cargo aircraft"
+                           },
+                           {
+                             value: "AUF",
+                             label: "Airborne, Uninhabited Fighter (AUF)",
+                             piE: 8.0,
+                             description: "Unmanned fighter aircraft"
+                           },
+                           {
+                             value: "ARW",
+                             label: "Airborne, Rotary Wing (ARW)",
+                             piE: 8.0,
+                             description: "Helicopters and other rotary aircraft"
+                           },
+                           {
+                             value: "SF",
+                             label: "Space, Flight (SF)",
+                             piE: 0.50,
+                             description: "Spacecraft in flight (not launch/re-entry)"
+                           },
+                           {
+                             value: "MF",
+                             label: "Missile, Flight (MF)",
+                             piE: 5.0,
+                             description: "Missiles during flight phase"
+                           },
+                           {
+                             value: "ML",
+                             label: "Missile, Launch (ML)",
+                             piE: 12,
+                             description: "Missiles during launch phase"
+                           },
+                           {
+                             value: "CL",
+                             label: "Cannon, Launch (CL)",
+                             piE: 220,
+                             description: "Gun-launched projectiles during firing"
+                           }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Quality Factor (π<sub>Q</sub>):</label>
+                       <Select
+                         style={customStyles}
+                         name="qualityFactor"
+                         placeholder="Select Quality Class"
+                         onChange={(selectedOption) => {
+     
+                           setCurrentComponent({
+                             ...currentComponent,
+                             quality: selectedOption.value,
+                             piQ: selectedOption.piQ
+                           });
+                         }}
+                         options={[
+              
+                           {
+                             value: "MIL_M_38510_ClassB",
+                             label: "Class B (MIL-M-38510, Class B)πQ = 1.0",
+                             piQ: 1.0,
+                             description: "Procured in full accordance with MIL-M-38510, Class B requirements."
+                           },
+                           {
+                             value: "MIL_I_38535_ClassQ",
+                             label: "Class B (MIL-I-38535, Class Q) πQ = 1.0",
+                             piQ: 1.0,
+                             description: "Procured in full accordance with MIL-I-38535 (Class Q) "
+                           },
+                           {
+                             value: "MIL_H_38534_ClassB_Hybrid",
+                             label: "Class B Hybrid (MIL-H-38534, Level H)",
+                             piQ: 1.0,
+                             description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
+                           },
+     
+                         ]}
+                       />
+                     </div>
+                   </Col>
+     
+                 </>
+               )}
+               {component.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
+                 <Col md={4}>
+                   <div className="form-group">
+                     <label>Environment (π<sub>E</sub>):</label>
+                     <Select
+                       style={customStyles}
+                       name="environment"
+                       placeholder="Select Environment"
+     
+                       onChange={(selectedOption) => {
+                         setCurrentComponent({
+                           ...currentComponent,
+                           environment: selectedOption.value,
+                           piE: selectedOption.piE
+                         });
+                       }}
+     
+                       options={[
+                         {
+                           value: "GB",
+                           label: "Ground, Benign (GB)",
+                           piE: 0.50,
+                           description: "Controlled laboratory or office environment"
+                         },
+                         {
+                           value: "GF",
+                           label: "Ground, Fixed (GF)",
+                           piE: 2.0,
+                           description: "Permanent ground installations with environmental controls"
+                         },
+                         {
+                           value: "GM",
+                           label: "Ground, Mobile (GM)",
+                           piE: 4.0,
+                           description: "Vehicles operating on improved roads"
+                         },
+                         {
+                           value: "NS",
+                           label: "Naval, Sheltered (NS)",
+                           piE: 4.0,
+                           description: "Below decks in harbor or calm seas"
+                         },
+                         {
+                           value: "NU",
+                           label: "Naval, Unsheltered (NU)",
+                           piE: 6.0,
+                           description: "On deck or in rough seas"
+                         },
+                         {
+                           value: "AIC",
+                           label: "Airborne, Inhabited Cargo (AIC)",
+                           piE: 4.0,
+                           description: "Cargo aircraft with human occupants"
+                         },
+                         {
+                           value: "AIF",
+                           label: "Airborne, Inhabited Fighter (AIF)",
+                           piE: 5.0,
+                           description: "Manned fighter/trainer aircraft"
+                         },
+                         {
+                           value: "AUC",
+                           label: "Airborne, Uninhabited Cargo (AUC)",
+                           piE: 5.0,
+                           description: "Unmanned cargo aircraft"
+                         },
+                         {
+                           value: "AUF",
+                           label: "Airborne, Uninhabited Fighter (AUF)",
+                           piE: 8.0,
+                           description: "Unmanned fighter aircraft"
+                         },
+                         {
+                           value: "ARW",
+                           label: "Airborne, Rotary Wing (ARW)",
+                           piE: 8.0,
+                           description: "Helicopters and other rotary aircraft"
+                         },
+                         {
+                           value: "SF",
+                           label: "Space, Flight (SF)",
+                           piE: 0.50,
+                           description: "Spacecraft in flight (not launch/re-entry)"
+                         },
+                         {
+                           value: "MF",
+                           label: "Missile, Flight (MF)",
+                           piE: 5.0,
+                           description: "Missiles during flight phase"
+                         },
+                         {
+                           value: "ML",
+                           label: "Missile, Launch (ML)",
+                           piE: 12,
+                           description: "Missiles during launch phase"
+                         },
+                         {
+                           value: "CL",
+                           label: "Cannon, Launch (CL)",
+                           piE: 220,
+                           description: "Gun-launched projectiles during firing"
+                         }
+                       ]}
+                     />
+                   </div>
+                 </Col>
+               )}
+               {component.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
+                 <>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Device Application Factor:</label>
+                       <Select
+                         styles={customStyles}
+                         name="applicationFactor"
+                         placeholder="Select"
+                         onChange={(selectedOption) => {
+                           setCurrentComponent({ ...currentComponent, applicationFactor: selectedOption.value });
+                         }}
+                         options={[
+                           { value: "MMIC Devices-Low Noise & Low Power", label: "MMIC Devices-Low Noise & Low Power" },
+                           { value: "MMIC Devices-Driver & High Power", label: "MMIC Devices-Driver & High Power" },
+                           { value: "MMIC Devices-Unknown", label: "MMIC Devices-Unknown" },
+                           { value: "Digital Devices- All Digital Applications", label: "Digital Devices- All Digital Applications" },
+                         ]}
+                       />
+                     </div>
+                   </Col>
+                 </>
+               )}
+               {component.type === "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS" && (
+                 <>
+     
+                   <div className='calculator-container'>
+                     <Row className="mb-3">
+     
+                       <Col md={4}>
+                         <div className="form-group">
+                           <label>Package Type for (π<sub>prT</sub>):</label>
+                           <Select
+                             styles={customStyles}
+                             value={packageTypes?.find(p => p.value === inputs.packageType)}
+                             onChange={(selectedOption) => {
+                               setInputs(prev => ({
+                                 ...prev,
+                                 packageType: selectedOption.value
+                               }));
+                             }}
+                             options={packageTypes}
+                           />
+                         </div>
+                       </Col>
+                       <Col md={4}>
+                         <div className="form-group">
+                           <label>Technology Type for (π<sub>T</sub>):</label>
+                           <Select
+                             styles={customStyles}
+                             name="technology"
+                             placeholder="Select Technology Type"
+                             onChange={(selectedOption) => {
+                               setCurrentComponent({
+                                 ...currentComponent,
+                                 technology: selectedOption.value,
+                                 technologyType: selectedOption.label,
+                                 // Reset calculatedPiT when technology changes
+                                 calculatedPiT: calculatePiT(
+                                   selectedOption.value,
+                                   currentComponent.temperature || 25, // Default to 25°C if not set
+                                   selectedOption.Ea // Pass the correct Ea for the technology
+                                 )
+                               });
+                             }}
+                             options={[
+                               {
+                                 value: "TTL,ASTTL,CML",
+                                 label: "TTL/ASTTL/CML (Bipolar Logic)",
+                                 description: "Standard TTL, Advanced Schottky TTL, and Current Mode Logic",
+                                 Ea: 0.4
+                               },
+                               {
+                                 value: "F,LTTL,STTL",
+                                 label: "F/LTTL/STTL (Fast/Low-Power TTL)",
+                                 description: "Fast, Low-Power, and Schottky TTL variants",
+                                 Ea: 0.45
+                               },
+                               {
+                                 value: "BiCMOS",
+                                 label: "BiCMOS (Bipolar CMOS Hybrid)",
+                                 description: "Combines bipolar and CMOS technologies",
+                                 Ea: 0.5
+                               },
+                               {
+                                 value: "III,f¹,ISL",
+                                 label: "III/f¹/ISL (Advanced Silicon)",
+                                 description: "High-speed/radiation-hardened silicon logic",
+                                 Ea: 0.6
+                               },
+                               {
+                                 value: "Digital MOS",
+                                 label: "Digital MOS (CMOS, VHSIC)",
+                                 description: "CMOS and VHSIC digital technologies",
+                                 Ea: 0.35
+                               },
+                               {
+                                 value: "Linear",
+                                 label: "Linear Analog (Bipolar/MOS)",
+                                 description: "Linear analog circuits (op-amps, regulators)",
+                                 Ea: 0.65
+                               },
+                               {
+                                 value: "Memories",
+                                 label: "Memories (Bipolar/MOS)",
+                                 description: "Memory chips (RAM, ROM, etc.)",
+                                 Ea: 0.6
+                               },
+                               {
+                                 value: "GaAs MMIC",
+                                 label: "GaAs MMIC (RF/Microwave)",
+                                 description: "Gallium Arsenide microwave/RF components",
+                                 Ea: 1.5
+                               },
+                               {
+                                 value: "GaAs Digital",
+                                 label: "GaAs Digital (High-Speed Logic)",
+                                 description: "Gallium Arsenide digital logic",
+                                 Ea: 1.4
+                               }
+                             ]}
+                           />
+                         </div>
+                       </Col>
+                       <Col md={4}>
+                         <div className="form-group">
+                           <label>Junction Temperature (°C) (π<sub>T</sub>):</label>
+                           <input
+                             className="form-group"
+                             style={{
+                               width: "100%",
+                               padding: "0.375rem 0.75rem",
+                               fontSize: "1rem",
+                               lineHeight: "1.5",
+                               color: "#495057",
+                               backgroundColor: "#fff",
+                               border: "1px solid #ced4da",
+                               borderRadius: "0.25rem"
+                             }}
+                             type="number"
+                             name="temperature"
+                             min="-40"
+                             max="175"
+                             value={currentComponent.temperature}
+                             onChange={handleInputChange}
+                           />
+                           <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+                         </div>
+                       </Col>
+     
+                       <Col md={4}>
+                         <div className="form-group">
+                           <label>Feature Size (X<sub>S</sub>) microns (π<sub>CD</sub>):</label>
+                           <input
+                             type="number"
+                             min="0.1"
+                             step="0.01"
+                             value={inputs.featureSize}
+                             onChange={(e) => {
+                               setInputs(prev => ({
+                                 ...prev,
+                                 featureSize: parseFloat(e?.target?.value)
+                               }));
+                             }}
+                             className="form-control"
+                           />
+                         </div>
+                       </Col>
+                       <Col md={4}>
+                         <div className="form-group">
+                           <label>Die Area (A) in cm² for (π<sub>CD</sub>):</label>
+                           <input
+                             type="number"
+                             min="0.01"
+                             step="0.01"
+                             value={inputs.dieArea}
+                             onChange={(e) => {
+                               setInputs(prev => ({
+                                 ...prev,
+                                 dieArea: parseFloat(e?.target?.value)
+                               }));
+                             }}
+                             className={`form-control ${inputs.dieArea && (inputs.dieArea < 0.4 || inputs.dieArea > 3.0)}`}
+                           />
+                           {inputs.dieArea && (inputs.dieArea < 0.4 || inputs.dieArea > 3.0) && (
+                             <div className="invalid-feedback">
+                               Die Area (A) must be between 0.4 cm² and 3.0 cm²
+                             </div>
+                           )}
+                         </div>
+                       </Col>
+                       <Col md={4}>
+                         <div className="form-group">
+                           <label>Package Hermeticity for (π<sub>prT</sub>):</label>
+                           <Select
+                             styles={customStyles}
+                             value={{
+                               value: inputs.packageHermeticity,
+                               label: inputs.packageHermeticity === 'Hermetic' ? 'Hermetic' : 'Nonhermetic'
+                             }}
+                             onChange={(selectedOption) => {
+                               setInputs(prev => ({
+                                 ...prev,
+                                 packageHermeticity: selectedOption.value
+                               }));
+                             }}
+                             options={[
+                               { value: 'Hermetic', label: 'Hermetic' },
+                               { value: 'Nonhermetic', label: 'Nonhermetic' }
+                             ]}
+                           />
+                         </div>
+                       </Col>
+                       <Col md={4}>
+                         <div className="form-group">
+                           <label>Manufacturing Process (π<sub>MFG</sub>):</label>
+                           <Select
+                             styles={customStyles}
+                             value={{
+                               value: inputs.manufacturingProcess,
+                               label: inputs.manufacturingProcess === 'QML' ? 'QML' :
+                                 inputs.manufacturingProcess === 'QPL' ? 'QPL' :
+                                   inputs.manufacturingProcess === 'Non-QML' ? 'Non-QML' : 'Non-QPL'
+                             }}
+                             onChange={(selectedOption) => {
+                               setInputs(prev => ({
+                                 ...prev,
+                                 manufacturingProcess: selectedOption.value
+                               }));
+                             }}
+                             options={[
+                               { value: 'QML', label: 'QML' },
+                               { value: 'QPL', label: 'QPL' },
+                               { value: 'Non-QML', label: 'Non-QML' },
+                               { value: 'Non-QPL', label: 'Non-QPL' }
+                             ]}
+                           />
+                         </div>
+                       </Col>
+                            <Col md={4}>
+                              <div className="form-group">
+                                <label>Quantity:</label>
+                               <input
+                                   type="number"
+                                   className="form-control"
+                                   min="1"
+                                   value={component.quantity || ''}
+                                   onChange={(e) => {
+                                     const inputValue = e?.target?.value;
+                                     const newQuantity = inputValue === '' ? 1 : Math.max(1, parseInt(inputValue));
+                                     updateComponent(component.id, {
+                                       quantity: newQuantity,
+                                       totalFailureRate: (component.failureRate || 0) * newQuantity
+                                     });
+                                   }}
+                                 />
+                               </div>
+                             </Col>
+                     </Row>
+     
+     
+                     <Button
+                       variant="primary"
+                       onClick={calculateVhsicFailureRate}
+                       className="btn-calculate float-end mt-1"
+                     >
+                       Calculate FR
+                     </Button>
+     
+     
+                     {result && (
+                       handleCalculateVhsic(result?.value * component?.quantity)
+     
+                     )}
+     
+                     {result && (
+                       <>
+     
+                         <div className="d-flex align-items-center">
+                           <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                           <span className="ms-2">{result?.value } failures/10<sup>6</sup> hours</span>
+                                <strong>λ<sub>c</sub> * N<sub>c</sub>:</strong>
+                           <span className="ms-2">{result?.value * component?.quantity} failures/10<sup>6</sup> hours</span>
+                           {console.log("CalculateVhsic..",result?.value * component?.quantity)}
+                         </div>
+                       </>
+                     )}
+     
+     
+                   </div>
+     
+                 </>
+               )}
+               {component.type === "Microcircuits,Memories" && (
+                 <>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Quality Factor (π<sub>Q</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         name="qualityFactor"
+                         placeholder="Select Quality Class"
+                         onChange={(selectedOption) => {
+     
+                           setCurrentComponent({
+                             ...currentComponent,
+                             quality: selectedOption.value,
+                             piQ: selectedOption.piQ
+                           });
+                         }}
+                         options={[
+                       
+                           {
+                             value: "MIL_M_38510_ClassB",
+                             label: "Class B (MIL-M-38510, Class B) πQ = 1.0",
+                             piQ: 1.0,
+                             description: "Procured in full accordance with MIL-M-38510, Class B requirements."
+                           },
+                           {
+                             value: "MIL_I_38535_ClassQ",
+                             label: "Class B (MIL-I-38535, Class Q) πQ = 1.0",
+                             piQ: 1.0,
+                             description: "Procured in full accordance with MIL-I-38535 (Class Q)."
+                           },
+                           {
+                             value: "MIL_H_38534_ClassB_Hybrid",
+                             label: "Class B Hybrid (MIL-H-38534, Level H) πQ = 1.0",
+                             piQ: 1.0,
+                             description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
+                           },
+     
+                         ]}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Environment (π<sub>E</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         value={inputs.environment}
+                         onChange={(selectedOption) => setInputs(prev => ({
+                           ...prev,
+                           environment: {
+                             value: selectedOption.value,
+                             label: selectedOption.label,
+                             factor: selectedOption.piE,
+                             description: selectedOption.description
+                           }
+                         }))}
+     
+                         options={[
+                           {
+                             value: "GB",
+                             label: "Ground, Benign (GB)",
+                             piE: 0.50,
+                             description: "Controlled laboratory or office environment"
+                           },
+                           {
+                             value: "GF",
+                             label: "Ground, Fixed (GF)",
+                             piE: 2.0,
+                             description: "Permanent ground installations with environmental controls"
+                           },
+                           {
+                             value: "GM",
+                             label: "Ground, Mobile (GM)",
+                             piE: 4.0,
+                             description: "Vehicles operating on improved roads"
+                           },
+                           {
+                             value: "NS",
+                             label: "Naval, Sheltered (NS)",
+                             piE: 4.0,
+                             description: "Below decks in harbor or calm seas"
+                           },
+                           {
+                             value: "NU",
+                             label: "Naval, Unsheltered (NU)",
+                             piE: 6.0,
+                             description: "On deck or in rough seas"
+                           },
+                           {
+                             value: "AIC",
+                             label: "Airborne, Inhabited Cargo (AIC)",
+                             piE: 4.0,
+                             description: "Cargo aircraft with human occupants"
+                           },
+                           {
+                             value: "AIF",
+                             label: "Airborne, Inhabited Fighter (AIF)",
+                             piE: 5.0,
+                             description: "Manned fighter/trainer aircraft"
+                           },
+                           {
+                             value: "AUC",
+                             label: "Airborne, Uninhabited Cargo (AUC)",
+                             piE: 5.0,
+                             description: "Unmanned cargo aircraft"
+                           },
+                           {
+                             value: "AUF",
+                             label: "Airborne, Uninhabited Fighter (AUF)",
+                             piE: 8.0,
+                             description: "Unmanned fighter aircraft"
+                           },
+                           {
+                             value: "ARW",
+                             label: "Airborne, Rotary Wing (ARW)",
+                             piE: 8.0,
+                             description: "Helicopters and other rotary aircraft"
+                           },
+                           {
+                             value: "SF",
+                             label: "Space, Flight (SF)",
+                             piE: 0.50,
+                             description: "Spacecraft in flight (not launch/re-entry)"
+                           },
+                           {
+                             value: "MF",
+                             label: "Missile, Flight (MF)",
+                             piE: 5.0,
+                             description: "Missiles during flight phase"
+                           },
+                           {
+                             value: "ML",
+                             label: "Missile, Launch (ML)",
+                             piE: 12,
+                             description: "Missiles during launch phase"
+                           },
+                           {
+                             value: "CL",
+                             label: "Cannon, Launch (CL)",
+                             piE: 220,
+                             description: "Gun-launched projectiles during firing"
+                           }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+                   <label>  λ<sub>cyc</sub> :</label>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label style={{ display: 'block', marginBottom: '0.5rem' }}>
+                         {mode === 'A1' ? 'Programming Cycles (C) A1 for λcyc' : 'A₁ Value'}
+                       </label>
+                       <input
+                         className="form-control"
+                         style={{
+                           width: "100%",
+                           padding: "0.375rem 0.75rem",
+                           fontSize: "1rem",
+                           lineHeight: "1.5",
+                           color: "#495057",
+                           backgroundColor: "#fff",
+                           border: "1px solid #ced4da",
+                           borderRadius: "0.25rem",
+                           marginBottom: "1rem"
+                         }}
+                         type="number"
+                         name={mode === 'A1' ? 'programmingCycles' : 'a1Value'}
+                         min={mode === 'A1' ? '1' : '0.000001'}
+                         max={mode === 'A1' ? '500000' : '3.4'}
+                         step={mode === 'A1' ? '1' : '0.000001'}
+                         value={
+                           mode === 'A1'
+                             ? currentComponent.programmingCycles || ''
+                             : currentComponent.a1Value || ''
+                         }
+                         onChange={(e) => {
+                           const value = e?.target?.value ? parseFloat(e?.target?.value) : null;
+                           const updatedComponent = {
+                             ...currentComponent,
+                             [mode === 'A1' ? 'programmingCycles' : 'a1Value']: value,
+                             technology: 'Flotox' 
+                           };
+     
+                      
+                           if (value !== null) {
+                             updatedComponent[mode === 'A1' ? 'a1Value' : 'programmingCycles'] =
+                               mode === 'A1'
+                                 ? 6.817e-6 * value // Calculate A₁ from C
+                                 : value / 6.817e-6; // Calculate C from A₁
+                           }
+     
+                           setCurrentComponent(updatedComponent);
+                         }}
+                         placeholder={
+                           mode === 'A1'
+                             ? 'Enter cycles (1-500,000)'
+                             : 'Enter A₁ (0.000001-3.4)'
+                         }
+                       />
+     
+                       {currentComponent.a1Value !== null && mode === 'A1' && (
+                         <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                           Calculated A₁: {currentComponent.a1Value}
+                         </div>
+                       )}
+     
+                       {currentComponent.programmingCycles !== null && mode === 'C' && (
+                         <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                           Calculated Cycles: {Math.round(currentComponent.programmingCycles)}
+                         </div>
+                       )}
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>A₂ Factor for λ<sub>cyc</sub> (Textured-Poly):</label>
+                       <Select
+                         styles={customStyles}
+                         name="a2Factor"
+                         placeholder="Select A₂ Factor"
+                         value={currentComponent.a2Factor}
+                         onChange={handleA2FactorChange}
+                         options={[
+                           {
+                             label: "Up to 300K cycles - 0",
+                             value: "up_to_300k",
+                             a2Value: 0,
+                             maxCycles: 300000,
+                             technology: "Textured-Poly"
+                           },
+                           {
+                             label: "300K < C ≤ 400K - 1.1",
+                             value: "300k_to_400k",
+                             a2Value: 1.1,
+                             maxCycles: 400000,
+                             technology: "Textured-Poly"
+                           },
+                           {
+                             label: "400K < C ≤ 500K - 2.3",
+                             value: "400k_to_500k",
+                             a2Value: 2.3,
+                             maxCycles: 500000,
+                             technology: "Textured-Poly"
+                           }
+                         ]}
+                         className="factor-select"
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Error Correction Code Options (π<sub>ECC</sub>) for (λ<sub>cyc</sub>) :</label>
+                       <Select
+                         styles={customStyles}
+                         options={eccOptions}
+                         onChange={handleChange}
+                         value={selectedECC}
+                         placeholder="Select ECC Option"
+                         className="ecc-select"
+                       />
+     
+                       {selectedECC && (
+                         <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                           Selected ECC Factor (ĒCC): {selectedECC.factor}
+                         </div>
+                       )}
+                     </div>
+                   </Col>
+                 </>
+               )}
+          
+               {component.type === "Microcircuits,Saw Devices" && (
+                 <>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Quality Factor (π<sub>Q</sub>):</label>
+                       <Select
+                         style={customStyles}
+                         name="qualityFactor"
+                         placeholder="Select Quality Factor (πQ)"
+                         value={currentComponent.qualityFactor}
+                         onChange={(selectedOption) => {
+                           const updatedComponent = {
+                             ...currentComponent,
+                             qualityFactor: selectedOption,
+                             piQ: selectedOption.piQ
+                           };
+                           setCurrentComponent(updatedComponent);
+                           updateComponentInList(updatedComponent);
+                         }}
+                         options={[
+               
+                           {
+                             label: "None beyond best commercial practices (πQ = 1.0)",
+                             value: 1.0,
+                             screeningLevel: "Standard",
+                             piQ: 1.0,
+                           }
+                         ]}
+                         className="factor-select"
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Environment (π<sub>E</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         name="environment"
+                         placeholder="Select Environment"
+                         value={environmentOptions.find(opt => opt.value === currentComponent.environment?.value)}
+                         onChange={(selectedOption) => {
+                           const updatedComponent = {
+                             ...currentComponent,
+                             environment: {
+                               value: selectedOption.value,
+                               factor: selectedOption.factor,
+                               description: selectedOption.description
+                             },
+                             piE: selectedOption.factor
+                           };
+                           setCurrentComponent(updatedComponent);
+                           updateComponentInList(updatedComponent);
+                         }}
+                         options={environmentOptions}
+                       />
+                     </div>
+                   </Col>
+                           <Col md={4}>
+                              <div className="form-group">
+                                <label>Quantity:</label>
+                               <input
+                                   type="number"
+                                   className="form-control"
+                                   min="1"
+                                   value={component.quantity || ''}
+                                   onChange={(e) => {
+                                     const inputValue = e?.target?.value;
+                                     const newQuantity = inputValue === '' ? 1 : Math.max(1, parseInt(inputValue));
+                                     updateComponent(component.id, {
+                                       quantity: newQuantity,
+                                       totalFailureRate: (component.failureRate || 0) * newQuantity
+                                     });
+                                   }}
+                                 />
+                               </div>
+                             </Col>
+                   <div  >
+                     <Button
+                       variant="primary"
+                       className="btn-calculate float-end mt-1"
+                     
+                      onClick ={handleCalculate}
+                     >
+                       Calculate FR
+                     </Button>
+                   </div>
+                   {currentComponent.calculatedFailureRate && (
+                     handleCalculateSawDevice(currentComponent?.calculatedFailureRate * component?.quantity)
+                   )}
+
+   {/* {currentComponent.calculatedFailureRate && (() => {
+  const calculatedSawDeviceValue = handleCalculateSawDevice(
+    currentComponent?.calculatedFailureRate * component?.quantity
+  );
+  setCalculatedValues(prev => ({ ...prev, [id]: calculatedSawDeviceValue }));
+  return null;
+})()} */}
+                   {currentComponent?.calculatedFailureRate && (
+                     <div>
+     
+                       <div className="d-flex align-items-center">
+                         <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                         <span className="ms-2">
+              {currentComponent?.calculatedFailureRate} failures/10<sup>6</sup> hours
+              {console.log("Sawdevice",currentComponent?.calculatedFailureRate * component?.quantity)}
+            </span>
+                           <strong>λ<sub>c</sub> * N<sub>c</sub>:</strong>
+                         <span className="ms-2 fw-bold">
+                           {currentComponent?.calculatedFailureRate * component?.quantity} failures/10<sup>6</sup> hours
+                         </span>
+                       </div>
+     
+     
+                     </div>
+                   )} 
+                 </>
+               )}
+     
+               {component.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
+                 <>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Device Type for (C<sub>1</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         name="type"
+                         value={{
+                           value: currentDevice.type,
+                           label: currentDevice.type === "MMIC"
+                             ? "MMIC (Microwave IC)"
+                             : currentDevice.type === "Digital"
+                               ? "Digital IC"
+                               : "Select Device Type"
+                         }}
+                         onChange={(selectedOption) => {
+                           setCurrentDevice(prev => ({
+                             ...prev,
+                             type: selectedOption.value,
+                             complexity: ""
+                           }));
+                         }}
+                         options={[
+                           { value: "MMIC", label: "MMIC (Microwave IC)" },
+                           { value: "Digital", label: "Digital IC" }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Complexity (C<sub>1</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         value={{
+                           value: currentComponent.complexity,
+                           label: currentComponent.complexity
+                             ? `${currentComponent.complexity} elements`
+                             : "Select Complexity"
+                         }}
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             complexity: selectedOption.value
+                           }));
+                         }}
+                         options={
+                           currentDevice?.type === "MMIC"
+                             ? [
+                               { value: "1-100", label: "1-100 elements (C₁ = 4.5)" },
+                               { value: "101-1000", label: "101-1000 elements (C₁ = 7.2)" }
+                             ]
+                             : [
+                               { value: "1-1000", label: "1-1000 elements (C₁ = 25)" },
+                               { value: "1001-10000", label: "1001-10000 elements (C₁ = 51)" }
+                             ]
+                         }
+                       />
+                     </div>
+                   </Col>
+     
+     
+                 </>)}
+               {component.type === "Microcircuit,Magnetic Bubble Memories" && (
+                 <>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Environment Factor (π<sub>E</sub>):</label>
+                       <Select
+                         styles={customStyles}
+     
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             environment: selectedOption.value,
+                             piE: selectedOption.piE
+                           }));
+                         }}
+                         options={[
+                           { value: "GB", label: "GB - Ground Benign (πE = 0.50)", piE: 0.50 },
+                           { value: "GF", label: "GF - Ground Fixed (πE = 2.0)", piE: 2.0 },
+                           { value: "GM", label: "GM - Ground Mobile (πE = 4.0)", piE: 4.0 },
+                           { value: "NS", label: "NS - Naval Sheltered (πE = 4.0)", piE: 4.0 },
+                           { value: "NU", label: "NU - Naval Unsheltered (πE = 6.0)", piE: 6.0 },
+                           { value: "AIC", label: "AIC - Airborne Inhabited Cargo (πE = 4.0)", piE: 4.0 },
+                           { value: "AIF", label: "AIF - Airborne Inhabited Fighter (πE = 5.0)", piE: 5.0 },
+                           { value: "AUC", label: "AUC - Airborne Uninhabited Cargo (πE = 5.0)", piE: 5.0 },
+                           { value: "AUF", label: "AUF - Airborne Uninhabited Fighter (πE = 8.0)", piE: 8.0 },
+                           { value: "ARW", label: "ARW - Airborne Rotary Wing (πE = 8.0)", piE: 8.0 },
+                           { value: "SF", label: "SF - Space Flight (πE = 0.50)", piE: 0.50 },
+                           { value: "MF", label: "MF - Missile Flight (πE = 5.0)", piE: 5.0 },
+                           { value: "ML", label: "ML - Missile Launch (πE = 12)", piE: 12 },
+                           { value: "CL", label: "CL - Cannon Launch (πE = 220)", piE: 220 }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Learning Factor (π<sub>L</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         placeholder="Select"
+     
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             yearsInProduction: selectedOption.value,
+                             piL: selectedOption.piL
+                           }));
+                         }}
+                         options={[
+                      
+                           { value: 2.0, label: "≥ 2.0 years (πL = 1.0)", piL: 1.0 }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+     
+     
+                 </>)}
+       </Row>
+     
+             {component.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
+               <>
+                 <Row className="mb-2">
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Device Type for (C<sub>1</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         name="devices"
+                         placeholder="Select"
+                         onChange={(selectedOption) => {
+                           setCurrentComponent({ ...currentComponent, devices: selectedOption.value });
+                         }}
+                         options={[
+                           { value: "bipolarData", label: "Bipolar Digital and Linear Gate" },
+                           { value: "mosData", label: "MOS Digital and Linear Gate" },
+                           { value: "microprocessorData", label: "Microprocessor" }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+     
+                   {/* Device-Specific Sections */}
+                   {currentComponent.devices === "bipolarData" && (
+                     <>
+     
+                       <Col md={4}>
+                         <div className="form-group">
+                           <label>Bipolar Devices for (C<sub>1</sub>):</label>
+     
+                           <Select
+                             styles={customStyles}
+                             className="mt-1"
+                             name="complexFailure"
+                             placeholder="Select"
+                             onChange={(selectedOption) => {
+                               setCurrentComponent({ ...currentComponent, complexFailure: selectedOption.value });
+                             }}
+                             options={[
+                               { value: "digital", label: "Digital" },
+                               { value: "linear", label: "Linear" },
+                               { value: "pla", label: "PLA/PAL" }
+                             ]}
+                           />
+                         </div>
+                       </Col>
+                       <Col md={4}>
+                         {currentComponent.complexFailure && (
+     
+                           <div className="form-group">
+                             <label >
+                               {currentComponent.complexFailure === "linear"
+                                 ? "Transistor Count for C1"
+                                 : "Gate Count for C1"}
+                             </label>
+                             <Select
+                               styles={customStyles}
+                               className="mt-1"
+                               placeholder="select"
+                               name="gateCount"
+     
+                               onChange={(selectedOption) => {
+                                 setCurrentComponent({ ...currentComponent, gateCount: selectedOption.value });
+                               }}
+                               options={
+                                 currentComponent.complexFailure === "digital" ? [
+                                   { value: "1-100", label: "1-100" },
+                                   { value: "101-1000", label: "101-1000" },
+                                   { value: "1001-3000", label: "1001-3000" },
+                                   { value: "3001-10000", label: "3001-10000" },
+                                   { value: "10001-30000", label: "10001-30000" },
+                                   { value: "30001-60000", label: "30001-60000" },
+                                 ] : currentComponent.complexFailure === "linear" ? [
+                                   { value: "1-100", label: "1-100" },
+                                   { value: "101-300", label: "101-300" },
+                                   { value: "301-1000", label: "301-1000" },
+                                   { value: "1001-10000", label: "1001-10000" },
+                                 ] : [
+                                   { value: "1-200", label: "1-200" },
+                                   { value: "201-1000", label: "201-1000" },
+                                   { value: "1001-5000", label: "1001-5000" },
+                                 ]
+                               }
+                             />
+                           </div>
+     
+                         )}
+                       </Col>
+                       <Col md={4}>
+     
+                       </Col>
+     
+                     </>
+     
+                   )}
+     
+                   {/* MOS Devices Section */}
+                   {currentComponent.devices === "mosData" && (
+                     <>
+     
+                       <Col md={4}>
+                         <div className="form-group">
+                           <label>MOS Devices for (C<sub>1</sub>):</label>
+                           <Select
+                             styles={customStyles}
+                             name="complexFailure"
+                             placeholder="Select"
+                             className="mt-1"
+                             onChange={(selectedOption) => {
+                               setCurrentComponent({ ...currentComponent, complexFailure: selectedOption.value });
+                             }}
+                             options={[
+                               { value: "digital", label: "Digital" },
+                               { value: "linear", label: "Linear" },
+                               { value: "pla", label: "PLA/PAL" }
+                             ]}
+                           />
+                         </div>
+                       </Col>
+                       <Col md={4}>
+                         {currentComponent.complexFailure && (
+                           <div className="form-group">
+                             <label>
+                               {currentComponent.complexFailure === "linear"
+                                 ? "Transistor Count for C1"
+                                 : "Gate Count for C1"}
+                             </label>
+                             <Select
+                               styles={customStyles}
+                               placeholder="select"
+                               name="gateCount"
+                               className="mt-1"
+                               onChange={(selectedOption) => {
+                                 setCurrentComponent({ ...currentComponent, gateCount: selectedOption.value });
+                               }}
+                               options={
+                                 currentComponent.complexFailure === "digital" ? [
+                                   { value: "1-100", label: "1-100" },
+                                   { value: "101-1000", label: "101-1000" },
+                                   { value: "1001-3000", label: "1001-3000" },
+                                   { value: "3001-10000", label: "3001-10000" },
+                                   { value: "10001-30000", label: "10001-30000" },
+                                   { value: "30001-60000", label: "30001-60000" },
+                                 ] : currentComponent.complexFailure === "linear" ? [
+                                   { value: "1-100", label: "1-100" },
+                                   { value: "101-300", label: "101-300" },
+                                   { value: "301-1000", label: "301-1000" },
+                                   { value: "1001-10000", label: "1001-10000" },
+                                 ] : [
+                                   { value: "1-500", label: "1-200" },
+                                   { value: "501-1000", label: "201-1000" },
+                                   { value: "2001-5000", label: "1001-5000" },
+                                   { value: "5001-20000", label: "5001-20000" }
+                                 ]
+                               }
+                             />
+                           </div>
+                         )}
+                       </Col>
+     
+                     </>
+                   )}
+     
+                   {/* Microprocessor Section */}
+                   {currentComponent.devices === "microprocessorData" && (
+                     <>
+                       <Col md={4}>
+                         <div className="form-group">
+                           <label>Microprocessor for (C<sub>1</sub>):</label>
+                           <Select
+                             styles={customStyles}
+                             name="complexFailure"
+                             placeholder="Select"
+                             onChange={(selectedOption) => {
+                               setCurrentComponent({
+                                 ...currentComponent,
+                                 complexFailure: selectedOption.value,
+                               });
+                             }}
+                             options={[
+                               { value: "bipolar", label: "Bipolar" },
+                               { value: "mos", label: "MOS" },
+                             ]}
+                           />
+                         </div>
+                       </Col>
+                       <Col md={4}>
+                         {currentComponent.complexFailure && (
+                           <div className="form-group">
+                             <label>
+                               Microprocessor-{currentComponent.complexFailure} for (C<sub>1</sub>):
+                             </label>
+                             <Select
+                               styles={customStyles}
+                               placeholder="select"
+                               name="gateCount"
+                               onChange={(selectedOption) => {
+                                 setCurrentComponent({ ...currentComponent, gateCount: selectedOption.value });
+                               }}
+                               options={
+                                 currentComponent.complexFailure === "MOS" ? [
+                                   { value: "1-8", label: "1-8" },
+                                   { value: "8-16", label: "8-16" },
+                                   { value: "16-32", label: "16-32" },
+                                 ] : [
+                                   { value: "1-8", label: "1-8" },
+                                   { value: "8-16", label: "8-16" },
+                                   { value: "16-32", label: "16-32" },
+                                 ]
+                               }
+                             />
+                           </div>
+                         )}
+                       </Col>
+     
+                     </>
+                   )}
+                 </Row>
+                 {/* Package and Pins Section */}
+                 <Row className="mb-2">
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>No. of Functional Pins for (C<sub>2</sub>):</label>
+                       <input
+                         styles={customStyles}
+                         placeholder="Select"
+                         value={0} // Fixed value set to 0
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             packageType: selectedOption.value,
+                             c2: selectedOption.c2
+                           }));
+                         }}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Quality Factor (π<sub>Q</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         name="qualityFactor"
+                         placeholder="Select Quality Class"
+                         onChange={(selectedOption) => {
+     
+                           setCurrentComponent({
+                             ...currentComponent,
+                             quality: selectedOption.value,
+                             piQ: selectedOption.piQ
+                           });
+                         }}
+                         options={[
+                           // Class S Categories (πQ = 0.25)
+                           // {
+                           //   value: "MIL_M_38510_ClassS",
+                           //   label: "Class S (MIL-M-38510, Class S)",
+                           //   piQ: 0.25, // Store πQ for calculations
+                           //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
+                           // },
+                           // {
+                           //   value: "MIL_I_38535_ClassU",
+                           //   label: "Class S (MIL-I-38535, Class U)",
+                           //   piQ: 0.25,
+                           //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
+                           // },
+                           // {
+                           //   value: "MIL_H_38534_ClassS_Hybrid",
+                           //   label: "Class S Hybrid (MIL-H-38534, Level K)",
+                           //   piQ: 0.25,
+                           //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
+                           // },
+     
+                           // Class B Categories (πQ = 1.0)
+                           {
+                             value: "MIL_M_38510_ClassB",
+                             label: "Class B (MIL-M-38510, Class B) (πQ = 1.0)",
+                             piQ: 1.0,
+                             description: "Procured in full accordance with MIL-M-38510, Class B requirements."
+                           },
+                           {
+                             value: "MIL_I_38535_ClassQ",
+                             label: "Class B (MIL-I-38535, Class Q) (πQ = 1.0)",
+                             piQ: 1.0,
+                             description: "Procured in full accordance with MIL-I-38535 (Class Q)."
+                           },
+                           {
+                             value: "MIL_H_38534_ClassB_Hybrid",
+                             label: "Class B Hybrid (MIL-H-38534, Level H) (πQ = 1.0)",
+                             piQ: 1.0,
+                             description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
+                           },
+     
+                           // Class B-1 Category (πQ = 2.0)
+                           // {
+                           //   value: "MIL_STD_883_ClassB1",
+                           //   label: "Class B-1 (MIL-STD-883)",
+                           //   piQ: 2.0,
+                           //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
+                           // }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Learning Factor (π<sub>L</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         name="learningFactor"
+                         placeholder="Select Years in Production"
+                         onChange={(selectedOption) => {
+                           setCurrentComponent({
+                             ...currentComponent,
+                             yearsInProduction: selectedOption.value,
+                             piL: selectedOption.piL
+                           });
+                         }}
+                         options={[
+                           // {
+                           //   value: 5.1,
+                           //   label: "≤ 0.5 years",
+                           //   piL: 2.0, // Direct value from table
+                           //   description: "Early production phase (highest learning factor)"
+                           // },
+                           // {
+                           //   value: 0.5,
+                           //   label: "0.5 years",
+                           //   piL: 1.8,
+                           //   description: "Initial production ramp-up"
+                           // },
+                           // {
+                           //   value: 1.0,
+                           //   label: "1.0 year",
+                           //   piL: 1.5,
+                           //   description: "Moderate experience"
+                           // },
+                           // {
+                           //   value: 1.5,
+                           //   label: "1.5 years",
+                           //   piL: 1.2,
+                           //   description: "Stabilizing production"
+                           // },
+                           {
+                             value: 2.0,
+                             label: "≥ 2.0 years (πL = 1.0)",
+                             piL: 1.0,
+                             description: "Mature production (lowest learning factor)"
+                           }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Technology Type (π<sub>T</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         name="technology"
+                         placeholder="Select Technology Type"
+                         onChange={(selectedOption) => {
+                           setCurrentComponent({
+                             ...currentComponent,
+                             technology: selectedOption.value,
+                             technologyType: selectedOption.label,
+                             // Reset calculatedPiT when technology changes
+                             calculatedPiT: calculatePiT(
+                               selectedOption.value,
+                               currentComponent.temperature || 25, // Default to 25°C if not set
+                               selectedOption.Ea // Pass the correct Ea for the technology
+                             )
+                           });
+                         }}
+                         options={[
+                           {
+                             value: "TTL,ASTTL,CML",
+                             label: "TTL/ASTTL/CML (Bipolar Logic)",
+                             description: "Standard TTL, Advanced Schottky TTL, and Current Mode Logic",
+                             Ea: 0.4
+                           },
+                           {
+                             value: "F,LTTL,STTL",
+                             label: "F/LTTL/STTL (Fast/Low-Power TTL)",
+                             description: "Fast, Low-Power, and Schottky TTL variants",
+                             Ea: 0.45
+                           },
+                           {
+                             value: "BiCMOS",
+                             label: "BiCMOS (Bipolar CMOS Hybrid)",
+                             description: "Combines bipolar and CMOS technologies",
+                             Ea: 0.5
+                           },
+                           {
+                             value: "III,f¹,ISL",
+                             label: "III/f¹/ISL (Advanced Silicon)",
+                             description: "High-speed/radiation-hardened silicon logic",
+                             Ea: 0.6
+                           },
+                           {
+                             value: "Digital MOS",
+                             label: "Digital MOS (CMOS, VHSIC)",
+                             description: "CMOS and VHSIC digital technologies",
+                             Ea: 0.35
+                           },
+                           {
+                             value: "Linear",
+                             label: "Linear Analog (Bipolar/MOS)",
+                             description: "Linear analog circuits (op-amps, regulators)",
+                             Ea: 0.65
+                           },
+                           {
+                             value: "Memories",
+                             label: "Memories (Bipolar/MOS)",
+                             description: "Memory chips (RAM, ROM, etc.)",
+                             Ea: 0.6
+                           },
+                           {
+                             value: "GaAs MMIC",
+                             label: "GaAs MMIC (RF/Microwave)",
+                             description: "Gallium Arsenide microwave/RF components",
+                             Ea: 1.5
+                           },
+                           {
+                             value: "GaAs Digital",
+                             label: "GaAs Digital (High-Speed Logic)",
+                             description: "Gallium Arsenide digital logic",
+                             Ea: 1.4
+                           }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Junction Temperature (°C) for (π<sub>T</sub>):</label>
+                       <input
+                         className="form-group"
+                         style={{
+                           width: "100%",
+                           padding: "0.375rem 0.75rem",
+                           fontSize: "1rem",
+                           lineHeight: "1.5",
+                           color: "#495057",
+                           backgroundColor: "#fff",
+                           border: "1px solid #ced4da",
+                           borderRadius: "0.25rem"
+                         }}
+                         type="number"
+                         name="temperature"
+                         min="-40"
+                         max="175"
+                         value={currentComponent.temperature}
+                         onChange={handleInputChange}
+                       />
+                       <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+                     </div>
+                   </Col>
+                    <Col md={4}>
+                              <div className="form-group">
+                                <label>Quantity:</label>
+                               <input
+                                   type="number"
+                                   className="form-control"
+                                   min="1"
+                                   value={component.quantity || ''}
+                                   onChange={(e) => {
+                                     const inputValue = e?.target?.value;
+                                     const newQuantity = inputValue === '' ? 1 : Math.max(1, parseInt(inputValue));
+                                     updateComponent(component.id, {
+                                       quantity: newQuantity,
+                                       totalFailureRate: (component.failureRate || 0) * newQuantity
+                                     });
+                                   }}
+                                 />
+                               </div>
+                             </Col>
+                 </Row>
+     
+                 <Button
+                   className="btn-calculate float-end mt-1"
+                   onClick={calculateGateFailureRate}
+                 >
+                   Calculate FR
+                 </Button>
+     
+                 <br />
+     
+                 {results && (
+     
+                   handleCalculateGate(calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)*component?.quantity?.toFixed(4))
+                 )}
+                 {results && (
+                   <>
+     
+     
+     
+                     <div>
+                       <p className="mb-1">
+                         <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                         {calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)?.toFixed(4)}failures/10<sup>6</sup> hours
+                       </p>
+         <p className="mb-1">
+                         <strong> λ<sub>c</sub> * N<sub>c</sub>:</strong>
+                         {calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent) * component?.quantity?.toFixed(2)}failures/10<sup>6</sup> hours
+                         {console.log("CalculateGate..",calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent) * component?.quantity)}
+                       </p>
+                     </div>
+     
+     
+                   </>
+                 )}
+     
+               </>
+             )}
+     
+             {component.type === "Microcircuits,Memories" && (
+               <>
+                 <Row >
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Memory Technology for (B<sub>1</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         name="memoryTech"
+                         placeholder="Select Technology"
+                         value={currentComponent.memoryTechOption}
+                         isDisabled={!currentComponent.memorySizeB1}
+                         onChange={(selectedOption) => {
+                           const updatedComponent = {
+                             ...currentComponent,
+                             memoryTechOption: selectedOption,
+                             memoryTech: selectedOption.value,
+                        
+                             B1: getBValueForTemp(
+                               selectedOption.value,  // memoryTech first
+                               currentComponent.memorySizeB1,  // then memorySize
+                               25,  // default temperature
+                               'B1'
+                             ),
+     
+                             techTemperatureB1: 25  // Set default temperature
+                           };
+                           setCurrentComponent(updatedComponent);
+                           updateComponentInList(updatedComponent);
+                         }}
+                         options={[
+                           {
+                             value: "Flotox",
+                             label: "Flotox (B₁ only)",
+                             description: "Uses B₁ factor only"
+                           },
+                           {
+                             value: "Textured-Poly-B1",
+                             label: "Textured-Poly (B₁)",
+                             description: "Textured-Poly with B₁ factor"
+                           },
+                        
+                         ]}
+                         className="factor-select"
+                       />
+                     </div>
+                   </Col>
+                   {/* For B₁ Calculation */}
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Memory Size for B₁:</label>
+                       <Select
+                         styles={customStyles}
+                         name="memorySizeB1"
+                         placeholder="Select Memory Size"
+                         value={currentComponent.memorySizeB1Option}
+                         onChange={(selectedOption) => {
+                           const updatedComponent = {
+                             ...currentComponent,
+                             memorySizeB1Option: selectedOption,
+                             memorySizeB1: selectedOption.value,
+                             B1: getBValueForTemp(
+                               currentComponent.memoryTech,
+                               selectedOption.value,
+                               currentComponent.techTemperatureB1 || 25,
+                               'B1'
+                             )
+                           };
+                           setCurrentComponent(updatedComponent);
+                           updateComponentInList(updatedComponent);
+                         }}
+                         options={[
+                           { value: 4096, label: "4K" },
+                           { value: 16384, label: "16K" },
+                           { value: 65536, label: "64K" },
+                           { value: 262144, label: "256K" },
+                           { value: 1048576, label: "1M" }
+                         ]}
+                         className="factor-select"
+                       />
+                     </div>
+                   </Col>
+              
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Junction Temperature for B₁ (°C):</label>
+                       <input
+                         name="techTemperatureB1"
+                         type="number"
+                         min="25"
+                         max="175"
+                         step="1"
+                         value={currentComponent.techTemperatureB1 ?? ''}
+                         onChange={(e) => {
+                           const rawValue = e?.target?.value;
+                           const temp = rawValue === '' ? null : Number(rawValue);
+                           const updatedComponent = {
+                             ...currentComponent,
+                             techTemperatureB1: temp,
+                             B1: (temp !== null && currentComponent.memoryTech && currentComponent.memorySizeB1)
+                               ? getBValueForTemp(
+                                 currentComponent.memoryTech,
+                                 currentComponent.memorySizeB1,
+                                 temp,
+                                 'B1'
+                               )
+                               : null
+                           };
+                           setCurrentComponent(updatedComponent);
+                           updateComponentInList(updatedComponent);
+                         }}
+                         onBlur={(e) => {
+                           let temp = currentComponent.techTemperatureB1;
+                           if (temp === null || isNaN(temp)) temp = 25;
+                           else if (temp < 25) temp = 25;
+                           else if (temp > 175) temp = 175;
+                           else temp = Math.round(temp);
+     
+                           if (temp !== currentComponent.techTemperatureB1) {
+                             const updatedComponent = {
+                               ...currentComponent,
+                               techTemperatureB1: temp,
+                               B1: (currentComponent.memoryTech && currentComponent.memorySizeB1)
+                                 ? getBValueForTemp(
+                                   currentComponent.memoryTech,
+                                   currentComponent.memorySizeB1,
+                                   temp,
+                                   'B1'
+                                 )
+                                 : null
+                             };
+                             setCurrentComponent(updatedComponent);
+                             updateComponentInList(updatedComponent);
+                           }
+                         }}
+                         placeholder="25-175°C"
+                       />
+                       {currentComponent.B1 !== null && (
+                         <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                           Calculated B₁: {currentComponent.B1?.toFixed(6) || 'N/A'}
+                         </div>
+                       )}
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Memory Size  (Textured-Poly<sup>3</sup> )for B₂:</label>
+                       <Select
+                         styles={customStyles}
+                         name="memorySizeB2"
+                         placeholder="Select Memory Size"
+                         value={currentComponent?.memorySizeB2Option}
+                         onChange={(selectedOption) => {
+                           const updatedComponent = {
+                             ...currentComponent,
+                             memorySizeB2Option: selectedOption,
+                             memorySizeB2: selectedOption.value,
+                             B2: getBValueForTemp(
+                               'Textured-Poly-B2',
+     
+                               selectedOption.value,
+                               currentComponent.techTemperatureB2 || 25,
+                               'B2'
+                             )
+                           };
+                           setCurrentComponent(updatedComponent);
+                           updateComponentInList(updatedComponent);
+                         }}
+                         options={[
+                           { value: 0, label: "Flotox & Textured-Poly²" },
+                           { value: 4096, label: "4K" },
+                           { value: 16384, label: "16K" },
+                           { value: 65536, label: "64K" },
+                           { value: 262144, label: "256K" },
+                           { value: 1024000, label: "1M" }
+                         ]}
+                         className="factor-select"
+                       />
+                     </div>
+                     {console.log('currentComponent.memorySizeB2', currentComponent.memorySizeB2)}
+     
+                     {currentComponent.memorySizeB2 == 0 && (
+                       <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                         Calculated B₂: 0
+                       </div>
+                     )}
+                   </Col>
+     
+     
+                   {currentComponent.memorySizeB2 !== 0 && (
+                     <Col md={4}>
+                       <div className="form-group">
+                         <label>Junction Temperature for B₂ (°C):</label>
+                         <input
+                           name="techTemperatureB2"
+                           type="number"
+                           min="25"
+                           max="175"
+                           step="1"
+                           value={currentComponent.techTemperatureB2 ?? ''}
+                           onChange={(e) => {
+                             const rawValue = e?.target?.value;
+                             const temp = rawValue === '' ? null : Number(rawValue);
+     
+                             if (temp !== currentComponent.techTemperatureB2) {
+                               const updatedComponent = {
+                                 ...currentComponent,
+                                 techTemperatureB2: temp,
+                                 B2: getBValueForTemp(
+                                   'Textured-Poly-B2',
+                                   currentComponent.memorySizeB2,
+                                   temp,
+                                   'B2'
+                                 )
+                               };
+                               setCurrentComponent(updatedComponent);
+                               updateComponentInList(updatedComponent);
+                             }
+                           }}
+                           onBlur={(e) => {
+                             let temp = currentComponent.techTemperatureB2;
+                             if (temp === null || isNaN(temp)) temp = 25;
+                             else if (temp < 25) temp = 25;
+                             else if (temp > 175) temp = 175;
+                             else temp = Math.round(temp);
+     
+                             if (temp !== currentComponent.techTemperatureB2) {
+                               const updatedComponent = {
+                                 ...currentComponent,
+                                 techTemperatureB2: temp,
+                                 B2: getBValueForTemp(
+                                   'Textured-Poly-B2',
+                                   currentComponent.memorySizeB2,
+                                   temp,
+                                   'B2'
+                                 )
+                               };
+                               setCurrentComponent(updatedComponent);
+                               updateComponentInList(updatedComponent);
+                             }
+                           }}
+                           placeholder="25-175°C"
+                         />
+     
+                         {currentComponent.B2 !== null && (
+                           <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
+                             Calculated B₂: {currentComponent.B2?.toFixed(6)}
+                           </div>
+                         )}
+                       </div>
+                     </Col>
+                   )}
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Memory Type for (C<sub>1</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         options={dieComplexityRates?.map(item => ({
+                           value: item,
+                           label: item.type
+                         }))}
+                         value={{
+                           value: inputs.memoryType,
+                           label: inputs.memoryType.type
+                         }}
+                         onChange={(selectedOption) => setInputs(prev => ({
+                           ...prev,
+                           memoryType: selectedOption.value,
+                           memorySize: selectedOption.value.rates[0]
+                         }))}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Memory Size (C<sub>1</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         options={inputs.memoryType.rates?.map(item => ({
+                           value: item,
+                           label: item.size
+                         }))}
+                         value={{
+                           value: inputs.memorySize,
+                           label: inputs.memorySize.size
+                         }}
+                         onChange={(selectedOption) => setInputs(prev => ({
+                           ...prev,
+                           memorySize: selectedOption.value
+                         }))}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Technology Type for (π<sub>T</sub>) :</label>
+                       <Select
+                         styles={customStyles}
+                         name="technology"
+                         placeholder="Select Technology Type"
+                         onChange={(selectedOption) => {
+                           setCurrentComponent({
+                             ...currentComponent,
+                             technology: selectedOption.value,
+                             technologyType: selectedOption.label,
+                          
+                             calculatedPiT: calculatePiT(
+                               selectedOption.value,
+                               currentComponent.temperature || 25, // Default to 25°C if not set
+                               selectedOption.Ea // Pass the correct Ea for the technology
+                             )
+                           });
+                         }}
+                         options={[
+                           {
+                             value: "TTL,ASTTL,CML",
+                             label: "TTL/ASTTL/CML (Bipolar Logic)",
+                             description: "Standard TTL, Advanced Schottky TTL, and Current Mode Logic",
+                             Ea: 0.4
+                           },
+                           {
+                             value: "F,LTTL,STTL",
+                             label: "F/LTTL/STTL (Fast/Low-Power TTL)",
+                             description: "Fast, Low-Power, and Schottky TTL variants",
+                             Ea: 0.45
+                           },
+                           {
+                             value: "BiCMOS",
+                             label: "BiCMOS (Bipolar CMOS Hybrid)",
+                             description: "Combines bipolar and CMOS technologies",
+                             Ea: 0.5
+                           },
+                           {
+                             value: "III,f¹,ISL",
+                             label: "III/f¹/ISL (Advanced Silicon)",
+                             description: "High-speed/radiation-hardened silicon logic",
+                             Ea: 0.6
+                           },
+                           {
+                             value: "Digital MOS",
+                             label: "Digital MOS (CMOS, VHSIC)",
+                             description: "CMOS and VHSIC digital technologies",
+                             Ea: 0.35
+                           },
+                           {
+                             value: "Linear",
+                             label: "Linear Analog (Bipolar/MOS)",
+                             description: "Linear analog circuits (op-amps, regulators)",
+                             Ea: 0.65
+                           },
+                           {
+                             value: "Memories",
+                             label: "Memories (Bipolar/MOS)",
+                             description: "Memory chips (RAM, ROM, etc.)",
+                             Ea: 0.6
+                           },
+                           {
+                             value: "GaAs MMIC",
+                             label: "GaAs MMIC (RF/Microwave)",
+                             description: "Gallium Arsenide microwave/RF components",
+                             Ea: 1.5
+                           },
+                           {
+                             value: "GaAs Digital",
+                             label: "GaAs Digital (High-Speed Logic)",
+                             description: "Gallium Arsenide digital logic",
+                             Ea: 1.4
+                           }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Junction Temperature (°C) for (π<sub>T</sub>) :</label>
+                       <input
+                         className="form-group"
+                         style={{
+                           width: "100%",
+                           padding: "0.375rem 0.75rem",
+                           fontSize: "1rem",
+                           lineHeight: "1.5",
+                           color: "#495057",
+                           backgroundColor: "#fff",
+                           border: "1px solid #ced4da",
+                           borderRadius: "0.25rem"
+                         }}
+                         type="number"
+                         name="temperature"
+                         min="-40"
+                         max="175"
+                         value={currentComponent.temperature}
+                         onChange={handleInputChange1}
+                       />
+                       <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+                     </div>
+                   </Col>
+     
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>No. of Functional Pins for (C<sub>2</sub>):</label>
+                       <input
+                         styles={customStyles}
+                         placeholder="Select"
+                         value={0} // Fixed value set to 0
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             packageType: selectedOption.value,
+                             c2: selectedOption.c2
+                           }));
+                         }}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Learning Factor (π<sub>L</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         name="learningFactor"
+                         placeholder="Select Years in Production"
+                         onChange={(selectedOption) => {
+                           setCurrentComponent({
+                             ...currentComponent,
+                             yearsInProduction: selectedOption.value,
+                             piL: selectedOption.piL
+                           });
+                         }}
+                         options={[
+                    
+                           {
+                             value: 2.0,
+                             label: "≥ 2.0 years (πL = 1.0)",
+                             piL: 1.0,
+                             description: "Mature production (lowest learning factor)"
+                           }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+                              <Col md={4}>
+                              <div className="form-group">
+                                <label>Quantity:</label>
+                               <input
+                                   type="number"
+                                   className="form-control"
+                                   min="1"
+                                   value={component.quantity || ''}
+                                   onChange={(e) => {
+                                     const inputValue = e?.target?.value;
+                                     const newQuantity = inputValue === '' ? 1 : Math.max(1, parseInt(inputValue));
+                                     updateComponent(component.id, {
+                                       quantity: newQuantity,
+                                       totalFailureRate: (component.failureRate || 0) * newQuantity
+                                     });
+                                   }}
+                                 />
+                               </div>
+                             </Col>
+                 </Row>
+     
+     
+                 <Button
+                   variant="primary"
+                   onClick={calculateMemoriesFailureRate}
+     
+                   className="btn-calculate float-end mt-1"
+                 >
+                   Calculate FR
+                 </Button>
+                 {result1 && (
+                   handleCalculateMemories(result1?.value * component?.quantity)
+                 )}
+     
+     
+                 {result1 && (
+                   <>
+     
+                     <div className="d-flex align-items-center">
+                       <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                       <span className="ms-2">{result1?.value} failures/10<sup>6</sup> hours</span>
+                          <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                       <span className="ms-2">{result1?.value * component?.quantity} failures/10<sup>6</sup> hours</span>
+                       {console.log("calculateMemories..",result1?.value * component?.quantity)}
+                     </div>
+                   </>
+                 )}
+     
+               </>
+             )}
+             {component.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
+               <>
+                 <Row className="mb-3">
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Environment (π<sub>E</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         placeholder="Select Environment"
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             environment: selectedOption.value,
+                             piE: selectedOption.piE
+                           }));
+                         }}
+                         options={[
+                           { value: "GB", label: "Ground Benign (πE = 0.5)", piE: 0.5 },
+                           { value: "GF", label: "Ground Fixed (πE = 2.0)", piE: 2.0 },
+                           { value: "GM", label: "Ground Mobile (πE = 4.0)", piE: 4.0 },
+                           { value: "NS", label: "Naval Sheltered (πE = 4.0)", piE: 4.0 },
+                           { value: "NU", label: "Naval Unsheltered (πE = 6.0)", piE: 6.0 },
+                           { value: "AIC", label: "Airborne Cargo (πE = 4.0)", piE: 4.0 },
+                           { value: "AIF", label: "Airborne Fighter (πE = 5.0)", piE: 5.0 },
+                           { value: "AUC", label: "Airborne Uninhabited Cargo (πE = 5.0)", piE: 5.0 },
+                           { value: "AUF", label: "Airborne Uninhabited Fighter (πE = 8.0)", piE: 8.0 },
+                           { value: "ARW", label: "Airborne Rotary Wing (πE = 8.0)", piE: 8.0 },
+                           { value: "SF", label: "Space Flight (πE = 0.5)", piE: 0.5 },
+                           { value: "MF", label: "Missile Flight (πE = 5.0)", piE: 5.0 },
+                           { value: "ML", label: "Missile Launch (πE = 12)", piE: 12 },
+                           { value: "CL", label: "Cannon Launch (πE = 220)", piE: 220 }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>No. of Functional Pins for (C<sub>2</sub>):</label>
+                       <input
+                         styles={customStyles}
+                         placeholder="Select"
+                         value={0} // Fixed value set to 0
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             packageType: selectedOption.value,
+                             c2: selectedOption.c2
+                           }));
+                         }}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Application Factor (π<sub>A</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         placeholder="Select"
+     
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             application: selectedOption.value,
+                             piA: selectedOption.piA
+                           }));
+                         }}
+                         options={[
+                           { value: "LowNoiseLowPower", label: "Low Noise & Low Power (πA = 1.0)", piA: 1.0 },
+                           { value: "DriverHighPower", label: "Driver & High Power (πA = 3.0)", piA: 3.0 },
+                           { value: "Unknown", label: "Unknown (πA = 3.0)", piA: 3.0 },
+                           { value: "Digital", label: "Digital Applications (πA = 1.0)", piA: 1.0 }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+     
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Learning Factor (π<sub>L</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         placeholder="Select"
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             yearsInProduction: selectedOption.value,
+                             piL: selectedOption.piL
+                           }));
+                         }}
+                         options={[
+                           { value: 2.0, label: "≥ 2.0 years (πL = 1.0)", piL: 1.0 }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Quality Factor (π<sub>Q</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         placeholder="Select"
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             quality: selectedOption.value,
+                             piQ: selectedOption.piQ
+                           }));
+                         }}
+                         options={[
+                  
+                           {
+                             value: "MIL_M_38510_ClassB",
+                             label: "Class B (MIL-M-38510, Class B) (πQ = 1.0)",
+                             piQ: 1.0,
+                             description: "Procured in full accordance with MIL-M-38510, Class B requirements."
+                           },
+                           {
+                             value: "MIL_I_38535_ClassQ",
+                             label: "Class B (MIL-I-38535, Class Q) (πQ = 1.0)",
+                             piQ: 1.0,
+                             description: "Procured in full accordance with MIL-I-38535 (Class Q)."
+                           },
+                           {
+                             value: "MIL_H_38534_ClassB_Hybrid",
+                             label: "Class B Hybrid (MIL-H-38534, Level H) (πQ = 1.0)",
+                             piQ: 1.0,
+                             description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
+                           },
+                   
+                         ]}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Technology Type for (π<sub>T</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         name="technology"
+                         placeholder="Select Technology Type"
+                         onChange={(selectedOption) => {
+                           setCurrentComponent({
+                             ...currentComponent,
+                             technology: selectedOption.value,
+                             technologyType: selectedOption.label,
+                          
+                             calculatedPiT: calculatePiT(
+                               selectedOption.value,
+                               currentComponent.temperature || 25, 
+                               selectedOption.Ea 
+                             )
+                           });
+                         }}
+                         options={[
+                           {
+                             value: "TTL,ASTTL,CML",
+                             label: "TTL/ASTTL/CML (Bipolar Logic)",
+                             description: "Standard TTL, Advanced Schottky TTL, and Current Mode Logic",
+                             Ea: 0.4
+                           },
+                           {
+                             value: "F,LTTL,STTL",
+                             label: "F/LTTL/STTL (Fast/Low-Power TTL)",
+                             description: "Fast, Low-Power, and Schottky TTL variants",
+                             Ea: 0.45
+                           },
+                           {
+                             value: "BiCMOS",
+                             label: "BiCMOS (Bipolar CMOS Hybrid)",
+                             description: "Combines bipolar and CMOS technologies",
+                             Ea: 0.5
+                           },
+                           {
+                             value: "III,f¹,ISL",
+                             label: "III/f¹/ISL (Advanced Silicon)",
+                             description: "High-speed/radiation-hardened silicon logic",
+                             Ea: 0.6
+                           },
+                           {
+                             value: "Digital MOS",
+                             label: "Digital MOS (CMOS, VHSIC)",
+                             description: "CMOS and VHSIC digital technologies",
+                             Ea: 0.35
+                           },
+                           {
+                             value: "Linear",
+                             label: "Linear Analog (Bipolar/MOS)",
+                             description: "Linear analog circuits (op-amps, regulators)",
+                             Ea: 0.65
+                           },
+                           {
+                             value: "Memories",
+                             label: "Memories (Bipolar/MOS)",
+                             description: "Memory chips (RAM, ROM, etc.)",
+                             Ea: 0.6
+                           },
+                           {
+                             value: "GaAs MMIC",
+                             label: "GaAs MMIC (RF/Microwave)",
+                             description: "Gallium Arsenide microwave/RF components",
+                             Ea: 1.5
+                           },
+                           {
+                             value: "GaAs Digital",
+                             label: "GaAs Digital (High-Speed Logic)",
+                             description: "Gallium Arsenide digital logic",
+                             Ea: 1.4
+                           }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Junction Temperature (°C) (π<sub>T</sub>):</label>
+                       <input
+                         className="form-group"
+                         style={{
+                           width: "100%",
+                           padding: "0.375rem 0.75rem",
+                           fontSize: "1rem",
+                           lineHeight: "1.5",
+                           color: "#495057",
+                           backgroundColor: "#fff",
+                           border: "1px solid #ced4da",
+                           borderRadius: "0.25rem"
+                         }}
+                         type="number"
+                         name="temperature"
+                         min="-40"
+                         max="175"
+                         value={currentComponent.temperature}
+                         onChange={handleInputChange2}
+                       />
+                       <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+                     </div>
+                   </Col>
+          <Col md={4}>
+                              <div className="form-group">
+                                <label>Quantity:</label>
+                               <input
+                                   type="number"
+                                   className="form-control"
+                                   min="1"
+                                   value={component.quantity || ''}
+                                   onChange={(e) => {
+                                     const inputValue = e?.target?.value;
+                                     const newQuantity = inputValue === '' ? 1 : Math.max(1, parseInt(inputValue));
+                                     updateComponent(component.id, {
+                                       quantity: newQuantity,
+                                       totalFailureRate: (component.failureRate || 0) * newQuantity
+                                     });
+                                   }}
+                                 />
+                               </div>
+                             </Col>
+                 </Row>
+     
+     
+                 <Button
+                   variant="primary"
+                   onClick={calculateGaAsFailureRate}
+                   className="btn-calculate float-end mb-4"
+                 >
+                   Calculate FR
+                 </Button>
+     
+                 {result2 && (
+                   handleCalculateGaAs(result2?.value * component?.quantity)
+                 )}
+     
+     
+                 {result2 && (
+                   <>
+     
+                     <div className="d-flex align-items-center">
+                       <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                       <span className="ms-3">{result2?.value} failures/10<sup>6</sup> hours</span>
+                             <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                       <span className="ms-3">{result2?.value * component?.quantity} failures/10<sup>6</sup> hours</span>
+                       {console.log("calculateGaAs..",result2?.value * component?.quantity)}
+                     </div>
+                   </>
+                 )}
+     
+               </>
+             )}
+             <br />
+             {component.type === "Microcircuit,Magnetic Bubble Memories" && (
+               <>
+                 <Row className="mb-3">
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Number of Bubble Chips per Package (N<sub>C</sub>):</label>
+                       <input
+                         className="form-control"
+                         type="number"
+                         name="bubbleChips"
+                         min="1"
+                         value={currentComponent.bubbleChips || ''}
+                         onChange={handleInputChange3}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Dissipative Elements (N<sub>1</sub>):</label>
+                       <input
+                         className="form-control"
+                         type="number"
+                         name="dissipativeElements"
+                         min="1"
+                         max="1000"
+                         value={currentComponent.dissipativeElements || ''}
+                         onChange={handleInputChange3}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Number of Bits (N<sub>2</sub>):</label>
+                       <input
+                         className="form-control"
+                         type="number"
+                         name="numberOfBits"
+                         min="1"
+                         max="9000000"
+                         value={currentComponent.numberOfBits || ''}
+                         onChange={handleInputChange3}
+                       />
+                     </div>
+                   </Col>
+                 </Row>
+     
+                 <Row className="mb-3">
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>No. of Functional Pins for (C<sub>2</sub>):</label>
+                       <input
+                         styles={customStyles}
+                         placeholder="Select"
+                         value={0} // Fixed value set to 0
+                         readOnly
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Duty Cycle Factor (π<sub>D</sub>):</label>
+                       <input
+                         className="form-control"
+                         type="number"
+                         name="dutyCycle"
+                         min="0"
+                         max="1"
+                         step="0.01"
+                         value={currentComponent.dutyCycle || ''}
+                         onChange={handleInputChange3}
+                       />
+                       <small className="form-text text-muted">
+                         π<sub>D</sub> = 0.9D + 0.1 (D ≤ 1)
+                       </small>
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Quality Factor (π<sub>Q</sub>):</label>
+                       <Select
+                         styles={customStyles}
+                         placeholder="Select"
+     
+                         onChange={(selectedOption) => {
+                           setCurrentComponent(prev => ({
+                             ...prev,
+                             quality: selectedOption.value,
+                             piQ: selectedOption.piQ
+                           }));
+                         }}
+                         options={[
+                           // Class S Categories (πQ = 0.25)
+                           // {
+                           //   value: "MIL_M_38510_ClassS",
+                           //   label: "Class S (MIL-M-38510, Class S)",
+                           //   piQ: 0.25, // Store πQ for calculations
+                           //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
+                           // },
+                           // {
+                           //   value: "MIL_I_38535_ClassU",
+                           //   label: "Class S (MIL-I-38535, Class U)",
+                           //   piQ: 0.25,
+                           //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
+                           // },
+                           // {
+                           //   value: "MIL_H_38534_ClassS_Hybrid",
+                           //   label: "Class S Hybrid (MIL-H-38534, Level K)",
+                           //   piQ: 0.25,
+                           //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
+                           // },
+     
+                           // Class B Categories (πQ = 1.0)
+                           {
+                             value: "MIL_M_38510_ClassB",
+                             label: "Class B (MIL-M-38510, Class B) (πQ = 1.0)",
+                             piQ: 1.0,
+                             description: "Procured in full accordance with MIL-M-38510, Class B requirements."
+                           },
+                           {
+                             value: "MIL_I_38535_ClassQ",
+                             label: "Class B (MIL-I-38535, Class Q) (πQ = 1.0)",
+                             piQ: 1.0,
+                             description: "Procured in full accordance with MIL-I-38535 (Class Q)."
+                           },
+                           {
+                             value: "MIL_H_38534_ClassB_Hybrid",
+                             label: "Class B Hybrid (MIL-H-38534, Level H) (πQ = 1.0)",
+                             piQ: 1.0,
+                             description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
+                           },
+     
+                           // Class B-1 Category (πQ = 2.0)
+                           // {
+                           //   value: "MIL_STD_883_ClassB1",
+                           //   label: "Class B-1 (MIL-STD-883)",
+                           //   piQ: 2.0,
+                           //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
+                           // }
+                         ]}
+                       />
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Case Temperature (°C):</label>
+                       <input
+                         className="form-control"
+                         type="number"
+                         name="tcase"
+                         min="25"
+                         max="175"
+                         value={currentComponent.tcase || ''}
+                         onChange={handleInputChange3}
+                       />
+                       <small className="form-text text-muted">
+                         T<sub>CASE</sub> = Measured case temperature
+                       </small>
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Junction Temperature (°C) (π<sub>T</sub>):</label>
+                       <input
+                         className="form-control"
+                         type="number"
+                         name="temperature"
+                         min="25"
+                         max="175"
+                         value={currentComponent.tcase ? Number(currentComponent.tcase) + 10 : ''}
+                         isDisabled={currentComponent.tcase}
+                         readOnly
+                       />
+                       <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+     
+                     </div>
+                   </Col>
+     
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Reads per Write (R/W) for (π<sub>W</sub>):</label>
+                       <input
+                         className="form-control"
+                         type="number"
+                         name="readsPerWrite"
+                         min="1"
+                         value={currentComponent.readsPerWrite || ''}
+                         onChange={handleInputChange3}
+                       />
+                     </div>
+                   </Col>
+                   <Col md={4}>
+                     <div className="form-group">
+                       <label>Write Duty Cycle Factor (π<sub>W</sub>):</label>
+                       <input
+                         className="form-control"
+                         type="number"
+                         name="writeDutyCycle"
+                         min="0"
+                         max="1"
+                         step="0.01"
+                         value={currentComponent.writeDutyCycle || ''}
+                         onChange={handleInputChange3}
+                       />
+                       <small className="form-text text-muted">
+                         D = Avg. Device Data Rate / Mfg. Max. Rated Data Rate (≤ 1)
+                       </small>
+                     </div>
+                   </Col>
+                       <Col md={4}>
+                              <div className="form-group">
+                                <label>Quantity:</label>
+                               <input
+                                   type="number"
+                                   className="form-control"
+                                   min="1"
+                                   value={component.quantity || ''}
+                                   onChange={(e) => {
+                                     const inputValue = e?.target?.value;
+                                     const newQuantity = inputValue === '' ? 1 : Math.max(1, parseInt(inputValue));
+                                     updateComponent(component.id, {
+                                       quantity: newQuantity,
+                                       totalFailureRate: (component.failureRate || 0) * newQuantity
+                                     });
+                                   }}
+                                 />
+                               </div>
+                             </Col>
+                 </Row>
+     
+     
+                 <Button
+                   variant="primary"
+                   onClick={calculateBubbleMemoryFailureRate}
+                   className="btn-calculate float-end mb-4"
+                 >
+                   Calculate FR
+                 </Button>
+     
+                 {result3 && (
+                   handleCalculateBubble(result3?.value *component?.quantity)
+                 )}
+     
+                 {result3 && (
+                   <>
+     
+                     <div className="d-flex align-items-center">
+                       <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                       <span className="ms-2">{result3?.value} failures/10<sup>6</sup> hours</span>
+                         <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                       <span className="ms-2">{result3?.value *component?.quantity} failures/10<sup>6</sup> hours</span>
+                       {console.log("CalculateBubble..",result3?.value *component?.quantity)}
+                     </div>
+                   </>
+                 )}
+     
+               </>
+     
+             )}
+        
+        {component?.failureRate > 0 && (
+          <div className="prediction-result" style={{ marginTop: '20px' }}>
+            <strong>Predicted Failure Rate:</strong>
+            <span className="ms-2">{component?.failureRate?.toFixed(6)} failures/10<sup>6</sup> hours</span>
             <br />
-
-            {results && (
-
-              handleCalculateGate(calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)?.toFixed(4))
-            )}
-            {results && (
-              <>
-
-
-
-                <div>
-                  <p className="mb-1">
-                    <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                    {calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)?.toFixed(4)}failures/10<sup>6</sup> hours
-                  </p>
-
-                </div>
-
-
-              </>
-            )}
-
-          </>
+            <strong>Total :</strong>
+            <span className="ms-2">
+              {component?.total?.toFixed(6)} failures/10<sup>6</sup> hours
+            </span>
+          </div>
         )}
 
-        {currentComponent.type === "Microcircuits,Memories" && (
-          <>
-            <Row >
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Memory Technology for (B<sub>1</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="memoryTech"
-                    placeholder="Select Technology"
-                    value={currentComponent.memoryTechOption}
-                    isDisabled={!currentComponent.memorySizeB1}
-                    onChange={(selectedOption) => {
-                      const updatedComponent = {
-                        ...currentComponent,
-                        memoryTechOption: selectedOption,
-                        memoryTech: selectedOption.value,
-                        // Calculate initial B values at default 25°C
-                        B1: getBValueForTemp(
-                          selectedOption.value,  // memoryTech first
-                          currentComponent.memorySizeB1,  // then memorySize
-                          25,  // default temperature
-                          'B1'
-                        ),
-
-                        techTemperatureB1: 25  // Set default temperature
-                      };
-                      setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
-                    options={[
-                      {
-                        value: "Flotox",
-                        label: "Flotox (B₁ only)",
-                        description: "Uses B₁ factor only"
-                      },
-                      {
-                        value: "Textured-Poly-B1",
-                        label: "Textured-Poly (B₁)",
-                        description: "Textured-Poly with B₁ factor"
-                      },
-                      // {
-                      //   value: "Textured-Poly-B2",
-                      //   label: "Textured-Poly (B₂)",
-                      //   description: "Textured-Poly with B₂ factor"
-                      // }
-                    ]}
-                    className="factor-select"
-                  />
-                </div>
-              </Col>
-              {/* For B₁ Calculation */}
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Memory Size for B₁:</label>
-                  <Select
-                    styles={customStyles}
-                    name="memorySizeB1"
-                    placeholder="Select Memory Size"
-                    value={currentComponent.memorySizeB1Option}
-                    onChange={(selectedOption) => {
-                      const updatedComponent = {
-                        ...currentComponent,
-                        memorySizeB1Option: selectedOption,
-                        memorySizeB1: selectedOption.value,
-                        B1: getBValueForTemp(
-                          currentComponent.memoryTech,
-                          selectedOption.value,
-                          currentComponent.techTemperatureB1 || 25,
-                          'B1'
-                        )
-                      };
-                      setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
-                    options={[
-                      { value: 4096, label: "4K" },
-                      { value: 16384, label: "16K" },
-                      { value: 65536, label: "64K" },
-                      { value: 262144, label: "256K" },
-                      { value: 1048576, label: "1M" }
-                    ]}
-                    className="factor-select"
-                  />
-                </div>
-              </Col>
-              {/* B₁ Temperature Input */}
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Junction Temperature for B₁ (°C):</label>
-                  <input
-                    name="techTemperatureB1"
-                    type="number"
-                    min="25"
-                    max="175"
-                    step="1"
-                    value={currentComponent.techTemperatureB1 ?? ''}
-                    onChange={(e) => {
-                      const rawValue = e.target.value;
-                      const temp = rawValue === '' ? null : Number(rawValue);
-                      const updatedComponent = {
-                        ...currentComponent,
-                        techTemperatureB1: temp,
-                        B1: (temp !== null && currentComponent.memoryTech && currentComponent.memorySizeB1)
-                          ? getBValueForTemp(
-                            currentComponent.memoryTech,
-                            currentComponent.memorySizeB1,
-                            temp,
-                            'B1'
-                          )
-                          : null
-                      };
-                      setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
-                    onBlur={(e) => {
-                      let temp = currentComponent.techTemperatureB1;
-                      if (temp === null || isNaN(temp)) temp = 25;
-                      else if (temp < 25) temp = 25;
-                      else if (temp > 175) temp = 175;
-                      else temp = Math.round(temp);
-
-                      if (temp !== currentComponent.techTemperatureB1) {
-                        const updatedComponent = {
-                          ...currentComponent,
-                          techTemperatureB1: temp,
-                          B1: (currentComponent.memoryTech && currentComponent.memorySizeB1)
-                            ? getBValueForTemp(
-                              currentComponent.memoryTech,
-                              currentComponent.memorySizeB1,
-                              temp,
-                              'B1'
-                            )
-                            : null
-                        };
-                        setCurrentComponent(updatedComponent);
-                        updateComponentInList(updatedComponent);
-                      }
-                    }}
-                    placeholder="25-175°C"
-                  />
-                  {currentComponent.B1 !== null && (
-                    <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                      Calculated B₁: {currentComponent.B1?.toFixed(6) || 'N/A'}
-                    </div>
-                  )}
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Memory Size  (Textured-Poly<sup>3</sup> )for B₂:</label>
-                  <Select
-                    styles={customStyles}
-                    name="memorySizeB2"
-                    placeholder="Select Memory Size"
-                    value={currentComponent?.memorySizeB2Option}
-                    onChange={(selectedOption) => {
-                      const updatedComponent = {
-                        ...currentComponent,
-                        memorySizeB2Option: selectedOption,
-                        memorySizeB2: selectedOption.value,
-                        B2: getBValueForTemp(
-                          'Textured-Poly-B2',
-
-                          selectedOption.value,
-                          currentComponent.techTemperatureB2 || 25,
-                          'B2'
-                        )
-                      };
-                      setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
-                    options={[
-                      { value: 0, label: "Flotox & Textured-Poly²" },
-                      { value: 4096, label: "4K" },
-                      { value: 16384, label: "16K" },
-                      { value: 65536, label: "64K" },
-                      { value: 262144, label: "256K" },
-                      { value: 1024000, label: "1M" }
-                    ]}
-                    className="factor-select"
-                  />
-                </div>
-                {console.log('currentComponent.memorySizeB2', currentComponent.memorySizeB2)}
-
-                {currentComponent.memorySizeB2 == 0 && (
-                  <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                    Calculated B₂: 0
-                  </div>
-                )}
-              </Col>
-
-
-              {currentComponent.memorySizeB2 !== 0 && (
-                <Col md={4}>
-                  <div className="form-group">
-                    <label>Junction Temperature for B₂ (°C):</label>
-                    <input
-                      name="techTemperatureB2"
-                      type="number"
-                      min="25"
-                      max="175"
-                      step="1"
-                      value={currentComponent.techTemperatureB2 ?? ''}
-                      onChange={(e) => {
-                        const rawValue = e.target.value;
-                        const temp = rawValue === '' ? null : Number(rawValue);
-
-                        if (temp !== currentComponent.techTemperatureB2) {
-                          const updatedComponent = {
-                            ...currentComponent,
-                            techTemperatureB2: temp,
-                            B2: getBValueForTemp(
-                              'Textured-Poly-B2',
-                              currentComponent.memorySizeB2,
-                              temp,
-                              'B2'
-                            )
-                          };
-                          setCurrentComponent(updatedComponent);
-                          updateComponentInList(updatedComponent);
-                        }
-                      }}
-                      onBlur={(e) => {
-                        let temp = currentComponent.techTemperatureB2;
-                        if (temp === null || isNaN(temp)) temp = 25;
-                        else if (temp < 25) temp = 25;
-                        else if (temp > 175) temp = 175;
-                        else temp = Math.round(temp);
-
-                        if (temp !== currentComponent.techTemperatureB2) {
-                          const updatedComponent = {
-                            ...currentComponent,
-                            techTemperatureB2: temp,
-                            B2: getBValueForTemp(
-                              'Textured-Poly-B2',
-                              currentComponent.memorySizeB2,
-                              temp,
-                              'B2'
-                            )
-                          };
-                          setCurrentComponent(updatedComponent);
-                          updateComponentInList(updatedComponent);
-                        }
-                      }}
-                      placeholder="25-175°C"
-                    />
-
-                    {currentComponent.B2 !== null && (
-                      <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
-                        Calculated B₂: {currentComponent.B2?.toFixed(6)}
-                      </div>
-                    )}
-                  </div>
-                </Col>
-              )}
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Memory Type for (C<sub>1</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    options={dieComplexityRates?.map(item => ({
-                      value: item,
-                      label: item.type
-                    }))}
-                    value={{
-                      value: inputs.memoryType,
-                      label: inputs.memoryType.type
-                    }}
-                    onChange={(selectedOption) => setInputs(prev => ({
-                      ...prev,
-                      memoryType: selectedOption.value,
-                      memorySize: selectedOption.value.rates[0]
-                    }))}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Memory Size (C<sub>1</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    options={inputs.memoryType.rates?.map(item => ({
-                      value: item,
-                      label: item.size
-                    }))}
-                    value={{
-                      value: inputs.memorySize,
-                      label: inputs.memorySize.size
-                    }}
-                    onChange={(selectedOption) => setInputs(prev => ({
-                      ...prev,
-                      memorySize: selectedOption.value
-                    }))}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Technology Type for (π<sub>T</sub>) :</label>
-                  <Select
-                    styles={customStyles}
-                    name="technology"
-                    placeholder="Select Technology Type"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        technology: selectedOption.value,
-                        technologyType: selectedOption.label,
-                        // Reset calculatedPiT when technology changes
-                        calculatedPiT: calculatePiT(
-                          selectedOption.value,
-                          currentComponent.temperature || 25, // Default to 25°C if not set
-                          selectedOption.Ea // Pass the correct Ea for the technology
-                        )
-                      });
-                    }}
-                    options={[
-                      {
-                        value: "TTL,ASTTL,CML",
-                        label: "TTL/ASTTL/CML (Bipolar Logic)",
-                        description: "Standard TTL, Advanced Schottky TTL, and Current Mode Logic",
-                        Ea: 0.4
-                      },
-                      {
-                        value: "F,LTTL,STTL",
-                        label: "F/LTTL/STTL (Fast/Low-Power TTL)",
-                        description: "Fast, Low-Power, and Schottky TTL variants",
-                        Ea: 0.45
-                      },
-                      {
-                        value: "BiCMOS",
-                        label: "BiCMOS (Bipolar CMOS Hybrid)",
-                        description: "Combines bipolar and CMOS technologies",
-                        Ea: 0.5
-                      },
-                      {
-                        value: "III,f¹,ISL",
-                        label: "III/f¹/ISL (Advanced Silicon)",
-                        description: "High-speed/radiation-hardened silicon logic",
-                        Ea: 0.6
-                      },
-                      {
-                        value: "Digital MOS",
-                        label: "Digital MOS (CMOS, VHSIC)",
-                        description: "CMOS and VHSIC digital technologies",
-                        Ea: 0.35
-                      },
-                      {
-                        value: "Linear",
-                        label: "Linear Analog (Bipolar/MOS)",
-                        description: "Linear analog circuits (op-amps, regulators)",
-                        Ea: 0.65
-                      },
-                      {
-                        value: "Memories",
-                        label: "Memories (Bipolar/MOS)",
-                        description: "Memory chips (RAM, ROM, etc.)",
-                        Ea: 0.6
-                      },
-                      {
-                        value: "GaAs MMIC",
-                        label: "GaAs MMIC (RF/Microwave)",
-                        description: "Gallium Arsenide microwave/RF components",
-                        Ea: 1.5
-                      },
-                      {
-                        value: "GaAs Digital",
-                        label: "GaAs Digital (High-Speed Logic)",
-                        description: "Gallium Arsenide digital logic",
-                        Ea: 1.4
-                      }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Junction Temperature (°C) for (π<sub>T</sub>) :</label>
-                  <input
-                    className="form-group"
-                    style={{
-                      width: "100%",
-                      padding: "0.375rem 0.75rem",
-                      fontSize: "1rem",
-                      lineHeight: "1.5",
-                      color: "#495057",
-                      backgroundColor: "#fff",
-                      border: "1px solid #ced4da",
-                      borderRadius: "0.25rem"
-                    }}
-                    type="number"
-                    name="temperature"
-                    min="-40"
-                    max="175"
-                    value={currentComponent.temperature}
-                    onChange={handleInputChange}
-                  />
-                  <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
-                </div>
-              </Col>
-
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>No. of Functional Pins for (C<sub>2</sub>):</label>
-                  <input
-                    styles={customStyles}
-                    placeholder="Select"
-                    value={0} // Fixed value set to 0
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        packageType: selectedOption.value,
-                        c2: selectedOption.c2
-                      }));
-                    }}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Learning Factor (π<sub>L</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="learningFactor"
-                    placeholder="Select Years in Production"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        yearsInProduction: selectedOption.value,
-                        piL: selectedOption.piL
-                      });
-                    }}
-                    options={[
-                      // {
-                      //   value: 5.1,
-                      //   label: "≤ 0.5 years",
-                      //   piL: 2.0, // Direct value from table
-                      //   description: "Early production phase (highest learning factor)"
-                      // },
-                      // {
-                      //   value: 0.5,
-                      //   label: "0.5 years",
-                      //   piL: 1.8,
-                      //   description: "Initial production ramp-up"
-                      // },
-                      // {
-                      //   value: 1.0,
-                      //   label: "1.0 year",
-                      //   piL: 1.5,
-                      //   description: "Moderate experience"
-                      // },
-                      // {
-                      //   value: 1.5,
-                      //   label: "1.5 years",
-                      //   piL: 1.2,
-                      //   description: "Stabilizing production"
-                      // },
-                      {
-                        value: 2.0,
-                        label: "≥ 2.0 years (πL = 1.0)",
-                        piL: 1.0,
-                        description: "Mature production (lowest learning factor)"
-                      }
-                    ]}
-                  />
-                </div>
-              </Col>
-            </Row>
-
-
-            <Button
-              variant="primary"
-              onClick={calculateMemoriesFailureRate}
-
-              className="btn-calculate float-end mt-1"
-            >
-              Calculate FR
-            </Button>
-            {result && (
-              handleCalculateMemories(result?.value)
-            )}
-
-
-            {result && (
-              <>
-
-                <div className="d-flex align-items-center">
-                  <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                  <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
-                </div>
-              </>
-            )}
-
-          </>
-        )}
-        {currentComponent.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
-          <>
-            <Row className="mb-3">
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Environment (π<sub>E</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    placeholder="Select Environment"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        environment: selectedOption.value,
-                        piE: selectedOption.piE
-                      }));
-                    }}
-                    options={[
-                      { value: "GB", label: "Ground Benign (πE = 0.5)", piE: 0.5 },
-                      { value: "GF", label: "Ground Fixed (πE = 2.0)", piE: 2.0 },
-                      { value: "GM", label: "Ground Mobile (πE = 4.0)", piE: 4.0 },
-                      { value: "NS", label: "Naval Sheltered (πE = 4.0)", piE: 4.0 },
-                      { value: "NU", label: "Naval Unsheltered (πE = 6.0)", piE: 6.0 },
-                      { value: "AIC", label: "Airborne Cargo (πE = 4.0)", piE: 4.0 },
-                      { value: "AIF", label: "Airborne Fighter (πE = 5.0)", piE: 5.0 },
-                      { value: "AUC", label: "Airborne Uninhabited Cargo (πE = 5.0)", piE: 5.0 },
-                      { value: "AUF", label: "Airborne Uninhabited Fighter (πE = 8.0)", piE: 8.0 },
-                      { value: "ARW", label: "Airborne Rotary Wing (πE = 8.0)", piE: 8.0 },
-                      { value: "SF", label: "Space Flight (πE = 0.5)", piE: 0.5 },
-                      { value: "MF", label: "Missile Flight (πE = 5.0)", piE: 5.0 },
-                      { value: "ML", label: "Missile Launch (πE = 12)", piE: 12 },
-                      { value: "CL", label: "Cannon Launch (πE = 220)", piE: 220 }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>No. of Functional Pins for (C<sub>2</sub>):</label>
-                  <input
-                    styles={customStyles}
-                    placeholder="Select"
-                    value={0} // Fixed value set to 0
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        packageType: selectedOption.value,
-                        c2: selectedOption.c2
-                      }));
-                    }}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Application Factor (π<sub>A</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    placeholder="Select"
-
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        application: selectedOption.value,
-                        piA: selectedOption.piA
-                      }));
-                    }}
-                    options={[
-                      { value: "LowNoiseLowPower", label: "Low Noise & Low Power (πA = 1.0)", piA: 1.0 },
-                      { value: "DriverHighPower", label: "Driver & High Power (πA = 3.0)", piA: 3.0 },
-                      { value: "Unknown", label: "Unknown (πA = 3.0)", piA: 3.0 },
-                      { value: "Digital", label: "Digital Applications (πA = 1.0)", piA: 1.0 }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Learning Factor (π<sub>L</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    placeholder="Select"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        yearsInProduction: selectedOption.value,
-                        piL: selectedOption.piL
-                      }));
-                    }}
-                    options={[
-                      // { value: 0.5, label: "≤ 0.5 years (πL = 2.0)", piL: 2.0 },
-                      // { value: 0.5, label: "0.5 years (πL = 1.8)", piL: 1.8 },
-                      // { value: 1.0, label: "1.0 year (πL = 1.5)", piL: 1.5 },
-                      // { value: 1.5, label: "1.5 years (πL = 1.2)", piL: 1.2 },
-                      { value: 2.0, label: "≥ 2.0 years (πL = 1.0)", piL: 1.0 }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Quality Factor (π<sub>Q</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    placeholder="Select"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        quality: selectedOption.value,
-                        piQ: selectedOption.piQ
-                      }));
-                    }}
-                    options={[
-                      // Class S Categories (πQ = 0.25)
-                      // {
-                      //   value: "MIL_M_38510_ClassS",
-                      //   label: "Class S (MIL-M-38510, Class S)",
-                      //   piQ: 0.25,
-                      //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
-                      // },
-                      // {
-                      //   value: "MIL_I_38535_ClassU",
-                      //   label: "Class S (MIL-I-38535, Class U)",
-                      //   piQ: 0.25,
-                      //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
-                      // },
-                      // {
-                      //   value: "MIL_H_38534_ClassS_Hybrid",
-                      //   label: "Class S Hybrid (MIL-H-38534, Level K) ",
-                      //   piQ: 0.25,
-                      //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
-                      // },
-                      // Class B Categories (πQ = 1.0)
-                      {
-                        value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B) (πQ = 1.0)",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-M-38510, Class B requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q) (πQ = 1.0)",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-I-38535 (Class Q)."
-                      },
-                      {
-                        value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "Class B Hybrid (MIL-H-38534, Level H) (πQ = 1.0)",
-                        piQ: 1.0,
-                        description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
-                      },
-                      // Class B-1 Category (πQ = 2.0)
-                      // {
-                      //   value: "MIL_STD_883_ClassB1",
-                      //   label: "Class B-1 (MIL-STD-883)",
-                      //   piQ: 2.0,
-                      //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
-                      // }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Technology Type for (π<sub>T</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="technology"
-                    placeholder="Select Technology Type"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        technology: selectedOption.value,
-                        technologyType: selectedOption.label,
-                        // Reset calculatedPiT when technology changes
-                        calculatedPiT: calculatePiT(
-                          selectedOption.value,
-                          currentComponent.temperature || 25, // Default to 25°C if not set
-                          selectedOption.Ea // Pass the correct Ea for the technology
-                        )
-                      });
-                    }}
-                    options={[
-                      {
-                        value: "TTL,ASTTL,CML",
-                        label: "TTL/ASTTL/CML (Bipolar Logic)",
-                        description: "Standard TTL, Advanced Schottky TTL, and Current Mode Logic",
-                        Ea: 0.4
-                      },
-                      {
-                        value: "F,LTTL,STTL",
-                        label: "F/LTTL/STTL (Fast/Low-Power TTL)",
-                        description: "Fast, Low-Power, and Schottky TTL variants",
-                        Ea: 0.45
-                      },
-                      {
-                        value: "BiCMOS",
-                        label: "BiCMOS (Bipolar CMOS Hybrid)",
-                        description: "Combines bipolar and CMOS technologies",
-                        Ea: 0.5
-                      },
-                      {
-                        value: "III,f¹,ISL",
-                        label: "III/f¹/ISL (Advanced Silicon)",
-                        description: "High-speed/radiation-hardened silicon logic",
-                        Ea: 0.6
-                      },
-                      {
-                        value: "Digital MOS",
-                        label: "Digital MOS (CMOS, VHSIC)",
-                        description: "CMOS and VHSIC digital technologies",
-                        Ea: 0.35
-                      },
-                      {
-                        value: "Linear",
-                        label: "Linear Analog (Bipolar/MOS)",
-                        description: "Linear analog circuits (op-amps, regulators)",
-                        Ea: 0.65
-                      },
-                      {
-                        value: "Memories",
-                        label: "Memories (Bipolar/MOS)",
-                        description: "Memory chips (RAM, ROM, etc.)",
-                        Ea: 0.6
-                      },
-                      {
-                        value: "GaAs MMIC",
-                        label: "GaAs MMIC (RF/Microwave)",
-                        description: "Gallium Arsenide microwave/RF components",
-                        Ea: 1.5
-                      },
-                      {
-                        value: "GaAs Digital",
-                        label: "GaAs Digital (High-Speed Logic)",
-                        description: "Gallium Arsenide digital logic",
-                        Ea: 1.4
-                      }
-                    ]}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Junction Temperature (°C) (π<sub>T</sub>):</label>
-                  <input
-                    className="form-group"
-                    style={{
-                      width: "100%",
-                      padding: "0.375rem 0.75rem",
-                      fontSize: "1rem",
-                      lineHeight: "1.5",
-                      color: "#495057",
-                      backgroundColor: "#fff",
-                      border: "1px solid #ced4da",
-                      borderRadius: "0.25rem"
-                    }}
-                    type="number"
-                    name="temperature"
-                    min="-40"
-                    max="175"
-                    value={currentComponent.temperature}
-                    onChange={handleInputChange}
-                  />
-                  <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
-                </div>
-              </Col>
-
-            </Row>
-
-
-            <Button
-              variant="primary"
-              onClick={calculateGaAsFailureRate}
-              className="btn-calculate float-end mb-4"
-            >
-              Calculate FR
-            </Button>
-
-            {result && (
-              handleCalculateGaAs(result?.value)
-            )}
-
-
-            {result && (
-              <>
-
-                <div className="d-flex align-items-center">
-                  <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                  <span className="ms-3">{result?.value} failures/10<sup>6</sup> hours</span>
-                </div>
-              </>
-            )}
-
-          </>
-        )}
-        <br />
-        {currentComponent.type === "Microcircuit,Magnetic Bubble Memories" && (
-          <>
-            <Row className="mb-3">
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Number of Bubble Chips per Package (N<sub>C</sub>):</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    name="bubbleChips"
-                    min="1"
-                    value={currentComponent.bubbleChips || ''}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Dissipative Elements (N<sub>1</sub>):</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    name="dissipativeElements"
-                    min="1"
-                    max="1000"
-                    value={currentComponent.dissipativeElements || ''}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Number of Bits (N<sub>2</sub>):</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    name="numberOfBits"
-                    min="1"
-                    max="9000000"
-                    value={currentComponent.numberOfBits || ''}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </Col>
-            </Row>
-
-            <Row className="mb-3">
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>No. of Functional Pins for (C<sub>2</sub>):</label>
-                  <input
-                    styles={customStyles}
-                    placeholder="Select"
-                    value={0} // Fixed value set to 0
-                    readOnly
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Duty Cycle Factor (π<sub>D</sub>):</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    name="dutyCycle"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={currentComponent.dutyCycle || ''}
-                    onChange={handleInputChange}
-                  />
-                  <small className="form-text text-muted">
-                    π<sub>D</sub> = 0.9D + 0.1 (D ≤ 1)
-                  </small>
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Quality Factor (π<sub>Q</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    placeholder="Select"
-
-                    onChange={(selectedOption) => {
-                      setCurrentComponent(prev => ({
-                        ...prev,
-                        quality: selectedOption.value,
-                        piQ: selectedOption.piQ
-                      }));
-                    }}
-                    options={[
-                      // Class S Categories (πQ = 0.25)
-                      // {
-                      //   value: "MIL_M_38510_ClassS",
-                      //   label: "Class S (MIL-M-38510, Class S)",
-                      //   piQ: 0.25, // Store πQ for calculations
-                      //   description: "Procured in full accordance with MIL-M-38510, Class S requirements."
-                      // },
-                      // {
-                      //   value: "MIL_I_38535_ClassU",
-                      //   label: "Class S (MIL-I-38535, Class U)",
-                      //   piQ: 0.25,
-                      //   description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
-                      // },
-                      // {
-                      //   value: "MIL_H_38534_ClassS_Hybrid",
-                      //   label: "Class S Hybrid (MIL-H-38534, Level K)",
-                      //   piQ: 0.25,
-                      //   description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
-                      // },
-
-                      // Class B Categories (πQ = 1.0)
-                      {
-                        value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B) (πQ = 1.0)",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-M-38510, Class B requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q) (πQ = 1.0)",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-I-38535 (Class Q)."
-                      },
-                      {
-                        value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "Class B Hybrid (MIL-H-38534, Level H) (πQ = 1.0)",
-                        piQ: 1.0,
-                        description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
-                      },
-
-                      // Class B-1 Category (πQ = 2.0)
-                      // {
-                      //   value: "MIL_STD_883_ClassB1",
-                      //   label: "Class B-1 (MIL-STD-883)",
-                      //   piQ: 2.0,
-                      //   description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
-                      // }
-                    ]}
-                  />
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Case Temperature (°C):</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    name="tcase"
-                    min="25"
-                    max="175"
-                    value={currentComponent.tcase || ''}
-                    onChange={handleInputChange}
-                  />
-                  <small className="form-text text-muted">
-                    T<sub>CASE</sub> = Measured case temperature
-                  </small>
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Junction Temperature (°C) (π<sub>T</sub>):</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    name="temperature"
-                    min="25"
-                    max="175"
-                    value={currentComponent.tcase ? Number(currentComponent.tcase) + 10 : ''}
-                    isDisabled={currentComponent.tcase}
-                    readOnly
-                  />
-                  <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
-
-                </div>
-              </Col>
-
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Reads per Write (R/W) for (π<sub>W</sub>):</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    name="readsPerWrite"
-                    min="1"
-                    value={currentComponent.readsPerWrite || ''}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </Col>
-              <Col md={4}>
-                <div className="form-group">
-                  <label>Write Duty Cycle Factor (π<sub>W</sub>):</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    name="writeDutyCycle"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={currentComponent.writeDutyCycle || ''}
-                    onChange={handleInputChange}
-                  />
-                  <small className="form-text text-muted">
-                    D = Avg. Device Data Rate / Mfg. Max. Rated Data Rate (≤ 1)
-                  </small>
-                </div>
-              </Col>
-            </Row>
-
-
-            <Button
-              variant="primary"
-              onClick={calculateBubbleMemoryFailureRate}
-              className="btn-calculate float-end mb-4"
-            >
-              Calculate FR
-            </Button>
-
-            {result && (
-              handleCalculateBubble(result?.value)
-            )}
-
-            {result && (
-              <>
-
-                <div className="d-flex align-items-center">
-                  <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                  <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
-                </div>
-              </>
-            )}
-
-          </>
-
-        )}
+        <Button 
+          variant="danger" 
+          onClick={() => removeComponent(component.id)}
+          style={{ marginTop: '10px',backgroundColor:"red" }}
+        >
+          Remove Component
+        </Button>
       </div>
-     {/* <div>
-       <button onClick={handleAddComponent}>Add Component</button>
-   <h2 className = "text-center">Lambda C</h2>
+    );
+  };
+  return (
+    <div className="reliability-calculator">
+      <br />
+      <h2 className='text-center' style={{ fontSize: '1.2rem' }}>
+        Microcircuits Reliability Calculator
+      </h2>
+{/*     
+    {components.map(renderComponent)} */}
+     {components.map(component => renderComponent({ ...component, id: component.id }))}
 
-     {components.map((_, index) => (
-       <Microcircuits key={index}
-         handleCalculateSawDevice={handleCalculateSawDevice}
-         handleCalculateGate={handleCalculateGate}
-         handleCalculateMemories={handleCalculateMemories}
-        handleCalculateVhsic={handleCalculateVhsic}
-        handleCalculateGaAs={handleCalculateGaAs}
-          handleCalculateBubble={handleCalculateBubble} />
-      ))}
-    </div> */}
+      <Button onClick={addNewComponent} className="mt-3">
+        Add Component
+      </Button>
+
+      {components.length > 0 && (
+        <div className="total-failure-rate" style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f8f9fa' }}>
+          <h4>Total System Failure Rate: {total} failures/10<sup>6</sup> hours</h4>
+          {console.log("totalbj,",total)}
+        </div>
+      )}
     </div>
+
   );
 }
-// const Microcircuits = () => {
-//   const [components, setComponents] = useState([]);
 
-//   const handleAddComponent = () => {
-//     setComponents([...components, {}]); // Push a placeholder object
-//   };
-
-//   return (
-//     <div>
-//       <h2>Repeat Component Example</h2>
-
-//       <button onClick={handleAddComponent}>Add Component</button>
-
-
-//       {components.map((_, index) => (
-//         <Microcircuits1 key={index}
-//           handleCalculateSawDevice={handleCalculateSawDevice}
-//           handleCalculateGate={handleCalculateGate}
-//           handleCalculateMemories={handleCalculateMemories}
-//           handleCalculateVhsic={handleCalculateVhsic}
-//           handleCalculateGaAs={handleCalculateGaAs}
-//           handleCalculateBubble={handleCalculateBubble} />
-//       ))}
-//     </div>
-//   )
-// }
 export default Microcircuits;

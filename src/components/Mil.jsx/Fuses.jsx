@@ -64,18 +64,17 @@ const Fuses = ({ onCalculate }) => {
       });
       setError(null);
       if (onCalculate) {
-        onCalculate(failureRate);  // Pass the numeric value
+        onCalculate(failureRate); 
       }
     } catch (err) {
       setError(err.message);
       setResult(null);
       if (onCalculate) {
-        onCalculate(null);  // Pass null if calculation fails
+        onCalculate(null); 
       }
     }
   };
 
-  // Custom styles for Select components
   const customStyles = {
   control: (provided) => ({
     ...provided,
@@ -122,7 +121,6 @@ const Fuses = ({ onCalculate }) => {
     overflowY: 'auto',
   }),
 };
-
   return (
     <>
       <h2 className="text-center mb-4">Fuses</h2>
@@ -326,3 +324,32 @@ const Fuses = ({ onCalculate }) => {
 };
 
 export default Fuses;
+
+// import { useState } from 'react';
+// import Select from 'react-select';
+
+// function Fuses(){
+//   const [selectedOptions, setSelectedOptions] = useState([]);
+ 
+//   const options = [
+//     { value: 'option1', label: 'Option 1' },
+//     { value: 'option2', label: 'Option 2' },
+//     { value: 'option3', label: 'Option 3' },
+//     { value: 'option4', label: 'Option 4' },
+//   ];
+
+//   return (
+//     <div>
+//       <Select
+//         isMulti
+//         options={options}
+//         value={selectedOptions}
+//         onChange={setSelectedOptions}
+//       />
+//       <p>
+//         Selected values: {selectedOptions.map(option => option.value).join(', ')}
+//       </p>
+//     </div>
+//   );
+// }
+// export default Fuses;
