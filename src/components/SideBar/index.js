@@ -143,8 +143,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
     root.style.setProperty("--Default-color", `oklch(70% 0.099 197.36 ${hue})`);
     localStorage.setItem("themeHue", hue.toString());
   }, [projectId, selectedModule]);
-
-  const handleSliderChange = (event) => {
+const handleSliderChange = (event) => {
     const newHue = event.target.value;
     setHue(newHue);
   };

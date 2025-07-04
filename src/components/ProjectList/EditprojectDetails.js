@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../css/ProjectList.scss";
-import { Form, Row, Col, Card, Modal, Button } from "react-bootstrap";
+import { Form, Row, Col, Card, Modal, Button,Tooltip,OverlayTrigger } from "react-bootstrap";
 import Label from "../core/Label";
 import * as Yup from "yup";
 import { Formik, ErrorMessage } from "formik";
@@ -968,10 +968,23 @@ export default function EditprojectDetails(props) {
                           </Row>
                           <Row>
                             <Col>
-                              <Form.Group className="mt-3">
-                                <Label>Non Short Probability(NSP)</Label>
+                               <Form.Group className="mt-3">
+                                <Label>Non Short Probability(NSP) </Label>
+                                    <OverlayTrigger
+                                    placement="bottom"
+                                    // delay={{ show: 250, hide: 400 }}
+                                    overlay={
+                                  
+<Tooltip id="nsp-tooltip" style={{ 
+}}>
+  NSP value must be 1 when calculating the Calculated Spare Quantity
+</Tooltip>
+
+                                 }
+                           >
                                 <Form.Control
                                   type="number"
+                                  id="nonShortProbability"
                                   min="0"
                                   step="any"
                                   value={values.nonShortProbability}
@@ -981,6 +994,7 @@ export default function EditprojectDetails(props) {
                                   name="nonShortProbability"
                                 />
                                 {/* <ErrorMessage name="nonShortProbability" component="span" className="error" /> */}
+                                </OverlayTrigger>
                               </Form.Group>
                             </Col>
                             <Col>

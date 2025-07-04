@@ -580,7 +580,9 @@ console.log("currentCom.....pany",currentCompany)
           </Modal.Footer>
         </Form>
       </Modal>
-      <Modal show={editMode} onHide={() => setEditMode(false)} centered>
+      
+      <Modal  show={editMode} onHide={() => setEditMode(false)} centered style={{}}>
+        <div className="edit-company-modal"style={{width: "500px"}}>
   <Modal.Header closeButton>
     <Modal.Title>Edit Company</Modal.Title>
   </Modal.Header>
@@ -603,8 +605,10 @@ console.log("currentCom.....pany",currentCompany)
       Save Changes
     </Button>
   </Modal.Footer>
+  </div>
 </Modal>
     </div>
+
   );
 }
 

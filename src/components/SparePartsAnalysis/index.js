@@ -33,6 +33,7 @@ function Index(props) {
   // const productId = props?.location?.props?.data?.id
   //   ? props?.location?.props?.data?.id
   //   : props?.location?.state?.productId;
+  console.log("props", props.location.state);
 
   const treeStructureId = props?.location?.state?.parentId;
 
@@ -406,12 +407,15 @@ function Index(props) {
 
   const getProductDatas = (treeId) => {
     const companyId = localStorage.getItem("companyId");
+    console.log(" treeStructureId",  treeStructureId);
+    console.log("treeId", treeId);
+
     Api.get("/api/v1/sparePartsAnalysis/details", {
       params: {
         projectId: projectId,
         productId: productId,
         companyId: companyId,
-        treeStructureId: treeStructureId,
+        treeStructureId: treeStructureId? treeStructureId : treeId,
         userId: userId,
       },
     })

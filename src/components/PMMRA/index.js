@@ -1573,7 +1573,8 @@ export default function PMMRA(props) {
               <Tooltip placement="right" title="Import">
                 <div style={{ marginRight: "8px" }}>
                   <label htmlFor="file-input" className="import-export-btn">
-                    <FontAwesomeIcon icon={faFileDownload} />
+                    <FontAwesomeIcon icon={faFileDownload} 
+                    style={{ width:"15px"}}/>
                   </label>
                   <input
                     type="file"
@@ -1587,6 +1588,8 @@ export default function PMMRA(props) {
               <Tooltip placement="left" title="Export">
                 <Button
                   className="import-export-btn"
+               style={{ marginLeft: "10px", borderStyle: "none",width:"40px",minWidth:"40px",padding:"0px", }}
+
                   onClick={() => {
                     exportToExcel(InitialValues);
                   }}

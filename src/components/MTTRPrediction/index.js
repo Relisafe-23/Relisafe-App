@@ -1286,6 +1286,7 @@ console.log("values.....",values)
                         <Tooltip placement="left" title="Export">
                           <Button
                             className="import-export-btn"
+                            style={{ marginLeft: "10px", borderStyle: "none",width:"40px",minWidth:"40px",padding:"0px", }}
                             onClick={() => exportToExcel(values)}
                           >
                             <FontAwesomeIcon

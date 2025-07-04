@@ -320,3 +320,15 @@
 .save-btn-btn:hover{
   background-color: #1d5460;
 }
+/* For all tooltips globally */
+.tooltip-inner {
+  font-size: 8px !important;
+  color: red !important;
+  background-color: white !important;
+  padding: 5px 10px !important;
+}
+
+
+.bs-tooltip-bottom .tooltip-arrow::before {
+  border-bottom-color: white !important;
+}

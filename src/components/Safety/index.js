@@ -2151,6 +2151,7 @@ function Index(props) {
                         <Tooltip placement="left" title="Export">
                           <Button
                             className="import-export-btn"
+                          style={{ marginLeft: "10px", borderStyle: "none",width:"40px",minWidth:"40px",padding:"0px", }}
                             onClick={() => DownloadExcel()}
                           >
                             <FontAwesomeIcon
