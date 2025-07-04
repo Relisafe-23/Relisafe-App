@@ -9,7 +9,7 @@ import { useTheme } from '@mui/material/styles'
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import Paper from '@mui/material/Paper';
 
-const Laser = () => {
+const Laser = ({onCalculate}) => {
   // Lasing Media Failure Rate data
   const lasingMediaRates = [
     { type: 'He/Ne', rate: 84 },
@@ -222,6 +222,10 @@ const Laser = () => {
     indicatorsContainer: (provided) => ({
       ...provided,
       height: '38px'
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999 
     })
   };
   // State for form laser CO2 sealed
@@ -266,8 +270,10 @@ const Laser = () => {
             πOS: inputData.opticalSurfaces.factor.toFixed(2),
             πE: 'N/A',
             formula: 'λp = λMEDIA × πO × πB × πE + 10 × πOS × πE'
+            
           }
         });
+        
         setError(null);
         return;
       }
@@ -293,6 +299,10 @@ const Laser = () => {
         }
       });
       setError(null);
+      if (onCalculate) {
+        onCalculate(failureRate);
+         // Pass the calculated failure rate
+      }
     } catch (err) {
       setError(err.message);
       setResult(null);
@@ -341,6 +351,10 @@ const Laser = () => {
         }
       });
       setError(null);
+      if (onCalculate) {
+        onCalculate(failureRate);
+         // Pass the calculated failure rate
+      }
     } catch (err) {
       setError(err.message);
       setResult(null);
@@ -382,6 +396,10 @@ const Laser = () => {
         }
       });
       setError(null);
+      if (onCalculate) {
+        onCalculate(failureRate);
+         // Pass the calculated failure rate
+      }
     } catch (err) {
       setError(err.message);
       setResult(null);
@@ -407,6 +425,10 @@ const Laser = () => {
         }
       });
       setError(null);
+      if (onCalculate) {
+        onCalculate(failureRate);
+         // Pass the calculated failure rate
+      }
     } catch (err) {
       setError(err.message);
       setResult(null);
@@ -673,7 +695,7 @@ const Laser = () => {
                 className="ms-auto mt-2"
               >
                 <CalculatorIcon
-                  style={{ height: '50px', width: '60px' }}
+                   style={{ height: '30px', width: '40px' }}
                   fontSize="large"
                 />
                 <Typography
@@ -903,7 +925,7 @@ const Laser = () => {
                   className="ms-auto mt-2"
                 >
                   <CalculatorIcon
-                    style={{ height: '50px', width: '60px' }}
+                    style={{ height: '30px', width: '40px' }}
                     fontSize="large"
                   />
                   <Typography
@@ -1098,7 +1120,7 @@ const Laser = () => {
                   className="ms-auto mt-2"
                 >
                   <CalculatorIcon
-                    style={{ height: '50px', width: '60px' }}
+                    style={{ height: '30px', width: '40px' }}
                     fontSize="large"
                   />
                   <Typography
@@ -1603,7 +1625,7 @@ const Laser = () => {
                   className="ms-auto mt-2"
                 >
                   <CalculatorIcon
-                    style={{ height: '50px', width: '60px' }}
+                      style={{ height: '30px', width: '40px' }}
                     fontSize="large"
                   />
                   <Typography
