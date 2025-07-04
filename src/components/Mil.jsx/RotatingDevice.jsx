@@ -177,7 +177,35 @@ const RotatingDevice = ({ onCalculate }) => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [showCalculations, setShowCalculations] = useState(false);
-
+ const [selectedDeviceType, setSelectedDeviceType] = useState(null);
+  const [selectedMotorType, setSelectedMotorType] = useState(null);
+  const [selectedRatioW,setSelectedRatioW] = useState(null);
+  const [selectedEnvironment, setSelectedEnvironment] = useState(null);
+  const [selectedSynchroType, setSelectedSynchroType] = useState(null);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [selectedBrushCount, setSelectedBrushCount] = useState(null);
+  const [selectedTimeMeter, setSelectedTimeMeter] = useState(null);
+  const [selectedElapsedEnvironment, setSelectedElapsedEnvironment] = useState(null);
+  const [selectedOperatingTempRatio, setSelectedOperatingTempRatio] = useState(null);
+  const[selectedRatioB,setSelectedRatioB]= useState(null)
+    // Error state
+    const [errors, setErrors] = useState({
+      deviceType: "",
+      motorType: "",
+      ambientTemp: "",
+      designLife: "",
+      environment: "",
+      synchroType: "",
+      size: "",
+      brushCount: "",
+      frameTemp: "",
+      timeMeter: "",
+      elapsedEnvironment: "",
+      operatingTempRatio: "",
+      ratioBInput:"",
+      ratioWInput:""
+    });
+  
   // Custom styles for Select components
   const customStyles = {
   control: (provided) => ({
@@ -267,7 +295,85 @@ const RotatingDevice = ({ onCalculate }) => {
     }
     return 1.0;
   };
+   const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    if (!selectedDeviceType) {
+      newErrors.deviceType = "Please select a device type";
+      isValid = false;
+    }
+
+    if (currentComponent.type === 'motor') {
+      if (!selectedMotorType) {
+        newErrors.motorType = "Please select a motor type";
+        isValid = false;
+      }
+      if (!currentComponent.ambientTemp || isNaN(currentComponent.ambientTemp)) {
+        newErrors.ambientTemp = "Please enter a valid ambient temperature";
+        isValid = false;
+      }
+      if (!currentComponent.designLife || isNaN(currentComponent.designLife)) {
+        newErrors.designLife = "Please enter a valid design life";
+        isValid = false;
+      }
+      if(!selectedRatioB){
+        newErrors.ratioBInput = "Select the λ1 value";
+        isValid =false;
+      }
+         if(!selectedRatioW){
+        newErrors.ratioWInput = "Select the λ2 value";
+        isValid =false;
+      }
+    } 
+    else if (currentComponent.type === 'synchro_resolver') {
+      if (!selectedEnvironment) {
+        newErrors.environment = "Please select an environment";
+        isValid = false;
+      }
+      if (!selectedSynchroType) {
+        newErrors.synchroType = "Please select the synchro/resolver type";
+        isValid = false;
+      }
+      if (!selectedSize) {
+        newErrors.selectedSize = "Please select the size";
+        isValid = false;
+      }
+      if (!selectedBrushCount) {
+        newErrors.selectedBrushCount = "Please select brush count";
+        isValid = false;
+      }
+      if (!currentComponent.useAmbientAsFrameTemp && (!currentComponent.frameTemp || isNaN(currentComponent.frameTemp))) {
+        newErrors.frameTemp = "Please enter a valid frame temperature";
+        isValid = false;
+      }
+      if (currentComponent.useAmbientAsFrameTemp && (!currentComponent.ambientTemp || isNaN(currentComponent.ambientTemp))) {
+        newErrors.ambientTemp = "Please enter a valid ambient temperature";
+        isValid = false;
+      }
+    } 
+    else if (currentComponent.type === 'time_meter') {
+      if (!selectedTimeMeter) {
+        newErrors.timeMeter = "Please select the time meter type";
+        isValid = false;
+      }
+      if (!selectedElapsedEnvironment) {
+        newErrors.selectedElapsedEnvironment = "Please select an environment";
+        isValid = false;
+      }
+      if (!selectedOperatingTempRatio) {
+        newErrors.operatingTempRatio = "Please select operating temperature ratio";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  }
   const calculateMotorFailureRate = () => {
+       if (!validateForm()) {
+      return null;
+    }
     const calculateAlphaB = (TA) => {
       const tempK = TA + 273; // Convert °C to Kelvin
       const term1 = 10 ** (2.534 - (2357 / tempK));
@@ -327,46 +433,9 @@ const RotatingDevice = ({ onCalculate }) => {
 
   // Calculate synchro/resolver failure rate
 const calculateSynchroFailureRate = () => {
-  const errors = {};
-  
-  // Validate frame temperature
-  if (currentComponent.useAmbientAsFrameTemp) {
-    if (!currentComponent.ambientTemp || isNaN(currentComponent.ambientTemp)) 
-      errors.ambientTemp = "Please enter a valid ambient temperature";
-    
-  } else {
-    if (!currentComponent.frameTemp || isNaN(currentComponent.frameTemp)) {
-      errors.frameTemp = "Please enter a valid frame temperature";
-    } else if (currentComponent.frameTemp < 30 || currentComponent.frameTemp > 135) 
-      errors.frameTemp = "Frame temperature must be between 30°C and 135°C";
-    
-  }
-
-  // Validate synchro type
-  if (!currentComponent.selectedSynchroType) 
-    errors.synchroType = "Please select a device type";
-  
-
-  // Validate size
-  if (!currentComponent.selectedSize) 
-    errors.size = "Please select a size";
-  
-
-  // Validate brush count
-  if (!currentComponent.selectedBrushCount) 
-    errors.brushCount = "Please select brush count";
-  
-
-  // Validate environment
-  if (!currentComponent.environment?.factor) 
-    errors.environment = "Please select an environment";
-  
-
-  // If any errors, throw them
-  if (Object.keys(errors).length > 0) 
-    throw new Error(JSON.stringify(errors));
-  
-
+ if (!validateForm()) {
+      return null;
+    }
   // Calculate frame temperature
   const frameTemp = currentComponent.useAmbientAsFrameTemp
     ? 40 + currentComponent.ambientTemp
@@ -403,6 +472,9 @@ const calculateSynchroFailureRate = () => {
 
   // Calculate elapsed time meter failure rate
   const calculateTimeMeterFailureRate = () => {
+     if (!validateForm()) {
+      return null;
+    }
     const λb = currentComponent.selectedTimeMeter.λb;
     const πT = tempStressFactors.find(
       item => item.ratio.includes(currentComponent.operatingTempRatio.toString()) ||
@@ -485,18 +557,25 @@ const calculateSynchroFailureRate = () => {
     <>
       <h2 className="text-center mb-4">Rotating Device </h2>
       <Row>
-        <Col md={4}>
+       <Col md={4}>
           <div className="form-group">
             <label>Part Type:</label>
             <Select
               styles={customStyles}
-              value={deviceTypes.find(d => d.value === currentComponent.type)}
-              onChange={(selectedOption) => setCurrentComponent(prev => ({
-                ...prev,
-                type: selectedOption.value
-              }))}
+              value={selectedDeviceType}
+              isInvalid={!!errors.deviceType}
+              className={errors.deviceType ? 'is-invalid' : ''}
+              onChange={(selectedOption) => {
+                setSelectedDeviceType(selectedOption);
+                setCurrentComponent(prev => ({
+                  ...prev,
+                  type: selectedOption.value
+                }));
+                setErrors({...errors, deviceType: ""});
+              }}
               options={deviceTypes}
             />
+            {errors.deviceType && <small className="text-danger">{errors.deviceType}</small>}
           </div>
         </Col>
 
@@ -504,20 +583,27 @@ const calculateSynchroFailureRate = () => {
         {currentComponent.type === 'motor' && (
           <>
 
-            <Col md={4}>
+      <Col md={4}>
               <div className="form-group">
                 <label>Motor Type:</label>
                 <Select
                   styles={customStyles}
-                  value={motorTypes.find(m => m.type === currentComponent.motorType) || motorTypes[0]}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
-                    ...prev,
-                    motorType: selectedOption.type
-                  }))}
+                  value={selectedMotorType}
+                  isInvalid={!!errors.motorType}
+                  className={errors.motorType ? 'is-invalid' : ''}
+                  onChange={(selectedOption) => {
+                    setSelectedMotorType(selectedOption);
+                    setCurrentComponent(prev => ({
+                      ...prev,
+                      motorType: selectedOption.type
+                    }));
+                    setErrors({...errors, motorType: ""});
+                  }}
                   options={motorTypes}
                   getOptionLabel={option => option.label}
                   getOptionValue={option => option.type}
                 />
+                {errors.motorType && <small className="text-danger">{errors.motorType}</small>}
               </div>
             </Col>
 
@@ -526,7 +612,7 @@ const calculateSynchroFailureRate = () => {
                 <label>Ambient Temperature (°C):</label>
                 <input
                   type="number"
-                  className="form-control"
+                      className={`form-control ${errors.ambientTemp ? 'is-invalid' : ''}`}
                   value={currentComponent.ambientTemp}
                   onChange={(e) => setCurrentComponent(prev => ({
                     ...prev,
@@ -536,6 +622,7 @@ const calculateSynchroFailureRate = () => {
                   max="135"
                   step="1"
                 />
+                 {errors.ambientTemp && <small className="text-danger">{errors.ambientTemp}</small>}
               </div>
             </Col>
 
@@ -544,7 +631,7 @@ const calculateSynchroFailureRate = () => {
                 <label>Design Life (hours):</label>
                 <input
                   type="number"
-                  className="form-control"
+                className={`form-control ${errors.designLife ? 'is-invalid' : ''}`}
                   value={currentComponent.designLife}
                   onChange={(e) => setCurrentComponent(prev => ({
                     ...prev,
@@ -553,6 +640,7 @@ const calculateSynchroFailureRate = () => {
                   min="1"
                   step="1"
                 />
+               {errors.designLife && <small className="text-danger">{errors.designLife}</small>}
               </div>
             </Col>
 
@@ -561,16 +649,20 @@ const calculateSynchroFailureRate = () => {
                 <label>LC/α<sub>B</sub> Ratio ( λ<sub>1</sub>):</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.ratioBInput,
-                    label: currentComponent.ratioBInput ?
-                      `${currentComponent.ratioBInput} (λ₁ = ${getLambdaValue(parseFloat(currentComponent.ratioBInput))})` :
-                      "Auto-calculate from design life"
-                  }}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
+                  value={selectedRatioB}
+                  // value={{
+                  //   value: currentComponent.ratioBInput,
+                  //   label: currentComponent.ratioBInput ?
+                  //     `${currentComponent.ratioBInput} (λ₁ = ${getLambdaValue(parseFloat(currentComponent.ratioBInput))})` :
+                  //     "Auto-calculate from design life"
+                  // }}
+                  onChange={(selectedOption) => {setCurrentComponent(prev => ({
                     ...prev,
                     ratioBInput: selectedOption.value
-                  }))}
+                  }))
+                setSelectedRatioB(selectedOption)
+              setErrors({...errors,ratioBInput:""})
+            }}
                   options={[
                     { value: "", label: "Auto-calculate from design life" },
                     { value: "0-0.10", label: "0-0.10 (λ₁ = 0.13)" },
@@ -585,6 +677,7 @@ const calculateSynchroFailureRate = () => {
                     { value: "1.0+", label: "1.0+ (λ₁ = 1.0)" }
                   ]}
                 />
+              {errors.ratioBInput && <small className="text-danger">{errors.ratioBInput}</small>}
               </div>
             </Col>
 
@@ -593,16 +686,19 @@ const calculateSynchroFailureRate = () => {
                 <label>LC/α<sub>W</sub> Ratio ( λ<sub>2</sub>):</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.ratioWInput,
-                    label: currentComponent.ratioWInput ?
-                      `${currentComponent.ratioWInput} (λ₂ = ${getLambdaValue(parseFloat(currentComponent.ratioWInput))})` :
-                      "Auto-calculate from design life"
-                  }}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
+                  value={selectedRatioW}
+                  // value={{
+                  //   value: currentComponent.ratioWInput,
+                  //   label: currentComponent.ratioWInput ?
+                  //     `${currentComponent.ratioWInput} (λ₂ = ${getLambdaValue(parseFloat(currentComponent.ratioWInput))})` :
+                  //     "Auto-calculate from design life"
+                  // }}
+                  onChange={(selectedOption) => {setCurrentComponent(prev => ({
                     ...prev,
                     ratioWInput: selectedOption.value
-                  }))}
+                  }))
+                setSelectedRatioW(selectedOption)
+              setErrors({...errors,ratioWInput:""})}}
                   options={[
                     { value: "", label: "Auto-calculate from design life" },
                     { value: "0-0.10", label: "0-0.10 (λ₂ = 0.13)" },
@@ -617,6 +713,7 @@ const calculateSynchroFailureRate = () => {
                     { value: "1.0+", label: "1.0+ (λ₂ = 1.0)" }
                   ]}
                 />
+                  {errors.ratioWInput && <small className="text-danger">{errors.ratioWInput}</small>}
               </div>
             </Col>
 {/* 
@@ -685,40 +782,52 @@ const calculateSynchroFailureRate = () => {
         {/* Synchro/Resolver-specific inputs */}
         {currentComponent.type === 'synchro_resolver' && (
           <>
-            <Col md={4}>
-              <div className="form-group">
-                <label>Environment (π<sub>E</sub>):</label>
-                <Select
-                  styles={customStyles}
-                  value={currentComponent.environment}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
-                    ...prev,
-                    environment: selectedOption
-                  }))}
-                  options={environmentFactors}
-                  getOptionLabel={option => `${option.label} (πE = ${option.factor})`}
-                  getOptionValue={option => option.env}
-                />
-              </div>
-            </Col>
+        <Col md={4}>
+                    <div className="form-group">
+                      <label>Environment (π<sub>E</sub>):</label>
+                      <Select
+                        styles={customStyles}
+                        value={selectedEnvironment}
+                        isInvalid={!!errors.environment}
+                        className={errors.environment ? 'is-invalid' : ''}
+                        onChange={(selectedOption) => {
+                          setSelectedEnvironment(selectedOption);
+                          setCurrentComponent(prev => ({
+                            ...prev,
+                            environment: selectedOption
+                          }));
+                          setErrors({...errors, environment: ""});
+                        }}
+                        options={environmentFactors}
+                        getOptionLabel={option => `${option.label} (πE = ${option.factor})`}
+                        getOptionValue={option => option.env}
+                      />
+                      {errors.environment && <small className="text-danger">{errors.environment}</small>}
+                    </div>
+                  </Col>
+    
             <Col md={4}>
               <div className="form-group">
                 <label>Device Type (π<sub>S</sub>):</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.selectedSynchroType,
-                    label: currentComponent.selectedSynchroType === 'synchro' ? 'Synchro' : 'Resolver'
+                  value={selectedSynchroType}
+                  isInvalid={!!errors.synchroType}
+                  className={errors.synchroType ? 'is-invalid' : ''}
+                  onChange={(selectedOption) => {
+                    setSelectedSynchroType(selectedOption);
+                    setCurrentComponent(prev => ({
+                      ...prev,
+                      selectedSynchroType: selectedOption.value
+                    }));
+                    setErrors({...errors, synchroType: ""});
                   }}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
-                    ...prev,
-                    selectedSynchroType: selectedOption.value
-                  }))}
                   options={[
                     { value: 'synchro', label: 'Synchro' },
                     { value: 'resolver', label: 'Resolver' }
                   ]}
                 />
+                {errors.synchroType && <small className="text-danger">{errors.synchroType}</small>}
               </div>
             </Col>
 
@@ -727,20 +836,26 @@ const calculateSynchroFailureRate = () => {
                 <label>Size for (π<sub>S</sub>):</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.selectedSize,
-                    label: currentComponent.selectedSize
-                  }}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
+                  value={selectedSize}
+                    isInvalid={!!errors.selectedSize}
+                  className={errors.selectedSize ? 'is-invalid' : ''}
+                  // value={{
+                  //   value: currentComponent.selectedSize,
+                  //   label: currentComponent.selectedSize
+                  // }}
+                  onChange={(selectedOption) => {setCurrentComponent(prev => ({
                     ...prev,
                     selectedSize: selectedOption.value
-                  }))}
+                  }))
+                setSelectedSize(selectedOption)
+              setErrors({...errors,selectedSize:""})}}
                   options={[
                     { value: '8 or smaller', label: '8 or smaller' },
                     { value: '10-16', label: '10-16' },
                     { value: '18 or larger', label: '18 or larger' }
                   ]}
                 />
+                {errors.selectedSize && <small className="text-danger">{errors.selectedSize}</small>}
               </div>
             </Col>
 
@@ -749,19 +864,24 @@ const calculateSynchroFailureRate = () => {
                 <label>Number of Brushes (π<sub>N</sub>):</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.selectedBrushCount,
-                    label: currentComponent.selectedBrushCount
-                  }}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
+                  value={selectedBrushCount}
+                  // value={{
+                  //   value: currentComponent.selectedBrushCount,
+                  //   label: currentComponent.selectedBrushCount
+                  // }}
+                  onChange={(selectedOption) => {setCurrentComponent(prev => ({
                     ...prev,
                     selectedBrushCount: selectedOption.value
-                  }))}
+                  }))
+                  setSelectedBrushCount(selectedOption)
+                setErrors({...errors,selectedBrushCount:""})
+              }}
                   options={brushFactors.map(brush => ({
                     value: brush.brushes,
                     label: `${brush.brushes} (Factor = ${brush.factor})`
                   }))}
                 />
+                 {errors.selectedBrushCount && <small className="text-danger">{errors.selectedBrushCount}</small>}
               </div>
             </Col>
          <Col md={4}>
@@ -780,6 +900,7 @@ const calculateSynchroFailureRate = () => {
                     max="135"
                     step="1"
                   />
+                  {errors.frameTemp && <small className="text-danger">{errors.frameTemp}</small>} 
                 </div>
               </Col>
           
@@ -790,6 +911,7 @@ const calculateSynchroFailureRate = () => {
                   name="type"
                   type="checkbox"
                   className="form-check-input"
+                  placeholder='Enter...'
                   id="useAmbientAsFrameTemp"
                   checked={currentComponent.useAmbientAsFrameTemp}
                   onChange={(e) => setCurrentComponent(prev => ({
@@ -800,6 +922,7 @@ const calculateSynchroFailureRate = () => {
                 <label className="form-check-label me-2" htmlFor="useAmbientAsFrameTemp">
                   If Ambient temperature is unknown
                 </label>
+                 {errors.useAmbientAsFrameTemp && <small className="text-danger">{errors.useAmbientAsFrameTemp}</small>} 
               </div>
             </Col>
 
@@ -819,6 +942,7 @@ const calculateSynchroFailureRate = () => {
                   max="150"
                   step="1"
                 />
+                 {errors.ambientTemp && <small className="text-danger">{errors.ambientTemp}</small>} 
               </div>
             </Col>
             )}
@@ -828,38 +952,48 @@ const calculateSynchroFailureRate = () => {
         {/* Time Meter-specific inputs */}
         {currentComponent.type === 'time_meter' && (
           <>
-
-            <Col md={4}>
+     <Col md={4}>
               <div className="form-group">
                 <label>Meter Type:</label>
                 <Select
                   styles={customStyles}
-                  value={currentComponent.selectedTimeMeter}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
-                    ...prev,
-                    selectedTimeMeter: selectedOption
-                  }))}
+                  value={selectedTimeMeter}
+                  isInvalid={!!errors.timeMeter}
+                  className={errors.timeMeter ? 'is-invalid' : ''}
+                  onChange={(selectedOption) => {
+                    setSelectedTimeMeter(selectedOption);
+                    setCurrentComponent(prev => ({
+                      ...prev,
+                      selectedTimeMeter: selectedOption
+                    }));
+                    setErrors({...errors, timeMeter: ""});
+                  }}
                   options={timeMeterTypes}
                   getOptionLabel={option => `${option.label} (λb = ${option.λb})`}
                   getOptionValue={option => option.type}
                 />
+                {errors.timeMeter && <small className="text-danger">{errors.timeMeter}</small>}
               </div>
             </Col>
-
-            <Col md={4}>
+           
+       <Col md={4}>
               <div className="form-group">
                 <label>Environment (π<sub>E</sub>):</label>
                 <Select
                   styles={customStyles}
-                  value={currentComponent.selectedElapsedEnvironment}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
+                  value={selectedElapsedEnvironment}
+                  // value={currentComponent.selectedElapsedEnvironment}
+                  onChange={(selectedOption) => {setCurrentComponent(prev => ({
                     ...prev,
                     selectedElapsedEnvironment: selectedOption
-                  }))}
+                  }))
+                setSelectedElapsedEnvironment(selectedOption)
+               setErrors({...errors,selectedElapsedEnvironment:""})}}
                   options={elapsedEnvironmentFactors}
                   getOptionLabel={option => `${option.label} (πE = ${option.factor})`}
                   getOptionValue={option => option.env}
                 />
+  {errors.selectedElapsedEnvironment && <small className="text-danger">{errors.selectedElapsedEnvironment}</small>}
               </div>
             </Col>
 
@@ -868,15 +1002,18 @@ const calculateSynchroFailureRate = () => {
                 <label>Operating Temp/Rated Temp Ratio:</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.operatingTempRatio,
-                    label: currentComponent.operatingTempRatio === 0.5 ? '0 to 0.5' :
-                      currentComponent.operatingTempRatio.toString()
-                  }}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
+                  value={selectedOperatingTempRatio}
+                  // value={{
+                  //   value: currentComponent.operatingTempRatio,
+                  //   label: currentComponent.operatingTempRatio === 0.5 ? '0 to 0.5' :
+                  //     currentComponent.operatingTempRatio.toString()
+                  // }}
+                  onChange={(selectedOption) => {setCurrentComponent(prev => ({
                     ...prev,
                     operatingTempRatio: parseFloat(selectedOption.value)
-                  }))}
+                  }))
+                setSelectedOperatingTempRatio(selectedOption)
+              setErrors({...errors,operatingTempRatio:""})}}
                   options={[
                     { value: 0.5, label: '0 to 0.5' },
                     { value: 0.6, label: '0.6' },
@@ -884,6 +1021,7 @@ const calculateSynchroFailureRate = () => {
                     { value: 1.0, label: '1.0' }
                   ]}
                 />
+                 {errors.operatingTempRatio && <small className="text-danger">{errors.operatingTempRatio}</small>}
               </div>
             </Col>
           </>

@@ -123,22 +123,22 @@ const Laser = ({ onCalculate }) => {
     { type: 'Argon', rate: 6 }
   ];
   const [current, setCurrent] = useState(null);
-  const [overfillPercent, setOverfillPercent] = useState(null);
-  const [volumeIncrease, setVolumeIncrease] = useState(null);
+  const [overfillPercent, setOverfillPercent] = useState();
+  const [volumeIncrease, setVolumeIncrease] = useState();
 
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-  const [errors, setErrors] = useState({
-  current: null,
-  overfillPercent: null,
-  volumeIncrease: null,
-  rubyPPS: null,
-  ej: null,
-  d: null,
-  L: null,
-  t: null,
-  power: null
-});
+//   const [errors, setErrors] = useState({
+//   current: null,
+//   overfillPercent: null,
+//   volumeIncrease: null,
+//   rubyPPS: null,
+//   ej: null,
+//   d: null,
+//   L: null,
+//   t: null,
+//   power: null
+// });
   const [currentComponent, setCurrentComponent] = useState({
     type: "Laser, CO2, Sealed"
   })
@@ -176,7 +176,7 @@ const Laser = ({ onCalculate }) => {
     { type: 'Liquid Cooled', factor: 0.1 },
     { type: 'Air/Gas Cooled', factor: 1.0 }
   ];
-  // Custom styles for Select components
+
   const customStyles = {
     control: (provided) => ({
       ...provided,
@@ -203,47 +203,67 @@ const Laser = ({ onCalculate }) => {
   };
   // State for form laser CO2 sealed
   const [input, setInput] = useState({
-    power: couplingRates[0],
-    opticalSurfaces: opticalSurfaceFactors[0],
-    environment: environmentFactorsCO2[0]
+    power: "",
+    opticalSurfaces: "",
+    environment: ""
   });
 
   const [inputData, setInputData] = useState({
     // tubeCurrent: lasingMediaRatesCO2[0],
-    overfill: overfillFactors[0],
-    ballast: ballastFactors[0],
-    opticalSurfaces: opticalSurfaceFactors[0],
-    environment: environmentFactorsCO2[0]
+    overfill: "",
+    ballast: "",
+    opticalSurfaces: "",
+    environment: ""
   });
   // State for form laser helium and argon
   const [inputs, setInputs] = useState({
-    lasingMedia: lasingMediaRates[0],
-    environment: environmentFactors[0],
-    coupling: couplingRates[0]
+    lasingMedia: "",
+    environment: "",
+    coupling: ""
   });
   // State for form laser solid state
   const [input2, setInput2] = useState({
-    pumpType: pumpTypes[0],
-    mediaType: mediaTypes[0],
-    cooling: coolingFactors[0],
-    opticalSurfaces: opticalSurfaceFactors[0],
-    environment: environmentFactors[0],
-    couplingCleanliness: couplingCleanlinessFactors[0],
+    pumpType: "",
+    mediaType: "",
+    cooling: "",
+    opticalSurfaces: "",
+    environment: "",
+    couplingCleanliness:"",
 
-    // Xenon parameters
     pps: 1,
     ej: 40,
     d: 4,
     L: 2,
     t: 100,
-
-    // Krypton parameters
     P: 4,
     kryptonL: 2,
 
-    // Ruby media parameters
     rubyPPS: '',
     F: 1
+  });
+    const [errors, setErrors] = useState({
+    type: '',
+    lasingMedia: '',
+    environment: '',
+    opticalSurfaces: '',
+    coupling: '',
+    tubeCurrent: '',
+    overfillPercent: '',
+    volumeIncrease: '',
+    power: '',
+    pumpType: '',
+    mediaType: '',
+    cooling: '',
+    couplingCleanliness: '',
+    rubyPPS: '',
+    F: '',
+    pps: '',
+    ej: '',
+    d: '',
+    L: '',
+    t: '',
+    P: '',
+    kryptonL: ''
   });
   const couplingRates1 = [
     { power: 0.01, rate: 3 },
@@ -251,18 +271,24 @@ const Laser = ({ onCalculate }) => {
     { power: 1.0, rate: 300 }
   ];
 
+ 
+    const handleChange = (e) => {
+    const value = e.target.value;
+    setCurrent(value);
+    setErrors({...errors, tubeCurrent: ''});
+  };
+
   const handleChange1 = (e) => {
     const value = e.target.value;
     setOverfillPercent(value);
- };
+    setErrors({...errors, overfillPercent: ''});
+  };
+
   const handleChange2 = (e) => {
     const value = e.target.value;
     setVolumeIncrease(value);
-};
-  const handleChange = (e) => {
-    const value = e.target.value;
-    setCurrent(value);
-};
+    setErrors({...errors, volumeIncrease: ''});
+  };
   const calculatePiB = () => {
     if (error || volumeIncrease === '' || isNaN(volumeIncrease)) return 'N/A';
     const percent = parseFloat(volumeIncrease);
@@ -273,17 +299,7 @@ const Laser = ({ onCalculate }) => {
     const l = parseFloat(current);
     return (69 * l - 450).toFixed(2);
   };
-  // const calculatePumpFailureRateSolid = () => {
-  //   if (input2.pumpType.value === 'xenon') {
-  //     const ej = Math.max(30, input2.ej);
-  //     const denominator = input2.d * input2.L * Math.sqrt(input2.t);
-  //     const term = Math.pow ((2000 *((ej / denominator) ,8.58)));
-  //     return 3600 * input2.pps * term * input2.cooling.factor;
-  //   } else { // krypton
-  //     const term = Math.pow(10, (0.9 * (input2.P / input2.kryptonL)));
-  //     return 625 * term * input2.cooling.factor;
-  //   }
-  // };
+
   const calculatePumpFailureRateSolid = () => {
   if (input2.pumpType.value === 'xenon') {
     const ej = Math.max(30, input2.ej); 
@@ -303,9 +319,169 @@ const Laser = ({ onCalculate }) => {
   }
 
 };
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
 
+
+    if (!currentComponent.type) {
+      newErrors.type = 'Please select a laser type';
+      isValid = false;
+    }
+
+    if (currentComponent.type === "Laser, Helium and Argon") {
+      if (!inputs.lasingMedia) {
+        newErrors.lasingMedia = 'Please select lasing media';
+        isValid = false;
+      }
+      if (!inputs.coupling) {
+        newErrors.coupling = 'Please select coupling type';
+        isValid = false;
+      }
+        if (!inputs.environment) {
+      newErrors.environment = 'Please select an environment';
+      isValid = false;
+    }
+    }
+  
+    if (currentComponent.type === "Laser, CO2, Sealed") {
+      if (!current || isNaN(current)) {
+        newErrors.tubeCurrent = 'Please enter a valid tube current (10-150 mA)';
+        isValid = false;
+      } else if (current < 10 || current > 150) {
+        newErrors.tubeCurrent = 'Tube current must be between 10 and 150 mA';
+        isValid = false;
+      }
+
+      if (!overfillPercent || isNaN(overfillPercent)) {
+        newErrors.overfillPercent = 'Please enter a valid overfill percentage';
+        isValid = false;
+      } else if (overfillPercent < 0 || overfillPercent > 100) {
+        newErrors.overfillPercent = 'Overfill must be between 0% and 100%';
+        isValid = false;
+      }
+
+      if (!volumeIncrease || isNaN(volumeIncrease)) {
+        newErrors.volumeIncrease = 'Please enter a valid volume increase';
+        isValid = false;
+      } else if (volumeIncrease < 0 || volumeIncrease > 200) {
+        newErrors.volumeIncrease = 'Volume increase must be between 0 and 200';
+        isValid = false;
+      }
+       if (!inputData.environment) {
+      newErrors.environment = 'Please select an environment';
+      isValid = false;
+    }
+      if (!inputData.opticalSurfaces) {
+        newErrors.opticalSurfaces = 'Please select optical surfaces';
+        isValid = false;
+      }
+    }
+
+    if (currentComponent.type === "Laser, CO2,Flowing") {
+if (!input.power?.power || isNaN(input.power.power)) {
+  newErrors.power = 'Please enter a valid power value';
+  isValid = false;
+} else if (input.power.power < 0.01 || input.power.power > 1.0) {
+  newErrors.power = 'Power must be between 0.01 KW and 1.0 KW';
+  isValid = false;
+}
+  if (!input.environment) {
+      newErrors.environment = 'Please select an environment';
+      isValid = false;
+    }
+      if (!input.opticalSurfaces) {
+        newErrors.opticalSurfaces = 'Please select optical surfaces';
+        isValid = false;
+      }
+    }
+
+    if (currentComponent.type === "Laser, Solid State,ND:YAG and Ruby Rod") {
+      if (!input2.pumpType) {
+        newErrors.pumpType = 'Please select pump type';
+        isValid = false;
+      }
+      if (!input2.mediaType) {
+        newErrors.mediaType = 'Please select media type';
+        isValid = false;
+      }
+      if (!input2.cooling) {
+        newErrors.cooling = 'Please select cooling type';
+        isValid = false;
+      }
+      if (!input2.couplingCleanliness) {
+        newErrors.couplingCleanliness = 'Please select coupling cleanliness';
+        isValid = false;
+      }
+      if (!input2.opticalSurfaces) {
+        newErrors.opticalSurfaces = 'Please select optical surfaces';
+        isValid = false;
+      }
+   if (!input2.environment) {
+      newErrors.environment = 'Please select an environment';
+      isValid = false;
+    }
+      // Ruby specific validations
+      if (input2.mediaType.type === 'Ruby') {
+        if (!input2.rubyPPS || isNaN(input2.rubyPPS)) {
+          newErrors.rubyPPS = 'Please enter valid pulses per second';
+          isValid = false;
+        }
+        if (!input2.F || isNaN(input2.F)) {
+          newErrors.F = 'Please enter valid energy density';
+          isValid = false;
+        }
+      }
+
+      // Xenon pump validations
+      if (input2.pumpType.value === 'xenon') {
+        if (!input2.pps || isNaN(input2.pps)) {
+          newErrors.pps = 'Please enter valid pulses per second';
+          isValid = false;
+        } else if (input2.pps < 1 || input2.pps > 20) {
+          newErrors.pps = 'PPS must be between 1 and 20';
+          isValid = false;
+        }
+        if (!input2.ej || isNaN(input2.ej)) {
+          newErrors.ej = 'Please enter valid joules';
+          isValid = false;
+        }
+        if (!input2.d || isNaN(input2.d)) {
+          newErrors.d = 'Please enter valid diameter';
+          isValid = false;
+        }
+        if (!input2.L || isNaN(input2.L)) {
+          newErrors.L = 'Please enter valid length';
+          isValid = false;
+        }
+        if (!input2.t || isNaN(input2.t)) {
+          newErrors.t = 'Please enter valid pulse duration';
+          isValid = false;
+        }
+      }
+
+      // Krypton pump validations
+      if (input2.pumpType.value === 'krypton') {
+        if (!input2.P || isNaN(input2.P)) {
+          newErrors.P = 'Please enter valid power';
+          isValid = false;
+        }
+        if (!input2.kryptonL || isNaN(input2.kryptonL)) {
+          newErrors.kryptonL = 'Please enter valid length';
+          isValid = false;
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
   // Calculate the failure rate for laser CO2 sealed
   const calculateFailureRateCO2 = () => {
+        if (!validateForm()) {
+      setResult(null);
+      return;
+    }
     try {
       // Skip calculation if environment is CL (N/A)
       if (inputData.environment.env === 'CL') {
@@ -358,6 +534,10 @@ const Laser = ({ onCalculate }) => {
   };
   // Calculate the failure rate for laser solid state
   const calculateFailureRateSolid = () => {
+        if (!validateForm()) {
+      setResult(null);
+      return;
+    }
     try {
       // Skip calculation if environment is CL (N/A)
       if (input2.environment.env === 'CL') {
@@ -412,6 +592,10 @@ const Laser = ({ onCalculate }) => {
   };
 
   const calculateFailureRate1 = () => {
+        if (!validateForm()) {
+      setResult(null);
+      return;
+    }
     try {
       // Skip calculation if environment is CL (N/A)
       if (input.environment.env === 'CL') {
@@ -456,6 +640,10 @@ const Laser = ({ onCalculate }) => {
   };
   // Calculate the failure rate for laser helium and argon
   const calculateFailureRate = () => {
+        if (!validateForm()) {
+      setResult(null);
+      return;
+    }
     try {
       const lasingRate = inputs.lasingMedia.rate;
       const couplingRate = inputs.coupling.rate;
@@ -503,7 +691,7 @@ const validateVolumeIncrease = (value) => {
       <h2 className="text-center mb-4"> Lasers</h2>
       <Row>
         <Col md={4}>
-          <div className="form-group" >
+          <div className="form-group">
             <label>
               Part Type:</label>
             <Select
@@ -527,46 +715,51 @@ const validateVolumeIncrease = (value) => {
         {currentComponent.type === "Laser, CO2, Sealed" && (
           <>
             <Col md={4}>
-              {/* Optical Surfaces */}
+           
               <div className="form-group">
                 <label>Active Optical Surfaces (π<sub>OS</sub>):</label>
                 <Select
                   styles={customStyles}
+                  isInvalid={!!errors.opticalSurfaces}
                   options={opticalSurfaceFactors.map(item => ({
                     value: item,
                     label: `${item.surfaces} (πOS = ${item.factor})`
                   }))}
                   value={{
                     value: inputData.opticalSurfaces,
-                    label: `${inputData.opticalSurfaces.surfaces} (πOS = ${inputData.opticalSurfaces.factor})`
+                    label:inputData.opticalSurfaces? `${inputData.opticalSurfaces.surfaces} (πOS = ${inputData.opticalSurfaces.factor})`:"select..."
                   }}
-                  onChange={(selectedOption) => setInputData(prev => ({
+                  onChange={(selectedOption) => {setInputData(prev => ({
                     ...prev,
                     opticalSurfaces: selectedOption.value
-                  }))}
+                  }))
+                setErrors({...errors,opticalSurfaces:""})}}
                 />
+                 {errors.opticalSurfaces && <small className="text-danger">{errors.opticalSurfaces}</small>}
               </div>
             </Col>
 
             <Col md={4}>
-              {/* Environment Factor */}
               <div className="form-group">
                 <label>Environment (π<sub>E</sub>):</label>
                 <Select
                   styles={customStyles}
+                  isInvalid={!!errors.environment}
                   options={environmentFactorsCO2.map(item => ({
                     value: item,
                     label: `${item.label} (πE = ${item.factor})`
                   }))}
                   value={{
                     value: inputData.environment,
-                    label: `${inputData.environment.label} (πE = ${inputData.environment.factor})`
+                    label: inputData.environment?`${inputData.environment.label} (πE = ${inputData.environment.factor})`:"select..."
                   }}
-                  onChange={(selectedOption) => setInputData(prev => ({
+                  onChange={(selectedOption) => {setInputData(prev => ({
                     ...prev,
                     environment: selectedOption.value
-                  }))}
+                  }))
+                setErrors({...errors,environment:""})}}
                 />
+                {errors.environment && <small className="text-danger">{errors.environment}</small>}
               </div>
             </Col>
           </>
@@ -580,19 +773,22 @@ const validateVolumeIncrease = (value) => {
                 <label>Lasing Media (λ<sub>MEDIA</sub>):</label>
                 <Select
                   styles={customStyles}
+                  isInvalid={!!errors.lasingMedia}
                   options={lasingMediaRates.map(item => ({
                     value: item,
                     label: `${item.type} (λMEDIA = ${item.rate})`
                   }))}
                   value={{
                     value: inputs.lasingMedia,
-                    label: `${inputs.lasingMedia.type} (λMEDIA = ${inputs.lasingMedia.rate})`
+                    label:inputs.lasingMedia? `${inputs.lasingMedia.type} (λMEDIA = ${inputs.lasingMedia.rate})`:"select..."
                   }}
-                  onChange={(selectedOption) => setInputs(prev => ({
+                  onChange={(selectedOption) => {setInputs(prev => ({
                     ...prev,
                     lasingMedia: selectedOption.value
-                  }))}
+                  }))
+                setErrors({...errors,lasingMedia:""})}}
                 />
+                {errors.lasingMedia && <small className="text-danger">{errors.lasingMedia}</small>}
               </div>
             </Col>
 
@@ -602,19 +798,22 @@ const validateVolumeIncrease = (value) => {
                 <label>Coupling Type (λ<sub>COUPLING</sub>):</label>
                 <Select
                   styles={customStyles}
+                  isInvalid={!!errors.coupling}
                   options={couplingRates.map(item => ({
                     value: item,
                     label: `${item.type} (λCOUPLING = ${item.rate})`
                   }))}
                   value={{
                     value: inputs.coupling,
-                    label: `${inputs.coupling.type} (λCOUPLING = ${inputs.coupling.rate})`
+                    label:  inputs.coupling?`${inputs.coupling.type} (λCOUPLING = ${inputs.coupling.rate})`:"select..."
                   }}
-                  onChange={(selectedOption) => setInputs(prev => ({
+                  onChange={(selectedOption) => {setInputs(prev => ({
                     ...prev,
                     coupling: selectedOption.value
-                  }))}
+                  }))
+                setErrors({...errors,coupling:""})}}
                 />
+                {errors.coupling && <small className="text-danger">{errors.coupling}</small>}
               </div>
             </Col>
           </>
@@ -622,7 +821,7 @@ const validateVolumeIncrease = (value) => {
         {currentComponent.type === "Laser, CO2,Flowing" && (
           <>
             <Col md={4}>
-              {/* Optical Surfaces */}
+            
               <div className="form-group">
                 <label>Active Optical Surfaces (π<sub>OS</sub>):</label>
                 <Select
@@ -633,35 +832,41 @@ const validateVolumeIncrease = (value) => {
                   }))}
                   value={{
                     value: input.opticalSurfaces,
-                    label: `${input.opticalSurfaces.surfaces} (πOS = ${input.opticalSurfaces.factor})`
+                    label:input.opticalSurfaces? `${input.opticalSurfaces.surfaces} (πOS = ${input.opticalSurfaces.factor})`:"select..."
                   }}
-                  onChange={(selectedOption) => setInput(prev => ({
+                  onChange={(selectedOption) => {setInput(prev => ({
                     ...prev,
                     opticalSurfaces: selectedOption.value
-                  }))}
+                  }))
+                setErrors({...errors,opticalSurfaces:""})
+              }}
                 />
+                {errors.opticalSurfaces && <small className="text-danger">{errors.opticalSurfaces}</small>}
               </div>
             </Col>
 
             <Col md={4}>
-              {/* Environment Factor */}
+            
               <div className="form-group">
                 <label>Environment (π<sub>E</sub>):</label>
                 <Select
                   styles={customStyles}
+                  isInvalid={!!errors.environment}
                   options={environmentFactorsCO2.map(item => ({
                     value: item,
                     label: `${item.label} (πE = ${item.factor})`
                   }))}
                   value={{
                     value: input.environment,
-                    label: `${input.environment.label} (πE = ${input.environment.factor})`
+                    label:input.environment? `${input.environment.label} (πE = ${input.environment.factor})`:"select..."
                   }}
-                  onChange={(selectedOption) => setInput(prev => ({
+                  onChange={(selectedOption) => {setInput(prev => ({
                     ...prev,
                     environment: selectedOption.value
-                  }))}
+                  }))
+                 setErrors({...errors,environment:""})}}
                 />
+                {errors.environment && <small className="text-danger">{errors.environment}</small>}
               </div>
             </Col>
           </>
@@ -674,19 +879,22 @@ const validateVolumeIncrease = (value) => {
                 <label>Active Optical Surfaces (π<sub>OS</sub>):</label>
                 <Select
                   styles={customStyles}
+                  isInvalid={!!errors.opticalSurfaces}
                   options={opticalSurfaceFactors.map(item => ({
                     value: item,
                     label: `${item.surfaces} (πOS = ${item.factor})`
                   }))}
                   value={{
                     value: input2.opticalSurfaces,
-                    label: `${input2.opticalSurfaces.surfaces} (πOS = ${input2.opticalSurfaces.factor})`
+                    label:input2.opticalSurfaces? `${input2.opticalSurfaces.surfaces} (πOS = ${input2.opticalSurfaces.factor})`:"select.."
                   }}
-                  onChange={(selectedOption) => setInput2(prev => ({
+                  onChange={(selectedOption) => {setInput2(prev => ({
                     ...prev,
                     opticalSurfaces: selectedOption.value
-                  }))}
+                  }))
+                setErrors({...errors,opticalSurfaces:""})}}
                 />
+                {errors.opticalSurfaces && <small className="text-danger">{errors.opticalSurfaces}</small>}
               </div>
             </Col>
 
@@ -696,19 +904,22 @@ const validateVolumeIncrease = (value) => {
                 <label>Environment (π<sub>E</sub>):</label>
                 <Select
                   styles={customStyles}
+                  isInvalid={!!errors.environment}
                   options={environmentFactorsSolid.map(item => ({
                     value: item,
                     label: `${item.label} (πE = ${item.factor})`
                   }))}
                   value={{
                     value: input2.environment,
-                    label: `${input2.environment.label} (πE = ${input2.environment.factor})`
+                    label:input2.environment? `${input2.environment.label} (πE = ${input2.environment.factor})`: "select..."
                   }}
-                  onChange={(selectedOption) => setInput2(prev => ({
+                  onChange={(selectedOption) => {setInput2(prev => ({
                     ...prev,
                     environment: selectedOption.value
-                  }))}
+                  }))
+                setErrors({...errors,environment:""})}}
                 />
+                {errors.environment && <small className="text-danger">{errors.environment}</small>}
               </div>
             </Col>
           </>
@@ -723,19 +934,22 @@ const validateVolumeIncrease = (value) => {
                 <label>Environment (π<sub>E</sub>):</label>
                 <Select
                   styles={customStyles}
+                  isInvalid={!!errors.environment}
                   options={environmentFactors.map(item => ({
                     value: item,
                     label: `${item.label} (πE = ${item.factor})`
                   }))}
                   value={{
                     value: inputs.environment,
-                    label: `${inputs.environment.label} (πE = ${inputs.environment.factor})`
+                    label:inputs.environment? `${inputs.environment.label} (πE = ${inputs.environment.factor})`:"select..."
                   }}
-                  onChange={(selectedOption) => setInputs(prev => ({
+                  onChange={(selectedOption) => {setInputs(prev => ({
                     ...prev,
                     environment: selectedOption.value
-                  }))}
+                  }))
+                setErrors({...errors,environment:""})}}
                 />
+                {errors.environment && <small className="text-danger">{errors.environment}</small>}
               </div>
             </Col>
           </Row>
@@ -897,7 +1111,6 @@ const validateVolumeIncrease = (value) => {
         </>
       )}
       <>
-
         {currentComponent.type === "Laser, CO2, Sealed" && (
           <>
             <Row className="mb-3">
@@ -909,38 +1122,44 @@ const validateVolumeIncrease = (value) => {
                     id="tube-current"
                     type="number"
                     value={current}
-                    onChange={handleChange}
+                    // onChange={handleChange}
+                      onChange={(e) => {
+                setCurrent(parseFloat(e.target.value))
+                setErrors({ ...errors, tubeCurrent: '' })
+              }}
                     min="10"
                     max="150"
                     step="0.1"
-                    className={`form-control ${error ? 'is-invalid' : ''}`}
+                    className={`form-control ${errors.tubeCurrent ? 'is-invalid' : ''}`}
                     placeholder="Enter value between 10 and 150"
                   />
-
+                 {errors.tubeCurrent && <div className="invalid-feedback">{errors.tubeCurrent}</div>}
                   <div className="mt-2 form-group">
                     <label>Calculated λ<sub>MEDIA</sub>: {calculateLambda()} </label>
                   </div>
-
                   <div className="form-text">
                     Valid range: 10 ≤ l ≤ 150 mA
                   </div>
                 </div>
               </Col>
               <Col md={4}>
-                {/* CO₂ Overfill Factor */}
                 <div className="form-group">
                   <label htmlFor="overfill-percent">% Gas Overfill Factor (π<sub>O</sub>):</label>
                   <input
                     id="overfill-percent"
                     type="number"
                     value={overfillPercent}
-                    onChange={handleChange1}
+               onChange={(e) => {
+                setOverfillPercent(parseFloat(e.target.value))
+                setErrors({ ...errors, overfillPercent: '' })     
+              }}
                     min="0"
                     max="100"
                     step="0.1"
-                    className={`form-control ${error ? 'is-invalid' : ''}`}
+                    className={`form-control ${errors.overfillPercent ? 'is-invalid' : ''}`}
                     placeholder="Enter percentage (0-100)"
                   />
+                  {errors.overfillPercent && <div className="invalid-feedback">{errors.overfillPercent}</div>}
 
                   <div className="mt-2 form-group">
                     <label> Calculated T<sub>O</sub>: {calculateTO()}</label>
@@ -958,13 +1177,16 @@ const validateVolumeIncrease = (value) => {
                     id="volume-increase"
                     type="number"
                     value={volumeIncrease}
-                    onChange={handleChange2}
+                    onChange={(e) => {
+                setVolumeIncrease(parseFloat(e.target.value))
+                setErrors({ ...errors, volumeIncrease: '' })
+              }}
                     min="0"
                     step="0.1"
-                    className={`form-control ${error ? 'is-invalid' : ''}`}
+                    className={`form-control ${errors.volumeIncrease ? 'is-invalid' : ''}`}
                     placeholder="Enter percentage volume increase"
                   />
-
+                 {errors.volumeIncrease && <div className="invalid-feedback">{errors.volumeIncrease}</div>  }
                   <div className="mt-2 form-group">
                     <label>Calculated π<sub>B</sub>:{calculatePiB()}</label>
                   </div>
@@ -1145,45 +1367,57 @@ const validateVolumeIncrease = (value) => {
             <Row className="mb-3">
               <Col md={4}>
                 {/* Power Selection */}
-                <div className="form-group">
-                  <label>Power (KW) (λ<sub>COUPLING</sub>):</label>
-                  <div className="input-group">
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={input.power.power || ''}
-                      onChange={(e) => {
-                        const powerValue = parseFloat(e.target.value);
-                        // Validate power range (0.01 ≤ P ≤ 1.0)
-                        const validatedPower = Math.min(Math.max(powerValue, 0.01), 1.0);
-                        setInput(prev => ({
-                          ...prev,
-                          power: {
-                            power: isNaN(powerValue) ? 0 : validatedPower,
-                            rate: isNaN(powerValue) ? 0 : calculateCouplingRate(validatedPower)
-                          }
-                        }));
-                      }}
-                      min="0.01"
-                      max="1.0"
-                      step="0.01"
-                      placeholder="Enter power (0.01-1.0 KW)"
-                    />
-                  </div>
+             <div className="form-group">
+  <label>Power (KW) (λ<sub>COUPLING</sub>):</label>
+  <div className="input-group">
+    <input
+      type="number"
+      value={input.power?.power??''} 
+    onChange={(e) => {
+  const rawValue = e.target.value;
+  
 
-                </div>
+  if (rawValue === '') {
+    setInput(prev => ({
+      ...prev,
+      power: {
+        power: null,
+        rate: 0
+      }
+    }));
+    setErrors(prev => ({ ...prev, power: '' }));
+    return;
+  }
+
+  const powerValue = parseFloat(rawValue);
+  
+    if (!isNaN(powerValue)) {
+   
+    setInput(prev => ({
+      ...prev,
+      power: {
+        power: powerValue, 
+        rate: calculateCouplingRate(Math.min(Math.max(powerValue, 0.01), 1.0))
+      }
+    }));
+    setErrors(prev => ({ ...prev, power: '' }));
+  }
+}}
+      className={`form-control ${errors.power ? 'is-invalid' : ''}`}
+      min="0.01"
+      max="1.0"
+      step="0.01"
+      placeholder="Enter power (0.01-1.0 KW)"
+    />
+    {errors.power && <div className="invalid-feedback">{errors.power}</div>}
+  </div>
+</div>
               </Col>
               <>
                 <span>
                   λ<sub>COUPLING</sub> = {input.power.rate || ''}
                 </span>
               </>
-              {input.power.power > 1.0 || input.power.power < 0.01 ? (
-                <div className="text-danger small">
-                  Power must be between 0.01 and 1.0 KW
-                </div>
-              ) : null}
-
             </Row>
             <div className='d-flex justify-content-between align-items-center' >
               <div>
@@ -1354,63 +1588,88 @@ const validateVolumeIncrease = (value) => {
         {currentComponent.type === "Laser, Solid State,ND:YAG and Ruby Rod" && (
           <>
             <Row className="mb-3">
-              <Col md={4}>
-                {/* Pump Type Selection */}
-                <div className="form-group">
-                  <label>Pump Type:</label>
-                  <Select
-                    styles={customStyles}
-                    options={pumpTypes}
-                    value={input2.pumpType}
-                    onChange={(selectedOption) => setInput2(prev => ({
-                      ...prev,
-                      pumpType: selectedOption
-                    }))}
-                  />
+                 <Col md={4}>
+     
+        <div className="form-group">
+          <label>Pump Type:</label>
+          <Select
+            styles={customStyles}
+            invalid={!!errors.pumpType}
+            options={pumpTypes}
+            value={input2.pumpType}
+            onChange={(selectedOption) => setInput2(prev => ({
+              ...prev,
+              pumpType: selectedOption
+            }))}
+            onFocus={() => setErrors(prev => ({
+              ...prev,
+              pumpType: ""
+            }))}
+          />
+          {errors.pumpType && <small className="text-danger">{errors.pumpType}</small>}
+                 
                 </div>
               </Col>
 
               <Col md={4}>
                 {/* Laser Media Type */}
                 <div className="form-group">
-                  <label>Laser Media (λ<sub>MEDIA</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    options={mediaTypes.map(item => ({
-                      value: item,
-                      label: `${item.type} (${item.formula})`
-                    }))}
-                    value={{
-                      value: input2.mediaType,
-                      label: `${input2.mediaType.type} (${input2.mediaType.formula})`
-                    }}
-                    onChange={(selectedOption) => setInput2(prev => ({
-                      ...prev,
-                      mediaType: selectedOption.value
-                    }))}
-                  />
+                 <label>Laser Media (λ<sub>MEDIA</sub>):</label>
+<Select
+  styles={customStyles}
+  invalid={!!errors.mediaType}
+  options={mediaTypes.map(item => ({
+    value: item,
+    label: `${item.type} (${item.formula})`
+  }))}
+  value={input2.mediaType ? {
+    value: input2.mediaType,
+    label: `${input2.mediaType.type} (${input2.mediaType.formula})`
+  } : {
+    value: null,
+    label: "Select..."
+  }}
+  onChange={(selectedOption) => setInput2(prev => ({
+    ...prev,
+    mediaType: selectedOption.value
+  }))}
+  onFocus={() => setErrors(prev => ({
+    ...prev,
+    mediaType: ""
+  }))}
+/>
+{errors.mediaType && <small className="text-danger">{errors.mediaType}</small>}
                 </div>
               </Col>
 
               <Col md={4}>
                 {/* Cooling Factor */}
                 <div className="form-group">
-                  <label>Cooling (π<sub>COOL</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    options={coolingFactors.map(item => ({
-                      value: item,
-                      label: `${item.type} (πCOOL = ${item.factor})`
-                    }))}
-                    value={{
-                      value: input2.cooling,
-                      label: `${input2.cooling.type} (πCOOL = ${input2.cooling.factor})`
-                    }}
-                    onChange={(selectedOption) => setInput2(prev => ({
-                      ...prev,
-                      cooling: selectedOption.value
-                    }))}
-                  />
+             <label>Cooling (π<sub>COOL</sub>):</label>
+<Select
+  styles={customStyles}
+  invalid={!!errors.cooling}
+  options={coolingFactors.map(item => ({
+    value: item,
+    label: `${item.type} (πCOOL = ${item.factor})`
+  }))}
+  value={input2.cooling ? {
+    value: input2.cooling,
+    label: `${input2.cooling.type} (πCOOL = ${input2.cooling.factor})`
+  } : {
+    value: null,
+    label: "Select..."
+  }}
+  onChange={(selectedOption) => setInput2(prev => ({
+    ...prev,
+    cooling: selectedOption.value
+  }))}
+  onFocus={() => setErrors(prev => ({
+    ...prev,
+    cooling: ""
+  }))}
+/>
+{errors.cooling && <small className="text-danger">{errors.cooling}</small>}
                 </div>
 
               </Col>
@@ -1418,34 +1677,45 @@ const validateVolumeIncrease = (value) => {
             <Row className="mb-3">
               <Col md={4}>
                 <div className="form-group">
-                  <label>Coupling Cleanliness Factor (π<sub>C</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    options={couplingCleanlinessFactors.map(item => ({
-                      value: item,
-                      label: `${item.type} (πC = ${item.factor})`
-                    }))}
-                    value={{
-                      value: input2.couplingCleanliness,
-                      label: `${input2.couplingCleanliness.type} (πC = ${input2.couplingCleanliness.factor})`
-                    }}
-                    onChange={(selectedOption) => setInput2(prev => ({
-                      ...prev,
-                      couplingCleanliness: selectedOption.value
-                    }))}
-                  />
+                 <label>Coupling Cleanliness Factor (π<sub>C</sub>):</label>
+<Select
+  styles={customStyles}
+  invalid={!!errors.couplingCleanliness}
+  options={couplingCleanlinessFactors.map(item => ({
+    value: item,
+    label: `${item.type} (πC = ${item.factor})`
+  }))}
+  value={input2.couplingCleanliness ? {
+    value: input2.couplingCleanliness,
+    label: `${input2.couplingCleanliness.type} (πC = ${input2.couplingCleanliness.factor})`
+  } : {
+    value: null,
+    label: "Select..."
+  }}
+  onChange={(selectedOption) => setInput2(prev => ({
+    ...prev,
+    couplingCleanliness: selectedOption.value
+  }))}
+  onFocus={() => setErrors(prev => ({
+    ...prev,
+    couplingCleanliness: ""
+  }))}
+/>
+{errors.couplingCleanliness && <small className="text-danger">{errors.couplingCleanliness}</small>}
                 </div>
               </Col>
               {input2.mediaType.type === 'Ruby' && (
                 <>
+                  
                   <Col md={4}>
-                    <div className="form-group">
+                  <div className="form-group">
                       <label>PPS (pulses/sec) for (λ<sub>MEDIA</sub>):</label>
                       <input
                         type="number"
                         className="form-group"
                         min="1"
                         value={input2.rubyPPS}
+                        invalid={!!errors.rubyPPS}
                         style={{
                           width: "100%",
                           padding: "0.375rem 0.75rem",
@@ -1460,8 +1730,13 @@ const validateVolumeIncrease = (value) => {
                           ...prev,
                           rubyPPS: parseFloat(e.target.value)
                         }))}
-                      />
-                    </div>
+                        onFocus={() => setErrors(prev => ({
+                          ...prev,
+                          rubyPPS: ""
+                        }))}
+                         />
+                {errors.rubyPPS && <small className="text-danger">{errors.rubyPPS}</small>}
+                         </div>
                   </Col>
                   <Col md={4}>
                     <div className="form-group">
@@ -1864,7 +2139,7 @@ const validateVolumeIncrease = (value) => {
           </>
         )}
 
-        {/* Additional Information Section */}
+        
 
       </>
 

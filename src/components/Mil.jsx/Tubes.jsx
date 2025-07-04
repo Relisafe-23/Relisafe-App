@@ -381,7 +381,7 @@ const Tubes = ({ onCalculate }) => {
               min="0.1"
               max="18"
               step="0.1"
-                   className={`form-control ${errors.twt.frequency ? 'is-invalid' : ''}`}
+              className={`form-control ${errors.twt.frequency ? 'is-invalid' : ''}`}
             />
             
             {errors.twt.frequency && <small className="text-danger">{errors.twt.frequency}</small>}
@@ -391,7 +391,7 @@ const Tubes = ({ onCalculate }) => {
 
         <Col md={4}>
           <div className="form-group">
-            <label>Environm`ent π<sub>E</sub>:</label>
+            <label>Environment π<sub>E</sub>:</label>
             <Select
               styles={customStyles}
               name="environment"

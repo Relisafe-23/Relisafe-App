@@ -299,7 +299,7 @@ console.log("S (Stress Ratio)...", S);
 
   
 
-    // Calculate πV based on the selected formula
+ 
     const piV =
       selectedCapacitor?.value?.πvColumn === 1 ? Math.pow(S / .6, 5) + 1 :
         selectedCapacitor?.value?.πvColumn === 2 ? Math.pow(S / .6, 10) + 1 :
@@ -573,7 +573,10 @@ const newResult = {
                 Calculated π<sub>V</sub>: {calculatePiV()?.toFixed(3)}
                 <br />
                 <small>
-                  Using {selectedCapacitor?.value?.πvColumn === 1 ? 'Column 1' : 'Column 2'}
+           Using { selectedCapacitor?.value?.πvColumn === 1 ? 'Column 1' : 
+selectedCapacitor?.value?.πvColumn === 2 ? 'Column 2' :
+selectedCapacitor?.value?.πvColumn === 3 ? 'Column 3' : 
+selectedCapacitor?.value?.πvColumn === 4 ?'Column 4':'Column 5'} formula
 
                 </small>
               </div>

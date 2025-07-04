@@ -278,57 +278,135 @@ const Relay = ({ onCalculate }) => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [showCalculations, setShowCalculations] = useState(false);
+  const [selectedEnvironment, setSelectedEnvironment] = useState(null);
+  const [selectedRelayType, setSelectedRelayType] = useState(null);
+  const [selectedRatedTemp, setSelectedRatedTemp] = useState(null);
+  const [selectedLoadType, setSelectedLoadType] = useState(null);
+  const [selectedContactForm, setSelectedContactForm] = useState(null);
+  const [selectedQuality, setSelectedQuality] = useState(null);
+  const [selectedApplicationType, setSelectedApplicationType] = useState(null);
+  const [selectedConstructionType, setSelectedConstructionType] = useState(null);
+  const [selectedBaseRateType, setSelectedBaseRateType] = useState(null);
+
+  const [errors, setErrors] = useState({
+    environment: "",
+    relayType: "",
+    ratedTemp: "",
+    loadType: "",
+    contactForm: "",
+    quality: "",
+    applicationType: "",
+    constructionType: "",
+    baseRateType: ""
+  });
 
   // Custom styles for Select components
-    const customStyles = {
-  control: (provided) => ({
-    ...provided,
-    minHeight: '38px',
-    height: '38px',
-    fontSize: '14px',
-    borderColor: '#ced4da',
-  }),
-  valueContainer: (provided) => ({
-    ...provided,
-    height: '38px',
-    padding: '0 12px',
-  }),
-  input: (provided) => ({
-    ...provided,
-    margin: '0px',
-    padding: '0px',
-  }),
-  indicatorsContainer: (provided) => ({
-    ...provided,
-    height: '38px',
-  }),
-  dropdownIndicator: (provided) => ({
-    ...provided,
-    padding: '8px',
-  }),
-  clearIndicator: (provided) => ({
-    ...provided,
-    padding: '8px',
-  }),
-  option: (provided) => ({
-    ...provided,
-    padding: '8px 12px',
-    fontSize: '14px',
-  }),
-  menu: (provided) => ({
-    ...provided,
-    marginTop: '2px',
-    zIndex: 9999,
-  }),
-  menuList: (provided) => ({
-    ...provided,
-    maxHeight: '150px',
-    overflowY: 'auto',
-  }),
-};
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      minHeight: '38px',
+      height: '38px',
+      fontSize: '14px',
+      borderColor: '#ced4da',
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      height: '38px',
+      padding: '0 12px',
+    }),
+    input: (provided) => ({
+      ...provided,
+      margin: '0px',
+      padding: '0px',
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      height: '38px',
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      padding: '8px',
+    }),
+    clearIndicator: (provided) => ({
+      ...provided,
+      padding: '8px',
+    }),
+    option: (provided) => ({
+      ...provided,
+      padding: '8px 12px',
+      fontSize: '14px',
+    }),
+    menu: (provided) => ({
+      ...provided,
+      marginTop: '2px',
+      zIndex: 9999,
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      maxHeight: '150px',
+      overflowY: 'auto',
+    }),
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    if (!selectedRelayType) {
+      newErrors.relayType = "Select the Relay Type";
+      isValid = false;
+    }
+
+    if (!selectedEnvironment) {
+      newErrors.environment = "Select the Environment Factor";
+      isValid = false;
+    }
+
+    if (currentComponent.type === 'electromechanical') {
+      if (!selectedRatedTemp) {
+        newErrors.ratedTemp = "Select the Rated Temperature";
+        isValid = false;
+      }
+      if (!selectedLoadType) {
+        newErrors.loadType = "Select the Load Type";
+        isValid = false;
+      }
+      if (!selectedContactForm) {
+        newErrors.contactForm = "Select the Contact Form";
+        isValid = false;
+      }
+      if (!selectedQuality) {
+        newErrors.quality = "Select the Quality Factor";
+        isValid = false;
+      }
+      if (!selectedApplicationType) {
+        newErrors.applicationType = "Select the Application Type";
+        isValid = false;
+      }
+      if (!selectedConstructionType) {
+        newErrors.constructionType = "Select the Construction Type";
+        isValid = false;
+      }
+    } else {
+      if (!selectedBaseRateType) {
+        newErrors.baseRateType = "Select the Base Rate Type";
+        isValid = false;
+      }
+      if (!selectedQuality) {
+        newErrors.quality = "Select the Quality Factor";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  }
 
   // Calculate failure rate for electromechanical relays
   const calculateElectromechanicalFailureRate = () => {
+    if (!validateForm()) {
+      return;
+    }
     // Find base failure rate based on temperature
     const tempData = baseFailureRates?.electromechanical?.find(item => item.temp === currentComponent.ambientTemp);
     const λb = currentComponent.ratedTemp === 85 ? tempData.rate85 : tempData.rate125;
@@ -351,10 +429,10 @@ const Relay = ({ onCalculate }) => {
 
     // Get πQ factor
     const πQ = qualityFactors?.find(q => q.quality === currentComponent.quality)?.factor;
-
+     
     // Get πE factor
     const πE = environmentFactors?.find(e => e.env === currentComponent.environment)?.factor;
-  
+
     // Get πF factor
     const currentApp = applicationConstructionFactors[currentComponent.applicationType];
     const construction = currentApp?.constructions?.find(c => c.type === currentComponent.constructionType);
@@ -364,7 +442,6 @@ const Relay = ({ onCalculate }) => {
     const λp = λb * πL * πC * πCYC * πQ * πE * πF;
     if (onCalculate) {
       onCalculate(λp);
-       // Pass the calculated failure rate
     }
     return {
       λb,
@@ -380,6 +457,9 @@ const Relay = ({ onCalculate }) => {
 
   // Calculate failure rate for solid state relays
   const calculateSolidStateFailureRate = () => {
+    if (!validateForm()) {
+      return;
+    }
     const selectedRate = baseFailureRates[currentComponent.type].find(r => r.type === currentComponent.baseRateType)?.rate || 0.029;
     const λb = selectedRate;
     const FQ = currentComponent.quality === 'MIL-SPEC' ? 1.0 : 1.9;
@@ -388,7 +468,6 @@ const Relay = ({ onCalculate }) => {
     const λp = λb * FQ * FE;
     if (onCalculate) {
       onCalculate(λp);
-       // Pass the calculated failure rate
     }
     return {
       λb,
@@ -401,8 +480,7 @@ const Relay = ({ onCalculate }) => {
   // Handle form submission
   const handleCalculate = (e) => {
     e.preventDefault();
-    // setShowCalculations(false);
-    
+  
     try {
       let result;
       if (currentComponent.type === 'electromechanical') {
@@ -411,8 +489,10 @@ const Relay = ({ onCalculate }) => {
         result = calculateSolidStateFailureRate();
       }
       
-      setResult(result);
-      setError(null);
+      if (result) {
+        setResult(result);
+        setError(null);
+      }
     } catch (err) {
       setError(err.message);
       setResult(null);
@@ -428,13 +508,20 @@ const Relay = ({ onCalculate }) => {
             <label>Relay Type:</label>
             <Select
               styles={customStyles}
-              value={relayTypes.find(r => r.value === currentComponent.type)}
-              onChange={(selectedOption) => setCurrentComponent(prev => ({
-                ...prev,
-                type: selectedOption.value
-              }))}
+              value={selectedRelayType}
+              isInvalid={!!errors.relayType}
+              className={errors.relayType ? 'is-invalid' : ''}
+              onChange={(selectedOption) => {
+                setSelectedRelayType(selectedOption);
+                setCurrentComponent(prev => ({
+                  ...prev,
+                  type: selectedOption.value
+                }));
+                setErrors({...errors, relayType: ""});
+              }}
               options={relayTypes}
             />
+            {errors.relayType && <small className="text-danger">{errors.relayType}</small>}
           </div>
         </Col>
 
@@ -444,15 +531,17 @@ const Relay = ({ onCalculate }) => {
             <label>Environment (π<sub>E</sub>):</label>
             <Select
               styles={customStyles}
-              value={
-                currentComponent.type === 'electromechanical' ? 
-                environmentFactors?.find(e => e.env === currentComponent.environment) :
-                solidStateEnvFactors?.find(e => e.env === currentComponent.environment)
-              }
-              onChange={(selectedOption) => setCurrentComponent(prev => ({
-                ...prev,
-                environment: selectedOption.env
-              }))}
+              value={selectedEnvironment}
+              isInvalid={!!errors.environment}
+              className={errors.environment ? 'is-invalid' : ''}
+              onChange={(selectedOption) => {
+                setSelectedEnvironment(selectedOption);
+                setCurrentComponent(prev => ({
+                  ...prev,
+                  environment: selectedOption.env
+                }));
+                setErrors({...errors, environment: ""});
+              }}
               options={
                 currentComponent.type === 'electromechanical' ? 
                 environmentFactors : 
@@ -461,6 +550,7 @@ const Relay = ({ onCalculate }) => {
               getOptionLabel={option => `${option.env} (πE = ${option?.factor})`}
               getOptionValue={option => option.env}
             />
+            {errors.environment && <small className="text-danger">{errors.environment}</small>}
           </div>
         </Col>
 
@@ -490,19 +580,23 @@ const Relay = ({ onCalculate }) => {
                 <label>Rated Temperature λ<sub>b</sub>:</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.ratedTemp,
-                    label: `${currentComponent.ratedTemp}°C`
+                  value={selectedRatedTemp}
+                  isInvalid={!!errors.ratedTemp}
+                  className={errors.ratedTemp ? 'is-invalid' : ''}
+                  onChange={(selectedOption) => {
+                    setSelectedRatedTemp(selectedOption);
+                    setCurrentComponent(prev => ({
+                      ...prev,
+                      ratedTemp: selectedOption.value
+                    }));
+                    setErrors({...errors, ratedTemp: ""});
                   }}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
-                    ...prev,
-                    ratedTemp: selectedOption.value
-                  }))}
                   options={[
                     { value: 85, label: '85°C' },
                     { value: 125, label: '125°C' }
                   ]}
                 />
+                {errors.ratedTemp && <small className="text-danger">{errors.ratedTemp}</small>}
               </div>
             </Col>
 
@@ -511,16 +605,17 @@ const Relay = ({ onCalculate }) => {
                 <label>Load Type π<sub>L</sub>:</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.loadType,
-                    label: currentComponent.loadType.charAt(0).toUpperCase() + currentComponent.loadType.slice(1)
-                  }}
+                  value={selectedLoadType}
+                  isInvalid={!!errors.loadType}
+                  className={errors.loadType ? 'is-invalid' : ''}
                   onChange={(selectedOption) => {
+                    setSelectedLoadType(selectedOption);
                     setCurrentComponent(prev => ({
                       ...prev,
                       loadType: selectedOption.value,
                       loadPercentage: 0.05 // Reset to minimum when changing load type
                     }));
+                    setErrors({...errors, loadType: ""});
                   }}
                   options={[
                     { value: 'resistive', label: 'Resistive' },
@@ -528,6 +623,7 @@ const Relay = ({ onCalculate }) => {
                     { value: 'lamp', label: 'Lamp' }
                   ]}
                 />
+                {errors.loadType && <small className="text-danger">{errors.loadType}</small>}
               </div>
             </Col>
 
@@ -554,21 +650,23 @@ const Relay = ({ onCalculate }) => {
                 <label>Contact Form π<sub>C</sub>:</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.contactForm,
-                    label: `${currentComponent.contactForm} (πC = ${
-                      contactFormFactors.find(c => c.form === currentComponent.contactForm)?.factor
-                    })`
+                  value={selectedContactForm}
+                  isInvalid={!!errors.contactForm}
+                  className={errors.contactForm ? 'is-invalid' : ''}
+                  onChange={(selectedOption) => {
+                    setSelectedContactForm(selectedOption);
+                    setCurrentComponent(prev => ({
+                      ...prev,
+                      contactForm: selectedOption.value
+                    }));
+                    setErrors({...errors, contactForm: ""});
                   }}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
-                    ...prev,
-                    contactForm: selectedOption.value
-                  }))}
                   options={contactFormFactors.map(form => ({
                     value: form.form,
                     label: `${form.form} (πC = ${form?.factor})`
                   }))}
                 />
+                {errors.contactForm && <small className="text-danger">{errors.contactForm}</small>}
               </div>
             </Col>
 
@@ -594,24 +692,32 @@ const Relay = ({ onCalculate }) => {
                 <label>Application Type π<sub>F</sub>:</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.applicationType,
-                    label: applicationConstructionFactors[currentComponent.applicationType].label
-                  }}
+                  value={selectedApplicationType}
+                  isInvalid={!!errors.applicationType}
+                  className={errors.applicationType ? 'is-invalid' : ''}
                   onChange={(selectedOption) => {
                     const firstConstruction = 
                       applicationConstructionFactors[selectedOption.value].constructions[0].type;
+                    setSelectedApplicationType(selectedOption);
+                    setSelectedConstructionType({
+                      value: firstConstruction,
+                      label: `${firstConstruction} (πF = ${
+                        applicationConstructionFactors[selectedOption.value].constructions[0].factor
+                      })`
+                    });
                     setCurrentComponent(prev => ({
                       ...prev,
                       applicationType: selectedOption.value,
                       constructionType: firstConstruction
                     }));
+                    setErrors({...errors, applicationType: ""});
                   }}
                   options={applicationTypes.map(app => ({
                     value: app.value,
                     label: app.label
                   }))}
                 />
+                {errors.applicationType && <small className="text-danger">{errors.applicationType}</small>}
               </div>
             </Col>
 
@@ -620,17 +726,17 @@ const Relay = ({ onCalculate }) => {
                 <label>Construction Type π<sub>F</sub>:</label>
                 <Select
                   styles={customStyles}
-                  value={{
-                    value: currentComponent.constructionType,
-                    label: `${currentComponent.constructionType} (πF = ${
-                      applicationConstructionFactors[currentComponent.applicationType]
-                        .constructions.find(c => c.type === currentComponent.constructionType)?.factor
-                    })`
+                  value={selectedConstructionType}
+                  isInvalid={!!errors.constructionType}
+                  className={errors.constructionType ? 'is-invalid' : ''}
+                  onChange={(selectedOption) => {
+                    setSelectedConstructionType(selectedOption);
+                    setCurrentComponent(prev => ({
+                      ...prev,
+                      constructionType: selectedOption.value
+                    }));
+                    setErrors({...errors, constructionType: ""});
                   }}
-                  onChange={(selectedOption) => setCurrentComponent(prev => ({
-                    ...prev,
-                    constructionType: selectedOption.value
-                  }))}
                   options={applicationConstructionFactors[currentComponent.applicationType]
                     .constructions.map(cons => ({
                       value: cons.type,
@@ -638,6 +744,7 @@ const Relay = ({ onCalculate }) => {
                     }))
                   }
                 />
+                {errors.constructionType && <small className="text-danger">{errors.constructionType}</small>}
               </div>
             </Col>
           </>
@@ -650,21 +757,23 @@ const Relay = ({ onCalculate }) => {
               <label>Base Failure Rate Type (λ<sub>b</sub>):</label>
               <Select
                 styles={customStyles}
-                value={{
-                  value: currentComponent.baseRateType,
-                  label: `${currentComponent.baseRateType} (${
-                    baseFailureRates[currentComponent.type].find(r => r.type === currentComponent.baseRateType)?.rate
-                  })`
+                value={selectedBaseRateType}
+                isInvalid={!!errors.baseRateType}
+                className={errors.baseRateType ? 'is-invalid' : ''}
+                onChange={(selectedOption) => {
+                  setSelectedBaseRateType(selectedOption);
+                  setCurrentComponent(prev => ({
+                    ...prev,
+                    baseRateType: selectedOption.value
+                  }));
+                  setErrors({...errors, baseRateType: ""});
                 }}
-                onChange={(selectedOption) => setCurrentComponent(prev => ({
-                  ...prev,
-                  baseRateType: selectedOption.value
-                }))}
                 options={baseFailureRates[currentComponent.type].map(rate => ({
                   value: rate.type,
                   label: `${rate.type} (${rate.rate})`
                 }))}
               />
+              {errors.baseRateType && <small className="text-danger">{errors.baseRateType}</small>}
             </div>
           </Col>
         )}
@@ -675,18 +784,17 @@ const Relay = ({ onCalculate }) => {
             <label>Quality π<sub>Q</sub>:</label>
             <Select
               styles={customStyles}
-              value={{
-                value: currentComponent.quality,
-                label: `${currentComponent.quality} (πQ = ${
-                  currentComponent.type === 'electromechanical' ?
-                  qualityFactors.find(q => q.quality === currentComponent.quality)?.factor :
-                  qualityFactors2.find(q => q.quality === currentComponent.quality)?.factor
-                })`
+              value={selectedQuality}
+              isInvalid={!!errors.quality}
+              className={errors.quality ? 'is-invalid' : ''}
+              onChange={(selectedOption) => {
+                setSelectedQuality(selectedOption);
+                setCurrentComponent(prev => ({
+                  ...prev,
+                  quality: selectedOption.value
+                }));
+                setErrors({...errors, quality: ""});
               }}
-              onChange={(selectedOption) => setCurrentComponent(prev => ({
-                ...prev,
-                quality: selectedOption.value
-              }))}
               options={
                 currentComponent.type === 'electromechanical' ?
                 qualityFactors.map(q => ({
@@ -699,6 +807,7 @@ const Relay = ({ onCalculate }) => {
                 }))
               }
             />
+            {errors.quality && <small className="text-danger">{errors.quality}</small>}
           </div>
         </Col>
       </Row>

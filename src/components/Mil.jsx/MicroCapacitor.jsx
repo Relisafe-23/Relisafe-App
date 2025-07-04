@@ -13,6 +13,7 @@ import Box from '@mui/material/Box';
 import { useTheme } from '@mui/material/styles'
 import Select from "react-select";
 import { CalculatorIcon } from '@heroicons/react/24/outline';
+import { Mic } from '@mui/icons-material';
 // import DeleteIcon from '@material-ui/icons/Delete';
 
 
@@ -126,6 +127,7 @@ function MicroCapacitor({ onCalculate, handleCalculateFailure }) {
   const [selectedQuality, setSelectedQuality] = useState(null);
   const [selectedEnvironment, setSelectedEnvironment] = useState(null);
   const [results, setResults] = useState([]);
+  const [components, setComponents] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [showCalculations, setShowCalculations] = useState(false);
   const [circuitResistance, setCircuitResistance] = useState(null);
@@ -133,7 +135,7 @@ function MicroCapacitor({ onCalculate, handleCalculateFailure }) {
   const [voltageApplied, setVoltageApplied] = useState(null);
   const [shouldCalculateCR, setShouldCalculateCR] = useState(false);
   const [piSR, setPiSR] = useState(null);
-
+  const[quantity,setQuantity] = useState(null);
   const [errors, setErrors] = useState({ 
     capacitorType: '',
     environment: '',
@@ -377,10 +379,23 @@ const newResult = {
     }
   };
 
+const handleAddComponent = () => {
 
+  if (components.length === 0 || components[components.length - 1].length !== 0) {
+    setComponents([...components, []]);
+  }
+};
+
+const handleRemoveComponent = () => {
+  if (components.length > 0) { // Only remove if there are components
+    const newComponents = [...components];
+    newComponents.pop(); // Remove the last component
+    setComponents(newComponents);
+  }
+};
 
   return (
-    <div className="calculator-container">
+      <div className="reliability-calculator">
       <h2 className='text-center' style={{ fontSize: '1.2rem' }}>Capacitor</h2>
       <div>
         <Row>
@@ -554,9 +569,12 @@ const newResult = {
                 max="150"
                 step="1"
               />
+                     {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
+                     <br/>
               <small>T<sub>A</sub>= Hybrid Case Temperature</small>
-              {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
+            
             </div>
+       
                  {selectedCapacitor?.value?.πtColumn && capacitorTypes.some(type => type.πtColumn === selectedCapacitor?.value.πtColumn) && (
               <div className="mt-2">
                 Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
@@ -674,10 +692,8 @@ const newResult = {
                        setErrors({ ...errors, effectiveResistance: '' });
                     }}
                     min="0"
-                    step="0.1"
-                      
+                    step="0.1"  
                   />
-             
                   {errors.effectiveResistance && <small style={{ color: 'red' }}>{errors.effectiveResistance}</small>}
                 </div>
               </Col>
@@ -719,7 +735,31 @@ const newResult = {
 >
   Calculate FR
 </Button>
-   
+  <br/>
+          <Col md={4} >
+            <div className="form-group">
+              <label>Quantity (Nₙ):</label>
+              <input
+                type="number"
+                className="form-control"
+                min="1"
+                value={quantity}
+                onChange={(e) => {
+                  setQuantity(e.target.value);
+                  //   calculateComponentSum(e.target.value)
+                }}
+              />
+            </div>
+          </Col>
+      <div>
+                         {components.length === 0 || components[components.length - 1].length > 0 ? (
+                         <div className='mb-5'>
+                           <Button   variant="primary" onClick={handleAddComponent}>Add Component</Button>            
+                         </div>
+                       ) : null}
+                       <div className=" float-end mb-5">
+                             <Button   variant="primary" onClick={handleRemoveComponent}>Remove Component</Button>
+                     </div>
       <br />
       <div>
          {results && showResults && (
@@ -728,15 +768,29 @@ const newResult = {
          )}
        { results && showResults && (
         
-            <div className="d-flex align-items-center">
+            <div className="Predicted-Failure">
               <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
               <span className="ms-2">
                 {calculateFailureRate()?.toFixed(10)} failures/10<sup>6</sup> hours
               </span>
+              <br/>
+              <strong>λ<sub>c</sub> * N <sub>c</sub>:</strong>
+                <span className="ms-2">  
+                {calculateFailureRate() * quantity} failures/10<sup>6</sup> hours
+                {console.log("quantity..",calculateFailureRate() * quantity)}
+              </span>
             </div>
        
         )}
+          {components.map((_, index) => (
+            <MicroCapacitor
+              key={index}
+              handleCalculateFailure={handleCalculateFailure}
+            />
+          ))}
+
         <br />
+        </div>
         </div>
       </div>
     </div>

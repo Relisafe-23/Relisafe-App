@@ -595,6 +595,7 @@ const ResistorCalculation = () => {
             <input
               type="number"
               name='powerFactor'
+              placeholder='Enter Power Factor'
               className={`form-control ${errors.powerFactor ? 'is-invalid' : ''}`}
               value={powerFactor}
               onChange={(e) => {

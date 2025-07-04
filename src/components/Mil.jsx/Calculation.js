@@ -1,6 +1,4 @@
-// reliabilityCalculations.js
 
-// Package failure rate lookup
 export const getFailureRate = (packageType, pinCount) => {
   // Validate input
   if (typeof pinCount !== 'number' || pinCount <= 0) return 0;
@@ -38,6 +36,7 @@ export const getFailureRate = (packageType, pinCount) => {
       return 0; // Unknown package type
   }
 };
+
 
 // Corrected getBValueForTemp function
 export const getBValueForTemp = (memoryTech, memorySize, temperature, factorType) => {
@@ -112,9 +111,9 @@ export const calculatePiT = (technology, temperature, Ea = 1.5) => {
   }
 };
 
-// Quality factor
+
 export const getQualityFactor = (quality) => {
-  console.log("quality..9999...", quality)
+
   const QUALITY_FACTORS = {
     MIL_M_38510_ClassS: { value: 0.25, label: "MIL-M-38510 Class S" },
     MIL_I_38535_ClassU: { value: 0.25, label: "MIL-I-38535 Class U" },
@@ -132,7 +131,7 @@ export const getQualityFactor = (quality) => {
   return QUALITY_FACTORS[quality]?.value ?? NaN;
 };
 
-// Learning factor
+
 export const calculateLearningFactor = (years) => {
   return years <= 0.1 ? 2.0 :
          years >= 2.0 ? 1.0 :
@@ -141,7 +140,7 @@ export const calculateLearningFactor = (years) => {
          years >= 0.5 ? 1.8 : 0;
 };
 
-// memoryFailureRates.js
+
 export const calculateMosRomC1 = (memorySize) => {
   const c1Values = {
     'Up to 16K': 0.00065,
@@ -215,61 +214,34 @@ export const getMemorySizeCategory = (bitCount) => {
   return '> 1M'; // Beyond table range
 };
 // GATE/LOGIC ARRAYS CALCULATION
-export const calculateMicrocircuitsAndMicroprocessorsFailureRate = (component) => {
-  console.log("component...yearsInProduction....", component.quality)
-  const C1 = calculateGateArrayC1(component);
-  console.log("Final C1 value:", C1);
- 
-  const C2 = getFailureRate(component.packageType, component.pinCount);
-  const piT = calculatePiT(component.technology, component.temperature);
-  const piE = getEnvironmentFactor(component.environment);
-  const piQ = getQualityFactor(component.quality);
-  const piL = calculateLearningFactor(component.yearsInProduction);
 
- 
-  console.log("C2......", C2);
-  console.log("piT......", piT);
-  console.log("piE......", piE);
-  console.log("piQ......", piQ);
-  console.log("C1......", C1);
-
-
-  console.log("final environment......", getEnvironmentFactor(component.environment))
-
-  console.log("final formulae......", (C1 * piT + C2 * piE) * piQ * piL)
-
-  return (C1 * piT + C2 * piE) * piQ * piL;
-};
 
 export const calculateGateArrayC1 = (component) => {
-  // Debug: Log the input component
-  console.log("Input component:", component);
 
-  // Validate input
   if (!component || !component.complexFailure || !component.gateCount) {
-    console.log("Missing required fields (complexFailure or gateCount)");
+
     return 11;
   }
 
-  // Parse gate count (handle ranges and "Up to" cases)
+ 
   let gateCount = parseGateCount(component.gateCount);
   if (isNaN(gateCount)) {
-    console.log("Invalid gateCount:", component.gateCount);
+  
     return 10;
   }
 
-  // Debug: Log parsed gate count
-  console.log("Parsed gateCount:", gateCount);
 
-  // Special case for MOS digital with >60,000 gates
+
+
+  
   if (component.technology === 'MOS' &&
       component.complexFailure === 'Digital' &&
       gateCount > 60000) {
-    console.log("Special case: MOS Digital with >60,000 gates");
+    
     return 'Use VHSIC/VHSIC-Like model';
   }
 
-  // Get the appropriate data set based on technology
+  
   let data;
   switch (component.devices) {
     case 'bipolarData':
@@ -282,33 +254,30 @@ export const calculateGateArrayC1 = (component) => {
       data = microprocessorData;
   }
 
-  // Debug: Log selected dataset
-  console.log("Selected dataset:", data);
 
-  // Normalize category name
+
   let category = component.complexFailure;
   if (category === 'pla/pal') {
     category = 'pla';
   }
 
-  // Debug: Log category
-  console.log("Category:", category);
+
 
   const categoryData = data[category];
-  console.log("Category data:",categoryData);
+
   if (!categoryData) {
-    console.log("No data found for category:", category);
+  
     return 12;
   }
-  console.log("Category data:",categoryData);
+
   const matchedRange = categoryData.find(
     item => gateCount >= item.min && gateCount <= item.max
   );
-  console.log("Matched range:", matchedRange);
+
 
   // 8. Return result
   const result = matchedRange ? matchedRange.c1 : 0;
-  console.log("Final C1 value:", result);
+
   return result;
 };
 
@@ -385,7 +354,16 @@ const microprocessorData = {
     { min: 16, max: 32, c1: 0.56 }
   ]
 };
-console.log("microprocessorData....", microprocessorData)
+ export const calculateMicrocircuitsAndMicroprocessorsFailureRate = (component) => {
+  
+    const C1 = calculateGateArrayC1(component);
+    const C2 = getFailureRate(component.packageType, component.pinCount);
+    const piT = calculatePiT(component.technology, component.temperature);
+    const piE = getEnvironmentFactor(component.environment);
+    const piQ = getQualityFactor(component.quality);
+    const piL = calculateLearningFactor(component.yearsInProduction);
+    return (C1 * piT + C2 * piE) * piQ * piL ;
+  };
 // MEMORIES CALCULATION
 
 export const calculateMemoriesFailureRate = (component) => {
@@ -611,9 +589,6 @@ export const calculateTexturedPolyLambdaCyc = (cycles) => {
   return 2.3;
 };
 
-
-
-
 // SYSTEM METRICS
 export const calculateSystemMetrics = (components) => {
   const totalFailureRate = components.reduce(
@@ -641,7 +616,7 @@ export const QUALITY_FACTORS = [
   },
 ];
 
-console.log("value1...", QUALITY_FACTORS)
+
 // Environment Factors Configuration
 export const ENVIRONMENTAL_FACTORS = {
   GB: { label: "Ground Benign", value: 0.50 },

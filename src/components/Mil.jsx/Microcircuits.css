@@ -126,23 +126,22 @@
   }
 
   .btn {
-    width: auto; /* or specify a reasonable width like 100px */
-    min-width: 80px; /* ensures button has minimum reasonable width */
-    padding: 8px 16px; /* adds internal spacing */
-    background-color: #007bff; /* example color */
-    color: white; /* text color */
-    border: none; /* removes default border */
-    border-radius: 4px; /* slightly rounded corners */
-    cursor: pointer; /* shows hand cursor on hover */
-    font-size: 14px; /* reasonable text size */
-    font-weight: 500; /* medium weight text */
-    transition: background-color 0.3s; /* smooth hover effect */
+    width: auto; 
+    min-width: 80px; 
+    padding: 8px 16px; 
+    background-color: #007bff; 
+    color: white;
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer;
+    font-size: 14px; 
+    font-weight: 500; 
+    transition: background-color 0.3s; 
   }
   
   .btn:hover {
-    background-color: #0069d9; /* slightly darker on hover */
+    background-color: #0069d9; 
   }
-/* For single row layout */
 .saw-device-row {
   display: flex;
   gap: 1rem;
@@ -152,22 +151,20 @@
 
 .saw-device-field {
   flex: 1;
-  min-width: 0; /* Prevents overflow */
+  min-width: 0; 
 }
-/* Container for the form fields */
+
 .form-row {
   display: flex;
-  gap: 20px; /* Space between columns */
+  gap: 20px; 
   margin-bottom: 15px;
 }
 
-/* Each form field container */
+
 .form-group {
   margin-bottom: 15px;
   width: 100%;
 }
-
-/* Labels styling */
 .form-group label {
   display: block;
   margin-bottom: 5px;
@@ -175,7 +172,7 @@
   color: #333;
 }
 
-/* Select dropdown styling */
+
 .form-group .Select__control {
   min-height: 38px;
   border-radius: 4px;
@@ -184,23 +181,25 @@
 }
 
 .form-group .Select__menu {
-  z-index: 1000; /* Ensure dropdown appears above other elements */
-}
+  z-index: 1000;
+ }
 
-/* Specific styling for Part Type and Environment fields */
 .form-group.part-type-field,
 .form-group.environment-field {
-  flex: 1; /* Make them take equal space */
-  min-width: 250px; /* Minimum width */
+  flex: 1;
+  min-width: 250px;
 }
-
-/* For the environment field with subscript */
 .form-group.environment-field label {
   display: flex;
   align-items: center;
 }
 
-/* Temperature input field */
+.predicted-value{
+  /* font-weight: bold; */
+  color: #333;
+  margin-top: 10px;
+  width:50%;
+}
 .form-group input[type="number"] {
   width: 100%;
   padding: 8px 12px;

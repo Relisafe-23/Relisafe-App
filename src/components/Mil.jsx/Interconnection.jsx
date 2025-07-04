@@ -148,13 +148,13 @@ const Interconnection = ({ onCalculate }) => {
 
   // State for PWA inputs
   const [pwaInputs, setPwaInputs] = useState({
-    technology: baseRatesPWA[0],
-    automatedPTHs: 0,
-    handSolderedPTHs: 0,
-    circuitPlanes: 1,
+    technology: "",
+    automatedPTHs: null,
+    handSolderedPTHs: null,
+    circuitPlanes: "",
     customPlanes: 0,
-    quality: qualityFactorsPWA[0],
-    environment: environmentFactorsPWA[0]
+    quality: "",
+    environment: ""
   });
 
 
@@ -165,18 +165,40 @@ const Interconnection = ({ onCalculate }) => {
     powerDissipation: 0.5, // watts
     thermalResistance: 20, // °C/watt
     designLife: 20, // years
-    cyclingRate: cyclingRatesSMT[6], // Military Ground
-    leadConfig: leadConfigFactorsSMT[0], // Leadless
-    packageMaterial: packageTCEValuesSMT[0],
-    ecfTableSMT: ecfTableSMT[0],
-    substrateMaterial: substrateTCEValuesSMT[0], // FR-4 Laminate
-    environment: environmentFactorsPWA[6], // Military Ground (GM)
+    cyclingRate: "", // Military Ground
+    leadConfig: "", // Leadless
+    packageMaterial: "",
+    ecfTableSMT: "",
+    substrateMaterial: "", // FR-4 Laminate
+    environment: "", // Military Ground (GM)
     deviceCount: 1
   });
 
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [showCalculations, setShowCalculations] = useState(false);
+  const [errors, setErrors] = useState({
+    type: "",
+    modelType: "",
+    technology: "",
+    automatedPTHs: "",
+    handSolderedPTHs: "",
+    circuitPlanes: "",
+    customPlanes: "",
+    ecfValue: "",
+    substrateMaterial: "",
+    environment: "",
+    packageSize: "",
+    solderHeight: "",
+    powerDissipation: "",
+    thermalResistance: "",
+    designLife: "",
+    deviceCount: "",
+    cyclingRate: "",
+    leadConfig: "",
+    packageMaterial: ""
+  });
+
 
   // Custom styles for Select components
   const customStyles = {
@@ -225,9 +247,105 @@ const Interconnection = ({ onCalculate }) => {
       overflowY: 'auto',
     }),
   };
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
 
+    if (!currentModel.type) {
+      newErrors.type = "Please select a model type";
+      isValid = false;
+    }
+
+    if (currentModel.type === 'PTH Model') {
+      if (!pwaInputs.technology) {
+        newErrors.technology = "Please select a technology type";
+        isValid = false;
+      }
+      if (!pwaInputs.quality) {
+        newErrors.quality = "Please select the quality factor";
+        isValid = false;
+      }
+      if (!pwaInputs.environment) {
+        newErrors.environment = "Please select an environment factor";
+        isValid = false;
+      }
+      if (!pwaInputs.automatedPTHs) {
+        newErrors.automatedPTHs = "Please enter a valid number of automated PTHs";
+        isValid = false;
+      }
+      if (!pwaInputs.handSolderedPTHs) {
+        newErrors.handSolderedPTHs = "Please enter a valid number of hand soldered PTHs";
+        isValid = false;
+      }
+      if (!pwaInputs.circuitPlanes) {
+        newErrors.circuitPlanes = "Please select number of circuit planes";
+        isValid = false;
+      }
+      if (pwaInputs.circuitPlanes === 'custom' &&
+        (isNaN(pwaInputs.customPlanes) || pwaInputs.customPlanes < 2 || pwaInputs.customPlanes > 18)) {
+        newErrors.customPlanes = "Please enter a valid number of custom planes (2-18)";
+        isValid = false;
+      }
+    }
+    else if (currentModel.type === 'SMT Model') {
+      if (!smtInputs.ecfValue) {
+        newErrors.ecfValue = "Please select environmental correction factor";
+        isValid = false;
+      }
+      if (!smtInputs.substrateMaterial) {
+        newErrors.substrateMaterial = "Please select substrate material";
+        isValid = false;
+      }
+      if (!smtInputs.environment) {
+        newErrors.environment = "Please select environment";
+        isValid = false;
+      }
+      // if (isNaN(smtInputs.packageSize) || smtInputs.packageSize <= 0) {
+      //   newErrors.packageSize = "Please enter a valid package size";
+      //   isValid = false;
+      // }
+      // if (isNaN(smtInputs.solderHeight) || smtInputs.solderHeight <= 0) {
+      //   newErrors.solderHeight = "Please enter a valid solder height";
+      //   isValid = false;
+      // }
+      // if (isNaN(smtInputs.powerDissipation) || smtInputs.powerDissipation < 0) {
+      //   newErrors.powerDissipation = "Please enter valid power dissipation";
+      //   isValid = false;
+      // }
+      // if (isNaN(smtInputs.thermalResistance) || smtInputs.thermalResistance <= 0) {
+      //   newErrors.thermalResistance = "Please enter valid thermal resistance";
+      //   isValid = false;
+      // }
+      // if (isNaN(smtInputs.designLife) || smtInputs.designLife <= 0) {
+      //   newErrors.designLife = "Please enter valid design life";
+      //   isValid = false;
+      // }
+      // if (isNaN(smtInputs.deviceCount) || smtInputs.deviceCount <= 0) {
+      //   newErrors.deviceCount = "Please enter valid number of devices";
+      //   isValid = false;
+      // }
+      if (!smtInputs.cyclingRate) {
+        newErrors.cyclingRate = "Please select cycling rate";
+        isValid = false;
+      }
+      if (!smtInputs.leadConfig) {
+        newErrors.leadConfig = "Please select lead configuration";
+        isValid = false;
+      }
+      if (!smtInputs.packageMaterial) {
+        newErrors.packageMaterial = "Please select package material";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  }
   // Calculate PWA failure rate
   const calculatePwaFailureRate = () => {
+    if (!validateForm()) {
+      return null;
+    }
     try {
       // Validate required inputs
       if (!pwaInputs.technology?.rate ||
@@ -305,18 +423,21 @@ const Interconnection = ({ onCalculate }) => {
     return 1.0;
   };
 
-const environmentCorrectionFactor =()=>{
-  return smtInputs.ecfValue;
-}
+  const environmentCorrectionFactor = () => {
+    return smtInputs.ecfValue;
+  }
   // Calculate SMT failure rate
   const calculateSmtFailureRate = () => {
+    if (!validateForm()) {
+      return null;
+    }
     try {
       // Get ΔT from environment
       const deltaT = deltaTValuesSMT.find(d => d.env === smtInputs.environment.env)?.value || 21; // Default to GM if not found
-     console.log("deltaT",deltaT)
+      console.log("deltaT", deltaT)
       // Calculate temperature rise due to power dissipation
       const tempRise = smtInputs.thermalResistance * smtInputs.powerDissipation;
-      
+
       // Calculate distance from center to furthest solder joint (half of package size)
       const d = smtInputs.packageSize / 2;
 
@@ -333,21 +454,21 @@ const environmentCorrectionFactor =()=>{
       // Calculate Ni (number of cycles to failure)
       const strainRange = Math.abs(αS * deltaT - αCC * (deltaT + tempRise)) * 1e-6 ?.toFixed(6);
       const Ni = 3.5 * Math.pow((d / (0.65 * h) * strainRange), -2.26) * πLC;
-     console.log("Ni",Ni)
+      console.log("Ni", Ni)
       // Get cycling rate
       const CR = smtInputs.cyclingRate.rate;
-      console.log("CR",CR)
+      console.log("CR", CR)
       // Calculate characteristic life (αSMT)
       const αSMT = Ni / CR;
-      console.log("αSMTghj ",αSMT )
+      console.log("αSMTghj ", αSMT)
       // const ecf = smtInputs.ecfTableSMT.value;
       const ecf = environmentCorrectionFactor();
-      console.log("ecf",ecf)
+      console.log("ecf", ecf)
       // Calculate LC/αSMT ratio
       const lifeRatio = (smtInputs.designLife * 8760) / αSMT;
 
-      const λSMT = (ecf/αSMT)?.toFixed(8);
-console.log("λSMTfh",λSMT)
+      const λSMT = (ecf / αSMT)?.toFixed(12);
+      console.log("λSMTfh", λSMT)
       const failureRate = λSMT * smtInputs.deviceCount?.toFixed(8);
 
       console.log('Failure Rate:', failureRate);
@@ -367,17 +488,17 @@ console.log("λSMTfh",λSMT)
           substrateMaterial: smtInputs.substrateMaterial.material,
           environment: smtInputs.environment.label,
           deviceCount: smtInputs.deviceCount,
-          Ni: Ni?.toFixed(0),
-          αSMT: αSMT?.toFixed(0),
+          Ni: Ni?.toFixed(4),
+          αSMT: αSMT?.toFixed(4),
           ecf: ecf?.toFixed(2),
           failureRate,
           formula: 'λSMT = (ECF / αSMT) × number of devices'
         }
       });
 
-   
-      console.log('αSMT:', αSMT?.toFixed(0));
-      console.log('ecf:',ecf)
+
+      console.log('αSMT:', αSMT?.toFixed(4));
+      console.log('ecf:', ecf)
       console.log('Number of Devices:', smtInputs.deviceCount);
       setError(null);
       if (onCalculate) {
@@ -412,77 +533,87 @@ console.log("λSMTfh",λSMT)
                 { value: currentModel.type, label: currentModel.type } : null}
               onChange={(selectedOption) => {
                 setCurrentModel({ ...currentModel, type: selectedOption.value });
+                setErrors({ ...errors, type: "" });
               }}
               options={[
                 { value: "PTH Model", label: "PTH Model (Through-hole)" },
                 { value: "SMT Model", label: "SMT Model (Surface Mount)" },
               ]}
+              className={errors.type ? 'is-invalid' : ''}
             />
+            {errors.type && <small className="text-danger">{errors.type}</small>}
           </div>
         </Col>
         {currentModel?.type === "SMT Model" && (
           <>
-           <Col md={4}>
-  {/* Environmental Correction Factor (ECF) */}
-  <div className="form-group">
-    <label>Environmental Correction Factor (ECF):</label>
-    <Select
-      styles={customStyles}
-      options={[
-        { range: '0-0.1', value: 0.13, label: '0-0.1 (ECF = 0.13)' },
-        { range: '0.11-0.20', value: 0.15, label: '0.11-0.20 (ECF = 0.15)' },
-        { range: '0.21-0.30', value: 0.23, label: '0.21-0.30 (ECF = 0.23)' },
-        { range: '0.31-0.40', value: 0.31, label: '0.31-0.40 (ECF = 0.31)' },
-        { range: '0.41-0.50', value: 0.41, label: '0.41-0.50 (ECF = 0.41)' },
-        { range: '0.51-0.60', value: 0.51, label: '0.51-0.60 (ECF = 0.51)' },
-        { range: '0.61-0.70', value: 0.61, label: '0.61-0.70 (ECF = 0.61)' },
-        { range: '0.71-0.80', value: 0.68, label: '0.71-0.80 (ECF = 0.68)' },
-        { range: '0.81-0.90', value: 0.76, label: '0.81-0.90 (ECF = 0.76)' },
-        { range: '>0.90', value: 1.0, label: '>0.90 (ECF = 1.0)' }
-      ]}
-      value={{
-        value: smtInputs.ecfValue,
-        label: smtInputs.ecfValue 
-          ? `ECF = ${smtInputs.ecfValue}`
-          : "Select ECF Range"
-      }}
-      onChange={(selectedOption) => setSmtInputs(prev => ({
-        ...prev,
-        ecfValue: selectedOption.value
-      }))}
-    />
-  </div>
-</Col>
+            <Col md={4}>
+              {/* Environmental Correction Factor (ECF) */}
+              <div className="form-group">
+                <label>Environmental Correction Factor (ECF):</label>
+                <Select
+                  styles={customStyles}
+                  options={[
+                    { range: '0-0.1', value: 0.13, label: '0-0.1 (ECF = 0.13)' },
+                    { range: '0.11-0.20', value: 0.15, label: '0.11-0.20 (ECF = 0.15)' },
+                    { range: '0.21-0.30', value: 0.23, label: '0.21-0.30 (ECF = 0.23)' },
+                    { range: '0.31-0.40', value: 0.31, label: '0.31-0.40 (ECF = 0.31)' },
+                    { range: '0.41-0.50', value: 0.41, label: '0.41-0.50 (ECF = 0.41)' },
+                    { range: '0.51-0.60', value: 0.51, label: '0.51-0.60 (ECF = 0.51)' },
+                    { range: '0.61-0.70', value: 0.61, label: '0.61-0.70 (ECF = 0.61)' },
+                    { range: '0.71-0.80', value: 0.68, label: '0.71-0.80 (ECF = 0.68)' },
+                    { range: '0.81-0.90', value: 0.76, label: '0.81-0.90 (ECF = 0.76)' },
+                    { range: '>0.90', value: 1.0, label: '>0.90 (ECF = 1.0)' }
+                  ]}
+                  value={{
+                    value: smtInputs.ecfValue,
+                    label: smtInputs.ecfValue
+                      ? `ECF = ${smtInputs.ecfValue}`
+                      : "Select ECF Range"
+                  }}
+                  onChange={(selectedOption) => {
+                    setSmtInputs(prev => ({
+                      ...prev,
+                      ecfValue: selectedOption.value
+                    }))
 
+                    setErrors({ ...errors, ecfValue: "" })
+                  }}
+                />
+                {errors.ecfValue && <small className="text-danger">{errors.ecfValue}</small>}
+              </div>
+            </Col>
             <Col md={4}>
               {/* Substrate Material */}
               <div className="form-group">
                 <label>Substrate Material (α<sub>S</sub>) for N<sub>f</sub>:</label>
                 <Select
                   styles={customStyles}
+                  placeholder="select.."
                   options={substrateTCEValuesSMT.map(item => ({
                     value: item,
                     label: `${item.material} (αS = ${item.value})`
                   }))}
                   value={{
                     value: smtInputs.substrateMaterial,
-                    label: `${smtInputs.substrateMaterial.material} (αS = ${smtInputs.substrateMaterial.value})`
+                    // label: `${smtInputs.substrateMaterial.material} (αS = ${smtInputs.substrateMaterial.value})`
+                    label: smtInputs.substrateMaterial ? `${smtInputs.substrateMaterial.material} (αS = ${smtInputs.substrateMaterial.value})` : "select..."
+
                   }}
-                  onChange={(selectedOption) => setSmtInputs(prev => ({
-                    ...prev,
-                    substrateMaterial: selectedOption.value
-                  }))}
+                  onChange={(selectedOption) => {
+                    setSmtInputs(prev => ({
+                      ...prev,
+                      substrateMaterial: selectedOption.value
+                    }))
+                    setErrors({ ...errors, substrateMaterial: "" })
+                  }}
                 />
+                {errors.substrateMaterial && <small className="text-danger">{errors.substrateMaterial}</small>}
               </div>
             </Col>
-
-
-
           </>
         )}
         {currentModel?.type === "PTH Model" && (
           <>
-
             <Col md={4}>
               {/* Quality Factor */}
               <div className="form-group">
@@ -495,13 +626,17 @@ console.log("λSMTfh",λSMT)
                   }))}
                   value={{
                     value: pwaInputs.quality,
-                    label: `${pwaInputs.quality.quality} ( πQ = ${pwaInputs.quality.factor})`
+                    label: pwaInputs.quality ? `${pwaInputs.quality.quality} ( πQ = ${pwaInputs.quality.factor})` : "select..."
                   }}
-                  onChange={(selectedOption) => setPwaInputs(prev => ({
-                    ...prev,
-                    quality: selectedOption.value
-                  }))}
+                  onChange={(selectedOption) => {
+                    setPwaInputs(prev => ({
+                      ...prev,
+                      quality: selectedOption.value
+                    }))
+                    setErrors({ ...errors, quality: "" })
+                  }}
                 />
+                {errors.quality && <small className="text-danger">{errors.quality}</small>}
               </div>
             </Col>
 
@@ -517,13 +652,17 @@ console.log("λSMTfh",λSMT)
                   }))}
                   value={{
                     value: pwaInputs.environment,
-                    label: `${pwaInputs.environment.label} ( πE = ${pwaInputs.environment.factor})`
+                    label: pwaInputs.environment ? `${pwaInputs.environment.label} ( πE = ${pwaInputs.environment.factor})` : "select..."
                   }}
-                  onChange={(selectedOption) => setPwaInputs(prev => ({
-                    ...prev,
-                    environment: selectedOption.value
-                  }))}
+                  onChange={(selectedOption) => {
+                    setPwaInputs(prev => ({
+                      ...prev,
+                      environment: selectedOption.value
+                    }))
+                    setErrors({ ...errors, environment: '' })
+                  }}
                 />
+                {errors.environment && <small className="text-danger">{errors.environment}</small>}
               </div>
             </Col>
           </>
@@ -546,47 +685,60 @@ console.log("λSMTfh",λSMT)
                   }))}
                   value={{
                     value: pwaInputs.technology,
-                    label: `${pwaInputs.technology.type} (λb = ${pwaInputs.technology.rate})`
+                    label: pwaInputs.technology ? `${pwaInputs.technology.type} (λb = ${pwaInputs.technology.rate})` : "select..."
                   }}
-                  onChange={(selectedOption) => setPwaInputs(prev => ({
-                    ...prev,
-                    technology: selectedOption.value
-                  }))}
+                  onChange={(selectedOption) => {
+                    setPwaInputs(prev => ({ ...prev, technology: selectedOption.value }));
+                    setErrors({ ...errors, technology: "" });
+                  }}
+                  className={errors.technology ? 'is-invalid' : ''}
                 />
+                {errors.technology && <small className="text-danger">{errors.technology}</small>}
               </div>
             </Col>
 
             <Col md={4}>
-              {/* Automated PTHs */}
+            
               <div className="form-group">
                 <label>Automated PTHs (N<sub>1</sub>):</label>
                 <input
                   type="number"
-                  className="form-control"
+                  placeholder='Enter..'
+                  className={`form-control ${errors.automatedPTHs ? 'is-invalid' : ''}`}
                   min="0"
                   value={pwaInputs.automatedPTHs}
-                  onChange={(e) => setPwaInputs(prev => ({
-                    ...prev,
-                    automatedPTHs: parseInt(e.target.value) || 0
-                  }))}
+                  onChange={(e) => {
+                    setPwaInputs(prev => ({
+                      ...prev,
+                      automatedPTHs: parseInt(e.target.value)
+                    }))
+                    setErrors({ ...errors, automatedPTHs: "" })
+                  }}
                 />
+                {errors.automatedPTHs && <small className="text-danger">{errors.automatedPTHs}</small>}
               </div>
             </Col>
 
             <Col md={4}>
-              {/* Hand Soldered PTHs */}
+           
               <div className="form-group">
                 <label>Hand Soldered PTHs (N<sub>2</sub>):</label>
                 <input
                   type="number"
-                  className="form-control"
+                  placeholder='Enter..'
+                  className={`form-control ${errors.handSolderedPTHs ? 'is-invalid' : ''}`}
                   min="0"
                   value={pwaInputs.handSolderedPTHs}
-                  onChange={(e) => setPwaInputs(prev => ({
-                    ...prev,
-                    handSolderedPTHs: parseInt(e.target.value) || 0
-                  }))}
+
+                  onChange={(e) => {
+                    setPwaInputs(prev => ({
+                      ...prev,
+                      handSolderedPTHs: parseInt(e.target.value)
+                    }))
+                    setErrors({ ...errors, handSolderedPTHs: "" })
+                  }}
                 />
+                {errors.handSolderedPTHs && <small className="text-danger">{errors.handSolderedPTHs}</small>}
               </div>
             </Col>
             <Col md={4}>
@@ -597,22 +749,28 @@ console.log("λSMTfh",λSMT)
                   options={[
                     ...complexityFactors.map(item => ({
                       value: item.planes,
-                      label: `${item.planes} planes (πC = ${item.factor.toFixed(1)})`
+                      label: `${item.planes} planes (πC = ${item.factor?.toFixed(1)})`
                     })),
                     { value: 'custom', label: 'Custom Planes' }
                   ]}
                   value={{
                     value: pwaInputs.circuitPlanes,
-                    label: pwaInputs.circuitPlanes === 'custom'
-                      ? `Custom Planes (πC = ${calculatePiC(pwaInputs.customPlanes).toFixed(3)})`
-                      : `${pwaInputs.circuitPlanes} planes (πC = ${calculatePiC(pwaInputs.circuitPlanes).toFixed(1)})`
+                    label: pwaInputs.circuitPlanes? `${pwaInputs.circuitPlanes} planes (πC = ${calculatePiC(pwaInputs.circuitPlanes)?.toFixed(1)})`:"select..."
+                    // label: pwaInputs.circuitPlanes === 'custom'
+                    //   ? `Custom Planes (πC = ${calculatePiC(pwaInputs.customPlanes)?.toFixed(3)})`
+                    //   : `${pwaInputs.circuitPlanes} planes (πC = ${calculatePiC(pwaInputs.circuitPlanes)?.toFixed(1)})`,
+
                   }}
-                  onChange={(selectedOption) => setPwaInputs(prev => ({
-                    ...prev,
-                    circuitPlanes: selectedOption.value,
-                    customPlanes: selectedOption.value === 'custom' ? (prev.customPlanes || 2) : undefined
-                  }))}
+                  onChange={(selectedOption) => {
+                    setPwaInputs(prev => ({
+                      ...prev,
+                      circuitPlanes: selectedOption.value,
+                      customPlanes: selectedOption.value === 'custom' ? (prev.customPlanes || 2) : undefined
+                    }))
+                    setErrors({ ...errors, circuitPlanes: "" })
+                  }}
                 />
+                {errors.circuitPlanes && <small className="text-danger">{errors.circuitPlanes}</small>}
 
                 {pwaInputs.circuitPlanes === 'custom' && (
                   <div className="mt-2">
@@ -626,13 +784,15 @@ console.log("λSMTfh",λSMT)
                         setPwaInputs(prev => ({
                           ...prev,
                           customPlanes: e.target.value
-                        }));
+                        }))
+                        setErrors({ ...errors, customPlanes: "" })
                       }}
                       min="2"
                       max="18"
                       step="1"
                       placeholder="Enter custom planes (2-18)"
                     />
+                    {errors.customPlanes && <small className="text-danger">{errors.customPlanes}</small>}
                     <small className="text-muted">
                       Formula: πC = 0.65 × P<sup>0.63</sup>
                     </small>
@@ -684,22 +844,22 @@ console.log("λSMTfh",λSMT)
               Calculate Failure Rate
             </Button>
           </div>
-                     {result && (
-        <>
-          <h2 className="text-center">Calculation Result</h2>
-          <div className="d-flex align-items-center">
-            <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-            <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
-          </div>
-        </>
-      )}
+          {result && (
+            <>
+              <h2 className="text-center">Calculation Result</h2>
+              <div className="d-flex align-items-center">
+                <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
+              </div>
+            </>
+          )}
         </>
       )}
 
       {currentModel?.type === "SMT Model" && (
         <>
           <Row className="mb-3">
-            
+
             <Col md={4}>
               {/* Environment */}
               <div className="form-group">
@@ -712,13 +872,17 @@ console.log("λSMTfh",λSMT)
                   }))}
                   value={{
                     value: smtInputs.environment,
-                    label: `${smtInputs.environment.label} (ΔT = ${deltaTValuesSMT.find(d => d.env === smtInputs.environment.env)?.value || 'N/A'})`
+                    label: smtInputs.environment ? `${smtInputs.environment.label} (ΔT = ${deltaTValuesSMT.find(d => d.env === smtInputs.environment.env)?.value || 'N/A'})` : "select..."
                   }}
-                  onChange={(selectedOption) => setSmtInputs(prev => ({
-                    ...prev,
-                    environment: selectedOption.value
-                  }))}
+                  onChange={(selectedOption) => {
+                    setSmtInputs(prev => ({
+                      ...prev,
+                      environment: selectedOption.value
+                    }))
+                    setErrors({ ...errors, environment: "" })
+                  }}
                 />
+                {errors.environment && <small className="text-danger">{errors.environment}</small>}
               </div>
             </Col>
             <Col md={4}>
@@ -755,9 +919,6 @@ console.log("λSMTfh",λSMT)
                 />
               </div>
             </Col>
-
-
-
             <Col md={4}>
               {/* Power Dissipation */}
               <div className="form-group">
@@ -778,8 +939,6 @@ console.log("λSMTfh",λSMT)
                 T<sub>RISE</sub> = Thermal Resistence (°C/W) × Power Dissipation (W)
               </small>
             </Col>
-
-
             <Col md={4}>
               {/* Thermal Resistance */}
               <div className="form-group">
@@ -796,7 +955,6 @@ console.log("λSMTfh",λSMT)
                 />
               </div>
             </Col>
-
 
             <Col md={4}>
               {/* Design Life */}
@@ -844,13 +1002,17 @@ console.log("λSMTfh",λSMT)
                   }))}
                   value={{
                     value: smtInputs.cyclingRate,
-                    label: `${smtInputs.cyclingRate.type} (${smtInputs.cyclingRate.rate} cycles/hour)`
+                    label: smtInputs.cyclingRate ? `${smtInputs.cyclingRate.type} (${smtInputs.cyclingRate.rate} cycles/hour)` : "select..."
                   }}
-                  onChange={(selectedOption) => setSmtInputs(prev => ({
-                    ...prev,
-                    cyclingRate: selectedOption.value
-                  }))}
+                  onChange={(selectedOption) => {
+                    setSmtInputs(prev => ({
+                      ...prev,
+                      cyclingRate: selectedOption.value
+                    }))
+                    setErrors({ ...errors, cyclingRate: "" })
+                  }}
                 />
+                {errors.cyclingRate && <small className="text-danger">{errors.cyclingRate}</small>}
               </div>
             </Col>
 
@@ -866,18 +1028,22 @@ console.log("λSMTfh",λSMT)
                   }))}
                   value={{
                     value: smtInputs.leadConfig,
-                    label: `${smtInputs.leadConfig.type} (πLC = ${smtInputs.leadConfig.factor})`
+                    label: smtInputs.leadConfig ? `${smtInputs.leadConfig.type} (πLC = ${smtInputs.leadConfig.factor})` : "select"
                   }}
-                  onChange={(selectedOption) => setSmtInputs(prev => ({
-                    ...prev,
-                    leadConfig: selectedOption.value
-                  }))}
+                  onChange={(selectedOption) => {
+                    setSmtInputs(prev => ({
+                      ...prev,
+                      leadConfig: selectedOption.value
+                    }))
+                    setErrors({ ...errors, leadConfig: "" })
+                  }}
                 />
+                {errors.leadConfig && <small className="text-danger">{errors.leadConfig}</small>}
               </div>
             </Col>
 
             <Col md={4}>
-              {/* Package Material */}
+            
               <div className="form-group">
                 <label>Package Material (α<sub>CC</sub>) for N<sub>f</sub>:</label>
                 <Select
@@ -888,13 +1054,17 @@ console.log("λSMTfh",λSMT)
                   }))}
                   value={{
                     value: smtInputs.packageMaterial,
-                    label: `${smtInputs.packageMaterial.material} (αCC = ${smtInputs.packageMaterial.value})`
+                    label: smtInputs.packageMaterial ? `${smtInputs.packageMaterial.material} (αCC = ${smtInputs.packageMaterial.value})` : "select"
                   }}
-                  onChange={(selectedOption) => setSmtInputs(prev => ({
-                    ...prev,
-                    packageMaterial: selectedOption.value
-                  }))}
+                  onChange={(selectedOption) => {
+                    setSmtInputs(prev => ({
+                      ...prev,
+                      packageMaterial: selectedOption.value
+                    }))
+                    setErrors({ ...errors, packageMaterial: "" })
+                  }}
                 />
+                {errors.packageMaterial && <small className="text-danger">{errors.packageMaterial}</small>}
               </div>
             </Col>
           </Row>
@@ -942,15 +1112,15 @@ console.log("λSMTfh",λSMT)
               Calculate Failure Rate
             </Button>
           </div>
-             {result && (
-        <>
-          <h2 className="text-center">Calculation Result</h2>
-          <div className="d-flex align-items-center">
-            <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-            <span className="ms-2">{result?.parameters?.failureRate?.toFixed(7)} failures/10<sup>6</sup> hours</span>
-          </div>
-        </>
-      )}
+          {result && (
+            <>
+              <h2 className="text-center">Calculation Result</h2>
+              <div className="d-flex align-items-center">
+                <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                <span className="ms-2">{result?.parameters?.failureRate?.toFixed(12)} failures/10<sup>6</sup> hours</span>
+              </div>
+            </>
+          )}
         </>
       )}
 
@@ -964,7 +1134,7 @@ console.log("λSMTfh",λSMT)
       <br />
       <br />
 
-   
+
       <br />
 
       {result && showCalculations && (
@@ -1115,7 +1285,7 @@ console.log("λSMTfh",λSMT)
                               {
                                 title: "Failure Rate (λSMT)",
                                 field: 'failureRate',
-                                render: rowData => rowData?.failureRate?.toFixed(7) || '-',
+                                render: rowData => rowData?.failureRate?.toFixed(12) || '-',
                               }
                             ]}
                             data={[
