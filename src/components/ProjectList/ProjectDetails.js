@@ -97,8 +97,12 @@ export default function ProjectDetails(props) {
   };
 
   const SignInSchema = Yup.object().shape({
-    opreationalPhase: Yup.string().required("Operational phase is required").max(20, "Maximum lenth is 20"),
-    customerName: Yup.string().required("Customer name is required"),
+    opreationalPhase: Yup.string().required("Operational phase is required").max(20, "Maximum lenth is 20")
+    .test("no-whitespace", "Operational phase cannot contain only whitespace", (value) => {
+      return value && value.trim().length > 0;}),
+    customerName: Yup.string().required("Customer name is required")
+    .test("no-whitwespace", "Customer name cannot contain only whitespace", (value) => {
+      return value && value.trim().length > 0;}),
     avgday: Yup.number()
       .typeError("you must specify a number")
       .min(0, "Min value 0.")
@@ -109,7 +113,10 @@ export default function ProjectDetails(props) {
     productlife: Yup.string()
       .required("Product life is required")
       .min(1, "Product life is required")
-      .max(99, "Maximum length is 2"),
+      .max(99, "Maximum length is 2")
+      .test("no-whitespace", "Product life cannot contain only whitespace", (value) => {
+        return value && value.trim().length > 0;
+      }),
     daysopration: Yup.string().required("Days of operation per year is required"),
     temp: Yup.string().required("Temperature is required"),
     // nonShortProbability: Yup.string().required("Non Short Probability(NSP) is required"),

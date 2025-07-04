@@ -643,13 +643,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
   }
   const calculateHybridFailureRate = (component) => {
 
-    // Validate input
-    // if (!component || !component.components) {
-    //   console.error('Invalid component data');
-    //   return 0;
-    // }
-
-    // Sum of (Nc × λc) for all components
     const componentSum = calculateComponentSum(quantity, currentComponent);
     console.log("componentSum6788", componentSum)
 
@@ -687,51 +680,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     return failureRate;
   };
 
-  const addComponent = () => {
-    let failureRate = 0;
-    let calculationParams = {};
-    let calculation = {};
-
-    switch (currentComponent.type) {
-      case 'Microcircuits,Gate/Logic Arrays And Microprocessors':
-        failureRate = calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent);
-        calculationParams = {
-          C1: calculateGateArrayC1(currentComponent),
-          C2: 0,
-          piT: calculatePiT(currentComponent.technology, currentComponent.temperature),
-          piE: getEnvironmentFactor(currentComponent?.environment),
-          piQ: getQualityFactor(currentComponent.quality),
-          piL: calculateLearningFactor(currentComponent.yearsInProduction),
-          λp: calculateMicrocircuitsAndMicroprocessorsFailureRate(currentComponent)
-        };
-        break;
-
-      default:
-        calculation = { error: 'Unsupported component type' };
-    }
-
-
-    // const quantity = currentComponent.quantity || 1;
-    const totalFailureRate = failureRate;
-
-    // Create a new component object to add to the array
-    const newComponent = {
-      ...currentComponent,
-      failureRate,
-      totalFailureRate,
-      calculationParams
-    };
-
-
-    setComponents([...components, newComponent]);
-
-
-    setResults({
-      failureRate,
-      totalFailureRate,
-      calculationParams
-    });
-  };
+ 
 
   return (
     <div className="reliability-calculator">
@@ -822,6 +771,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                 </div>
               </Col>
 
+              {/* Component Type Selection */}
               <Col md={4}>
                 <div className="form-group">
                   <label>Component Type:</label>
@@ -867,6 +817,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
               )}
 
               {selectedComponent?.some(option => option.value === "Microcircuit") && (
+
                 <Microcircuits
                   handleCalculateSawDevice={handleCalculateSawDevice}
                   handleCalculateGate={handleCalculateGate}
@@ -883,11 +834,14 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
               {selectedComponent?.some(option => option.value === "DiscreteSemiconductor") && (
                 <>
                   <MicroDiode handleInitialRate={handleInitialRate} />
+
                 </>
               )}
           
+
                 <Col md={4}>
-                  <div className="form-group mb-3">   
+                  <div className="form-group mb-3">
+                 
                     <label>Failure Rate (λc):</label>
                     <input
                       type="string"

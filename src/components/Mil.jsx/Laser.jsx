@@ -9,6 +9,7 @@ import { useTheme } from '@mui/material/styles'
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import Paper from '@mui/material/Paper';
 
+
 const Laser = ({ onCalculate }) => {
 
   // Lasing Media Failure Rate data
@@ -127,6 +128,17 @@ const Laser = ({ onCalculate }) => {
 
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+//   const [errors, setErrors] = useState({
+//   current: null,
+//   overfillPercent: null,
+//   volumeIncrease: null,
+//   rubyPPS: null,
+//   ej: null,
+//   d: null,
+//   L: null,
+//   t: null,
+//   power: null
+// });
   const [currentComponent, setCurrentComponent] = useState({
     type: "Laser, CO2, Sealed"
   })
@@ -659,7 +671,21 @@ if (!input.power?.power || isNaN(input.power.power)) {
       setResult(null);
     }
   };
-
+  const validateCurrent = (value) => {
+  if (value === '' || isNaN(value)) return 'Current is required';
+  if (value < 10 || value > 150) return 'Current must be between 10 and 150 mA';
+  return null;
+};
+const validateOverfillPercent = (value) => {
+  if (value === '' || isNaN(value)) return 'Overfill % is required';
+  if (value < 0 || value > 100) return 'Overfill % must be between 0 and 100';
+  return null;
+};
+const validateVolumeIncrease = (value) => {
+  if (value === '' || isNaN(value)) return 'Volume increase is required';
+  if (value < 0) return 'Volume increase cannot be negative';
+  return null;
+};
   return (
     <>
       <h2 className="text-center mb-4"> Lasers</h2>

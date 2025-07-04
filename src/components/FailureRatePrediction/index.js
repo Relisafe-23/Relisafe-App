@@ -691,7 +691,7 @@ function Index(props) {
       source: values.source.value,
     })
       .then((response) => {
-        console.log("responghjj",response)
+        console.log("responghjj", response)
         setSuccessMessage(response.data.message);
         setFrpId(response?.data?.data?.createFailureRatePrediction?.id);
         NextPage();
@@ -2605,18 +2605,20 @@ function Index(props) {
                                             {currentComponent.type ===
                                               "Microcircuits" && (
                                                 <MicrocircuitsCalculation
-                                                  onCalculate={(value) => {
+                                                  onCalculate={(value,handleSawCalculation) => {
                                                     // Round the value to 6 decimal places
-                                                    const roundedValue =
-                                                      parseFloat(
-                                                        value.toFixed(6)
-                                                      );
+                                                    console.log(value, "microcircuit value......",typeof(value))
+                                                    const numberValue = parseFloat(value);
+                                                    const roundedValue = !isNaN(numberValue)
+                                                      ? parseFloat(numberValue.toFixed(6))
+                                                      : 0;
                                                     // Update the predicted field
                                                     setPredicted(roundedValue);
                                                     formik.setFieldValue(
                                                       "predicted",
                                                       roundedValue
                                                     );
+                                               
                                                     // Optionally close the modal
                                                     // setShowModal(false);
                                                   }}
