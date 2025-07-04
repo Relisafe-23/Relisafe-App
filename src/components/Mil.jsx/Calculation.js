@@ -214,22 +214,7 @@ export const getMemorySizeCategory = (bitCount) => {
   return '> 1M'; // Beyond table range
 };
 // GATE/LOGIC ARRAYS CALCULATION
-export const calculateMicrocircuitsAndMicroprocessorsFailureRate = (component) => {
 
-  const C1 = calculateGateArrayC1(component);
-  
- 
-  const C2 = getFailureRate(component.packageType, component.pinCount);
-  const piT = calculatePiT(component.technology, component.temperature);
-  const piE = getEnvironmentFactor(component.environment);
-  const piQ = getQualityFactor(component.quality);
-  const piL = calculateLearningFactor(component.yearsInProduction);
-
- 
- 
-
-  return (C1 * piT + C2 * piE) * piQ * piL ;
-};
 
 export const calculateGateArrayC1 = (component) => {
 
@@ -369,7 +354,16 @@ const microprocessorData = {
     { min: 16, max: 32, c1: 0.56 }
   ]
 };
-
+ export const calculateMicrocircuitsAndMicroprocessorsFailureRate = (component) => {
+  
+    const C1 = calculateGateArrayC1(component);
+    const C2 = getFailureRate(component.packageType, component.pinCount);
+    const piT = calculatePiT(component.technology, component.temperature);
+    const piE = getEnvironmentFactor(component.environment);
+    const piQ = getQualityFactor(component.quality);
+    const piL = calculateLearningFactor(component.yearsInProduction);
+    return (C1 * piT + C2 * piE) * piQ * piL ;
+  };
 // MEMORIES CALCULATION
 
 export const calculateMemoriesFailureRate = (component) => {

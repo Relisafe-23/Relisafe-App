@@ -822,7 +822,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                 </div>
               </Col>
 
-              {/* Component Type Selection */}
               <Col md={4}>
                 <div className="form-group">
                   <label>Component Type:</label>
@@ -868,7 +867,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
               )}
 
               {selectedComponent?.some(option => option.value === "Microcircuit") && (
-
                 <Microcircuits
                   handleCalculateSawDevice={handleCalculateSawDevice}
                   handleCalculateGate={handleCalculateGate}
@@ -885,14 +883,11 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
               {selectedComponent?.some(option => option.value === "DiscreteSemiconductor") && (
                 <>
                   <MicroDiode handleInitialRate={handleInitialRate} />
-
                 </>
               )}
           
-
                 <Col md={4}>
-                  <div className="form-group mb-3">
-                 
+                  <div className="form-group mb-3">   
                     <label>Failure Rate (λc):</label>
                     <input
                       type="string"

@@ -12,19 +12,19 @@ const MicroDiode = ({ onCalculate, handleInitialRate }) => {
     // Add this state declaration at the top of your component with other useState hooks
 
     const componentTypes = [
-        { id: 'lowFreqDiode', name: '6.1 Diodes, Low Frequency' },
-        { id: 'highFreqDiode', name: '6.2 Diodes, High Frequency (Microwave, RF)' },
-        { id: 'lowFreqBipolar', name: '6.3 Transistors, Low Frequency, Bipolar' },
-        { id: 'lowFreqFET', name: '6.4 Transistors, Low Frequency, SI FET' },
-        { id: 'transistorsUnijunction', name: '6.5 Transistors,Unijunction' },
-        { id: 'transistorsLowNoiseHighFreqBipolar', name: '6.6 Transistors, Low Noise, High Frequency, Bipolar' },
-        { id: 'transistorsHighPowerHighFrequencyBipolar', name: '6.7 Transistors,High Power,High Frequency,Bipolar' },
-        { id: 'transistorsHighFrequencyGaAsFET', name: '6.8 Transistors, High Frequency, GaAs FET' },
-        { id: 'transistorsHighFrequencySIFET', name: '6.9 Transistors, High Frequency, SI FET' },
-        { id: 'thyristorsAndSCRS', name: '6.10 Thyristors and SCRS' },
-        { id: 'optoelectronics', name: '6.11 Optoelectronics (Detectors, Isolators, Emitters)' },
-        { id: 'alphanumericDisplays', name: '6.12 Alphanumeric Displays' },
-        { id: 'laserDiode', name: '6.13 Optoelectronics, Laser Diode' }
+        { id: '6.1 Diodes, Low Frequency', name: '6.1 Diodes, Low Frequency' },
+        { id: '6.2 Diodes, High Frequency (Microwave, RF)', name: '6.2 Diodes, High Frequency (Microwave, RF)' },
+        { id: '6.3 Transistors, Low Frequency, Bipolar', name: '6.3 Transistors, Low Frequency, Bipolar' },
+        { id: '6.4 Transistors, Low Frequency, SI FET', name: '6.4 Transistors, Low Frequency, SI FET' },
+        { id: '6.5 Transistors,Unijunction', name: '6.5 Transistors,Unijunction' },
+        { id: '6.6 Transistors, Low Noise, High Frequency, Bipolar', name: '6.6 Transistors, Low Noise, High Frequency, Bipolar' },
+        { id: '6.7 Transistors,High Power,High Frequency,Bipolar', name: '6.7 Transistors,High Power,High Frequency,Bipolar' },
+        { id: '6.8 Transistors, High Frequency, GaAs FET', name: '6.8 Transistors, High Frequency, GaAs FET' },
+        { id: '6.9 Transistors, High Frequency, SI FET', name: '6.9 Transistors, High Frequency, SI FET' },
+        { id: '6.10 Thyristors and SCRS', name: '6.10 Thyristors and SCRS' },
+        { id: '6.11 Optoelectronics (Detectors, Isolators, Emitters)', name: '6.11 Optoelectronics (Detectors, Isolators, Emitters)' },
+        { id: '6.12 Alphanumeric Displays', name: '6.12 Alphanumeric Displays' },
+        { id: '6.13 Optoelectronics, Laser Diode', name: '6.13 Optoelectronics, Laser Diode' }
     ];
 
     // Low Frequency Diode types
@@ -87,18 +87,12 @@ const MicroDiode = ({ onCalculate, handleInitialRate }) => {
         { name: 'All Other Diodes', pi_A: 1.0 }
     ];
     const highFreqQualityFactors2 = [
-        // { name: 'JANTXV', pi_Q: 0.50 },
         { name: 'JANTX', pi_Q: 1.0 },
-        // { name: 'JAN', pi_Q: 1.8 },
-        // { name: 'Lower', pi_Q: 2.5 },
-        // { name: 'Plastic', pi_Q: null } // Plastic is marked with "—" in the image
+   
     ];
     const highFreqQualityFactors1 = [
-        // { name: 'JANTXV', pi_Q: 0.50 },
         { name: 'JANTX', pi_Q: 1.0 },
-        // { name: 'JAN', pi_Q: 5.0 },  // Updated from 1.8 to 5.0
-        // { name: 'Lower', pi_Q: 25 },  // Updated from 2.5 to 25
-        // { name: 'Plastic', pi_Q: 50 } // Updated from null to 50
+ 
     ];
     // Add these constants with your other constants
     const highFreqDiodeTempFactors1 = [
@@ -170,172 +164,49 @@ const MicroDiode = ({ onCalculate, handleInitialRate }) => {
     ];
     const highFreqDiodeEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        // { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
-        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
-        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
-        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
-        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
-        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
-        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
-        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        // { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
+       
     ];
     const lowNoiseEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        // { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
-        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
-        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
-        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
-        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
-        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
-        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
-        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        // { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
+ 
     ];
     const highpowerEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        // { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
-        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
-        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
-        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
-        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
-        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
-        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
-        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        // { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
+
     ];
     const gasFETEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        // { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
-        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
-        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
-        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
-        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
-        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
-        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
-        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        // { code: 'MF', name: 'Missile, Flight', pi_E: 7.5 },
-        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        // { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
+
     ];
     const siFETEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        // { code: 'GM', name: 'Ground, Mobile', pi_E: 5.0 },
-        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 4.0 },
-        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 11 },
-        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 5.0 },
-        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 7.0 },
-        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 12 },
-        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 16 },
-        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        // { code: 'CL', name: 'Cannon, Launch', pi_E: 250 }
+   
     ]
     // Common quality factors
     const qualityFactors = [
-        // { name: 'JANTXV', pi_Q: 0.7 },
         { name: 'JANTX', pi_Q: 1.0 },
-        // { name: 'JAN', pi_Q: 2.4 },
-        // { name: 'Lower', pi_Q: 5.5 },
-        // { name: 'Plastic', pi_Q: 8.0 }
+  
     ];
     // Common environment factors
     const environmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        // { code: 'GF', name: 'Ground, Fixed', pi_E: 6.0 },
-        // { code: 'GM', name: 'Ground, Mobile', pi_E: 9.0 },
-        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 9.0 },
-        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 19 },
-        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 13 },
-        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 29 },
-        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 20 },
-        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 43 },
-        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 24 },
-        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        // { code: 'MF', name: 'Missile, Flight', pi_E: 14 },
-        // { code: 'ML', name: 'Missile, Launch', pi_E: 32 },
-        // { code: 'CL', name: 'Cannon, Launch', pi_E: 320 }
+
     ];
     const lowFrequencyenvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        // { code: 'GF', name: 'Ground, Fixed', pi_E: 6.0 },
-        // { code: 'GM', name: 'Ground, Mobile', pi_E: 9.0 },
-        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 9.0 },
-        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 19 },
-        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 13 },
-        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 29 },
-        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 20 },
-        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 43 },
-        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 24 },
-        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        // { code: 'MF', name: 'Missile, Flight', pi_E: 14 },
-        // { code: 'ML', name: 'Missile, Launch', pi_E: 32 },
-        // { code: 'CL', name: 'Cannon, Launch', pi_E: 320 }
+
     ];
     const optoElectroEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        // { code: 'GM', name: 'Ground, Mobile', pi_E: 8.0 },
-        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 5.0 },
-        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 12 },
-        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 6.0 },
-        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 6.0 },
-        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 8.0 },
-        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 17 },
-        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        // { code: 'CL', name: 'Cannon, Launch', pi_E: 450 }
+      
     ];
     const alphaNumericEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        // { code: 'GM', name: 'Ground, Mobile', pi_E: 8.0 },
-        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 5.0 },
-        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 12 },
-        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 6.0 },
-        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 6.0 },
-        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 8.0 },
-        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 17 },
-        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        // { code: 'CL', name: 'Cannon, Launch', pi_E: 450 }
+
     ];
     const laserEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
-        // { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
-        // { code: 'GM', name: 'Ground, Mobile', pi_E: 8.0 },
-        // { code: 'NS', name: 'Naval, Sheltered', pi_E: 5.0 },
-        // { code: 'NU', name: 'Naval, Unsheltered', pi_E: 12 },
-        // { code: 'AIC', name: 'Airborne, Inhabited, Cargo', pi_E: 4.0 },
-        // { code: 'AIF', name: 'Airborne, Inhabited, Fighter', pi_E: 6.0 },
-        // { code: 'AUC', name: 'Airborne, Uninhabited, Cargo', pi_E: 6.0 },
-        // { code: 'AUF', name: 'Airborne, Uninhabited, Fighter', pi_E: 8.0 },
-        // { code: 'ARW', name: 'Airborne, Rotary Wing', pi_E: 17 },
-        // { code: 'SF', name: 'Space, Flight', pi_E: 0.5 },
-        // { code: 'MF', name: 'Missile, Flight', pi_E: 9.0 },
-        // { code: 'ML', name: 'Missile, Launch', pi_E: 24 },
-        // { code: 'CL', name: 'Cannon, Launch', pi_E: 450 }
+    
     ];
     const highFreqPowerFactors = [
         { power: 'PIN Diodes (Pr ≤ 10W)', pi_R: 0.50 },
@@ -1012,8 +883,6 @@ const MicroDiode = ({ onCalculate, handleInitialRate }) => {
         }
     };
 
-
-    // Initial form state
     const initialState = {
         componentType: 'lowFreqDiode',
         diodeType: lowFreqDiodeTypes[0].name,
@@ -1077,10 +946,10 @@ const MicroDiode = ({ onCalculate, handleInitialRate }) => {
         metalizationType: 'Gold', // Default to Gold
 
     };
-    // State for form inputs
+ 
     const [formData, setFormData] = useState(initialState);
     const [results, setResults] = useState(null);
-  
+   const [failureRates, setFailureRates] = useState([]);
     const [showCalculations, setShowCalculations] = useState();
 const handleAddComponent = () => {
 
@@ -1090,13 +959,13 @@ const handleAddComponent = () => {
 };
 
 const handleRemoveComponent = () => {
-  if (components.length > 0) { // Only remove if there are components
+  if (components.length > 0) { 
     const newComponents = [...components];
-    newComponents.pop(); // Remove the last component
+    newComponents.pop(); 
     setComponents(newComponents);
   }
 };
-    // Handle input changes
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => {
@@ -1116,12 +985,30 @@ const handleRemoveComponent = () => {
         });
     };
 
-    // Reset form
+      const removeComponent = (id) => {
+    setComponents(components.filter(comp => comp.id !== id));
+  };
+
+    const updateComponent = (id, updatedProps) => {
+    setComponents(components.map(comp =>
+      comp.id === id ? { ...comp, ...updatedProps } : comp
+    ));
+  };
+   const totalSystemFailureRate = failureRates?.reduce((sum, item) => sum + item.rate, 0);
+
     const resetForm = () => {
         setFormData(initialState);
         setResults(null);
     };
-
+  const addNewComponent = () => {
+    const newComponent = {
+      id: Date.now(),
+      type: '',
+      devices: '',
+   
+    };
+    setComponents([...components, newComponent]);
+  };
     // Calculate failure rate
     const calculateFailureRate = () => {
         let lambda_p = 0;
@@ -2384,12 +2271,19 @@ const handleRemoveComponent = () => {
             zIndex: 9999
         })
     };
-
+  const renderComponent = (component) => {
     return (
       
-          <div className="reliability-calculator">
-                <h2 className="text-center" style={{ fontSize: '1.2rem' }}>Discrete Semiconductor</h2>
-                {/* <h4 className="mb-3">Component Selection</h4> */}
+           <div key={component.id} className="component-container" style={{
+        border: '1px solid #ddd',
+        padding: '15px',
+        margin: '15px 0',
+        borderRadius: '5px',
+        position: 'relative'
+      }}>
+        <h3>Component {components.findIndex(c => c.id === component.id) + 1}</h3>
+ 
+<h2 className='text-center' style={{ fontSize: '1.2rem' }}> {formData?.componentType ? formData?.componentType?.replace(/,/g, ' ').trim() : 'Discrete Semiconductor'}</h2>
                 <Row>
                     <Col md={12}>
                 <div className="form-group">
@@ -2399,6 +2293,11 @@ const handleRemoveComponent = () => {
                         // className="form-control"
                         value={formData.componentType}
                         onChange={handleInputChange}
+                //           value={formData.componentType ?
+                // { value: formData.componentType, label: formData.componentType } : null}
+            //   onChange={(selectedOption) => {
+            //     updateComponent(component.id, { type: selectedOption.value });
+            //   }}
                     >
                         {componentTypes.map(type => (
                             <option key={type.id} value={type.id}>{type.name}</option>
@@ -2406,11 +2305,11 @@ const handleRemoveComponent = () => {
                     </select>
                 </div>
                 </Col>
-                {/* Quantity Input (Nₙ) */}
+           
              
                 </Row>
                 <Row>
-                    {formData.componentType === 'lowFreqDiode' && (
+                    {formData.componentType === '6.1 Diodes, Low Frequency' && (
                         <>
                             <Col md={4}>
                                 <div className="form-group">
@@ -2504,7 +2403,7 @@ const handleRemoveComponent = () => {
                         </>
 
                     )}
-                    {formData.componentType === 'lowFreqDiode' && !(
+                    {formData.componentType === '6.1 Diodes, Low Frequency' && !(
                         formData.diodeType.includes('Transient Suppressor') ||
                         formData.diodeType.includes('Voltage Regulator') ||
                         formData.diodeType.includes('Current Regulator')
@@ -2594,7 +2493,7 @@ const handleRemoveComponent = () => {
                         )}
                 </Row>
 
-                {formData.componentType === 'highFreqDiode' && (
+                {formData.componentType === '6.2 Diodes, High Frequency (Microwave, RF)' && (
                     <div>
                         <Row>
                             <Col md={4}>
@@ -2723,7 +2622,7 @@ const handleRemoveComponent = () => {
                     </div>
                 )}
 
-                {formData.componentType === 'lowFreqBipolar' && (
+                {formData.componentType === '6.3 Transistors, Low Frequency, Bipolar' && (
                     <div>
                         <Row>
                             <Col md={4}>
@@ -2929,7 +2828,7 @@ const handleRemoveComponent = () => {
                     </div>
 
                 )}
-                {formData.componentType === 'lowFreqFET' && (
+                {formData.componentType === '6.4 Transistors, Low Frequency, SI FET' && (
                     <div>
 
                         <Row>
@@ -3035,7 +2934,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </div>
                 )}
-                {formData.componentType === 'transistorsUnijunction' && (
+                {formData.componentType === '6.5 Transistors,Unijunction' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3122,7 +3021,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === 'transistorsLowNoiseHighFreqBipolar' && (
+                {formData.componentType === '6.6 Transistors, Low Noise, High Frequency, Bipolar' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3310,7 +3209,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === 'transistorsHighPowerHighFrequencyBipolar' && (
+                {formData.componentType === '6.7 Transistors,High Power,High Frequency,Bipolar' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3475,7 +3374,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === 'transistorsHighFrequencyGaAsFET' && (
+                {formData.componentType === '6.8 Transistors, High Frequency, GaAs FET' && (
                     <>
 
                         <Row>
@@ -3617,7 +3516,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === 'transistorsHighFrequencySIFET' && (
+                {formData.componentType === '6.9 Transistors, High Frequency, SI FET' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3711,7 +3610,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === 'thyristorsAndSCRS' && (
+                {formData.componentType === '6.10 Thyristors and SCRS' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3875,7 +3774,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === 'optoelectronics' && (
+                {formData.componentType === '6.11 Optoelectronics (Detectors, Isolators, Emitters)' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3967,7 +3866,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === 'alphanumericDisplays' && (
+                {formData.componentType === '6.12 Alphanumeric Displays' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -4084,7 +3983,7 @@ const handleRemoveComponent = () => {
 
                     </>
                 )}
-                {formData.componentType === 'laserDiode' && (
+                {formData.componentType === '6.13 Optoelectronics, Laser Diode' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -4318,9 +4217,6 @@ const handleRemoveComponent = () => {
                     </>
                 )}
 
-                {/* {console.log(parseFloat(results?.failureRate)?.toFixed(6),"printing value")} */}
-             
-             
                 {results && (
                     handleInitialRate(parseFloat(results?.failureRate)?.toFixed(6))
                 )}
@@ -4332,7 +4228,7 @@ const handleRemoveComponent = () => {
                     Calculate FR
                 </Button>
                 <br/>
-                   <Col md={6}>
+                   <Col md={4}>
                     <div className="form-group">
                         <label>Quantity (Nₙ):</label>
                         <input
@@ -4349,12 +4245,15 @@ const handleRemoveComponent = () => {
                 </Col>
                     <br/>
                         {results && (
-                    <div className="d-flex align-items-center">
+                    <div className="Predicted-Failure">
                         <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong> {parseFloat(results?.failureRate)?.toFixed(6)} failures/10<sup>6</sup> hours
+                        <br/>
+                         <strong>λ<sub>c</sub> * N<sub>c</sub>:</strong> {parseFloat(results?.failureRate * quantity)?.toFixed(6)} failures/10<sup>6</sup> hours
+                         {console.log("lambda C and N c", parseFloat(results?.failureRate * quantity))}
                     </div>
                 )}
                   <br/>
-           {components.length === 0 || components[components.length - 1].length > 0 ? (
+           {/* {components.length === 0 || components[components.length - 1].length > 0 ? (
                  <div>
                    <Button   variant="primary" onClick={handleAddComponent}>Add Component</Button>
                   
@@ -4374,11 +4273,50 @@ const handleRemoveComponent = () => {
         // setFormData={setFormData}
          handleInitialRate = {handleInitialRate}
     />
-  ))}
-  </div>
+  ))} */}
+       {component?.failureRate > 0 && (
+            <div className="prediction-result" style={{ marginTop: '20px' }}>
+              <strong>Predicted Failure Rate:</strong>
+              <span className="ms-2">{component?.failureRate?.toFixed(6)} failures/10<sup>6</sup> hours</span>
+              <br />
+              <strong>Total :</strong>
+              <span className="ms-2">
+                {component?.total?.toFixed(6)} failures/10<sup>6</sup> hours
+              </span>
             </div>
+          )}
+  
+          <Button
+            variant="danger"
+            onClick={() => removeComponent(component.id)}
+            style={{ marginTop: '10px', backgroundColor: "red" }}
+          >
+            Remove Component
+          </Button>
+  </div>
+         
     
     );
+}
+return(
+        <div className="reliability-calculator">
+             <h2 className='text-center' style={{ fontSize: '1.2rem' }}>
+        Microcircuits Reliability Calculator
+      </h2>
+            {components.map(component => renderComponent({ ...component, id: component.id }))}
+
+               <Button onClick={addNewComponent} className="mt-3">
+                    Add Component
+                  </Button>
+                   {components.length > 0 && (
+        <div className="total-failure-rate" style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f8f9fa' }}>
+          {/* <h4>Total System Failure Rate: {total} failures/10<sup>6</sup> hours</h4> */}
+           <h4>Total System Failure Rate: {totalSystemFailureRate.toFixed(6)} failures/10<sup>6</sup> hours</h4>
+         
+        </div>
+      )}
+        </div>
+)
 };
 
 export default MicroDiode;

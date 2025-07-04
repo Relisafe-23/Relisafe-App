@@ -569,9 +569,12 @@ const handleRemoveComponent = () => {
                 max="150"
                 step="1"
               />
+                     {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
+                     <br/>
               <small>T<sub>A</sub>= Hybrid Case Temperature</small>
-              {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
+            
             </div>
+       
                  {selectedCapacitor?.value?.πtColumn && capacitorTypes.some(type => type.πtColumn === selectedCapacitor?.value.πtColumn) && (
               <div className="mt-2">
                 Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
@@ -689,10 +692,8 @@ const handleRemoveComponent = () => {
                        setErrors({ ...errors, effectiveResistance: '' });
                     }}
                     min="0"
-                    step="0.1"
-                      
+                    step="0.1"  
                   />
-             
                   {errors.effectiveResistance && <small style={{ color: 'red' }}>{errors.effectiveResistance}</small>}
                 </div>
               </Col>
@@ -750,7 +751,7 @@ const handleRemoveComponent = () => {
               />
             </div>
           </Col>
-      <div >
+      <div>
                          {components.length === 0 || components[components.length - 1].length > 0 ? (
                          <div className='mb-5'>
                            <Button   variant="primary" onClick={handleAddComponent}>Add Component</Button>            
@@ -767,10 +768,16 @@ const handleRemoveComponent = () => {
          )}
        { results && showResults && (
         
-            <div className="d-flex align-items-center">
+            <div className="Predicted-Failure">
               <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
               <span className="ms-2">
                 {calculateFailureRate()?.toFixed(10)} failures/10<sup>6</sup> hours
+              </span>
+              <br/>
+              <strong>λ<sub>c</sub> * N <sub>c</sub>:</strong>
+                <span className="ms-2">  
+                {calculateFailureRate() * quantity} failures/10<sup>6</sup> hours
+                {console.log("quantity..",calculateFailureRate() * quantity)}
               </span>
             </div>
        
@@ -778,12 +785,9 @@ const handleRemoveComponent = () => {
           {components.map((_, index) => (
             <MicroCapacitor
               key={index}
-             
               handleCalculateFailure={handleCalculateFailure}
-   
             />
           ))}
-      
 
         <br />
         </div>
