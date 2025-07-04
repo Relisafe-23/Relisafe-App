@@ -1089,9 +1089,9 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
       errors.applicationFactor = "Enter Application Factor"
     }
 
-    if (!inputs.environment) {
-      errors.environment = "Select Environment"
-    }
+    // if (!inputs.environment) {
+    //   errors.environment = "Select Environment"
+    // }
 
     if (!currentComponent.devices) {
       errors.devices = "Enter device type"
@@ -1906,6 +1906,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       environment: selectedOption.value,
                       piE: selectedOption.piE
                     });
+                    
                   }}
 
                   options={[
@@ -1995,7 +1996,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                     }
                   ]}
                 />
-                {errors.environment && <small className='text-danger'>{errors.environment}</small>}
               </div>
             </Col>
           )}
@@ -2567,9 +2567,9 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                                       πCD: result?.parameters?.πCD,
                                       λBP: result?.parameters?.λBP,
                                       λEOS: result?.parameters?.λEOS,
-                                      πE: result?.parameters?.πE,    // Added missing parameter
-                                      πT: result?.parameters?.πT,    // Added missing parameter
-                                      πQ: result?.parameters?.πQ,    // Added missing parameter
+                                      πE: result?.parameters?.πE,  
+                                      πT: result?.parameters?.πT,    
+                                      πQ: result?.parameters?.πQ,    
                                       λp: result?.value
                                     }
                                   ]}
@@ -2638,10 +2638,10 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       setQualityFactor(selectedOption)
                       setCurrentComponent({
                         ...currentComponent,
-                        quality: selectedOption?.value,
+                        quality: selectedOption,
                         piQ: selectedOption.piQ
                       });
-                      setErrors({ ...errors, quality: "" })
+                      // setErrors({ ...errors, quality: "" })
                     }}
                     options={[
                       // Class S Categories (πQ = 0.25)
@@ -2693,7 +2693,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                       }
                     ]}
                   />
-                  {errors.quality && <small className="text-danger">{errors.quality}</small>}
+                  {/* {errors.quality && <small className="text-danger">{errors.quality}</small>} */}
                 </div>
               </Col>
               <Col md={4}>

@@ -1085,7 +1085,7 @@ const MTTRPrediction = (props, active) => {
   const patchMttrData = (values) => {
     if (validateData > 0) {
       const companyId = localStorage.getItem("companyId");
-
+console.log("values.....",values)
       Api.patch(`/api/v1/mttrPrediction/${mttrId}`, {
         companyId: companyId,
         projectId: projectId,
@@ -1197,6 +1197,8 @@ const MTTRPrediction = (props, active) => {
             labourHour: totalLabourHr ? totalLabourHr : "",
             mttr: mttrCalculatedValue ? mttrCalculatedValue : '',
 
+            // mttr: mttrData ? mttrData :"",
+
             remarks: mttrData?.remarks
               ? mttrData?.remarks
               : importExcelData?.remarks
@@ -1284,6 +1286,7 @@ const MTTRPrediction = (props, active) => {
                         <Tooltip placement="left" title="Export">
                           <Button
                             className="import-export-btn"
+                            style={{ marginLeft: "10px", borderStyle: "none",width:"40px",minWidth:"40px",padding:"0px", }}
                             onClick={() => exportToExcel(values)}
                           >
                             <FontAwesomeIcon
@@ -1916,6 +1919,7 @@ const MTTRPrediction = (props, active) => {
                                   title="(Calculated only for family type - Assemblie)"
                                   arrow
                                 >
+                                  
                                   <Form.Control
                                     type="number"
                                     name="mttr"
@@ -1928,6 +1932,7 @@ const MTTRPrediction = (props, active) => {
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                   />
+                       {console.log("mttrkjk...",values.mttr)}
                                 </Tooltip>
                                 <ErrorMessage
                                   className="text-danger"

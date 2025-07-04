@@ -171,6 +171,7 @@ console.log("userData", userData)
         </div>
       </div>
             <Modal show={editMode} onHide={() => setEditMode(false)} centered>
+              <div className="edit-user-modal" style={{ width: "500px"}}>
   <Modal.Header closeButton>
     <Modal.Title>Edit User</Modal.Title>
   </Modal.Header>
@@ -236,6 +237,7 @@ console.log("userData", userData)
       Save Changes
     </Button>
   </Modal.Footer>
+  </div>
 </Modal>
     </div>
   );

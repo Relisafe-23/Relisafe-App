@@ -9,6 +9,7 @@ import { useTheme } from '@mui/material/styles'
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import Paper from '@mui/material/Paper';
 
+
 const Laser = ({ onCalculate }) => {
 
   // Lasing Media Failure Rate data
@@ -121,12 +122,23 @@ const Laser = ({ onCalculate }) => {
     { type: 'Helium', rate: 0 },
     { type: 'Argon', rate: 6 }
   ];
-  const [current, setCurrent] = useState(10);
-  const [overfillPercent, setOverfillPercent] = useState(0.0);
-  const [volumeIncrease, setVolumeIncrease] = useState(0.0);
+  const [current, setCurrent] = useState(null);
+  const [overfillPercent, setOverfillPercent] = useState(null);
+  const [volumeIncrease, setVolumeIncrease] = useState(null);
 
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({
+  current: null,
+  overfillPercent: null,
+  volumeIncrease: null,
+  rubyPPS: null,
+  ej: null,
+  d: null,
+  L: null,
+  t: null,
+  power: null
+});
   const [currentComponent, setCurrentComponent] = useState({
     type: "Laser, CO2, Sealed"
   })
@@ -242,82 +254,15 @@ const Laser = ({ onCalculate }) => {
   const handleChange1 = (e) => {
     const value = e.target.value;
     setOverfillPercent(value);
-
-    // Clear error when empty
-    if (value === '') {
-      setError('');
-      return;
-    }
-
-    // Validate input is a number
-    if (isNaN(value)) {
-      setError('Please enter a valid number');
-      return;
-    }
-
-    const numValue = parseFloat(value);
-
-    // Validate range (0-100%)
-    if (numValue < 0) {
-      setError('Percentage cannot be negative');
-    } else if (numValue > 100) {
-      setError('Percentage cannot exceed 100%');
-    } else {
-      setError('');
-    }
-  };
+ };
   const handleChange2 = (e) => {
     const value = e.target.value;
     setVolumeIncrease(value);
-
-    // Clear error when empty
-    if (value === '') {
-      setError('');
-      return;
-    }
-
-    // Validate input is a number
-    if (isNaN(value)) {
-      setError('Please enter a valid number');
-      return;
-    }
-
-    const numValue = parseFloat(value);
-
-    // Validate range (0-100% is typical, but adjust if needed)
-    if (numValue < 0) {
-      setError('Percentage cannot be negative');
-    } else {
-      setError('');
-    }
-  };
+};
   const handleChange = (e) => {
     const value = e.target.value;
     setCurrent(value);
-
-    // Clear previous errors when empty
-    if (value === '') {
-      setError('');
-      return;
-    }
-
-    // Validate input is a number
-    if (isNaN(value) || value === '') {
-      setError('Please enter a valid number');
-      return;
-    }
-
-    const numValue = parseFloat(value);
-
-    // Validate range
-    if (numValue < 10) {
-      setError('Tube current must be ≥ 10 mA');
-    } else if (numValue > 150) {
-      setError('Tube current must be ≤ 150 mA');
-    } else {
-      setError('');
-    }
-  };
+};
   const calculatePiB = () => {
     if (error || volumeIncrease === '' || isNaN(volumeIncrease)) return 'N/A';
     const percent = parseFloat(volumeIncrease);
@@ -538,7 +483,21 @@ const Laser = ({ onCalculate }) => {
       setResult(null);
     }
   };
-
+  const validateCurrent = (value) => {
+  if (value === '' || isNaN(value)) return 'Current is required';
+  if (value < 10 || value > 150) return 'Current must be between 10 and 150 mA';
+  return null;
+};
+const validateOverfillPercent = (value) => {
+  if (value === '' || isNaN(value)) return 'Overfill % is required';
+  if (value < 0 || value > 100) return 'Overfill % must be between 0 and 100';
+  return null;
+};
+const validateVolumeIncrease = (value) => {
+  if (value === '' || isNaN(value)) return 'Volume increase is required';
+  if (value < 0) return 'Volume increase cannot be negative';
+  return null;
+};
   return (
     <>
       <h2 className="text-center mb-4"> Lasers</h2>
@@ -957,7 +916,6 @@ const Laser = ({ onCalculate }) => {
                     className={`form-control ${error ? 'is-invalid' : ''}`}
                     placeholder="Enter value between 10 and 150"
                   />
-                  {error && <div className="invalid-feedback">{error}</div>}
 
                   <div className="mt-2 form-group">
                     <label>Calculated λ<sub>MEDIA</sub>: {calculateLambda()} </label>
@@ -983,7 +941,6 @@ const Laser = ({ onCalculate }) => {
                     className={`form-control ${error ? 'is-invalid' : ''}`}
                     placeholder="Enter percentage (0-100)"
                   />
-                  {error && <div className="invalid-feedback">{error}</div>}
 
                   <div className="mt-2 form-group">
                     <label> Calculated T<sub>O</sub>: {calculateTO()}</label>
@@ -1007,7 +964,6 @@ const Laser = ({ onCalculate }) => {
                     className={`form-control ${error ? 'is-invalid' : ''}`}
                     placeholder="Enter percentage volume increase"
                   />
-                  {error && <div className="invalid-feedback">{error}</div>}
 
                   <div className="mt-2 form-group">
                     <label>Calculated π<sub>B</sub>:{calculatePiB()}</label>

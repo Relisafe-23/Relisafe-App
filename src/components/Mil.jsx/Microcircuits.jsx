@@ -403,7 +403,6 @@ const Microcircuits = ({ onCalculate, handleCalculateGate, handleCalculateSawDev
       title: <span>π<sub>T</sub></span>,
       field: 'calculationParams.piT',
       render: rowData => rowData?.piT?.toFixed(2),
-
     },
     {
       title: 'Failure Rate',

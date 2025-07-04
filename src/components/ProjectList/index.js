@@ -149,15 +149,24 @@ export default function ProjectList(props) {
     name: Yup.string()
       .required("Project name is required")
       .min(1, "Enter project valid name")
-      .max(25, "Maximum 25 character is allowed"),
+      .max(25, "Maximum 25 character is allowed")
+      .test('no-whitespace', 'Project name cannot contain only whitespace', (value) => {
+        return value && value.trim().length > 0;
+      }),
 
     number: Yup.string()
       .required("Project number is required")
       .min(1, "Enter valid project number")
-      .max(25, "Maximum 25 characters is allowed"),
+      .max(25, "Maximum 25 characters is allowed")
+      .test('no-whitespace', 'Project number cannot contain only whitespace', (value) => {
+        return value && value.trim().length > 0;
+      }),
     description: Yup.string()
       .required("Project description is required")
-      .min(1, "Enter valid project description is required"),
+      .min(1, "Enter valid project description is required")
+      .test('no-whitespace', 'Project description cannot contain only whitespace', (value) => {
+        return value && value.trim().length > 0;
+      }),
     // .max(50, "Maximum 50 character is allowed"),
     // owner: Yup.object().required("Project owner Is required"),
   });
@@ -388,7 +397,7 @@ export default function ProjectList(props) {
                 {(formik) => {
                   const { values, handleChange, handleSubmit, handleBlur, isValid } = formik;
                   return (
-                    <div className=" mx-4">
+                    <div className=" mx-4"style={{width:"1000px"}}>
                       <Form onSubmit={handleSubmit}>
                         <Card className="card-color">
                           <div className="pb-4 px-4">
@@ -403,6 +412,10 @@ export default function ProjectList(props) {
                                     value={values.name}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
+                                    //   onBlur={(e) => {
+                                    //   handleBlur(e);
+                                    // setFieldValue('name', e.target.value.trim());
+                                    //   }}
                                     id="name"
                                     placeholder="Project Name"
                                   />
