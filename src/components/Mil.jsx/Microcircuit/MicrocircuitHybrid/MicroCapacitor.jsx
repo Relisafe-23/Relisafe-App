@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './CapacitorCalculaton.css';
+import '../../CapacitorCalculaton.css';
 import { Button, Row, Col } from 'react-bootstrap';
 import { Link } from '@material-ui/core';
 import MaterialTable from "material-table";

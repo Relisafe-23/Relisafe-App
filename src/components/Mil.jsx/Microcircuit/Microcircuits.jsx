@@ -12,16 +12,16 @@ import {
   getEnvironmentalOptions,
   calculateLearningFactor,
   BASE_FAILURE_RATE
-} from './Calculation.js';
+} from '../Calculation.js';
 import { createTheme } from "@mui/material";
 import { Button, Container, Row, Col } from 'react-bootstrap';
 import { Alert } from "@mui/material";
-import Hybridgate from "./Hybridgate.jsx"
-import HybridVhsic from './HybridVhsic.jsx'
-import Hybridmemories from './Hybridmemories.jsx';
-import HybridMagnetic from './HybridMagnetic.jsx';
-import HybridGaAs from './HybridGaAs.jsx';
-import HybridSaw from './HybridSaw.jsx';
+import Hybridgate from "./MicrocircuitHybrid/Hybridgate.jsx"
+import HybridVhsic from './MicrocircuitHybrid/HybridVhsic.jsx'
+import Hybridmemories from './MicrocircuitHybrid/Hybridmemories.jsx';
+import HybridMagnetic from './MicrocircuitHybrid/HybridMagnetic.jsx';
+import HybridGaAs from './MicrocircuitHybrid/HybridGaAs.jsx';
+import HybridSaw from './MicrocircuitHybrid/HybridSaw.jsx';
 const Microcircuits = ({
   setSelectedComponent,
   onCalculate,

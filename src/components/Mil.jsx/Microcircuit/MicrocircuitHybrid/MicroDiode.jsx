@@ -1,15 +1,33 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Table, Button, Row, Col, Container, FormGroup } from 'react-bootstrap';
-import './../MIL/Diode.css'
 
 const MicroDiode = ({ onCalculate, handleInitialRate }) => {
-    // State for the failure rate
+ 
     const [failureRate, setFailureRate] = useState(null);
     const [quantity, setQuantity] = useState(null);
-    const [components, setComponents] = useState([]);
-    // Component types
-    // Add this state declaration at the top of your component with other useState hooks
+    const [components, setComponents] = useState([{
+        id: Date.now(),
+        type: '',
+        formData: {
+            componentType: '',
+            diodeType: '',
+            junctionTemp: 25,
+            voltageStress: 0.3,
+            contactConstruction: 'Metallurgically Bonded',
+            quality: 'JANTX',
+            environment: 'GB',
+            numJunctions: 1,
+            voltageApplied: 0,
+            voltageRated: 1,
+            voltageStressRatio: 0,
+            failureRate: 0,
+            total: 0
+        }
+    }]);
+
+  
+
 
     const componentTypes = [
         { id: '6.1 Diodes, Low Frequency', name: '6.1 Diodes, Low Frequency' },
@@ -966,1282 +984,6 @@ const handleRemoveComponent = () => {
   }
 };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => {
-            const newData = {
-                ...prev,
-                [name]: value
-            };
-
-            // Calculate voltage stress ratio when either voltage changes
-            if (name === 'voltageApplied' || name === 'voltageRated') {
-                const applied = parseFloat(newData.voltageApplied) || 0;
-                const rated = parseFloat(newData.voltageRated) || 1;
-                newData.voltageStressRatio = rated > 0 ? (applied / rated) : 0;
-            }
-
-            return newData;
-        });
-    };
-
-      const removeComponent = (id) => {
-    setComponents(components.filter(comp => comp.id !== id));
-  };
-
-    const updateComponent = (id, updatedProps) => {
-    setComponents(components.map(comp =>
-      comp.id === id ? { ...comp, ...updatedProps } : comp
-    ));
-  };
-   const totalSystemFailureRate = failureRates?.reduce((sum, item) => sum + item.rate, 0);
-
-    const resetForm = () => {
-        setFormData(initialState);
-        setResults(null);
-    };
-  const addNewComponent = () => {
-    const newComponent = {
-      id: Date.now(),
-      type: '',
-      devices: '',
-   
-    };
-    setComponents([...components, newComponent]);
-  };
-    // Calculate failure rate
-    const calculateFailureRate = () => {
-        let lambda_p = 0;
-        let lambda_b = 0;
-        let pi_T = 1;
-        let pi_S = 1;
-        let pi_C = 1;
-        let pi_Q = 1;
-        let pi_E = 1;
-        let pi_A = 1;
-        let pi_R = 1;
-        let calculationDetails = [];
-        let formula = '';
-
-        // Get quality factor
-        const qualityFactor = qualityFactors.find(q => q.name === formData.quality);
-        pi_Q = qualityFactor ? qualityFactor.pi_Q : 1;
-        calculationDetails.push({ name: 'Quality Factor (πQ)', value: pi_Q });
-
-
-        const envFactor = lowFrequencyenvironmentFactors.find(e => e.code === formData.environment);
-        pi_E = envFactor ? envFactor.pi_E : 1;
-        calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
-        if (formData.componentType === 'lowFreqDiode') {
-            // Low frequency diode calculation
-            const diodeType = lowFreqDiodeTypes.find(d => d.name === formData.diodeType);
-            lambda_b = diodeType.lambda_b;
-            if (diodeType.perJunction) {
-                lambda_b *= formData.numJunctions;
-            }
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
-
-            const calculatePiT = (diodeType, junctionTemp) => {
-                const Tj = parseFloat(junctionTemp);
-
-                if (diodeType.includes('Voltage Regulator') ||
-                    diodeType.includes('Current Regulator') ||
-                    diodeType.includes('Voltage Reference')) {
-                    // For Voltage Regulator/Reference and Current Regulator
-                    return Math.exp(-1925 * ((1 / (Tj + 273)) - (1 / 298)));
-                } else {
-                    // For General Purpose, Switching, Fast Recovery, etc.
-                    return Math.exp(-3091 * ((1 / (Tj + 273)) - (1 / 298)));
-                }
-            };
-            pi_T = calculatePiT(formData.diodeType, formData.junctionTemp);
-            calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T.toFixed(4) });
-
-
-            let pi_S = 1;
-            let voltageStressDescription = '';
-
-            if (formData.voltageStress) {
-                // Use the selected dropdown value
-                const stressFactor = voltageStressFactors.find(v => v.range === formData.voltageStress);
-                pi_S = stressFactor ? stressFactor.pi_S : 1;
-                voltageStressDescription = `Selected range: ${formData.voltageStress}`;
-            } else if (formData.voltageStressRatio !== undefined) {
-                // Calculate from voltage ratio
-                const Vs = parseFloat(formData.voltageStressRatio);
-                if (Vs <= 0.3) {
-                    pi_S = 0.054;
-                    voltageStressDescription = `Vs (${Vs.toFixed(4)}) ≤ 0.3, so πS = 0.054`;
-                } else if (Vs > 0.3 && Vs <= 1) {
-                    pi_S = Math.pow(Vs, 2.43);
-                    voltageStressDescription = `Vs (${Vs.toFixed(4)}) > 0.3, so πS = Vs^2.43 = ${pi_S.toFixed(4)}`;
-                } else {
-                    pi_S = 1.0;
-                    voltageStressDescription = `Vs (${Vs.toFixed(4)}) > 1.0, so πS = 1.0`;
-                }
-            }
-
-            calculationDetails.push({
-                name: 'Electrical Stress Factor (πS)',
-                value: pi_S.toFixed(4),
-                description: voltageStressDescription
-            });
-            // Contact construction factor
-            const contactFactor = contactConstructionFactors.find(c => c.type === formData.contactConstruction);
-            pi_C = contactFactor ? contactFactor.pi_C : 1;
-            calculationDetails.push({ name: 'Contact Construction Factor (πC)', value: pi_C });
-
-            // Calculate final failure rate
-            lambda_p = lambda_b * pi_T * pi_S * pi_C * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πS × πC × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-
-        } else if (formData.componentType === 'highFreqDiode') {
-            // High frequency diode calculation
-            const diodeType = highFreqDiodeTypes.find(d => d.name === formData.highFreqDiodeType);
-            lambda_b = diodeType.lambda_b;
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
-
-            // Temperature factor - use different tables based on diode type
-            //  let tempFactors;
-            const calculatePiT = (highFreqDiodeType, junctionTemp) => {
-
-                const Tj = parseFloat(junctionTemp);
-                if (formData.highFreqDiodeType === 'SI IMPATT (≤ 35 GHz)') {
-
-                    return Math.exp(-5260 * ((1 / (Tj + 273)) - (1 / 298)));
-                } else {
-                    // For General Purpose, Switching, Fast Recovery, etc.
-                    return Math.exp(-2100 * ((1 / (Tj + 273)) - (1 / 298)));
-                }
-            }
-
-
-            pi_T = calculatePiT(formData.highFreqDiodeType, formData.junctionTemp);
-            calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T.toFixed(4) });
-
-            // Application factor
-
-            const appFactor = highFreqAppFactors.find(a => a.name === formData.highFreqAppFactor);
-            pi_A = appFactor ? appFactor.pi_A : 1;
-            calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
-            // Power rating factor
-            // Power rating factor calculation for high frequency diodes
-            let pi_R = 1;
-            let powerRatingDescription = '';
-
-            if (formData.highFreqPowerFactor) {
-                // Use dropdown value if selected
-                const powerFactor = highFreqPowerFactors.find(p => p.power === formData.highFreqPowerFactor);
-                pi_R = powerFactor ? powerFactor.pi_R : 1;
-                powerRatingDescription = `Selected power factor: ${formData.highFreqPowerFactor} (πR = ${pi_R})`;
-            } else if (formData.powerInput) {
-                // Calculate from manual input if provided
-                const Pr = parseFloat(formData.powerInput) || 1;
-                pi_R = 0.326 * Math.log(Pr) - 0.25;
-                powerRatingDescription = `Calculated from input power (${Pr} W): πR = 0.326 * ln(${Pr}) - 0.25 = ${pi_R.toFixed(4)}`;
-            } else {
-                // Default value if neither is provided
-                pi_R = 1;
-                powerRatingDescription = "No power input selected, using default πR = 1";
-            }
-
-            calculationDetails.push({
-                name: 'Power Rating Factor (πR)',
-                value: pi_R.toFixed(4),
-                description: powerRatingDescription
-            });
-
-            let qualityFactor;
-            if (formData.highFreqDiodeType === 'Schottky Barrier (including Detectors) and Point Contact') {
-                qualityFactor = highFreqQualityFactors2.find(q => q.name === formData.quality);
-            } else {
-                qualityFactor = highFreqQualityFactors1.find(q => q.name === formData.quality);
-            }
-            pi_Q = qualityFactor ? (qualityFactor.pi_Q !== null ? qualityFactor.pi_Q : 1) : 1;
-            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q };
-
-            // Special case for PIN diodes
-            if (formData.highFreqDiodeType === 'PIN' && formData.highFreqPowerFactor === 'All Other Diodes') {
-                pi_R = 1.5; // Specific value for PIN diodes
-                calculationDetails[calculationDetails.length - 1].value = pi_R;
-            }
-            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q };
-
-            // Get environment factor
-            const envFactor = highFreqDiodeEnvironmentFactors.find(e => e.code === formData.environment);
-            pi_E = envFactor ? envFactor.pi_E : 1;
-            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
-            // Special case for PIN diodes
-            if (formData.highFreqDiodeType === 'PIN' && formData.highFreqPowerFactor === 'PIN Diodes') {
-                pi_R = 1.5; // Specific value for PIN diodes
-                calculationDetails[calculationDetails.length - 1].value = pi_R;
-            }
-            // Calculate final failure rate
-            lambda_p = lambda_b * pi_T * pi_A * pi_R * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πA  × πR × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-
-        } else if (formData.componentType === 'lowFreqBipolar') {
-            // Low frequency bipolar transistor calculation
-            lambda_b = 0.00074;
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
-
-            // Temperature factor calculation
-            let tempDescription;
-            if (formData.junctionTemp) {
-                // Use the selected dropdown value
-                const tempFactor = TransistorTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
-                pi_T = tempFactor.pi_T;
-                tempDescription = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
-            } else if (formData.junctionTempInput) {
-                // Calculate from manual input using the formula
-                const Tj = parseFloat(formData.junctionTempInput);
-                pi_T = Math.exp(-2114 * ((1 / (Tj + 273)) - (1 / 298)));
-                tempDescription = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-            } else {
-                // Default to 25°C if no input provided
-                pi_T = 1.0;
-                tempDescription = "No temperature input, using default πT = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Temperature Factor (πT)',
-                value: pi_T.toFixed(4),
-                description: tempDescription
-            });
-            const appFactor = transistorAppFactors.find(a => a.name === formData.transistorAppFactor);
-            pi_A = appFactor ? appFactor.pi_A : 1;
-            calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
-            let pi_R = 1;
-            let powerRatingDescription1 = '';
-
-            if (formData.transistorPowerFactor) {
-                // Use dropdown value if selected
-                const powerFactor = transistorPowerFactors.find(p => p.power === formData.transistorPowerFactor);
-                pi_R = powerFactor ? powerFactor.pi_R : 1;
-                powerRatingDescription1 = `Selected power factor: ${formData.transistorPowerFactor} (πR = ${pi_R})`;
-            } else if (formData.powerInput1) {
-                // Calculate from manual input if provided
-                const Pr = parseFloat(formData.powerInput1) || 1;
-                pi_R = Math.pow(Pr, 0.37);
-
-                pi_R = calculatePiR(Pr);
-                powerRatingDescription1 = `Calculated from input power (${Pr} W): πR = ${pi_R.toFixed(4)}`;
-            }
-            calculationDetails.push({
-                name: 'Power Rating Factor (πR)',
-                value: pi_R.toFixed(4),
-                description: powerRatingDescription1
-            });
-            let pi_S = 1;
-            let voltageStressDescription3 = '';
-
-            if (formData.transistorVoltageFactor) {
-                // Use dropdown value if selected
-                const voltageFactor = transistorVoltageFactors.find(v => v.range === formData.transistorVoltageFactor);
-                pi_S = voltageFactor ? voltageFactor.pi_S : 1;
-                voltageStressDescription3 = `Selected range: ${formData.transistorVoltageFactor}`;
-            } else if (formData.applied && formData.rated) {
-                // Calculate from voltage ratio when manual values are entered
-                const Vs = parseFloat(formData.applied) / parseFloat(formData.rated);
-
-                // Calculate πS using the exponential formula for 0 < Vs ≤ 1.0
-                if (Vs > 0 && Vs <= 1.0) {
-                    pi_S = 0.045 * Math.exp(3.1 * Vs);
-                    voltageStressDescription3 = `Vs (${Vs.toFixed(4)}) is in range 0 < Vs ≤ 1.0, calculated using πS = 0.045 * exp(3.1 * Vs)`;
-                } else if (Vs <= 0) {
-                    pi_S = 0;  // or whatever value makes sense for Vs ≤ 0
-                    voltageStressDescription3 = `Vs (${Vs.toFixed(4)}) ≤ 0, so πS = 0`;
-                } else {
-                    pi_S = 1.0;  // or whatever value makes sense for Vs > 1.0
-                    voltageStressDescription3 = `Vs (${Vs.toFixed(4)}) > 1.0, so πS = 1.0`;
-                }
-            }
-
-            calculationDetails.push({
-                name: 'Voltage Stress Factor (πS)',
-                value: pi_S.toFixed(4),
-                description: voltageStressDescription3
-            });
-            // Calculate final failure rate
-            lambda_p = lambda_b * pi_T * pi_A * pi_R * pi_S * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πA × πR × πS × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-        } else if (formData.componentType === 'lowFreqFET') {
-            // Low frequency SI FET calculation
-            const fetType = siFETTypes.find(t => t.name === formData.siFETType);
-            lambda_b = fetType.lambda_b;
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
-            // Temperature factor calculation
-            let tempDescription4;
-            if (formData.junctionTemp) {
-                // Use the selected dropdown value
-                const tempFactor = siFETTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
-
-                pi_T = tempFactor.pi_T;
-                tempDescription4 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
-            } else if (formData.junctionTempInput) {
-                // Calculate from manual input using the formula
-                const Tj = parseFloat(formData.junctionTempInput);
-                pi_T = Math.exp(-1925 * ((1 / (Tj + 273)) - (1 / 298)));
-                tempDescription4 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-            } else {
-                // Default to 25°C if no input provided
-                pi_T = 1.0;
-                tempDescription4 = "No temperature input, using default πT = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Temperature Factor (πT)',
-                value: pi_T.toFixed(4),
-                description: tempDescription4
-            });
-            // Application factor
-            const appFactor = siFETAppFactors.find(a => a.name === formData.siFETAppFactor);
-            pi_A = appFactor ? appFactor.pi_A : 1;
-            calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
-
-            // Calculate final failure rate
-            lambda_p = lambda_b * pi_T * pi_A * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πA × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-        } else if (formData.componentType === 'transistorsUnijunction') {
-            // Unijunction transistor calculation
-            const unijunctionType = unijunctionTypes.find(t => t.name === formData.unijunctionType);
-            lambda_b = unijunctionType.lambda_b;
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
-
-            // Temperature factor (using table lookup)
-            const tempFactor = unijunctionTempFactors.find(t => t.temp >= formData.junctionTemp) ||
-                unijunctionTempFactors[unijunctionTempFactors.length - 1];
-            pi_T = tempFactor.pi_T;
-            calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T });
-
-            let tempDescription5;
-            if (formData.junctionTemp) {
-                // Use the selected dropdown value
-                const tempFactor = unijunctionTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
-
-                pi_T = tempFactor.pi_T;
-                tempDescription5 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
-            } else if (formData.junctionTempInput) {
-                // Calculate from manual input using the formula
-                const Tj = parseFloat(formData.junctionTempInput);
-                pi_T = Math.exp(-2483 * ((1 / (Tj + 273)) - (1 / 298)));
-                tempDescription5 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-            } else {
-                // Default to 25°C if no input provided
-                pi_T = 1.0;
-                tempDescription5 = "No temperature input, using default πT = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Temperature Factor (πT)',
-                value: pi_T.toFixed(4),
-                description: tempDescription5
-            });
-            // Calculate final failure rate
-            lambda_p = lambda_b * pi_T * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-        } else if (formData.componentType === 'transistorsLowNoiseHighFreqBipolar') {
-
-            // 6.6 Transistors, Low Noise, High Frequency, Bipolar calculation
-            lambda_b = 0.18; // Base failure rate from your image
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
-
-            // Temperature factor (using the specific formula from your image)
-            let tempDescription6;
-            if (formData.junctionTemp) {
-                // Use the selected dropdown value
-                const tempFactor = lowNoiseHighFreqTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
-
-                pi_T = tempFactor.pi_T;
-                tempDescription6 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
-            } else if (formData.junctionTempInput) {
-                // Calculate from manual input using the formula
-                const Tj = parseFloat(formData.junctionTempInput);
-                pi_T = Math.exp(-2114 * ((1 / (Tj + 273)) - (1 / 298)));
-                tempDescription6 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-            } else {
-                // Default to 25°C if no input provided
-                pi_T = 1.0;
-                tempDescription6 = "No temperature input, using default πT = 1.0";
-            }
-            calculationDetails.push({
-                name: 'Temperature Factor (πT)',
-                value: pi_T.toFixed(4),
-                description: tempDescription6
-            });
-            let powerRatingDescription1
-            if (formData.powerRating) {
-                // Use dropdown value if selected
-                const powerFactor = lowNoiseHighFreqPowerFactors.find(p => p.power === formData.powerRating);
-                pi_R = powerFactor ? powerFactor.pi_R : 1;
-                powerRatingDescription1 = `Selected power factor: ${formData.powerRating} (πR = ${pi_R})`;
-            } else if (formData.powerInput1) {
-                // Calculate from manual input if provided
-                const Pr = parseFloat(formData.powerInput1) || 1;
-                pi_R = Math.pow(Pr, 0.37);
-
-                pi_R = calculatePiR(Pr);
-                powerRatingDescription1 = `Calculated from input power (${Pr} W): πR = ${pi_R.toFixed(4)}`;
-            }
-            calculationDetails.push({
-                name: 'Power Rating Factor (πR)',
-                value: pi_R.toFixed(4),
-                description: powerRatingDescription1
-            });
-            // Voltage stress factor
-
-            let pi_S = 1;
-            let voltageStressDescription6 = '';
-
-            if (formData.voltageStressRatio) {
-                // Use dropdown value if selected
-                const voltageFactor = lowNoiseHighFreqVoltageFactors.find(v => v.range === formData.voltageStressRatio);
-                pi_S = voltageFactor ? voltageFactor.pi_S : 1;
-                voltageStressDescription6 = `Selected range: ${formData.voltageStressRatio}`;
-            } else if (formData.applied && formData.rated) {
-                // Calculate from voltage ratio when manual values are entered
-                const Vs = parseFloat(formData.applied) / parseFloat(formData.rated);
-
-                // Calculate πS using the exponential formula for 0 < Vs ≤ 1.0
-                if (Vs > 0 && Vs <= 1.0) {
-                    pi_S = 0.045 * Math.exp(3.1 * Vs);
-                    voltageStressDescription6 = `Vs (${Vs.toFixed(4)}) is in range 0 < Vs ≤ 1.0, calculated using πS = 0.045 * exp(3.1 * Vs)`;
-                } else if (Vs <= 0) {
-                    pi_S = 0;  // or whatever value makes sense for Vs ≤ 0
-                    voltageStressDescription6 = `Vs (${Vs.toFixed(4)}) ≤ 0, so πS = 0`;
-                } else {
-                    pi_S = 1.0;  // or whatever value makes sense for Vs > 1.0
-                    voltageStressDescription6 = `Vs (${Vs.toFixed(4)}) > 1.0, so πS = 1.0`;
-                }
-            }
-
-            calculationDetails.push({
-                name: 'Voltage Stress Factor (πS)',
-                value: pi_S.toFixed(4),
-                description: voltageStressDescription6
-            });
-            // Quality factor (specific to this component type)
-            const qualityFactor = lowNoiseHighFreqQualityFactors.find(q => q.name === formData.lowNoiseHighFreqQuality);
-            pi_Q = qualityFactor ? qualityFactor.pi_Q : 1;
-            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q }; // Update first item
-
-            // Get environment factor
-            const envFactor = lowNoiseEnvironmentFactors.find(e => e.code === formData.environment);
-            pi_E = envFactor ? envFactor.pi_E : 1;
-            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
-
-            // Calculate final failure rate
-            lambda_p = lambda_b * pi_T * pi_R * pi_S * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πR × πS × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-        } else if (formData.componentType === 'transistorsHighPowerHighFrequencyBipolar') {
-
-
-            const frequency = parseFloat(formData.frequencyGHz);
-            const power = parseFloat(formData.outputPowerWatts);
-            let lambda_b = 0;
-            let description = '';
-
-            // Find the appropriate row in the frequency/power table
-            if (frequency <= 0.5) {
-                if (power <= 1.0) {
-                    lambda_b = 0.038;
-                    description = `From table: F ≤ 0.5GHz, P ≤ 1.0W`;
-                } else if (power <= 5.0) {
-                    lambda_b = 0.039;
-                    description = `From table: F ≤ 0.5GHz, 1.0W < P ≤ 5.0W`;
-                } else if (power <= 10) {
-                    lambda_b = 0.040;
-                    description = `From table: F ≤ 0.5GHz, 5.0W < P ≤ 10W`;
-                } else if (power <= 50) {
-                    lambda_b = 0.050;
-                    description = `From table: F ≤ 0.5GHz, 10W < P ≤ 50W`;
-                } else if (power <= 100) {
-                    lambda_b = 0.067;
-                    description = `From table: F ≤ 0.5GHz, 50W < P ≤ 100W`;
-                } else if (power <= 200) {
-                    lambda_b = 0.12;
-                    description = `From table: F ≤ 0.5GHz, 100W < P ≤ 200W`;
-                } else if (power <= 300) {
-                    lambda_b = 0.20;
-                    description = `From table: F ≤ 0.5GHz, 200W < P ≤ 300W`;
-                } else if (power <= 400) {
-                    lambda_b = 0.36;
-                    description = `From table: F ≤ 0.5GHz, 300W < P ≤ 400W`;
-                } else if (power <= 500) {
-                    lambda_b = 0.62;
-                    description = `From table: F ≤ 0.5GHz, 400W < P ≤ 500W`;
-                } else {
-                    lambda_b = 1.1;
-                    description = `From table: F ≤ 0.5GHz, P > 500W`;
-                }
-            } else if (frequency <= 1) {
-                if (power <= 1.0) {
-                    lambda_b = 0.046;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, P ≤ 1.0W`;
-                } else if (power <= 5.0) {
-                    lambda_b = 0.047;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, 1.0W < P ≤ 5.0W`;
-                } else if (power <= 10) {
-                    lambda_b = 0.048;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, 5.0W < P ≤ 10W`;
-                } else if (power <= 50) {
-                    lambda_b = 0.060;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, 10W < P ≤ 50W`;
-                } else if (power <= 100) {
-                    lambda_b = 0.080;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, 50W < P ≤ 100W`;
-                } else if (power <= 200) {
-                    lambda_b = 0.14;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, 100W < P ≤ 200W`;
-                } else if (power <= 300) {
-                    lambda_b = 0.24;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, 200W < P ≤ 300W`;
-                } else if (power <= 400) {
-                    lambda_b = 0.42;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, 300W < P ≤ 400W`;
-                } else if (power <= 500) {
-                    lambda_b = 0.74;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, 400W < P ≤ 500W`;
-                } else if (power <= 600) {
-                    lambda_b = 1.3;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, 500W < P ≤ 600W`;
-                } else {
-                    lambda_b = 1.3;
-                    description = `From table: 0.5GHz < F ≤ 1GHz, P > 600W`;
-                }
-            } else if (frequency <= 2) {
-                if (power <= 1.0) {
-                    lambda_b = 0.065;
-                    description = `From table: 1GHz < F ≤ 2GHz, P ≤ 1.0W`;
-                } else if (power <= 5.0) {
-                    lambda_b = 0.067;
-                    description = `From table: 1GHz < F ≤ 2GHz, 1.0W < P ≤ 5.0W`;
-                } else if (power <= 10) {
-                    lambda_b = 0.069;
-                    description = `From table: 1GHz < F ≤ 2GHz, 5.0W < P ≤ 10W`;
-                } else if (power <= 50) {
-                    lambda_b = 0.086;
-                    description = `From table: 1GHz < F ≤ 2GHz, 10W < P ≤ 50W`;
-                } else if (power <= 100) {
-                    lambda_b = 0.11;
-                    description = `From table: 1GHz < F ≤ 2GHz, 50W < P ≤ 100W`;
-                } else if (power <= 200) {
-                    lambda_b = 0.20;
-                    description = `From table: 1GHz < F ≤ 2GHz, 100W < P ≤ 200W`;
-                } else if (power <= 300) {
-                    lambda_b = 0.35;
-                    description = `From table: 1GHz < F ≤ 2GHz, 200W < P ≤ 300W`;
-                } else {
-                    lambda_b = 0.35;
-                    description = `From table: 1GHz < F ≤ 2GHz, P > 300W`;
-                }
-            } else if (frequency <= 3) {
-                if (power <= 1.0) {
-                    lambda_b = 0.093;
-                    description = `From table: 2GHz < F ≤ 3GHz, P ≤ 1.0W`;
-                } else if (power <= 5.0) {
-                    lambda_b = 0.095;
-                    description = `From table: 2GHz < F ≤ 3GHz, 1.0W < P ≤ 5.0W`;
-                } else if (power <= 10) {
-                    lambda_b = 0.098;
-                    description = `From table: 2GHz < F ≤ 3GHz, 5.0W < P ≤ 10W`;
-                } else if (power <= 50) {
-                    lambda_b = 0.12;
-                    description = `From table: 2GHz < F ≤ 3GHz, 10W < P ≤ 50W`;
-                } else if (power <= 100) {
-                    lambda_b = 0.16;
-                    description = `From table: 2GHz < F ≤ 3GHz, 50W < P ≤ 100W`;
-                } else if (power <= 200) {
-                    lambda_b = 0.28;
-                    description = `From table: 2GHz < F ≤ 3GHz, 100W < P ≤ 200W`;
-                } else {
-                    lambda_b = 0.28;
-                    description = `From table: 2GHz < F ≤ 3GHz, P > 200W`;
-                }
-            } else if (frequency <= 4) {
-                if (power <= 1.0) {
-                    lambda_b = 0.13;
-                    description = `From table: 3GHz < F ≤ 4GHz, P ≤ 1.0W`;
-                } else if (power <= 5.0) {
-                    lambda_b = 0.14;
-                    description = `From table: 3GHz < F ≤ 4GHz, 1.0W < P ≤ 5.0W`;
-                } else if (power <= 10) {
-                    lambda_b = 0.14;
-                    description = `From table: 3GHz < F ≤ 4GHz, 5.0W < P ≤ 10W`;
-                } else if (power <= 50) {
-                    lambda_b = 0.17;
-                    description = `From table: 3GHz < F ≤ 4GHz, 10W < P ≤ 50W`;
-                } else {
-                    lambda_b = 0.23;
-                    description = `From table: 3GHz < F ≤ 4GHz, P > 50W`;
-                }
-            } else if (frequency <= 5) {
-                if (power <= 1.0) {
-                    lambda_b = 0.19;
-                    description = `From table: 4GHz < F ≤ 5GHz, P ≤ 1.0W`;
-                } else if (power <= 5.0) {
-                    lambda_b = 0.19;
-                    description = `From table: 4GHz < F ≤ 5GHz, 1.0W < P ≤ 5.0W`;
-                } else if (power <= 10) {
-                    lambda_b = 0.20;
-                    description = `From table: 4GHz < F ≤ 5GHz, 5.0W < P ≤ 10W`;
-                } else if (power <= 50) {
-                    lambda_b = 0.25;
-                    description = `From table: 4GHz < F ≤ 5GHz, 10W < P ≤ 50W`;
-                } else {
-                    // For frequencies > 4GHz and power outside table range, use the formula
-                    lambda_b = 0.032 * Math.exp(354 * frequency + 0.00558 * power);
-                    description = `Calculated from formula: 0.032 * exp(354*${frequency} + 0.00558*${power})`;
-                }
-            } else {
-                // For frequencies > 5GHz, always use the formula
-                lambda_b = 0.032 * Math.exp(354 * frequency + 0.00558 * power);
-                description = `Calculated from formula: 0.032 * exp(354*${frequency} + 0.00558*${power})`;
-            }
-
-            calculationDetails.push({
-                name: 'Base Failure Rate (λb)',
-                value: lambda_b.toFixed(6),
-                description: description
-            });
-
-            // Temperature factor
-            const pi_T = getHighPowerHighFreqTempFactor(
-                parseFloat(formData.junctionTempHP),
-                parseFloat(formData.voltageRatio),
-                formData.metalizationType
-            );
-            calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T?.toFixed(4) });
-            // Application factor
-            let pi_A = 1;
-            let appFactorDescription = '';
-
-            if (formData.applicationType) {
-                // Use dropdown value if selected
-                const appFactor = appFactors.find(a => a.name === formData.applicationType);
-                pi_A = appFactor ? appFactor.pi_A : 1.0;
-                appFactorDescription = `Selected application: ${formData.applicationType} (πA = ${pi_A})`;
-            } else if (formData.dutyCycle) {  // Changed from appFactorInput to dutyCycle
-                // Calculate from manual input if provided
-                const dutyFactor = parseFloat(formData.dutyCycle) || 0;
-                // Calculate πA based on duty cycle using linear interpolation
-                if (dutyFactor === 0) {
-                    // CW operation
-                    pi_A = 7.6;
-                    appFactorDescription = `Continuous Wave (CW) operation: πA = ${pi_A}`;
-                } else if (dutyFactor <= 1) {
-                    pi_A = 0.48;
-                    appFactorDescription = `Pulsed ≤ 1% duty cycle: πA = ${pi_A}`;
-                } else if (dutyFactor <= 5) {
-                    pi_A = 0.48 + (0.70 - 0.48) * (dutyFactor - 1) / (5 - 1);
-                    appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 1% and 5%): πA = ${pi_A.toFixed(4)}`;
-                } else if (dutyFactor <= 10) {
-                    pi_A = 0.70 + (1.0 - 0.70) * (dutyFactor - 5) / (10 - 5);
-                    appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 5% and 10%): πA = ${pi_A.toFixed(4)}`;
-                } else if (dutyFactor <= 15) {
-                    pi_A = 1.0 + (1.3 - 1.0) * (dutyFactor - 10) / (15 - 10);
-                    appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 10% and 15%): πA = ${pi_A.toFixed(4)}`;
-                } else if (dutyFactor <= 20) {
-                    pi_A = 1.3 + (1.6 - 1.3) * (dutyFactor - 15) / (20 - 15);
-                    appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 15% and 20%): πA = ${pi_A.toFixed(4)}`;
-                } else if (dutyFactor <= 25) {
-                    pi_A = 1.6 + (1.9 - 1.6) * (dutyFactor - 20) / (25 - 20);
-                    appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 20% and 25%): πA = ${pi_A.toFixed(4)}`;
-                } else if (dutyFactor <= 30) {
-                    pi_A = 1.9 + (2.2 - 1.9) * (dutyFactor - 25) / (30 - 25);
-                    appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 25% and 30%): πA = ${pi_A.toFixed(4)}`;
-                } else {
-                    pi_A = 2.2;
-                    appFactorDescription = `Pulsed ≥ 30% duty cycle: πA = ${pi_A}`;
-                }
-
-                console.log('Calculated πA:', pi_A);
-            } else {
-                pi_A = 1.0;
-                appFactorDescription = "No application type selected, using default πA = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Application Factor (πA)',
-                value: pi_A.toFixed(4),
-                description: appFactorDescription
-            });
-
-            // Quality factor (specific to this component type)
-            const qualityFactorsHP = [
-                { name: 'JANTXV', pi_Q: 0.50 },
-                { name: 'JANTX', pi_Q: 1.0 },
-                { name: 'JAN', pi_Q: 2.0 },
-                { name: 'Lower', pi_Q: 5.0 }
-            ];
-            const qualityFactor = qualityFactorsHP.find(q => q.name === formData.quality);
-            pi_Q = qualityFactor ? qualityFactor.pi_Q : 1.0;
-            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q?.toFixed(2) };
-            // Environment factor (use existing)
-            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E?.toFixed(2) };
-            // calculationDetails.push({ name: 'Environment Factor (πE)', value: pi_E });
-
-            // Get environment factor
-            const envFactor = highpowerEnvironmentFactors.find(e => e.code === formData.environment);
-            pi_E = envFactor ? envFactor.pi_E : 1;
-            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
-            // Matching network factor
-            const matchFactors = [
-                { name: 'Input and Output', pi_M: 1.0 },
-                { name: 'Input', pi_M: 2.0 },
-                { name: 'None', pi_M: 4.0 }
-            ];
-            const matchFactor = matchFactors.find(m => m.name === formData.matchingNetwork);
-            const pi_M = matchFactor ? matchFactor.pi_M : 1.0;
-            calculationDetails.push({ name: 'Matching Network Factor (πM)', value: pi_M?.toFixed(2) });
-
-            // Calculate final failure rate
-            lambda_p = lambda_b * pi_T * pi_A * pi_Q * pi_E * pi_M;
-            formula = 'λp = λb × πT × πA × πQ × πE × πM';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-        } else if (formData.componentType === 'transistorsHighFrequencyGaAsFET') {
-            // 6.8 Transistors, High Frequency, GaAs FET calculation
-
-            // Get base failure rate from table
-            const frequency = parseFloat(formData.frequencyGHzGaAs);
-            const power = parseFloat(formData.outputPowerWattsGaAs);
-            let lambda_b = 0;
-
-            // First check if we can use the table values
-            if (frequency === 1 && power < 0.1) {
-                lambda_b = 0.052;
-            } else if (frequency === 4) {
-                if (power < 0.1) lambda_b = 0.052;
-                else if (power <= 0.1) lambda_b = 0.054;
-                else if (power <= 0.5) lambda_b = 0.066;
-                else if (power <= 1) lambda_b = 0.084;
-                else if (power <= 2) lambda_b = 0.14;
-                else if (power <= 4) lambda_b = 0.36;
-                else if (power <= 6) lambda_b = 0.96;
-            } else if (frequency === 5) {
-                if (power < 0.1) lambda_b = 0.052;
-                else if (power <= 0.1) lambda_b = 0.083;
-                else if (power <= 0.5) lambda_b = 0.10;
-                else if (power <= 1) lambda_b = 0.13;
-                else if (power <= 2) lambda_b = 0.21;
-                else if (power <= 4) lambda_b = 0.56;
-                else if (power <= 6) lambda_b = 1.5;
-            } else if (frequency === 6) {
-                if (power < 0.1) lambda_b = 0.052;
-                else if (power <= 0.1) lambda_b = 0.13;
-                else if (power <= 0.5) lambda_b = 0.16;
-                else if (power <= 1) lambda_b = 0.20;
-                else if (power <= 2) lambda_b = 0.32;
-                else if (power <= 4) lambda_b = 0.85;
-                else if (power <= 6) lambda_b = 2.3;
-            } else if (frequency === 7) {
-                if (power < 0.1) lambda_b = 0.052;
-                else if (power <= 0.1) lambda_b = 0.20;
-                else if (power <= 0.5) lambda_b = 0.24;
-                else if (power <= 1) lambda_b = 0.30;
-                else if (power <= 2) lambda_b = 0.50;
-                else if (power <= 4) lambda_b = 1.3;
-                else if (power <= 6) lambda_b = 3.5;
-            } else if (frequency === 8) {
-                if (power < 0.1) lambda_b = 0.052;
-                else if (power <= 0.1) lambda_b = 0.30;
-                else if (power <= 0.5) lambda_b = 0.37;
-                else if (power <= 1) lambda_b = 0.47;
-                else if (power <= 2) lambda_b = 0.76;
-                else if (power <= 4) lambda_b = 2.0;
-            } else if (frequency === 9) {
-                if (power < 0.1) lambda_b = 0.052;
-                else if (power <= 0.1) lambda_b = 0.46;
-                else if (power <= 0.5) lambda_b = 0.56;
-                else if (power <= 1) lambda_b = 0.72;
-                else if (power <= 2) lambda_b = 1.2;
-            } else if (frequency === 10) {
-                if (power < 0.1) lambda_b = 0.052;
-                else if (power <= 0.1) lambda_b = 0.71;
-                else if (power <= 0.5) lambda_b = 0.87;
-                else if (power <= 1) lambda_b = 1.1;
-                else if (power <= 2) lambda_b = 1.8;
-                console.log('λb from table:', lambda_b);
-            } else {
-                // For frequencies not in the table or power ranges not covered, use the formula
-                lambda_b = 0.0093 * Math.exp(0.429 * frequency + 0.486 * power);
-                console.log('Calculated λb:', lambda_b);
-            }
-
-            calculationDetails.push({
-                name: 'Base Failure Rate (λb)',
-                value: lambda_b.toFixed(6),
-                description: frequency >= 1 && frequency <= 10 ?
-                    `From table: F=${frequency}GHz, P=${power}W` :
-                    `Calculated from formula: 0.0093 * exp(0.429*${frequency} + 0.486*${power}) = ${lambda_b.toFixed(6)}`
-            });
-
-            let pi_T = 1;
-            let tempDescription8;
-            if (formData.junctionTempGaAs) {
-                // Use the selected dropdown value
-                const tempFactor = gaAsTempFactors.find(t => t.temp === parseInt(formData.junctionTempGaAs));
-                pi_T = tempFactor.pi_T;
-                tempDescription8 = `From table: ${formData.junctionTempGaAs}°C → πT = ${pi_T}`;
-            } else if (formData.junctionTempInput) {
-                // Calculate from manual input using the formula
-                const Tj = parseFloat(formData.junctionTempInput);
-                pi_T = Math.exp(-2114 * ((1 / (Tj + 273)) - (1 / 298)));
-                tempDescription8 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-            } else {
-                // Default to 25°C if no input provided
-                pi_T = 1.0;
-                tempDescription8 = "No temperature input, using default πT = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Temperature Factor (πT)',
-                value: pi_T.toFixed(4),
-                description: tempDescription8
-            });
-
-            // Application factor
-            const appFactor = gaAsAppFactors.find(a => a.name === formData.applicationTypeGaAs);
-            const pi_A = appFactor ? appFactor.pi_A : 1.0;
-            calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
-
-            // Matching network factor
-            const matchFactor = gaAsMatchingNetworkFactors.find(m => m.name === formData.matchingNetworkGaAs);
-            const pi_M = matchFactor ? matchFactor.pi_M : 1.0;
-            calculationDetails.push({ name: 'Matching Network Factor (πM)', value: pi_M });
-
-            // Quality factor (specific to this component type)
-            const qualityFactor = gaAsQualityFactors.find(q => q.name === formData.qualityGaAs);
-            pi_Q = qualityFactor ? qualityFactor.pi_Q : 1.0;
-            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q };
-            // Get environment factor
-            const envFactor = gasFETEnvironmentFactors.find(e => e.code === formData.environment);
-            pi_E = envFactor ? envFactor.pi_E : 1;
-            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
-
-
-
-            // Calculate final failure rate
-            lambda_p = lambda_b * pi_T * pi_A * pi_M * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πA × πM × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-        } else if (formData.componentType === 'transistorsHighFrequencySIFET') {
-            // 6.9 Transistors, High Frequency, SI FET calculation
-
-            // Get base failure rate
-            const fetType = siFETTypesHF.find(t => t.name === formData.siFETTypeHF);
-            const lambda_b = fetType.lambda_b;
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
-
-            // Temperature factor (using table lookup)
-            let pi_T = 1;
-            let tempDescription9;
-            if (formData.junctionTempSIFET) {
-                // Use the selected dropdown value
-                const tempFactor = siFETTempFactorsHF.find(t => t.temp === parseInt(formData.junctionTempSIFET));
-                pi_T = tempFactor.pi_T;
-                tempDescription9 = `From table: ${formData.junctionTempSIFET}°C → πT = ${pi_T}`;
-            } else if (formData.junctionTempInput) {
-                // Calculate from manual input using the formula
-                const Tj = parseFloat(formData.junctionTempInput);
-                pi_T = Math.exp(-1925 * ((1 / (Tj + 273)) - (1 / 298)));
-                tempDescription9 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-            } else {
-                // Default to 25°C if no input provided
-                pi_T = 1.0;
-                tempDescription9 = "No temperature input, using default πT = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Temperature Factor (πT)',
-                value: pi_T.toFixed(4),
-                description: tempDescription9
-            });
-
-            // Quality factor (specific to this component type)
-            const qualityFactor = siFETQualityFactors.find(q => q.name === formData.qualitySIFET);
-            pi_Q = qualityFactor ? qualityFactor.pi_Q : 1.0;
-            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q };
-
-            // Environment factor (use existing)
-            const envFactor = siFETEnvironmentFactors.find(e => e.code === formData.environment);
-            pi_E = envFactor ? envFactor.pi_E : 1;
-            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
-
-
-            // Calculate final failure rate
-            lambda_p = lambda_b * pi_T * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-        } else if (formData.componentType === 'thyristorsAndSCRS') {
-            // 6.10 Thyristors and SCRS calculation
-            const thyristorType = thyristorTypes.find(t => t.name === formData.thyristorType);
-            lambda_b = thyristorType.lambda_b;
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
-
-            let pi_T = 1;
-            let tempDescription10;
-            if (formData.junctionTemp) {
-                // Use the selected dropdown value
-
-                const tempFactor = thyristorTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
-                pi_T = tempFactor.pi_T;
-                tempDescription10 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
-            } else if (formData.junctionTempInput) {
-                // Calculate from manual input using the formula
-                const Tj = parseFloat(formData.junctionTempInput);
-                pi_T = Math.exp(-3082 * ((1 / (Tj + 273)) - (1 / 298)));
-                tempDescription10 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-            } else {
-                // Default to 25°C if no input provided
-                pi_T = 1.0;
-                tempDescription10 = "No temperature input, using default πT = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Temperature Factor (πT)',
-                value: pi_T.toFixed(4),
-                description: tempDescription10
-            });
-
-
-            let pi_R = 1;
-            let powerRatingDescription10 = '';
-
-            if (formData.thyristorCurrent) {
-                // Use dropdown value if selected
-                const currentFactor = thyristorCurrentFactors.find(c => c.current === parseInt(formData.thyristorCurrent));
-                pi_R = currentFactor ? currentFactor.pi_R : 1.0;
-                powerRatingDescription10 = `Selected power factor: ${formData.thyristorCurrent} (πR = ${pi_R})`;
-            } else if (formData.powerInput2) {
-                // Calculate from manual input if provided
-                const Pr = parseFloat(formData.powerInput2) || 1;
-                pi_R = Math.pow(Pr, 0.40);
-
-                // pi_R = calculatePiR(Pr);
-                pi_R = Math.pow(Pr, 0.40);
-
-                powerRatingDescription10 = `Calculated from input power (${Pr} W): πR = ${pi_R.toFixed(4)}`;
-            }
-            calculationDetails.push({
-                name: 'Power Rating Factor (πR)',
-                value: pi_R.toFixed(4),
-                description: powerRatingDescription10
-            });
-
-            let pi_S = 1;
-            let voltageStressFactorsDescription10 = '';
-            if (formData.thyristorVoltage) {
-                // Use dropdown value if selected
-                const voltageFactor = thyristorVoltageFactors.find(v => v.range === formData.thyristorVoltage);
-                pi_S = voltageFactor ? voltageFactor.pi_S : 1.0;
-                voltageStressFactorsDescription10 = `Selected power factor: ${formData.thyristorVoltage} (πS = ${pi_S})`;
-            } else if (formData.powerInput3) {
-                // Calculate from manual input if provided
-                const vs = parseFloat(formData.powerInput3) || 1;
-                pi_S = Math.pow(vs, 1.9);
-                // pi_S = calculatePiR(Pr);
-                pi_S = Math.pow(vs, 1.9);
-
-
-                voltageStressFactorsDescription10 = `Calculated from input power (${vs} W): πS = ${pi_S.toFixed(4)}`;
-            }
-            calculationDetails.push({
-                name: 'Voltage Stress Factor (πS)',
-                value: pi_S.toFixed(4),
-                description: voltageStressFactorsDescription10
-            });
-            // Calculate final failure rate
-            lambda_p = lambda_b * pi_T * pi_R * pi_S * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πR × πS × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-            // Add this case to your calculateFailureRate function
-        } else if (formData.componentType === 'optoelectronics') {
-            // Optoelectronics calculation
-            const optoType = optoelectronicTypes.find(t => t.name === formData.optoelectronicType);
-            const lambda_0 = optoType.lambda_0;
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_0 });
-
-            // Temperature factor (using formula from image)
-            let pi_T = 1;
-            let tempDescription11;
-            if (formData.junctionTemp) {
-                // Use the selected dropdown value
-
-                const tempFactor = optoTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
-                pi_T = tempFactor.pi_T;
-                tempDescription11 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
-            } else if (formData.junctionTempInput) {
-                // Calculate from manual input using the formula
-                const Tj = parseFloat(formData.junctionTempInput);
-                pi_T = Math.exp(-2790 * ((1 / (Tj + 273)) - (1 / 298)));
-                tempDescription11 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-            } else {
-                // Default to 25°C if no input provided
-                pi_T = 1.0;
-                tempDescription11 = "No temperature input, using default πT = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Temperature Factor (πT)',
-                value: pi_T.toFixed(4),
-                description: tempDescription11
-            });
-
-            const envFactor = optoElectroEnvironmentFactors.find(e => e.code === formData.environment);
-            pi_E = envFactor ? envFactor.pi_E : 1;
-            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
-
-            // calculationDetails.push({ name: 'Environment Factor (πE)', value: pi_E });
-            // Calculate final failure rate
-            lambda_p = lambda_0 * pi_T * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-            // Add this case to your calculateFailureRate function
-        } else if (formData.componentType === 'alphanumericDisplays') {
-
-            const C = parseInt(formData.characterCount);
-            const hasLogicChip = formData.hasLogicChip === 'true';
-            const λ_IC = hasLogicChip ? 0.000043 : 0.0;
-
-            // Calculate base failure rate based on display type
-            let λ_b;
-            if (formData.displayType === 'segment') {
-                λ_b = 0.00043 * C + λ_IC;
-            } else { // diode array
-                λ_b = 0.00009 + 0.00017 * C + λ_IC;
-            }
-
-            calculationDetails.push({
-                name: 'Base Failure Rate (λb)',
-                value: λ_b.toFixed(6),
-                description: formData.displayType === 'segment'
-                    ? `Segment Display: 0.00043 × ${C} + ${λ_IC}`
-                    : `Diode Array: 0.00009 + 0.00017 × ${C} + ${λ_IC}`
-            });
-
-            let pi_T = 1;
-            let tempDescription12;
-            if (formData.junctionTemp) {
-                // Use the selected dropdown value
-
-                const tempFactor = alphanumeric.find(t => t.temp === parseInt(formData.junctionTemp));
-                pi_T = tempFactor.pi_T;
-                tempDescription12 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
-            } else if (formData.junctionTempInput) {
-                // Calculate from manual input using the formula
-                const Tj = parseFloat(formData.junctionTempInput);
-                pi_T = Math.exp(-2790 * ((1 / (Tj + 273)) - (1 / 298)));
-                tempDescription12 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-            } else {
-                // Default to 25°C if no input provided
-                pi_T = 1.0;
-                tempDescription12 = "No temperature input, using default πT = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Temperature Factor (πT)',
-                value: pi_T.toFixed(4),
-                description: tempDescription12
-            });
-            // Quality factor (use existing)
-            // calculationDetails.push({ name: 'Quality Factor (πQ)', value: pi_Q });
-            // Environment factor (use existing)
-
-            const envFactor = alphaNumericEnvironmentFactors.find(e => e.code === formData.environment);
-            pi_E = envFactor ? envFactor.pi_E : 1;
-            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
-
-
-            // calculationDetails.push({ name: 'Environment Factor (πE)', value: pi_E });
-
-            // Calculate final failure rate
-            console.log('lambda_b:', lambda_b);
-            lambda_p = λ_b * pi_T * pi_Q * pi_E;
-            formula = 'λp = λb × πT × πQ × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-        } else if (formData.componentType === 'laserDiode') {
-            // Laser Diode calculation
-            const diodeType = laserDiodeTypes.find(d => d.name === formData.laserDiodeType);
-            lambda_b = diodeType.lambda_b;
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
-
-            // Temperature facto
-
-            let pi_T = 1;
-            let tempDescription13;
-            if (formData.laserDiodeTemp) {
-                // Use the selected dropdown value
-
-                const tempFactor = laserDiodeTempFactors.find(t => t.temp === parseInt(formData.laserDiodeTemp));
-                pi_T = tempFactor.pi_T;
-                tempDescription13 = `From table: ${formData.laserDiodeTemp}°C → πT = ${pi_T}`;
-            } else if (formData.junctionTempInput) {
-                // Calculate from manual input using the formula
-                const Tj = parseFloat(formData.junctionTempInput);
-                pi_T = Math.exp(-4635 * ((1 / (Tj + 273)) - (1 / 298)));
-                tempDescription13 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-            } else {
-                // Default to 25°C if no input provided
-                pi_T = 1.0;
-                tempDescription13 = "No temperature input, using default πT = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Temperature Factor (πT)',
-                value: pi_T.toFixed(4),
-                description: tempDescription13
-            });
-
-            // Quality factor (specific to laser diodes)
-            const qualityFactor = laserDiodeQualityFactors.find(q => q.name === formData.laserDiodeQuality);
-            pi_Q = qualityFactor ? qualityFactor.pi_Q : 1.0;
-            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q };
-
-            // Get environment factor
-            const envFactor = laserEnvironmentFactors.find(e => e.code === formData.environment);
-            pi_E = envFactor ? envFactor.pi_E : 1;
-            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
-
-            let pi_I = 1;
-            let forwardCurrentDescription = '';
-
-            if (formData.laserDiodeCurrent) {
-                // Use dropdown value if selected
-                const currentFactor = laserDiodeCurrentFactors.find(c => parseFloat(c.current) === parseFloat(formData.laserDiodeCurrent));
-                if (currentFactor) {
-                    pi_I = currentFactor.pi_I;
-                    forwardCurrentDescription = `Selected current: ${formData.laserDiodeCurrent}A (πI = ${pi_I})`;
-                } else {
-                    // If not found in table, calculate using the formula
-                    const I = parseFloat(formData.laserDiodeCurrent);
-                    pi_I = Math.pow(I, 0.7); // Example formula - adjust based on your actual formula
-                    forwardCurrentDescription = `Calculated from input current (${I}A): πI = I^0.7 = ${pi_I.toFixed(4)}`;
-                }
-            } else if (formData.powerInput4) {
-                // Calculate from manual input if provided
-                const I = parseFloat(formData.powerInput4) || 1;
-                pi_I = Math.pow(I, 0.7); // Example formula - adjust based on your actual formula
-                forwardCurrentDescription = `Calculated from input current (${I}A): πI = I^0.7 = ${pi_I.toFixed(4)}`;
-            } else {
-                pi_I = 1.0;
-                forwardCurrentDescription = "No current input, using default πI = 1.0";
-            }
-
-            calculationDetails.push({
-                name: 'Forward Current Factor (πI)',
-                value: pi_I.toFixed(4),
-                description: forwardCurrentDescription
-            });
-            let pi_A = 1;
-            let appFactorDescription13 = '';
-
-            if (formData.laserDiodeApplication) {
-                // Use dropdown value if selected
-                const currentFactor = laserDiodeApplicationFactors.find(c => c.current === parseInt(formData.laserDiodeApplication));
-                pi_A = currentFactor ? currentFactor.pi_A : 1.0;
-                appFactorDescription13 = `Selected power factor: ${formData.laserDiodeApplication} (πA = ${pi_A})`;
-            } else if (formData.powerInput2) {
-                // Calculate from manual input if provided
-                const Pr = parseFloat(formData.powerInput2) || 1;
-                pi_A = Math.pow(Pr, 0.5);
-
-                // pi_R = calculatePiR(Pr);
-                pi_A = Math.pow(Pr, 0.40);
-
-                appFactorDescription13 = `Calculated from input power (${Pr} W): πR = ${pi_R.toFixed(4)}`;
-            }
-            calculationDetails.push({
-                name: 'APP Facter (πA)',
-                value: pi_A.toFixed(4),
-                description: appFactorDescription13
-            });
-
-            let pi_P;
-            if (formData.laserDiodePowerRatio) {
-
-                const powerFactor = laserDiodePowerFactors.find(p => p.ratio === parseFloat(formData.laserDiodePowerRatio));
-                pi_P = powerFactor ? powerFactor.pi_P : 1.0;
-            } else if (formData.requiredPower && formData.ratedPower) {
-                // Calculate from input values using the correct formula
-                const Pr = parseFloat(formData.requiredPower);
-                const Ps = parseFloat(formData.ratedPower);
-                const ratio = Pr / Ps;
-
-                if (ratio > 0 && ratio <= 0.95) {
-                    pi_P = 1 / (2 * (1 - ratio));
-                    calculationDetails.push({
-                        name: 'Power Degradation Factor (πP)',
-                        value: pi_P.toFixed(4),
-                        description: `Calculated from Pr/Ps = ${ratio.toFixed(4)} using formula: 1/(2*(1-${ratio.toFixed(4)})) = ${pi_P.toFixed(4)}`
-                    });
-                } else if (ratio <= 0) {
-                    pi_P = 0;
-                    calculationDetails.push({
-                        name: 'Power Degradation Factor (πP)',
-                        value: '0',
-                        description: 'Pr/Ps ratio must be greater than 0'
-                    });
-                } else {
-                    pi_P = 10;
-                    calculationDetails.push({
-                        name: 'Power Degradation Factor (πP)',
-                        value: '10',
-                        description: 'For Pr/Ps > 0.95, πP = 10 (maximum value)'
-                    });
-                }
-            } else {
-                pi_P = 1.0;
-                calculationDetails.push({
-                    name: 'Power Degradation Factor (πP)',
-                    value: '1.0',
-                    description: 'No power ratio input, using default πP = 1.0'
-                });
-            }
-            lambda_p = lambda_b * pi_T * pi_Q * pi_I * pi_A * pi_P * pi_E;
-            formula = 'λp = λb × πT × πQ × πI × πA × πP × πE';
-            if (onCalculate) {
-                onCalculate(lambda_p, calculationDetails, formula);
-            }
-        }
-
-        setResults({
-            failureRate: lambda_p.toExponential(4),
-            calculationDetails,
-            formula,
-            componentType: formData.componentType
-        });
-    };
     const [inputData, setInputData] = useState({
         componentstype: componentTypes[0],
 
@@ -2271,358 +1013,1467 @@ const handleRemoveComponent = () => {
             zIndex: 9999
         })
     };
-  const renderComponent = (component) => {
-    return (
+
+    // Component types and other constants remain the same...
+
+    const addNewComponent = () => {
+        const newComponent = {
+            id: Date.now(),
+            type: '',
+            formData: {
+                componentType: '',
+                diodeType: '',
+                junctionTemp: 25,
+                voltageStress: 0.3,
+                contactConstruction: 'Metallurgically Bonded',
+                quality: 'JANTX',
+                environment: 'GB',
+                numJunctions: 1,
+                voltageApplied: 0,
+                voltageRated: 1,
+                voltageStressRatio: 0,
+                failureRate: 0,
+                total: 0
+            }
+        };
+        setComponents([...components, newComponent]);
+    };
+
+    const removeComponent = (id) => {
+        setComponents(components.filter(comp => comp.id !== id));
+    };
+
+    const updateComponent = (id, updatedProps) => {
+        setComponents(components.map(comp =>
+            comp.id === id ? { ...comp, formData: { ...comp.formData, ...updatedProps } } : comp
+        ));
+    };
+
+    const handleInputChange = (e, componentId) => {
+        const { name, value } = e.target;
+        setComponents(components.map(comp => {
+            if (comp.id === componentId) {
+                const newData = {
+                    ...comp.formData,
+                    [name]: value
+                };
+
+             
+                if (name === 'voltageApplied' || name === 'voltageRated') {
+                    const applied = parseFloat(newData.voltageApplied) || 0;
+                    const rated = parseFloat(newData.voltageRated) || 1;
+                    newData.voltageStressRatio = rated > 0 ? (applied / rated) : 0;
+                }
+
+                return {
+                    ...comp,
+                    formData: newData
+                };
+            }
+            return comp;
+        }));
+    };
+
+    // const calculateFailureRate = (componentId) => {
+    //     // Find the component
+    //     const component = components.find(c => c.id === componentId);
+    //     if (!component) return;
+
+    //     const formData = component.formData;
+    //     let lambda_p = 0;
+    //     let calculationDetails = [];
+    //     let formula = '';
+
+    //     // Your existing calculation logic here...
+    //     // Replace all references to this.state.formData with formData
+    //     // Keep all the calculation logic the same, just change the data source
+
+    //     // After calculation, update the component
+    //     setComponents(components.map(comp => {
+    //         if (comp.id === componentId) {
+    //             return {
+    //                 ...comp,
+    //                 formData: {
+    //                     ...comp.formData,
+    //                     failureRate: lambda_p,
+    //                     total: lambda_p * (quantity || 1)
+    //                 }
+    //             };
+    //         }
+    //         return comp;
+    //     }));
+    // };
+const calculateFailureRate = (componentId) => {
+    console.log("componentId.....",componentId)
+        // Find the component
+        const component = components.find(c => c.id === componentId);
+        if (!component) return;
+
+        const formData = component.formData;
+        let lambda_p = 0;
+        let lambda_b = 0;
+        let pi_T = 1;
+        let pi_S = 1;
+        let pi_C = 1;
+        let pi_Q = 1;
+        let pi_E = 1;
+        let pi_A = 1;
+        let pi_R = 1;
+        let calculationDetails = [];
+        let formula = '';
+
+        // Get quality factor
+        const qualityFactor = qualityFactors.find(q => q.name === formData.quality);
+        pi_Q = qualityFactor ? qualityFactor.pi_Q : 1;
+        calculationDetails.push({ name: 'Quality Factor (πQ)', value: pi_Q });
+        const envFactor = lowFrequencyenvironmentFactors.find(e => e.code === formData.environment);
+        pi_E = envFactor ? envFactor.pi_E : 1;
+        calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
+        if   (formData.componentType === 'lowFreqDiode') {
+            // Low frequency diode calculation
+            const diodeType = lowFreqDiodeTypes.find(d => d.name === formData.diodeType);
+            lambda_b = diodeType.lambda_b;
+            if (diodeType.perJunction) {
+                lambda_b *= formData.numJunctions;
+            }
+            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+
+            const calculatePiT = (diodeType, junctionTemp) => {
+    const Tj = parseFloat(junctionTemp);
+    
+    if (diodeType.includes('Voltage Regulator') || 
+        diodeType.includes('Current Regulator') ||
+        diodeType.includes('Voltage Reference')) {
+        // For Voltage Regulator/Reference and Current Regulator
+        return Math.exp(-1925 * ((1/(Tj + 273)) - (1/298)));
+    } else {
+        // For General Purpose, Switching, Fast Recovery, etc.
+        return Math.exp(-3091 * ((1/(Tj + 273)) - (1/298)));
+    }
+};
+pi_T = calculatePiT(formData.diodeType, formData.junctionTemp);
+calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T.toFixed(4) });
+
+
+            let pi_S = 1;
+        let voltageStressDescription = '';
+        
+        if (formData.voltageStress) {
+            // Use the selected dropdown value
+            const stressFactor = voltageStressFactors.find(v => v.range === formData.voltageStress);
+            pi_S = stressFactor ? stressFactor.pi_S : 1;
+            voltageStressDescription = `Selected range: ${formData.voltageStress}`;
+        } else if (formData.voltageStressRatio !== undefined) {
+            // Calculate from voltage ratio
+            const Vs = parseFloat(formData.voltageStressRatio);
+            if (Vs <= 0.3) {
+                pi_S = 0.054;
+                voltageStressDescription = `Vs (${Vs.toFixed(4)}) ≤ 0.3, so πS = 0.054`;
+            } else if (Vs > 0.3 && Vs <= 1) {
+                pi_S = Math.pow(Vs, 2.43);
+                voltageStressDescription = `Vs (${Vs.toFixed(4)}) > 0.3, so πS = Vs^2.43 = ${pi_S.toFixed(4)}`;
+            } else {
+                pi_S = 1.0;
+                voltageStressDescription = `Vs (${Vs.toFixed(4)}) > 1.0, so πS = 1.0`;
+            }
+        }
+
+        calculationDetails.push({ 
+            name: 'Electrical Stress Factor (πS)', 
+            value: pi_S.toFixed(4),
+            description: voltageStressDescription
+        });
+      // Contact construction factor
+            const contactFactor = contactConstructionFactors.find(c => c.type === formData.contactConstruction);
+            pi_C = contactFactor ? contactFactor.pi_C : 1;
+            calculationDetails.push({ name: 'Contact Construction Factor (πC)', value: pi_C });
+
+            // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_S * pi_C * pi_Q * pi_E;
+            formula = 'λp = λb × πT × πS × πC × πQ × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+
+        } else if   (formData.componentType === 'highFreqDiode') {
+            // High frequency diode calculation
+            const diodeType = highFreqDiodeTypes.find(d => d.name === formData.highFreqDiodeType);
+            lambda_b = diodeType.lambda_b;
+            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+
+            // Temperature factor - use different tables based on diode type
+    //  let tempFactors;
+                   const calculatePiT = (highFreqDiodeType, junctionTemp) => {
+                            
+    const Tj = parseFloat(junctionTemp);
+            if (formData.highFreqDiodeType === 'SI IMPATT (≤ 35 GHz)') {
+                // formData.highFreqDiodeType === 'Gunn/Bulk Effect'
+                // Use the second table (higher temperature factors)
+              return Math.exp(-5260 * ((1/(Tj + 273)) - (1/298)));
+    } else {
+        // For General Purpose, Switching, Fast Recovery, etc.
+        return Math.exp(-2100 * ((1/(Tj + 273)) - (1/298)));}
+    }
+
+         
+        pi_T = calculatePiT(formData.highFreqDiodeType, formData.junctionTemp);
+calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T.toFixed(4) });
+
+            // Application factor
+
+            const appFactor = highFreqAppFactors.find(a => a.name === formData.highFreqAppFactor);
+            pi_A = appFactor ? appFactor.pi_A : 1;
+            calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
+            // Power rating factor
+// Power rating factor calculation for high frequency diodes
+let pi_R = 1;
+let powerRatingDescription = '';
+
+if (formData.highFreqPowerFactor) {
+    // Use dropdown value if selected
+    const powerFactor = highFreqPowerFactors.find(p => p.power === formData.highFreqPowerFactor);
+    pi_R = powerFactor ? powerFactor.pi_R : 1;
+    powerRatingDescription = `Selected power factor: ${formData.highFreqPowerFactor} (πR = ${pi_R})`;
+} else if (formData.powerInput) {
+    // Calculate from manual input if provided
+    const Pr = parseFloat(formData.powerInput) || 1;
+    pi_R = 0.326 * Math.log(Pr) - 0.25;
+    powerRatingDescription = `Calculated from input power (${Pr} W): πR = 0.326 * ln(${Pr}) - 0.25 = ${pi_R.toFixed(4)}`;
+} else {
+    // Default value if neither is provided
+    pi_R = 1;
+    powerRatingDescription = "No power input selected, using default πR = 1";
+}
+
+calculationDetails.push({ 
+    name: 'Power Rating Factor (πR)', 
+    value: pi_R.toFixed(4),
+    description: powerRatingDescription
+});
+
+      let qualityFactor;
+            if (formData.highFreqDiodeType === 'Schottky Barrier (including Detectors) and Point Contact') {
+                qualityFactor = highFreqQualityFactors2.find(q => q.name === formData.quality);
+            } else {
+                qualityFactor = highFreqQualityFactors1.find(q => q.name === formData.quality);
+            }
+            pi_Q = qualityFactor ? (qualityFactor.pi_Q !== null ? qualityFactor.pi_Q : 1) : 1;
+            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q };
+
+            // Special case for PIN diodes
+            if (formData.highFreqDiodeType === 'PIN' && formData.highFreqPowerFactor === 'All Other Diodes') {
+                pi_R = 1.5; // Specific value for PIN diodes
+                calculationDetails[calculationDetails.length - 1].value = pi_R;
+            }
+            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q };
+
+            // Get environment factor
+            const envFactor = highFreqDiodeEnvironmentFactors.find(e => e.code === formData.environment);
+            pi_E = envFactor ? envFactor.pi_E : 1;
+            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
+            // Special case for PIN diodes
+            if (formData.highFreqDiodeType === 'PIN' && formData.highFreqPowerFactor === 'PIN Diodes') {
+                pi_R = 1.5; // Specific value for PIN diodes
+                calculationDetails[calculationDetails.length - 1].value = pi_R;
+            }
+            // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_A * pi_R * pi_Q * pi_E;
+            formula = 'λp = λb × πT × πA  × πR × πQ × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+
+        } else if   (formData.componentType === 'lowFreqBipolar') {
+            // Low frequency bipolar transistor calculation
+            lambda_b = 0.00074;
+            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+
+           // Temperature factor calculation
+        let tempDescription;
+    if (formData.junctionTemp) {
+        // Use the selected dropdown value
+        const tempFactor = TransistorTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
+        pi_T = tempFactor.pi_T;
+        tempDescription = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+        // Calculate from manual input using the formula
+        const Tj = parseFloat(formData.junctionTempInput);
+        pi_T = Math.exp(-2114 * ((1/(Tj + 273)) - (1/298)));
+        tempDescription = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    } else {
+        // Default to 25°C if no input provided
+        pi_T = 1.0;
+        tempDescription = "No temperature input, using default πT = 1.0";
+    }
+    
+    calculationDetails.push({ 
+        name: 'Temperature Factor (πT)', 
+        value: pi_T.toFixed(4),
+        description: tempDescription
+    });
+
+
+            // Application factor
+            const appFactor = transistorAppFactors.find(a => a.name === formData.transistorAppFactor);
+            pi_A = appFactor ? appFactor.pi_A : 1;
+            calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
+
+
+ let pi_R = 1;
+    let powerRatingDescription1 = '';
+
+    if (formData.transistorPowerFactor) {
+        // Use dropdown value if selected
+        const powerFactor = transistorPowerFactors.find(p => p.power === formData.transistorPowerFactor);
+        pi_R = powerFactor ? powerFactor.pi_R : 1;
+        powerRatingDescription1 = `Selected power factor: ${formData.transistorPowerFactor} (πR = ${pi_R})`;
+    } else if (formData.powerInput1) {
+        // Calculate from manual input if provided
+          const Pr = parseFloat(formData.powerInput1) || 1;
+          pi_R = Math.pow(Pr, 0.37);
       
-           <div key={component.id} className="component-container" style={{
-        border: '1px solid #ddd',
-        padding: '15px',
-        margin: '15px 0',
-        borderRadius: '5px',
-        position: 'relative'
-      }}>
-        <h3>Component {components.findIndex(c => c.id === component.id) + 1}</h3>
+        pi_R = calculatePiR(Pr);
+        powerRatingDescription1 = `Calculated from input power (${Pr} W): πR = ${pi_R.toFixed(4)}`;
+    } 
+  calculationDetails.push({ 
+        name: 'Power Rating Factor (πR)', 
+        value: pi_R.toFixed(4),
+        description: powerRatingDescription1
+    });
  
-<h2 className='text-center' style={{ fontSize: '1.2rem' }}> {formData?.componentType ? formData?.componentType?.replace(/,/g, ' ').trim() : 'Discrete Semiconductor'}</h2>
+
+let pi_S = 1;
+let voltageStressDescription3 = '';
+
+if (formData.transistorVoltageFactor) {
+    // Use dropdown value if selected
+    const voltageFactor = transistorVoltageFactors.find(v => v.range === formData.transistorVoltageFactor);
+    pi_S = voltageFactor ? voltageFactor.pi_S : 1;
+    voltageStressDescription3 = `Selected range: ${formData.transistorVoltageFactor}`;
+} else if (formData.applied && formData.rated) {
+    // Calculate from voltage ratio when manual values are entered
+    const Vs = parseFloat(formData.applied) / parseFloat(formData.rated);
+    
+    // Calculate πS using the exponential formula for 0 < Vs ≤ 1.0
+    if (Vs > 0 && Vs <= 1.0) {
+        pi_S = 0.045 * Math.exp(3.1 * Vs);
+        voltageStressDescription3 = `Vs (${Vs.toFixed(4)}) is in range 0 < Vs ≤ 1.0, calculated using πS = 0.045 * exp(3.1 * Vs)`;
+    } else if (Vs <= 0) {
+        pi_S = 0;  // or whatever value makes sense for Vs ≤ 0
+        voltageStressDescription3 = `Vs (${Vs.toFixed(4)}) ≤ 0, so πS = 0`;
+    } else {
+        pi_S = 1.0;  // or whatever value makes sense for Vs > 1.0
+        voltageStressDescription3 = `Vs (${Vs.toFixed(4)}) > 1.0, so πS = 1.0`;
+    }
+}
+
+calculationDetails.push({ 
+    name: 'Voltage Stress Factor (πS)', 
+    value: pi_S.toFixed(4),
+    description: voltageStressDescription3
+});
+           // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_A * pi_R * pi_S * pi_Q * pi_E;
+            formula = 'λp = λb × πT × πA × πR × πS × πQ × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+        } else if   (formData.componentType === 'lowFreqFET') {
+            // Low frequency SI FET calculation
+            const fetType = siFETTypes.find(t => t.name === formData.siFETType);
+            lambda_b = fetType.lambda_b;
+            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+// Temperature factor calculation
+        let tempDescription4;
+    if (formData.junctionTemp) {
+        // Use the selected dropdown value
+        const tempFactor =  siFETTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
+            
+        pi_T = tempFactor.pi_T;
+        tempDescription4 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+        // Calculate from manual input using the formula
+        const Tj = parseFloat(formData.junctionTempInput);
+        pi_T = Math.exp(-1925 * ((1/(Tj + 273)) - (1/298)));
+        tempDescription4 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    } else {
+        // Default to 25°C if no input provided
+        pi_T = 1.0;
+        tempDescription4 = "No temperature input, using default πT = 1.0";
+    }
+    
+    calculationDetails.push({ 
+        name: 'Temperature Factor (πT)', 
+        value: pi_T.toFixed(4),
+        description: tempDescription4
+    });
+  // Application factor
+            const appFactor = siFETAppFactors.find(a => a.name === formData.siFETAppFactor);
+            pi_A = appFactor ? appFactor.pi_A : 1;
+            calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
+
+            // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_A * pi_Q * pi_E;
+            formula = 'λp = λb × πT × πA × πQ × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+        } else if   (formData.componentType === 'transistorsUnijunction') {
+            // Unijunction transistor calculation
+            const unijunctionType = unijunctionTypes.find(t => t.name === formData.unijunctionType);
+            lambda_b = unijunctionType.lambda_b;
+            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+
+            // Temperature factor (using table lookup)
+            const tempFactor = unijunctionTempFactors.find(t => t.temp >= formData.junctionTemp) ||
+                unijunctionTempFactors[unijunctionTempFactors.length - 1];
+            pi_T = tempFactor.pi_T;
+            calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T });
+
+       let tempDescription5;
+    if (formData.junctionTemp) {
+        // Use the selected dropdown value
+        const tempFactor =  unijunctionTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
+            
+        pi_T = tempFactor.pi_T;
+        tempDescription5 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+        // Calculate from manual input using the formula
+        const Tj = parseFloat(formData.junctionTempInput);
+        pi_T = Math.exp(-2483 * ((1/(Tj + 273)) - (1/298)));
+        tempDescription5 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    } else {
+        // Default to 25°C if no input provided
+        pi_T = 1.0;
+        tempDescription5 = "No temperature input, using default πT = 1.0";
+    }
+    
+    calculationDetails.push({ 
+        name: 'Temperature Factor (πT)', 
+        value: pi_T.toFixed(4),
+        description: tempDescription5
+    });
+      // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_Q * pi_E;
+            formula = 'λp = λb × πT × πQ × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+        } else if   (formData.componentType === 'transistorsLowNoiseHighFreqBipolar') {
+
+            // 6.6 Transistors, Low Noise, High Frequency, Bipolar calculation
+            lambda_b = 0.18; // Base failure rate from your image
+            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+
+            // Temperature factor (using the specific formula from your image)
+            let tempDescription6;
+    if (formData.junctionTemp) {
+        // Use the selected dropdown value
+        const tempFactor = lowNoiseHighFreqTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
+            
+        pi_T = tempFactor.pi_T;
+        tempDescription6 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+        // Calculate from manual input using the formula
+        const Tj = parseFloat(formData.junctionTempInput);
+        pi_T = Math.exp(-2114 * ((1/(Tj + 273)) - (1/298)));
+        tempDescription6 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    } else {
+        // Default to 25°C if no input provided
+        pi_T = 1.0;
+        tempDescription6 = "No temperature input, using default πT = 1.0";
+    }
+calculationDetails.push({ 
+        name: 'Temperature Factor (πT)', 
+        value: pi_T.toFixed(4),
+        description: tempDescription6
+    });
+
+// lowNoiseHighFreqPowerFactors
+            
+let powerRatingDescription1
+ if (formData.powerRating) {
+        // Use dropdown value if selected
+        const powerFactor = lowNoiseHighFreqPowerFactors.find(p => p.power === formData.powerRating);
+        pi_R = powerFactor ? powerFactor.pi_R : 1;
+        powerRatingDescription1 = `Selected power factor: ${formData.powerRating} (πR = ${pi_R})`;
+    } else if (formData.powerInput1) {
+        // Calculate from manual input if provided
+          const Pr = parseFloat(formData.powerInput1) || 1;
+          pi_R = Math.pow(Pr, 0.37);
+      
+        pi_R = calculatePiR(Pr);
+        powerRatingDescription1 = `Calculated from input power (${Pr} W): πR = ${pi_R.toFixed(4)}`;
+    } 
+  calculationDetails.push({ 
+        name: 'Power Rating Factor (πR)', 
+        value: pi_R.toFixed(4),
+        description: powerRatingDescription1
+    });
+ // Voltage stress factor
+
+let pi_S = 1;
+let voltageStressDescription6 = '';
+
+if (formData.voltageStressRatio) {
+    // Use dropdown value if selected
+    const voltageFactor = lowNoiseHighFreqVoltageFactors.find(v => v.range === formData.voltageStressRatio);
+    pi_S = voltageFactor ? voltageFactor.pi_S : 1;
+    voltageStressDescription6 = `Selected range: ${formData.voltageStressRatio}`;
+} else if (formData.applied && formData.rated) {
+    // Calculate from voltage ratio when manual values are entered
+    const Vs = parseFloat(formData.applied) / parseFloat(formData.rated);
+    
+    // Calculate πS using the exponential formula for 0 < Vs ≤ 1.0
+    if (Vs > 0 && Vs <= 1.0) {
+        pi_S = 0.045 * Math.exp(3.1 * Vs);
+        voltageStressDescription6 = `Vs (${Vs.toFixed(4)}) is in range 0 < Vs ≤ 1.0, calculated using πS = 0.045 * exp(3.1 * Vs)`;
+    } else if (Vs <= 0) {
+        pi_S = 0;  // or whatever value makes sense for Vs ≤ 0
+        voltageStressDescription6 = `Vs (${Vs.toFixed(4)}) ≤ 0, so πS = 0`;
+    } else {
+        pi_S = 1.0;  // or whatever value makes sense for Vs > 1.0
+        voltageStressDescription6 = `Vs (${Vs.toFixed(4)}) > 1.0, so πS = 1.0`;
+    }
+}
+
+calculationDetails.push({ 
+    name: 'Voltage Stress Factor (πS)', 
+    value: pi_S.toFixed(4),
+    description: voltageStressDescription6
+});
+ // Quality factor (specific to this component type)
+            const qualityFactor = lowNoiseHighFreqQualityFactors.find(q => q.name === formData.lowNoiseHighFreqQuality);
+            pi_Q = qualityFactor ? qualityFactor.pi_Q : 1;
+            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q }; // Update first item
+
+            // Get environment factor
+            const envFactor = lowNoiseEnvironmentFactors.find(e => e.code === formData.environment);
+            pi_E = envFactor ? envFactor.pi_E : 1;
+            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
+
+            // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_R * pi_S * pi_Q * pi_E;
+            formula = 'λp = λb × πT × πR × πS × πQ × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+        } else if   (formData.componentType === 'transistorsHighPowerHighFrequencyBipolar') {
+
+    // Get base failure rate from table or formula
+    const frequency = parseFloat(formData.frequencyGHz);
+    const power = parseFloat(formData.outputPowerWatts);
+    let lambda_b = 0;
+    let description = '';
+
+    // Find the appropriate row in the frequency/power table
+    if (frequency <= 0.5) {
+        if (power <= 1.0) {
+            lambda_b = 0.038;
+            description = `From table: F ≤ 0.5GHz, P ≤ 1.0W`;
+        } else if (power <= 5.0) {
+            lambda_b = 0.039;
+            description = `From table: F ≤ 0.5GHz, 1.0W < P ≤ 5.0W`;
+        } else if (power <= 10) {
+            lambda_b = 0.040;
+            description = `From table: F ≤ 0.5GHz, 5.0W < P ≤ 10W`;
+        } else if (power <= 50) {
+            lambda_b = 0.050;
+            description = `From table: F ≤ 0.5GHz, 10W < P ≤ 50W`;
+        } else if (power <= 100) {
+            lambda_b = 0.067;
+            description = `From table: F ≤ 0.5GHz, 50W < P ≤ 100W`;
+        } else if (power <= 200) {
+            lambda_b = 0.12;
+            description = `From table: F ≤ 0.5GHz, 100W < P ≤ 200W`;
+        } else if (power <= 300) {
+            lambda_b = 0.20;
+            description = `From table: F ≤ 0.5GHz, 200W < P ≤ 300W`;
+        } else if (power <= 400) {
+            lambda_b = 0.36;
+            description = `From table: F ≤ 0.5GHz, 300W < P ≤ 400W`;
+        } else if (power <= 500) {
+            lambda_b = 0.62;
+            description = `From table: F ≤ 0.5GHz, 400W < P ≤ 500W`;
+        } else {
+            lambda_b = 1.1;
+            description = `From table: F ≤ 0.5GHz, P > 500W`;
+        }
+    } else if (frequency <= 1) {
+        if (power <= 1.0) {
+            lambda_b = 0.046;
+            description = `From table: 0.5GHz < F ≤ 1GHz, P ≤ 1.0W`;
+        } else if (power <= 5.0) {
+            lambda_b = 0.047;
+            description = `From table: 0.5GHz < F ≤ 1GHz, 1.0W < P ≤ 5.0W`;
+        } else if (power <= 10) {
+            lambda_b = 0.048;
+            description = `From table: 0.5GHz < F ≤ 1GHz, 5.0W < P ≤ 10W`;
+        } else if (power <= 50) {
+            lambda_b = 0.060;
+            description = `From table: 0.5GHz < F ≤ 1GHz, 10W < P ≤ 50W`;
+        } else if (power <= 100) {
+            lambda_b = 0.080;
+            description = `From table: 0.5GHz < F ≤ 1GHz, 50W < P ≤ 100W`;
+        } else if (power <= 200) {
+            lambda_b = 0.14;
+            description = `From table: 0.5GHz < F ≤ 1GHz, 100W < P ≤ 200W`;
+        } else if (power <= 300) {
+            lambda_b = 0.24;
+            description = `From table: 0.5GHz < F ≤ 1GHz, 200W < P ≤ 300W`;
+        } else if (power <= 400) {
+            lambda_b = 0.42;
+            description = `From table: 0.5GHz < F ≤ 1GHz, 300W < P ≤ 400W`;
+        } else if (power <= 500) {
+            lambda_b = 0.74;
+            description = `From table: 0.5GHz < F ≤ 1GHz, 400W < P ≤ 500W`;
+        } else if (power <= 600) {
+            lambda_b = 1.3;
+            description = `From table: 0.5GHz < F ≤ 1GHz, 500W < P ≤ 600W`;
+        } else {
+            lambda_b = 1.3;
+            description = `From table: 0.5GHz < F ≤ 1GHz, P > 600W`;
+        }
+    } else if (frequency <= 2) {
+        if (power <= 1.0) {
+            lambda_b = 0.065;
+            description = `From table: 1GHz < F ≤ 2GHz, P ≤ 1.0W`;
+        } else if (power <= 5.0) {
+            lambda_b = 0.067;
+            description = `From table: 1GHz < F ≤ 2GHz, 1.0W < P ≤ 5.0W`;
+        } else if (power <= 10) {
+            lambda_b = 0.069;
+            description = `From table: 1GHz < F ≤ 2GHz, 5.0W < P ≤ 10W`;
+        } else if (power <= 50) {
+            lambda_b = 0.086;
+            description = `From table: 1GHz < F ≤ 2GHz, 10W < P ≤ 50W`;
+        } else if (power <= 100) {
+            lambda_b = 0.11;
+            description = `From table: 1GHz < F ≤ 2GHz, 50W < P ≤ 100W`;
+        } else if (power <= 200) {
+            lambda_b = 0.20;
+            description = `From table: 1GHz < F ≤ 2GHz, 100W < P ≤ 200W`;
+        } else if (power <= 300) {
+            lambda_b = 0.35;
+            description = `From table: 1GHz < F ≤ 2GHz, 200W < P ≤ 300W`;
+        } else {
+            lambda_b = 0.35;
+            description = `From table: 1GHz < F ≤ 2GHz, P > 300W`;
+        }
+    } else if (frequency <= 3) {
+        if (power <= 1.0) {
+            lambda_b = 0.093;
+            description = `From table: 2GHz < F ≤ 3GHz, P ≤ 1.0W`;
+        } else if (power <= 5.0) {
+            lambda_b = 0.095;
+            description = `From table: 2GHz < F ≤ 3GHz, 1.0W < P ≤ 5.0W`;
+        } else if (power <= 10) {
+            lambda_b = 0.098;
+            description = `From table: 2GHz < F ≤ 3GHz, 5.0W < P ≤ 10W`;
+        } else if (power <= 50) {
+            lambda_b = 0.12;
+            description = `From table: 2GHz < F ≤ 3GHz, 10W < P ≤ 50W`;
+        } else if (power <= 100) {
+            lambda_b = 0.16;
+            description = `From table: 2GHz < F ≤ 3GHz, 50W < P ≤ 100W`;
+        } else if (power <= 200) {
+            lambda_b = 0.28;
+            description = `From table: 2GHz < F ≤ 3GHz, 100W < P ≤ 200W`;
+        } else {
+            lambda_b = 0.28;
+            description = `From table: 2GHz < F ≤ 3GHz, P > 200W`;
+        }
+    } else if (frequency <= 4) {
+        if (power <= 1.0) {
+            lambda_b = 0.13;
+            description = `From table: 3GHz < F ≤ 4GHz, P ≤ 1.0W`;
+        } else if (power <= 5.0) {
+            lambda_b = 0.14;
+            description = `From table: 3GHz < F ≤ 4GHz, 1.0W < P ≤ 5.0W`;
+        } else if (power <= 10) {
+            lambda_b = 0.14;
+            description = `From table: 3GHz < F ≤ 4GHz, 5.0W < P ≤ 10W`;
+        } else if (power <= 50) {
+            lambda_b = 0.17;
+            description = `From table: 3GHz < F ≤ 4GHz, 10W < P ≤ 50W`;
+        } else {
+            lambda_b = 0.23;
+            description = `From table: 3GHz < F ≤ 4GHz, P > 50W`;
+        }
+    } else if (frequency <= 5) {
+        if (power <= 1.0) {
+            lambda_b = 0.19;
+            description = `From table: 4GHz < F ≤ 5GHz, P ≤ 1.0W`;
+        } else if (power <= 5.0) {
+            lambda_b = 0.19;
+            description = `From table: 4GHz < F ≤ 5GHz, 1.0W < P ≤ 5.0W`;
+        } else if (power <= 10) {
+            lambda_b = 0.20;
+            description = `From table: 4GHz < F ≤ 5GHz, 5.0W < P ≤ 10W`;
+        } else if (power <= 50) {
+            lambda_b = 0.25;
+            description = `From table: 4GHz < F ≤ 5GHz, 10W < P ≤ 50W`;
+        } else {
+            // For frequencies > 4GHz and power outside table range, use the formula
+            lambda_b = 0.032 * Math.exp(354 * frequency + 0.00558 * power);
+            description = `Calculated from formula: 0.032 * exp(354*${frequency} + 0.00558*${power})`;
+        }
+    } else {
+        // For frequencies > 5GHz, always use the formula
+        lambda_b = 0.032 * Math.exp(354 * frequency + 0.00558 * power);
+        description = `Calculated from formula: 0.032 * exp(354*${frequency} + 0.00558*${power})`;
+    }
+
+    calculationDetails.push({ 
+        name: 'Base Failure Rate (λb)', 
+        value: lambda_b.toFixed(6),
+        description: description
+    });
+
+ // Temperature factor
+            const pi_T = getHighPowerHighFreqTempFactor(
+                parseFloat(formData.junctionTempHP),
+                parseFloat(formData.voltageRatio),
+                formData.metalizationType
+            );
+            calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T?.toFixed(4) });
+              // Application factor
+let pi_A = 1;
+let appFactorDescription = '';
+
+if (formData.applicationType) {
+    // Use dropdown value if selected
+    const appFactor = appFactors.find(a => a.name === formData.applicationType);
+    pi_A = appFactor ? appFactor.pi_A : 1.0;
+    appFactorDescription = `Selected application: ${formData.applicationType} (πA = ${pi_A})`;
+} else if (formData.dutyCycle) {  // Changed from appFactorInput to dutyCycle
+    // Calculate from manual input if provided
+    const dutyFactor = parseFloat(formData.dutyCycle) || 0;
+      // Calculate πA based on duty cycle using linear interpolation
+    if (dutyFactor === 0) {
+        // CW operation
+        pi_A = 7.6;
+        appFactorDescription = `Continuous Wave (CW) operation: πA = ${pi_A}`;
+    } else if (dutyFactor <= 1) {
+        pi_A = 0.48;
+        appFactorDescription = `Pulsed ≤ 1% duty cycle: πA = ${pi_A}`;
+    } else if (dutyFactor <= 5) {
+        pi_A = 0.48 + (0.70 - 0.48) * (dutyFactor - 1) / (5 - 1);
+        appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 1% and 5%): πA = ${pi_A.toFixed(4)}`;
+    } else if (dutyFactor <= 10) {
+        pi_A = 0.70 + (1.0 - 0.70) * (dutyFactor - 5) / (10 - 5);
+        appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 5% and 10%): πA = ${pi_A.toFixed(4)}`;
+    } else if (dutyFactor <= 15) {
+        pi_A = 1.0 + (1.3 - 1.0) * (dutyFactor - 10) / (15 - 10);
+        appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 10% and 15%): πA = ${pi_A.toFixed(4)}`;
+    } else if (dutyFactor <= 20) {
+        pi_A = 1.3 + (1.6 - 1.3) * (dutyFactor - 15) / (20 - 15);
+        appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 15% and 20%): πA = ${pi_A.toFixed(4)}`;
+    } else if (dutyFactor <= 25) {
+        pi_A = 1.6 + (1.9 - 1.6) * (dutyFactor - 20) / (25 - 20);
+        appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 20% and 25%): πA = ${pi_A.toFixed(4)}`;
+    } else if (dutyFactor <= 30) {
+        pi_A = 1.9 + (2.2 - 1.9) * (dutyFactor - 25) / (30 - 25);
+        appFactorDescription = `Pulsed ${dutyFactor}% duty cycle (interpolated between 25% and 30%): πA = ${pi_A.toFixed(4)}`;
+    } else {
+        pi_A = 2.2;
+        appFactorDescription = `Pulsed ≥ 30% duty cycle: πA = ${pi_A}`;
+    }
+    
+    console.log('Calculated πA:', pi_A);
+} else {
+    pi_A = 1.0;
+    appFactorDescription = "No application type selected, using default πA = 1.0";
+}
+
+calculationDetails.push({ 
+    name: 'Application Factor (πA)', 
+    value: pi_A.toFixed(4),
+    description: appFactorDescription
+});
+
+ // Quality factor (specific to this component type)
+            const qualityFactorsHP = [
+                { name: 'JANTXV', pi_Q: 0.50 },
+                { name: 'JANTX', pi_Q: 1.0 },
+                { name: 'JAN', pi_Q: 2.0 },
+                { name: 'Lower', pi_Q: 5.0 }
+            ];
+            const qualityFactor = qualityFactorsHP.find(q => q.name === formData.quality);
+            pi_Q = qualityFactor ? qualityFactor.pi_Q : 1.0;
+            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q?.toFixed(2) };
+            // Environment factor (use existing)
+            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E?.toFixed(2) };
+            // calculationDetails.push({ name: 'Environment Factor (πE)', value: pi_E });
+
+            // Get environment factor
+            const envFactor = highpowerEnvironmentFactors.find(e => e.code === formData.environment);
+            pi_E = envFactor ? envFactor.pi_E : 1;
+            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
+    // Matching network factor
+            const matchFactors = [
+                { name: 'Input and Output', pi_M: 1.0 },
+                { name: 'Input', pi_M: 2.0 },
+                { name: 'None', pi_M: 4.0 }
+            ];
+            const matchFactor = matchFactors.find(m => m.name === formData.matchingNetwork);
+            const pi_M = matchFactor ? matchFactor.pi_M : 1.0;
+            calculationDetails.push({ name: 'Matching Network Factor (πM)', value: pi_M?.toFixed(2) });
+
+            // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_A * pi_Q * pi_E * pi_M;
+            formula = 'λp = λb × πT × πA × πQ × πE × πM';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+        } else if   (formData.componentType === 'transistorsHighFrequencyGaAsFET') {
+            // 6.8 Transistors, High Frequency, GaAs FET calculation
+
+            // Get base failure rate from table
+         const frequency = parseFloat(formData.frequencyGHzGaAs);
+    const power = parseFloat(formData.outputPowerWattsGaAs);
+    let lambda_b = 0;
+    
+    // First check if we can use the table values
+    if (frequency === 1 && power < 0.1) {
+        lambda_b = 0.052;
+    } else if (frequency === 4) {
+        if (power < 0.1) lambda_b = 0.052;
+        else if (power <= 0.1) lambda_b = 0.054;
+        else if (power <= 0.5) lambda_b = 0.066;
+        else if (power <= 1) lambda_b = 0.084;
+        else if (power <= 2) lambda_b = 0.14;
+        else if (power <= 4) lambda_b = 0.36;
+        else if (power <= 6) lambda_b = 0.96;
+    } else if (frequency === 5) {
+        if (power < 0.1) lambda_b = 0.052;
+        else if (power <= 0.1) lambda_b = 0.083;
+        else if (power <= 0.5) lambda_b = 0.10;
+        else if (power <= 1) lambda_b = 0.13;
+        else if (power <= 2) lambda_b = 0.21;
+        else if (power <= 4) lambda_b = 0.56;
+        else if (power <= 6) lambda_b = 1.5;
+    } else if (frequency === 6) {
+        if (power < 0.1) lambda_b = 0.052;
+        else if (power <= 0.1) lambda_b = 0.13;
+        else if (power <= 0.5) lambda_b = 0.16;
+        else if (power <= 1) lambda_b = 0.20;
+        else if (power <= 2) lambda_b = 0.32;
+        else if (power <= 4) lambda_b = 0.85;
+        else if (power <= 6) lambda_b = 2.3;
+    } else if (frequency === 7) {
+        if (power < 0.1) lambda_b = 0.052;
+        else if (power <= 0.1) lambda_b = 0.20;
+        else if (power <= 0.5) lambda_b = 0.24;
+        else if (power <= 1) lambda_b = 0.30;
+        else if (power <= 2) lambda_b = 0.50;
+        else if (power <= 4) lambda_b = 1.3;
+        else if (power <= 6) lambda_b = 3.5;
+    } else if (frequency === 8) {
+        if (power < 0.1) lambda_b = 0.052;
+        else if (power <= 0.1) lambda_b = 0.30;
+        else if (power <= 0.5) lambda_b = 0.37;
+        else if (power <= 1) lambda_b = 0.47;
+        else if (power <= 2) lambda_b = 0.76;
+        else if (power <= 4) lambda_b = 2.0;
+    } else if (frequency === 9) {
+        if (power < 0.1) lambda_b = 0.052;
+        else if (power <= 0.1) lambda_b = 0.46;
+        else if (power <= 0.5) lambda_b = 0.56;
+        else if (power <= 1) lambda_b = 0.72;
+        else if (power <= 2) lambda_b = 1.2;
+    } else if (frequency === 10) {
+        if (power < 0.1) lambda_b = 0.052;
+        else if (power <= 0.1) lambda_b = 0.71;
+        else if (power <= 0.5) lambda_b = 0.87;
+        else if (power <= 1) lambda_b = 1.1;
+        else if (power <= 2) lambda_b = 1.8;
+        console.log('λb from table:', lambda_b);
+    } else {
+        // For frequencies not in the table or power ranges not covered, use the formula
+        lambda_b = 0.0093 * Math.exp(0.429 * frequency + 0.486 * power);
+        console.log('Calculated λb:', lambda_b);
+    }
+    
+    calculationDetails.push({ 
+        name: 'Base Failure Rate (λb)', 
+        value: lambda_b.toFixed(6),
+        description: frequency >= 1 && frequency <= 10 ? 
+            `From table: F=${frequency}GHz, P=${power}W` : 
+            `Calculated from formula: 0.0093 * exp(0.429*${frequency} + 0.486*${power}) = ${lambda_b.toFixed(6)}`
+    });
+
+let pi_T = 1;
+     let tempDescription8;
+    if (formData.junctionTempGaAs) {
+        // Use the selected dropdown value
+        const tempFactor = gaAsTempFactors.find(t => t.temp === parseInt(formData.junctionTempGaAs));
+       pi_T = tempFactor.pi_T;
+        tempDescription8 = `From table: ${formData.junctionTempGaAs}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+        // Calculate from manual input using the formula
+        const Tj = parseFloat(formData.junctionTempInput);
+        pi_T = Math.exp(-2114 * ((1/(Tj + 273)) - (1/298)));
+        tempDescription8 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    } else {
+        // Default to 25°C if no input provided
+        pi_T = 1.0;
+        tempDescription8 = "No temperature input, using default πT = 1.0";
+    }
+    
+    calculationDetails.push({ 
+        name: 'Temperature Factor (πT)', 
+        value: pi_T.toFixed(4),
+        description: tempDescription8
+    });
+
+      // Application factor
+            const appFactor = gaAsAppFactors.find(a => a.name === formData.applicationTypeGaAs);
+            const pi_A = appFactor ? appFactor.pi_A : 1.0;
+            calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
+
+            // Matching network factor
+            const matchFactor = gaAsMatchingNetworkFactors.find(m => m.name === formData.matchingNetworkGaAs);
+            const pi_M = matchFactor ? matchFactor.pi_M : 1.0;
+            calculationDetails.push({ name: 'Matching Network Factor (πM)', value: pi_M });
+
+            // Quality factor (specific to this component type)
+            const qualityFactor = gaAsQualityFactors.find(q => q.name === formData.qualityGaAs);
+            pi_Q = qualityFactor ? qualityFactor.pi_Q : 1.0;
+            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q };
+            // Get environment factor
+            const envFactor = gasFETEnvironmentFactors.find(e => e.code === formData.environment);
+            pi_E = envFactor ? envFactor.pi_E : 1;
+            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
+
+
+
+            // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_A * pi_M * pi_Q * pi_E;
+            formula = 'λp = λb × πT × πA × πM × πQ × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+        } else if   (formData.componentType === 'transistorsHighFrequencySIFET') {
+            // 6.9 Transistors, High Frequency, SI FET calculation
+
+            // Get base failure rate
+            const fetType = siFETTypesHF.find(t => t.name === formData.siFETTypeHF);
+            const lambda_b = fetType.lambda_b;
+            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+
+            // Temperature factor (using table lookup)
+ let pi_T = 1;
+     let tempDescription9;
+    if (formData.junctionTempSIFET) {
+        // Use the selected dropdown value
+        const tempFactor = siFETTempFactorsHF.find(t => t.temp === parseInt(formData.junctionTempSIFET));
+       pi_T = tempFactor.pi_T;
+        tempDescription9 = `From table: ${formData.junctionTempSIFET}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+        // Calculate from manual input using the formula
+        const Tj = parseFloat(formData.junctionTempInput);
+        pi_T = Math.exp(-1925 * ((1/(Tj + 273)) - (1/298)));
+        tempDescription9 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    } else {
+        // Default to 25°C if no input provided
+        pi_T = 1.0;
+        tempDescription9 = "No temperature input, using default πT = 1.0";
+    }
+    
+    calculationDetails.push({ 
+        name: 'Temperature Factor (πT)', 
+        value: pi_T.toFixed(4),
+        description: tempDescription9
+    });
+
+    // Quality factor (specific to this component type)
+            const qualityFactor = siFETQualityFactors.find(q => q.name === formData.qualitySIFET);
+            pi_Q = qualityFactor ? qualityFactor.pi_Q : 1.0;
+            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q };
+
+            // Environment factor (use existing)
+            const envFactor = siFETEnvironmentFactors.find(e => e.code === formData.environment);
+            pi_E = envFactor ? envFactor.pi_E : 1;
+            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
+
+
+            // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_Q * pi_E;
+            formula = 'λp = λb × πT × πQ × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+        } else if   (formData.componentType === 'thyristorsAndSCRS') {
+            // 6.10 Thyristors and SCRS calculation
+            const thyristorType = thyristorTypes.find(t => t.name === formData.thyristorType);
+            lambda_b = thyristorType.lambda_b;
+            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+
+            let pi_T = 1;
+     let tempDescription10;
+    if (formData.junctionTemp) {
+        // Use the selected dropdown value
+      
+        const tempFactor = thyristorTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
+         pi_T = tempFactor.pi_T;
+        tempDescription10 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+        // Calculate from manual input using the formula
+        const Tj = parseFloat(formData.junctionTempInput);
+        pi_T = Math.exp(-3082 * ((1/(Tj + 273)) - (1/298)));
+        tempDescription10 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    } else {
+        // Default to 25°C if no input provided
+        pi_T = 1.0;
+        tempDescription10 = "No temperature input, using default πT = 1.0";
+    }
+    
+    calculationDetails.push({ 
+        name: 'Temperature Factor (πT)', 
+        value: pi_T.toFixed(4),
+        description: tempDescription10
+    });
+     
+
+           let pi_R = 1;
+    let powerRatingDescription10 = '';
+
+    if (formData.thyristorCurrent) {
+        // Use dropdown value if selected
+       const currentFactor = thyristorCurrentFactors.find(c => c.current === parseInt(formData.thyristorCurrent));
+            pi_R = currentFactor ? currentFactor.pi_R : 1.0;
+        powerRatingDescription10 = `Selected power factor: ${formData.thyristorCurrent} (πR = ${pi_R})`;
+    } else if (formData.powerInput2) {
+        // Calculate from manual input if provided
+          const Pr = parseFloat(formData.powerInput2) || 1;
+          pi_R = Math.pow(Pr, 0.40);
+      
+        // pi_R = calculatePiR(Pr);
+        pi_R = Math.pow(Pr, 0.40);
+        
+        powerRatingDescription10 = `Calculated from input power (${Pr} W): πR = ${pi_R.toFixed(4)}`;
+    } 
+  calculationDetails.push({ 
+        name: 'Power Rating Factor (πR)', 
+        value: pi_R.toFixed(4),
+        description: powerRatingDescription10
+    });
+
+let pi_S = 1;
+    let voltageStressFactorsDescription10 = '';
+   if (formData.thyristorVoltage) {
+        // Use dropdown value if selected
+         const voltageFactor = thyristorVoltageFactors.find(v => v.range === formData.thyristorVoltage);
+            pi_S = voltageFactor ? voltageFactor.pi_S : 1.0;
+         voltageStressFactorsDescription10= `Selected power factor: ${formData.thyristorVoltage} (πS = ${pi_S})`;
+    } else if (formData.powerInput3) {
+        // Calculate from manual input if provided
+          const vs = parseFloat(formData.powerInput3) || 1;
+          pi_S = Math.pow(vs, 1.9);
+        // pi_S = calculatePiR(Pr);
+        pi_S = Math.pow(vs, 1.9);
+
+    
+        voltageStressFactorsDescription10 = `Calculated from input power (${vs} W): πS = ${pi_S.toFixed(4)}`;
+    } 
+  calculationDetails.push({ 
+        name: 'Voltage Stress Factor (πS)', 
+        value: pi_S.toFixed(4),
+        description:  voltageStressFactorsDescription10
+    });
+       // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_R * pi_S * pi_Q * pi_E;
+            formula = 'λp = λb × πT × πR × πS × πQ × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+            // Add this case to your calculateFailureRate function
+        } else if   (formData.componentType === 'optoelectronics') {
+            // Optoelectronics calculation
+            const optoType = optoelectronicTypes.find(t => t.name === formData.optoelectronicType);
+            const lambda_0 = optoType.lambda_0;
+            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_0 });
+
+            // Temperature factor (using formula from image)
+           let pi_T = 1;
+     let tempDescription11;
+    if (formData.junctionTemp) {
+        // Use the selected dropdown value
+      
+        const tempFactor = optoTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
+         pi_T = tempFactor.pi_T;
+        tempDescription11 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+        // Calculate from manual input using the formula
+        const Tj = parseFloat(formData.junctionTempInput);
+        pi_T = Math.exp(-2790 * ((1/(Tj + 273)) - (1/298)));
+        tempDescription11 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    } else {
+        // Default to 25°C if no input provided
+        pi_T = 1.0;
+        tempDescription11 = "No temperature input, using default πT = 1.0";
+    }
+    
+    calculationDetails.push({ 
+        name: 'Temperature Factor (πT)', 
+        value: pi_T.toFixed(4),
+        description: tempDescription11
+    });
+
+ const envFactor = optoElectroEnvironmentFactors.find(e => e.code === formData.environment);
+            pi_E = envFactor ? envFactor.pi_E : 1;
+            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
+            lambda_p = lambda_0 * pi_T * pi_Q * pi_E;
+            formula = 'λp = λb × πT × πQ × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+       
+        } else if   (formData.componentType === 'alphanumericDisplays') {
+         
+      const C = parseInt(formData.characterCount);
+    const hasLogicChip = formData.hasLogicChip === 'true';
+    const λ_IC = hasLogicChip ? 0.000043 : 0.0;
+    
+    // Calculate base failure rate based on display type
+    let λ_b;
+    if (formData.displayType === 'segment') {
+        λ_b = 0.00043 * C + λ_IC;
+    } else { // diode array
+        λ_b = 0.00009 + 0.00017 * C + λ_IC;
+    }
+    
+    calculationDetails.push({ 
+        name: 'Base Failure Rate (λb)', 
+        value: λ_b.toFixed(6),
+        description: formData.displayType === 'segment' 
+            ? `Segment Display: 0.00043 × ${C} + ${λ_IC}`
+            : `Diode Array: 0.00009 + 0.00017 × ${C} + ${λ_IC}`
+    });
+         
+ let pi_T = 1;
+     let tempDescription12;
+    if (formData.junctionTemp) {
+        // Use the selected dropdown value
+      
+        const tempFactor = alphanumeric.find(t => t.temp === parseInt(formData.junctionTemp));
+         pi_T = tempFactor.pi_T;
+        tempDescription12 = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+        // Calculate from manual input using the formula
+        const Tj = parseFloat(formData.junctionTempInput);
+        pi_T = Math.exp(-2790 * ((1/(Tj + 273)) - (1/298)));
+        tempDescription12 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    } else {
+        // Default to 25°C if no input provided
+        pi_T = 1.0;
+        tempDescription12 = "No temperature input, using default πT = 1.0";
+    }
+    
+    calculationDetails.push({ 
+        name: 'Temperature Factor (πT)', 
+        value: pi_T.toFixed(4),
+        description: tempDescription12
+    });
+            
+
+            const envFactor = alphaNumericEnvironmentFactors.find(e => e.code === formData.environment);
+            pi_E = envFactor ? envFactor.pi_E : 1;
+            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
+
+
+            // calculationDetails.push({ name: 'Environment Factor (πE)', value: pi_E });
+
+            // Calculate final failure rate
+            console.log('lambda_b:', lambda_b);
+           lambda_p = λ_b * pi_T * pi_Q * pi_E;
+    formula = 'λp = λb × πT × πQ × πE';
+    if (onCalculate) {
+        onCalculate(lambda_p, calculationDetails, formula); 
+    }
+        } else if  (formData.componentType === 'laserDiode') {
+            // Laser Diode calculation
+            const diodeType = laserDiodeTypes.find(d => d.name === formData.laserDiodeType);
+            lambda_b = diodeType.lambda_b;
+            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+
+            // Temperature facto
+
+                  let pi_T = 1;
+     let tempDescription13;
+    if (formData.laserDiodeTemp) {
+        // Use the selected dropdown value
+      
+        const tempFactor =laserDiodeTempFactors.find(t => t.temp === parseInt(formData.laserDiodeTemp));
+         pi_T = tempFactor.pi_T;
+        tempDescription13 = `From table: ${formData.laserDiodeTemp}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+        // Calculate from manual input using the formula
+        const Tj = parseFloat(formData.junctionTempInput);
+        pi_T = Math.exp(-4635 * ((1/(Tj + 273)) - (1/298)));
+        tempDescription13 = `Calculated: πT = exp(-2100 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    } else {
+        // Default to 25°C if no input provided
+        pi_T = 1.0;
+        tempDescription13 = "No temperature input, using default πT = 1.0";
+    }
+    
+    calculationDetails.push({ 
+        name: 'Temperature Factor (πT)', 
+        value: pi_T.toFixed(4),
+        description: tempDescription13
+    });
+
+ // Quality factor (specific to laser diodes)
+            const qualityFactor = laserDiodeQualityFactors.find(q => q.name === formData.laserDiodeQuality);
+            pi_Q = qualityFactor ? qualityFactor.pi_Q : 1.0;
+            calculationDetails[0] = { name: 'Quality Factor (πQ)', value: pi_Q };
+
+            // Get environment factor
+            const envFactor = laserEnvironmentFactors.find(e => e.code === formData.environment);
+            pi_E = envFactor ? envFactor.pi_E : 1;
+            calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
+
+let pi_I = 1;
+let forwardCurrentDescription = '';
+
+if (formData.laserDiodeCurrent) {
+    // Use dropdown value if selected
+    const currentFactor = laserDiodeCurrentFactors.find(c => parseFloat(c.current) === parseFloat(formData.laserDiodeCurrent));
+    if (currentFactor) {
+        pi_I = currentFactor.pi_I;
+        forwardCurrentDescription = `Selected current: ${formData.laserDiodeCurrent}A (πI = ${pi_I})`;
+    } else {
+        // If not found in table, calculate using the formula
+        const I = parseFloat(formData.laserDiodeCurrent);
+        pi_I = Math.pow(I, 0.7); // Example formula - adjust based on your actual formula
+        forwardCurrentDescription = `Calculated from input current (${I}A): πI = I^0.7 = ${pi_I.toFixed(4)}`;
+    }
+} else if (formData.powerInput4) {
+    // Calculate from manual input if provided
+    const I = parseFloat(formData.powerInput4) || 1;
+    pi_I = Math.pow(I, 0.7); // Example formula - adjust based on your actual formula
+    forwardCurrentDescription = `Calculated from input current (${I}A): πI = I^0.7 = ${pi_I.toFixed(4)}`;
+} else {
+    pi_I = 1.0;
+    forwardCurrentDescription = "No current input, using default πI = 1.0";
+}
+
+calculationDetails.push({ 
+    name: 'Forward Current Factor (πI)', 
+    value: pi_I.toFixed(4),
+    description: forwardCurrentDescription
+});
+
+
+
+        let pi_A = 1;
+    let  appFactorDescription13 = '';
+
+    if (formData.laserDiodeApplication) {
+        // Use dropdown value if selected
+       const currentFactor = laserDiodeApplicationFactors.find(c => c.current === parseInt(formData.laserDiodeApplication));
+            pi_A = currentFactor ? currentFactor.pi_A : 1.0;
+       appFactorDescription13= `Selected power factor: ${formData.laserDiodeApplication} (πA = ${pi_A})`;
+    } else if (formData.powerInput2) {
+        // Calculate from manual input if provided
+          const Pr = parseFloat(formData.powerInput2) || 1;
+          pi_A = Math.pow(Pr, 0.5);
+      
+        // pi_R = calculatePiR(Pr);
+        pi_A = Math.pow(Pr, 0.40);
+        
+     appFactorDescription13 = `Calculated from input power (${Pr} W): πR = ${pi_R.toFixed(4)}`;
+    } 
+  calculationDetails.push({ 
+        name: 'APP Facter (πA)', 
+        value: pi_A.toFixed(4),
+        description: appFactorDescription13
+    });
+
+let pi_P;
+if (formData.laserDiodePowerRatio) {
+    // Use selected value from dropdown
+    const powerFactor = laserDiodePowerFactors.find(p => p.ratio === parseFloat(formData.laserDiodePowerRatio));
+    pi_P = powerFactor ? powerFactor.pi_P : 1.0;
+} else if (formData.requiredPower && formData.ratedPower) {
+    // Calculate from input values using the correct formula
+    const Pr = parseFloat(formData.requiredPower);
+    const Ps = parseFloat(formData.ratedPower);
+    const ratio = Pr / Ps;
+    
+    if (ratio > 0 && ratio <= 0.95) {
+        pi_P = 1 / (2 * (1 - ratio));
+        calculationDetails.push({ 
+            name: 'Power Degradation Factor (πP)', 
+            value: pi_P.toFixed(4),
+            description: `Calculated from Pr/Ps = ${ratio.toFixed(4)} using formula: 1/(2*(1-${ratio.toFixed(4)})) = ${pi_P.toFixed(4)}`
+        });
+    } else if (ratio <= 0) {
+        pi_P = 0;
+        calculationDetails.push({ 
+            name: 'Power Degradation Factor (πP)', 
+            value: '0',
+            description: 'Pr/Ps ratio must be greater than 0'
+        });
+    } else {
+        pi_P = 10; // As shown in your table for ratio > 0.95
+        calculationDetails.push({ 
+            name: 'Power Degradation Factor (πP)', 
+            value: '10',
+            description: 'For Pr/Ps > 0.95, πP = 10 (maximum value)'
+        });
+    }
+} else {
+    pi_P = 1.0; // Default value
+    calculationDetails.push({ 
+        name: 'Power Degradation Factor (πP)', 
+        value: '1.0',
+        description: 'No power ratio input, using default πP = 1.0'
+    });
+}
+
+            // Calculate final failure rate
+            lambda_p = lambda_b * pi_T * pi_Q * pi_I * pi_A * pi_P * pi_E;
+            formula = 'λp = λb × πT × πQ × πI × πA × πP × πE';
+            if (onCalculate) {
+                onCalculate(lambda_p, calculationDetails, formula); 
+              }
+        }
+
+        setResults({
+            failureRate: lambda_p.toExponential(4),
+            calculationDetails,
+            formula,
+            componentType: formData.componentType
+        });
+              setComponents(components.map(comp => {
+            if (comp.id === componentId) {
+                return {
+                    ...comp,
+                    formData: {
+                        ...comp.formData,
+                        failureRate: lambda_p,
+                        total: lambda_p * (quantity || 1)
+                    }
+                };
+            }
+            return comp;
+        }));
+    };
+    const totalSystemFailureRate = components.reduce((sum, comp) => sum + (comp.formData.total || 0), 0);
+
+    const renderComponent = (component) => {
+        return (
+            <div key={component.id} className="component-container" style={{
+                border: '1px solid #ddd',
+                padding: '15px',
+                margin: '15px 0',
+                borderRadius: '5px',
+                position: 'relative'
+            }}>
+                <h3>Component {components.findIndex(c => c.id === component.id) + 1}</h3>
+                <h2 className='text-center' style={{ fontSize: '1.2rem' }}>
+                    {component.formData?.componentType ? component.formData?.componentType?.replace(/,/g, ' ').trim() : 'Discrete Semiconductor'}
+                </h2>
+                
                 <Row>
                     <Col md={12}>
-                <div className="form-group">
-                    <label>Part Type</label>
-                    <select
-                        name="componentType"
-                        // className="form-control"
-                        value={formData.componentType}
-                        onChange={handleInputChange}
-                //           value={formData.componentType ?
-                // { value: formData.componentType, label: formData.componentType } : null}
-            //   onChange={(selectedOption) => {
-            //     updateComponent(component.id, { type: selectedOption.value });
-            //   }}
-                    >
-                        {componentTypes.map(type => (
-                            <option key={type.id} value={type.id}>{type.name}</option>
-                        ))}
-                    </select>
-                </div>
-                </Col>
-           
-             
-                </Row>
-                <Row>
-                    {formData.componentType === '6.1 Diodes, Low Frequency' && (
-                        <>
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Diode Type λb </label>
-                                    <select
-                                        name="diodeType"
-                                        // className="form-control"
-                                        value={formData.diodeType}
-                                        onChange={handleInputChange}
-                                    >
-                                        {lowFreqDiodeTypes.map(type => (
-                                            <option key={type.name} value={type.name}>{type.name}</option>
-                                        ))}
-                                    </select>
-
-
-                                </div>
-                            </Col>
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Junction Temperature (°C) πT</label>
-                                    <input
-                                        type="number"
-                                        name="junctionTemp"
-                                        className="form-control"
-                                        min="25"
-                                        max="175"
-                                        value={formData.junctionTemp}
-                                        onChange={handleInputChange}
-                                    />
-                                    <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
-                                    <div class="invalid-feedback">
-                                        Please provide a valid city.
-                                    </div>
-                                </div>
-                            </Col>
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Environment πE</label>
-                                    <select
-                                        name="environment"
-                                        className="form-control"
-                                        value={formData.environment}
-                                        onChange={handleInputChange}
-                                    >
-                                        {environmentFactors.map(factor => (
-                                            <option key={factor.code} value={factor.code}>
-                                                {factor.code} - {factor.name} (πE = {factor.pi_E})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </Col>
-
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Quality πQ</label>
-                                    <select
-                                        name="quality"
-                                        // className="form-control"
-                                        value={formData.quality}
-                                        onChange={handleInputChange}
-                                    >
-                                        {qualityFactors.map(factor => (
-                                            <option key={factor.name} value={factor.name}>{factor.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </Col>
-
-
-                            {formData.diodeType.includes('High Voltage Stacks') && (
-
-                                <Col md={4}>
-                                    <div className="form-group">
-                                        <label>Number of Junctions</label>
-                                        <input
-                                            type="number"
-                                            name="numJunctions"
-                                            className="form-control"
-                                            min="1"
-                                            value={formData.numJunctions}
-                                            onChange={handleInputChange}
-                                        />
-                                    </div>
-
-                                </Col>
-
-                            )}
-
-                        </>
-
-                    )}
-                    {formData.componentType === '6.1 Diodes, Low Frequency' && !(
-                        formData.diodeType.includes('Transient Suppressor') ||
-                        formData.diodeType.includes('Voltage Regulator') ||
-                        formData.diodeType.includes('Current Regulator')
-                    ) && (
-                            <>
-                                <Col md={4}>
-                                    <div className="form-group">
-                                        <label>Voltage Stress Ratio (Vs) πS</label>
-                                        <select
-                                            name="voltageStress"
-                                            className="form-control"
-                                            value={formData.voltageStress}
-                                            onChange={handleInputChange}
-                                        >
-                                            <option value="">Select or calculate below</option>
-                                            {voltageStressFactors.map(factor => (
-                                                <option key={factor.range} value={factor.range}>
-                                                    {factor.range} (πS = {factor.pi_S})
-                                                </option>
-                                            ))}
-                                        </select>
-
-                                    </div>
-                                </Col>
-                                <Col md={4}>
-                                    <div className="form-group">
-                                        <label>Voltage Applied (V) πs</label>
-                                        <input
-                                            type="number"
-                                            name="voltageApplied"
-                                            className="form-control"
-                                            step="0.1"
-                                            min="0"
-                                            value={formData.voltageApplied}
-                                            onChange={handleInputChange}
-                                            disabled={!!formData.voltageStress}
-                                        />
-                                    </div>
-                                </Col>
-                                <Col md={4}>
-                                    <div className="form-group">
-                                        <label>Voltage Rated (V) πs</label>
-                                        <input
-                                            type="number"
-                                            name="voltageRated"
-                                            className="form-control"
-                                            step="0.1"
-                                            min="0.1"
-                                            value={formData.voltageRated}
-                                            onChange={handleInputChange}
-                                            disabled={!!formData.voltageStress}
-                                        />
-                                    </div>
-                                </Col>
-                                {formData.voltageStressRatio !== undefined && !formData.voltageStress && (
-                                    <Col md={4}>
-                                        <div className="form-group">
-                                            <label>Calculated Voltage Stress Ratio πs</label>
-                                            <input
-                                                type="number"
-                                                className="form-control"
-                                                readOnly
-                                                value={formData.voltageStressRatio.toFixed(4)}
-                                            />
-                                        </div>
-                                    </Col>
-                                )}
-
-                                <Col md={4}>
-                                    <div className="form-group">
-                                        <label>Contact Construction Factor πC	 </label>
-                                        <select
-                                            name="contactConstruction"
-                                            // className="form-control"
-                                            value={formData.contactConstruction}
-                                            onChange={handleInputChange}
-                                        >
-                                            {contactConstructionFactors.map(type => (
-                                                <option key={type.type} value={type.type}>{type.type}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </Col>
-
-
-                            </>
-                        )}
+                        <div className="form-group">
+                            <label>Part Type</label>
+                            <select
+                                name="componentType"
+                                className="form-control"
+                                value={component.formData.componentType || ""}
+                                onChange={(e) => {
+                                    handleInputChange(e, component.id);
+                                    updateComponent(component.id, { componentType: e.target.value });
+                                }}
+                            >
+                                <option value="" disabled>Select a part type</option>
+                                {componentTypes.map(type => (
+                                    <option key={type.id} value={type.id}>{type.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </Col>
                 </Row>
 
-                {formData.componentType === '6.2 Diodes, High Frequency (Microwave, RF)' && (
-                    <div>
-                        <Row>
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Diode Type</label>
-                                    <select
-                                        name="highFreqDiodeType"
-                                        className="form-control"
-                                        value={formData.highFreqDiodeType}
-                                        onChange={handleInputChange}
-                                    >
-                                        {highFreqDiodeTypes.map(type => (
-                                            <option key={type.name} value={type.name}>{type.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </Col>
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Application</label>
-                                    <select
-                                        name="highFreqAppFactor"
-                                        className="form-control"
-                                        value={formData.highFreqAppFactor}
-                                        onChange={handleInputChange}
-                                    >
-                                        {highFreqAppFactors.map(factor => (
-                                            <option key={factor.name} value={factor.name}>{factor.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </Col>
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Environment πE</label>
-                                    <select
-                                        name="environment"
-                                        className="form-control"
-                                        value={formData.environment}
-                                        onChange={handleInputChange}
-                                    >
-                                        {highFreqDiodeEnvironmentFactors.map(factor => (
-                                            <option key={factor.code} value={factor.code}>
-                                                {factor.code} - {factor.name} (πE = {factor.pi_E})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </Col>
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Power Rating πR</label>
-                                    <select
-                                        name="highFreqPowerFactor"
-                                        className="form-control"
-                                        value={formData.highFreqPowerFactor}
-                                        onChange={handleInputChange}
-                                    >
-                                        <option value="">Calculate from input power</option>
-                                        {highFreqPowerFactors.map(factor => (
-                                            <option key={factor.power} value={factor.power}>
-                                                {factor.power} (πR = {factor.pi_R})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </Col>
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Input Power (P_i in Watts)πR</label>
-                                    <input
-                                        type="number"
-                                        name="powerInput"
-                                        className="form-control"
-                                        min="0.1"
-                                        step="0.1"
-                                        value={formData.powerInput}
-                                        onChange={handleInputChange}
-                                        disabled={!!formData.highFreqPowerFactor}
-                                    />
-                                </div>
-                            </Col>
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Junction Temperature (°C) πT</label>
-                                    <input
-                                        type="number"
-                                        name="junctionTemp"
-                                        className="form-control"
-                                        min="25"
-                                        max="175"
-                                        value={formData.junctionTemp}
-                                        onChange={handleInputChange}
-                                    />
-                                </div>
-                                <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
-                            </Col>
-
-                            <Col md={4}>
-                                <div className="form-group">
-                                    <label>Quality πQ</label>
-
-                                    <select
-                                        name="quality"
-                                        className="form-control"
-                                        value={formData.quality}
-                                        onChange={handleInputChange}
-                                    >
-                                        {formData.highFreqDiodeType === 'Schottky Barrier (including Detectors) and Point Contact' ? (
-                                            highFreqQualityFactors2.map(factor => (
-                                                <option key={factor.name} value={factor.name}>
-                                                    {factor.name} (πQ = {factor.pi_Q !== null ? factor.pi_Q : '—'})
-                                                </option>
-                                            ))
-                                        ) : (
-                                            highFreqQualityFactors1.map(factor => (
-                                                <option key={factor.name} value={factor.name}>
-                                                    {factor.name} (πQ = {factor.pi_Q !== null ? factor.pi_Q : '—'})
-                                                </option>
-                                            ))
-                                        )}
-                                    </select>
-                                </div>
-                            </Col>
-                        </Row>
-                    </div>
+              
+                {component.formData.componentType === '6.1 Diodes, Low Frequency' && (
+                    <>
+                        <Col md={4}>
+                            <div className="form-group">
+                                <label>Diode Type λb</label>
+                                <select
+                                    name="diodeType"
+                                    className="form-control"
+                                    value={component.formData.diodeType}
+                                    onChange={(e) => handleInputChange(e, component.id)}
+                                >
+                                    {lowFreqDiodeTypes.map(type => (
+                                        <option key={type.name} value={type.name}>{type.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </Col>
+                         
+                                                          <Col md={4}>
+                                                          <div className="form-group">
+                                                              <label>Junction Temperature (°C) πT</label>
+                                                              <input
+                                                                  type="number"
+                                                                  name="junctionTemp"
+                                                                  className="form-control"
+                                                                  min="25"
+                                                                  max="175"
+                                                                  value={component.formData.junctionTemp}
+                                                                  onChange={handleInputChange}
+                                                              />
+                             
+                                                                <div class="invalid-feedback">
+                              Please provide a valid city.
+                            </div>
+                                                              </div>
+                                                          </Col>
+                                                            <Col md={4}>
+                                                          <div className="form-group">
+                                                              <label>Environment πE</label>
+                                                              <select
+                                                                  name="environment"
+                                                                  className="form-control"
+                                                                  value={component.formData.environment}
+                                                                  onChange={handleInputChange}
+                                                              >
+                                                                  {environmentFactors.map(factor => (
+                                                                      <option key={factor.code} value={factor.code}>
+                                                                          {factor.code} - {factor.name} (πE = {factor.pi_E})
+                                                                      </option>
+                                                                  ))}
+                                                              </select>
+                                                          </div>
+                                                          </Col>
+                      
+                                                          <Col md={4}>
+                                                          <div className="form-group">
+                                                              <label>Quality πQ</label>
+                                                              <select
+                                                                  name="quality"
+                                                                  // className="form-control"
+                                                                  value={component.formData.quality}
+                                                                  onChange={handleInputChange}
+                                                              >
+                                                                  {qualityFactors.map(factor => (
+                                                                      <option key={factor.name} value={factor.name}>{factor.name}</option>
+                                                                  ))}
+                                                              </select>
+                                                          </div>
+                                                          </Col>
+                    </>
                 )}
 
-                {formData.componentType === '6.3 Transistors, Low Frequency, Bipolar' && (
+                {component.formData.componentType === '6.3 Transistors, Low Frequency, Bipolar' && (
                     <div>
                         <Row>
                             <Col md={4}>
@@ -2644,7 +2495,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="transistorAppFactor"
                                         // className="form-control"
-                                        value={formData.transistorAppFactor}
+                                        value={component.formData.transistorAppFactor}
                                         onChange={handleInputChange}
                                     >
                                         {transistorAppFactors.map(factor => (
@@ -2661,7 +2512,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="transistorPowerFactor"
                                         className="form-control"
-                                        value={formData.transistorPowerFactor}
+                                        value={component.formData.transistorPowerFactor}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Calculate from input power</option>
@@ -2683,7 +2534,7 @@ const handleRemoveComponent = () => {
                                         className="form-control"
                                         min="0.1"
                                         step="0.1"
-                                        value={formData.powerInput1}
+                                        value={component.formData.powerInput1}
                                         onChange={handleInputChange}
                                         disabled={!!formData.transistorPowerFactor}
                                     />
@@ -2695,7 +2546,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                        value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {environmentFactors.map(factor => (
@@ -2714,7 +2565,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="transistorVoltageFactor"
                                         className="form-control"
-                                        value={formData.transistorVoltageFactor}
+                                        value={component.formData.transistorVoltageFactor}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Select or calculate below</option>
@@ -2736,7 +2587,7 @@ const handleRemoveComponent = () => {
                                         className="form-control"
                                         step="0.1"
                                         min="0"
-                                        value={formData.applied}
+                                        value={component.formData.applied}
                                         onChange={handleInputChange}
                                         disabled={!!formData.transistorVoltageFactor}
                                     />
@@ -2752,14 +2603,14 @@ const handleRemoveComponent = () => {
                                         className="form-control"
                                         step="0.1"
                                         min="0.1"
-                                        value={formData.rated}
+                                        value={component.formData.rated}
                                         onChange={handleInputChange}
                                         disabled={!!formData.transistorVoltageFactor}
                                     />
                                 </div>
                             </Col>
 
-                            {formData.applied && formData.rated && !formData.transistorVoltageFactor && (
+                            {component.formData.applied && formData.rated && !formData.transistorVoltageFactor && (
                                 <Col md={4}>
                                     <div className="form-group">
                                         <label>Calculated Vs Ratio πS</label>
@@ -2779,7 +2630,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="junctionTemp"
                                         className="form-control"
-                                        value={formData.junctionTemp}
+                                        value={component.formData.junctionTemp}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Enter manual temperature</option>
@@ -2803,7 +2654,7 @@ const handleRemoveComponent = () => {
                                         min="25"
                                         max="175"
                                         step="1"
-                                        value={formData.junctionTempInput || ''}
+                                        value={component.formData.junctionTempInput || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.junctionTemp} // Disable if dropdown value is selected
                                     />
@@ -2815,7 +2666,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="quality"
                                         // className="form-control"
-                                        value={formData.quality}
+                                        value={component.formData.quality}
                                         onChange={handleInputChange}
                                     >
                                         {qualityFactors.map(factor => (
@@ -2828,7 +2679,7 @@ const handleRemoveComponent = () => {
                     </div>
 
                 )}
-                {formData.componentType === '6.4 Transistors, Low Frequency, SI FET' && (
+                {component.formData.componentType === '6.4 Transistors, Low Frequency, SI FET' && (
                     <div>
 
                         <Row>
@@ -2837,7 +2688,7 @@ const handleRemoveComponent = () => {
                                     <label>Transistor Type</label>
                                     <select
                                         name="siFETType"
-                                        value={formData.siFETType}
+                                        value={component.formData.siFETType}
                                         onChange={handleInputChange}
                                     >
                                         {siFETTypes.map(type => (
@@ -2851,7 +2702,7 @@ const handleRemoveComponent = () => {
                                     <label>Application</label>
                                     <select
                                         name="siFETAppFactor"
-                                        value={formData.siFETAppFactor}
+                                        value={component.formData.siFETAppFactor}
                                         onChange={handleInputChange}
                                     >
                                         {siFETAppFactors.map(factor => (
@@ -2866,7 +2717,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="junctionTemp"
                                         className="form-control"
-                                        value={formData.junctionTemp}
+                                        value={component.formData.junctionTemp}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Enter manual temperature</option>
@@ -2890,7 +2741,7 @@ const handleRemoveComponent = () => {
                                         min="25"
                                         max="175"
                                         step="1"
-                                        value={formData.junctionTempInput || ''}
+                                        value={component.formData.junctionTempInput || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.junctionTemp} // Disable if dropdown value is selected 
                                     />
@@ -2903,7 +2754,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                       value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {environmentFactors.map(factor => (
@@ -2922,7 +2773,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="quality"
                                         // className="form-control"
-                                        value={formData.quality}
+                                       value={component.formData.quality}
                                         onChange={handleInputChange}
                                     >
                                         {qualityFactors.map(factor => (
@@ -2934,7 +2785,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </div>
                 )}
-                {formData.componentType === '6.5 Transistors,Unijunction' && (
+                {component.formData.componentType === '6.5 Transistors,Unijunction' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -2942,7 +2793,7 @@ const handleRemoveComponent = () => {
                                     <label>Transistor Type</label>
                                     <select
                                         name="unijunctionType"
-                                        value={formData.unijunctionType}
+                                       value={component.formData.unijunctionType}
                                         onChange={handleInputChange}
                                     >
                                         {unijunctionTypes.map(type => (
@@ -2957,7 +2808,7 @@ const handleRemoveComponent = () => {
                                     {/* <label>Junction Temperature (°C) πT</label> */}
                                     <select
                                         name="junctionTemp"
-                                        value={formData.junctionTemp}
+                                       value={component.formData.junctionTemp}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Enter manual temperature</option>
@@ -2980,7 +2831,7 @@ const handleRemoveComponent = () => {
                                         min="25"
                                         max="175"
                                         step="1"
-                                        value={formData.junctionTempInput || ''}
+                                       value={component.formData.junctionTempInput || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.junctionTemp} // Disable if dropdown value is selected 
                                     />
@@ -2992,7 +2843,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                       value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {environmentFactors.map(factor => (
@@ -3009,7 +2860,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="quality"
                                         // className="form-control"
-                                        value={formData.quality}
+                                       value={component.formData.quality}
                                         onChange={handleInputChange}
                                     >
                                         {qualityFactors.map(factor => (
@@ -3021,7 +2872,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === '6.6 Transistors, Low Noise, High Frequency, Bipolar' && (
+                {component.formData.componentType === '6.6 Transistors, Low Noise, High Frequency, Bipolar' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3043,7 +2894,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="powerRating"
                                         // className="form-control"
-                                        value={formData.powerRating}
+                                       value={component.formData.powerRating}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Calculate from input power</option>
@@ -3064,7 +2915,7 @@ const handleRemoveComponent = () => {
                                         className="form-control"
                                         min="0.1"
                                         step="0.1"
-                                        value={formData.powerInput1}
+                                       value={component.formData.powerInput1}
                                         onChange={handleInputChange}
                                         disabled={!!formData.powerRating}
                                     />
@@ -3076,7 +2927,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="voltageStressRatio"
                                         // className="form-control"
-                                        value={formData.voltageStressRatio}
+                                       value={component.formData.voltageStressRatio}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Select or calculate below</option>
@@ -3097,7 +2948,7 @@ const handleRemoveComponent = () => {
                                         className="form-control"
                                         step="0.1"
                                         min="0"
-                                        value={formData.applied}
+                                       value={component.formData.applied}
                                         onChange={handleInputChange}
                                         disabled={!!formData.voltageStressRatio}
                                     />
@@ -3113,7 +2964,7 @@ const handleRemoveComponent = () => {
                                         className="form-control"
                                         step="0.1"
                                         min="0.1"
-                                        value={formData.rated}
+                                       value={component.formData.rated}
                                         onChange={handleInputChange}
                                         disabled={!!formData.voltageStressRatio}
                                     />
@@ -3139,7 +2990,7 @@ const handleRemoveComponent = () => {
                                     <label>Junction Temperature (°C) πT</label>
                                     <select
                                         name="junctionTemp"
-                                        value={formData.junctionTemp}
+                                       value={component.formData.junctionTemp}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Enter manual temperature</option>
@@ -3163,7 +3014,7 @@ const handleRemoveComponent = () => {
                                         min="25"
                                         max="175"
                                         step="1"
-                                        value={formData.junctionTempInput || ''}
+                                       value={component.formData.junctionTempInput || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.junctionTemp} // Disable if dropdown value is selected
                                     />
@@ -3179,7 +3030,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                       value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {lowNoiseEnvironmentFactors.map(factor => (
@@ -3195,7 +3046,7 @@ const handleRemoveComponent = () => {
                                     <label>Quality πQ</label>
                                     <select
                                         name="lowNoiseHighFreqQuality"
-                                        value={formData.lowNoiseHighFreqQuality}
+                                       value={component.formData.lowNoiseHighFreqQuality}
                                         onChange={handleInputChange}
                                     >
                                         {lowNoiseHighFreqQualityFactors.map(factor => (
@@ -3209,7 +3060,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === '6.7 Transistors,High Power,High Frequency,Bipolar' && (
+                {component.formData.componentType === '6.7 Transistors,High Power,High Frequency,Bipolar' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3222,7 +3073,7 @@ const handleRemoveComponent = () => {
                                         step="0.1"
                                         min="0.1"
                                         max="10"
-                                        value={formData.frequencyGHz}
+                                       value={component.formData.frequencyGHz}
                                         onChange={handleInputChange}
                                     />
                                 </div>
@@ -3237,7 +3088,7 @@ const handleRemoveComponent = () => {
                                         step="1"
                                         min="1"
                                         max="600"
-                                        value={formData.outputPowerWatts}
+                                       value={component.formData.outputPowerWatts}
                                         onChange={handleInputChange}
                                     />
                                 </div>
@@ -3251,7 +3102,7 @@ const handleRemoveComponent = () => {
                                         className="form-control"
                                         min="110"
                                         max="200"
-                                        value={formData.junctionTempHP}
+                                       value={component.formData.junctionTempHP}
                                         onChange={handleInputChange}
                                     />
                                     <small>T<sub>j</sub> = T<sub>c</sub> + θ<sub>jc</sub> P</small>
@@ -3268,7 +3119,7 @@ const handleRemoveComponent = () => {
                                         step="0.01"
                                         min="0"
                                         max="1"
-                                        value={formData.voltageRatio}
+                                       value={component.formData.voltageRatio}
                                         onChange={handleInputChange}
                                     />
                                 </div>
@@ -3280,7 +3131,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="metalizationType"
                                         className="form-control"
-                                        value={formData.metalizationType}
+                                       value={component.formData.metalizationType}
                                         onChange={handleInputChange}
                                     >
                                         <option value="Gold">Gold</option>
@@ -3293,7 +3144,7 @@ const handleRemoveComponent = () => {
                                     <label>Application  πA</label>
                                     <select
                                         name="applicationType"
-                                        value={formData.applicationType}
+                                       value={component.formData.applicationType}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Select or enter duty cycle</option>
@@ -3318,7 +3169,7 @@ const handleRemoveComponent = () => {
                                         min="0"
                                         max="100"
                                         step="1"
-                                        value={formData.dutyCycle || ''}
+                                       value={component.formData.dutyCycle || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.applicationType} // Disable if dropdown value is selected
                                     />
@@ -3329,7 +3180,7 @@ const handleRemoveComponent = () => {
                                     <label>Matching Network</label>
                                     <select
                                         name="matchingNetwork"
-                                        value={formData.matchingNetwork}
+                                       value={component.formData.matchingNetwork}
                                         onChange={handleInputChange}
                                     >
                                         <option value="Input and Output">Input and Output Matched (πM = 1.0)</option>
@@ -3345,7 +3196,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                       value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {highpowerEnvironmentFactors.map(factor => (
@@ -3361,7 +3212,7 @@ const handleRemoveComponent = () => {
                                     <label>Quality πQ</label>
                                     <select
                                         name="quality"
-                                        value={formData.quality}
+                                       value={component.formData.quality}
                                         onChange={handleInputChange}
                                     >
                                         {/* <option value="JANTXV">JANTXV (πQ = 0.50)</option> */}
@@ -3374,7 +3225,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === '6.8 Transistors, High Frequency, GaAs FET' && (
+                {component.formData.componentType === '6.8 Transistors, High Frequency, GaAs FET' && (
                     <>
 
                         <Row>
@@ -3388,7 +3239,7 @@ const handleRemoveComponent = () => {
                                         step="0.1"
                                         min="1"
                                         max="10"
-                                        value={formData.frequencyGHzGaAs}
+                                       value={component.formData.frequencyGHzGaAs}
                                         onChange={handleInputChange}
                                     />
                                 </div>
@@ -3403,7 +3254,7 @@ const handleRemoveComponent = () => {
                                         step="0.1"
                                         min="0.1"
                                         max="6"
-                                        value={formData.outputPowerWattsGaAs}
+                                       value={component.formData.outputPowerWattsGaAs}
                                         onChange={handleInputChange}
                                     />
                                 </div>
@@ -3415,7 +3266,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="junctionTempGaAs"
                                         className="form-control"
-                                        value={formData.junctionTempGaAs}
+                                       value={component.formData.junctionTempGaAs}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Enter manual temperature</option>
@@ -3439,7 +3290,7 @@ const handleRemoveComponent = () => {
                                         min="25"
                                         max="175"
                                         step="1"
-                                        value={formData.junctionTempInput || ''}
+                                       value={component.formData.junctionTempInput || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.junctionTempGaAs} // Disable if dropdown value is selected
                                     />
@@ -3451,7 +3302,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="applicationTypeGaAs"
                                         className="form-control"
-                                        value={formData.applicationTypeGaAs}
+                                       value={component.formData.applicationTypeGaAs}
                                         onChange={handleInputChange}
                                     >
                                         {gaAsAppFactors.map(factor => (
@@ -3468,7 +3319,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="matchingNetworkGaAs"
                                         // className="form-control"
-                                        value={formData.matchingNetworkGaAs}
+                                       value={component.formData.matchingNetworkGaAs}
                                         onChange={handleInputChange}
                                     >
                                         {gaAsMatchingNetworkFactors.map(factor => (
@@ -3485,7 +3336,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                       value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {gasFETEnvironmentFactors.map(factor => (
@@ -3502,7 +3353,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="qualityGaAs"
                                         // className="form-control"
-                                        value={formData.qualityGaAs}
+                                       value={component.formData.qualityGaAs}
                                         onChange={handleInputChange}
                                     >
                                         {gaAsQualityFactors.map(factor => (
@@ -3516,7 +3367,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === '6.9 Transistors, High Frequency, SI FET' && (
+                {component.formData.componentType === '6.9 Transistors, High Frequency, SI FET' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3525,7 +3376,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="siFETTypeHF"
                                         // className="form-control"
-                                        value={formData.siFETTypeHF}
+                                       value={component.formData.siFETTypeHF}
                                         onChange={handleInputChange}
                                     >
                                         {siFETTypesHF.map(type => (
@@ -3542,7 +3393,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="junctionTempSIFET"
                                         className="form-control"
-                                        value={formData.junctionTempSIFET}
+                                       value={component.formData.junctionTempSIFET}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Enter manual temperature</option>
@@ -3566,7 +3417,7 @@ const handleRemoveComponent = () => {
                                         min="25"
                                         max="175"
                                         step="1"
-                                        value={formData.junctionTempInput || ''}
+                                       value={component.formData.junctionTempInput || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.junctionTempSIFET} // Disable if dropdown value is selected 
                                     />
@@ -3579,7 +3430,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                       value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {siFETEnvironmentFactors.map(factor => (
@@ -3596,7 +3447,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="qualitySIFET"
                                         // className="form-control"
-                                        value={formData.qualitySIFET}
+                                       value={component.formData.qualitySIFET}
                                         onChange={handleInputChange}
                                     >
                                         {siFETQualityFactors.map(factor => (
@@ -3610,7 +3461,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === '6.10 Thyristors and SCRS' && (
+                {component.formData.componentType === '6.10 Thyristors and SCRS' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3619,7 +3470,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="thyristorType"
                                         // className="form-control"
-                                        value={formData.thyristorType}
+                                       value={component.formData.thyristorType}
                                         onChange={handleInputChange}
                                     >
                                         {thyristorTypes.map(type => (
@@ -3636,7 +3487,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="junctionTemp"
                                         className="form-control"
-                                        value={formData.junctionTemp}
+                                       value={component.formData.junctionTemp}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Enter manual temperature</option>
@@ -3660,7 +3511,7 @@ const handleRemoveComponent = () => {
                                         min="25"
                                         max="175"
                                         step="1"
-                                        value={formData.junctionTempInput || ''}
+                                       value={component.formData.junctionTempInput || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.junctionTemp} // Disable if dropdown value is selected 
                                     />
@@ -3674,7 +3525,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="thyristorCurrent"
                                         // className="form-control"
-                                        value={formData.thyristorCurrent}
+                                       value={component.formData.thyristorCurrent}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Select or calculate below</option>
@@ -3696,7 +3547,7 @@ const handleRemoveComponent = () => {
                                         className="form-control"
                                         min="0.1"
                                         step="0.1"
-                                        value={formData.powerInput2}
+                                       value={component.formData.powerInput2}
                                         onChange={handleInputChange}
                                         disabled={!!formData.thyristorCurrent}
                                     />
@@ -3708,7 +3559,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="thyristorVoltage"
                                         // className="form-control"
-                                        value={formData.thyristorVoltage}
+                                       value={component.formData.thyristorVoltage}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Select or calculate below</option>
@@ -3730,7 +3581,7 @@ const handleRemoveComponent = () => {
                                         className="form-control"
                                         min="0.1"
                                         step="0.1"
-                                        value={formData.powerInput3}
+                                       value={component.formData.powerInput3}
                                         onChange={handleInputChange}
                                         disabled={!!formData.thyristorVoltage}
                                     />
@@ -3743,7 +3594,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                       value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {environmentFactors.map(factor => (
@@ -3760,7 +3611,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="quality"
                                         // className="form-control"
-                                        value={formData.quality}
+                                       value={component.formData.quality}
                                         onChange={handleInputChange}
                                     >
                                         {qualityFactors.map(factor => (
@@ -3774,7 +3625,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === '6.11 Optoelectronics (Detectors, Isolators, Emitters)' && (
+                {component.formData.componentType === '6.11 Optoelectronics (Detectors, Isolators, Emitters)' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3783,7 +3634,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="optoelectronicType"
                                         // className="form-control"
-                                        value={formData.optoelectronicType}
+                                       value={component.formData.optoelectronicType}
                                         onChange={handleInputChange}
                                     >
                                         {optoelectronicTypes.map(type => (
@@ -3800,7 +3651,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="junctionTemp"
                                         className="form-control"
-                                        value={formData.junctionTemp}
+                                       value={component.formData.junctionTemp}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Enter manual temperature</option>
@@ -3824,7 +3675,7 @@ const handleRemoveComponent = () => {
                                         min="25"
                                         max="175"
                                         step="1"
-                                        value={formData.junctionTempInput || ''}
+                                       value={component.formData.junctionTempInput || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.junctionTemp} // Disable if dropdown value is selected
                                     />
@@ -3837,7 +3688,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                       value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {optoElectroEnvironmentFactors.map(factor => (
@@ -3854,7 +3705,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="quality"
                                         // className="form-control"
-                                        value={formData.quality}
+                                       value={component.formData.quality}
                                         onChange={handleInputChange}
                                     >
                                         {qualityFactors.map(factor => (
@@ -3866,7 +3717,7 @@ const handleRemoveComponent = () => {
                         </Row>
                     </>
                 )}
-                {formData.componentType === '6.12 Alphanumeric Displays' && (
+                {component.formData.componentType === '6.12 Alphanumeric Displays' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3875,7 +3726,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="displayType"
                                         className="form-control"
-                                        value={formData.displayType}
+                                       value={component.formData.displayType}
                                         onChange={handleInputChange}
                                     >
                                         <option value="segment">Segment Display  λ_b</option>
@@ -3891,7 +3742,7 @@ const handleRemoveComponent = () => {
                                         name="characterCount"
                                         className="form-control"
                                         min="1"
-                                        value={formData.characterCount}
+                                       value={component.formData.characterCount}
                                         onChange={handleInputChange}
                                     />
                                 </div>
@@ -3902,7 +3753,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="hasLogicChip"
                                         className="form-control"
-                                        value={formData.hasLogicChip}
+                                       value={component.formData.hasLogicChip}
                                         onChange={handleInputChange}
                                     >
                                         <option value={true}>Yes (λ_IC = 0.000043)</option>
@@ -3917,7 +3768,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="junctionTemp"
                                         className="form-control"
-                                        value={formData.junctionTemp}
+                                       value={component.formData.junctionTemp}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Enter manual temperature</option>
@@ -3941,7 +3792,7 @@ const handleRemoveComponent = () => {
                                         min="25"
                                         max="175"
                                         step="1"
-                                        value={formData.junctionTempInput || ''}
+                                       value={component.formData.junctionTempInput || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.junctionTemp} // Disable if dropdown value is selected 
                                     />
@@ -3953,7 +3804,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                       value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {alphaNumericEnvironmentFactors.map(factor => (
@@ -3970,7 +3821,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="quality"
                                         // className="form-control"
-                                        value={formData.quality}
+                                       value={component.formData.quality}
                                         onChange={handleInputChange}
                                     >
                                         {qualityFactors.map(factor => (
@@ -3983,7 +3834,7 @@ const handleRemoveComponent = () => {
 
                     </>
                 )}
-                {formData.componentType === '6.13 Optoelectronics, Laser Diode' && (
+                {component.formData.componentType === '6.13 Optoelectronics, Laser Diode' && (
                     <>
                         <Row>
                             <Col md={4}>
@@ -3992,7 +3843,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="laserDiodeCurrent"
                                         className="form-control"
-                                        value={formData.laserDiodeCurrent}
+                                       value={component.formData.laserDiodeCurrent}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Select or enter current below</option>
@@ -4013,7 +3864,7 @@ const handleRemoveComponent = () => {
                                         className="form-control"
                                         min="0.05"
                                         step="0.01"
-                                        value={formData.powerInput4}
+                                       value={component.formData.powerInput4}
                                         onChange={handleInputChange}
                                         disabled={!!formData.laserDiodeCurrent}
                                     />
@@ -4025,7 +3876,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="laserDiodeApplication"
                                         // className="form-control"
-                                        value={formData.laserDiodeApplication}
+                                       value={component.formData.laserDiodeApplication}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Select or enter application to find pulse</option>
@@ -4047,7 +3898,7 @@ const handleRemoveComponent = () => {
                                         min="0"
                                         max="1"
                                         step="0.01"
-                                        value={formData.powerInput2 || ''}
+                                       value={component.formData.powerInput2 || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.laserDiodeApplication} // Disable if dropdown value is selected
                                     />
@@ -4063,7 +3914,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="laserDiodePowerRatio"
                                         className="form-control"
-                                        value={formData.laserDiodePowerRatio}
+                                        value={component.formData.laserDiodePowerRatio}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Select or enter Pr/Ps below</option>
@@ -4086,7 +3937,7 @@ const handleRemoveComponent = () => {
                                         placeholder="Required (Pr)"
                                         step="0.01"
                                         min="0"
-                                        value={formData.requiredPower || ''}
+                                        value={component.formData.requiredPower || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.laserDiodePowerRatio}
                                     />
@@ -4104,7 +3955,7 @@ const handleRemoveComponent = () => {
                                         placeholder="Rated (Ps)"
                                         step="0.01"
                                         min="0.01"
-                                        value={formData.ratedPower || ''}
+                                        value={component.formData.ratedPower || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.laserDiodePowerRatio}
                                     />
@@ -4132,7 +3983,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="environment"
                                         className="form-control"
-                                        value={formData.environment}
+                                        value={component.formData.environment}
                                         onChange={handleInputChange}
                                     >
                                         {laserEnvironmentFactors.map(factor => (
@@ -4150,7 +4001,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="laserDiodeQuality"
                                         // className="form-control"
-                                        value={formData.laserDiodeQuality}
+                                        value={component.formData.laserDiodeQuality}
                                         onChange={handleInputChange}
                                     >
                                         {laserDiodeQualityFactors.map(factor => (
@@ -4167,7 +4018,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="laserDiodeType"
                                         // className="form-control"
-                                        value={formData.laserDiodeType}
+                                        value={component.formData.laserDiodeType}
                                         onChange={handleInputChange}
                                     >
                                         {laserDiodeTypes.map(type => (
@@ -4184,7 +4035,7 @@ const handleRemoveComponent = () => {
                                     <select
                                         name="laserDiodeTemp"
                                         //  className="form-control"
-                                        value={formData.laserDiodeTemp}
+                                        value={component.formData.laserDiodeTemp}
                                         onChange={handleInputChange}
                                     >
                                         <option value="">Enter manual temperature</option>
@@ -4207,7 +4058,7 @@ const handleRemoveComponent = () => {
                                         min="25"
                                         max="175"
                                         step="1"
-                                        value={formData.junctionTempInput || ''}
+                                        value={component.formData.junctionTempInput || ''}
                                         onChange={handleInputChange}
                                         disabled={!!formData.laserDiodeTemp} // Disable if dropdown value is selected 
                                     />
@@ -4217,18 +4068,15 @@ const handleRemoveComponent = () => {
                     </>
                 )}
 
-                {results && (
-                    handleInitialRate(parseFloat(results?.failureRate)?.toFixed(6))
-                )}
-   <Button
+                <Button
                     className="btn-calculate float-end mb-5"
                     variant="primary"
-                    onClick={calculateFailureRate}
+                    onClick={() => calculateFailureRate(component.id)}
                 >
-                    Calculate FR
+                    Calculate FR1
                 </Button>
-                <br/>
-                   <Col md={4}>
+
+                <Col md={4}>
                     <div className="form-group">
                         <label>Quantity (Nₙ):</label>
                         <input
@@ -4238,85 +4086,50 @@ const handleRemoveComponent = () => {
                             value={quantity}
                             onChange={(e) => {
                                 setQuantity(e.target.value);
-                                //   calculateComponentSum(e.target.value)
+                                updateComponent(component.id, { total: component.formData.failureRate * e.target.value });
                             }}
                         />
                     </div>
                 </Col>
-                    <br/>
-                        {results && (
-                    <div className="Predicted-Failure">
-                        <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong> {parseFloat(results?.failureRate)?.toFixed(6)} failures/10<sup>6</sup> hours
-                        <br/>
-                         <strong>λ<sub>c</sub> * N<sub>c</sub>:</strong> {parseFloat(results?.failureRate * quantity)?.toFixed(6)} failures/10<sup>6</sup> hours
-                         {console.log("lambda C and N c", parseFloat(results?.failureRate * quantity))}
+
+                {component.formData.failureRate > 0 && (
+                    <div className="prediction-result" style={{ marginTop: '20px' }}>
+                        <strong>Predicted Failure Rate:</strong>
+                        <span className="ms-2">{component.formData.failureRate.toFixed(6)} failures/10<sup>6</sup> hours</span>
+                        <br />
+                        <strong>Total :</strong>
+                        <span className="ms-2">
+                            {component.formData.total.toFixed(6)} failures/10<sup>6</sup> hours
+                        </span>
                     </div>
                 )}
-                  <br/>
-           {/* {components.length === 0 || components[components.length - 1].length > 0 ? (
-                 <div>
-                   <Button   variant="primary" onClick={handleAddComponent}>Add Component</Button>
-                  
-                 </div>
-               ) : null}
-               <div className="text-end">
-                     <Button   variant="primary" onClick={handleRemoveComponent}>Remove Component</Button>
-                     </div>
-            
-                <div>
-                
-                    <br/>
-   {components.map((_, index) => (
-    <MicroDiode
-        key={index} 
-        // formData={formData}
-        // setFormData={setFormData}
-         handleInitialRate = {handleInitialRate}
-    />
-  ))} */}
-       {component?.failureRate > 0 && (
-            <div className="prediction-result" style={{ marginTop: '20px' }}>
-              <strong>Predicted Failure Rate:</strong>
-              <span className="ms-2">{component?.failureRate?.toFixed(6)} failures/10<sup>6</sup> hours</span>
-              <br />
-              <strong>Total :</strong>
-              <span className="ms-2">
-                {component?.total?.toFixed(6)} failures/10<sup>6</sup> hours
-              </span>
-            </div>
-          )}
-  
-          <Button
-            variant="danger"
-            onClick={() => removeComponent(component.id)}
-            style={{ marginTop: '10px', backgroundColor: "red" }}
-          >
-            Remove Component
-          </Button>
-  </div>
-         
-    
-    );
-}
-return(
-        <div className="reliability-calculator">
-             <h2 className='text-center' style={{ fontSize: '1.2rem' }}>
-        Microcircuits Reliability Calculator
-      </h2>
-            {components.map(component => renderComponent({ ...component, id: component.id }))}
 
-               <Button onClick={addNewComponent} className="mt-3">
-                    Add Component
-                  </Button>
-                   {components.length > 0 && (
-        <div className="total-failure-rate" style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f8f9fa' }}>
-          {/* <h4>Total System Failure Rate: {total} failures/10<sup>6</sup> hours</h4> */}
-           <h4>Total System Failure Rate: {totalSystemFailureRate.toFixed(6)} failures/10<sup>6</sup> hours</h4>
-         
+                <Button
+                    variant="danger"
+                    onClick={() => removeComponent(component.id)}
+                    style={{ marginTop: '10px', backgroundColor: "red" }}
+                >
+                    Remove Component
+                </Button>
+            </div>
+        );
+    };
+
+    return (
+        <div className="reliability-calculator">
+            {components.map(component => renderComponent(component))}
+
+            <Button onClick={addNewComponent} className="mt-3">
+                Add Component
+            </Button>
+
+            {components.length > 0 && (
+                <div className="total-failure-rate" style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f8f9fa' }}>
+                    <h4>Total System Failure Rate: {totalSystemFailureRate.toFixed(6)} failures/10<sup>6</sup> hours</h4>
+                </div>
+            )}
         </div>
-      )}
-        </div>
-)
+    );
 };
 
 export default MicroDiode;
