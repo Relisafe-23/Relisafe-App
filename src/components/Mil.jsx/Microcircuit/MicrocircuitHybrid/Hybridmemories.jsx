@@ -426,8 +426,9 @@ const qualityFactor =()=>{
         }
       });
       setError(null);
+      console.log("quantity.....",quantity)
       if (onCalculate) {
-        onCalculate(failureRate);
+        onCalculate(failureRate * quantity);
       }
     } catch (err) {
       setError(err.message);

@@ -419,8 +419,9 @@ const HybridVhsic = ({ onCalculate }) => {
             });
             setError(null);
             if (onCalculate) {
-                onCalculate(totalFailureRate);
+                onCalculate(totalFailureRate * quantity);
             }
+            console.log("onCalculate124..",totalFailureRate * quantity)
         } catch (err) {
             setError(err.message);
             setResult(null);

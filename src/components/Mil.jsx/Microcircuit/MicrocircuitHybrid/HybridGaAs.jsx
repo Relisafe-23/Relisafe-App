@@ -119,7 +119,7 @@ const HybridGaAs= ({ onCalculate }) => {
       });
       setError(null);
       if (onCalculate) {
-        onCalculate(lambdaP);
+        onCalculate(lambdaP * quantity);
       }
     } catch (err) {
       setError(err.message);

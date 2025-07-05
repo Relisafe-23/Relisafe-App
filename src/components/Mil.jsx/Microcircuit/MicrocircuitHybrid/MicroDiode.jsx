@@ -4125,7 +4125,7 @@ if (formData.laserDiodePowerRatio) {
 
             {components.length > 0 && (
                 <div className="total-failure-rate" style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f8f9fa' }}>
-                    <h4>Total System Failure Rate: {totalSystemFailureRate.toFixed(6)} failures/10<sup>6</sup> hours</h4>
+                    <h4>Total System Failure Rate3: {totalSystemFailureRate.toFixed(6)} failures/10<sup>6</sup> hours</h4>
                 </div>
             )}
         </div>

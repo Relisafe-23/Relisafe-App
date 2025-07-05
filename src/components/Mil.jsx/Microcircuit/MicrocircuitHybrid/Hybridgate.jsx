@@ -195,27 +195,13 @@ const[error,setError] = useState("");
     const failureRate = (C1 * piT + C2 *piE) * piQ * piL
     console.log("Failure Rate1:", failureRate);
 
-    const quantity = currentComponent.quantity || 1;
-    console.log("quantity..",quantity)
-    const totalFailureRate = failureRate * quantity;
 
-    // setFailureRates(prev => {
-    //   const newRates = [...prev];
-    //   const existingIndex = newRates.findIndex(r => r.id === component.id);
-      
-    //   if (existingIndex >= 0) {
-    //     newRates[existingIndex] = { id: component.id, rate: totalFailureRate };
-    //   } else {
-    //     newRates.push({ id: component.id, rate: totalFailureRate });
-    //   }
-      
-    //   return newRates;
-    // });
+   
 
 
     setResults({
       value: failureRate,
-      totalValue: totalFailureRate,
+      // totalValue: totalFailureRate,
       parameters: {
         C1,
         C2,
@@ -227,14 +213,19 @@ const[error,setError] = useState("");
         formula: 'λp = CalculatedFailureRate'
       }
     });
+    console.log("failureRate...1...",failureRate)
+    console.log("quantity.....",quantity)
+if (onCalculate) {
+        onCalculate(failureRate * quantity);
+      }
 
 
-    const newComponents = {
-      ...component,
-      failureRate: result.value,
-      totalFailureRate: result.totalValue,
-      calculationParams: result.parameters
-    };
+    // const newComponents = {
+    //   ...component,
+    //   failureRate: result.value,
+    //   totalFailureRate: result.totalValue,
+    //   calculationParams: result.parameters
+    // };
 
  
     // setComponent([...component, newComponents]);
@@ -601,8 +592,6 @@ const[error,setError] = useState("");
             </>
           )}
 
- 
-              
                       <Col md={4}>
                                <div className="form-group">
                                  <label>No. of Functional Pins for (C<sub>2</sub>):</label>
@@ -622,8 +611,7 @@ const[error,setError] = useState("");
                                </div>
                              </Col>
               
-      
-
+    
           <Col md={4}>
             <div className="form-group">
               <label>Learning Factor (π<sub>L</sub>):</label>
@@ -752,7 +740,6 @@ const[error,setError] = useState("");
             </div>
           </Col>
         
-
             <Col md={4}>
                            <div className="form-group">
                         <label>Quantity (Nₙ):</label>

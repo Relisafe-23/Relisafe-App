@@ -253,7 +253,7 @@ const HybridSaw = ({ onCalculate }) => {
         addOrUpdateComponent(updatedComponent);
 
         if (onCalculate) {
-            onCalculate(failureRate);
+            onCalculate(failureRate * quantity);
         }
     };
 

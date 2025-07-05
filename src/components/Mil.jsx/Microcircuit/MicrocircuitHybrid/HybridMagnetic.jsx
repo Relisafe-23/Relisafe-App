@@ -145,7 +145,7 @@ const HybridMagnetic = ({ onCalculate }) => {
 
       setError(null);
       if (onCalculate) {
-        onCalculate(lambdaP);
+        onCalculate(lambdaP * quantity);
       }
     } catch (err) {
       setError("Error in calculation: " + err.message);
