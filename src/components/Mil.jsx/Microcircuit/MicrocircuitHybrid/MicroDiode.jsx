@@ -26,8 +26,6 @@ const MicroDiode = ({ onCalculate, handleInitialRate }) => {
         }
     }]);
 
-  
-
 
     const componentTypes = [
         { id: '6.1 Diodes, Low Frequency', name: '6.1 Diodes, Low Frequency' },

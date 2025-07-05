@@ -545,7 +545,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
       description: "Gun-launched projectiles during firing"
     }
 
-    // ... rest of your options (same structure for all)
+   
   ];
 
 

@@ -377,9 +377,16 @@ const Microcircuits = ({
     setComponents([...components, newComponent]);
   };
 
+  // const removeComponent = (id) => {
+  //   setComponents(components.filter(comp => comp.id !== id));
+  //   setFailureRates(id)
+   
+  //   // setFailureRates(prev => ({ ...prev, gate: rate }))
+  // };
   const removeComponent = (id) => {
-    setComponents(components.filter(comp => comp.id !== id));
-  };
+  setComponents(prev => prev.filter(comp => comp.id !== id));
+  setFailureRates(({ [id]: _, ...rest }) => rest);
+};
 
   const updateComponent = (id, updatedProps) => {
     setComponents(components.map(comp =>
