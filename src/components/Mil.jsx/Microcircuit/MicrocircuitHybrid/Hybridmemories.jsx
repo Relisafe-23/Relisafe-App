@@ -1257,8 +1257,7 @@ const qualityFactor =()=>{
      
 
             {result && (
-              <>
-              
+              <>  
                 <div style={{width:"50%"}}>
        <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
                   <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>

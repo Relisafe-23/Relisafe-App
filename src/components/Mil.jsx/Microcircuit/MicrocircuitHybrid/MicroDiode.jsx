@@ -900,7 +900,7 @@ const MicroDiode = ({ onCalculate, handleInitialRate }) => {
     };
 
     const initialState = {
-        componentType: 'lowFreqDiode',
+        componentType:  '6.1 Diodes, Low Frequency',
         diodeType: lowFreqDiodeTypes[0].name,
         highFreqDiodeTypes: highFreqDiodeTypes[0].name,
         junctionTemp: 25,
@@ -965,8 +965,9 @@ const MicroDiode = ({ onCalculate, handleInitialRate }) => {
  
     const [formData, setFormData] = useState(initialState);
     const [results, setResults] = useState(null);
-   const [failureRates, setFailureRates] = useState([]);
+    const [failureRates, setFailureRates] = useState([]);
     const [showCalculations, setShowCalculations] = useState();
+
 const handleAddComponent = () => {
 
   if (components.length === 0 || components[components.length - 1].length !== 0) {
@@ -1127,11 +1128,11 @@ const calculateFailureRate = (componentId) => {
         const envFactor = lowFrequencyenvironmentFactors.find(e => e.code === formData.environment);
         pi_E = envFactor ? envFactor.pi_E : 1;
         calculationDetails[1] = { name: 'Environment Factor (πE)', value: pi_E };
-        if   (formData.componentType === 'lowFreqDiode') {
+        if   (component.formData.componentType ===  '6.1 Diodes, Low Frequency') {
             // Low frequency diode calculation
             const diodeType = lowFreqDiodeTypes.find(d => d.name === formData.diodeType);
-            lambda_b = diodeType.lambda_b;
-            if (diodeType.perJunction) {
+            lambda_b = diodeType?.lambda_b;
+            if (diodeType?.perJunction) {
                 lambda_b *= formData.numJunctions;
             }
             calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
@@ -1193,10 +1194,9 @@ calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T.toFixed(
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
 
-        } else if   (formData.componentType === 'highFreqDiode') {
-            // High frequency diode calculation
+        } else if   (component.formData.componentType === '6.2 Diodes, High Frequency (Microwave, RF)') {            // High frequency diode calculation
             const diodeType = highFreqDiodeTypes.find(d => d.name === formData.highFreqDiodeType);
-            lambda_b = diodeType.lambda_b;
+            lambda_b = diodeType?.lambda_b;
             calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
 
             // Temperature factor - use different tables based on diode type
@@ -1281,7 +1281,7 @@ calculationDetails.push({
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
 
-        } else if   (formData.componentType === 'lowFreqBipolar') {
+        } else if   (component.formData.componentType === '6.3 Transistors, Low Frequency, Bipolar' ) {
             // Low frequency bipolar transistor calculation
             lambda_b = 0.00074;
             calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
@@ -1376,10 +1376,10 @@ calculationDetails.push({
             if (onCalculate) {
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
-        } else if   (formData.componentType === 'lowFreqFET') {
+        } else if   (component.formData.componentType === '6.4 Transistors, Low Frequency, SI FET') {
             // Low frequency SI FET calculation
             const fetType = siFETTypes.find(t => t.name === formData.siFETType);
-            lambda_b = fetType.lambda_b;
+            lambda_b = fetType?.lambda_b;
             calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
 // Temperature factor calculation
         let tempDescription4;
@@ -1416,10 +1416,10 @@ calculationDetails.push({
             if (onCalculate) {
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
-        } else if   (formData.componentType === 'transistorsUnijunction') {
+        } else if   (component.formData.componentType === '6.5 Transistors,Unijunction') {
             // Unijunction transistor calculation
             const unijunctionType = unijunctionTypes.find(t => t.name === formData.unijunctionType);
-            lambda_b = unijunctionType.lambda_b;
+            lambda_b = unijunctionType?.lambda_b;
             calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
 
             // Temperature factor (using table lookup)
@@ -1457,7 +1457,7 @@ calculationDetails.push({
             if (onCalculate) {
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
-        } else if   (formData.componentType === 'transistorsLowNoiseHighFreqBipolar') {
+        } else if   (component.formData.componentType === '6.6 Transistors, Low Noise, High Frequency, Bipolar') {
 
             // 6.6 Transistors, Low Noise, High Frequency, Bipolar calculation
             lambda_b = 0.18; // Base failure rate from your image
@@ -1556,7 +1556,7 @@ calculationDetails.push({
             if (onCalculate) {
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
-        } else if   (formData.componentType === 'transistorsHighPowerHighFrequencyBipolar') {
+        } else if   (component.formData.componentType === '6.7 Transistors,High Power,High Frequency,Bipolar') {
 
     // Get base failure rate from table or formula
     const frequency = parseFloat(formData.frequencyGHz);
@@ -1724,7 +1724,7 @@ calculationDetails.push({
 
     calculationDetails.push({ 
         name: 'Base Failure Rate (λb)', 
-        value: lambda_b.toFixed(6),
+        value: lambda_b?.toFixed(6),
         description: description
     });
 
@@ -1824,7 +1824,7 @@ calculationDetails.push({
             if (onCalculate) {
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
-        } else if   (formData.componentType === 'transistorsHighFrequencyGaAsFET') {
+        } else if   (component.formData.componentType === '6.8 Transistors, High Frequency, GaAs FET') {
             // 6.8 Transistors, High Frequency, GaAs FET calculation
 
             // Get base failure rate from table
@@ -1895,10 +1895,10 @@ calculationDetails.push({
     
     calculationDetails.push({ 
         name: 'Base Failure Rate (λb)', 
-        value: lambda_b.toFixed(6),
+        value: lambda_b?.toFixed(6),
         description: frequency >= 1 && frequency <= 10 ? 
             `From table: F=${frequency}GHz, P=${power}W` : 
-            `Calculated from formula: 0.0093 * exp(0.429*${frequency} + 0.486*${power}) = ${lambda_b.toFixed(6)}`
+            `Calculated from formula: 0.0093 * exp(0.429*${frequency} + 0.486*${power}) = ${lambda_b?.toFixed(6)}`
     });
 
 let pi_T = 1;
@@ -1952,12 +1952,12 @@ let pi_T = 1;
             if (onCalculate) {
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
-        } else if   (formData.componentType === 'transistorsHighFrequencySIFET') {
+        } else if   (component.formData.componentType === '6.9 Transistors, High Frequency, SI FET') {
             // 6.9 Transistors, High Frequency, SI FET calculation
 
             // Get base failure rate
             const fetType = siFETTypesHF.find(t => t.name === formData.siFETTypeHF);
-            const lambda_b = fetType.lambda_b;
+            const lambda_b = fetType?.lambda_b;
             calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
 
             // Temperature factor (using table lookup)
@@ -2002,10 +2002,10 @@ let pi_T = 1;
             if (onCalculate) {
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
-        } else if   (formData.componentType === 'thyristorsAndSCRS') {
+        } else if   (component.formData.componentType ===  '6.10 Thyristors and SCRS') {
             // 6.10 Thyristors and SCRS calculation
             const thyristorType = thyristorTypes.find(t => t.name === formData.thyristorType);
-            lambda_b = thyristorType.lambda_b;
+            lambda_b = thyristorType?.lambda_b;
             calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
 
             let pi_T = 1;
@@ -2087,10 +2087,10 @@ let pi_S = 1;
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
             // Add this case to your calculateFailureRate function
-        } else if   (formData.componentType === 'optoelectronics') {
+        } else if   (component.formData.componentType === '6.11 Optoelectronics (Detectors, Isolators, Emitters)' ) {
             // Optoelectronics calculation
             const optoType = optoelectronicTypes.find(t => t.name === formData.optoelectronicType);
-            const lambda_0 = optoType.lambda_0;
+            const lambda_0 = optoType?.lambda_0;
             calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_0 });
 
             // Temperature factor (using formula from image)
@@ -2128,7 +2128,7 @@ let pi_S = 1;
                 onCalculate(lambda_p, calculationDetails, formula); 
               }
        
-        } else if   (formData.componentType === 'alphanumericDisplays') {
+        } else if   (component.formData.componentType === 'alphanumericDisplays') {
          
       const C = parseInt(formData.characterCount);
     const hasLogicChip = formData.hasLogicChip === 'true';
@@ -2190,10 +2190,10 @@ let pi_S = 1;
     if (onCalculate) {
         onCalculate(lambda_p, calculationDetails, formula); 
     }
-        } else if  (formData.componentType === 'laserDiode') {
+        } else if  (component.formData.componentType === 'laserDiode') {
             // Laser Diode calculation
             const diodeType = laserDiodeTypes.find(d => d.name === formData.laserDiodeType);
-            lambda_b = diodeType.lambda_b;
+            lambda_b = diodeType?.lambda_b;
             calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
 
             // Temperature facto
@@ -3379,7 +3379,7 @@ if (formData.laserDiodePowerRatio) {
                                     >
                                         {siFETTypesHF.map(type => (
                                             <option key={type.name} value={type.name}>
-                                                {type.name} (λb = {type.lambda_b})
+                                                {type.name} (λb = {type?.lambda_b})
                                             </option>
                                         ))}
                                     </select>
@@ -3473,7 +3473,7 @@ if (formData.laserDiodePowerRatio) {
                                     >
                                         {thyristorTypes.map(type => (
                                             <option key={type.name} value={type.name}>
-                                                {type.name} (λb = {type.lambda_b})
+                                                {type.name} (λb = {type?.lambda_b})
                                             </option>
                                         ))}
                                     </select>
@@ -3637,7 +3637,7 @@ if (formData.laserDiodePowerRatio) {
                                     >
                                         {optoelectronicTypes.map(type => (
                                             <option key={type.name} value={type.name}>
-                                                {type.name} (λb = {type.lambda_0})
+                                                {type.name} (λb = {type?.lambda_0})
                                             </option>
                                         ))}
                                     </select>
@@ -4021,7 +4021,7 @@ if (formData.laserDiodePowerRatio) {
                                     >
                                         {laserDiodeTypes.map(type => (
                                             <option key={type.name} value={type.name}>
-                                                {type.name} (λb = {type.lambda_b})
+                                                {type.name} (λb = {type?.lambda_b})
                                             </option>
                                         ))}
                                     </select>
@@ -4123,7 +4123,7 @@ if (formData.laserDiodePowerRatio) {
 
             {components.length > 0 && (
                 <div className="total-failure-rate" style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f8f9fa' }}>
-                    <h4>Total System Failure Rate3: {totalSystemFailureRate.toFixed(6)} failures/10<sup>6</sup> hours</h4>
+                    <h4>Total System Failure Rate3: {totalSystemFailureRate?.toFixed(6)} failures/10<sup>6</sup> hours</h4>
                 </div>
             )}
         </div>
