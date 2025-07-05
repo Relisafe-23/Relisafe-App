@@ -3,14 +3,14 @@ import Select from "react-select";
 import {
   getEnvironmentFactor,
   BASE_FAILURE_RATE,
-} from './Calculation.js';
+} from '../Calculation.js';
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { Button, Container, Row, Col, Table, Collapse } from 'react-bootstrap';
 import Box from '@mui/material/Box';
 import { Alert, Paper, Typography, IconButton, Tooltip } from "@mui/material";
-import './Microcircuits.css'
+import '../Microcircuits.css'
 import MaterialTable from "material-table";
-import { tableIcons } from "../core/TableIcons.js";
+import { tableIcons } from "../../core/TableIcons.js";
 import { createTheme } from "@mui/material";
 import { ThemeProvider } from "@material-ui/core";
 

@@ -8,13 +8,14 @@ import {
   getQualityFactor,
   calculateGateArrayC1,
   calculateLearningFactor,
-} from './Calculation.js';
+} from '../Calculation.js';
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { Button, Row, Col } from 'react-bootstrap';
 import Box from '@mui/material/Box';
 import { Alert, Paper, Typography } from "@mui/material";
 import MaterialTable from "material-table";
-import './Microcircuits.css';
+import '../Microcircuits.css';
+import { tableIcons } from "../../core/TableIcons";
 
 const MicroGate = ({ onCalculate }) => {
   const [showCalculations, setShowCalculations] = useState(false);
@@ -33,7 +34,7 @@ const MicroGate = ({ onCalculate }) => {
     technology: '',
     applicationFactor: '',
     packageType: '',
-    pinCount: '',
+    pinCount: 3,
     yearsInProduction: '',
     piL: 1.0,
     calculatedPiT: null

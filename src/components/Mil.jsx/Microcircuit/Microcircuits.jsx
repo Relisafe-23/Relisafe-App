@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Select from "react-select";
 import {
   calculateMicrocircuitsAndMicroprocessorsFailureRate,
@@ -12,16 +12,16 @@ import {
   getEnvironmentalOptions,
   calculateLearningFactor,
   BASE_FAILURE_RATE
-} from './Calculation.js';
+} from '../Calculation.js';
 import { createTheme } from "@mui/material";
 import { Button, Container, Row, Col } from 'react-bootstrap';
 import { Alert } from "@mui/material";
-import Hybridgate from "./Hybridgate.jsx"
-import HybridVhsic from './HybridVhsic.jsx'
-import Hybridmemories from './Hybridmemories.jsx';
-import HybridMagnetic from './HybridMagnetic.jsx';
-import HybridGaAs from './HybridGaAs.jsx';
-import HybridSaw from './HybridSaw.jsx';
+import Hybridgate from "./MicrocircuitHybrid/Hybridgate.jsx"
+import HybridVhsic from './MicrocircuitHybrid/HybridVhsic.jsx'
+import Hybridmemories from './MicrocircuitHybrid/Hybridmemories.jsx';
+import HybridMagnetic from './MicrocircuitHybrid/HybridMagnetic.jsx';
+import HybridGaAs from './MicrocircuitHybrid/HybridGaAs.jsx';
+import HybridSaw from './MicrocircuitHybrid/HybridSaw.jsx';
 const Microcircuits = ({
   setSelectedComponent,
   onCalculate,
@@ -78,9 +78,18 @@ const Microcircuits = ({
     technology: '',
     temperature: ''
   });
+
+   const [failureRates, setFailureRates] = useState({
+    gate: null,
+    vhsic: null,
+    memories: null,
+    saw: null,
+    magnetic: null,
+    gaAs: null
+  });
  
   const [totalFailureRate, setTotalFaiureRate] = useState([]);
-  const [failureRates, setFailureRates] = useState([]);
+  
   
   let totalSysFailureRate = [];
   const dieComplexityRates = [
@@ -368,9 +377,16 @@ const Microcircuits = ({
     setComponents([...components, newComponent]);
   };
 
+  // const removeComponent = (id) => {
+  //   setComponents(components.filter(comp => comp.id !== id));
+  //   setFailureRates(id)
+   
+  //   // setFailureRates(prev => ({ ...prev, gate: rate }))
+  // };
   const removeComponent = (id) => {
-    setComponents(components.filter(comp => comp.id !== id));
-  };
+  setComponents(prev => prev.filter(comp => comp.id !== id));
+  setFailureRates(({ [id]: _, ...rest }) => rest);
+};
 
   const updateComponent = (id, updatedProps) => {
     setComponents(components.map(comp =>
@@ -584,7 +600,37 @@ const Microcircuits = ({
     return currentComponent.piQ; // Assuming this is already set in state
   };
 
-  const totalSystemFailureRate = failureRates.reduce((sum, item) => sum + item.rate, 0);
+   const totalSystemFailureRate = useMemo(() => {
+    return Object.values(failureRates).reduce((sum, rate) => {
+      return sum + (rate || 0);
+    }, 0);
+  }, [failureRates]);
+
+  const handleGateCalculation = (rate) => {
+ setFailureRates(prev => ({ ...prev, gate: rate }));
+};
+const handleVhsicCalculation = (rate) => {
+  console.log("@@@@@@rui")
+    setFailureRates(prev => ({ ...prev, vhsic: rate }));
+  };
+
+  const hybridMemCalculation = (rate) => {
+    setFailureRates(prev => ({ ...prev, memories: rate }));
+  };
+    const hybridSawCalculation = (rate) => {
+    setFailureRates(prev => ({ ...prev, saw: rate }));
+  };
+  
+      const hybridMagneticCalculation = (rate) => {
+    setFailureRates(prev => ({ ...prev, magnetic: rate }));
+  };
+  
+        const hybridGasCalculation = (rate) => {
+    setFailureRates(prev => ({ ...prev, gaAs: rate }));
+  };
+  
+
+  
 
   const renderComponent = (component) => {
 
@@ -625,25 +671,25 @@ const Microcircuits = ({
     <br/>
         <Row>
           {component.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
-           <Hybridgate/>
+            <Hybridgate onCalculate={handleGateCalculation}/>
           )}
           {component.type === "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS" && (
-        <HybridVhsic/>
+        <HybridVhsic onCalculate={handleVhsicCalculation}/>
           )}
           {component.type === "Microcircuits,Memories" && (
-          <Hybridmemories/>
-          )}
+          <Hybridmemories onCalculate={hybridMemCalculation}/>
+                    )}
 
           {component.type === "Microcircuits,Saw Devices" && (
-          <HybridSaw/>
+          <HybridSaw onCalculate={hybridSawCalculation}/>
           )}
 
           {component.type === "Microcircuit,Magnetic Bubble Memories" && (
-           <HybridMagnetic/>
+           <HybridMagnetic onCalculate={hybridMagneticCalculation}/>
            )}
 
         {component.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
-        <HybridGaAs/>
+        <HybridGaAs onCalculate={hybridGasCalculation}/>
         )}
         <br />
        </Row>
@@ -687,7 +733,7 @@ const Microcircuits = ({
       {components.length > 0 && (
         <div className="total-failure-rate" style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f8f9fa' }}>
           {/* <h4>Total System Failure Rate: {total} failures/10<sup>6</sup> hours</h4> */}
-           <h4>Total System Failure Rate: {totalSystemFailureRate?.toFixed(6)} failures/10<sup>6</sup> hours</h4>
+           <h4>Total System Failure Rate: {totalSystemFailureRate.toFixed(6)} failures/10<sup>6</sup> hours</h4>
          
         </div>
       )}

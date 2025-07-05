@@ -28,7 +28,7 @@ import {
   faCircleCheck,
   faCircleXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import MicrocircuitsCalculation from "../Mil.jsx/MicrocircuitsCalculation";
+
 import Switches from "../Mil.jsx/Switches";
 import { customStyles } from "../core/select";
 import { Link, useHistory } from "react-router-dom";
@@ -64,6 +64,7 @@ import Tube from "./PartTypes/Tube";
 import CapacitorCalculation from "../Mil.jsx/CapacitorCalculation.jsx";
 import InductiveCalculation from "../Mil.jsx/InductiveCalculation.jsx";
 import ConnectionCalculation from "../Mil.jsx/ConnectionCalculation.jsx";
+import MicrocircuitsCalculation from "../Mil.jsx/Microcircuit/MicrocircuitsCalculation";
 import Lamps from "../Mil.jsx/Lamps.jsx";
 import Quartz from "../Mil.jsx/Quartz.jsx";
 import ElectronicFilters from "../Mil.jsx/ElectronicFilters.jsx";
