@@ -19,17 +19,31 @@ const MicroVhsic = ({ onCalculate }) => {
   const [numberOfPins, setNumberOfPins] = useState(null);
    const [result, setResult] = useState(null);
  const [error, setError] = useState(null);
+ const [errors, setErrors] = useState({
+  partType: '',
+  esdSusceptibility: '',
+  packagePins: '',
+  environment: '',
+  quality: '',
+  packageType: '',
+  technology: '',
+  temperature: '',
+  featureSize: '',
+  dieArea: '',
+  packageHermeticity: '',
+  manufacturingProcess: ''
+});
   const [currentComponent, setCurrentComponent] = useState({
-    type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
-    temperature: 25,
-    devices: "bipolarData",
-    complexFailure: "digital",
+    type: '',
+    temperature: ' ',
+    devices: "",
+    complexFailure: " ",
     environment: '',
-    data: "microprocessorData",
-    quality: 'M',
-    quantity: 0,
+    data: "",
+    quality: '',
+    quantity:'',
     microprocessorData: "",
-    gateCount: 1000,
+    gateCount: '',
     technology: '',
     complexity: '',
     application: '',
@@ -38,21 +52,21 @@ const MicroVhsic = ({ onCalculate }) => {
     yearsInProduction: '',
     quality: '',
 
-    memoryTemperature: 45,   
-    techTemperatureB2: 25,
-    techTemperatureB1: 25,    
-    memorySizeB1: 1024,
-    memorySizeB2: 1024,
-    memoryTech: "Flotox",
-    technology: "Digital MOS",
-    B1: 0.79,
-    B2: 0,
-    calculatedPiT: 1.2,
+    memoryTemperature: '',   
+    techTemperatureB2: '',
+    techTemperatureB1: '',    
+    memorySizeB1: '',
+    memorySizeB2: '',
+    memoryTech: "",
+    technology: "",
+    B1: '',
+    B2: '',
+    calculatedPiT: '',
 
 
-    piL: 1.0,
+    piL: "",
     // piQ: 1.0,
-    basePiT: 0.1,
+    basePiT: "",
     calculatedPiT: null
   });
   const partTypes = [
@@ -116,6 +130,34 @@ const MicroVhsic = ({ onCalculate }) => {
     // Fall back to the formula if no match in table
     return (A / 0.21) * Math.pow(2 / Xs, 2) * 0.64 + 0.36;
   };
+  const validateForm = () => {
+  const newErrors = {
+    partType: !inputs.partType ? "Please select a part type" : '',
+    esdSusceptibility: !inputs.esdSusceptibility ? "Please select ESD susceptibility" : '',
+    packagePins: !numberOfPins || numberOfPins < 1 ? "Please enter valid number of pins (minimum 1)" : '',
+    environment: !currentComponent.environment ? "Please select environment" : '',
+    quality: !currentComponent.quality ? "Please select quality factor" : '',
+    packageType: !inputs.packageType ? "Please select package type" : '',
+    technology: !currentComponent.technology ? "Please select technology type" : '',
+    temperature: !currentComponent.temperature || isNaN(currentComponent.temperature) ? 
+                "Please enter valid junction temperature" : 
+                (currentComponent.temperature < -40 || currentComponent.temperature > 175) ?
+                "Temperature must be between -40°C and 175°C" : '',
+    featureSize: !inputs.featureSize || isNaN(inputs.featureSize) || inputs.featureSize <= 0 ?
+                "Please enter valid feature size (greater than 0)" : '',
+    dieArea: !inputs.dieArea || isNaN(inputs.dieArea) || inputs.dieArea <= 0 ?
+             "Please enter valid die area (greater than 0)" : 
+             (inputs.dieArea < 0.4 || inputs.dieArea > 3.0) ?
+             "Die area must be between 0.4 cm² and 3.0 cm²" : '',
+    packageHermeticity: !inputs.packageHermeticity ? "Please select package hermeticity" : '',
+    manufacturingProcess: !inputs.manufacturingProcess ? "Please select manufacturing process" : ''
+  };
+
+  setErrors(newErrors);
+  
+  // Check if any errors exist
+  return !Object.values(newErrors).some(error => error !== '');
+};
   
   const packageRates = [
     {
@@ -353,7 +395,7 @@ const MicroVhsic = ({ onCalculate }) => {
     memoryType: dieComplexityRates[0],
     memorySize: dieComplexityRates[0].rates[0],
     technology: 'MOS', 
-    packageType: packageRates[0],
+    packageType: '',
     pinCount: 3,
     eepromType: 'Flotox', 
     programmingCycles: a1Factors[0],
@@ -363,17 +405,23 @@ const MicroVhsic = ({ onCalculate }) => {
     // environment: getEnvironmentalOptions('AIA'),
     systemLifeHours: 10000,
     junctionTemp: 35,
-    partType: 'Logic',
-    manufacturingProcess: 'QML',
-    packageType: 'DIP',
-    packageHermeticity: 'Hermetic',
-    featureSize: 1.0,
-    dieArea: 0.5,
+    partType: '',
+    manufacturingProcess: '',
+    packageType: '',
+    packageHermeticity: '',
+    featureSize: "",
+    dieArea: '',
     pinCount: 24,
-    esdSusceptibility: '0-1000'
+    esdSusceptibility: ''
   });
 
     const calculateVhsicFailureRate = () => {
+        setError(null);
+  
+  if (!validateForm()) {
+    setError("");
+    return;
+  }
       try {
         // Calculate each component
         const λBD = getDieBaseRate();
@@ -386,7 +434,6 @@ const MicroVhsic = ({ onCalculate }) => {
         const λEOS = calculateLambdaBP();
         const πE = currentComponent.piE;
         // const πE = getEnvironmentFactor()?.toFixed(2)
-   console.log("piE", πE)
      
         const πT = calculatePiT(currentComponent.technology, currentComponent.temperature);
         const πQ = qualityFactor();
@@ -485,9 +532,12 @@ const MicroVhsic = ({ onCalculate }) => {
                           ...prev,
                           partType: selectedOption.value
                         }));
+                      setErrors(prev => ({ ...prev, partType: '' }));
                       }}
                       options={partTypes}
                     />
+                        {errors.partType && <div className="text-danger small mt-1">{errors.partType}</div>}
+
                   </div>
                 </Col>
                 <Col md={4}>
@@ -501,9 +551,11 @@ const MicroVhsic = ({ onCalculate }) => {
                           ...prev,
                           esdSusceptibility: selectedOption.value
                         }));
+                           setErrors(prev => ({ ...prev, esdSusceptibility: '' }));
                       }}
                       options={esdLevels}
                     />
+                        {errors.esdSusceptibility && <div className="text-danger small mt-1">{errors.esdSusceptibility}</div>}
                   </div>
                 </Col>
                 <Col md={4}>
@@ -514,9 +566,13 @@ const MicroVhsic = ({ onCalculate }) => {
                       min="0"
                       step="1"
                       value={numberOfPins}
-                      onChange={(e) => setNumberOfPins(parseInt(e.target.value) || 0)}
+                        onChange={(e) => {
+        setNumberOfPins(parseInt(e.target.value) || 0);
+        setErrors(prev => ({ ...prev, packagePins: '' }));
+      }}
                       className="form-control"
                     />
+                        {errors.packagePins && <div className="text-danger small mt-1">{errors.packagePins}</div>}
                   </div>
                 </Col>
             <Col md={4}>
@@ -531,6 +587,7 @@ const MicroVhsic = ({ onCalculate }) => {
                         environment: selectedOption.value,
                         piE: selectedOption.piE
                       }));
+                              setErrors(prev => ({ ...prev, environment: '' }));
                     }}
                     options={[
                       { value: "GB", label: "GB - Ground Benign (πE = 0.50)", piE: 0.50 },
@@ -549,6 +606,7 @@ const MicroVhsic = ({ onCalculate }) => {
                       { value: "CL", label: "CL - Cannon Launch (πE = 220)", piE: 220 }
                     ]}
                   />
+                      {errors.environment && <div className="text-danger small mt-1">{errors.environment}</div>}
                 </div>
               </Col>
                 <Col md={4}>
@@ -565,6 +623,7 @@ const MicroVhsic = ({ onCalculate }) => {
                           quality: selectedOption.value,
                           piQ: selectedOption.piQ
                         });
+                           setErrors(prev => ({ ...prev, quality: '' }));
                       }}
                       options={[
                         // Class S Categories (πQ = 0.25)
@@ -616,6 +675,7 @@ const MicroVhsic = ({ onCalculate }) => {
                         }
                       ]}
                     />
+                        {errors.quality && <div className="text-danger small mt-1">{errors.quality}</div>}
                   </div>
                 </Col>
   
@@ -630,9 +690,11 @@ const MicroVhsic = ({ onCalculate }) => {
                             ...prev,
                             packageType: selectedOption.value
                           }));
+                        setErrors(prev => ({ ...prev, packageType: '' }));
                         }}
                         options={packageTypes}
                       />
+                          {errors.packageType && <div className="text-danger small mt-1">{errors.packageType}</div>}
                     </div>
                   </Col>
                   <Col md={4}>
@@ -654,6 +716,7 @@ const MicroVhsic = ({ onCalculate }) => {
                               selectedOption.Ea // Pass the correct Ea for the technology
                             )
                           });
+                                  setErrors(prev => ({ ...prev, technology: '' }));
                         }}
                         options={[
                           {
@@ -712,6 +775,7 @@ const MicroVhsic = ({ onCalculate }) => {
                           }
                         ]}
                       />
+                          {errors.technology && <div className="text-danger small mt-1">{errors.technology}</div>}
                     </div>
                   </Col>
                   <Col md={4}>
@@ -734,8 +798,12 @@ const MicroVhsic = ({ onCalculate }) => {
                         min="-40"
                         max="175"
                         value={currentComponent.temperature}
-                        onChange={handleInputChange}
+                        onChange={(e) => {
+        handleInputChange(e);
+        setErrors(prev => ({ ...prev, temperature: '' }));
+      }}
                       />
+                        {errors.temperature && <div className="text-danger small mt-1">{errors.temperature}</div>}
                     </div>
                   </Col>
 
@@ -752,9 +820,12 @@ const MicroVhsic = ({ onCalculate }) => {
                             ...prev,
                             featureSize: parseFloat(e.target.value)
                           }));
+                                  setErrors(prev => ({ ...prev, featureSize: '' }));
+
                         }}
                         className="form-control"
                       />
+                          {errors.featureSize && <div className="text-danger small mt-1">{errors.featureSize}</div>}
                     </div>
                   </Col>
                   <Col md={4}>
@@ -770,6 +841,7 @@ const MicroVhsic = ({ onCalculate }) => {
                             ...prev,
                             dieArea: parseFloat(e.target.value)
                           }));
+                          setErrors(prev => ({ ...prev, dieArea: '' }));
                         }}
                         className={`form-control ${inputs.dieArea && (inputs.dieArea < 0.4 || inputs.dieArea > 3.0)}`}
                       />
@@ -794,12 +866,14 @@ const MicroVhsic = ({ onCalculate }) => {
                             ...prev,
                             packageHermeticity: selectedOption.value
                           }));
+                          setErrors(prev => ({ ...prev, packageHermeticity: '' }));
                         }}
                         options={[
                           { value: 'Hermetic', label: 'Hermetic' },
                           { value: 'Nonhermetic', label: 'Nonhermetic' }
                         ]}
                       />
+                      {errors.packageHermeticity && <div className="text-danger small mt-1">{errors.packageHermeticity}</div>}  
                     </div>
                   </Col>
                   <Col md={4}>
@@ -818,6 +892,7 @@ const MicroVhsic = ({ onCalculate }) => {
                             ...prev,
                             manufacturingProcess: selectedOption.value
                           }));
+                          setErrors(prev => ({ ...prev, manufacturingProcess: '' }));
                         }}
                         options={[
                           { value: 'QML', label: 'QML' },
@@ -826,6 +901,7 @@ const MicroVhsic = ({ onCalculate }) => {
                           { value: 'Non-QPL', label: 'Non-QPL' }
                         ]}
                       />
+                      {errors.manufacturingProcess && <div className="text-danger small mt-1">{errors.manufacturingProcess}</div>}
                     </div>
                   </Col>
             

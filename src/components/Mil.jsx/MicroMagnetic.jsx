@@ -36,6 +36,18 @@ const MicroMagnetic= ({ onCalculate }) => {
      const [showCalculations, setShowCalculations] = useState(false); 
       const [result, setResult] = useState(null);
       const [error, setError] = useState(null);
+      const [errors, setErrors] = useState({
+  environment: '',
+  learningFactor: '',
+  bubbleChips: '',
+  dissipativeElements: '',
+  numberOfBits: '',
+  packageType: '',
+  pinCount: '',
+  quality: '',
+  temperature: '',
+  writeDutyCycle: ''
+});
       const [currentComponent, setCurrentComponent] = useState({
         type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
         temperature: 25,
@@ -84,7 +96,38 @@ const MicroMagnetic= ({ onCalculate }) => {
   };  
 
   
-  
+  const validateForm = () => {
+  const newErrors = {
+    environment: !currentComponent.environment ? "Please select environment factor" : '',
+    learningFactor: !currentComponent.piL ? "Please select learning factor" : '',
+    bubbleChips: !currentComponent.bubbleChips || isNaN(currentComponent.bubbleChips) 
+      ? "Please enter valid number of bubble chips" 
+      : '',
+    dissipativeElements: !currentComponent.dissipativeElements || isNaN(currentComponent.dissipativeElements)
+      ? "Please enter valid number of dissipative elements (1-1000)"
+      : '',
+    numberOfBits: !currentComponent.numberOfBits || isNaN(currentComponent.numberOfBits)
+      ? "Please enter valid number of bits (1-9,000,000)"
+      : '',
+    packageType: !currentComponent.packageType ? "Please select package type" : '',
+    pinCount: !currentComponent.pinCount || isNaN(currentComponent.pinCount)
+      ? "Please enter valid pin count (3-224)"
+      : '',
+    quality: !currentComponent.piQ ? "Please select quality factor" : '',
+    temperature: !currentComponent.temperature || isNaN(currentComponent.temperature)
+      ? "Please enter valid case temperature (25-175°C)"
+      : '',
+    writeDutyCycle: currentComponent.writeDutyCycle === undefined || 
+                   isNaN(currentComponent.writeDutyCycle) || 
+                   currentComponent.writeDutyCycle < 0 || 
+                   currentComponent.writeDutyCycle > 1
+      ? "Duty cycle must be between 0 and 1"
+      : ''
+  };
+
+  setErrors(newErrors);
+  return !Object.values(newErrors).some(error => error !== '');
+};
     const calculateBubbleMemoryFailureRate = () => {
       // Validate required inputs
     //   if (!currentComponent.bubbleChips || !currentComponent.dissipativeElements ||
@@ -94,6 +137,11 @@ const MicroMagnetic= ({ onCalculate }) => {
     //     setError("Please fill all required fields");
     //     return;
     //   }
+      
+  if (!validateForm()) {
+    setError("");
+    return;
+  }
   
       try {
         // Calculate complexity factors
@@ -241,6 +289,7 @@ const MicroMagnetic= ({ onCalculate }) => {
                         environment: selectedOption.value,
                         piE: selectedOption.piE
                       }));
+                        setErrors(prev => ({ ...prev, environment: '' }));
                     }}
                     options={[
                       { value: "GB", label: "GB - Ground Benign (πE = 0.50)", piE: 0.50 },
@@ -259,6 +308,7 @@ const MicroMagnetic= ({ onCalculate }) => {
                       { value: "CL", label: "CL - Cannon Launch (πE = 220)", piE: 220 }
                     ]}
                   />
+                  {errors.environment && <div className="text-danger small mt-1">{errors.environment}</div>}
                 </div>
               </Col>
               <Col md={4}>
@@ -283,6 +333,7 @@ const MicroMagnetic= ({ onCalculate }) => {
                       { value: 2.0, label: "≥ 2.0 years (πL = 1.0)", piL: 1.0 }
                     ]}
                   />
+                  {errors.learningFactor && <div className="text-danger small mt-1">{errors.learningFactor}</div>}
                 </div>
               </Col>
   
@@ -295,8 +346,16 @@ const MicroMagnetic= ({ onCalculate }) => {
                     name="bubbleChips"
                     min="1"
                     value={currentComponent.bubbleChips || ''}
-                    onChange={handleInputChange}
+                   onChange={(e) => {
+                    
+  setCurrentComponent(prev => ({
+    ...prev,
+    bubbleChips: parseFloat(e.target.value)
+  }));
+  setErrors(prev => ({ ...prev, bubbleChips: '' })); // Clear error
+}}
                   />
+                  {errors.bubbleChips && <div className="text-danger small mt-1">{errors.bubbleChips}</div>}
                 </div>
               </Col>
 
@@ -310,8 +369,18 @@ const MicroMagnetic= ({ onCalculate }) => {
                     min="1"
                     max="1000"
                     value={currentComponent.dissipativeElements || ''}
-                    onChange={handleInputChange}
+                    // onChange={handleInputChange}
+                                       onChange={(e) => {
+                    
+  setCurrentComponent(prev => ({
+    ...prev,
+    dissipativeElements: parseFloat(e.target.value)
+  }));
+  setErrors(prev => ({ ...prev, dissipativeElements: '' })); // Clear error
+}}
+
                   />
+                  {errors.dissipativeElements && <div className="text-danger small mt-1">{errors.dissipativeElements}</div>}
                 </div>
               </Col>
 
@@ -325,8 +394,17 @@ const MicroMagnetic= ({ onCalculate }) => {
                     min="1"
                     max="9000000"
                     value={currentComponent.numberOfBits || ''}
-                    onChange={handleInputChange}
+                    // onChange={handleInputChange}
+                                       onChange={(e) => {
+                    
+  setCurrentComponent(prev => ({
+    ...prev,
+    numberOfBits: parseFloat(e.target.value)
+  }));
+  setErrors(prev => ({ ...prev, numberOfBits: '' })); // Clear error
+}}
                   />
+                  {errors.numberOfBits && <div className="text-danger small mt-1">{errors.numberOfBits}</div>}
                 </div>
               </Col>
         
@@ -344,6 +422,7 @@ const MicroMagnetic= ({ onCalculate }) => {
                         packageType: selectedOption.value,
                         c2: selectedOption.c2
                       }));
+                        setErrors(prev => ({ ...prev, packageType: '' })); 
                     }}
                     options={[
                       { value: "Hermetic_DIPs_SolderWeldSeal", label: "Hermetic: DIPs w/Solder or Weld Seal", c2: 0.00092 },
@@ -353,6 +432,7 @@ const MicroMagnetic= ({ onCalculate }) => {
                       { value: "Nonhermetic_DIPs", label: "Nonhermetic: DIPs", c2: 0.0012 }
                     ]}
                   />
+                  {errors.packageType && <div className="text-danger small mt-1">{errors.packageType}</div>}
                 </div>
               </Col>
               <Col md={4}>
@@ -375,11 +455,20 @@ const MicroMagnetic= ({ onCalculate }) => {
                     min="3"
                     max="224"
                     value={currentComponent.pinCount || ''}
-                    onChange={(e) => setCurrentComponent({
-                      ...currentComponent,
-                      pinCount: parseInt(e.target.value)
-                    })}
+                    // onChange={(e) => setCurrentComponent({
+                    //   ...currentComponent,
+                    //   pinCount: parseInt(e.target.value)
+                    // })}
+               onChange={(e) => {
+            setCurrentComponent(prev => ({
+                  ...prev,
+    pinCount: parseFloat(e.target.value)
+  }));
+  setErrors(prev => ({ ...prev, pinCount: '' })); 
+}}
                   />
+                  {errors.pinCount && <div className="text-danger small mt-1">{errors.pinCount}</div>}
+
                 </div>
               </Col>
               <Col md={4}>
@@ -413,6 +502,8 @@ const MicroMagnetic= ({ onCalculate }) => {
                         quality: selectedOption.value,
                         piQ: selectedOption.piQ
                       }));
+                    setErrors(prev => ({ ...prev, quality: '' })); 
+
                     }}
                     options={[
                       // Class S Categories (πQ = 0.25)
@@ -464,6 +555,8 @@ const MicroMagnetic= ({ onCalculate }) => {
                       }
                     ]}
                   />
+                  {errors.quality && <div className="text-danger small mt-1">{errors.quality}</div>}
+
                 </div>
               </Col>
 
@@ -496,6 +589,8 @@ const MicroMagnetic= ({ onCalculate }) => {
                     value={currentComponent.tcase ? Number(currentComponent.tcase) + 10 : ''}
                     readOnly
                   />
+                  {errors.temperature && <div className="text-danger small mt-1">{errors.temperature}</div>}
+
                   <small className="form-text text-muted">
                     T<sub>J</sub> = T<sub>CASE</sub> + 10°C (automatically calculated)
                   </small>
@@ -526,8 +621,16 @@ const MicroMagnetic= ({ onCalculate }) => {
                     max="1"
                     step="0.01"
                     value={currentComponent.writeDutyCycle || ''}
-                    onChange={handleInputChange}
+                    // onChange={handleInputChange}
+                                  onChange={(e) => {
+            setCurrentComponent(prev => ({
+                  ...prev,
+  writeDutyCycle: parseFloat(e.target.value)
+  }));
+  setErrors(prev => ({ ...prev, writeDutyCycle: '' })); 
+}}
                   />
+                  {errors.writeDutyCycle && <div className="text-danger small mt-1">{errors.writeDutyCycle}</div>}
                   <small className="form-text text-muted">
                     D = Avg. Device Data Rate / Mfg. Max. Rated Data Rate (≤ 1)
                   </small>
