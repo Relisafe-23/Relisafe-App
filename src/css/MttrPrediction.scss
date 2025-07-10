@@ -10,7 +10,35 @@
   border: none;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
+/* Custom modal styling */
+.fixed-width-modal {
+  max-width: 1200px;
+  width: 90%;
+}
 
+.modal-content-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.modal-content {
+  width: 100%;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+@media (max-width: 1200px) {
+  .fixed-width-modal {
+    width: 95%;
+  }
+}
+
+@media (max-width: 768px) {
+  .fixed-width-modal {
+    width: 98%;
+  }
+}
 /* Modal Header/Close Button */
 .close-icon {
   position: absolute;

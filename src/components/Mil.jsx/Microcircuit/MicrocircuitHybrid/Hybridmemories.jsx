@@ -406,8 +406,7 @@ const qualityFactor =()=>{
 
       // Calculate final failure rate
       const failureRate = (c1 * piT + c2 * piE + lambdaCyc) * πQ * piL;
-      //  console.log("Failure Rate:", failureRate);
-      // Call onCalculate with the failure rate
+   
 
 
       setResult({

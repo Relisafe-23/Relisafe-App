@@ -494,10 +494,10 @@ const packageRates = [
             </div>
           </Col>
           {currentComponent.type === "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS" && (
-           <MicroVhsic/>
+           <MicroVhsic  onCalculate={onCalculate}/>
           )}
           {currentComponent.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
-          <MicroGate/>
+          <MicroGate onCalculate={onCalculate}/>
           )}
           {currentComponent.type === "Microcircuits,Hybrids" && (
             <>
@@ -608,7 +608,7 @@ const packageRates = [
 
               {selectedComponent?.some(option => option.value === "DiscreteSemiconductor") && (
                 <>
-                  <MicroDiode  />
+                  <MicroDiode/>
 
                 </>
               )}
@@ -1003,22 +1003,22 @@ const packageRates = [
           )}
 
           {currentComponent.type === "Microcircuits,Saw Devices" && (
-         <MicroSawDevice/>
+         <MicroSawDevice  onCalculate={onCalculate}/>
           )}
 
           {currentComponent.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
            
-           <MicroGaAs/>)}
+           <MicroGaAs onCalculate={onCalculate}/>)}
          
         </Row>
   
         {currentComponent.type === "Microcircuits,Memories" && (
-        <MicroMemories/>
+        <MicroMemories onCalculate={onCalculate}/>
         )}
       
         <br />
         {currentComponent.type === "Microcircuit,Magnetic Bubble Memories" && (
-        <MicroMagnetic/>
+        <MicroMagnetic onCalculate={onCalculate}/>
 
         )}
       </div>
