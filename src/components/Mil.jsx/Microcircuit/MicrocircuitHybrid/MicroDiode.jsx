@@ -733,7 +733,6 @@ const MicroDiode = ({ onCalculate, handleInitialRate }) => {
         setFailureRate(newRate);
         // console.log("newRate7..",newRate)
     };
-
     const getBaseFailureRate = (count, displayType, withLogic = false) => {
         const rates = {
             1: {
@@ -1310,12 +1309,10 @@ calculationDetails.push({
         description: tempDescription
     });
 
-
             // Application factor
             const appFactor = transistorAppFactors.find(a => a.name === formData.transistorAppFactor);
             pi_A = appFactor ? appFactor.pi_A : 1;
             calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
-
 
  let pi_R = 1;
     let powerRatingDescription1 = '';
@@ -4105,7 +4102,7 @@ if (formData.laserDiodePowerRatio) {
                 <Button
                     variant="danger"
                     onClick={() => removeComponent(component.id)}
-                    style={{ marginTop: '10px', backgroundColor: "red" }}
+                    style={{ marginTop: '10px', backgroundColor: "blue" }}
                 >
                     Remove Component
                 </Button>

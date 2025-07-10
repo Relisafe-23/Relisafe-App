@@ -2434,12 +2434,13 @@ function Index(props) {
                                       }}
                                     </Formik>
                                   </Modal>
+                                  <div className="Mil">
                                   <Modal
                                     show={showModal}
                                     onHide={setShowModal}
                                     centered
                                     size="xl" // Bootstrap extra-large size
-                                    dialogClassName="custom-modal-width" // Custom class for additional width control
+                                    dialogClassName="custom-modal-width" 
                                     backdrop="static" // Prevent closing by clicking outside
                                   >
                                     <Modal.Body className="p-0">
@@ -2985,6 +2986,7 @@ function Index(props) {
                                       </div>
                                     </Modal.Body>
                                   </Modal>
+                                  </div>
                                 </div>
                               </div>
                             </Col>

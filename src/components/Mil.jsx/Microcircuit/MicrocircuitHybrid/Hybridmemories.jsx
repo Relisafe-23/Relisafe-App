@@ -28,7 +28,7 @@ const Hybridmemories= ({ onCalculate }) => {
   const [mode, setMode] = useState('A1');
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
-    const [quantity, setQuantity]=useState(null)
+    const [quantity, setQuantity]= useState(1)
   const [selectedECC, setSelectedECC] = React.useState(null);
   const [currentComponent, setCurrentComponent] = useState({
     type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',

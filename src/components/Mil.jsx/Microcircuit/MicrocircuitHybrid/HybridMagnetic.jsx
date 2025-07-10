@@ -15,7 +15,7 @@ const HybridMagnetic = ({ onCalculate }) => {
   const [showCalculations, setShowCalculations] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-  const [quantity, setQuantity] = useState(null)
+  const [quantity, setQuantity] = useState(1)
   const [currentComponent, setCurrentComponent] = useState({
     // type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
     temperature: 25,
@@ -487,6 +487,7 @@ const HybridMagnetic = ({ onCalculate }) => {
           <div className="Predicted-FailureRate">
             <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
             <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
+              <br/>
             <strong>λ<sub>c</sub> * N<sub>c</sub>:</strong>
             <span className="ms-2">{result?.value * quantity} failures/10<sup>6</sup> hours</span>
 
