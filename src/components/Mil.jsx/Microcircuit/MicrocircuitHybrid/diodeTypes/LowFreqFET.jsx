@@ -43,71 +43,60 @@ const LowFreqFET = ({ formData, onInputChange, onCalculate, qualityFactors, envi
   ];
 
   const calculateFailureRate = () => {
-    try {
-      // Validate inputs
-      if (!formData.siFETType) throw new Error('Please select a transistor type');
-      
-      const calculationDetails = [];
-      
-      // Base failure rate
-      const fetType = siFETTypes.find(t => t.name === formData.siFETType);
-      if (!fetType) throw new Error('Invalid transistor type selected');
-      
-      const lambda_b = fetType.lambda_b;
-      calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+    const calculationDetails = [];
+    
+    // Base failure rate
+    const fetType = siFETTypes.find(t => t.name === formData.siFETType);
+    const lambda_b = fetType ? fetType.lambda_b : 0;
+    calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
 
-      // Temperature factor
-      let pi_T = 1.0;
-      let tempDescription = '';
-      
-      if (formData.junctionTemp) {
-        const tempFactor = siFETTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
-        pi_T = tempFactor.pi_T;
-        tempDescription = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
-      } else if (formData.junctionTempInput) {
-        const Tj = parseFloat(formData.junctionTempInput);
-        pi_T = Math.exp(-1925 * ((1/(Tj + 273)) - (1/298)));
-        tempDescription = `Calculated: πT = exp(-1925 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
-      }
-      
-      calculationDetails.push({ 
-        name: 'Temperature Factor (πT)', 
-        value: pi_T.toFixed(4),
-        description: tempDescription
-      });
+    // Temperature factor
+    let pi_T = 1.0;
+    let tempDescription = '';
+    
+    if (formData.junctionTemp) {
+      const tempFactor = siFETTempFactors.find(t => t.temp === parseInt(formData.junctionTemp));
+      pi_T = tempFactor ? tempFactor.pi_T : 1.0;
+      tempDescription = `From table: ${formData.junctionTemp}°C → πT = ${pi_T}`;
+    } else if (formData.junctionTempInput) {
+      const Tj = parseFloat(formData.junctionTempInput);
+      pi_T = Math.exp(-1925 * ((1/(Tj + 273)) - (1/298)));
+      tempDescription = `Calculated: πT = exp(-1925 * (1/(${Tj}+273) - 1/298) = ${pi_T.toFixed(4)}`;
+    }
+    
+    calculationDetails.push({ 
+      name: 'Temperature Factor (πT)', 
+      value: pi_T.toFixed(4),
+      description: tempDescription
+    });
 
-      // Application factor
-      const appFactor = siFETAppFactors.find(a => a.name === formData.siFETAppFactor);
-      const pi_A = appFactor ? appFactor.pi_A : 1;
-      calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
+    // Application factor
+    const appFactor = siFETAppFactors.find(a => a.name === formData.siFETAppFactor);
+    const pi_A = appFactor ? appFactor.pi_A : 1;
+    calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
 
-      // Quality factor
-      const qualityFactor = siFETQualityFactors.find(q => q.name === formData.quality);
-      const pi_Q = qualityFactor ? qualityFactor.pi_Q : 1;
-      calculationDetails.push({ name: 'Quality Factor (πQ)', value: pi_Q });
+    // Quality factor
+    const qualityFactor = siFETQualityFactors.find(q => q.name === formData.quality);
+    const pi_Q = qualityFactor ? qualityFactor.pi_Q : 1;
+    calculationDetails.push({ name: 'Quality Factor (πQ)', value: pi_Q });
 
-      // Environment factor
-      const envFactor = environmentFactors.find(e => e.code === formData.environment);
-      const pi_E = envFactor ? envFactor.pi_E : 1;
-      calculationDetails.push({ name: 'Environment Factor (πE)', value: pi_E });
+    // Environment factor
+    const envFactor = environmentFactors.find(e => e.code === formData.environment);
+    const pi_E = envFactor ? envFactor.pi_E : 1;
+    calculationDetails.push({ name: 'Environment Factor (πE)', value: pi_E });
 
-      // Final calculation
-      const lambda_p = lambda_b * pi_T * pi_A * pi_Q * pi_E;
-      const formula = 'λp = λb × πT × πA × πQ × πE';
+    // Final calculation
+    const lambda_p = lambda_b * pi_T * pi_A * pi_Q * pi_E;
+    const formula = 'λp = λb × πT × πA × πQ × πE';
 
-      setResults({
-        failureRate: lambda_p,
-        details: calculationDetails,
-        formula
-      });
+    setResults({
+      failureRate: lambda_p,
+      details: calculationDetails,
+      formula
+    });
 
-      if (onCalculate) {
-        onCalculate(lambda_p, calculationDetails, formula);
-      }
-
-    } catch (error) {
-      console.error("Calculation error:", error);
-      alert(error.message);
+    if (onCalculate) {
+      onCalculate(lambda_p, calculationDetails, formula);
     }
   };
 
@@ -228,7 +217,6 @@ const LowFreqFET = ({ formData, onInputChange, onCalculate, qualityFactors, envi
           <p>
             <strong>Failure Rate (λp):</strong> {results.failureRate.toFixed(6)} failures/10<sup>6</sup> hours
           </p>
-        
         </div>
       )}
     </>

@@ -4,7 +4,6 @@ import { Row, Col, Button } from 'react-bootstrap';
 const HighFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFactors, environmentFactors }) => {
   const [results, setResults] = useState(null);
   
-  // High Frequency Diode types
   const highFreqDiodeTypes = [
     { name: 'SI IMPATT (≤ 35 GHz)', lambda_b: 0.22 },
     { name: 'Gunn/Bulk Effect', lambda_b: 0.18 },
@@ -14,14 +13,12 @@ const HighFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFacto
     { name: 'Varactor (200 MHz ≤ Frequency ≤ 35 GHz)', lambda_b: 0.0025 },
   ];
 
-  // Application factors
   const highFreqAppFactors = [
     { name: 'Varactor, Voltage Control', pi_A: 0.5 },
     { name: 'Varactor, Multiplier', pi_A: 2.5 },
     { name: 'All Other Diodes', pi_A: 1.0 }
   ];
 
-  // Quality factors
   const highFreqQualityFactors2 = [
     { name: 'JANTXV', pi_Q: 0.50 },
     { name: 'JANTX', pi_Q: 1.0 },
@@ -37,7 +34,6 @@ const HighFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFacto
     { name: 'Plastic', pi_Q: 50 }
   ];
 
-  // Power factors
   const highFreqPowerFactors = [
     { power: '≤ 0.1 W', pi_R: 0.5 },
     { power: '0.1 W < P ≤ 1 W', pi_R: 1.0 },
@@ -55,88 +51,66 @@ const HighFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFacto
   };
 
   const calculateFailureRate = () => {
-    try {
-      // Validate inputs
-      if (!formData.highFreqDiodeType) throw new Error('Please select a diode type');
-      if (!formData.junctionTemp) throw new Error('Please enter junction temperature');
-      
-      const calculationDetails = [];
-      const diodeType = highFreqDiodeTypes.find(d => d.name === formData.highFreqDiodeType);
-      if (!diodeType) throw new Error('Invalid diode type selected');
+    const calculationDetails = [];
+    const diodeType = highFreqDiodeTypes.find(d => d.name === formData.highFreqDiodeType);
 
-      // Base failure rate
-      let lambda_b = diodeType.lambda_b;
-      calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+    // Base failure rate
+    let lambda_b = diodeType ? diodeType.lambda_b : 0;
+    calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
 
-      // Temperature factor
-      const pi_T = calculatePiT(formData.highFreqDiodeType, formData.junctionTemp);
-      calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T.toFixed(4) });
+    // Temperature factor
+    const pi_T = formData.junctionTemp ? calculatePiT(formData.highFreqDiodeType, formData.junctionTemp) : 1;
+    calculationDetails.push({ name: 'Temperature Factor (πT)', value: pi_T.toFixed(4) });
 
-      // Application factor
-      const appFactor = highFreqAppFactors.find(a => a.name === formData.highFreqAppFactor);
-      const pi_A = appFactor ? appFactor.pi_A : 1;
-      calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
+    // Application factor
+    const appFactor = highFreqAppFactors.find(a => a.name === formData.highFreqAppFactor);
+    const pi_A = appFactor ? appFactor.pi_A : 1;
+    calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
 
-      // Power rating factor
-      let pi_R = 1;
-      let powerRatingDescription = '';
-      
-      if (formData.highFreqPowerFactor) {
-        const powerFactor = highFreqPowerFactors.find(p => p.power === formData.highFreqPowerFactor);
-        pi_R = powerFactor ? powerFactor.pi_R : 1;
-        powerRatingDescription = `Selected: ${formData.highFreqPowerFactor}`;
-      } else if (formData.powerInput) {
-        const Pr = parseFloat(formData.powerInput) || 1;
-        pi_R = 0.326 * Math.log(Pr) - 0.25;
-        powerRatingDescription = `Calculated from input power (${Pr} W)`;
-      }
-      
-      // Special case for PIN diodes
-      if (formData.highFreqDiodeType === 'PIN' && formData.highFreqAppFactor === 'All Other Diodes') {
-        pi_R = 1.5;
-        powerRatingDescription = 'Special case for PIN diodes';
-      }
-      
-      calculationDetails.push({ 
-        name: 'Power Rating Factor (πR)', 
-        value: pi_R.toFixed(4),
-        description: powerRatingDescription 
-      });
+    // Power rating factor
+    let pi_R = 1;
+    if (formData.highFreqPowerFactor) {
+      const powerFactor = highFreqPowerFactors.find(p => p.power === formData.highFreqPowerFactor);
+      pi_R = powerFactor ? powerFactor.pi_R : 1;
+    } else if (formData.powerInput) {
+      const Pr = parseFloat(formData.powerInput) || 1;
+      pi_R = 0.326 * Math.log(Pr) - 0.25;
+    }
+    
+    // Special case for PIN diodes
+    if (formData.highFreqDiodeType === 'PIN' && formData.highFreqAppFactor === 'All Other Diodes') {
+      pi_R = 1.5;
+    }
+    
+    calculationDetails.push({ name: 'Power Rating Factor (πR)', value: pi_R.toFixed(4) });
 
-      // Quality factor
-      let qualityFactor;
-      if (formData.highFreqDiodeType === 'Schottky Barrier (including Detectors) and Point Contact') {
-        qualityFactor = highFreqQualityFactors2.find(q => q.name === formData.quality);
-      } else {
-        qualityFactor = highFreqQualityFactors1.find(q => q.name === formData.quality);
-      }
-      const pi_Q = qualityFactor ? qualityFactor.pi_Q : 1;
-      calculationDetails.push({ name: 'Quality Factor (πQ)', value: pi_Q });
+    // Quality factor
+    let qualityFactor;
+    if (formData.highFreqDiodeType === 'Schottky Barrier (including Detectors) and Point Contact') {
+      qualityFactor = highFreqQualityFactors2.find(q => q.name === formData.quality);
+    } else {
+      qualityFactor = highFreqQualityFactors1.find(q => q.name === formData.quality);
+    }
+    const pi_Q = qualityFactor ? qualityFactor.pi_Q : 1;
+    calculationDetails.push({ name: 'Quality Factor (πQ)', value: pi_Q });
 
-      // Environment factor
-      const envFactor = environmentFactors.find(e => e.code === formData.environment);
-      const pi_E = envFactor ? envFactor.pi_E : 1;
-      calculationDetails.push({ name: 'Environment Factor (πE)', value: pi_E });
+    // Environment factor
+    const envFactor = environmentFactors.find(e => e.code === formData.environment);
+    const pi_E = envFactor ? envFactor.pi_E : 1;
+    calculationDetails.push({ name: 'Environment Factor (πE)', value: pi_E });
 
-      // Final calculation
-      const lambda_p = lambda_b * pi_T * pi_A * pi_R * pi_Q * pi_E;
-      const formula = 'λp = λb × πT × πA × πR × πQ × πE';
+    // Final calculation
+    const lambda_p = lambda_b * pi_T * pi_A * pi_R * pi_Q * pi_E;
+    const formula = 'λp = λb × πT × πA × πR × πQ × πE';
 
-      // Set results
-      setResults({
-        failureRate: lambda_p,
-        details: calculationDetails,
-        formula
-      });
+    setResults({
+      failureRate: lambda_p,
+      details: calculationDetails,
+      formula
+    });
 
-      // Call parent callback if needed
-      if (onCalculate) {
-        onCalculate(lambda_p, calculationDetails, formula);
-      }
-
-    } catch (error) {
-      alert(error.message);
-      console.error(error);
+    if (onCalculate) {
+      onCalculate(lambda_p, calculationDetails, formula);
     }
   };
 
@@ -281,7 +255,6 @@ const HighFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFacto
           <p>
             <strong>Failure Rate (λp):</strong> {results.failureRate.toFixed(6)} failures/10<sup>6</sup> hours
           </p>
-
         </div>
       )}
     </>
