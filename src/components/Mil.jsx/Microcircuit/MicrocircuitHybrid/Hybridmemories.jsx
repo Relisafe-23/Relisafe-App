@@ -28,7 +28,7 @@ const Hybridmemories= ({ onCalculate }) => {
   const [mode, setMode] = useState('A1');
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
-    const [quantity, setQuantity]=useState(null)
+    const [quantity, setQuantity]= useState(1)
   const [selectedECC, setSelectedECC] = React.useState(null);
   const [currentComponent, setCurrentComponent] = useState({
     type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
@@ -406,8 +406,7 @@ const qualityFactor =()=>{
 
       // Calculate final failure rate
       const failureRate = (c1 * piT + c2 * piE + lambdaCyc) * πQ * piL;
-      //  console.log("Failure Rate:", failureRate);
-      // Call onCalculate with the failure rate
+   
 
 
       setResult({

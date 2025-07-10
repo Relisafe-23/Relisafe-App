@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState,useMemo, useEffect } from 'react';
 import '../../CapacitorCalculaton.css';
 import { Button, Row, Col } from 'react-bootstrap';
 import { Link } from '@material-ui/core';
@@ -18,7 +18,7 @@ import { Mic } from '@mui/icons-material';
 
 
 
-function MicroCapacitor({ onCalculate, handleCalculateFailure }) {
+function MicroCapacitor({ onCalculate, capacitorTotalFRate, handleCalculateFailure }) {
   
 
   // Capacitor types data
@@ -93,19 +93,7 @@ function MicroCapacitor({ onCalculate, handleCalculateFailure }) {
   // Environment factors
   const environmentFactors = [
     { env: "GB (Ground, Benign) πE = 1.0", πE: 1.0 },
-    // { env: "GF (Ground, Fixed)", πE: 10 },
-    // { env: "GM (Ground, Mobile)", πE: 20 },
-    // { env: "NS (Naval, Sheltered)", πE: 7.0 },
-    // { env: "NU (Naval, Unsheltered)", πE: 15 },
-    // { env: "AIC (Airborne, Inhabited, Cargo)", πE: 12 },
-    // { env: "AIF (Airborne, Inhabited, Fighter)", πE: 15 },
-    // { env: "AUC (Airborne, Uninhabited, Cargo)", πE: 25 },
-    // { env: "AUF (Airborne, Uninhabited, Fighter)", πE: 30 },
-    // { env: "ARW (Airborne, Rotary Wing)", πE: 40 },
-    // { env: "SF (Space, Flight)", πE: 0.50 },
-    // { env: "MF (Missile, Flight)", πE: 20 },
-    // { env: "ML (Missile, Launch)", πE: 50 },
-    // { env: "CL (Cannon, Launch)", πE: 570 }
+
   ];
   const seriesResistanceOptions = [
     { value: 0.66, label: ">0.8 (πSR = 0.66)" },
@@ -127,7 +115,7 @@ function MicroCapacitor({ onCalculate, handleCalculateFailure }) {
   const [selectedQuality, setSelectedQuality] = useState(null);
   const [selectedEnvironment, setSelectedEnvironment] = useState(null);
   const [results, setResults] = useState([]);
-  const [components, setComponents] = useState([]);
+  // const [components, setComponents] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [showCalculations, setShowCalculations] = useState(false);
   const [circuitResistance, setCircuitResistance] = useState(null);
@@ -135,87 +123,87 @@ function MicroCapacitor({ onCalculate, handleCalculateFailure }) {
   const [voltageApplied, setVoltageApplied] = useState(null);
   const [shouldCalculateCR, setShouldCalculateCR] = useState(false);
   const [piSR, setPiSR] = useState(null);
-  const[quantity,setQuantity] = useState(null);
-  const [errors, setErrors] = useState({ 
-    capacitorType: '',
-    environment: '',
-    quality: '',
-    temperature: '',
-    capacitance: '',
-    dcVoltageApplied: '',
-    acVoltageApplied: '',
-    dcVoltageRated: '',
-    seriesResistance: '',
-    circuitResistance: '',
-    effectiveResistance: '',
-    voltageApplied: ''
-  });
+  const[quantity,setQuantity] = useState(1);
+  // const [errors, setErrors] = useState({ 
+  //   capacitorType: '',
+  //   environment: '',
+  //   quality: '',
+  //   temperature: '',
+  //   capacitance: '',
+  //   dcVoltageApplied: '',
+  //   acVoltageApplied: '',
+  //   dcVoltageRated: '',
+  //   seriesResistance: '',
+  //   circuitResistance: '',
+  //   effectiveResistance: '',
+  //   voltageApplied: ''
+  // });
 
 
 
 
-    const calculatePiT = () => {
-    // Constants from the 
-       if (!selectedCapacitor || selectedCapacitor?.value?.πtColumn === "N/A (πt=1)") {
-      return 1.0;
-    }
-    const BOLTZMANN_CONSTANT = 8.617e-5; // eV/K
-    const REFERENCE_TEMP = 298; // K (25°C)
+  //   const calculatePiT = () => {
+  //   // Constants from the 
+  //      if (!selectedCapacitor || selectedCapacitor?.value?.πtColumn === "N/A (πt=1)") {
+  //     return 1.0;
+  //   }
+  //   const BOLTZMANN_CONSTANT = 8.617e-5; // eV/K
+  //   const REFERENCE_TEMP = 298; // K (25°C)
 
-    // Get activation energy based on column selection
-    const Ea = selectedCapacitor?.value?.πtColumn === 1 ? 0.15 : 0.35; // eV (from image columns)
+  //   // Get activation energy based on column selection
+  //   const Ea = selectedCapacitor?.value?.πtColumn === 1 ? 0.15 : 0.35; // eV (from image columns)
 
-    // Convert temperature to Kelvin
-    const tempInKelvin = temperature + 273;
+  //   // Convert temperature to Kelvin
+  //   const tempInKelvin = temperature + 273;
 
-    // Calculate πT using Arrhenius equation
-    const exponent = (-Ea / BOLTZMANN_CONSTANT) *
-      ((1 / tempInKelvin) - (1 / REFERENCE_TEMP));
+  //   // Calculate πT using Arrhenius equation
+  //   const exponent = (-Ea / BOLTZMANN_CONSTANT) *
+  //     ((1 / tempInKelvin) - (1 / REFERENCE_TEMP));
 
-    return Math.exp(exponent);
-  };
+  //   return Math.exp(exponent);
+  // };
 
-  const calculatePiC = () => {
-     if (!selectedCapacitor || selectedCapacitor?.value?.πcColumn === "N/A (πc=1)") {
-      return 1.0;
-    }
-    const closestCap = capacitanceFactors.reduce((prev, curr) =>
-      Math.abs(curr.capacitance - capacitance) < Math.abs(prev.capacitance - capacitance) ? curr : prev
-    );
+  // const calculatePiC = () => {
+  //    if (!selectedCapacitor || selectedCapacitor?.value?.πcColumn === "N/A (πc=1)") {
+  //     return 1.0;
+  //   }
+  //   const closestCap = capacitanceFactors.reduce((prev, curr) =>
+  //     Math.abs(curr.capacitance - capacitance) < Math.abs(prev.capacitance - capacitance) ? curr : prev
+  //   );
 
-    return selectedCapacitor?.value?.πcColumn === 1
-      ? Math.pow(capacitance, 0.09)  // Column 1: C^0.09
-      : Math.pow(capacitance, 0.23); // Column 2: C^0.23
-  };
+  //   return selectedCapacitor?.value?.πcColumn === 1
+  //     ? Math.pow(capacitance, 0.09)  // Column 1: C^0.09
+  //     : Math.pow(capacitance, 0.23); // Column 2: C^0.23
+  // };
 
 
- const calculatePiV = () => {
-     if (!selectedCapacitor || selectedCapacitor?.value?.πvColumn === "N/A (πv=1)") {
-      return 1.0;
-    }
-    // Calculate stress ratio (S = Operating Voltage / Rated Voltage)
-const operatingVoltage = dcVoltageApplied + Math.sqrt(2) * acVoltageApplied;
-console.log("operatingVoltage...", operatingVoltage);
+//  const calculatePiV = () => {
+//      if (!selectedCapacitor || selectedCapacitor?.value?.πvColumn === "N/A (πv=1)") {
+//       return 1.0;
+//     }
+//     // Calculate stress ratio (S = Operating Voltage / Rated Voltage)
+// const operatingVoltage = dcVoltageApplied + Math.sqrt(2) * acVoltageApplied;
+// console.log("operatingVoltage...", operatingVoltage);
 
-const S = operatingVoltage / dcVoltageRated;
-console.log("S (Stress Ratio)...", S);
+// const S = operatingVoltage / dcVoltageRated;
+// console.log("S (Stress Ratio)...", S);
 
   
 
-    // Calculate πV based on the selected formula
-    const piV =
-      selectedCapacitor?.value?.πvColumn === 1 ? Math.pow(S / .6, 5) + 1 :
-        selectedCapacitor?.value?.πvColumn === 2 ? Math.pow(S / .6, 10) + 1 :
-          selectedCapacitor?.value?.πvColumn === 3 ? Math.pow(S / .6, 3) + 1 :
-            selectedCapacitor?.value?.πvColumn === 4 ? Math.pow(S / .6, 17) + 1 :
-              selectedCapacitor?.value?.πvColumn === 5 ? Math.pow(S / .5, 3) + 1 :
-                1.0;
+//     // Calculate πV based on the selected formula
+//     const piV =
+//       selectedCapacitor?.value?.πvColumn === 1 ? Math.pow(S / .6, 5) + 1 :
+//         selectedCapacitor?.value?.πvColumn === 2 ? Math.pow(S / .6, 10) + 1 :
+//           selectedCapacitor?.value?.πvColumn === 3 ? Math.pow(S / .6, 3) + 1 :
+//             selectedCapacitor?.value?.πvColumn === 4 ? Math.pow(S / .6, 17) + 1 :
+//               selectedCapacitor?.value?.πvColumn === 5 ? Math.pow(S / .5, 3) + 1 :
+//                 1.0;
 
-    // Log the final calculated πV value
-    console.log("Calculated πV...", piV);
+//     // Log the final calculated πV value
+//     console.log("Calculated πV...", piV);
 
-    return piV;
-  };
+//     return piV;
+//   };
 
   function calculateCR(effectiveResistance, voltage) {
     if (!voltage || voltage === 0) return 0;
@@ -232,152 +220,54 @@ console.log("S (Stress Ratio)...", S);
     return 3.3; // For CR ≤ 0.1
   }
   const PiSRvalue = calculatePiSRFromCR(effectiveResistance / voltageApplied)
-  const calculatePiSR = () => {
-    if (shouldCalculateCR) {
+ // const calculatePiSR = () => {
+  //   if (shouldCalculateCR) {
      
-      return calculatePiSRFromCR(effectiveResistance / voltageApplied);
-    } else {
+  //     return calculatePiSRFromCR(effectiveResistance / voltageApplied);
+  //   } else {
      
-      return circuitResistance;
-    }
-    
-  };
+  //     return circuitResistance;
+  //   }
+     
+  // };
 
-  const customStyles = {
-    control: (provided) => ({
-      ...provided,
-      minHeight: '38px',
-      height: '38px'
-    }),
-    valueContainer: (provided) => ({
-      ...provided,
-      height: '38px',
-      padding: '0 6px'
-    }),
-    input: (provided) => ({
-      ...provided,
-      margin: '0px'
-    }),
-    indicatorsContainer: (provided) => ({
-      ...provided,
-      height: '38px'
-    }),
-    menu: (provided) => ({
-      ...provided,
-      zIndex: 9999
-    })
-  };
- 
-  // Calculate failure rate
-   const calculateFailureRate = () => {
+
+//    console.log("1. Starting calculation..."); // Debug log
   
-    const λb = selectedCapacitor?.value.λb;
-    const πT = calculatePiT();
-    const πC = calculatePiC();
-    const πV = calculatePiV();
-    const πSR = calculatePiSR();
-    console.log(" πSR..", πSR)
-    const πQ = selectedQuality?.value.πQ;
-    const πE = selectedEnvironment?.value.πE;
-    const failureRate = λb * πT * πC * πV * πSR * πQ * πE;
+//   if (!validateForm()) {
+//     console.log("2. Validation failed - exiting"); // Debug log
+//     return;
+//   }
+//   console.log("3. Validation passed - proceeding with calculation");
 
-    return failureRate;
-  };
-  // Validation function
-  const validateForm = () => {
-
-      const newErrors = {};
-    let isValid = true;
-    if(!selectedEnvironment){
-      newErrors.environment ='Environment is required';
-          isValid = false;
-    }
-    if(!selectedCapacitor){
-      newErrors.capacitorType ='Select the Capacitor Type ';
-      isValid = false;
-    }
-    if(!selectedQuality){
-       newErrors.quality ='Quality is required';
-            isValid = false;
-    }
-if(!dcVoltageApplied){
-  newErrors.dcVoltageApplied ='DC Voltage is required';
-  isValid = false;
-}
-if(!acVoltageApplied){
-  newErrors.acVoltageApplied ='AC Voltage is required';
-  isValid = false;
-}
-if(!dcVoltageRated){
-  newErrors.dcVoltageRated ='DC Voltage Rated is required';
-  isValid = false;
-}
-if(!temperature){
-  newErrors.temperature ='Temperature is required';
-  isValid = false;
-}
-if(!capacitance){
-  newErrors.capacitance ='Capacitance is required';
-  isValid = false;
-}
-if (shouldCalculateCR) {
-  if (!effectiveResistance) {
-    newErrors.effectiveResistance = 'Effective Resistance is required';
-    isValid = false;
-  }
-  if (!voltageApplied) {
-    newErrors.voltageApplied = 'Applied Voltage is required';
-    isValid = false;
-  }
-} else {
-  if (!circuitResistance) {
-    newErrors.circuitResistance = 'Circuit Resistance is required';
-    isValid = false;
-  }
-}
-       setErrors(newErrors);
-    return isValid;
-
-  };
-
-
-  const handleCalculate = () => {
-   console.log("1. Starting calculation..."); // Debug log
+// const newResult = {
+//   id: Date.now(),
+//   capacitorType: selectedCapacitor.style,
+//   temperature,
+//   capacitance,
+//   dcVoltageApplied,
+//   acVoltageApplied,
+//   dcVoltageRated,
+//   seriesResistance,
+//   quality: selectedQuality.quality,
+//   environment: selectedEnvironment.env,
+//   λb: selectedCapacitor?.value.λb,
+//   πT: calculatePiT(),
+//   πC: calculatePiC(),
+//   πV: calculatePiV(),
+//   πSR: calculatePiSR(),
+//   πQ: selectedQuality?.value.πQ,
+//   πE: selectedEnvironment?.value.πE,
+//   λp: calculateFailureRate()
+// };
   
-  if (!validateForm()) {
-    console.log("2. Validation failed - exiting"); // Debug log
-    return;
-  }
-  console.log("3. Validation passed - proceeding with calculation");
+//     setResults([...results, newResult]);
+//     setShowResults(true);
 
-const newResult = {
-  id: Date.now(),
-  capacitorType: selectedCapacitor.style,
-  temperature,
-  capacitance,
-  dcVoltageApplied,
-  acVoltageApplied,
-  dcVoltageRated,
-  seriesResistance,
-  quality: selectedQuality.quality,
-  environment: selectedEnvironment.env,
-  λb: selectedCapacitor?.value.λb,
-  πT: calculatePiT(),
-  πC: calculatePiC(),
-  πV: calculatePiV(),
-  πSR: calculatePiSR(),
-  πQ: selectedQuality?.value.πQ,
-  πE: selectedEnvironment?.value.πE,
-  λp: calculateFailureRate()
-};
-  
-    setResults([...results, newResult]);
-    setShowResults(true);
-
-    if (onCalculate) {
-      onCalculate(newResult.λp);
-    }
-  };
+//     if (onCalculate) {
+//       onCalculate(newResult.λp);
+//     }
+//   };
 
 const handleAddComponent = () => {
 
@@ -394,10 +284,289 @@ const handleRemoveComponent = () => {
   }
 };
 
-  return (
-      <div className="reliability-calculator">
-      <h2 className='text-center' style={{ fontSize: '1.2rem' }}>Capacitor</h2>
-      <div>
+
+  const [components, setComponents] = useState([{
+    id: Date.now(),
+    selectedCapacitor: null,
+    temperature: null,
+    capacitance: null,
+    dcVoltageApplied: null,
+    acVoltageApplied: null,
+    dcVoltageRated: null,
+    seriesResistance: null,
+    selectedQuality: null,
+    selectedEnvironment: null,
+    circuitResistance: null,
+    effectiveResistance: null,
+    voltageApplied: null,
+    shouldCalculateCR: false,
+    quantity: 1,
+    failureRate: 0
+  }]);
+
+  const [errors, setErrors] = useState({
+    capacitorType: '',
+    environment: '',
+    quality: '',
+    temperature: '',
+    capacitance: '',
+    dcVoltageApplied: '',
+    acVoltageApplied: '',
+    dcVoltageRated: '',
+    seriesResistance: '',
+    circuitResistance: '',
+    effectiveResistance: '',
+    voltageApplied: ''
+  });
+
+  const [failureRates, setFailureRates] = useState({});
+
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      minHeight: '38px',
+      height: '38px',
+      fontSize: '14px',
+      borderColor: '#ced4da',
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      height: '38px',
+      padding: '0 12px',
+    }),
+    input: (provided) => ({
+      ...provided,
+      margin: '0px',
+      padding: '0px',
+    }),
+    indicatorsContainer: (provided) => ({
+      ...provided,
+      height: '38px',
+    }),
+    dropdownIndicator: (provided) => ({
+      ...provided,
+      padding: '8px',
+    }),
+    clearIndicator: (provided) => ({
+      ...provided,
+      padding: '8px',
+    }),
+    option: (provided) => ({
+      ...provided,
+      padding: '8px 12px',
+      fontSize: '14px',
+    }),
+    menu: (provided) => ({
+      ...provided,
+      marginTop: '2px',
+      zIndex: 9999,
+    }),
+    menuList: (provided) => ({
+      ...provided,
+      maxHeight: '150px',
+      overflowY: 'auto',
+    }),
+  };
+
+  const addNewComponent = () => {
+    const newComponent = {
+      id: Date.now(),
+      selectedCapacitor: null,
+      temperature: null,
+      capacitance: null,
+      dcVoltageApplied: null,
+      acVoltageApplied: null,
+      dcVoltageRated: null,
+      seriesResistance: null,
+      selectedQuality: null,
+      selectedEnvironment: null,
+      circuitResistance: null,
+      effectiveResistance: null,
+      voltageApplied: null,
+      shouldCalculateCR: false,
+      quantity: 1,
+      failureRate: 0
+    };
+    setComponents([...components, newComponent]);
+  };
+
+  const removeComponent = (id) => {
+    setComponents(prev => prev.filter(comp => comp.id !== id));
+    setFailureRates(prev => {
+      const newRates = {...prev};
+      delete newRates[id];
+      return newRates;
+    });
+  };
+
+  const updateComponent = (id, updatedProps) => {
+    setComponents(components.map(comp =>
+      comp.id === id ? { ...comp, ...updatedProps } : comp
+    ));
+  };
+
+  const calculatePiT = (component) => {
+    if (!component.selectedCapacitor || component.selectedCapacitor?.value?.πtColumn === "N/A (πt=1)") {
+      return 1.0;
+    }
+    const BOLTZMANN_CONSTANT = 8.617e-5;
+    const REFERENCE_TEMP = 298;
+    const Ea = component.selectedCapacitor?.value?.πtColumn === 1 ? 0.15 : 0.35;
+    const tempInKelvin = component.temperature + 273;
+    const exponent = (-Ea / BOLTZMANN_CONSTANT) * ((1 / tempInKelvin) - (1 / REFERENCE_TEMP));
+    return Math.exp(exponent);
+  };
+
+  const calculatePiC = (component) => {
+    if (!component.selectedCapacitor || component.selectedCapacitor?.value?.πcColumn === "N/A (πc=1)") {
+      return 1.0;
+    }
+    return component.selectedCapacitor?.value?.πcColumn === 1
+      ? Math.pow(component.capacitance, 0.09)
+      : Math.pow(component.capacitance, 0.23);
+  };
+
+  const calculatePiV = (component) => {
+    if (!component.selectedCapacitor || component.selectedCapacitor?.value?.πvColumn === "N/A (πv=1)") {
+      return 1.0;
+    }
+    const operatingVoltage = component.dcVoltageApplied + Math.sqrt(2) * component.acVoltageApplied;
+    const S = operatingVoltage / component.dcVoltageRated;
+
+    return component.selectedCapacitor?.value?.πvColumn === 1 ? Math.pow(S / .6, 5) + 1 :
+      component.selectedCapacitor?.value?.πvColumn === 2 ? Math.pow(S / .6, 10) + 1 :
+      component.selectedCapacitor?.value?.πvColumn === 3 ? Math.pow(S / .6, 3) + 1 :
+      component.selectedCapacitor?.value?.πvColumn === 4 ? Math.pow(S / .6, 17) + 1 :
+      component.selectedCapacitor?.value?.πvColumn === 5 ? Math.pow(S / .5, 3) + 1 : 1.0;
+  };
+
+ 
+  const calculatePiSR = (component) => {
+    if (component.shouldCalculateCR) {
+      const CR = component.effectiveResistance / component.voltageApplied;
+      return calculatePiSRFromCR(CR);
+    } else {
+      return component.circuitResistance;
+    }
+  };
+
+  const validateForm = (component) => {
+    const newErrors = {};
+    let isValid = true;
+    
+    if (!component.selectedEnvironment) {
+      newErrors.environment = 'Environment is required';
+      isValid = false;
+    }
+    if (!component.selectedCapacitor) {
+      newErrors.capacitorType = 'Select the Capacitor Type';
+      isValid = false;
+    }
+    if (!component.selectedQuality) {
+      newErrors.quality = 'Quality is required';
+      isValid = false;
+    }
+    if (!component.dcVoltageApplied) {
+      newErrors.dcVoltageApplied = 'DC Voltage is required';
+      isValid = false;
+    }
+    if (!component.acVoltageApplied) {
+      newErrors.acVoltageApplied = 'AC Voltage is required';
+      isValid = false;
+    }
+    if (!component.dcVoltageRated) {
+      newErrors.dcVoltageRated = 'DC Voltage Rated is required';
+      isValid = false;
+    }
+    if (!component.temperature) {
+      newErrors.temperature = 'Temperature is required';
+      isValid = false;
+    }
+    if (!component.capacitance) {
+      newErrors.capacitance = 'Capacitance is required';
+      isValid = false;
+    }
+    if (component.shouldCalculateCR) {
+      if (!component.effectiveResistance) {
+        newErrors.effectiveResistance = 'Effective Resistance is required';
+        isValid = false;
+      }
+      if (!component.voltageApplied) {
+        newErrors.voltageApplied = 'Applied Voltage is required';
+        isValid = false;
+      }
+    } else {
+      if (!component.circuitResistance) {
+        newErrors.circuitResistance = 'Circuit Resistance is required';
+        isValid = false;
+      }
+    }
+    
+    return { isValid, newErrors };
+  };
+
+  const calculateFailureRate = (component) => {
+    const validation = validateForm(component);
+    if (!validation.isValid) {
+      setErrors(validation.newErrors);
+      return 0;
+    }
+    
+    const λb = component.selectedCapacitor?.value.λb;
+    const πT = calculatePiT(component);
+    const πC = calculatePiC(component);
+    const πV = calculatePiV(component);
+    const πSR = calculatePiSR(component);
+    const πQ = component.selectedQuality?.value.πQ;
+    const πE = component.selectedEnvironment?.value.πE;
+    const failureRate = λb * πT * πC * πV * πSR * πQ * πE * component.quantity;
+    
+    return failureRate;
+  };
+
+  const handleCalculate = (id) => {
+    const component = components.find(c => c.id === id);
+    if (!component) return;
+    
+    const failureRate = calculateFailureRate(component);
+    updateComponent(id, { failureRate });
+    
+    setFailureRates(prev => ({
+      ...prev,
+      [id]: failureRate
+    }));
+    
+    if (handleCalculateFailure) {
+      handleCalculateFailure(failureRate);
+    }
+  };
+
+  const totalSystemFailureRate = useMemo(() => {
+    return Object.values(failureRates).reduce((sum, rate) => sum + (rate || 0), 0);
+  }, [failureRates]);
+
+if(capacitorTotalFRate){
+  capacitorTotalFRate(totalSystemFailureRate)
+}
+
+  const renderComponent = (component) => {
+    const piT = calculatePiT(component);
+    const piC = calculatePiC(component);
+    const piV = calculatePiV(component);
+    const piSR = calculatePiSR(component);
+    
+    return (
+      <div key={component.id} className="component-container" style={{
+        border: '1px solid #ddd',
+        padding: '15px',
+        margin: '15px 0',
+        borderRadius: '5px',
+        position: 'relative'
+      }}>
+        <h3>Component {components.findIndex(c => c.id === component.id) + 1}</h3>
+        
+        <h2 className='text-center' style={{ fontSize: '1.2rem' }}>Capacitor Reliability Calculator</h2>
+        
         <Row>
           <Col md={4}>
             <div className="form-group">
@@ -405,19 +574,19 @@ const handleRemoveComponent = () => {
               <Select
                 styles={customStyles}
                 isInvalid={!!errors.capacitorType}
-                value={selectedCapacitor}
+                value={component.selectedCapacitor}
                 onChange={(selectedOption) => {
-                  setSelectedCapacitor(selectedOption);
+                  updateComponent(component.id, { 
+                    selectedCapacitor: selectedOption,
+                    failureRate: 0
+                  });
                   setErrors({ ...errors, capacitorType: '' });
-           
                 }}
                 options={capacitorTypes.map(type => ({
                   value: type,
                   label: `${type.style} - ${type.description}`
                 }))}
                 placeholder="Select type"
-                className="basic-select"
-                classNamePrefix="select"
               />
               {errors.capacitorType && <small style={{ color: 'red' }}>{errors.capacitorType}</small>}
             </div>
@@ -428,11 +597,13 @@ const handleRemoveComponent = () => {
               <Select
                 styles={customStyles}
                 isInvalid={!!errors.environment}
-                value={selectedEnvironment}
+                value={component.selectedEnvironment}
                 onChange={(selectedOption) => {
-                  setSelectedEnvironment(selectedOption);
-                       setErrors({ ...errors, environment: '' });
-                
+                  updateComponent(component.id, { 
+                    selectedEnvironment: selectedOption,
+                    failureRate: 0
+                  });
+                  setErrors({ ...errors, environment: '' });
                 }}
                 options={environmentFactors.map(type => ({
                   value: type,
@@ -447,11 +618,14 @@ const handleRemoveComponent = () => {
               <label>Quality (π<sub>Q</sub>):</label>
               <Select
                 styles={customStyles}
-                isInvalid ={!!errors.quality}
-                value={selectedQuality}
+                isInvalid={!!errors.quality}
+                value={component.selectedQuality}
                 onChange={(selectedOption) => {
-                  setSelectedQuality(selectedOption);
-                    setErrors({ ...errors, quality: '' });
+                  updateComponent(component.id, { 
+                    selectedQuality: selectedOption,
+                    failureRate: 0
+                  });
+                  setErrors({ ...errors, quality: '' });
                 }}
                 options={qualityFactors.map(type => ({
                   value: type,
@@ -470,13 +644,15 @@ const handleRemoveComponent = () => {
               <label>DC Voltage Applied (V):</label>
               <input
                 type="number"
-                value={dcVoltageApplied}
+                value={component.dcVoltageApplied || ''}
                 isInvalid={!!errors.dcVoltageApplied}
                 onChange={(e) => {
-                  const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                  setDcVoltageApplied(value);
-                   setErrors({ ...errors, dcVoltageApplied: '' });
-                
+                  const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                  updateComponent(component.id, { 
+                    dcVoltageApplied: value,
+                    failureRate: 0
+                  });
+                  setErrors({ ...errors, dcVoltageApplied: '' });
                 }}
                 min="0"
                 step="1"
@@ -489,17 +665,20 @@ const handleRemoveComponent = () => {
               <label>AC Voltage Applied (Vrms):</label>
               <input
                 type="number"
-                value={acVoltageApplied}
-                isInvalid ={!!errors.acVoltageApplied}
+                value={component.acVoltageApplied || ''}
+                isInvalid={!!errors.acVoltageApplied}
                 onChange={(e) => {
-                  const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                  setAcVoltageApplied(value);
-                   setErrors({ ...errors, acVoltageApplied: '' });
+                  const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                  updateComponent(component.id, { 
+                    acVoltageApplied: value,
+                    failureRate: 0
+                  });
+                  setErrors({ ...errors, acVoltageApplied: '' });
                 }}
                 min="0"
                 step="1"
               />
-              {errors.acVoltageApplied &&<small style={{ color: 'red' }}>{errors.acVoltageApplied}</small>}
+              {errors.acVoltageApplied && <small style={{ color: 'red' }}>{errors.acVoltageApplied}</small>}
             </div>
           </Col>
           <Col md={4}>
@@ -507,50 +686,28 @@ const handleRemoveComponent = () => {
               <label>DC Voltage Rated (V):</label>
               <input
                 type="number"
-                value={dcVoltageRated}
+                value={component.dcVoltageRated || ''}
                 isInvalid={!!errors.dcVoltageRated}
                 onChange={(e) => {
-                  const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                  setDcVoltageRated(value);
-                setErrors({ ...errors, dcVoltageRated: '' });
+                  const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                  updateComponent(component.id, { 
+                    dcVoltageRated: value,
+                    failureRate: 0
+                  });
+                  setErrors({ ...errors, dcVoltageRated: '' });
                 }}
                 min="1"
                 step="1"
               />
               {errors.dcVoltageRated && <small style={{ color: 'red' }}>{errors.dcVoltageRated}</small>}
-                  {errors.dcVoltageApplied && <small style={{ color: 'red' }}>{errors.dcVoltageApplied}</small>}
-                    {selectedCapacitor?.value?.πvColumn && capacitorTypes.some(type => type.πvColumn === selectedCapacitor?.value?.πvColumn) && (
-              <div className="mt-2">
-                Calculated π<sub>V</sub>: {calculatePiV()?.toFixed(3)}
-                <br />
-                <small>
-                  Using {selectedCapacitor?.value?.πvColumn === 1 ? 'Column 1' : 'Column 2'}
-
-                </small>
-              </div>
-            )}
+              {component.selectedCapacitor?.value?.πvColumn && (
+                <div className="mt-2">
+                  Calculated π<sub>V</sub>: {piV?.toFixed(3)}
+                </div>
+              )}
             </div>
           </Col>
         </Row>
-
-        {/* {selectedCapacitor?.value.πsrColumn === "See πSR Table" && (
-          <div className="form-group">
-            <label>Series Resistance (ohms/volt):</label>
-            <input
-              type="number"
-              value={seriesResistance}
-              isInvalid ={!!errors.seriesResistance}
-              onChange={(e) => {
-                const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                setSeriesResistance(value);
-               setErrors({ ...errors, seriesResistance: '' });
-              }}
-              min="0"
-              step="0.1"
-            />
-            {errors.seriesResistance && <small style={{ color: 'red' }}>{errors.seriesResistance}</small>}
-          </div>
-        )} */}
 
         <Row>
           <Col md={4}>
@@ -558,33 +715,29 @@ const handleRemoveComponent = () => {
               <label>Temperature (°C) π<sub>T</sub>:</label>
               <input
                 type="number"
-                value={temperature}
-                isInvalid ={!!errors.temperature}
+                value={component.temperature || ''}
+                isInvalid={!!errors.temperature}
                 onChange={(e) => {
-                  const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                  setTemperature(value);
-                 setErrors({ ...errors, temperature: '' });
+                  const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                  updateComponent(component.id, { 
+                    temperature: value,
+                    failureRate: 0
+                  });
+                  setErrors({ ...errors, temperature: '' });
                 }}
                 min="20"
                 max="150"
                 step="1"
               />
-                     {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
-                     <br/>
+              {errors.temperature && <small style={{ color: 'red' }}>{errors.temperature}</small>}
+              <br/>
               <small>T<sub>A</sub>= Hybrid Case Temperature</small>
-            
+              {component.selectedCapacitor?.value?.πtColumn && (
+                <div className="mt-2">
+                  Calculated π<sub>T</sub>: {piT?.toFixed(3)}
+                </div>
+              )}
             </div>
-       
-                 {selectedCapacitor?.value?.πtColumn && capacitorTypes.some(type => type.πtColumn === selectedCapacitor?.value.πtColumn) && (
-              <div className="mt-2">
-                Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
-                <br />
-                <small>
-                  Using {selectedCapacitor?.value?.πtColumn === 1 ? 'Column 1' : 'Column 2'}
-                  {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
-                </small>
-              </div>
-            )}
           </Col>
 
           <Col md={4}>
@@ -593,26 +746,24 @@ const handleRemoveComponent = () => {
               <input
                 type="number"
                 isInvalid={!!errors.capacitance}
-                value={capacitance}
+                value={component.capacitance || ''}
                 onChange={(e) => {
-                  const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                  setCapacitance(value);
-                   setErrors({ ...errors, capacitance: '' });
+                  const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                  updateComponent(component.id, { 
+                    capacitance: value,
+                    failureRate: 0
+                  });
+                  setErrors({ ...errors, capacitance: '' });
                 }}
                 min="0.000001"
                 step="0.000001"
               />
               {errors.capacitance && <small style={{ color: 'red' }}>{errors.capacitance}</small>}
-                      {selectedCapacitor?.value?.πcColumn && capacitorTypes.some(type => type.πcColumn === selectedCapacitor?.value.πcColumn) && (
-              <div className="mt-2">
-                Calculated π<sub>C</sub>: {calculatePiC()?.toFixed(3)}
-                <br />
-                <small>
-                  Using {selectedCapacitor?.value?.πcColumn === 1 ? 'Column 1' : 'Column 2'}
- 
-                </small>
-              </div>
-            )}
+              {component.selectedCapacitor?.value?.πcColumn && (
+                <div className="mt-2">
+                  Calculated π<sub>C</sub>: {piC?.toFixed(3)}
+                </div>
+              )}
             </div>
           </Col>
 
@@ -623,32 +774,27 @@ const handleRemoveComponent = () => {
                 styles={customStyles}
                 isInvalid={!!errors.seriesResistance}
                 value={seriesResistanceOptions.find(option =>
-                  option.value === circuitResistance
+                  option.value === component.circuitResistance
                 )}
                 onChange={(selectedOption) => {
                   const value = selectedOption.value;
-                  setCircuitResistance(value);
-                   setErrors({ ...errors, circuitResistance: '' });
-                  const CR = calculateCR(value, voltageApplied);
-                  setPiSR(calculatePiSRFromCR(CR));
+                  updateComponent(component.id, { 
+                    circuitResistance: value,
+                    failureRate: 0
+                  });
+                  setErrors({ ...errors, circuitResistance: '' });
                 }}
                 options={seriesResistanceOptions}
                 placeholder="Select Effective Resistance (ohms/volt)"
-                className="basic-select"
-                classNamePrefix="select"
-                isDisabled={shouldCalculateCR}
+                isDisabled={component.shouldCalculateCR}
               />
-              {errors.circuitResistance && !shouldCalculateCR && <small style={{ color: 'red' }}>{errors.circuitResistance}</small>}
-                       {selectedCapacitor?.value?.πsrColumn && capacitorTypes.some(type => type.πsrColumn === selectedCapacitor?.value?.πsrColumn) && (
-              <div className="mt-2">
-                Calculated π<sub>C</sub>: {calculatePiSR()?.toFixed(3)}
-                <br />
-                <small>
-                  Using {selectedCapacitor?.value?.πsrColumn === 1 ? 'Column 1' : 'Column 2'}
-                  {temperature < 20 || temperature > 150 ? ' formula' : ' table values'}
-                </small>
-              </div>
-            )}
+              {errors.circuitResistance && !component.shouldCalculateCR && 
+                <small style={{ color: 'red' }}>{errors.circuitResistance}</small>}
+              {component.selectedCapacitor?.value?.πsrColumn && (
+                <div className="mt-2">
+                  Calculated π<sub>SR</sub>: {piSR?.toFixed(3)}
+                </div>
+              )}
             </div>
           </Col>
         </Row>
@@ -659,24 +805,24 @@ const handleRemoveComponent = () => {
               <input
                 className="form-check-input me-3"
                 type="radio"
-                name="type"
-                checked={shouldCalculateCR}
+                name={`type-${component.id}`}
+                checked={component.shouldCalculateCR}
                 onChange={() => { }}
                 onClick={(e) => {
-                  if (shouldCalculateCR) {
+                  if (component.shouldCalculateCR) {
                     e.preventDefault();
-                    setShouldCalculateCR(false);
+                    updateComponent(component.id, { shouldCalculateCR: false });
                   } else {
-                    setShouldCalculateCR(true);
+                    updateComponent(component.id, { shouldCalculateCR: true });
                   }
                 }}
               />
-              {shouldCalculateCR ? "Calculating CR (click to cancel)" : "Calculate CR"}
+              {component.shouldCalculateCR ? "Calculating CR (click to cancel)" : "Calculate CR"}
             </label>
           </div>
         </div>
 
-        {shouldCalculateCR && (
+        {component.shouldCalculateCR && (
           <>
             <Row>
               <Col md={4}>
@@ -684,12 +830,15 @@ const handleRemoveComponent = () => {
                   <label>Effective Resistance:</label>
                   <input
                     type="number"
-                    value={effectiveResistance}
+                    value={component.effectiveResistance || ''}
                     isInvalid={!!errors.effectiveResistance}
                     onChange={(e) => {
-                      const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                      setEffectiveResistance(value);
-                       setErrors({ ...errors, effectiveResistance: '' });
+                      const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                      updateComponent(component.id, { 
+                        effectiveResistance: value,
+                        failureRate: 0
+                      });
+                      setErrors({ ...errors, effectiveResistance: '' });
                     }}
                     min="0"
                     step="0.1"  
@@ -702,12 +851,15 @@ const handleRemoveComponent = () => {
                   <label>Voltage Applied to Capacitor (V) for π<sub>SR</sub>:</label>
                   <input
                     type="number"
-                    value={voltageApplied}
+                    value={component.voltageApplied || ''}
                     isInvalid={!!errors.voltageApplied}
                     onChange={(e) => {
-                      const value = e.target.value === '' ? '' : parseFloat(e.target.value);
-                      setVoltageApplied(value);
-                    setErrors({ ...errors, voltageApplied: '' });
+                      const value = e.target.value === '' ? null : parseFloat(e.target.value);
+                      updateComponent(component.id, { 
+                        voltageApplied: value,
+                        failureRate: 0
+                      });
+                      setErrors({ ...errors, voltageApplied: '' });
                     }}
                     min="0"
                     step="0.1"
@@ -716,85 +868,90 @@ const handleRemoveComponent = () => {
                 </div>
               </Col>
             </Row>
-            {circuitResistance && voltageApplied && (
+            {component.effectiveResistance && component.voltageApplied && (
               <div className="mt-3">
                 <p><strong>CR Calculation:</strong></p>
                 <p>CR = Effective Resistance / Applied Voltage</p>
-                <p>CR = {effectiveResistance}Ω / {voltageApplied}V = {(effectiveResistance / voltageApplied)?.toFixed(2)} ohms/volt</p>
-                <p className="mt-2"><strong>π<sub>SR</sub> Result:</strong> {PiSRvalue}</p>
+                <p>CR = {component.effectiveResistance}Ω / {component.voltageApplied}V = 
+                  {(component.effectiveResistance / component.voltageApplied)?.toFixed(2)} ohms/volt</p>
+                <p className="mt-2"><strong>π<sub>SR</sub> Result:</strong> {piSR?.toFixed(3)}</p>
               </div>
             )}
           </>
         )}
-            <Button 
-  className="btn-calculate float-end mt-1" 
-  onClick={() => {
-    handleCalculate();
-    // setShowResults(true);
-  }}
->
-  Calculate FR
-</Button>
-  <br/>
-          <Col md={4} >
+        
+          <Col md={4}>
             <div className="form-group">
               <label>Quantity (Nₙ):</label>
               <input
                 type="number"
-                className="form-control"
                 min="1"
-                value={quantity}
+                value={component.quantity || ''}
                 onChange={(e) => {
-                  setQuantity(e.target.value);
-                  //   calculateComponentSum(e.target.value)
+                  const value = e.target.value === '' ? null : parseInt(e.target.value);
+                  updateComponent(component.id, { 
+                    quantity: value,
+                    failureRate: 0
+                  });
                 }}
               />
             </div>
           </Col>
-      <div>
-                         {components.length === 0 || components[components.length - 1].length > 0 ? (
-                         <div className='mb-5'>
-                           <Button   variant="primary" onClick={handleAddComponent}>Add Component</Button>            
-                         </div>
-                       ) : null}
-                       <div className=" float-end mb-5">
-                             <Button   variant="primary" onClick={handleRemoveComponent}>Remove Component</Button>
-                     </div>
-      <br />
-      <div>
-         {results && showResults && (
-          handleCalculateFailure(calculateFailureRate()?.toFixed(10))
-
-         )}
-       { results && showResults && (
         
-            <div className="Predicted-Failure">
-              <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-              <span className="ms-2">
-                {calculateFailureRate()?.toFixed(10)} failures/10<sup>6</sup> hours
-              </span>
-              <br/>
-              <strong>λ<sub>c</sub> * N <sub>c</sub>:</strong>
-                <span className="ms-2">  
-                {calculateFailureRate() * quantity} failures/10<sup>6</sup> hours
-                {console.log("quantity..",calculateFailureRate() * quantity)}
-              </span>
-            </div>
        
-        )}
-          {components.map((_, index) => (
-            <MicroCapacitor
-              key={index}
-              handleCalculateFailure={handleCalculateFailure}
-            />
-          ))}
+            <Button 
+              className="btn float-end mt-1" 
+              onClick={() => handleCalculate(component.id)}
+            >
+              Calculate FR
+            </Button>
+      
+    
 
-        <br />
-        </div>
-        </div>
+        {component.failureRate > 0 && (
+          <div className="prediction-result" style={{ marginTop: '20px',width:"50%" }}>
+            <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+            <span className="ms-2">
+              {(component.failureRate / component.quantity)?.toFixed(10)} failures/10<sup>6</sup> hours
+            </span>
+            <br/>
+            <strong>Total (λ<sub>c</sub> × Nₙ):</strong>
+            <span className="ms-2">  
+              {component.failureRate?.toFixed(10)} failures/10<sup>6</sup> hours
+            </span>
+          </div>
+        )}
+
+        <Button
+          variant="danger"
+          onClick={() => removeComponent(component.id)}
+          style={{ marginTop: '10px', backgroundColor: "red" }}
+        >
+          Remove Component
+        </Button>
       </div>
+    );
+  };
+
+  return (
+    <div className="reliability-calculator">
+      <br />
+      <h2 className='text-center' style={{ fontSize: '1.2rem' }}>
+        Capacitor Reliability Calculator
+      </h2>
+      
+      {components.map(component => renderComponent(component))}
+
+      <Button onClick={addNewComponent} className="mt-3">
+        Add Component
+      </Button>
+
+      {components.length > 0 && (
+        <div className="total-failure-rate" style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f8f9fa' }}>
+          <h5> Capacitors (λ<sub>c</sub> * N<sub>c</sub>): {totalSystemFailureRate?.toFixed(10)} failures/10<sup>6</sup> hours</h5>
+        </div>
+      )}
     </div>
   );
 }
-
 export default MicroCapacitor;

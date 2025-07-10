@@ -2434,18 +2434,20 @@ function Index(props) {
                                       }}
                                     </Formik>
                                   </Modal>
-                                  <Modal
-                                    show={showModal}
-                                    onHide={setShowModal}
-                                    centered
-                                    size="xl" // Bootstrap extra-large size
-                                    dialogClassName="custom-modal-width" // Custom class for additional width control
-                                    backdrop="static" // Prevent closing by clicking outside
-                                  >
+                              <div className="Mil" style={{ width: "100%", maxWidth: "1200px", margin: "0 auto" }}>
+  <Modal
+    show={showModal}
+    onHide={() => setShowModal(false)}
+    centered
+    size="xl" 
+    dialogClassName="fixed-width-modal" 
+    backdrop="static"
+    contentClassName="modal-content-wrapper" 
+  >
                                     <Modal.Body className="p-0">
                                       {" "}
-                                      {/* Remove default padding */}
-                                      <div className="modal-content">
+                                      {/* Remove default padding */}    
+                                       <div className="modal-content" style={{ width: "100%", maxWidth: "1200px" }}>
                                         {/* Improved Close Button */}
                                         <div className="text-center mt-1">
                                           <h3 className="modal-title ">
@@ -2985,6 +2987,7 @@ function Index(props) {
                                       </div>
                                     </Modal.Body>
                                   </Modal>
+                                  </div>
                                 </div>
                               </div>
                             </Col>

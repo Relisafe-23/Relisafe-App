@@ -22,7 +22,7 @@ const Hybridgate = ({ onCalculate }) => {
   const [showCalculations, setShowCalculations] = useState(false);
   const [components, setComponents] = useState([]);
   const [results, setResults] = useState(null);
-  const[quantity,setQuantity] = useState(null)
+  const[quantity,setQuantity] = useState(1)
   const [currentComponent, setCurrentComponent] = useState({
     type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
     temperature: 25,
@@ -179,10 +179,10 @@ const[error,setError] = useState("");
   const calculateGateFailureRate = () => {
   try {
     
-    // if (!validateForm()) {
-    //   setResults(null);
-    //   return;
-    // }
+    if (!validateForm()) {
+      setResults(null);
+      return;
+    }
     const C1 = calculateGateArrayC1(currentComponent);
     const C2 = 0;
     const piT = calculatePiT(currentComponent.technology, currentComponent.temperature);
@@ -776,6 +776,7 @@ if (onCalculate) {
                            <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
                            {results?.value?.toFixed(4)}failures/10<sup>6</sup> hours
                          </p>
+                         <br/>
                          <p className="mb-1">
                            <strong> λ<sub>c</sub> * N<sub>c</sub>:</strong>
                            {results?.value * quantity}failures/10<sup>6</sup> hours

@@ -10,7 +10,7 @@ import '../../Microcircuits.css'
 
 const HybridSaw = ({ onCalculate }) => {
     const [components, setComponents] = useState([]);
-    const [quantity, setQuantity] = useState(null);
+    const [quantity, setQuantity] = useState(1);
     const [currentComponent, setCurrentComponent] = useState({
         type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
         temperature: 25,
@@ -360,6 +360,7 @@ const HybridSaw = ({ onCalculate }) => {
                         <span className="ms-2">
                             {currentComponent?.calculatedFailureRate} failures/10<sup>6</sup> hours
                         </span>
+                          <br/>
                         <strong>λ<sub>c</sub> * N<sub>c</sub>:</strong>
                         <span className="ms-2">{currentComponent?.calculatedFailureRate * quantity} failures/10<sup>6</sup> hours</span>
 

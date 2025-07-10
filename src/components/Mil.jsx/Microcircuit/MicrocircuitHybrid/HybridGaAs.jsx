@@ -10,7 +10,7 @@ const HybridGaAs= ({ onCalculate }) => {
       const [currentDevice, setCurrentDevice] = useState([]); 
        const [result, setResult] = useState(null);
         const [error, setError] = useState(null);
-    const[quantity, setQuantity]= useState(null);
+    const[quantity, setQuantity]= useState(1);
       const [currentComponent, setCurrentComponent] = useState({
         type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
         temperature: 25,
