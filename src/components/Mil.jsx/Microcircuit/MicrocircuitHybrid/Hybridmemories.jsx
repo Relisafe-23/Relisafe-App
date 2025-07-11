@@ -8,15 +8,15 @@ import {
   getBValueForTemp,
   QUALITY_FACTORS,
   getEnvironmentalOptions,
-} from './Calculation.js';
+} from '../../Calculation.js';
 
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { Button, Container, Row, Col, Table, Collapse } from 'react-bootstrap';
 import Box from '@mui/material/Box';
 import { Alert, Paper, Typography, IconButton, Tooltip } from "@mui/material";
-import './Microcircuits.css'
+import '../../Microcircuits.css'
 import MaterialTable from "material-table";
-import { tableIcons } from "../core/TableIcons";
+import { tableIcons } from "../../../core/TableIcons";
 import { createTheme } from "@mui/material";
 import { ThemeProvider } from "@material-ui/core";
 
@@ -28,7 +28,7 @@ const Hybridmemories= ({ onCalculate }) => {
   const [mode, setMode] = useState('A1');
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
-    const [quantity, setQuantity]=useState(null)
+    const [quantity, setQuantity]= useState(1)
   const [selectedECC, setSelectedECC] = React.useState(null);
   const [currentComponent, setCurrentComponent] = useState({
     type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
@@ -406,8 +406,7 @@ const qualityFactor =()=>{
 
       // Calculate final failure rate
       const failureRate = (c1 * piT + c2 * piE + lambdaCyc) * πQ * piL;
-      //  console.log("Failure Rate:", failureRate);
-      // Call onCalculate with the failure rate
+   
 
 
       setResult({
@@ -426,8 +425,9 @@ const qualityFactor =()=>{
         }
       });
       setError(null);
+      console.log("quantity.....",quantity)
       if (onCalculate) {
-        onCalculate(failureRate);
+        onCalculate(failureRate * quantity);
       }
     } catch (err) {
       setError(err.message);
@@ -1256,8 +1256,7 @@ const qualityFactor =()=>{
      
 
             {result && (
-              <>
-              
+              <>  
                 <div style={{width:"50%"}}>
        <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
                   <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
