@@ -8,39 +8,38 @@ import {
   getBValueForTemp,
   QUALITY_FACTORS,
   getEnvironmentalOptions,
-} from './Calculation.js';
+} from '../Calculation.js';
 
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { Button, Container, Row, Col, Table, Collapse } from 'react-bootstrap';
 import Box from '@mui/material/Box';
 import { Alert, Paper, Typography, IconButton, Tooltip } from "@mui/material";
-import './Microcircuits.css'
+import '../Microcircuits.css'
 import MaterialTable from "material-table";
-import { tableIcons } from "../core/TableIcons";
+import { tableIcons } from "../../core/TableIcons";
 import { createTheme } from "@mui/material";
 import { ThemeProvider } from "@material-ui/core";
 
 
 
-const Hybridmemories= ({ onCalculate }) => {
+const MicroMemories= ({ onCalculate }) => {
   const [showCalculations, setShowCalculations] = useState(false);
   const [components, setComponents] = useState([]);
   const [mode, setMode] = useState('A1');
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
-    const [quantity, setQuantity]=useState(null)
   const [selectedECC, setSelectedECC] = React.useState(null);
   const [currentComponent, setCurrentComponent] = useState({
-    type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
-    temperature: 25,
-    devices: "bipolarData",
-    complexFailure: "digital",
+    type: '',
+    temperature:"",
+    devices: "",
+    complexFailure: "",
     environment: '',
-    data: "microprocessorData",
-    quality: 'M',
-    quantity: 0,
+    data: "",
+    quality: '',
+    quantity: "",
     microprocessorData: "",
-    gateCount: 1000,
+    gateCount: "",
     technology: '',
     complexity: '',
     application: '',
@@ -49,13 +48,13 @@ const Hybridmemories= ({ onCalculate }) => {
     yearsInProduction: '',
     quality: '',
 
-    memoryTemperature: 45,   
-    techTemperatureB2: 25,
-    techTemperatureB1: 25,    
-    memorySizeB1: 1024,
-    memorySizeB2: 1024,
-    memoryTech: "Flotox",
-    technology: "Digital MOS",
+    memoryTemperature: "",   
+    techTemperatureB2: "",
+    techTemperatureB1: "",    
+    memorySizeB1: "",
+    memorySizeB2: "",
+    memoryTech: "",
+    technology: "",
     B1: 0.79,
     B2: 0,
     calculatedPiT: 1.2,
@@ -66,6 +65,73 @@ const Hybridmemories= ({ onCalculate }) => {
     basePiT: 0.1,
     calculatedPiT: null
   });
+  const [errors, setErrors] = useState({
+  quality: '',
+  environment: '',
+  learningFactor: '', 
+  memoryTech: '',
+  memorySizeB1: '',
+  techTemperatureB1: '',
+  memorySizeB2: '',
+  techTemperatureB2: '',
+  memoryType: '',
+  memorySize: '',
+  technology: '',
+  temperature: '',
+  packageType: '',
+  pinCount: '',
+  programmingCycles: '',
+  a2Factor: '',
+  eccOption: ''
+});
+const validateForm = () => {
+  const newErrors = {
+    quality: !currentComponent.quality ? "Please select quality factor" : '',
+    environment: !inputs.environment ? "Please select environment" : '',
+    learningFactor: !currentComponent.piL ? "Please select learning factor" : '',    memoryTech: !currentComponent.memoryTech ? "Please select memory technology" : '',
+    memorySizeB1: !currentComponent.memorySizeB1 ? "Please select memory size for B₁" : '',
+    techTemperatureB1: !currentComponent.techTemperatureB1 || isNaN(currentComponent.techTemperatureB1) ? 
+                      "Please enter valid temperature for B₁ (25-175°C)" : 
+                      (currentComponent.techTemperatureB1 < 25 || currentComponent.techTemperatureB1 > 175) ?
+                      "Temperature for B₁ must be between 25°C and 175°C" : '',
+    memorySizeB2: currentComponent.memoryTech?.includes('Textured-Poly') && !currentComponent.memorySizeB2 ? 
+                 "Please select memory size for B₂" : '',
+    techTemperatureB2: currentComponent.memoryTech?.includes('Textured-Poly') && currentComponent.memorySizeB2 > 0 && 
+                      (!currentComponent.techTemperatureB2 || isNaN(currentComponent.techTemperatureB2)) ? 
+                      "Please enter valid temperature for B₂ (25-175°C)" : 
+                      (currentComponent.memoryTech?.includes('Textured-Poly') && currentComponent.memorySizeB2 > 0 && 
+                      (currentComponent.techTemperatureB2 < 25 || currentComponent.techTemperatureB2 > 175)) ?
+                      "Temperature for B₂ must be between 25°C and 175°C" : '',
+    memoryType: !inputs.memoryType ? "Please select memory type" : '',
+    memorySize: !inputs.memorySize ? "Please select memory size" : '',
+    technology: !currentComponent.technology ? "Please select technology type" : '',
+    temperature: !currentComponent.temperature || isNaN(currentComponent.temperature) ? 
+                "Please enter valid junction temperature" : 
+                (currentComponent.temperature < -40 || currentComponent.temperature > 175) ?
+                "Temperature must be between -40°C and 175°C" : '',
+    packageType: !currentComponent.packageType ? "Please select package type" : '',
+    pinCount: !currentComponent.pinCount || isNaN(currentComponent.pinCount) ? 
+             "Please enter valid number of pins" : 
+             (currentComponent.pinCount < 3 || currentComponent.pinCount > 224) ?
+             "Pin count must be between 3 and 224" : '',
+    programmingCycles: 
+      mode === 'A1' && 
+      (!currentComponent.programmingCycles || isNaN(currentComponent.programmingCycles)) 
+        ? "Please enter valid programming cycles (1-500,000)" 
+        : '',
+     a2Factor: 
+      currentComponent.memoryTech?.includes('Textured-Poly') && 
+      !currentComponent.a2Factor
+        ? "Please select A₂ factor for Textured-Poly memory"
+        : '',
+    eccOption: !selectedECC ? "Please select ECC option" : ''
+  };
+
+  setErrors(newErrors);
+  
+  // Check if any errors exist
+  return !Object.values(newErrors).some(error => error !== '');
+};
 
 
   const packageRates = [
@@ -326,16 +392,15 @@ const qualityFactor =()=>{
     setSelectedECC(selectedOption);
     console.log(`Selected ECC: ${selectedOption.label}, Factor: ${selectedOption.factor}`);
   };
-
-  const handleA2FactorChange = (selectedOption) => {
-    setCurrentComponent(prev => ({
-      ...prev,
-      a2Factor: selectedOption,
-      a2Value: selectedOption.a2Value,
-      programmingCyclesMax: selectedOption.maxCycles
-    }));
-    console.log(`Selected A₂ Factor: ${selectedOption.label}, Value: ${selectedOption.a2Value}, Max Cycles: ${selectedOption.maxCycles}`);
-  };
+const handleA2FactorChange = (selectedOption) => {
+  setCurrentComponent(prev => ({
+    ...prev,
+    a2Factor: selectedOption,
+    a2Value: selectedOption.a2Value,
+    programmingCyclesMax: selectedOption.maxCycles
+  }));
+  setErrors(prev => ({ ...prev, a2Factor: '' })); // Clear error on selection
+};
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -376,6 +441,13 @@ const qualityFactor =()=>{
     });
 
   const calculateMemoriesFailureRate = () => {
+      setError(null);
+
+      if (!validateForm()) {
+    setError("");
+    return;
+  }
+
     try {
 
       const c1 = inputs?.technology === 'MOS'
@@ -383,7 +455,7 @@ const qualityFactor =()=>{
         : inputs?.memorySize.bipolar;
 
 
-      const c2 = 0;
+      const c2 = getFailureRate(currentComponent.packageType, currentComponent.pinCount)
 
       // Calculate λcyc
 
@@ -431,6 +503,8 @@ const qualityFactor =()=>{
       }
     } catch (err) {
       setError(err.message);
+          setResult(null);
+
     }
 
 
@@ -485,46 +559,76 @@ const qualityFactor =()=>{
   return(
    <>
      <Row>
-                    <Col md={4}>
-                <div className="form-group">
-                  <label>Quality Factor (π<sub>Q</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="qualityFactor"
-                    placeholder="Select Quality Class"
-                    onChange={(selectedOption) => {
-
-                      setCurrentComponent({
-                        ...currentComponent,
-                        quality: selectedOption.value,
-                        piQ: selectedOption.piQ
-                      });
-                    }}
-                    options={[
-
-                      {
-                        value: "MIL_M_38510_ClassB",
-                        label: "Class B (MIL-M-38510, Class B) πQ = 1.0",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-M-38510, Class B requirements."
-                      },
-                      {
-                        value: "MIL_I_38535_ClassQ",
-                        label: "Class B (MIL-I-38535, Class Q) πQ = 1.0",
-                        piQ: 1.0,
-                        description: "Procured in full accordance with MIL-I-38535 (Class Q)."
-                      },
-                      {
-                        value: "MIL_H_38534_ClassB_Hybrid",
-                        label: "Class B Hybrid (MIL-H-38534, Level H) πQ = 1.0",
-                        piQ: 1.0,
-                        description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
-                      },
-
-                    ]}
-                  />
-                </div>
-              </Col>
+                 <Col md={4}>
+                   <div className="form-group">
+                     <label>Quality Factor (π<sub>Q</sub>):</label>
+                     <Select
+                       styles={customStyles}
+                       name="qualityFactor"
+                       value={currentComponent.quality}
+                       placeholder="Select Quality Class"
+                       onChange={(selectedOption) => {
+   
+                         setCurrentComponent({
+                           ...currentComponent,
+                           quality: selectedOption,
+                           piQ: selectedOption.piQ
+                         });
+                              setErrors(prev => ({ ...prev, quality: '' }));
+                       }}
+                       options={[
+                         // Class S Categories (πQ = 0.25)
+                         {
+                           value: "MIL_M_38510_ClassS",
+                           label: "Class S (MIL-M-38510, Class S)",
+                           piQ: 0.25, 
+                           description: "Procured in full accordance with MIL-M-38510, Class S requirements."
+                         },
+                         {
+                           value: "MIL_I_38535_ClassU",
+                           label: "Class S (MIL-I-38535, Class U)",
+                           piQ: 0.25,
+                           description: "Procured in full accordance with MIL-I-38535, Appendix B (Class U)."
+                         },
+                         {
+                           value: "MIL_H_38534_ClassS_Hybrid",
+                           label: "Class S Hybrid (MIL-H-38534, Level K)",
+                           piQ: 0.25,
+                           description: "Hybrids procured to Class S (Quality Level K) of MIL-H-38534."
+                         },
+   
+                         // Class B Categories (πQ = 1.0)
+                         {
+                           value: "MIL_M_38510_ClassB",
+                           label: "Class B (MIL-M-38510, Class B)",
+                           piQ: 1.0,
+                           description: "Procured in full accordance with MIL-M-38510, Class B requirements."
+                         },
+                         {
+                           value: "MIL_I_38535_ClassQ",
+                           label: "Class B (MIL-I-38535, Class Q)",
+                           piQ: 1.0,
+                           description: "Procured in full accordance with MIL-I-38535 (Class Q)."
+                         },
+                         {
+                           value: "MIL_H_38534_ClassB_Hybrid",
+                           label: "Class B Hybrid (MIL-H-38534, Level H)",
+                           piQ: 1.0,
+                           description: "Hybrids procured to Class B (Quality Level H) of MIL-H-38534."
+                         },
+   
+                         // Class B-1 Category (πQ = 2.0)
+                         {
+                           value: "MIL_STD_883_ClassB1",
+                           label: "Class B-1 (MIL-STD-883)",
+                           piQ: 2.0,
+                           description: "Compliant with MIL-STD-883, paragraph 1.2.1 (non-hybrid)."
+                         }
+                       ]}
+                     />
+                         {errors.quality && <div className="text-danger small mt-1">{errors.quality}</div>}
+                   </div>
+                 </Col>
    
                  <Col md={4}>
                    <div className="form-group">
@@ -532,15 +636,19 @@ const qualityFactor =()=>{
                      <Select
                        styles={customStyles}
                        value={inputs?.environment}
-                       onChange={(selectedOption) => setInputs(prev => ({
-                         ...prev,
-                         environment: {
-                           value: selectedOption.value,
-                           label: selectedOption.label,
-                           factor: selectedOption.piE,
-                           description: selectedOption.description
-                         }
-                       }))}
+                        onChange={(selectedOption) => {
+        setInputs(prev => ({
+          ...prev,
+          environment: {
+            value: selectedOption.value,
+            label: selectedOption.label,
+            factor: selectedOption.piE,
+            description: selectedOption.description
+          }
+        }));
+        setErrors(prev => ({ ...prev, environment: '' }));
+      }}
+
    
                        options={[
                          {
@@ -629,6 +737,7 @@ const qualityFactor =()=>{
                          }
                        ]}
                      />
+                         {errors.environment && <div className="text-danger small mt-1">{errors.environment}</div>}
                    </div>
                  </Col>
                    <Col md={4}>
@@ -641,9 +750,11 @@ const qualityFactor =()=>{
                     onChange={(selectedOption) => {
                       setCurrentComponent({
                         ...currentComponent,
-                        yearsInProduction: selectedOption.value,
+                          yearsInProduction: selectedOption.value,
                         piL: selectedOption.piL
+
                       });
+                    setErrors(prev => ({ ...prev, learningFactor: '' })); 
                     }}
                     options={[
                       {
@@ -678,6 +789,7 @@ const qualityFactor =()=>{
                       }
                     ]}
                   />
+                  {errors.learningFactor && <div className="text-danger small mt-1">{errors.learningFactor}</div>}
                 </div>
               </Col>
                  <label>  λ<sub>cyc</sub> :</label>
@@ -709,30 +821,25 @@ const qualityFactor =()=>{
                            ? currentComponent.programmingCycles || ''
                            : currentComponent.a1Value || ''
                        }
-                       onChange={(e) => {
-                         const value = e.target.value ? parseFloat(e.target.value) : null;
-                         const updatedComponent = {
-                           ...currentComponent,
-                           [mode === 'A1' ? 'programmingCycles' : 'a1Value']: value,
-                           technology: 'Flotox' // Auto-set for calculations
-                         };
-   
-                         // Auto-calculate when input changes
-                         if (value !== null) {
-                           updatedComponent[mode === 'A1' ? 'a1Value' : 'programmingCycles'] =
-                             mode === 'A1'
-                               ? 6.817e-6 * value // Calculate A₁ from C
-                               : value / 6.817e-6; // Calculate C from A₁
-                         }
-   
-                         setCurrentComponent(updatedComponent);
-                       }}
+                      onChange={(e) => {
+    const value = e.target.value ? parseFloat(e.target.value) : null;
+    const updatedComponent = {
+      ...currentComponent,
+      programmingCycles: value,
+      a1Value: mode === 'A1' ? 6.817e-6 * value : value / 6.817e-6,
+    };
+    setCurrentComponent(updatedComponent);
+    setErrors(prev => ({ ...prev, programmingCycles: '' })); // Clear error on change
+  }}
                        placeholder={
                          mode === 'A1'
                            ? 'Enter cycles (1-500,000)'
                            : 'Enter A₁ (0.000001-3.4)'
                        }
                      />
+               {errors.programmingCycles && (
+  <div className="text-danger small mt-1">{errors.programmingCycles}</div>
+)}
    
                      {currentComponent.a1Value !== null && mode === 'A1' && (
                        <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
@@ -781,11 +888,12 @@ const qualityFactor =()=>{
                        ]}
                        className="factor-select"
                      />
+                     {errors.a2Factor && <div className="text-danger small mt-1">{errors.a2Factor}</div>}
                    </div>
                  </Col>
                  <Col md={4}>
                    <div className="form-group">
-                     <label>Error Correction Code Options (π<sub>ECC</sub>) :</label>
+                     <label>Error Correction Code Options (π<sub>ECC</sub>) for (λ<sub>cyc</sub>) :</label>
                      <Select
                        styles={customStyles}
                        options={eccOptions}
@@ -829,6 +937,8 @@ const qualityFactor =()=>{
                       };
                       setCurrentComponent(updatedComponent);
                       updateComponentInList(updatedComponent);
+                          updateComponentInList(updatedComponent);
+                      setErrors(prev => ({ ...prev, memoryTech: '' }));
                     }}
                     options={[
                       {
@@ -845,6 +955,7 @@ const qualityFactor =()=>{
                     ]}
                     className="factor-select"
                   />
+              {errors.memoryTech && <div className="text-danger small mt-1">{errors.memoryTech}</div>}
                 </div>
               </Col>
           
@@ -869,8 +980,10 @@ const qualityFactor =()=>{
                         )
                       };
                       setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
+                      setErrors(prev => ({ ...prev, memorySizeB1: '' }));
+        updateComponentInList(updatedComponent);
+      }}
+                    
                     options={[
                       { value: 4096, label: "4K" },
                       { value: 16384, label: "16K" },
@@ -880,6 +993,7 @@ const qualityFactor =()=>{
                     ]}
                     className="factor-select"
                   />
+                 {errors.memorySizeB1 && <div className="text-danger small mt-1">{errors.memorySizeB1}</div>}
                 </div>
               </Col>
               {/* B₁ Temperature Input */}
@@ -908,9 +1022,11 @@ const qualityFactor =()=>{
                           )
                           : null
                       };
-                      setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
+                           setCurrentComponent(updatedComponent);
+                           setErrors(prev => ({ ...prev, techTemperatureB1: '' }));
+                           updateComponentInList(updatedComponent);
+                          }}
+
                     onBlur={(e) => {
                       let temp = currentComponent.techTemperatureB1;
                       if (temp === null || isNaN(temp)) temp = 25;
@@ -937,6 +1053,7 @@ const qualityFactor =()=>{
                     }}
                     placeholder="25-175°C"
                   />
+                     {errors.techTemperatureB1 && <div className="text-danger small mt-1">{errors.techTemperatureB1}</div>}
                   {currentComponent.B1 !== null && (
                     <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
                       Calculated B₁: {currentComponent.B1?.toFixed(6) || 'N/A'}
@@ -966,8 +1083,9 @@ const qualityFactor =()=>{
                         )
                       };
                       setCurrentComponent(updatedComponent);
-                      updateComponentInList(updatedComponent);
-                    }}
+                          setErrors(prev => ({ ...prev, memorySizeB2: '' }));
+        updateComponentInList(updatedComponent);
+      }}
                     options={[
                       { value: 0, label: "Flotox & Textured-Poly²" },
                       { value: 4096, label: "4K" },
@@ -978,8 +1096,8 @@ const qualityFactor =()=>{
                     ]}
                     className="factor-select"
                   />
+                      {errors.memorySizeB2 && <div className="text-danger small mt-1">{errors.memorySizeB2}</div>}
                 </div>
-                {console.log('currentComponent.memorySizeB2', currentComponent.memorySizeB2)}
 
                 {currentComponent.memorySizeB2 == 0 && (
                   <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
@@ -1016,9 +1134,11 @@ const qualityFactor =()=>{
                             )
                           };
                           setCurrentComponent(updatedComponent);
-                          updateComponentInList(updatedComponent);
+                          setErrors(prev => ({ ...prev, techTemperatureB2: '' }));
+          updateComponentInList(updatedComponent);
+        }}
                         }
-                      }}
+                    
                       onBlur={(e) => {
                         let temp = currentComponent.techTemperatureB2;
                         if (temp === null || isNaN(temp)) temp = 25;
@@ -1043,7 +1163,7 @@ const qualityFactor =()=>{
                       }}
                       placeholder="25-175°C"
                     />
-
+   {errors.techTemperatureB2 && <div className="text-danger small mt-1">{errors.techTemperatureB2}</div>}
                     {currentComponent.B2 !== null && (
                       <div style={{ fontSize: '0.875rem', color: '#6c757d' }}>
                         Calculated B₂: {currentComponent.B2?.toFixed(6)}
@@ -1065,12 +1185,16 @@ const qualityFactor =()=>{
                       value: inputs?.memoryType,
                       label: inputs?.memoryType.type
                     }}
-                    onChange={(selectedOption) => setInputs(prev => ({
-                      ...prev,
-                      memoryType: selectedOption.value,
-                      memorySize: selectedOption.value.rates[0]
-                    }))}
+                       onChange={(selectedOption) => {
+        setInputs(prev => ({
+          ...prev,
+          memoryType: selectedOption.value,
+          memorySize: selectedOption.value.rates[0]
+        }));
+        setErrors(prev => ({ ...prev, memoryType: '' }));
+      }}
                   />
+                      {errors.memoryType && <div className="text-danger small mt-1">{errors.memoryType}</div>}
                 </div>
               </Col>
               <Col md={4}>
@@ -1086,11 +1210,15 @@ const qualityFactor =()=>{
                       value: inputs?.memorySize,
                       label: inputs?.memorySize.size
                     }}
-                    onChange={(selectedOption) => setInputs(prev => ({
-                      ...prev,
-                      memorySize: selectedOption.value
-                    }))}
+                    onChange={(selectedOption) => {
+        setInputs(prev => ({
+          ...prev,
+          memorySize: selectedOption.value
+        }));
+        setErrors(prev => ({ ...prev, memorySize: '' }));
+      }}
                   />
+                   {errors.memorySize && <div className="text-danger small mt-1">{errors.memorySize}</div>}
                 </div>
               </Col>
 
@@ -1113,6 +1241,7 @@ const qualityFactor =()=>{
                           selectedOption.Ea // Pass the correct Ea for the technology
                         )
                       });
+                      setErrors(prev => ({ ...prev, technology: '' }));
                     }}
                     options={[
                       {
@@ -1171,6 +1300,7 @@ const qualityFactor =()=>{
                       }
                     ]}
                   />
+                  {errors.technology && <div className="text-danger small mt-1">{errors.technology}</div>}
                 </div>
               </Col>
               <Col md={4}>
@@ -1193,13 +1323,51 @@ const qualityFactor =()=>{
                     min="-40"
                     max="175"
                     value={currentComponent.temperature}
-                    onChange={handleInputChange}
+                    // onChange={handleInputChange}
+                    onChange={(e) => {
+                      const temp = parseFloat(e.target.value);
+                      setCurrentComponent({
+                        ...currentComponent,
+                        temperature: temp,
+                        calculatedPiT: calculatePiT(
+                          currentComponent.technology,
+                          temp,
+                          currentComponent.technologyEa // Use the correct Ea for the technology
+                        )
+                      });
+                      setErrors(prev => ({ ...prev, temperature: '' }));
+                    }}
                   />
-                        <small>T<sub>j</sub> = T<sub>c</sub> + 0.9 (θ<sub>jc</sub>)(P<sub>D</sub>)</small>
+                      {errors.temperature && <div className="text-danger small mt-1">{errors.temperature}</div>}
+
                 </div>
               </Col>
 
-         
+              <Col md={4}>
+                <div className="form-group">
+                  <label>Package Type for (C<sub>2</sub>):</label>
+                  <Select
+                    styles={customStyles}
+                    name="packageType"
+                    placeholder="Select Package Type"
+                    onChange={(selectedOption) => {
+                      setCurrentComponent({
+                        ...currentComponent,
+                        packageType: selectedOption.value
+                      });
+                              setErrors(prev => ({ ...prev, packageType: '' }));
+                    }}
+                    options={[
+                      { value: "Hermetic_DIPs_SolderWeldSeal", label: "Hermetic: DIPs w/Solder or Weld Seal, PGA, SMT" },
+                      { value: "DIPs_GlassSeal", label: "DIPs with Glass Seal" },
+                      { value: "Flatpacks_AxialLeads", label: "Flatpacks with Axial Leads" },
+                      { value: "Cans", label: "Cans" },
+                      { value: "Nonhermetic_DIPs_PGA_SMT", label: "Nonhermetic: DIPs, PGA, SMT" }
+                    ]}
+                  />
+                  {errors.packageType && <div className="text-danger small mt-1">{errors.packageType}</div>}
+                </div>
+              </Col>
               <Col md={4}>
                 <div className="form-group">
                   <label>No. of Functional Pins for (C<sub>2</sub>):</label>
@@ -1219,62 +1387,185 @@ const qualityFactor =()=>{
                     name="pinCount"
                     min="3"
                     max="224"
-                    value={currentComponent.pinCount || 0}
-                    onChange={(e) => setCurrentComponent({
-                      ...currentComponent,
-                      pinCount: parseInt(e.target.value)
-                    })}
+                    value={currentComponent.pinCount || ''}
+                    onChange={(e) => {
+        setCurrentComponent({
+          ...currentComponent,
+          pinCount: parseInt(e.target.value)
+        });
+        setErrors(prev => ({ ...prev, pinCount: '' }));
+      }}
                   />
+                     {errors.pinCount && <div className="text-danger small mt-1">{errors.pinCount}</div>}
                 </div>
               </Col>
-             <Col md={4}>
-                                       <div className="form-group">
-                                    <label>Quantity (Nₙ):</label>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        min="1"
-                                        value={quantity}
-                                        onChange={(e) => {
-                                            setQuantity(e.target.value);
-                                            //   calculateComponentSum(e.target.value)
-                                        }}
-                                    />
-                                </div>
-                                 </Col>
+            
             </Row>
-    
-              
-         <div className="d-flex justify-content-end">
-  <Button
-    className="btn"
-    onClick={calculateMemoriesFailureRate}
-  >
-    Calculate FR
-  </Button>
-</div>
-     
+            <div className='d-flex justify-content-between align-items-center'>
+              <div>
+                {result && (
+                  <Box
+                    component="div"
+                    onClick={() => setShowCalculations(!showCalculations)}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      '&:hover': {
+                        textDecoration: 'underline'
+                      }
+                    }}
+                    className="ms-auto mt-2"
+                  >
+                    <CalculatorIcon
+                      style={{ height: '30px', width: '40px' }}
+                      fontSize="large"
+                    />
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem',
+                        ml: 1
+                      }}
+                    >
+                      {showCalculations ? 'Hide Calculations' : 'Show Calculations'}
+                    </Typography>
+                  </Box>
+                )}
+              </div>
+              <Button
+                variant="primary"
+                onClick={calculateMemoriesFailureRate}
+
+                className="btn-calculate float-end mt-1"
+              >
+                Calculate Failure Rate
+              </Button>
+            </div>
+
+            {error && (
+              <Row>
+                <Col>
+                  <Alert variant="danger">{error}</Alert>
+                </Col>
+              </Row>
+            )}
 
             {result && (
               <>
-              
-                <div style={{width:"50%"}}>
-       <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
-                  <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
-                  <br/>
-                  <strong>λ<sub>c</sub> * N<sub>c</sub>:</strong>
-                  <span className="ms-2">{result?.value * quantity} failures/10<sup>6</sup> hours</span>
-                
-                  {console.log("calculateMemories..", result?.value * quantity)}
+                <h2 className="text-center">Calculation Result</h2>
+                <div className="d-flex align-items-center">
+                  <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
+                  <span className="ms-2">{result.value} failures/10<sup>6</sup> hours</span>
                 </div>
               </>
             )}
 
-       
+            {result && showCalculations && (
+              <div className="card mt-3">
+                <div className="card-body">
+                  <MaterialTable
+                    columns={[
+                      {
+                        title: <span>C<sub>1</sub></span>,
+                        field: 'c1',
+                        render: rowData => rowData?.c1 || '-'
+                      },
+                      {
+                        title: <span>π<sub>T</sub></span>,
+                        field: 'piT',
+                        render: rowData => rowData?.piT || '-'
+                      },
+                      {
+                        title: <span>C<sub>2</sub></span>,
+                        field: 'c2',
+                        render: rowData => rowData?.c2 || '-'
+                      },
+                      {
+                        title: <span>π<sub>E</sub></span>,
+                        field: 'piE',
+                        render: rowData => (
+                          <div>
+                            <div>{rowData.piE}</div>
+                            <div style={{ fontSize: '0.8rem', color: '#666' }}>
+                              {rowData?.piELabel}
+                            </div>
+                          </div>
+                        )
+                      },
+                      {
+                        title: <span>λ<sub>cyc</sub></span>,
+                        field: 'lambdaCyc',
+                        render: rowData => rowData?.lambdaCyc || '-'
+                      },
+                      {
+                        title: <span>π<sub>Q</sub></span>,
+                        field: 'πQ',
+                        render: rowData => rowData?.πQ || '-'
+                      },
+                      {
+                        title: <span>π<sub>L</sub></span>,
+                        field: 'piL',
+                        render: rowData => rowData?.piL || '-'
+                      },
+                      {
+                        title: "Failure Rate",
+                        field: 'λp',
+                        render: rowData => rowData?.λp || '-'
+                      }
+                    ]}
+                    data={[{
+                      c1: result?.parameters?.c1,
+                      piT: result?.parameters?.piT,
+                      c2: result?.parameters?.c2,
+                      piE: result?.parameters?.piE,
+
+                      lambdaCyc: result?.parameters?.lambdaCyc,
+                      // piQ: result?.parameters?.piQ,
+                      πQ: (() => {
+                        const piQValue = result?.parameters?.πQ;
+                        console.log('piQ value:', piQValue);
+                        return piQValue;
+                      })(),
+                      piL: result?.parameters?.piL,
+                      λp: result?.value
+                    }]}
+                    options={{
+                      search: false,
+                      paging: false,
+                      toolbar: false,
+                      headerStyle: { backgroundColor: '#CCE6FF', fontWeight: 'bold' }
+                    }}
+                    components={{
+                      Container: props => <Paper {...props} elevation={2} />
+                    }}
+                  />
+
+                  <div className="mt-3">
+                    <h5>Calculation Formula</h5>
+                    <p>λ<sub>p</sub> = (C<sub>1</sub> × π<sub>T</sub> + C<sub>2</sub> × π<sub>E</sub> + λ<sub>cyc</sub>) × π<sub>Q</sub>× π<sub>L</sub></p>
+
+                    <h5>Where:</h5>
+                    <ul>
+                      <li>C<sub>1</sub> = Die complexity failure rate (from memory type and size)</li>
+                      <li>π<sub>T</sub> = Temperature factor (based on junction temperature)</li>
+                      <li>C<sub>2</sub> = Package failure rate (from package type and pin count)</li>
+                      <li>π<sub>E</sub> = Environment factor</li>
+                      {inputs?.memoryType.type.includes('EEPROM') && (
+                        <li>λ<sub>cyc</sub> = Read/write cycling induced failure rate (for EEPROMs)</li>
+                      )}
+                      <li>π<sub>Q</sub> = Quality factor</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
   )
 }
-export default  Hybridmemories;
+export default  MicroMemories;
 
 
 

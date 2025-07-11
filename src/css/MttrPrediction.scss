@@ -435,3 +435,45 @@
   background-color: red;
   height: 40px; /* Adjust the height as needed */
 }
+/* Extra wide modal styling */
+.extra-wide-modal {
+  max-width: 1400px !important;  /* Increased width */
+  width: 95% !important;
+  margin: 0 auto;
+}
+
+.modal-content-wrapper {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Ensure content fills the width */
+.modal-body {
+  width: 100%;
+  padding: 2rem;  /* Increased padding */
+}
+
+/* Responsive adjustments */
+@media (min-width: 1600px) {
+  .extra-wide-modal {
+    max-width: 1500px !important;  /* Even wider for large screens */
+  }
+}
+
+@media (max-width: 1200px) {
+  .extra-wide-modal {
+    max-width: 90% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .extra-wide-modal {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+}

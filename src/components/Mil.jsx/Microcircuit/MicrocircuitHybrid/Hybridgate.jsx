@@ -8,13 +8,13 @@ import {
   getQualityFactor,
   calculateGateArrayC1,
   calculateLearningFactor,
-} from './Calculation.js';
+} from '../../Calculation.js';
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { Button, Row, Col } from 'react-bootstrap';
 import Box from '@mui/material/Box';
 import { Alert, Paper, Typography } from "@mui/material";
 import MaterialTable from "material-table";
-import './Microcircuits.css';
+import '../../Microcircuits.css';
 
 const Hybridgate = ({ onCalculate }) => {
     
@@ -22,7 +22,7 @@ const Hybridgate = ({ onCalculate }) => {
   const [showCalculations, setShowCalculations] = useState(false);
   const [components, setComponents] = useState([]);
   const [results, setResults] = useState(null);
-  const[quantity,setQuantity] = useState(null)
+  const[quantity,setQuantity] = useState(1)
   const [currentComponent, setCurrentComponent] = useState({
     type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
     temperature: 25,
@@ -179,10 +179,10 @@ const[error,setError] = useState("");
   const calculateGateFailureRate = () => {
   try {
     
-    // if (!validateForm()) {
-    //   setResults(null);
-    //   return;
-    // }
+    if (!validateForm()) {
+      setResults(null);
+      return;
+    }
     const C1 = calculateGateArrayC1(currentComponent);
     const C2 = 0;
     const piT = calculatePiT(currentComponent.technology, currentComponent.temperature);
@@ -195,27 +195,13 @@ const[error,setError] = useState("");
     const failureRate = (C1 * piT + C2 *piE) * piQ * piL
     console.log("Failure Rate1:", failureRate);
 
-    const quantity = currentComponent.quantity || 1;
-    console.log("quantity..",quantity)
-    const totalFailureRate = failureRate * quantity;
 
-    // setFailureRates(prev => {
-    //   const newRates = [...prev];
-    //   const existingIndex = newRates.findIndex(r => r.id === component.id);
-      
-    //   if (existingIndex >= 0) {
-    //     newRates[existingIndex] = { id: component.id, rate: totalFailureRate };
-    //   } else {
-    //     newRates.push({ id: component.id, rate: totalFailureRate });
-    //   }
-      
-    //   return newRates;
-    // });
+   
 
 
     setResults({
       value: failureRate,
-      totalValue: totalFailureRate,
+      // totalValue: totalFailureRate,
       parameters: {
         C1,
         C2,
@@ -227,14 +213,19 @@ const[error,setError] = useState("");
         formula: 'λp = CalculatedFailureRate'
       }
     });
+    console.log("failureRate...1...",failureRate)
+    console.log("quantity.....",quantity)
+if (onCalculate) {
+        onCalculate(failureRate * quantity);
+      }
 
 
-    const newComponents = {
-      ...component,
-      failureRate: result.value,
-      totalFailureRate: result.totalValue,
-      calculationParams: result.parameters
-    };
+    // const newComponents = {
+    //   ...component,
+    //   failureRate: result.value,
+    //   totalFailureRate: result.totalValue,
+    //   calculationParams: result.parameters
+    // };
 
  
     // setComponent([...component, newComponents]);
@@ -601,8 +592,6 @@ const[error,setError] = useState("");
             </>
           )}
 
- 
-              
                       <Col md={4}>
                                <div className="form-group">
                                  <label>No. of Functional Pins for (C<sub>2</sub>):</label>
@@ -622,8 +611,7 @@ const[error,setError] = useState("");
                                </div>
                              </Col>
               
-      
-
+    
           <Col md={4}>
             <div className="form-group">
               <label>Learning Factor (π<sub>L</sub>):</label>
@@ -752,7 +740,6 @@ const[error,setError] = useState("");
             </div>
           </Col>
         
-
             <Col md={4}>
                            <div className="form-group">
                         <label>Quantity (Nₙ):</label>
@@ -789,6 +776,7 @@ const[error,setError] = useState("");
                            <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
                            {results?.value?.toFixed(4)}failures/10<sup>6</sup> hours
                          </p>
+                         <br/>
                          <p className="mb-1">
                            <strong> λ<sub>c</sub> * N<sub>c</sub>:</strong>
                            {results?.value * quantity}failures/10<sup>6</sup> hours
