@@ -41,7 +41,7 @@ export default function PBS(props) {
   if (!projectId) {
     const url = window.location.href; // Get the full URL
     const urlParts = url.split("/"); // Split URL by '/'
-    projectId = urlParts[urlParts.length - 1]; // Assuming projectId is the last segment of the URL
+    projectId = urlParts[urlParts?.length - 1]; // Assuming projectId is the last segment of the URL
   }
 
   const [productId, setProductId] = useState();
@@ -132,7 +132,7 @@ export default function PBS(props) {
 
       return newRow;
     });
-    if (modifiedTableData.length > 0) {
+    if (modifiedTableData?.length > 0) {
       const columns = Object.keys(modifiedTableData[0]).map((columnName) => ({
         title: columnName,
         field: columnName,
@@ -201,7 +201,7 @@ export default function PBS(props) {
 
   const convertToJson = (headers, data) => {
     const rows = [];
-    if (data.length > 0 && data[0].length > 1) {
+    if (data?.length > 0 && data[0]?.length > 1) {
       data.forEach((row) => {
         let rowData = {};
         row.forEach((element, index) => {
@@ -456,7 +456,7 @@ export default function PBS(props) {
       userId: userId,
     })
       .then((res) => {
-       
+
         setProductMessage(res?.data?.message);
         setMainProductModalOpen(false);
         resetForm({ values: "" });
@@ -513,7 +513,7 @@ export default function PBS(props) {
       .then((res) => {
         const treeData = res?.data?.data;
         setData(treeData);
-        console.log("treeDataaa.......................",res)
+        console.log("treeDataaa.......................", res)
         setISLoading(false);
       })
       .catch((error) => {
@@ -562,7 +562,7 @@ export default function PBS(props) {
       category: category.value,
       reference: values.referenceOrPosition,
       // environment: prefillEnviron.value,
-       environment: values.environment?.value || environment,
+      environment: values.environment?.value || environment,
       temperature: values.temperature,
       partType: values.partType.value,
       partNumber: values.partNumber,
@@ -638,7 +638,7 @@ export default function PBS(props) {
     });
   };
   const callCopyAndPasteProduct = (pasteProductTreeIds, pasteProductIds) => {
-    if (selectCopyData.children.length > 0) {
+    if (selectCopyData.children?.length > 0) {
       copyAndPasteProduct(pasteProductTreeIds, pasteProductIds);
     } else {
       copyAndPasteParentProduct(pasteProductTreeIds, pasteProductIds);
@@ -791,7 +791,7 @@ export default function PBS(props) {
                               DownloadExcel();
                             }}
                             disabled={
-                              data.length === 0 || // Disable if no data
+                              data?.length === 0 || // Disable if no data
                                 (permission?.write !== true &&
                                   permission?.write !== undefined &&
                                   role !== "admin" &&
@@ -1086,7 +1086,7 @@ export default function PBS(props) {
                                       <Select
                                         type="select"
                                         styles={customStyles}
-                                        value={values.environment} 
+                                        value={values.environment}
                                         name="environment"
                                         placeholder="Select Environment"
                                         onChange={(e) => {
@@ -1123,7 +1123,7 @@ export default function PBS(props) {
                                         min="0"
                                         step="any"
                                         name="temperature"
-                                        value={values.temperature}   
+                                        value={values.temperature}
 
 
                                         onChange={handleChange}
@@ -1207,36 +1207,38 @@ export default function PBS(props) {
                     <Modal
                       show={deleteMessage}
                       centered
+                      size="xl"
                       onHide={() => setShow(!show)}
+                      dialogClassName="custom-delete-modal"
                     >
-                      <div className="d-flex justify-content-center mt-5">
-                        <div>
+                      <Modal.Body className="p-4">
+                        <div className="d-flex justify-content-center">
                           <h4 className="text-center">
-                            <h4 className="text-center">
-                              Are you Sure want to delete
-                            </h4>
+                            Are you sure you want to delete?
                           </h4>
                         </div>
-                      </div>
-                      <Modal.Footer className=" d-flex justify-content-center success-message mt-3 mb-4">
-                        <div className="d-flex justify-content-center">
-                          <Button
-                            variant="outline-secondary"
-                            onClick={() => {
-                              setDeleteMessage(false);
-                            }}
-                            className="delete-cancel-btn  mx-2"
-                          >
-                            No
-                          </Button>
-
-                          <Button
-                            className="yese-btn "
-                            onClick={() => deleteForm(deleteProduct)}
-                          >
-                            Yes
-                          </Button>
-                        </div>
+                      </Modal.Body>
+                      <Modal.Footer className="d-flex justify-content-center py-4">
+<Button
+  variant="outline-secondary"
+  onClick={() => setDeleteMessage(false)}
+  className="delete-cancel-btn mx-2"
+  style={{ minWidth: "100px" }}
+>
+  No
+</Button>
+<Button
+  className="yes-btn"
+  onClick={() => deleteForm(deleteProduct)}
+  style={{ 
+    minWidth: "100px",
+    backgroundColor: "#218838",  
+    borderColor: "#218838",
+    color: "white"
+  }}
+>
+  Yes
+</Button>
                       </Modal.Footer>
                     </Modal>
                     <Modal
@@ -1299,83 +1301,84 @@ export default function PBS(props) {
                   </thead>
                 </table>
               </div> */}
-                <MaterialTable
-                  title="PBS"
-                  columns={[
-                    { title: "S.No", field: "indexCount", width: "7%", align: "center",
-                      cellStyle: { paddingLeft: '20px'},
-                      headerStyle: { paddingLeft: '20px'} 
-                    },
-                    { title: "Product Name", field: "productName", width: "18%", align: "center" },
-                    { title: "Category", field: "category", width: "10%", align: "center" },
-                    { title: "Part Number", field: "partNumber", width: "15%", align: "center" },
-                    { title: "Part Type", field: "partType", width: "15%", align: "center" },
-                    { title: "FR", field: "fr", width: "5%", align: "center" },
-                    { title: "MTTR", field: "mttr", width: "5%", align: "center" },
-                    { title: "MCT", field: "mct", width: "5%", align: "center" },
-                    { title: "MLH", field: "mlh", width: "5%", align: "center" },
-                  ]}
-                  data={sortedData}
-                  icons={tableIcons}
-                  parentChildData={(row, rows) =>
-                    rows.find((a) => a.id === row.productId)
-                  }
-                  actions={[
-                    (rowData) => {
-                      return {
-                        icon: () => (
-                          <Dropdown>
-                            {permission?.write === true ||
-                              permission?.write === "undefined" ||
-                              role === "admin" ||
-                              (isOwner === true && createdBy === userId) ? (
-                              <Dropdown.Toggle className="dropdown">
-                                <FaEllipsisV className="icon" />
-                              </Dropdown.Toggle>
-                            ) : null}
-                            {permission?.write === true ||
-                              permission?.write === "undefined" ||
-                              role === "admin" ||
-                              (isOwner === true && createdBy === userId) ? (
-                              <Dropdown.Menu right>
-                                {rowData.category === "Electronic" ||
-                                  rowData.category === "Mechanical" ? null : (
-                                  <Tooltip
-                                    title="create sub product"
-                                    placement="top"
+              <MaterialTable
+                title="PBS"
+                columns={[
+                  {
+                    title: "S.No", field: "indexCount", width: "7%", align: "center",
+                    cellStyle: { paddingLeft: '20px' },
+                    headerStyle: { paddingLeft: '20px' }
+                  },
+                  { title: "Product Name", field: "productName", width: "18%", align: "center" },
+                  { title: "Category", field: "category", width: "10%", align: "center" },
+                  { title: "Part Number", field: "partNumber", width: "15%", align: "center" },
+                  { title: "Part Type", field: "partType", width: "15%", align: "center" },
+                  { title: "FR", field: "fr", width: "5%", align: "center" },
+                  { title: "MTTR", field: "mttr", width: "5%", align: "center" },
+                  { title: "MCT", field: "mct", width: "5%", align: "center" },
+                  { title: "MLH", field: "mlh", width: "5%", align: "center" },
+                ]}
+                data={sortedData}
+                icons={tableIcons}
+                parentChildData={(row, rows) =>
+                  rows.find((a) => a.id === row.productId)
+                }
+                actions={[
+                  (rowData) => {
+                    return {
+                      icon: () => (
+                        <Dropdown>
+                          {permission?.write === true ||
+                            permission?.write === "undefined" ||
+                            role === "admin" ||
+                            (isOwner === true && createdBy === userId) ? (
+                            <Dropdown.Toggle className="dropdown">
+                              <FaEllipsisV className="icon" />
+                            </Dropdown.Toggle>
+                          ) : null}
+                          {permission?.write === true ||
+                            permission?.write === "undefined" ||
+                            role === "admin" ||
+                            (isOwner === true && createdBy === userId) ? (
+                            <Dropdown.Menu right>
+                              {rowData.category === "Electronic" ||
+                                rowData.category === "Mechanical" ? null : (
+                                <Tooltip
+                                  title="create sub product"
+                                  placement="top"
+                                >
+                                  <Dropdown.Item
+                                    className="user-dropitem-project text-center"
+                                    onClick={() => {
+                                      setMainProductModalOpen(true);
+                                      setSubProduct(true);
+                                      setPatchModal(false);
+                                      setPartType("");
+                                      setParentId(rowData.id);
+                                      setProductIndexCount(
+                                        rowData.indexCount
+                                      );
+                                      const convertNumber = parseInt(
+                                        rowData.indexCount
+                                      );
+                                      setCount(convertNumber);
+                                      setChildProductCriteria(false);
+                                    }}
                                   >
-                                    <Dropdown.Item
-                                      className="user-dropitem-project text-center"
-                                      onClick={() => {
-                                        setMainProductModalOpen(true);
-                                        setSubProduct(true);
-                                        setPatchModal(false);
-                                        setPartType("");
-                                        setParentId(rowData.id);
-                                        setProductIndexCount(
-                                          rowData.indexCount
-                                        );
-                                        const convertNumber = parseInt(
-                                          rowData.indexCount
-                                        );
-                                        setCount(convertNumber);
-                                        setChildProductCriteria(false);
-                                      }}
-                                    >
-                                      <span style={{ color: 'blue' }}>Add Child Part</span>
+                                    <span style={{ color: 'blue' }}>Add Child Part</span>
 
-                                    </Dropdown.Item>
-                                  </Tooltip>
-                                )}
-                                <hr
-                                  style={{
-                                    margin: "0",
-                                    border: "1px",
-                                    borderBottom: "1px solid #000000",
-                                  }}
-                                />
+                                  </Dropdown.Item>
+                                </Tooltip>
+                              )}
+                              <hr
+                                style={{
+                                  margin: "0",
+                                  border: "1px",
+                                  borderBottom: "1px solid #000000",
+                                }}
+                              />
 
-                                {/* <Dropdown.Item
+                              {/* <Dropdown.Item
                                   className="user-dropitem-project text-center"
                                   onClick={() => {
                                     setProductId(rowData.id);
@@ -1405,150 +1408,150 @@ export default function PBS(props) {
                                 >
                                   <span style={{ color: 'blue' }}>Edit</span>
                                 </Dropdown.Item> */}
-                                <Dropdown.Item
-                                  className="user-dropitem-project text-center"
-                                  onClick={() => {
-                                    setProductId(rowData.id);
-                                    setTreeId(rowData.parentId);
-                                    setChildProductCriteria(
-                                      rowData?.children?.length > 0
-                                        ? true
-                                        : false
-                                    );
-                                    setMainProductModalOpen(true);
-                                    setPatchModal(true);
-                                    setPatchCategory(rowData.category);
-                                    setPatchPartType(rowData.partType);
-                                    setReference(rowData.referenceOrPosition);
-                                    setQuantity(rowData.quantity);
-                                    setPartNumber(rowData.partNumber);
-                                    setPatchName(rowData.productName);
-                                    setCategory(
-                                      rowData.category
-                                        ? {
-                                          value: rowData.category,
-                                          label: rowData.category,
-                                        }
-                                        : ""
-                                    );
-                                  }}
-                                >
-                                  <span style={{ color: 'blue' }}>Edit</span>
-                                </Dropdown.Item>
-                                <hr
-                                  style={{
-                                    margin: "0",
-                                    border: "1px",
-                                    borderBottom: "1px solid #000000",
-                                  }}  
-                                />
-                              
-                                <Dropdown.Item
-                                  className="user-dropitem-project text-center"
-                                  onClick={() => {
-                                    setParentsId(rowData?.productId);
-                                    setDeleteProduct(rowData);
-                                    setDeleteId(rowData.id);
-                                    setProductIndexCount(rowData.indexCount);
-                                    setDeleteTreeId(rowData.parentId);
-                                    setDeleteMessage(true);
-                                  }}
-                                >
-                                  <span style={{ color: 'blue' }}>Delete</span>
-                                </Dropdown.Item>
-                                <hr
-                                  style={{
-                                    margin: "0",
-                                    border: "1px",
-                                    borderBottom: "1px solid #000000",
-                                  }}
-                                />
+                              <Dropdown.Item
+                                className="user-dropitem-project text-center"
+                                onClick={() => {
+                                  setProductId(rowData.id);
+                                  setTreeId(rowData.parentId);
+                                  setChildProductCriteria(
+                                    rowData?.children?.length > 0
+                                      ? true
+                                      : false
+                                  );
+                                  setMainProductModalOpen(true);
+                                  setPatchModal(true);
+                                  setPatchCategory(rowData.category);
+                                  setPatchPartType(rowData.partType);
+                                  setReference(rowData.referenceOrPosition);
+                                  setQuantity(rowData.quantity);
+                                  setPartNumber(rowData.partNumber);
+                                  setPatchName(rowData.productName);
+                                  setCategory(
+                                    rowData.category
+                                      ? {
+                                        value: rowData.category,
+                                        label: rowData.category,
+                                      }
+                                      : ""
+                                  );
+                                }}
+                              >
+                                <span style={{ color: 'blue' }}>Edit</span>
+                              </Dropdown.Item>
+                              <hr
+                                style={{
+                                  margin: "0",
+                                  border: "1px",
+                                  borderBottom: "1px solid #000000",
+                                }}
+                              />
 
-                                <Dropdown.Item
-                                  className="user-dropitem-project text-center"
-                                  onClick={() => {
-                                    setCopyProductTreeId(rowData.parentId);
-                                    setCopyProdctId(rowData.id);
-                                    handleCopyClick(rowData);
-                                    callCopyProduct(
-                                      rowData.parentId,
-                                      rowData.id
-                                    );
-                                  }}
-                                >
-                                  <span style={{ color: 'blue' }}>Copy</span>
-                                </Dropdown.Item>
-                                <hr
-                                  style={{
-                                    margin: "0",
-                                    border: "1px",
-                                    borderBottom: "1px solid #000000",
-                                  }}
-                                />
+                              <Dropdown.Item
+                                className="user-dropitem-project text-center"
+                                onClick={() => {
+                                  setParentsId(rowData?.productId);
+                                  setDeleteProduct(rowData);
+                                  setDeleteId(rowData.id);
+                                  setProductIndexCount(rowData.indexCount);
+                                  setDeleteTreeId(rowData.parentId);
+                                  setDeleteMessage(true);
+                                }}
+                              >
+                                <span style={{ color: 'blue' }}>Delete</span>
+                              </Dropdown.Item>
+                              <hr
+                                style={{
+                                  margin: "0",
+                                  border: "1px",
+                                  borderBottom: "1px solid #000000",
+                                }}
+                              />
 
-                                <Dropdown.Item
-                                  className="user-dropitem-project text-center"
-                                  onClick={() => {
-                                    setPasteProductTreeId(rowData.parentId);
-                                    setPasteProdctId(rowData.id);
-                                    callCopyAndPasteProduct(
-                                      rowData.parentId,
-                                      rowData.id
-                                    );
-                                    window.location.reload();
-                                    handlePasteClick(rowData);
-                                    setParentsId(rowData?.productId);
-                                  }}
-                                >
-                                  <span style={{ color: 'blue' }}>Paste</span>
-                                </Dropdown.Item>
-                              </Dropdown.Menu>
-                            ) : null}
-                          </Dropdown>
-                        ),
-                        onClick: (event, rowData) => {
-                          setColId(rowData.id);
-                          setIsOpen(!isOpen);
-                        },
-                      };
-                    },
-                  ]}
-                  // options={{
-                  //   actionsColumnIndex: -1,
-                  //   addRowPosition: "last",
-                  //   headerStyle: {
-                  //     backgroundColor: "#cce6ff",
-                  //     fontWeight: "bold",
-                  //     zIndex: 0,
-                  //   },
-                  //   defaultExpanded: true,
-                  //   rowStyle,
-                  //   header: false,
-                  //   search: false,
-                  // }}
-                  options={{
-                    cellStyle: {
-                      border: "1px solid #eee",
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis',
-                      overflow: 'hidden'
-                    },
-                    addRowPosition: "last",
-                    actionsColumnIndex: -1,
-                    pageSize: 5,
-                    pageSizeOptions: [5, 10, 20, 50],
-                    headerStyle: {
-                      backgroundColor: "#CCE6FF",
-                      fontWeight: "bold",
-                      zIndex: 0,
-                      textAlign:'center',
-                      whiteSpace: 'nowrap',       // prevent line wrap
-                      // minWidth: 200,              // or width: 200
-                      maxWidth: 300,
-                    },
+                              <Dropdown.Item
+                                className="user-dropitem-project text-center"
+                                onClick={() => {
+                                  setCopyProductTreeId(rowData.parentId);
+                                  setCopyProdctId(rowData.id);
+                                  handleCopyClick(rowData);
+                                  callCopyProduct(
+                                    rowData.parentId,
+                                    rowData.id
+                                  );
+                                }}
+                              >
+                                <span style={{ color: 'blue' }}>Copy</span>
+                              </Dropdown.Item>
+                              <hr
+                                style={{
+                                  margin: "0",
+                                  border: "1px",
+                                  borderBottom: "1px solid #000000",
+                                }}
+                              />
 
-                  }}
-                />
+                              <Dropdown.Item
+                                className="user-dropitem-project text-center"
+                                onClick={() => {
+                                  setPasteProductTreeId(rowData.parentId);
+                                  setPasteProdctId(rowData.id);
+                                  callCopyAndPasteProduct(
+                                    rowData.parentId,
+                                    rowData.id
+                                  );
+                                  window.location.reload();
+                                  handlePasteClick(rowData);
+                                  setParentsId(rowData?.productId);
+                                }}
+                              >
+                                <span style={{ color: 'blue' }}>Paste</span>
+                              </Dropdown.Item>
+                            </Dropdown.Menu>
+                          ) : null}
+                        </Dropdown>
+                      ),
+                      onClick: (event, rowData) => {
+                        setColId(rowData.id);
+                        setIsOpen(!isOpen);
+                      },
+                    };
+                  },
+                ]}
+                // options={{
+                //   actionsColumnIndex: -1,
+                //   addRowPosition: "last",
+                //   headerStyle: {
+                //     backgroundColor: "#cce6ff",
+                //     fontWeight: "bold",
+                //     zIndex: 0,
+                //   },
+                //   defaultExpanded: true,
+                //   rowStyle,
+                //   header: false,
+                //   search: false,
+                // }}
+                options={{
+                  cellStyle: {
+                    border: "1px solid #eee",
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                    overflow: 'hidden'
+                  },
+                  addRowPosition: "last",
+                  actionsColumnIndex: -1,
+                  pageSize: 5,
+                  pageSizeOptions: [5, 10, 20, 50],
+                  headerStyle: {
+                    backgroundColor: "#CCE6FF",
+                    fontWeight: "bold",
+                    zIndex: 0,
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',       // prevent line wrap
+                    // minWidth: 200,              // or width: 200
+                    maxWidth: 300,
+                  },
+
+                }}
+              />
             </ThemeProvider>
           </div>
         </div>

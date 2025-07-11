@@ -10,35 +10,7 @@
   border: none;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
-/* Custom modal styling */
-.fixed-width-modal {
-  max-width: 1200px;
-  width: 90%;
-}
 
-.modal-content-wrapper {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.modal-content {
-  width: 100%;
-  overflow-y: auto;
-  max-height: 90vh;
-}
-
-@media (max-width: 1200px) {
-  .fixed-width-modal {
-    width: 95%;
-  }
-}
-
-@media (max-width: 768px) {
-  .fixed-width-modal {
-    width: 98%;
-  }
-}
 /* Modal Header/Close Button */
 .close-icon {
   position: absolute;
@@ -462,4 +434,46 @@
   margin-top: 8px;
   background-color: red;
   height: 40px; /* Adjust the height as needed */
+}
+/* Extra wide modal styling */
+.extra-wide-modal {
+  max-width: 1400px !important;  /* Increased width */
+  width: 95% !important;
+  margin: 0 auto;
+}
+
+.modal-content-wrapper {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Ensure content fills the width */
+.modal-body {
+  width: 100%;
+  padding: 2rem;  /* Increased padding */
+}
+
+/* Responsive adjustments */
+@media (min-width: 1600px) {
+  .extra-wide-modal {
+    max-width: 1500px !important;  /* Even wider for large screens */
+  }
+}
+
+@media (max-width: 1200px) {
+  .extra-wide-modal {
+    max-width: 90% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .extra-wide-modal {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
 }
