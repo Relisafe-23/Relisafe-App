@@ -40,6 +40,7 @@ const[ failureRate,setFailureRate]= useState({})
   const [mode, setMode] = useState('A1');
   const [capacitor,setCapacitor] =useState(null);
   const [diode,setDiode] = useState(null);
+  
   const[microcircuits,setMicrocircuits] = useState(null)
   const [numberOfPins, setNumberOfPins] = useState(null);
   const [selectedECC, setSelectedECC] = React.useState(null);// 'A1' or 'C'
@@ -100,7 +101,9 @@ const capacitorTotalFRate = (values) =>{
   const onTotalFailureRateChange = (value) => {
    setFailureRate(value);
   };
-
+  const diodeFailureRateChange =(value) =>{
+    setDiode(value);
+  }
  
 const totalLambdaNc = () => {
   const capacitorValue = Number(capacitor) || 0;
@@ -610,7 +613,7 @@ const packageRates = [
 
               {selectedComponent?.some(option => option.value === "DiscreteSemiconductor") && (
                 <>
-                  <MicroDiode   onCalculate={onCalculate}/>
+                  <MicroDiode diodeFailureRateChange= {diodeFailureRateChange}/>
 
                 </>
               )}

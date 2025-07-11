@@ -948,7 +948,7 @@ if(capacitorTotalFRate){
 
       {components.length > 0 && (
         <div className="total-failure-rate" style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f8f9fa' }}>
-          <h5> Capacitors (λ<sub>c</sub> * N<sub>c</sub>): {totalSystemFailureRate?.toFixed(10)} failures/10<sup>6</sup> hours</h5>
+        <h5>  <strong>Capacitors (λ<sub>c</sub> * N<sub>c</sub>): {totalSystemFailureRate?.toFixed(10)} failures/10<sup>6</sup> hours  </strong> </h5>
         </div>
       )}
     </div>

@@ -318,7 +318,7 @@ onTotalFailureRateChange
 
       {components.length > 0 && (
         <div className="total-failure-rate" style={{ marginTop: '20px', padding: '10px'}}>
-         <strong><h5>Microcircuits (λ<sub>c</sub> * N<sub>c</sub>): {totalSystemFailureRate?.toFixed(6)} failures/10<sup>6</sup> hours</h5></strong>
+       <h5>  <strong> Microcircuits (λ<sub>c</sub> * N<sub>c</sub>): {totalSystemFailureRate?.toFixed(6)} failures/10<sup>6</sup> hours </strong></h5>
         </div>
       )}
     </div>

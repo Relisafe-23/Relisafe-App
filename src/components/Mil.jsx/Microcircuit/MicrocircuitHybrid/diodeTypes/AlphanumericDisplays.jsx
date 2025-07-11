@@ -24,7 +24,8 @@ const AlphanumericDisplays = ({ formData, onInputChange, onCalculate, qualityFac
         { temp: 110, pi_T: 8.0 },
         { temp: 115, pi_T: 8.8 }
     ];
-    
+    const[quantity, setQuantity]= useState(1)
+
     const alphaNumericEnvironmentFactors = [
         { code: 'GB', name: 'Ground, Benign', pi_E: 1.0 },
         { code: 'GF', name: 'Ground, Fixed', pi_E: 2.0 },
@@ -115,10 +116,11 @@ const AlphanumericDisplays = ({ formData, onInputChange, onCalculate, qualityFac
       formula
     });
 
-    if (onCalculate) {
-      onCalculate(lambda_p, calculationDetails, formula);
-    }
-  };
+     if (onCalculate) {
+      onCalculate(lambda_p * quantity);
+    }}
+    // console.log("onCalculate..", lambda_p * quantity)
+
   return(
       <>
                         <Row>
@@ -231,6 +233,21 @@ const AlphanumericDisplays = ({ formData, onInputChange, onCalculate, qualityFac
                             </select>
                         </div>
                         </Col>
+                         <Col md={4}>
+                                                   <div className="form-group">
+                                                <label>Quantity (Nₙ):</label>
+                                                <input
+                                                    type="number"
+                                                    className="form-control"
+                                                    min="1"
+                                                    value={quantity}
+                                                    onChange={(e) => {
+                                                        setQuantity(e.target.value);
+                                                        //   calculateComponentSum(e.target.value)
+                                                    }}
+                                                />
+                                            </div>
+                                             </Col>
                         </Row>
 
 
@@ -242,10 +259,16 @@ const AlphanumericDisplays = ({ formData, onInputChange, onCalculate, qualityFac
                           {results && (
         <div className="mt-4 p-3 bg-light rounded">
           <h4>Calculation Results</h4>
-          <p><strong>Formula:</strong> {results.formula}</p>
-          <p>
-            <strong>Failure Rate (λp):</strong> {results.failureRate.toFixed(6)} failures/10<sup>6</sup> hours
+          <p><strong>Formula:</strong> {results?.formula}</p>
+        <p>
+            <strong>Failure Rate (λp):</strong> {results?.failureRate?.toFixed(6)} failures/10<sup>6</sup> hours
           </p>
+        <p className="mb-1">
+                           <strong> λ<sub>c</sub> * N<sub>c</sub>:</strong>
+                           {results?.failureRate * quantity?.toFixed(6)} failures/10<sup>6</sup> hours
+                           {/* {totalSysFailureRate.push(results?.value * quantity)} */}
+                           {console.log("CalculateGate123..", results?.failureRate * quantity)}
+                         </p>
          
         </div>
       )}

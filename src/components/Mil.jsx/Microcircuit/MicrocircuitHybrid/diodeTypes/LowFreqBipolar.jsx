@@ -3,7 +3,7 @@ import { Row, Col, Button } from 'react-bootstrap';
 
 const LowFreqBipolar = ({ formData, onInputChange, onCalculate, qualityFactors, environmentFactors }) => {
   const [results, setResults] = useState(null);
-
+  const [quantity,setQuantity]= useState(1);
   // Transistor application factors
   const transistorAppFactors = [
     { name: 'Linear Amplification', pi_A: 1.5 },
@@ -141,9 +141,12 @@ const LowFreqBipolar = ({ formData, onInputChange, onCalculate, qualityFactors, 
         formula
       });
 
-      if (onCalculate) {
-        onCalculate(lambda_p, calculationDetails, formula);
-      }
+      // if (onCalculate) {
+      //   onCalculate(lambda_p, calculationDetails, formula);
+      // }
+        if (onCalculate) {
+      onCalculate(lambda_p *quantity);
+    }
 
     } catch (error) {
       console.error("Calculation error:", error);
@@ -348,6 +351,21 @@ const LowFreqBipolar = ({ formData, onInputChange, onCalculate, qualityFactors, 
             </select>
           </div>
         </Col>
+         <Col md={4}>
+                                   <div className="form-group">
+                                <label>Quantity (Nₙ):</label>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    min="1"
+                                    value={quantity}
+                                    onChange={(e) => {
+                                        setQuantity(e.target.value);
+                                        //   calculateComponentSum(e.target.value)
+                                    }}
+                                />
+                            </div>
+                             </Col>
       </Row>
 
       <Button onClick={calculateFailureRate} className="mt-3">
@@ -358,9 +376,15 @@ const LowFreqBipolar = ({ formData, onInputChange, onCalculate, qualityFactors, 
         <div className="mt-4 p-3 bg-light rounded">
           <h4>Calculation Results</h4>
           <p><strong>Formula:</strong> {results.formula}</p>
-          <p>
-            <strong>Failure Rate (λp):</strong> {results.failureRate.toFixed(6)} failures/10<sup>6</sup> hours
+         <p>
+            <strong>Failure Rate (λp):</strong> {results?.failureRate?.toFixed(6)} failures/10<sup>6</sup> hours
           </p>
+        <p className="mb-1">
+                           <strong> λ<sub>c</sub> * N<sub>c</sub>:</strong>
+                           {results?.failureRate * quantity}failures/10<sup>6</sup> hours
+                           {/* {totalSysFailureRate.push(results?.value * quantity)} */}
+                           {console.log("CalculateGate123..", results?.failureRate * quantity)}
+                         </p>
          
         </div>
       )}

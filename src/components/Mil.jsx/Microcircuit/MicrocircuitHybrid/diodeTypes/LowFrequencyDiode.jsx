@@ -4,7 +4,7 @@ import { Row, Col, Button } from 'react-bootstrap';
 const LowFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFactors, environmentFactors }) => {
   
   const [results, setResults] = useState(null);
-
+  const [quantity,setQuantity] = useState(1);
   // Low Frequency Diode types
   const lowFreqDiodeTypes = [
     { name: 'General Purpose Analog Switching', lambda_b: 0.0038 },
@@ -161,9 +161,12 @@ const LowFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFactor
       });
 
  
-      if (onCalculate) {
-        onCalculate(lambda_p, calculationDetails, formula);
-      }
+      // if (onCalculate) {
+      //   onCalculate(lambda_p, calculationDetails, formula);
+      // }
+        if (onCalculate) {
+      onCalculate(lambda_p *quantity);
+    }
 
     } catch (error) {
       alert(error.message);
@@ -339,8 +342,24 @@ const LowFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFactor
                 </select>
               </div>
             </Col>
+            
           </>
          )}
+            <Col md={4}>
+                                            <div className="form-group">
+                                         <label>Quantity (Nₙ):</label>
+                                         <input
+                                             type="number"
+                                             className="form-control"
+                                             min="1"
+                                             value={quantity}
+                                             onChange={(e) => {
+                                                 setQuantity(e.target.value);
+                                                 //   calculateComponentSum(e.target.value)
+                                             }}
+                                         />
+                                     </div>
+                                      </Col>
       </Row>
 
       <Button onClick={calculateFailureRate} className="mt-3">
@@ -350,12 +369,16 @@ const LowFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFactor
       {results && (
         <div className="mt-4 p-3 bg-light rounded">
           <h4>Calculation Results</h4>
-          <p><strong>Formula:</strong> {results.formula}</p>
-          <p>
-            <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong> 
-            {results.failureRate.toFixed(6)} failures/10<sup>6</sup> hours
+          <p><strong>Formula:</strong> {results?.formula}</p>
+       <p>
+            <strong>Failure Rate (λp):</strong> {results?.failureRate?.toFixed(6)} failures/10<sup>6</sup> hours
           </p>
-          
+        <p className="mb-1">
+                           <strong> λ<sub>c</sub> * N<sub>c</sub>:</strong>
+                           {results?.failureRate * quantity}failures/10<sup>6</sup> hours
+                           {/* {totalSysFailureRate.push(results?.value * quantity)} */}
+                           {console.log("CalculateGate123..", results?.failureRate * quantity)}
+                         </p>
    
         </div>
       )}

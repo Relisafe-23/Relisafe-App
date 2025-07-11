@@ -63,8 +63,6 @@ const HybridMagnetic = ({ onCalculate }) => {
     }));
   };
 
-
-
   const calculateBubbleMemoryFailureRate = () => {
 
     try {
