@@ -18,7 +18,19 @@ const MicroGaAs= ({ onCalculate }) => {
       const [currentDevice, setCurrentDevice] = useState([]); 
        const [result, setResult] = useState(null);
         const [error, setError] = useState(null);
- 
+  const [errors, setErrors] = useState({
+    type: '',
+    complexity: '',
+    environment: '',
+    packageType: '',
+    pinCount: '',
+    application: '',
+    yearsInProduction: '',
+    quality: '',
+    technology: '',
+    temperature: ''
+  });
+
       const [currentComponent, setCurrentComponent] = useState({
         type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
         temperature: 25,
@@ -64,7 +76,36 @@ const MicroGaAs= ({ onCalculate }) => {
         : value
     }));
   };  
+  const validateForm = () => {
+    const newErrors = {
+      type: !currentDevice.type ? "Please select a device type" : '',
+      complexity: !currentComponent.complexity ? "Please select complexity range" : '',
+      environment: !currentComponent.environment ? "Please select environment" : '',
+      packageType: !currentComponent.packageType ? "Please select package type" : '',
+      pinCount: !currentComponent.pinCount ? "Please enter number of pins" : 
+                currentComponent.pinCount < 3 || currentComponent.pinCount > 224 ? 
+              "Pin count must be between 3 and 224" : '',
+      application: !currentComponent.application ? "Please select application factor" : '',
+      yearsInProduction: !currentComponent.yearsInProduction ? "Please select years in production" : '',
+      quality: !currentComponent.quality ? "Please select quality factor" : '',
+      technology: !currentComponent.technology ? "Please select technology type" : '',
+      temperature: !currentComponent.temperature ? "Please enter junction temperature" : 
+                  currentComponent.temperature < -40 || currentComponent.temperature > 175 ? 
+                  "Temperature must be between -40°C and 175°C" : ''
+    };
+
+    setErrors(newErrors);
+    
+    // Check if any errors exist
+    return !Object.values(newErrors).some(error => error !== '');
+  };
+
+
   const calculateGaAsFailureRate = () => {
+      if (!validateForm()) {
+    setError("Please fix all validation errors before calculating");
+    return;
+  }
     try {
 
     //   if (!currentComponent.type) throw new Error("Please select a device type");
@@ -82,17 +123,13 @@ const MicroGaAs= ({ onCalculate }) => {
           c1 = 4.5;
         } else if (currentComponent?.complexity === "101-1000") {
           c1 = 7.2;
-        } else {
-          throw new Error("Invalid MMIC complexity range");
         }
       } else {
         if (currentComponent?.complexity === "1-1000") {
           c1 = 25;
         } else if (currentComponent?.complexity === "1001-10000") {
           c1 = 51;
-        } else {
-          throw new Error("Invalid Digital complexity range");
-        }
+        } 
       }
 
       // Get πA (application factor)
@@ -134,7 +171,7 @@ const MicroGaAs= ({ onCalculate }) => {
           piQ: piQ?.toFixed(4)
         }
       });
-      setError(null);
+      // setError(null);
       if (onCalculate) {
         onCalculate(lambdaP);
       }
@@ -189,6 +226,18 @@ const MicroGaAs= ({ onCalculate }) => {
       overflowY: 'auto',
     }),
   };
+    const handleDeviceTypeChange = (selectedOption) => {
+    setCurrentDevice(prev => ({
+      ...prev,
+      type: selectedOption.value,
+      complexity: ""
+    }));
+    setErrors(prev => ({
+      ...prev,
+      type: '',
+      complexity: ''
+    }));
+  };
     return(
    <>
     <>
@@ -207,18 +256,25 @@ const MicroGaAs= ({ onCalculate }) => {
                              : "Select Device Type"
                        }}
    
-                       onChange={(selectedOption) => {
-                         setCurrentDevice(prev => ({
-                           ...prev,
-                           type: selectedOption.value,
-                           complexity: ""
-                         }));
-                       }}
+                      //  onChange={(selectedOption) => {
+                      //    setCurrentDevice(prev => ({
+                        
+                      //    ...currentComponent,
+                      //      type: selectedOption.value,
+                      //      complexity: ""
+                      //    }));
+                      //    setErrors(currentComponent => ({
+                      //          ...currentComponent,
+                      //       type: selectedOption.value ? '' : 'Please select a device type.'
+                      //     }));
+                      //  }}
+                        onChange={handleDeviceTypeChange}
                        options={[
                          { value: "MMIC", label: "MMIC (Microwave IC)" },
                          { value: "Digital", label: "Digital IC" }
                        ]}
                      />
+                         {errors.type&& <div className="text-danger small mt-1">{errors.type}</div>}
                    </div>
                  </Col>
                  <Col md={4}>
@@ -237,7 +293,9 @@ const MicroGaAs= ({ onCalculate }) => {
                            ...prev,
                            complexity: selectedOption.value
                          }));
+                          setErrors(prev => ({ ...prev, complexity: '' }));
                        }}
+                      // onChange={handleComplexityChange}
                        options={
                          currentDevice?.type === "MMIC"
                            ? [
@@ -250,6 +308,7 @@ const MicroGaAs= ({ onCalculate }) => {
                            ]
                        }
                      />
+                     {errors.complexity && <div className="text-danger small mt-1">{errors.complexity}</div>}
                    </div>
                  </Col>
    
@@ -268,6 +327,7 @@ const MicroGaAs= ({ onCalculate }) => {
                         environment: selectedOption.value,
                         piE: selectedOption.piE
                       }));
+                     setErrors(prev => ({ ...prev, environment: '' }));
                     }}
                     options={[
                       { value: "GB", label: "Ground Benign (πE = 0.5)", piE: 0.5 },
@@ -286,6 +346,7 @@ const MicroGaAs= ({ onCalculate }) => {
                       { value: "CL", label: "Cannon Launch (πE = 220)", piE: 220 }
                     ]}
                   />
+                       {errors.environment && <div className="text-danger small mt-1">{errors.environment}</div>}
                 </div>
               </Col>
 
@@ -301,6 +362,7 @@ const MicroGaAs= ({ onCalculate }) => {
                         ...currentComponent,
                         packageType: selectedOption.value
                       });
+                      setErrors(prev => ({ ...prev, packageType: '' }));
                     }}
                     options={[
                       { value: "Hermetic_DIPs_SolderWeldSeal", label: "Hermetic: DIPs w/Solder or Weld Seal, PGA, SMT" },
@@ -310,6 +372,7 @@ const MicroGaAs= ({ onCalculate }) => {
                       { value: "Nonhermetic_DIPs_PGA_SMT", label: "Nonhermetic: DIPs, PGA, SMT" }
                     ]}
                   />
+                  {errors.packageType && <div className="text-danger small mt-1">{errors.packageType}</div>}
                 </div>
               </Col>
               <Col md={4}>
@@ -332,11 +395,16 @@ const MicroGaAs= ({ onCalculate }) => {
                     min="3"
                     max="224"
                     value={currentComponent.pinCount || ''}
-                    onChange={(e) => setCurrentComponent({
-                      ...currentComponent,
-                      pinCount: parseInt(e.target.value)
-                    })}
+                    onChange={(e) => {
+        setCurrentComponent(prev => ({
+          ...prev,
+          pinCount: parseInt(e.target.value)
+        }));
+        setErrors(prev => ({ ...prev, pinCount: '' }));
+      }}
+                
                   />
+                  {errors.pinCount && <div className="text-danger small mt-1">{errors.pinCount}</div>}
                 </div>
               </Col>
               <Col md={4}>
@@ -352,6 +420,7 @@ const MicroGaAs= ({ onCalculate }) => {
                         application: selectedOption.value,
                         piA: selectedOption.piA
                       }));
+                      setErrors(prev => ({ ...prev, application: '' }));
                     }}
                     options={[
                       { value: "LowNoiseLowPower", label: "Low Noise & Low Power (πA = 1.0)", piA: 1.0 },
@@ -360,6 +429,7 @@ const MicroGaAs= ({ onCalculate }) => {
                       { value: "Digital", label: "Digital Applications (πA = 1.0)", piA: 1.0 }
                     ]}
                   />
+                  {errors.application && <div className="text-danger small mt-1">{errors.application}</div>}
                 </div>
               </Col>
 
@@ -376,6 +446,7 @@ const MicroGaAs= ({ onCalculate }) => {
                         yearsInProduction: selectedOption.value,
                         piL: selectedOption.piL
                       }));
+                      setErrors(prev => ({ ...prev, yearsInProduction: '' }));
                     }}
                     options={[
                       { value: 0.5, label: "≤ 0.5 years (πL = 2.0)", piL: 2.0 },
@@ -385,6 +456,7 @@ const MicroGaAs= ({ onCalculate }) => {
                       { value: 2.0, label: "≥ 2.0 years (πL = 1.0)", piL: 1.0 }
                     ]}
                   />
+                  {errors.yearsInProduction && <div className="text-danger small mt-1">{errors.yearsInProduction}</div>}
                 </div>
               </Col>
 
@@ -400,6 +472,7 @@ const MicroGaAs= ({ onCalculate }) => {
                         quality: selectedOption.value,
                         piQ: selectedOption.piQ
                       }));
+                      setErrors(prev => ({ ...prev, quality: '' }));
                     }}
                     options={[
                       // Class S Categories (πQ = 0.25)
@@ -449,6 +522,7 @@ const MicroGaAs= ({ onCalculate }) => {
                       }
                     ]}
                   />
+                  {errors.quality && <div className="text-danger small mt-1">{errors.quality}</div>}
                 </div>
               </Col>
         
@@ -456,22 +530,25 @@ const MicroGaAs= ({ onCalculate }) => {
               <Col md={4}>
                 <div className="form-group">
                   <label>Technology Type for (π<sub>T</sub>):</label>
-                  <Select
-                    styles={customStyles}
-                    name="technology"
-                    placeholder="Select Technology Type"
-                    onChange={(selectedOption) => {
-                      setCurrentComponent({
-                        ...currentComponent,
-                        technology: selectedOption.value,
-                        technologyType: selectedOption.label,
-                        calculatedPiT: calculatePiT(
-                          selectedOption.value,
-                          currentComponent.temperature || 25, // Default to 25°C if not set
-                          selectedOption.Ea // Pass the correct Ea for the technology
-                        )
-                      });
-                    }}
+    <Select
+      styles={customStyles}
+      name="technology"
+      placeholder="Select Technology Type"
+      isClearable={true}
+     
+      onChange={(selectedOption) => {
+        setCurrentComponent(prev => ({
+          ...prev,
+          technology: selectedOption?.value || "",
+          technologyType: selectedOption?.label,
+          calculatedPiT: calculatePiT(
+            selectedOption?.value,
+            prev.temperature || 25,
+            selectedOption?.Ea
+          )
+        }));
+        setErrors(prev => ({ ...prev, technology: '' }));
+      }}
                     options={[
                       {
                         value: "TTL,ASTTL,CML",
@@ -529,7 +606,9 @@ const MicroGaAs= ({ onCalculate }) => {
                       }
                     ]}
                   />
-                </div>
+    {errors.technology && (
+      <div className="text-danger small mt-1">{errors.technology}</div>
+    )}                </div>
               </Col>
               <Col md={4}>
                 <div className="form-group">
@@ -551,8 +630,13 @@ const MicroGaAs= ({ onCalculate }) => {
                     min="-40"
                     max="175"
                     value={currentComponent.temperature}
-                    onChange={handleInputChange}
+                    onChange={(e) => {
+        handleInputChange(e);
+        setErrors(prev => ({ ...prev, temperature: '' }));
+      }}
+
                   />
+                  {errors.temperature && <div className="text-danger small mt-1">{errors.temperature}</div>}
                 </div>
               </Col>
 
@@ -602,13 +686,7 @@ const MicroGaAs= ({ onCalculate }) => {
               </div>
             </div>
 
-            {error && (
-              <Row>
-                <Col>
-                  <Alert variant="danger">{error}</Alert>
-                </Col>
-              </Row>
-            )}
+         
             <br />
 
             {result && (
