@@ -224,14 +224,14 @@ const LowFreqFET = ({ formData, onInputChange, onCalculate, qualityFactors, envi
                                      </Col>
       </Row>
 
-      <Button onClick={calculateFailureRate} className="mt-3">
-        Calculate Failure Rate
+      <Button onClick={calculateFailureRate} className=" float-end mt-5">
+        Calculate FR
       </Button>
-
+<br/>
       {results && (
-        <div className="mt-4 p-3 bg-light rounded">
-          <h4>Calculation Results</h4>
-          <p><strong>Formula:</strong> {results.formula}</p>
+        <div className="Predicted-FailureRate" style={{width:"50%"}}>
+          {/* <h4>Calculation Results</h4>
+          <p><strong>Formula:</strong> {results.formula}</p> */}
         <p>
             <strong>Failure Rate (λp):</strong> {results?.failureRate?.toFixed(6)} failures/10<sup>6</sup> hours
           </p>

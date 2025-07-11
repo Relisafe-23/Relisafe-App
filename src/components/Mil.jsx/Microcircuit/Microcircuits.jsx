@@ -306,8 +306,8 @@ onTotalFailureRateChange
   return (
     <div className="reliability-calculator">
       <br />
-      <h2 className='text-center' style={{ fontSize: '1.2rem' }}>
-        Microcircuits Reliability Calculator
+      <h2 className='text-center' >
+        Microcircuits 
       </h2>
       
       {components.map(component => renderComponent(component))}

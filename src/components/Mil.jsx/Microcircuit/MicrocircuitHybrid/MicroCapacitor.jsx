@@ -936,8 +936,8 @@ if(capacitorTotalFRate){
   return (
     <div className="reliability-calculator">
       <br />
-      <h2 className='text-center' style={{ fontSize: '1.2rem' }}>
-        Capacitor Reliability Calculator
+      <h2 className='text-center'>
+        Capacitors
       </h2>
       
       {components.map(component => renderComponent(component))}

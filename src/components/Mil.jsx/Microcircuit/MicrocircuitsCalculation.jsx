@@ -429,7 +429,7 @@ const packageRates = [
   }
   const calculateHybridFailureRate = (component) => {
 
-    const componentSum = calculateComponentSum(quantity, currentComponent);
+    const componentSum = totalLambdaNc();
     console.log("componentSum6788", componentSum)
 
     //  const Nc = quantity
@@ -462,8 +462,11 @@ const packageRates = [
       piL,
       failureRate
     });
-
+   if (onCalculate) {
+      onCalculate(failureRate);
+    }
     return failureRate;
+    
   };
 
  
@@ -917,15 +920,11 @@ const packageRates = [
                               field: 'type',
                               render: rowData => (rowData?.currentComponent?.type || 'Hybrid Microcircuit')
                             },
-                            {
-                              title: 'Quantity (Nₙ)',
-                              field: 'quantity',
-                              render: rowData => (rowData?.Nc || 1)
-                            },
+                         
                             {
                               title: 'Contribution (Nₙ × λₙ)',
                               field: 'contribution',
-                              render: rowData => (rowData?.componentSum?.toFixed(6) || '0.000000')
+                              render: rowData => (rowData?.componentSum|| '0.000000')
                             },
                             {
                               title: <span>π<sub>E</sub></span>,
