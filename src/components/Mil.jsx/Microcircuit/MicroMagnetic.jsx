@@ -1,33 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Select from "react-select";
-import {
-  calculateMicrocircuitsAndMicroprocessorsFailureRate,
-  // calculateMemoriesFailureRate,
-  calculateHybridFailureRate,
-  calculateSystemMetrics,
-  calculatePiT,
-  getEnvironmentFactor,
-  getFailureRate,
-  getCircuitFunctionFactor,
-  getQualityFactor,
-  getBValueForTemp,
-  calculateGateArrayC1,
-  calculateLearningFactor,
-  BASE_FAILURE_RATE,
-  calculateComponentSum,
-  QUALITY_FACTORS,
-  getEnvironmentalOptions,
-  getEnvironmentLabel,
-  calculateSawDeviceFailureRate
-
-} from './Calculation.js';
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { Button, Container, Row, Col, Table, Collapse } from 'react-bootstrap';
 import Box from '@mui/material/Box';
 import { Alert, Paper, Typography, IconButton, Tooltip } from "@mui/material";
-import './Microcircuits.css'
+import '../Microcircuits.css'
 import MaterialTable from "material-table";
-import { tableIcons } from "../core/TableIcons.js";
+import { tableIcons } from "../../core/TableIcons.js";
 import { createTheme } from "@mui/material";
 import { ThemeProvider } from "@material-ui/core";
 

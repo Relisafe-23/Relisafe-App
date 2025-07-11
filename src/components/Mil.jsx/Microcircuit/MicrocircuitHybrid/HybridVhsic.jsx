@@ -3,14 +3,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import Select from "react-select";
 import {
     calculatePiT,
-} from './Calculation.js';
+} from '../../Calculation.js';
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { Button, Container, Row, Col, Table, Collapse } from 'react-bootstrap';
 import Box from '@mui/material/Box';
 import { Alert, Paper, Typography, IconButton, Tooltip } from "@mui/material";
-import './Microcircuits.css'
+import '../../Microcircuits.css'
 import MaterialTable from "material-table";
-import { tableIcons } from "../core/TableIcons.js";
+import { tableIcons } from "../../../core/TableIcons.js";
 import { createTheme } from "@mui/material";
 import { ThemeProvider } from "@material-ui/core";
 
@@ -20,7 +20,7 @@ const HybridVhsic = ({ onCalculate }) => {
     const [numberOfPins, setNumberOfPins] = useState(null);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
-    const [quantity, setQuantity] = useState(null);
+    const [quantity, setQuantity] = useState(1);
     const [currentComponent, setCurrentComponent] = useState({
         type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
         temperature: 25,
@@ -419,8 +419,9 @@ const HybridVhsic = ({ onCalculate }) => {
             });
             setError(null);
             if (onCalculate) {
-                onCalculate(totalFailureRate);
+                onCalculate(totalFailureRate * quantity);
             }
+            console.log("onCalculate124..",totalFailureRate * quantity)
         } catch (err) {
             setError(err.message);
             setResult(null);
@@ -836,6 +837,7 @@ const HybridVhsic = ({ onCalculate }) => {
                         <div className="Predicted-Failure">
                             <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
                             <span className="ms-2">{result?.value} failures/10<sup>6</sup> hours</span>
+                              <br/>
                             <p className="mb-1">
                                 <strong> λ<sub>c</sub> * N<sub>c</sub>:</strong>
                                 {result?.value * quantity} failures/10<sup>6</sup> hours

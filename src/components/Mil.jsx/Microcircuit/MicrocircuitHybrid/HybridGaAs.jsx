@@ -1,46 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Select from "react-select";
 import {
-  calculateMicrocircuitsAndMicroprocessorsFailureRate,
-  // calculateMemoriesFailureRate,
-  calculateHybridFailureRate,
-  calculateSystemMetrics,
   calculatePiT,
-  getEnvironmentFactor,
-  getFailureRate,
-  getCircuitFunctionFactor,
-  getQualityFactor,
-  getBValueForTemp,
-  calculateGateArrayC1,
-  calculateLearningFactor,
-  BASE_FAILURE_RATE,
-  calculateComponentSum,
-  QUALITY_FACTORS,
-  getEnvironmentalOptions,
-  getEnvironmentLabel,
-  calculateSawDeviceFailureRate
-
-} from './Calculation.js';
-import { CalculatorIcon } from '@heroicons/react/24/outline';
+} from '../../Calculation.js';
 import { Button, Container, Row, Col, Table, Collapse } from 'react-bootstrap';
-import Box from '@mui/material/Box';
-import { Alert, Paper, Typography, IconButton, Tooltip } from "@mui/material";
-import MicroCapacitor from './MicroCapacitor.jsx';
-import Microcircuits from './Microcircuits.jsx';
-import MicroDiode from './MicroDiode.jsx';
-import './Microcircuits.css'
-import MaterialTable from "material-table";
-import { tableIcons } from "../core/TableIcons.js";
-import { createTheme } from "@mui/material";
-import { ThemeProvider } from "@material-ui/core";
-
+import '../../Microcircuits.css'
 
 const HybridGaAs= ({ onCalculate }) => {
-     const [showCalculations, setShowCalculations] = useState(false);
       const [currentDevice, setCurrentDevice] = useState([]); 
        const [result, setResult] = useState(null);
         const [error, setError] = useState(null);
-    const[quantity, setQuantity]= useState(null);
+    const[quantity, setQuantity]= useState(1);
       const [currentComponent, setCurrentComponent] = useState({
         type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
         temperature: 25,
@@ -149,7 +119,7 @@ const HybridGaAs= ({ onCalculate }) => {
       });
       setError(null);
       if (onCalculate) {
-        onCalculate(lambdaP);
+        onCalculate(lambdaP * quantity);
       }
     } catch (err) {
       setError(err.message);

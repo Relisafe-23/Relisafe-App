@@ -1,39 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState,useMemo, useEffect, useRef, useCallback } from 'react';
 import Select from "react-select";
 
 import {
-  calculateMicrocircuitsAndMicroprocessorsFailureRate,
-  // calculateMemoriesFailureRate,
-  calculateHybridFailureRate,
-  calculateSystemMetrics,
-  calculatePiT,
-  getEnvironmentFactor,
-  getFailureRate,
-  getCircuitFunctionFactor,
-  getQualityFactor,
-  getBValueForTemp,
-  calculateGateArrayC1,
   calculateLearningFactor,
-  BASE_FAILURE_RATE,
-  calculateComponentSum,
-  QUALITY_FACTORS,
   getEnvironmentalOptions,
-  getEnvironmentLabel,
-  calculateSawDeviceFailureRate
 
-} from './Calculation.js';
+} from '../Calculation.js';
 
 import MicroSawDevice from './MicroSawDevice.jsx';
 import { CalculatorIcon } from '@heroicons/react/24/outline';
 import { Button, Container, Row, Col, Table, Collapse } from 'react-bootstrap';
 import Box from '@mui/material/Box';
 import { Alert, Paper, Typography, IconButton, Tooltip } from "@mui/material";
-import MicroCapacitor from './MicroCapacitor.jsx';
+import MicroCapacitor from './MicrocircuitHybrid/MicroCapacitor.jsx';
 import Microcircuits from './Microcircuits.jsx';
-import MicroDiode from './MicroDiode.jsx';
-import './Microcircuits.css'
+import MicroDiode from './MicrocircuitHybrid/MicroDiode.jsx';
+import '../Microcircuits.css'
 import MaterialTable from "material-table";
-import { tableIcons } from "../core/TableIcons";
+import { tableIcons } from "../../core/TableIcons.js";
 import { createTheme } from "@mui/material";
 import { ThemeProvider } from "@material-ui/core";
 import MicroGate from './MicroGate.jsx';
@@ -43,19 +28,19 @@ import MicroGaAs from './MicroGaAs.jsx';
 import MicroMagnetic from './MicroMagnetic.jsx';
 
 const MicrocircuitsCalculation = ({ onCalculate }) => {
-
-
+const[totalFailure,setTotalFailure] =useState(null)
+const[ failureRate,setFailureRate]= useState({})
   const [showCalculations, setShowCalculations] = useState(false);
   const [mainInitialRate, setMainInitialRate] = useState("")
   const [components, setComponents] = useState([]);
   const [selectedComponent, setSelectedComponent] = useState([]);
-  const [currentDevice, setCurrentDevice] = useState([]);
-  const [showResults, setShowResults] = useState(false);
-  const [selectedOption, setSelectedOption] = useState();
   const [results, setResults] = useState(false)
   const [quantity, setQuantity] = useState(null)
   const [currentComponents, setCurrentComponents] = useState(null);
   const [mode, setMode] = useState('A1');
+  const [capacitor,setCapacitor] =useState(null);
+  const [diode,setDiode] = useState(null);
+  const[microcircuits,setMicrocircuits] = useState(null)
   const [numberOfPins, setNumberOfPins] = useState(null);
   const [selectedECC, setSelectedECC] = React.useState(null);// 'A1' or 'C'
   const [currentComponent, setCurrentComponent] = useState({
@@ -94,137 +79,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     basePiT: 0.1,
     calculatedPiT: null
   });
- 
-      const dieComplexityRates = [
-    {
-      type: ' MOS-ROM',
-      rates: [
-        { size: 'Up to 16K', mos: 0.00065 },
-        { size: '16K < B ≤ 64K', mos: 0.0013 },
-        { size: '64K < B ≤ 256K', mos: 0.0026 },
-        { size: '256K < B ≤ 1M', mos: 0.0052 }
-      ]
-    },
-    {
-      type: 'MOS-PROM/UVEPROM/EEPROM/EAPROM',
-      rates: [
-        { size: 'Up to 16K', mos: 0.00085 },
-        { size: '16K < B ≤ 64K', mos: 0.0017 },
-        { size: '64K < B ≤ 256K', mos: 0.0034 },
-        { size: '256K < B ≤ 1M', mos: 0.0068 }
-      ]
-    },
-    {
-      type: 'MOS-DRAM',
-      rates: [
-        { size: 'Up to 16K', mos: 0.0013 },
-        { size: '16K < B ≤ 64K', mos: 0.0025 },
-        { size: '64K < B ≤ 256K', mos: 0.0050 },
-        { size: '256K < B ≤ 1M', mos: 0.010 }
-      ]
-    },
-    {
-      type: 'MOS-SRAM (MOS & BIMOS)',
-      rates: [
-        { size: 'Up to 16K', mos: 0.0078 },
-        { size: '16K < B ≤ 64K', mos: 0.016 },
-        { size: '64K < B ≤ 256K', mos: 0.031 },
-        { size: '256K < B ≤ 1M', mos: 0.062 }
-      ]
-    },
 
-    {
-      type: 'Bipolar-(ROM & PROM)',
-      rates: [
-        { size: 'Up to 16K', mos: 0.0094 },
-        { size: '16K < B ≤ 64K', mos: 0.019 },
-        { size: '64K < B ≤ 256K', mos: 0.038 },
-        { size: '256K < B ≤ 1M', mos: 0.075 }
-      ]
-    },
-    {
-      type: 'Bipolar-(SRAM)',
-      rates: [
-        { size: 'Up to 16K', mos: 0.0052 },
-        { size: '16K < B ≤ 64K', mos: 0.011 },
-        { size: '64K < B ≤ 256K', mos: 0.021 },
-        { size: '256K < B ≤ 1M', mos: 0.042 }
-      ]
-    }
-
-  ];
-  // A1 Factors for λCycle Calculation
-  const a1Factors = [
-    { cycles: 'Up to 100', flotox: 0.00070, texturedPoly: 0.0097 },
-    { cycles: '100 < C ≤ 200', flotox: 0.0014, texturedPoly: 0.014 },
-    { cycles: '200 < C ≤ 500', flotox: 0.0034, texturedPoly: 0.023 },
-    { cycles: '500 < C ≤ 1K', flotox: 0.0068, texturedPoly: 0.033 },
-    { cycles: '1K < C ≤ 3K', flotox: 0.020, texturedPoly: 0.061 },
-    { cycles: '3K < C ≤ 7K', flotox: 0.049, texturedPoly: 0.14 },
-    { cycles: '7K < C ≤ 15K', flotox: 0.10, texturedPoly: 0.30 },
-    { cycles: '15K < C ≤ 20K', flotox: 0.14, texturedPoly: 0.30 },
-    { cycles: '20K < C ≤ 30K', flotox: 0.20, texturedPoly: 0.30 },
-    { cycles: '30K < C ≤ 100K', flotox: 0.68, texturedPoly: 0.30 },
-    { cycles: '100K < C ≤ 200K', flotox: 1.3, texturedPoly: 0.30 },
-    { cycles: '200K < C ≤ 400K', flotox: 2.7, texturedPoly: 0.30 },
-    { cycles: '400K < C ≤ 500K', flotox: 3.4, texturedPoly: 0.30 }
-  ];
-  // A2 Factors for λCycle Calculation
-  const a2Factors = [
-    { cycles: 'Up to 300K', value: 0 },
-    { cycles: '300K < C ≤ 400K', value: 1.1 },
-    { cycles: '400K < C ≤ 500K', value: 2.3 }
-  ];
-  const eccOptions = [
-    { value: 'none', label: 'No On-Chip ECC', factor: 1.0 },
-    { value: 'hamming', label: 'On-Chip Hamming Code', factor: 0.72 },
-    { value: 'redundant', label: 'Two-Needs-One Redundant Cell Approach', factor: 0.68 }
-  ];
-
-  const handleChange = (selectedOption) => {
-    setSelectedECC(selectedOption);
-    console.log(`Selected ECC: ${selectedOption.label}, Factor: ${selectedOption.factor}`);
-  };
-
-  const handleA2FactorChange = (selectedOption) => {
-    setCurrentComponent(prev => ({
-      ...prev,
-      a2Factor: selectedOption,
-      a2Value: selectedOption.a2Value,
-      programmingCyclesMax: selectedOption.maxCycles
-    }));
-    console.log(`Selected A₂ Factor: ${selectedOption.label}, Value: ${selectedOption.a2Value}, Max Cycles: ${selectedOption.maxCycles}`);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentComponent(prev => ({
-      ...prev,
-      [name]: name === 'temperature' || name === 'Tj' || name === 'gateCount' || name === 'quantity'
-        ? parseFloat(value)
-        : value
-    }));
-  };
-
-  const c1Values = {
-    MMIC: [
-      { range: '1-100', value: 4.5 },
-      { range: '101-1000', value: 7.2 }
-    ],
-    Digital: [
-      { range: '1-1000', value: 25 },
-      { range: '1001-10000', value: 51 }
-    ]
-  };
-
-  const getQualityLabel = (piQ) => {
-    const qualityOptions = [
-      { piQ: 0.25, label: "Class S (MIL-M-38510)" },
-      { piQ: 1.0, label: "Class B (MIL-M-38510)" },
-      { piQ: 2.0, label: "Class B-1 (MIL-STD-883)" }
-    ];
-    return qualityOptions.find(q => q.piQ === parseFloat(piQ))?.label || 'Unknown';
-  };
 
   const getEnvironmentFactor = (envValue) => {
     if (!environmentOptions || !Array.isArray(environmentOptions)) return 1.0;
@@ -235,7 +90,44 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 
 
 
-  const packageRates = [
+const capacitorTotalFRate = (values) =>{
+  setCapacitor(values)
+}
+
+ 
+  console.log("Capacitor...",capacitor)
+
+  const onTotalFailureRateChange = (value) => {
+   setFailureRate(value);
+  };
+
+ 
+const totalLambdaNc = () => {
+  const capacitorValue = Number(capacitor) || 0;
+  const failureRateValue = Number(failureRate) || 0;
+  const diodeValue = Number(diode) || 0
+  const lambdaC = (capacitorValue + failureRateValue + diodeValue)?.toFixed(6);
+  return lambdaC;
+};
+console.log("TotalFailure",totalFailure)
+const totalSystemFailureRate = useMemo(() => {
+  if (!failureRate || typeof failureRate !== 'object') return 0;
+  
+  return Object.values(failureRate).reduce((sum, rate) => {
+    return sum + (Number(rate) || 0);
+  }, 0);
+}, [failureRate]); 
+
+const prevTotalRef = useRef(totalSystemFailureRate);
+
+useEffect(() => {
+  
+  if (totalSystemFailureRate !== prevTotalRef.current) {
+    onTotalFailureRateChange(totalSystemFailureRate);
+    prevTotalRef.current = totalSystemFailureRate;
+  }
+}, [totalSystemFailureRate, onTotalFailureRateChange]);
+const packageRates = [
     {
       type: 'Hermetic: DIPs w/Solder or Weld Seal, PGA, SMT',
       formula: '2.8e-4 * (Np)^1.08',
@@ -358,52 +250,14 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
     // const lambdac = handleCalculateBubble(currentComponent) + handleCalculateSawDevice(currentComponent) + handleCalculateGaAs(currentComponent) + handleCalculateVhsic(currentComponent) + handleCalculateMemories(currentComponent) + handleCalculateGate(currentComponent) + handleCalculateFailure(currentComponent);
     const baseLambda = currentComponent?.baseFailureRate || mainInitialRate || 0;
     const componentSum = baseLambda;
-
-
     return  componentSum;
   };
 
-  const [inputs, setInputs] = useState({
-    memoryType: dieComplexityRates[0],
-    memorySize: dieComplexityRates[0].rates[0],
-    technology: 'MOS', // MOS or Bipolar
-    packageType: packageRates[0],
-    pinCount: 3,
-    eepromType: 'Flotox', // Flotox or Textured-Poly
-    programmingCycles: a1Factors[0],
-    a2Factor: a2Factors[0],
-    eccOption: eccOptions[0],
-    quality: QUALITY_FACTORS,
-    environment: getEnvironmentalOptions('AIA'),
-    systemLifeHours: 10000,
-    junctionTemp: 35,
-    partType: 'Logic',
-    manufacturingProcess: 'QML',
-    packageType: 'DIP',
-    packageHermeticity: 'Hermetic',
-    featureSize: 1.0,
-    dieArea: 0.5,
-    pinCount: 24,
-    esdSusceptibility: '0-1000'
-  });
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
- 
-  const [componentRates, setComponentRates] = useState({
- handleCalculateBubble: [],
-    handleCalculateSawDevice:[],  
-    handleCalculateGaAs: [],
-    handleCalculateVhsic: [],
-    handleCalculateMemories: [],
-    handleCalculateGate: [], 
-    handleCalculateFailure: []
-  });
 
   const [frArr, setFrArr] = useState([0])
 
-
-  const [trate, setTotalRate] = useState(0);
-  const totalRate =  frArr.reduce((sum, item) => sum + item, 2);
 
   const calculateTempFactor = (temp) => {
     // Simplified exponential model for πT
@@ -469,9 +323,9 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
       overflowY: 'auto',
     }),
   };
-
+   console.log("capacitor.,.l",capacitor)
   const handleCalculateSawDevice = (values) => {
-    setMainInitialRate(values)
+    setMainInitialRate(values) 
   }
 
   const environmentOptions = [
@@ -561,79 +415,8 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
       description: "Gun-launched projectiles during firing"
     }
 
-    // ... rest of your options (same structure for all)
+   
   ];
-
-
-  const getTechnologyFactor = () => {
-    const technologyMap = {
-      "Bipolar": {
-        basePiT: 0.10,
-        description: "Standard bipolar logic families (TTL, ECL, ALSTTL, etc.)"
-      },
-      "MOS": {
-        basePiT: 0.10,
-        description: "CMOS and MOS-based technologies (CMOS, Digital MOS, VHSIC)"
-      },
-      "BiCMOS": {
-        basePiT: 3.205e-8,
-        description: "Bipolar-CMOS hybrid technologies"
-      },
-      "GaAs": {
-        basePiT: 1.5,
-        description: "Gallium Arsenide technologies (GaAs MMIC/Digital)"
-      },
-      "Linear": {
-        basePiT: 0.65,
-        description: "Linear analog circuits"
-      }
-    };
-
-    return technologyMap[currentComponent.technology] || {
-      basePiT: 1.0,
-      description: "Unknown technology type"
-    };
-  };
-
- 
-
-  useEffect(() => {
-    let sum = 0;
-    
-    // Loop through all components
-    for (const component in componentRates) {
-      // Only add if the component exists and has a numeric value
-      if (component in componentRates && !isNaN(componentRates[component])) {
-        sum += componentRates[component];
-      }
-    }
-    console.log("Component Rates:", componentRates);
-    setTotalRate(sum);
-  }, [componentRates]);
-
-  const handleCalculateBubble = (values) => {
-    setMainInitialRate(values)
-  }
-  const handleCalculateGaAs = (values) => {
-    setMainInitialRate(values)
-  }
-
-  const handleCalculateVhsic = (value) => {
-    setMainInitialRate(value)
-  }
-  const handleCalculateMemories = (value) => {
-    setMainInitialRate(value)
-  }
-  const handleCalculateGate = (value) => {
-    setMainInitialRate(value)
-  }
-  const handleCalculateFailure = (value) => {
-    setMainInitialRate(value)
-  }
-  const handleInitialRate = (initialRate) => {
-    setMainInitialRate(initialRate)
-  }
-
 
   const getQualityFactor = () => {
     return currentComponent.piQ; // Assuming this is already set in state
@@ -681,7 +464,6 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
   };
 
  
-
   return (
     <div className="reliability-calculator">
     
@@ -714,10 +496,10 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
             </div>
           </Col>
           {currentComponent.type === "Microcircuits,VHSIC/VHSIC-LIKE AND VLSI CMOS" && (
-           <MicroVhsic/>
+           <MicroVhsic  onCalculate={onCalculate}/>
           )}
           {currentComponent.type === 'Microcircuits,Gate/Logic Arrays And Microprocessors' && (
-          <MicroGate/>
+          <MicroGate onCalculate={onCalculate}/>
           )}
           {currentComponent.type === "Microcircuits,Hybrids" && (
             <>
@@ -812,20 +594,15 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
               </Col>
               {selectedComponent?.some(option => option.value === "Capacitor") && (
 
-                <MicroCapacitor handleCalculateFailure={handleCalculateFailure} />
+                <MicroCapacitor  capacitorTotalFRate = {capacitorTotalFRate}/>
 
               )}
 
               {selectedComponent?.some(option => option.value === "Microcircuit") && (
 
                 <Microcircuits
-                  handleCalculateSawDevice={handleCalculateSawDevice}
-                  handleCalculateGate={handleCalculateGate}
-                  handleCalculateMemories={handleCalculateMemories}
-                  handleCalculateVhsic={handleCalculateVhsic}
-                  handleCalculateGaAs={handleCalculateGaAs}
-                  handleCalculateBubble={handleCalculateBubble}
-                  setSelectedComponent = {setSelectedComponent}
+                   onTotalFailureRateChange={onTotalFailureRateChange}
+                
                   // handleFrChange={handleFrChange}
                   />
 
@@ -833,7 +610,7 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 
               {selectedComponent?.some(option => option.value === "DiscreteSemiconductor") && (
                 <>
-                  <MicroDiode handleInitialRate={handleInitialRate} />
+                  <MicroDiode   onCalculate={onCalculate}/>
 
                 </>
               )}
@@ -844,10 +621,11 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
                  
                     <label>Failure Rate (λc):</label>
                     <input
-                      type="string"
-                      step="0.000001"
+                      type="text"  
+                      readOnly 
+                    
                       min="0"
-                      value={totalRate}
+                      value={totalLambdaNc()}
                       placeholder="Props value will appear here"
                     />
                     <span className="unit">failures/10<sup>6</sup> hours</span>
@@ -1227,22 +1005,22 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
           )}
 
           {currentComponent.type === "Microcircuits,Saw Devices" && (
-         <MicroSawDevice/>
+         <MicroSawDevice  onCalculate={onCalculate}/>
           )}
 
           {currentComponent.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
            
-           <MicroGaAs/>)}
+           <MicroGaAs onCalculate={onCalculate}/>)}
          
         </Row>
   
         {currentComponent.type === "Microcircuits,Memories" && (
-        <MicroMemories/>
+        <MicroMemories onCalculate={onCalculate}/>
         )}
       
         <br />
         {currentComponent.type === "Microcircuit,Magnetic Bubble Memories" && (
-        <MicroMagnetic/>
+        <MicroMagnetic onCalculate={onCalculate}/>
 
         )}
       </div>
