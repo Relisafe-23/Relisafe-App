@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Container } from 'react-bootstrap';
+import { Container, Button, Row, Col } from 'react-bootstrap';
 
 // Import all diode type components
 import LowFrequencyDiode from './diodeTypes/LowFrequencyDiode.jsx';
@@ -22,99 +22,176 @@ import { qualityFactors, environmentFactors } from './diodeTypes/diodeConstants.
 
 const MicroDiode = ({ onCalculate }) => {
   const componentTypes = [
-    { id: '6.1 Diodes, Low Frequency', name: '6.1 Diodes, Low Frequency'
-
-     },
-    { id: 'highFreqDiode', name: '6.2 Diodes, High Frequency (Microwave, RF)' },
-    { id: 'lowFreqBipolar', name: '6.3 Transistors, Low Frequency, Bipolar' },
-    { id: 'lowFreqFET', name: '6.4 Transistors, Low Frequency, SI FET' },
-    { id: 'transistorsUnijunction', name: '6.5 Transistors,Unijunction' },
-    { id: 'transistorsLowNoiseHighFreqBipolar', name: '6.6 Transistors, Low Noise, High Frequency, Bipolar' },
-    { id: 'transistorsHighPowerHighFrequencyBipolar', name: '6.7 Transistors,High Power,High Frequency,Bipolar' },
-    { id: 'transistorsHighFrequencyGaAsFET', name: '6.8 Transistors, High Frequency, GaAs FET' },
-    { id: 'transistorsHighFrequencySIFET', name: '6.9 Transistors, High Frequency, SI FET' },
-    { id: 'thyristorsAndSCRS', name: '6.10 Thyristors and SCRS' },
-    { id: 'optoelectronics', name: '6.11 Optoelectronics (Detectors, Isolators, Emitters)' },
-    { id: 'alphanumericDisplays', name: '6.12 Alphanumeric Displays' },
-    { id: 'laserDiode', name: '6.13 Optoelectronics, Laser Diode' }
+    { id: '6.1 Diodes, Low Frequency', name: '6.1 Diodes, Low Frequency' },
+    { id: '6.2 Diodes, High Frequency (Microwave, RF)', name: '6.2 Diodes, High Frequency (Microwave, RF)' },
+    { id: '6.3 Transistors, Low Frequency, Bipolar', name: '6.3 Transistors, Low Frequency, Bipolar' },
+    { id: '6.4 Transistors, Low Frequency, SI FET', name: '6.4 Transistors, Low Frequency, SI FET' },
+    { id: '6.5 Transistors,Unijunction', name: '6.5 Transistors,Unijunction' },
+    { id: '6.6 Transistors, Low Noise, High Frequency, Bipolar', name: '6.6 Transistors, Low Noise, High Frequency, Bipolar' },
+    { id: '6.7 Transistors,High Power,High Frequency,Bipolar', name: '6.7 Transistors,High Power,High Frequency,Bipolar' },
+    { id: '6.8 Transistors, High Frequency, GaAs FET', name: '6.8 Transistors, High Frequency, GaAs FET' },
+    { id: '6.9 Transistors, High Frequency, SI FET', name: '6.9 Transistors, High Frequency, SI FET' },
+    { id: '6.10 Thyristors and SCRS', name: '6.10 Thyristors and SCRS' },
+    { id: '6.11 Optoelectronics (Detectors, Isolators, Emitters)', name: '6.11 Optoelectronics (Detectors, Isolators, Emitters)' },
+    { id: '6.12 Alphanumeric Displays', name: '6.12 Alphanumeric Displays' },
+    { id: '6.13 Optoelectronics, Laser Diode', name: '6.13 Optoelectronics, Laser Diode' }
   ];
 
-  const [formData, setFormData] = useState({
-     componentType: 'lowFreqDiode',
-    // Initialize all fields with defaults
-    diodeType: 'General Purpose Analog Switching',
-    junctionTemp: 25,
-    environment: 'GB', // Ground Benign as default
-    quality: 'MIL-SPEC',
-    voltageStress: '',
-    voltageApplied: '',
-    voltageRated: '',
-    contactConstruction: 'Metallurgically Bonded',
-    numJunctions: 1
-  
-  });
+  const [components, setComponents] = useState([
+    {
+      id: 1,
+      componentType: '',
+      formData: {
+        diodeType: 'General Purpose Analog Switching',
+        junctionTemp: 25,
+        environment: 'GB',
+        quality: 'MIL-SPEC',
+        voltageStress: '',
+        voltageApplied: '',
+        voltageRated: '',
+        contactConstruction: 'Metallurgically Bonded',
+        numJunctions: 1
+      }
+    }
+  ]);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const addComponent = () => {
+    const newId = components.length > 0 ? Math.max(...components.map(c => c.id)) + 1 : 1;
+    setComponents([
+      ...components,
+      {
+        id: newId,
+        componentType: '',
+        formData: {
+          diodeType: 'General Purpose Analog Switching',
+          junctionTemp: 25,
+          environment: 'GB',
+          quality: 'MIL-SPEC',
+          voltageStress: '',
+          voltageApplied: '',
+          voltageRated: '',
+          contactConstruction: 'Metallurgically Bonded',
+          numJunctions: 1
+        }
+      }
+    ]);
   };
 
-  const handleCalculate = (data) => {
-    if (onCalculate) {
-      onCalculate(data);
+  const removeComponent = (id) => {
+    if (components.length > 1) {
+      setComponents(components.filter(component => component.id !== id));
     }
   };
 
-  const renderComponent = () => {
+  const handleComponentTypeChange = (id, value) => {
+    setComponents(components.map(component =>
+      component.id === id ? { ...component, componentType: value } : component
+    ));
+  };
+
+  const handleInputChange = (id, e) => {
+    const { name, value } = e.target;
+    setComponents(components.map(component =>
+      component.id === id 
+        ? { ...component, formData: { ...component.formData, [name]: value } } 
+        : component
+    ));
+  };
+
+  const handleCalculate = (id, data) => {
+    if (onCalculate) {
+      onCalculate({ ...data, componentId: id });
+    }
+  };
+
+  const renderComponent = (component) => {
     const commonProps = {
-      formData,
-      onInputChange: handleInputChange,
-      onCalculate: handleCalculate,
+      formData: component.formData,
+      onInputChange: (e) => handleInputChange(component.id, e),
+      onCalculate: (data) => handleCalculate(component.id, data),
       qualityFactors,
       environmentFactors
     };
 
-    switch (formData.componentType) {
+    switch (component?.componentType) {
       case '6.1 Diodes, Low Frequency': return <LowFrequencyDiode {...commonProps} />;
-      case 'highFreqDiode': return <HighFrequencyDiode {...commonProps} />;
-      case 'lowFreqBipolar': return <LowFreqBipolar {...commonProps} />;
-      case 'lowFreqFET': return <LowFreqFET {...commonProps} />;
-      case 'transistorsUnijunction': return <TransistorsUnijunction {...commonProps} />;
-      case 'transistorsLowNoiseHighFreqBipolar': return <TransistorsLowNoiseHighFreqBipolar {...commonProps} />;
-      case 'transistorsHighPowerHighFrequencyBipolar': return <TransistorsHighPowerHighFrequencyBipolar {...commonProps} />;
-      case 'transistorsHighFrequencyGaAsFET': return <TransistorsHighFrequencyGaAsFET {...commonProps} />;
-      case 'transistorsHighFrequencySIFET': return <TransistorsHighFrequencySIFET {...commonProps} />;
-      case 'thyristorsAndSCRS': return <ThyristorsAndSCRS {...commonProps} />;
-      case 'optoelectronics': return <Optoelectronics {...commonProps} />;
-      case 'alphanumericDisplays': return <AlphanumericDisplays {...commonProps} />;
-      case 'laserDiode': return <LaserDiode {...commonProps} />;
-      default: return <LowFrequencyDiode {...commonProps} />;
+      case '6.2 Diodes, High Frequency (Microwave, RF)': return <HighFrequencyDiode {...commonProps} />;
+      case '6.3 Transistors, Low Frequency, Bipolar': return <LowFreqBipolar {...commonProps} />;
+      case '6.4 Transistors, Low Frequency, SI FET': return <LowFreqFET {...commonProps} />;
+      case '6.5 Transistors,Unijunction': return <TransistorsUnijunction {...commonProps} />;
+      case '6.6 Transistors, Low Noise, High Frequency, Bipolar': return <TransistorsLowNoiseHighFreqBipolar {...commonProps} />;
+      case '6.7 Transistors,High Power,High Frequency,Bipolar': return <TransistorsHighPowerHighFrequencyBipolar {...commonProps} />;
+      case '6.8 Transistors, High Frequency, GaAs FET': return <TransistorsHighFrequencyGaAsFET {...commonProps} />;
+      case '6.9 Transistors, High Frequency, SI FET': return <TransistorsHighFrequencySIFET {...commonProps} />;
+      case '6.10 Thyristors and SCRS': return <ThyristorsAndSCRS {...commonProps} />;
+      case '6.11 Optoelectronics (Detectors, Isolators, Emitters)': return <Optoelectronics {...commonProps} />;
+      case '6.12 Alphanumeric Displays': return <AlphanumericDisplays {...commonProps} />;
+      case '6.13 Optoelectronics, Laser Diode': return <LaserDiode {...commonProps} />;
+      default: return <div className="text-center mt-4">Please select a component type</div>;
     }
+  };
+
+  const getMainHeading = () => {
+    if (components.length === 1 && components[0].componentType) {
+      return components[0].componentType.replace(/,/g, ' ').trim();
+    }
+    return 'Microcircuits Reliability Calculator';
   };
 
   return (
     <Container>
       <div className="container mt-4 background">
         <h2 className="text-center">Discrete Semiconductor</h2>
+        <h2 className='text-center' style={{ fontSize: '1.0rem' }}>{getMainHeading()}</h2>
         
-        <div className="form-group">
-          <label>Part Type</label>
-          <select
-            name="componentType"
-            className="form-control"
-            value={formData.componentType}
-            onChange={handleInputChange}
-          >
-            {componentTypes.map(type => (
-              <option key={type.id} value={type.id}>{type.name}</option>
-            ))}
-          </select>
-        </div>
+        {components.map((component, index) => (
+          <div key={component.id} className="mb-4 p-3 border rounded">
+            <Row className="align-items-center mb-3">
+              <Col>
+                <h4>Component {index + 1}</h4>
+              </Col>
+            
+            </Row>
+            
+            <div className="form-group">
+              <label>Part Type</label>
+              <select
+                name="componentType"
+                className="form-control"
+                value={component.componentType}
+                onChange={(e) => handleComponentTypeChange(component.id, e.target.value)}
+              >
+                <option value="">Select a component type</option>
+                {componentTypes.map(type => (
+                  <option key={type.id} value={type.id}>{type.name}</option>
+                ))}
+              </select>
+            </div>
+              
 
-        {renderComponent()}
+            {renderComponent(component)}
+             {components.length > 1 && (
+                <Col xs="auto">
+                  <Button 
+                    variant="danger" 
+                    className='float-end mb-6'
+                              style={{ marginBottom:"100px",backgroundColor: "red" }}
+                    size="sm"
+                    onClick={() => removeComponent(component.id)}
+                  >
+                    Remove
+                  </Button>
+                </Col>
+              )}
+          </div>
+        ))}
+      
+    
+        <div className="float-start mt-3">
+          <Button variant="primary" onClick={addComponent}>
+            Add Another Component
+          </Button>
+        </div>
       </div>
     </Container>
   );

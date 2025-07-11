@@ -95,11 +95,25 @@ const calculateFailureRate = () => {
     let pi_E = 1.0; 
     let pi_R = 1.0;
        let lambda_b=1.0;
-
-            // Laser Diode calculation
-            const diodeType = laserDiodeTypes.find(d => d.name === formData.laserDiodeType);
-            lambda_b = diodeType.lambda_b;
-            calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+     if (formData.laserDiodeType) {
+      const diodeType = laserDiodeTypes.find(d => d.name === formData.laserDiodeType);
+      if (diodeType) {
+        lambda_b = diodeType?.lambda_b;
+        calculationDetails.push({ name: 'Base Failure Rate (λb)', value: lambda_b });
+      } else {
+        calculationDetails.push({ 
+          name: 'Base Failure Rate (λb)', 
+          value: '1.0 (default)',
+          description: 'No valid laser diode type selected, using default λb = 1.0'
+        });
+      }
+    } else {
+      calculationDetails.push({ 
+        name: 'Base Failure Rate (λb)', 
+        value: '1.0 (default)',
+        description: 'No laser diode type selected, using default λb = 1.0'
+      });
+    }
 
             // Temperature facto
 
@@ -127,6 +141,7 @@ const calculateFailureRate = () => {
         value: pi_T.toFixed(4),
         description: tempDescription13
     });
+
 
  // Quality factor (specific to laser diodes)
             const qualityFactor = laserDiodeQualityFactors.find(q => q.name === formData.laserDiodeQuality);
@@ -496,7 +511,7 @@ if (formData.laserDiodePowerRatio) {
                                     disabled={!!formData.laserDiodeTemp} // Disable if dropdown value is selected 
                                 />
                             </div>
-                            </Col> \
+                            </Col> 
                               </Row>  
  <Button onClick={calculateFailureRate} className="mt-3">
             Calculate Failure Rate

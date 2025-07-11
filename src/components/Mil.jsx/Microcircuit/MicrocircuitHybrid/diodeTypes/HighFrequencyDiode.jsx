@@ -123,7 +123,7 @@ const HighFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFacto
             <select
               name="highFreqDiodeType"
               className="form-control"
-              value={formData.highFreqDiodeType || ''}
+              value={formData.highFreqDiodeType }
               onChange={onInputChange}
             >
               {highFreqDiodeTypes.map(type => (
@@ -139,7 +139,7 @@ const HighFrequencyDiode = ({ formData, onInputChange, onCalculate, qualityFacto
             <select
               name="highFreqAppFactor"
               className="form-control"
-              value={formData.highFreqAppFactor || ''}
+              value={formData.highFreqAppFactor }
               onChange={onInputChange}
             >
               {highFreqAppFactors.map(factor => (
