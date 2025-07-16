@@ -265,7 +265,7 @@ const AlphanumericDisplays = ({ formData, onInputChange, onCalculate, qualityFac
           </p>
         <p className="mb-1">
                            <strong> λ<sub>c</sub> * N<sub>c</sub>:</strong>
-                           {results?.failureRate * quantity?.toFixed(6)} failures/10<sup>6</sup> hours
+                           {results?.failureRate * quantity} failures/10<sup>6</sup> hours
                            {/* {totalSysFailureRate.push(results?.value * quantity)} */}
                            {console.log("CalculateGate123..", results?.failureRate * quantity)}
                          </p>

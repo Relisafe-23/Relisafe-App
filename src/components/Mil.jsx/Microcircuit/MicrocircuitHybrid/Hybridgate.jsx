@@ -598,7 +598,8 @@ if (onCalculate) {
                                  <input
                                    styles={customStyles}
                                    placeholder="Select"
-                                   value={0} // Fixed value set to 0
+                                   value={0} 
+                                      disabled={true} // Fixed value set to 0
                                    onChange={(selectedOption) => {
                                      setCurrentComponent(prev => ({
                                        ...prev,
@@ -607,7 +608,7 @@ if (onCalculate) {
                                      }));
                                    }}
                                  />
-               
+                           <small style={{ fontSize: '0.875rem', color: '#6c757d' }}>C<sub>2</sub> must be zero </small>
                                </div>
                              </Col>
               

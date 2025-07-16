@@ -79,15 +79,7 @@ function MicroCapacitor({ onCalculate, capacitorTotalFRate, handleCalculateFailu
   ];
 
   const qualityFactors = [
-    // { quality: "Established Reliability (D)", πQ: 0.001 },
-    // { quality: "Established Reliability (C)", πQ: 0.01 },
-    // { quality: "Established Reliability (S, B)", πQ: 0.03 },
-    // { quality: "Established Reliability (R)", πQ: 0.1 },
-    // { quality: "Established Reliability (P)", πQ: 0.3 },
     { quality: "Established Reliability (M) πQ = 1.0", πQ: 1.0 },
-    // { quality: "Established Reliablity (L)", πQ: 1.5 },
-    // { quality: "Non-Established Reliability", πQ: 3.0 },
-    // { quality: "Commercial/Unknown", πQ: 10.0 }
   ];
 
   // Environment factors
@@ -104,21 +96,21 @@ function MicroCapacitor({ onCalculate, capacitorTotalFRate, handleCalculateFailu
     { value: 3.3, label: "0 to 0.1 (πSR = 3.3)" }
   ];
   
-  // State for form inputs
-  const [selectedCapacitor, setSelectedCapacitor] = useState(null);
-  const [temperature, setTemperature] = useState(null);
-  const [capacitance, setCapacitance] = useState(null); 
-  const [dcVoltageApplied, setDcVoltageApplied] = useState(null);
-  const [acVoltageApplied, setAcVoltageApplied] = useState(null);
-  const [dcVoltageRated, setDcVoltageRated] = useState(null);
-  const [seriesResistance, setSeriesResistance] = useState(null);
-  const [selectedQuality, setSelectedQuality] = useState(null);
-  const [selectedEnvironment, setSelectedEnvironment] = useState(null);
-  const [results, setResults] = useState([]);
-  // const [components, setComponents] = useState([]);
-  const [showResults, setShowResults] = useState(false);
-  const [showCalculations, setShowCalculations] = useState(false);
-  const [circuitResistance, setCircuitResistance] = useState(null);
+  // // State for form inputs
+  // const [selectedCapacitor, setSelectedCapacitor] = useState(null);
+  // const [temperature, setTemperature] = useState(null);
+  // const [capacitance, setCapacitance] = useState(null); 
+  // const [dcVoltageApplied, setDcVoltageApplied] = useState(null);
+  // const [acVoltageApplied, setAcVoltageApplied] = useState(null);
+  // const [dcVoltageRated, setDcVoltageRated] = useState(null);
+  // const [seriesResistance, setSeriesResistance] = useState(null);
+  // const [selectedQuality, setSelectedQuality] = useState(null);
+  // const [selectedEnvironment, setSelectedEnvironment] = useState(null);
+  // const [results, setResults] = useState([]);
+  // // const [components, setComponents] = useState([]);
+  // const [showResults, setShowResults] = useState(false);
+  // const [showCalculations, setShowCalculations] = useState(false);
+  // const [circuitResistance, setCircuitResistance] = useState(null);
   const [effectiveResistance, setEffectiveResistance] = useState(null);
   const [voltageApplied, setVoltageApplied] = useState(null);
   const [shouldCalculateCR, setShouldCalculateCR] = useState(false);
@@ -138,72 +130,6 @@ function MicroCapacitor({ onCalculate, capacitorTotalFRate, handleCalculateFailu
   //   effectiveResistance: '',
   //   voltageApplied: ''
   // });
-
-
-
-
-  //   const calculatePiT = () => {
-  //   // Constants from the 
-  //      if (!selectedCapacitor || selectedCapacitor?.value?.πtColumn === "N/A (πt=1)") {
-  //     return 1.0;
-  //   }
-  //   const BOLTZMANN_CONSTANT = 8.617e-5; // eV/K
-  //   const REFERENCE_TEMP = 298; // K (25°C)
-
-  //   // Get activation energy based on column selection
-  //   const Ea = selectedCapacitor?.value?.πtColumn === 1 ? 0.15 : 0.35; // eV (from image columns)
-
-  //   // Convert temperature to Kelvin
-  //   const tempInKelvin = temperature + 273;
-
-  //   // Calculate πT using Arrhenius equation
-  //   const exponent = (-Ea / BOLTZMANN_CONSTANT) *
-  //     ((1 / tempInKelvin) - (1 / REFERENCE_TEMP));
-
-  //   return Math.exp(exponent);
-  // };
-
-  // const calculatePiC = () => {
-  //    if (!selectedCapacitor || selectedCapacitor?.value?.πcColumn === "N/A (πc=1)") {
-  //     return 1.0;
-  //   }
-  //   const closestCap = capacitanceFactors.reduce((prev, curr) =>
-  //     Math.abs(curr.capacitance - capacitance) < Math.abs(prev.capacitance - capacitance) ? curr : prev
-  //   );
-
-  //   return selectedCapacitor?.value?.πcColumn === 1
-  //     ? Math.pow(capacitance, 0.09)  // Column 1: C^0.09
-  //     : Math.pow(capacitance, 0.23); // Column 2: C^0.23
-  // };
-
-
-//  const calculatePiV = () => {
-//      if (!selectedCapacitor || selectedCapacitor?.value?.πvColumn === "N/A (πv=1)") {
-//       return 1.0;
-//     }
-//     // Calculate stress ratio (S = Operating Voltage / Rated Voltage)
-// const operatingVoltage = dcVoltageApplied + Math.sqrt(2) * acVoltageApplied;
-// console.log("operatingVoltage...", operatingVoltage);
-
-// const S = operatingVoltage / dcVoltageRated;
-// console.log("S (Stress Ratio)...", S);
-
-  
-
-//     // Calculate πV based on the selected formula
-//     const piV =
-//       selectedCapacitor?.value?.πvColumn === 1 ? Math.pow(S / .6, 5) + 1 :
-//         selectedCapacitor?.value?.πvColumn === 2 ? Math.pow(S / .6, 10) + 1 :
-//           selectedCapacitor?.value?.πvColumn === 3 ? Math.pow(S / .6, 3) + 1 :
-//             selectedCapacitor?.value?.πvColumn === 4 ? Math.pow(S / .6, 17) + 1 :
-//               selectedCapacitor?.value?.πvColumn === 5 ? Math.pow(S / .5, 3) + 1 :
-//                 1.0;
-
-//     // Log the final calculated πV value
-//     console.log("Calculated πV...", piV);
-
-//     return piV;
-//   };
 
   function calculateCR(effectiveResistance, voltage) {
     if (!voltage || voltage === 0) return 0;

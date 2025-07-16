@@ -31,19 +31,11 @@ const MicrocircuitsCalculation = ({ onCalculate }) => {
 const[totalFailure,setTotalFailure] =useState(null)
 const[ failureRate,setFailureRate]= useState({})
   const [showCalculations, setShowCalculations] = useState(false);
-  const [mainInitialRate, setMainInitialRate] = useState("")
-  const [components, setComponents] = useState([]);
   const [selectedComponent, setSelectedComponent] = useState([]);
   const [results, setResults] = useState(false)
   const [quantity, setQuantity] = useState(null)
-  const [currentComponents, setCurrentComponents] = useState(null);
-  const [mode, setMode] = useState('A1');
   const [capacitor,setCapacitor] =useState(null);
   const [diode,setDiode] = useState(null);
-  
-  const[microcircuits,setMicrocircuits] = useState(null)
-  const [numberOfPins, setNumberOfPins] = useState(null);
-  const [selectedECC, setSelectedECC] = React.useState(null);// 'A1' or 'C'
   const [currentComponent, setCurrentComponent] = useState({
     type: 'Microcircuits,Gate/Logic Arrays And Microprocessors',
     temperature: 25,
@@ -62,7 +54,6 @@ const[ failureRate,setFailureRate]= useState({})
     pinCount: '',
     yearsInProduction: '',
     quality: '',
-
     memoryTemperature: 45,   
     techTemperatureB2: 25,
     techTemperatureB1: 25,    
@@ -130,143 +121,10 @@ useEffect(() => {
     prevTotalRef.current = totalSystemFailureRate;
   }
 }, [totalSystemFailureRate, onTotalFailureRateChange]);
-const packageRates = [
-    {
-      type: 'Hermetic: DIPs w/Solder or Weld Seal, PGA, SMT',
-      formula: '2.8e-4 * (Np)^1.08',
-      rates: [
-        { pins: 3, rate: 0.00092 },
-        { pins: 4, rate: 0.0013 },
-        { pins: 6, rate: 0.0019 },
-        { pins: 8, rate: 0.0026 },
-        { pins: 10, rate: 0.0034 },
-        { pins: 12, rate: 0.0041 },
-        { pins: 14, rate: 0.0048 },
-        { pins: 16, rate: 0.0056 },
-        { pins: 18, rate: 0.0064 },
-        { pins: 22, rate: 0.0079 },
-        { pins: 24, rate: 0.0087 },
-        { pins: 28, rate: 0.010 },
-        { pins: 36, rate: 0.013 },
-        { pins: 40, rate: 0.015 },
-        { pins: 64, rate: 0.025 },
-        { pins: 80, rate: 0.032 },
-        { pins: 128, rate: 0.053 },
-        { pins: 180, rate: 0.076 },
-        { pins: 224, rate: 0.097 }
-      ]
-    },
-    {
-      type: 'DIPs with Glass Seal',
-      formula: '9.0e-5 * (Np)^1.51',
-      rates: [
-        { pins: 3, rate: 0.00047 },
-        { pins: 4, rate: 0.00073 },
-        { pins: 6, rate: 0.0013 },
-        { pins: 8, rate: 0.0021 },
-        { pins: 10, rate: 0.0029 },
-        { pins: 12, rate: 0.0038 },
-        { pins: 14, rate: 0.0048 },
-        { pins: 16, rate: 0.0059 },
-        { pins: 18, rate: 0.0071 },
-        { pins: 22, rate: 0.0096 },
-        { pins: 24, rate: 0.011 },
-        { pins: 28, rate: 0.014 },
-        { pins: 36, rate: 0.020 },
-        { pins: 40, rate: 0.024 },
-        { pins: 64, rate: 0.048 }
-      ]
-    },
-    {
-      type: 'Flatpacks with Axial Leads on 50 Mil Centers',
-      formula: '3.0e-5 * (Np)^1.82',
-      rates: [
-        { pins: 3, rate: 0.00022 },
-        { pins: 4, rate: 0.00037 },
-        { pins: 6, rate: 0.00078 },
-        { pins: 8, rate: 0.0013 },
-        { pins: 10, rate: 0.0020 },
-        { pins: 12, rate: 0.0028 },
-        { pins: 14, rate: 0.0037 },
-        { pins: 16, rate: 0.0047 },
-        { pins: 18, rate: 0.0059 },
-        { pins: 22, rate: 0.0083 },
-        { pins: 24, rate: 0.0098 }
-      ]
-    },
-    {
-      type: 'Cans',
-      formula: '3.0e-5 * (Np)^2.01',
-      rates: [
-        { pins: 3, rate: 0.00027 },
-        { pins: 4, rate: 0.00049 },
-        { pins: 6, rate: 0.0011 },
-        { pins: 8, rate: 0.0020 },
-        { pins: 10, rate: 0.0031 },
-        { pins: 12, rate: 0.0044 },
-        { pins: 14, rate: 0.0060 },
-        { pins: 16, rate: 0.0079 }
-      ]
-    },
-    {
-      type: 'Nonhermetic: DIPs, PGA, SMT',
-      formula: '3.6e-4 * (Np)^1.08',
-      rates: [
-        { pins: 3, rate: 0.0012 },
-        { pins: 4, rate: 0.0016 },
-        { pins: 6, rate: 0.0025 },
-        { pins: 8, rate: 0.0034 },
-        { pins: 10, rate: 0.0043 },
-        { pins: 12, rate: 0.0053 },
-        { pins: 14, rate: 0.0062 },
-        { pins: 16, rate: 0.0072 },
-        { pins: 18, rate: 0.0082 },
-        { pins: 22, rate: 0.010 },
-        { pins: 24, rate: 0.011 },
-        { pins: 28, rate: 0.013 },
-        { pins: 36, rate: 0.017 },
-        { pins: 40, rate: 0.019 },
-        { pins: 64, rate: 0.032 },
-        { pins: 80, rate: 0.041 },
-        { pins: 128, rate: 0.068 },
-        { pins: 180, rate: 0.098 },
-        { pins: 224, rate: 0.12 }
-      ]
-    }
-  ];
 
-  const QUALITY_FACTORS = [
-    {
-      label: "10 Temperature Cycles (-55°C to +125°C) with end point electrical tests",
-      value: 0.10,
-      screeningLevel: "High"
-    },
-    {
-      label: "None beyond best commercial practices",
-      value: 1.0,
-      screeningLevel: "Standard"
-    }
-  ];
-
-  const calculateComponentSum = (currentComponent) => {
-
-    // const lambdac = handleCalculateBubble(currentComponent) + handleCalculateSawDevice(currentComponent) + handleCalculateGaAs(currentComponent) + handleCalculateVhsic(currentComponent) + handleCalculateMemories(currentComponent) + handleCalculateGate(currentComponent) + handleCalculateFailure(currentComponent);
-    const baseLambda = currentComponent?.baseFailureRate || mainInitialRate || 0;
-    const componentSum = baseLambda;
-    return  componentSum;
-  };
 
   const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
 
-  const [frArr, setFrArr] = useState([0])
-
-
-  const calculateTempFactor = (temp) => {
-    // Simplified exponential model for πT
-    return Math.exp((-14 / (8.617e-5)) * ((1 / (temp + 273)) - (1 / 298)));
-  };
- 
   const tableTheme = createTheme({
     overrides: {
       MuiTableRow: {
@@ -327,9 +185,6 @@ const packageRates = [
     }),
   };
    console.log("capacitor.,.l",capacitor)
-  const handleCalculateSawDevice = (values) => {
-    setMainInitialRate(values) 
-  }
 
   const environmentOptions = [
 
@@ -620,8 +475,9 @@ const packageRates = [
 
                 </>
               )}
-          
-
+          <br/>
+  <br/>
+  
                 <Col md={4}>
                   <div className="form-group mb-3">
                  
@@ -637,7 +493,7 @@ const packageRates = [
                     <span className="unit">failures/10<sup>6</sup> hours</span>
                   </div>
                 </Col>
-
+                
                 <Col md={4}>
                   <div className="form-group mb-3">
                     <label>Quality Factor (π<sub>Q</sub>):</label>
@@ -841,6 +697,7 @@ const packageRates = [
                   />
                 </div>
               </Col>
+              
               <div className='d-flex justify-content-between align-items-center'>
                 <div>
                   {results && (
@@ -1005,14 +862,12 @@ const packageRates = [
               )}
             </>
           )}
-
           {currentComponent.type === "Microcircuits,Saw Devices" && (
          <MicroSawDevice  onCalculate={onCalculate}/>
           )}
-
-          {currentComponent.type === "Microcircuit,GaAs MMIC and Digital Devices" && (
-           
-           <MicroGaAs onCalculate={onCalculate}/>)}
+          {currentComponent.type === "Microcircuit,GaAs MMIC and Digital Devices" && ( 
+           <MicroGaAs onCalculate={onCalculate}/>
+           )}
          
         </Row>
   
