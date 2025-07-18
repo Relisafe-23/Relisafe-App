@@ -63,8 +63,6 @@ const HybridMagnetic = ({ onCalculate }) => {
     }));
   };
 
-
-
   const calculateBubbleMemoryFailureRate = () => {
 
     try {
@@ -320,12 +318,14 @@ const HybridMagnetic = ({ onCalculate }) => {
               name="pinCount"
               min="3"
               max="224"
-              value={currentComponent.pinCount || ''}
+              disabled={true} 
+              value={currentComponent.pinCount || 0}
               onChange={(e) => setCurrentComponent({
                 ...currentComponent,
                 pinCount: parseInt(e.target.value)
               })}
             />
+             <small style={{ fontSize: '0.875rem', color: '#6c757d' }}>C<sub>2</sub> must be zero </small>
           </div>
         </Col>
         <Col md={4}>
