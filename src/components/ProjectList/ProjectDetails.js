@@ -110,24 +110,61 @@ export default function ProjectDetails(props) {
       .required("Average operational hours per day is required"),
     avghour: Yup.number().max(8784, "max value 8784").required("Average annual operational hours is required"),
     environment: Yup.object().required("Environment is required"),
-    productlife: Yup.string()
-      .required("Product life is required")
-      .min(1, "Product life is required")
-      .max(99, "Maximum length is 2")
-      .test("no-whitespace", "Product life cannot contain only whitespace", (value) => {
-        return value && value.trim().length > 0;
-      }),
-    daysopration: Yup.string().required("Days of operation per year is required"),
+productlife: Yup.number()
+  .typeError("Product life must be a number")
+  .required("Product life is required")
+  .min(1, "Minimum value is 1")
+  .max(99, "Maximum value is 99")
+  .test("decimals", "Only up to 2 decimal places allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    return /^\d+(\.\d{1,2})?$/.test(value.toString());
+  }),
+        daysopration: Yup.number()
+      .typeError("You must specify a number")
+      .min(1, "Minimum value is 1.")
+      .max(366, "Maximum value is 366.")
+      .required("Days of operation per year is required"),
     temp: Yup.string().required("Temperature is required"),
     // nonShortProbability: Yup.string().required("Non Short Probability(NSP) is required"),
     // mMaxValue: Yup.string().required("Phi for Mmax required"),
-    avgpoweronhoursperday:Yup.number().max(24, "Average Power on hours per day Max value 24."),
-    prolifekm: Yup.number()
-      .min(1, "Minimum 1 value is required")
-      .max(999999999, "Maximum  length is 4")
-      .typeError("you must specify a number")
-      .nullable(),
-    productlifemiles: Yup.string().min(1, "Minimum 1 value is required").max(9999, "Maximum  length is 4").nullable(),
+    avgpoweronhoursperday: Yup.number()
+  .typeError("You must specify a number")
+  .max(24, "Average Power on hours per day Max value is 24.")
+  .test("max-decimals", "Only up to 2 decimal places allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    return /^\d+(\.\d{1,2})?$/.test(value.toString());
+  }),
+
+prolifekm: Yup.number()
+  .typeError("You must specify a number")
+  .min(1, "Minimum 1 value is required")
+  .max(999999999, "Maximum value is 999999999")
+  .nullable()
+  .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    return /^\d+(\.\d{1,4})?$/.test(value.toString());
+  }),
+    productlifemiles: Yup.string()
+  .required("Product life miles is required")
+  .matches(
+    /^\d{1,20}(\.\d{1,4})?$/,
+    "Only numbers allowed with max 20 digits and up to 4 decimal places"
+  )
+  .nullable(),
+prolifecycle: Yup.number()
+  .typeError("Pro life cycle must be a number")
+  .test("max-digits", "Maximum 25 digits before decimal allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    const [intPart] = value.toString().split(".");
+    return intPart.length <= 25;
+  })
+  .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    return /^\d+(\.\d{1,4})?$/.test(value.toString());
+  })
+  .nullable(),
+
+
   });
 
   return (

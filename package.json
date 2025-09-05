@@ -61,9 +61,8 @@
     "web-vitals": "^1.1.2",
     "xlsx": "^0.18.5",
     "yup": "^0.32.9"
-  },
-  "scripts": {
-    "start": "serve -s build",
+  },    "scripts": {
+   "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

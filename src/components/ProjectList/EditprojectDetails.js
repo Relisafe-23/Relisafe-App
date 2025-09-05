@@ -212,11 +212,16 @@ export default function EditprojectDetails(props) {
     number: Yup.string().required("Project number is required"),
     description: Yup.string().required("Project description is required"),
     opreationalPhase: Yup.string().required("Operational phase is required"),
-    avgday: Yup.number()
-      .typeError("you must specify a number")
-      .min(0, "Min value 0.")
-      .max(24, "Max value 24.")
-      .required("Average operational hours per day is required"),
+avgday: Yup.number()
+  .typeError("You must specify a number")
+  .min(0, "Min value 0.")
+  .max(24, "Max value 24.")
+  .required("Average operational hours per day is required")
+  .test("max-decimals", "Only up to 2 decimal places allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    return /^\d+(\.\d{1,2})?$/.test(value.toString());
+  }),
+
     avghour: Yup.number().max(8784, "max value 8784").required("Average annual operational hours is required"),
     avgannualpweronhr: Yup.number().max(8784, "max value 8784"),
 
@@ -227,12 +232,49 @@ export default function EditprojectDetails(props) {
     environment: Yup.object().required("Environment is required"),
     // nonShortProbability: Yup.string().required("Non Short Probability(NSP) is required"),
     // mMaxValue: Yup.string().required("Phi for Mmax required"),
-    productlife: Yup.string().required("Product life in years is required"),
+    productlife: Yup.number()
+      .typeError("Product life must be a number")
+      .required("Product life is required")
+      .min(1, "Minimum value is 1")
+      .max(99, "Maximum value is 99")
+      .test("decimals", "Only up to 2 decimal places allowed", (value) => {
+        if (value === undefined || value === null) return true;
+        return /^\d+(\.\d{1,2})?$/.test(value.toString());
+      }),
+      productlifekm:Yup.number()
+        .typeError("You must specify a number")
+        .min(1, "Minimum 1 value is required")
+        .max(999999999, "Maximum value is 999999999")
+        .nullable()
+        .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
+          if (value === undefined || value === null) return true;
+          return /^\d+(\.\d{1,4})?$/.test(value.toString());
+        }),
+            pdtlifeinmiles: Yup.string()
+          .required("Product life miles is required")
+          .matches(
+            /^\d{1,20}(\.\d{1,4})?$/,
+            "Only numbers allowed with max 20 digits and up to 4 decimal places"
+          )
+          .nullable(),
+          pdtlifeoptncycle: Yup.number()
+            .typeError("Pro life cycle must be a number")
+            .test("max-digits", "Maximum 25 digits before decimal allowed", (value) => {
+              if (value === undefined || value === null) return true;
+              const [intPart] = value.toString().split(".");
+              return intPart.length <= 25;
+            })
+            .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
+              if (value === undefined || value === null) return true;
+              return /^\d+(\.\d{1,4})?$/.test(value.toString());
+            })
+            .nullable(),
     daysopration: Yup.number()
-      .typeError("you must specify a number")
-      .min(0, "Min value 0.")
-      .max(366, "Max value 366.")
-      .required("Days of operation per year is required"),
+  .typeError("You must specify a number")
+  .min(1, "Minimum value is 1.")
+  .max(366, "Maximum value is 366.")
+  .required("Days of operation per year is required"),
+
     temp: Yup.string().required("Temperature is required"),
     customerName: Yup.string().required("Customer name is required"),
   });
@@ -521,6 +563,7 @@ export default function EditprojectDetails(props) {
                                   value={values.productlifekm}
                                   className="mt-1"
                                 />
+                                <ErrorMessage name="productlifekm" component="span" className="error" />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -538,6 +581,7 @@ export default function EditprojectDetails(props) {
                                   name="pdtlifeinmiles"
                                   id="pdtlifeinmiles"
                                 />
+                                <ErrorMessage name="pdtlifeinmiles" component="span" className="error" />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -556,6 +600,7 @@ export default function EditprojectDetails(props) {
                                   className="mt-1"
                                   value={values.pdtlifeoptncycle}
                                 />
+                                 <ErrorMessage name="pdtlifeoptncycle" component="span" className="error" />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
