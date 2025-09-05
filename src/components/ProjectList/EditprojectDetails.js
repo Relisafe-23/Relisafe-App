@@ -225,10 +225,18 @@ avgday: Yup.number()
     avghour: Yup.number().max(8784, "max value 8784").required("Average annual operational hours is required"),
     avgannualpweronhr: Yup.number().max(8784, "max value 8784"),
 
-    avgpoweronhrday: Yup.number()
-      .typeError("you must specify a number")
-      .min(0, "Min value 0.")
-      .max(24, "Max value 24."),
+ avgpoweronhrday: Yup.number()
+  .typeError("You must specify a number")
+  .min(0, "Min value 0.")
+  .max(24, "Max value 24.")
+  .test(
+    "max-2-decimals",
+    "Only up to 2 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return true; // skip empty
+      return /^\d+(\.\d{1,2})?$/.test(value.toString());
+    }
+  ),
     environment: Yup.object().required("Environment is required"),
     // nonShortProbability: Yup.string().required("Non Short Probability(NSP) is required"),
     // mMaxValue: Yup.string().required("Phi for Mmax required"),
@@ -277,6 +285,107 @@ avgday: Yup.number()
 
     temp: Yup.string().required("Temperature is required"),
     customerName: Yup.string().required("Customer name is required"),
+
+avgcyclesperoperationnh: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average cycles per operation is required")
+  .test(
+    "max-3-decimals",
+    "Only up to 3 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required, so must fail if empty
+      return /^\d+(\.\d{1,3})?$/.test(value.toString());
+    }
+  ),
+  avgcycleperpoweronhr: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average cycles per power on hour is required")
+  .test(
+    "max-3-decimals",
+    "Only up to 3 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,3})?$/.test(value.toString());
+    }
+  ),
+  avgannualmilekm: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average annual mileage (km) is required")
+  .test(
+    "max-4-decimals",
+    "Only up to 4 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,4})?$/.test(value.toString());
+    }
+  ),
+    avgannualmilegemile: Yup.number()
+    .typeError("You must specify a number")
+    .required("Average annual mileage miles is required")
+    .test(
+      "max-4-decimals",
+      "Only up to 4 decimal places are allowed",
+      (value) => {
+        if (value === undefined || value === null) return false; // required
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      }
+    ),
+    avgannualoperationcycle: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average annual operation cycle is required")
+  .test(
+    "max-4-decimals",
+    "Only up to 4 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,4})?$/.test(value.toString());
+    }
+  ),
+  
+      avgannualpwroncycle: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average annual power on cycle is required")
+  .test(
+    "max-4-decimals",
+    "Only up to 4 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,4})?$/.test(value.toString());
+    }
+  ), 
+        avgspeedkm: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average speed (km) is required")
+  .test(
+    "max-4-decimals",
+    "Only up to 4 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,4})?$/.test(value.toString());
+    }
+  ),
+          avgspeedmiles: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average speed (miles) is required")
+  .test(
+    "max-4-decimals",
+    "Only up to 4 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,4})?$/.test(value.toString());
+    }
+  ),
+      deliverylocation: Yup.string()
+    .matches(/^[A-Za-z]+$/, "Only letters are allowed")
+    .nullable()
+    .optional(),
+  
+
+    
+
+
+  
+
   });
   const submitForm = (values) => {
     const projectOwner = values.owner.value;
@@ -677,6 +786,7 @@ avgday: Yup.number()
                                   name="avgcyclesperoperationnh"
                                   id="avgcyclesperoperationnh"
                                 />
+                                <ErrorMessage name="avgcyclesperoperationnh" component="span" className="error" />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -693,6 +803,7 @@ avgday: Yup.number()
                                   value={values.avgcycleperpoweronhr}
                                   className="mt-1"
                                 />
+                                <ErrorMessage name="avgcycleperpoweronhr" component="span" className="error" />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -750,6 +861,7 @@ avgday: Yup.number()
                                   name="avgannualmilekm"
                                   id="avgannualmilekm"
                                 />
+                                 <ErrorMessage name="avgannualmilekm" component="span" className="error" />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -767,6 +879,7 @@ avgday: Yup.number()
                                   value={values.avgannualmilegemile}
                                   className="mt-1"
                                 />
+                                 <ErrorMessage name="avgannualmilegemile" component="span" className="error" />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -786,6 +899,8 @@ avgday: Yup.number()
                                   name="avgannualoperationcycle"
                                   id="avgannualoperationcycle"
                                 />
+                                 <ErrorMessage name="avgannualoperationcycle" component="span" className="error" />
+
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -802,6 +917,7 @@ avgday: Yup.number()
                                   value={values.avgannualpwroncycle}
                                   className="mt-1"
                                 />
+                                <ErrorMessage name="avgannualpwroncycle" component="span" className="error" />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -820,6 +936,7 @@ avgday: Yup.number()
                                   value={values.avgspeedkm}
                                   id="avgspeedkm"
                                 />
+                                 <ErrorMessage name="avgspeedkm" component="span" className="error" />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -837,6 +954,8 @@ avgday: Yup.number()
                                   value={values.avgspeedmiles}
                                   className="mt-1"
                                 />
+                                 <ErrorMessage name="avgspeedmiles" component="span" className="error" />
+
                               </Form.Group>
                             </Col>
                           </Row>
@@ -958,6 +1077,7 @@ avgday: Yup.number()
                                   value={values.deliverylocation}
                                   className="mt-1"
                                 />
+                                <ErrorMessage name="deliverylocation" component="span" className="error" />
                               </Form.Group>
                             </Col>
                           </Row>

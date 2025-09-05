@@ -163,6 +163,101 @@ prolifecycle: Yup.number()
     return /^\d+(\.\d{1,4})?$/.test(value.toString());
   })
   .nullable(),
+avgcycleperhour: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average cycle per hour is required")
+  .test(
+    "max-3-decimals",
+    "Only up to 3 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required, so must fail if empty
+      return /^\d+(\.\d{1,3})?$/.test(value.toString());
+    }
+  ),
+  avgcyclesperpoweronhour: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average cycles per power on hour is required")
+  .test(
+    "max-3-decimals",
+    "Only up to 3 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,3})?$/.test(value.toString());
+    }
+  ), 
+  avgannualmileagekm: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average annual mileage (km) is required")
+  .test(
+    "max-4-decimals",
+    "Only up to 4 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,4})?$/.test(value.toString());
+    }
+  ),
+  avgannualmileagemiles: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average annual mileage miles is required")
+  .test(
+    "max-4-decimals",
+    "Only up to 4 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,4})?$/.test(value.toString());
+    }
+  ),
+      avgannualoprationcycle: Yup.number()
+    .typeError("You must specify a number")
+    .required("Average annual operation cycle is required")
+    .test(
+      "max-4-decimals",
+      "Only up to 4 decimal places are allowed",
+      (value) => {
+        if (value === undefined || value === null) return false; // required
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      }
+    ), 
+          avgannualpoweroncycles: Yup.number()
+    .typeError("You must specify a number")
+    .required("Average annual power on cycle is required")
+    .test(
+      "max-4-decimals",
+      "Only up to 4 decimal places are allowed",
+      (value) => {
+        if (value === undefined || value === null) return false; // required
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      }
+    ), 
+      avgspeedkm: Yup.number()
+    .typeError("You must specify a number")
+    .required("Average speed (km) is required")
+    .test(
+      "max-4-decimals",
+      "Only up to 4 decimal places are allowed",
+      (value) => {
+        if (value === undefined || value === null) return false; // required
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      }
+    ),
+    avgspeedmiles: Yup.number()
+    .typeError("You must specify a number")
+    .required("Average speed (miles) is required")
+    .test(
+      "max-4-decimals",
+      "Only up to 4 decimal places are allowed",
+      (value) => {
+        if (value === undefined || value === null) return false; // required
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      }
+    ), 
+    deliverylocation: Yup.string()
+  .matches(/^[A-Za-z]+$/, "Only letters are allowed")
+  .nullable()
+  .optional(),
+
+    
+
 
 
   });
@@ -372,6 +467,7 @@ prolifecycle: Yup.number()
                           value={values.avgpoweronhoursperday}
                           className="mt-1"
                         />
+                         <ErrorMessage name="avgpoweronhoursperday" component="span" className="error" />
                       </Form.Group>
                     </Col>
                   </Row>
@@ -390,6 +486,7 @@ prolifecycle: Yup.number()
                           value={values.avgcycleperhour}
                           className="mt-1"
                         />
+                             <ErrorMessage name="avgcycleperhour" component="span" className="error" />
                       </Form.Group>
                     </Col>
                     <Col md={6}>
@@ -407,6 +504,7 @@ prolifecycle: Yup.number()
                           value={values.avgcyclesperpoweronhour}
                           className="mt-1"
                         />
+                         <ErrorMessage name="avgcyclesperpoweronhour" component="span" className="error" />
                       </Form.Group>
                     </Col>
                   </Row>
@@ -463,6 +561,7 @@ prolifecycle: Yup.number()
                           value={values.avgannualmileagekm}
                           className="mt-1"
                         />
+                          <ErrorMessage name="avgannualmileagekm" component="span" className="error" />
                       </Form.Group>
                     </Col>
                     <Col md={6}>
@@ -479,6 +578,7 @@ prolifecycle: Yup.number()
                           value={values.avgannualmileagemiles}
                           className="mt-1"
                         />
+                         <ErrorMessage name="avgannualmileagemiles" component="span" className="error" />
                       </Form.Group>
                     </Col>
                   </Row>
@@ -497,6 +597,8 @@ prolifecycle: Yup.number()
                           value={values.avgannualoprationcycle}
                           className="mt-1"
                         />
+                        <ErrorMessage name="avgannualoprationcycle" component="span" className="error" />
+
                       </Form.Group>
                     </Col>
                     <Col md={6}>
@@ -513,6 +615,7 @@ prolifecycle: Yup.number()
                           value={values.avgannualpoweroncycles}
                           className="mt-1"
                         />
+                         <ErrorMessage name="avgannualpoweroncycles" component="span" className="error" />
                       </Form.Group>
                     </Col>
                   </Row>
@@ -531,6 +634,7 @@ prolifecycle: Yup.number()
                           value={values.avgspeedkm}
                           className="mt-1"
                         />
+                         <ErrorMessage name="avgspeedkm" component="span" className="error" />
                       </Form.Group>
                     </Col>
                     <Col md={6}>
@@ -547,6 +651,8 @@ prolifecycle: Yup.number()
                           id="avgspeedmiles"
                           className="mt-1"
                         />
+                        <ErrorMessage name="avgspeedmiles" component="span" className="error" />
+
                       </Form.Group>
                     </Col>
                   </Row>
@@ -652,6 +758,7 @@ prolifecycle: Yup.number()
                           name="deliverylocation"
                           id="deliverylocation"
                         />
+                        <ErrorMessage name="deliverylocation" component="span" className="error" />
                       </Form.Group>
                     </Col>
                   </Row>
