@@ -964,7 +964,7 @@ const handleSliderChange = (event) => {
                       {" "}
                       <NavLink
                         to={{
-                          pathname: `/safety/${projectId}`,
+                          pathname: ``,
                           state: {
                             projectId: projectId,
                             productId: productId,
