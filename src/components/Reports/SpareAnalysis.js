@@ -94,6 +94,7 @@ function SpareAnalysis(props) {
   const userId = localStorage.getItem("userId");
 
   const headers = [
+    "S.No",
     "Product Name",
     "Part Number",
     "Quantity",
@@ -596,6 +597,16 @@ function SpareAnalysis(props) {
                                 row?.mttrData?.[key] ??
                                 row?.spareData?.[key] ??
                                 "-";
+                              if (header === "S.No") {
+                                return (
+                                  <td
+                                    key={header}
+                                    style={{ textAlign: "center" }}
+                                  >
+                                    {rowIndex + 1}
+                                  </td>
+                                )
+                              }
                               if (
                                 header === "FR" &&
                                 typeof value === "number"
