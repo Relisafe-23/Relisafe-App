@@ -1,19 +1,24 @@
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
-import { Modal, Button, Row, Col, Form } from "react-bootstrap";
+import { Modal, Button, Row, Col } from "react-bootstrap";
 import "../../css/FMECA.scss";
 import Api from "../../Api";
 import { tableIcons } from "../core/TableIcons";
+// import { ThemeProvider } from "@material-ui/core/styles";
+// import { createTheme } from "@material-ui/core/styles";
+// import Tree from "../Tree";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
 import { toast } from "react-toastify";
 import {
   faFileDownload,
   faFileUpload,
-  faPlusCircle,
 } from "@fortawesome/free-solid-svg-icons";
 
+//import  XLSX from 'xlsx'
+
+//import * as XLSX from "xlsx/xlsx";
 import * as XLSX from "xlsx";
 
 import {
@@ -32,45 +37,6 @@ import { ButtonBase, createTheme, Dialog, DialogActions, DialogContent, DialogTi
 import MaterialTable from "material-table";
 
 function Index(props) {
-  // ... (all your existing state variables)
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newFmecaData, setNewFmecaData] = useState({
-    operatingPhase: "",
-    function: "",
-    failureMode: "",
-    failureModeRatioAlpha: "",
-    cause: "",
-    subSystemEffect: "",
-    systemEffect: "",
-    endEffect: "",
-    endEffectRatioBeta: "",
-    safetyImpact: "",
-    referenceHazardId: "",
-    realibilityImpact: "",
-    serviceDisruptionTime: "",
-    frequency: "",
-    severity: "",
-    riskIndex: "",
-    detectableMeansDuringOperation: "",
-    detectableMeansToMaintainer: "",
-    BuiltInTest: "",
-    designControl: "",
-    maintenanceControl: "",
-    exportConstraints: "",
-    immediteActionDuringOperationalPhase: "",
-    immediteActionDuringNonOperationalPhase: "",
-    userField1: "",
-    userField2: "",
-    userField3: "",
-    userField4: "",
-    userField5: "",
-    userField6: "",
-    userField7: "",
-    userField8: "",
-    userField9: "",
-    userField10: "",
-  });
-
   const [initialProductID, setInitialProductID] = useState();
   const [initialTreeStructure, setInitialTreeStructure] = useState();
   const [exceldata, setExcelData] = useState(null);
@@ -2910,120 +2876,6 @@ validate: (rowData) => {
     deleteFmecaData(row);
   };
 
-  const handleAddModalInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewFmecaData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
-  };
-
-  const handleAddModalSelectChange = (selectedOption, fieldName) => {
-    setNewFmecaData(prevData => ({
-      ...prevData,
-      [fieldName]: selectedOption ? selectedOption.value : ""
-    }));
-  };
-
-  const handleAddFmeca = () => {
-    // Validate required fields
-    if (!newFmecaData.function || !newFmecaData.failureMode || !newFmecaData.failureModeRatioAlpha) {
-      toast.error("Function, Failure Mode, and Failure Mode Ratio Alpha are required!");
-      return;
-    }
-
-    createFmeca(newFmecaData);
-    setShowAddModal(false);
-    // Reset form data
-    setNewFmecaData({
-      operatingPhase: "",
-      function: "",
-      failureMode: "",
-      failureModeRatioAlpha: "",
-      cause: "",
-      subSystemEffect: "",
-      systemEffect: "",
-      endEffect: "",
-      endEffectRatioBeta: "",
-      safetyImpact: "",
-      referenceHazardId: "",
-      realibilityImpact: "",
-      serviceDisruptionTime: "",
-      frequency: "",
-      severity: "",
-      riskIndex: "",
-      detectableMeansDuringOperation: "",
-      detectableMeansToMaintainer: "",
-      BuiltInTest: "",
-      designControl: "",
-      maintenanceControl: "",
-      exportConstraints: "",
-      immediteActionDuringOperationalPhase: "",
-      immediteActionDuringNonOperationalPhase: "",
-      userField1: "",
-      userField2: "",
-      userField3: "",
-      userField4: "",
-      userField5: "",
-      userField6: "",
-      userField7: "",
-      userField8: "",
-      userField9: "",
-      userField10: "",
-    });
-  };
-
-  // Render function for select fields in the modal
-  const renderModalSelectField = (fieldName, title, placeholder) => {
-    const seperateFilteredData =
-      allSepareteData?.filter((item) => item?.sourceName === fieldName) || [];
-    const conncetedFilteredData =
-      allConnectedData?.filter(
-        (item) => item?.destinationName === fieldName
-      ) || [];
-
-    const options =
-      conncetedFilteredData.length > 0
-        ? conncetedFilteredData?.map((item) => ({
-            value: item?.destinationValue,
-            label: item?.destinationValue,
-          }))
-        : seperateFilteredData?.map((item) => ({
-            value: item?.sourceValue,
-            label: item?.sourceValue,
-          }));
-
-    if (!options || options.length === 0) {
-      return (
-        <Form.Group className="mb-3">
-          <Form.Label>{title}</Form.Label>
-          <Form.Control
-            type="text"
-            name={fieldName}
-            value={newFmecaData[fieldName]}
-            onChange={handleAddModalInputChange}
-            placeholder={placeholder}
-          />
-        </Form.Group>
-      );
-    }
-
-    return (
-      <Form.Group className="mb-3">
-        <Form.Label>{title}</Form.Label>
-        <Select
-          name={fieldName}
-          value={options.find(option => option.value === newFmecaData[fieldName])}
-          onChange={(selectedOption) => handleAddModalSelectChange(selectedOption, fieldName)}
-          options={options}
-          styles={customStyles}
-        />
-      </Form.Group>
-    );
-  };
-
-  // ... (all your existing functions)
-
   return (
     <div className="mx-4 mt-5">
       {isLoading ? (
@@ -3085,130 +2937,151 @@ validate: (rowData) => {
               </Tooltip>
             </div>
           </div>
+          <div>
+            <div className="mt-5" style={{ bottom: "35px" }}>
+              <ThemeProvider theme={tableTheme}>
+                <MaterialTable
+                  editable={{
+                    onRowAdd:
+                      writePermission === true ||
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
+                        ? (newRow) =>
+                          new Promise((resolve, reject) => {
+                            createFmeca(newRow);
+                            resolve();
+                          })
+                        : null,
+                    onRowUpdate:
+                      writePermission === true ||
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
+                        ? (newRow, oldData) =>
+                          new Promise((resolve, reject) => {
+                            updateFmeca(newRow);
+                            resolve();
+                          })
+                        : null,
 
-          <div className="d-flex justify-content-end mb-3">
-            <Button 
-              className="btn btn-primary"
-              onClick={() => setShowAddModal(true)}
-              disabled={!writePermission && role !== "admin" && !(isOwner === true && createdBy === userId)}
-            >
-              <FontAwesomeIcon icon={faPlusCircle} className="me-2" />
-              Add New FMECA
-            </Button>
+                    onRowDelete:
+                      writePermission === true ||
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
+                        ? (selectedRow) =>
+                          new Promise((resolve, reject) => {
+                            deleteFmecaData(selectedRow);
+                            resolve();
+                          })
+                        : null,
+                  }}
+                  title="FMECA"
+                  icons={tableIcons}
+                  columns={columns}
+                  data={tableData}
+                  // options={{
+                  //   cellStyle: { border: "1px solid #eee" },
+                  //   addRowPosition: "first",
+                  //   actionsColumnIndex: -1,
+                  //   headerStyle: {
+                  //     backgroundColor: "#CCE6FF",
+                  //     border: "1px solid red",
+                  //     height: '10px',
+
+                  //   },
+                  // exportButton: { csv: true },
+                  // }}
+                  options={{
+                    cellStyle: {
+                      border: "1px solid #eee",
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden'
+                    },
+                    addRowPosition: "first",
+                    actionsColumnIndex: -1,
+                    pageSize: 5,
+                    pageSizeOptions: [5, 10, 20, 50],
+                    headerStyle: {
+                      backgroundColor: "#CCE6FF",
+                      fontWeight: "bold",
+                      zIndex: 0,
+                      whiteSpace: 'nowrap',       // prevent line wrap
+                      minWidth: 200,              // or width: 200
+                      maxWidth: 300,
+                    },
+
+                  }}
+                  localization={{
+                    toolbar: { function: "Placeholder" },
+                    body: {
+                      addTooltip: "Add FMECA",
+                    },
+                  }}
+                />
+              </ThemeProvider>
+            </div>
           </div>
-
-          <div className="mt-3">
-            <ThemeProvider theme={tableTheme}>
-              <MaterialTable
-                editable={{
-                  onRowUpdate:
-                    writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
-                      ? (newRow, oldData) =>
-                        new Promise((resolve, reject) => {
-                          updateFmeca(newRow);
-                          resolve();
-                        })
-                      : null,
-
-                  onRowDelete:
-                    writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
-                      ? (selectedRow) =>
-                        new Promise((resolve, reject) => {
-                          deleteFmecaData(selectedRow);
-                          resolve();
-                        })
-                      : null,
-                }}
-                title="FMECA"
-                icons={tableIcons}
-                columns={columns.filter(col => col.field !== 'actions')} // Remove editable columns
-                data={tableData}
-                options={{
-                  cellStyle: {
-                    border: "1px solid #eee",
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                    overflow: 'hidden'
-                  },
-                  actionsColumnIndex: -1,
-                  pageSize: 5,
-                  pageSizeOptions: [5, 10, 20, 50],
-                  headerStyle: {
-                    backgroundColor: "#CCE6FF",
-                    fontWeight: "bold",
-                    zIndex: 0,
-                    whiteSpace: 'nowrap',
-                    minWidth: 200,
-                    maxWidth: 300,
-                  },
-                }}
+          <Modal show={show} centered>
+            <div className="d-flex justify-content-center mt-5">
+              <FontAwesomeIcon
+                icon={faCircleCheck}
+                fontSize={"40px"}
+                color="#1D5460"
               />
-            </ThemeProvider>
-          </div>
-
-          {/* Add Modal */}
-          <Modal show={showAddModal} onHide={() => setShowAddModal(false)} size="lg">
-            <Modal.Header closeButton>
-              <Modal.Title>Add New FMECA</Modal.Title>
-            </Modal.Header>
-            <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-              <Form>
-                <Row>
-                  <Col md={6}>
-                    {renderModalSelectField("operatingPhase", "Operating Phases", "Enter Operating Phase")}
-                  </Col>
-                  <Col md={6}>
-                    {renderModalSelectField("function", "Function*", "Enter Function")}
-                  </Col>
-                  <Col md={6}>
-                    {renderModalSelectField("failureMode", "Failure Mode*", "Enter Failure Mode")}
-                  </Col>
-                  <Col md={6}>
-                    {renderModalSelectField("failureModeRatioAlpha", "Failure Mode Ratio Alpha*", "Enter Failure Mode Ratio Alpha")}
-                  </Col>
-                  <Col md={6}>
-                    {renderModalSelectField("cause", "Cause", "Enter Cause")}
-                  </Col>
-                  <Col md={6}>
-                    {renderModalSelectField("subSystemEffect", "Sub System Effect*", "Enter Sub System Effect")}
-                  </Col>
-                  <Col md={6}>
-                    {renderModalSelectField("systemEffect", "System Effect*", "Enter System Effect")}
-                  </Col>
-                  <Col md={6}>
-                    {renderModalSelectField("endEffect", "End Effect*", "Enter End Effect")}
-                  </Col>
-                  <Col md={6}>
-                    {renderModalSelectField("endEffectRatioBeta", "End Effect Ratio Beta*", "Enter End Effect Ratio Beta")}
-                  </Col>
-                  <Col md={6}>
-                    {renderModalSelectField("safetyImpact", "Safety Impact*", "Enter Safety Impact")}
-                  </Col>
-                  {/* Add more fields as needed */}
-                </Row>
-              </Form>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowAddModal(false)}>
-                Cancel
-              </Button>
-              <Button variant="primary" onClick={handleAddFmeca}>
-                Save
-              </Button>
+            </div>
+            <Modal.Footer className=" d-flex justify-content-center success-message mt-3 mb-4">
+              <div>
+                <h4 className="text-center">Row Deleted Successfully</h4>
+              </div>
             </Modal.Footer>
           </Modal>
-
-          {/* ... (your existing modals) */}
+          <Modal show={productModal} centered onHide={handleClose}>
+            <div className="d-flex justify-content-center mt-5">
+              <FaExclamationCircle size={45} color="#de2222b0" />
+            </div>
+            <Modal.Footer className=" d-flex justify-content-center success-message mb-4">
+              <div>
+                <h5 className="text-center">
+                  Please select product from <b>Dropdown </b>before adding a new
+                  row!
+                </h5>
+                <Button
+                  className="save-btn fw-bold fmeca-button mt-3"
+                  onClick={() => setProductModal(false)}
+                >
+                  OK
+                </Button>
+              </div>
+            </Modal.Footer>
+          </Modal>
+          <Modal show={failureModeRatioError} centered onHide={handleHide}>
+            <div className="d-flex justify-content-center mt-5">
+              <FontAwesomeIcon
+                icon={faCircleExclamation}
+                size="2x"
+                color="#de2222b0"
+              />
+            </div>
+            <Modal.Footer className=" d-flex justify-content-center success-message mb-4">
+              <div>
+                <h5 className="text-center">
+                  Sum of Failure Mode must be equal to<b>1</b>
+                </h5>
+                <Button
+                  className="save-btn fw-bold fmeca-button mt-3"
+                  onClick={() => setFailureModeRatioError(false)}
+                >
+                  OK
+                </Button>
+              </div>
+            </Modal.Footer>
+          </Modal>
         </div>
       )}
     </div>
   );
 }
-
 export default Index;
