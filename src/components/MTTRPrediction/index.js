@@ -239,6 +239,7 @@ const MTTRPrediction = (props, active) => {
   };
 
   const exportToExcel = (value, productName) => {
+    console.log('value',value)
     const originalData = {
       remarks: value.remarks,
     };
@@ -868,6 +869,8 @@ const MTTRPrediction = (props, active) => {
     spare: Yup.object().required("Spare is required"),
     mct: Yup.string().required("MCT is required"),
     mlh: Yup.string().required("MLH is required"),
+    remarks:Yup.string()     .min(3, 'Minimum 3 characters required')
+    .max(200, 'Maximum 200 characters allowed')
     // labourHour: Yup.string().required("Labour hour is required"),
     // partType:
     //   category === "" || category === "Assembly"
@@ -1976,6 +1979,11 @@ console.log("values.....",values)
                                   value={values.remarks}
                                   onChange={handleChange}
                                   onBlur={handleBlur}
+                                />
+                                    <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="remarks"
                                 />
                               </Form.Group>
                             </Col>
