@@ -692,181 +692,174 @@ function Index(props) {
       }
       ,
     },
-    {
-      field: "function",
-      title: "Function*",
-      type: "string",
-      // cellStyle: { minWidth: "50px", textAlign: "center" },
-      // headerStyle: { textAlign: "center" },
-      onCellClick: () => handleDropdownSelection("function"),
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "function") ||
-          [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "function"
-          ) || [];
+{
+  field: "function",
+  title: "Function*",
+  type: "string",
+  onCellClick: () => handleDropdownSelection("function"),
+  validate: (rowData) => {
+    if (!rowData.function || rowData.function.trim() === "") {
+      if (!toast.isActive("function-required")) {  
+        toast.error("Function is required!", {
+          toastId: "function-required", // unique id
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
+      return false; 
+    }
+    return true; 
+  },
+  editComponent: ({ value, onChange }) => {
+    const seperateFilteredData =
+      allSepareteData?.filter((item) => item?.sourceName === "function") || [];
+    const conncetedFilteredData =
+      allConnectedData?.filter(
+        (item) => item?.destinationName === "function"
+      ) || [];
+
+    const options =
+      conncetedFilteredData.length > 0
+        ? conncetedFilteredData?.map((item) => ({
+            value: item?.destinationValue,
+            label: item?.destinationValue,
+          }))
+        : seperateFilteredData?.map((item) => ({
+            value: item?.sourceValue,
+            label: item?.sourceValue,
+          }));
+
+    // If no dropdown options → use input
+    if (!options || options.length === 0) {
+      return (
+        <input
+          type="text"
+          name="function"
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Enter Function"
+          style={{ height: "40px", borderRadius: "4px" }}
+          title="Enter Function"
+        />
+      );
+    }
+
+    // Dropdown (react-select)
+    return (
+      <Select
+        name="function"
+        value={value ? { label: value, value: value } : null}
+        onChange={(selectedItems) => {
+          onChange(selectedItems?.value || "");
+        }}
+        options={options}
+      />
+    );
+  },
+},
+
+{
+  field: "failureMode",
+  title: "Failure Mode*",
+  type: "string",
+  headerStyle: { textAlign: "center" },
+  cellStyle: { minWidth: "230px", textAlign: "center" },
 
 
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-              value: item?.destinationValue,
-              label: item?.destinationValue,
-            }))
-            : seperateFilteredData?.map((item) => ({
-              value: item?.sourceValue,
-              label: item?.sourceValue,
-            }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="function"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Function"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Function"
-            />
-          );
-        }
-        return (
-          <Select
-            name="function"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "function");
-              getAllConnectedLibrary(selectedItems, "function");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
-    {
-      field: "failureMode",
-      title: "Failure Mode*",
-      type: "string",
-      headerStyle: { textAlign: "center" },
-      cellStyle: { minWidth: "230px", textAlign: "center" },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "failureMode"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "failureMode"
-          ) || [];
+  validate: (rowData) => {
+    if (!rowData.failureMode || rowData.failureMode.trim() === "") {
+      if (!toast.isActive("failureMode-required")) {
+        toast.error("Failure Mode is required!", {
+          toastId: "failureMode-required", 
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
+      return false; 
+    }
+    return true; 
+  },
 
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-              value: item?.destinationValue,
-              label: item?.destinationValue,
-            }))
-            : seperateFilteredData?.map((item) => ({
-              value: item?.sourceValue,
-              label: item?.sourceValue,
-            }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="failureMode"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Failure Mode"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter FailureMode"
-            />
-          );
-        }
-        return (
-          <Select
-            name="failureMode"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "failureMode");
-              getAllConnectedLibrary(selectedItems, "failureMode");
-            }}
-            options={options}
-          />
-        );
-      },
-      onCellClick: () => handleDropdownSelection("failureMode"),
-    },
-    // {
-    //   field: "searchFM",
-    //   title: "Search FM*",
-    //   type: "string",
-    //   headerStyle: { textAlign: "center" },
-    //   cellStyle: { minWidth: "230px" },
-    //   editComponent: ({ value, onChange }) => {
-    //     const seperateFilteredData =
-    //       allSepareteData?.filter((item) => item?.sourceName === "searchFM") ||
-    //       [];
-    //     const conncetedFilteredData =
-    //       allConnectedData?.filter(
-    //         (item) => item?.destinationName === "searchFM"
-    //       ) || [];
-    //     const options =
-    //       conncetedFilteredData.length > 0
-    //         ? conncetedFilteredData?.map((item) => ({
-    //             value: item?.destinationValue,
-    //             label: item?.destinationValue,
-    //           }))
-    //         : seperateFilteredData?.map((item) => ({
-    //             value: item?.sourceValue,
-    //             label: item?.sourceValue,
-    //           }));
-    //     if (!options || options.length === 0) {
-    //       return (
-    //         <input
-    //           type="text"
-    //           name="searchFM"
-    //           value={value}
-    //           onChange={(e) => {
-    //             createDropdownEditComponent(e.target.value);
-    //             onChange(e.target.value);
-    //           }}
-    //           placeholder="Enter Search FM"
-    //           style={{ height: "40px", borderRadius: "4px" }}
-    //           title="Enter Search FM"
-    //         />
-    //       );
-    //     }
-    //     return (
-    //       <Select
-    //         name="searchFM"
-    //         value={value ? { label: value, value: value } : ""}
-    //         onChange={(selectedItems) => {
-    //           onChange(selectedItems?.value);
-    //           handleInputChange(selectedItems, "searchFM");
-    //           getAllConnectedLibrary(selectedItems, "searchFM");
-    //         }}
-    //         options={options}
-    //       />
-    //     );
-    //   },
-    //   onCellClick: () => handleDropdownSelection("searchFM"),
-    // },
+  editComponent: ({ value, onChange }) => {
+    const seperateFilteredData =
+      allSepareteData?.filter(
+        (item) => item?.sourceName === "failureMode"
+      ) || [];
+
+    const conncetedFilteredData =
+      allConnectedData?.filter(
+        (item) => item?.destinationName === "failureMode"
+      ) || [];
+
+    const options =
+      conncetedFilteredData.length > 0
+        ? conncetedFilteredData?.map((item) => ({
+            value: item?.destinationValue,
+            label: item?.destinationValue,
+          }))
+        : seperateFilteredData?.map((item) => ({
+            value: item?.sourceValue,
+            label: item?.sourceValue,
+          }));
+
+    // If no dropdown → input
+    if (!options || options.length === 0) {
+      return (
+        <input
+          type="text"
+          name="failureMode"
+          value={value || ""}
+          onChange={(e) => {
+            createDropdownEditComponent(e.target.value);
+            onChange(e.target.value);
+          }}
+          placeholder="Enter Failure Mode"
+          style={{ height: "40px", borderRadius: "4px" }}
+          title="Enter Failure Mode"
+        />
+      );
+    }
+
+    // Dropdown (react-select)
+    return (
+      <Select
+        name="failureMode"
+        value={value ? { label: value, value: value } : null}
+        onChange={(selectedItems) => {
+          onChange(selectedItems?.value || "");
+          handleInputChange(selectedItems, "failureMode");
+          getAllConnectedLibrary(selectedItems, "failureMode");
+        }}
+        options={options}
+      />
+    );
+  },
+
+  onCellClick: () => handleDropdownSelection("failureMode"),
+},
+
     {
       field: "failureModeRatioAlpha",
       title: "Failure Mode Ratio Alpha*",
       type: "string",
       headerStyle: { textAlign: "center" },
       cellStyle: { minWidth: "230px", textAlign: "center" },
+       validate: (rowData) => {
+    if (
+      !rowData.failureModeRatioAlpha ||
+      rowData.failureModeRatioAlpha.toString().trim() === ""
+    ) {
+      if (!toast.isActive("failureModeRatioAlpha-required")) {
+        toast.error("Failure Mode Ratio Alpha is required!", {
+          toastId: "failureModeRatioAlpha-required",
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
+      return false; 
+    }
+    return true; 
+  },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -900,8 +893,6 @@ function Index(props) {
               onChange={(e) => {
                 createDropdownEditComponent(e.target.value);
                 onChange(e.target.value
-
-
                 );
 
               }}
@@ -1078,6 +1069,7 @@ function Index(props) {
         return (
           <Select
             name="systemEffect"
+            multiline
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
@@ -1085,6 +1077,23 @@ function Index(props) {
               getAllConnectedLibrary(selectedItems, "systemEffect");
             }}
             options={options}
+              styles={{
+    option: (provided) => ({
+      ...provided,
+      whiteSpace: "normal",  
+      wordWrap: "break-word", 
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      whiteSpace: "normal",   
+      wordWrap: "break-word",
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      whiteSpace: "normal",
+      wordWrap: "break-word",
+    }),
+  }}
           />
         );
       },
@@ -1200,68 +1209,84 @@ function Index(props) {
         );
       },
     },
-    {
-      field: "safetyImpact",
-      title: "Safety Impact*",
-      type: "string",
-      cellStyle: { minWidth: "230px", textAlign: "center" },
-      headerStyle: { textAlign: "center" },
-      // validate: (rowData) => {
-      //   if (rowData.safetyImpact === undefined || rowData.safetyImpact === "") {
-      //     return "required";
-      //   }
-      //   return true;
-      // },
-      editComponent: ({ value, onChange }) => {
-        const seperateFilteredData =
-          allSepareteData?.filter(
-            (item) => item?.sourceName === "safetyImpact"
-          ) || [];
-        const conncetedFilteredData =
-          allConnectedData?.filter(
-            (item) => item?.destinationName === "safetyImpact"
-          ) || [];
+{
+  field: "safetyImpact",
+  title: "Safety Impact*",
+  type: "string",
+  cellStyle: { minWidth: "230px", textAlign: "center" },
+  headerStyle: { textAlign: "center" },
 
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-              value: item?.destinationValue,
-              label: item?.destinationValue,
-            }))
-            : seperateFilteredData?.map((item) => ({
-              value: item?.sourceValue,
-              label: item?.sourceValue,
-            }));
-        if (!options || options.length === 0) {
-          return (
-            <input
-              type="text"
-              name="safetyImpact"
-              value={value}
-              onChange={(e) => {
-                createDropdownEditComponent(e.target.value);
-                onChange(e.target.value);
-              }}
-              placeholder="Enter Safety Impact"
-              style={{ height: "40px", borderRadius: "4px" }}
-              title="Enter Safety Impact"
-            />
-          );
-        }
-        return (
-          <Select
-            name="safetyImpact"
-            value={value ? { label: value, value: value } : ""}
-            onChange={(selectedItems) => {
-              onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "safetyImpact");
-              getAllConnectedLibrary(selectedItems, "safetyImpact");
-            }}
-            options={options}
-          />
-        );
-      },
-    },
+
+  validate: (rowData) => {
+    if (!rowData.safetyImpact || rowData.safetyImpact.trim() === "") {
+      if (!toast.isActive("safetyImpact-required")) {
+        toast.error("Safety Impact is required!", {
+          toastId: "safetyImpact-required",
+          position: "top-right",
+          autoClose: 3000,
+        });
+      }
+      return false; 
+    }
+    return true; 
+  },
+
+  editComponent: ({ value, onChange }) => {
+    const seperateFilteredData =
+      allSepareteData?.filter(
+        (item) => item?.sourceName === "safetyImpact"
+      ) || [];
+
+    const conncetedFilteredData =
+      allConnectedData?.filter(
+        (item) => item?.destinationName === "safetyImpact"
+      ) || [];
+
+    const options =
+      conncetedFilteredData.length > 0
+        ? conncetedFilteredData?.map((item) => ({
+            value: item?.destinationValue,
+            label: item?.destinationValue,
+          }))
+        : seperateFilteredData?.map((item) => ({
+            value: item?.sourceValue,
+            label: item?.sourceValue,
+          }));
+
+    // If no dropdown → use input
+    if (!options || options.length === 0) {
+      return (
+        <input
+          type="text"
+          name="safetyImpact"
+          value={value || ""}
+          onChange={(e) => {
+            createDropdownEditComponent(e.target.value);
+            onChange(e.target.value);
+          }}
+          placeholder="Enter Safety Impact"
+          style={{ height: "40px", borderRadius: "4px" }}
+          title="Enter Safety Impact"
+        />
+      );
+    }
+
+    // Dropdown (react-select)
+    return (
+      <Select
+        name="safetyImpact"
+        value={value ? { label: value, value: value } : null}
+        onChange={(selectedItems) => {
+          onChange(selectedItems?.value || "");
+          handleInputChange(selectedItems, "safetyImpact");
+          getAllConnectedLibrary(selectedItems, "safetyImpact");
+        }}
+        options={options}
+      />
+    );
+  },
+},
+
     {
       field: "referenceHazardId",
       title: "Reference Hazard ID",

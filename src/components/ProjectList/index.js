@@ -166,8 +166,8 @@ export default function ProjectList(props) {
       .min(1, "Enter valid project description is required")
       .test('no-whitespace', 'Project description cannot contain only whitespace', (value) => {
         return value && value.trim().length > 0;
-      }),
-    // .max(50, "Maximum 50 character is allowed"),
+      })
+     .max(50, "Maximum 50 character is allowed"),
     // owner: Yup.object().required("Project owner Is required"),
   });
   const submitForm = (values, { resetForm }, id) => {

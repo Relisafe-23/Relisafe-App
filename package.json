@@ -63,7 +63,7 @@
     "yup": "^0.32.9"
   },
   "scripts": {
-    "start": "serve -s build",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -87,6 +87,7 @@
     ]
   },
   "devDependencies": {
+    "@csstools/normalize.css": "^12.1.1",
     "@types/react-router-dom": "^5.3.3"
   }
 }

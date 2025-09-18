@@ -110,24 +110,156 @@ export default function ProjectDetails(props) {
       .required("Average operational hours per day is required"),
     avghour: Yup.number().max(8784, "max value 8784").required("Average annual operational hours is required"),
     environment: Yup.object().required("Environment is required"),
-    productlife: Yup.string()
-      .required("Product life is required")
-      .min(1, "Product life is required")
-      .max(99, "Maximum length is 2")
-      .test("no-whitespace", "Product life cannot contain only whitespace", (value) => {
-        return value && value.trim().length > 0;
-      }),
-    daysopration: Yup.string().required("Days of operation per year is required"),
+productlife: Yup.number()
+  .typeError("Product life must be a number")
+  .required("Product life is required")
+  .min(1, "Minimum value is 1")
+  .max(99, "Maximum value is 99")
+  .test("decimals", "Only up to 2 decimal places allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    return /^\d+(\.\d{1,2})?$/.test(value.toString());
+  }),
+        daysopration: Yup.number()
+      .typeError("You must specify a number")
+      .min(1, "Minimum value is 1.")
+      .max(366, "Maximum value is 366.")
+      .required("Days of operation per year is required"),
     temp: Yup.string().required("Temperature is required"),
     // nonShortProbability: Yup.string().required("Non Short Probability(NSP) is required"),
     // mMaxValue: Yup.string().required("Phi for Mmax required"),
-    avgpoweronhoursperday:Yup.number().max(24, "Average Power on hours per day Max value 24."),
-    prolifekm: Yup.number()
-      .min(1, "Minimum 1 value is required")
-      .max(999999999, "Maximum  length is 4")
-      .typeError("you must specify a number")
-      .nullable(),
-    productlifemiles: Yup.string().min(1, "Minimum 1 value is required").max(9999, "Maximum  length is 4").nullable(),
+    avgpoweronhoursperday: Yup.number()
+  .typeError("You must specify a number")
+  .max(24, "Average Power on hours per day Max value is 24.")
+  .test("max-decimals", "Only up to 2 decimal places allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    return /^\d+(\.\d{1,2})?$/.test(value.toString());
+  }),
+
+prolifekm: Yup.number()
+  .typeError("You must specify a number")
+  .min(1, "Minimum 1 value is required")
+  .max(999999999, "Maximum value is 999999999")
+  .nullable()
+  .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    return /^\d+(\.\d{1,4})?$/.test(value.toString());
+  }),
+    productlifemiles: Yup.string()
+  .required("Product life miles is required")
+  .matches(
+    /^\d{1,20}(\.\d{1,4})?$/,
+    "Only numbers allowed with max 20 digits and up to 4 decimal places"
+  )
+  .nullable(),
+prolifecycle: Yup.number()
+  .typeError("Pro life cycle must be a number")
+  .test("max-digits", "Maximum 25 digits before decimal allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    const [intPart] = value.toString().split(".");
+    return intPart.length <= 25;
+  })
+  .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    return /^\d+(\.\d{1,4})?$/.test(value.toString());
+  })
+  .nullable(),
+avgcycleperhour: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average cycle per hour is required")
+  .test(
+    "max-3-decimals",
+    "Only up to 3 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required, so must fail if empty
+      return /^\d+(\.\d{1,3})?$/.test(value.toString());
+    }
+  ),
+  avgcyclesperpoweronhour: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average cycles per power on hour is required")
+  .test(
+    "max-3-decimals",
+    "Only up to 3 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,3})?$/.test(value.toString());
+    }
+  ), 
+  avgannualmileagekm: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average annual mileage (km) is required")
+  .test(
+    "max-4-decimals",
+    "Only up to 4 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,4})?$/.test(value.toString());
+    }
+  ),
+  avgannualmileagemiles: Yup.number()
+  .typeError("You must specify a number")
+  .required("Average annual mileage miles is required")
+  .test(
+    "max-4-decimals",
+    "Only up to 4 decimal places are allowed",
+    (value) => {
+      if (value === undefined || value === null) return false; // required
+      return /^\d+(\.\d{1,4})?$/.test(value.toString());
+    }
+  ),
+      avgannualoprationcycle: Yup.number()
+    .typeError("You must specify a number")
+    .required("Average annual operation cycle is required")
+    .test(
+      "max-4-decimals",
+      "Only up to 4 decimal places are allowed",
+      (value) => {
+        if (value === undefined || value === null) return false; // required
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      }
+    ), 
+          avgannualpoweroncycles: Yup.number()
+    .typeError("You must specify a number")
+    .required("Average annual power on cycle is required")
+    .test(
+      "max-4-decimals",
+      "Only up to 4 decimal places are allowed",
+      (value) => {
+        if (value === undefined || value === null) return false; // required
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      }
+    ), 
+      avgspeedkm: Yup.number()
+    .typeError("You must specify a number")
+    .required("Average speed (km) is required")
+    .test(
+      "max-4-decimals",
+      "Only up to 4 decimal places are allowed",
+      (value) => {
+        if (value === undefined || value === null) return false; // required
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      }
+    ),
+    avgspeedmiles: Yup.number()
+    .typeError("You must specify a number")
+    .required("Average speed (miles) is required")
+    .test(
+      "max-4-decimals",
+      "Only up to 4 decimal places are allowed",
+      (value) => {
+        if (value === undefined || value === null) return false; // required
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      }
+    ), 
+    deliverylocation: Yup.string()
+  .matches(/^[A-Za-z]+$/, "Only letters are allowed")
+  .nullable()
+  .optional(),
+
+    
+
+
+
   });
 
   return (
@@ -335,6 +467,7 @@ export default function ProjectDetails(props) {
                           value={values.avgpoweronhoursperday}
                           className="mt-1"
                         />
+                         <ErrorMessage name="avgpoweronhoursperday" component="span" className="error" />
                       </Form.Group>
                     </Col>
                   </Row>
@@ -353,6 +486,7 @@ export default function ProjectDetails(props) {
                           value={values.avgcycleperhour}
                           className="mt-1"
                         />
+                             <ErrorMessage name="avgcycleperhour" component="span" className="error" />
                       </Form.Group>
                     </Col>
                     <Col md={6}>
@@ -370,6 +504,7 @@ export default function ProjectDetails(props) {
                           value={values.avgcyclesperpoweronhour}
                           className="mt-1"
                         />
+                         <ErrorMessage name="avgcyclesperpoweronhour" component="span" className="error" />
                       </Form.Group>
                     </Col>
                   </Row>
@@ -426,6 +561,7 @@ export default function ProjectDetails(props) {
                           value={values.avgannualmileagekm}
                           className="mt-1"
                         />
+                          <ErrorMessage name="avgannualmileagekm" component="span" className="error" />
                       </Form.Group>
                     </Col>
                     <Col md={6}>
@@ -442,6 +578,7 @@ export default function ProjectDetails(props) {
                           value={values.avgannualmileagemiles}
                           className="mt-1"
                         />
+                         <ErrorMessage name="avgannualmileagemiles" component="span" className="error" />
                       </Form.Group>
                     </Col>
                   </Row>
@@ -460,6 +597,8 @@ export default function ProjectDetails(props) {
                           value={values.avgannualoprationcycle}
                           className="mt-1"
                         />
+                        <ErrorMessage name="avgannualoprationcycle" component="span" className="error" />
+
                       </Form.Group>
                     </Col>
                     <Col md={6}>
@@ -476,6 +615,7 @@ export default function ProjectDetails(props) {
                           value={values.avgannualpoweroncycles}
                           className="mt-1"
                         />
+                         <ErrorMessage name="avgannualpoweroncycles" component="span" className="error" />
                       </Form.Group>
                     </Col>
                   </Row>
@@ -494,6 +634,7 @@ export default function ProjectDetails(props) {
                           value={values.avgspeedkm}
                           className="mt-1"
                         />
+                         <ErrorMessage name="avgspeedkm" component="span" className="error" />
                       </Form.Group>
                     </Col>
                     <Col md={6}>
@@ -510,6 +651,8 @@ export default function ProjectDetails(props) {
                           id="avgspeedmiles"
                           className="mt-1"
                         />
+                        <ErrorMessage name="avgspeedmiles" component="span" className="error" />
+
                       </Form.Group>
                     </Col>
                   </Row>
@@ -615,6 +758,7 @@ export default function ProjectDetails(props) {
                           name="deliverylocation"
                           id="deliverylocation"
                         />
+                        <ErrorMessage name="deliverylocation" component="span" className="error" />
                       </Form.Group>
                     </Col>
                   </Row>
