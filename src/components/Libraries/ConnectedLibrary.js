@@ -227,9 +227,10 @@ function ConnectedLibrary(props) {
       });
   };
   // update Api
-  const updateConnectLibrary = (values) => {
+  const updateConnectLibrary = (values,{resetForm}) => {
     console.log("values.....", values.destinationModule.value);
     const comId = localStorage.getItem("companyId");
+
     Api.put("api/v1/library/update/connect/value", {
       moduleName: values.Module.label,
       projectId: projectId,
@@ -242,9 +243,33 @@ function ConnectedLibrary(props) {
     }).then((res) => {
       // window.location.reload();
       // setIsLoading(false);
+         resetForm({
+          Module: "",
+          destinationModule: "",
+          Field: "",
+          Value: "",
+          FieldValueAndValue: { field: "", value: "" },
+          end: [],
+          valueEnd: [],
+          FieldValueAndValueEnd: { field: "", value: "" }
+        });
+         resetFormFields();
+       toast.success("Updated successfully!");
       getAllConnect();
     });
   };
+  const resetFormFields = () => {
+  setEditRowData(null);
+  setSelectModule("");
+  setSelectDestinationModule("");
+  setModuleData([]);
+  setModuleFieldValue("");
+  setSeparateData([]);
+  setSeparateDestinationData([]);
+  setSourceId(null);
+  setDestinationId(null);
+};
+  
   //delete-Api
   const deleteConnectLibarary = (values) => {
     console.log(values)
@@ -407,7 +432,7 @@ function ConnectedLibrary(props) {
                 if (validateValueEnd(values.end, values.valueEnd)) {
                   // Custom validation passed, proceed with submission
                   editRowData
-                    ? updateConnectLibrary(values)
+                    ? updateConnectLibrary(values,{resetForm})
                     : createConnectLibrary(values, { resetForm });
                 }
               }}
@@ -828,15 +853,25 @@ function ConnectedLibrary(props) {
                                 type="reset"
                                 onClick={() => {
                                   resetForm();
+                                   resetFormFields();
                                   setEditRowData(null);
                                   setModuleData([]);
                                   setSelectModule("");
+                                     setEditRowData(null);
+    setSelectModule("");
+    setSelectDestinationModule(""); 
+    setModuleData([]);
+    setModuleFieldValue("");
+    setSeparateData([]);
+    setSeparateDestinationData([]);
+    setSourceId(null);
+    setDestinationId(null);
                                 }}
                               >
                                 CANCEL
                               </Button>
                               {editRowData ? (
-                                <Button className="save-btn" type="submit">
+                                <Button className="save-btn" type="submit" >
                                   UPDATE
                                 </Button>
                               ) : (

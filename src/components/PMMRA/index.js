@@ -72,6 +72,26 @@ const Validation = Yup.object().shape({
   // scheduledMaintenanceTask: Yup.string().required(
   //   "Schedule maintenance task type is required"
   // ),
+    userfield1: Yup.string()
+    .required("User Field1 is require")
+    .max(225, "User Field 1 must be at most 225 characters")
+    .nullable(),
+  userfield2: Yup.string()
+  .required("User Field2 is require")
+    .max(225, "User Field 2 must be at most 225 characters")
+    .nullable(),
+  userfield3: Yup.string()
+  .required("User Field3 is require")
+    .max(225, "User Field 3 must be at most 225 characters")
+    .nullable(),
+  userfield4: Yup.string()
+  .required("User Field4 is require")
+    .max(225, "User Field 4 must be at most 225 characters")
+    .nullable(),
+  userfield5: Yup.string()
+  .required("User Field5 is require")
+    .max(225, "User Field 5 must be at most 225 characters")
+    .nullable(),
 });
 
 export default function PMMRA(props) {
@@ -6274,6 +6294,11 @@ export default function PMMRA(props) {
                                     title="User Field 1"
                                   />
                                 )}
+                                       <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="userfield1"
+                                  />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 2</Label>
@@ -6352,6 +6377,11 @@ export default function PMMRA(props) {
                                     title="User Field 2"
                                   />
                                 )}
+                                       <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="userfield2"
+                                  />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 3</Label>
@@ -6430,6 +6460,11 @@ export default function PMMRA(props) {
                                     title="User Field 3"
                                   />
                                 )}
+                                       <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="userfield3"
+                                  />
                               </Form.Group>
                             </Col>
                             <Col md={6} className="mt-4 mb-4">
@@ -6510,6 +6545,11 @@ export default function PMMRA(props) {
                                     title="User Field 4"
                                   />
                                 )}
+                                       <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="userfield4"
+                                  />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User field 5</Label>
@@ -6588,6 +6628,11 @@ export default function PMMRA(props) {
                                     title="User Field 5"
                                   />
                                 )}
+                                       <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="userfield5"
+                                  />
                               </Form.Group>
                               {/* <Form.Group className="mt-3">
                           <Label>User field 6</Label>
