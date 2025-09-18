@@ -152,57 +152,216 @@ export default function PMMRA(props) {
   const [importExcelData, setImportExcelData] = useState({});
   const [shouldReload, setShouldReload] = useState(false);
   const [open, setOpen] = useState(false);
-  
-  const importExcel = (e) => {
-    const file = e.target.files[0];
-    const fileName = file.name;
-    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
-    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
+const importExcel = (e) => {
+  const file = e.target.files[0];
+  const fileName = file.name;
+  const validExtensions = ["xlsx", "xls"];
+  const fileExtension = fileName.split(".").pop().toLowerCase();
 
-    if (!validExtensions.includes(fileExtension)) {
-      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
-      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+  if (!validExtensions.includes(fileExtension)) {
+    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+      position: toast.POSITION.TOP_RIGHT,
+    });
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const bstr = event.target.result;
+    const workBook = XLSX.read(bstr, { type: "binary" });
+    const workSheetName = workBook.SheetNames[0];
+    const workSheet = workBook.Sheets[workSheetName];
+    const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+    
+    if (excelData.length > 1) {
+      const headers = excelData[0];
+      const rows = excelData.slice(1);
+      const parsedData = rows.map((row) => {
+        const rowData = {};
+        headers.forEach((header, index) => {
+          rowData[header] = row[index];
+        });
+        return rowData;
       });
-      return; // Exit the function if the file is not an Excel file
+      
+      // Map all Excel fields to form fields
+      const mappedData = {};
+      parsedData[0] && Object.keys(parsedData[0]).forEach(key => {
+        const value = parsedData[0][key];
+        
+        // Map Excel column names to form field names
+        switch(key) {
+          case "endEffect":
+            mappedData.endeffect = value;
+            break;
+          case "safetyImpact":
+            mappedData.safetyimpact = value;
+            break;
+          case "reliabilityImpact":
+            mappedData.reliability = value;
+            break;
+          case "frequency":
+            mappedData.frequency = value;
+            break;
+          case "severity":
+            mappedData.severity = value;
+            break;
+          case "riskIndex":
+            mappedData.riskindex = value;
+            break;
+          case "rcmNotes":
+            mappedData.rcmnotes = value;
+            break;
+          case "pmTaskId":
+            mappedData.pmtaskid = value;
+            break;
+          case "pmTaskType":
+            mappedData.PMtasktype = value;
+            break;
+          case "taskIntrvlFreq":
+            mappedData.taskintervalFrequency = value;
+            break;
+          case "LatitudeFreqTolrnc":
+            mappedData.latitudeFrequency = value;
+            break;
+          case "scheduleMaintenceTsk":
+            mappedData.scheduledMaintenanceTask = value;
+            break;
+          case "tskInteralDetermination":
+            mappedData.taskInterval = value;
+            break;
+          case "taskDesc":
+            mappedData.taskDescription = value;
+            break;
+          case "tskTimeML1":
+            mappedData.tasktimeML1 = value;
+            break;
+          case "tskTimeML2":
+            mappedData.tasktimeML2 = value;
+            break;
+          case "tskTimeML3":
+            mappedData.tasktimeML3 = value;
+            break;
+          case "tskTimeML4":
+            mappedData.tasktimeML4 = value;
+            break;
+          case "tskTimeML5":
+            mappedData.tasktimeML5 = value;
+            break;
+          case "tskTimeML6":
+            mappedData.tasktimeML6 = value;
+            break;
+          case "tskTimeML7":
+            mappedData.tasktimeML7 = value;
+            break;
+          case "skill1":
+            mappedData.skill1 = value;
+            break;
+          case "skillOneNos":
+            mappedData.skill1nos = value;
+            break;
+          case "skillOneContribution":
+            mappedData.skill1contribution = value;
+            break;
+          case "skill2":
+            mappedData.skill2 = value;
+            break;
+          case "skillTwoNos":
+            mappedData.skill2nos = value;
+            break;
+          case "skillTwoContribution":
+            mappedData.skill2contribution = value;
+            break;
+          case "skill3":
+            mappedData.skill3 = value;
+            break;
+          case "skillThreeNos":
+            mappedData.skill3nos = value;
+            break;
+          case "skillThreeContribution":
+            mappedData.skill3contribution = value;
+            break;
+          case "addiReplaceSpare1":
+            mappedData.addReplacespare1 = value;
+            break;
+          case "addiReplaceSpare1Qty":
+            mappedData.addReplacespare1qty = value;
+            break;
+          case "addiReplaceSpare2":
+            mappedData.addReplacespare2 = value;
+            break;
+          case "addiReplaceSpare2Qty":
+            mappedData.addReplacespare2qty = value;
+            break;
+          case "addiReplaceSpare3":
+            mappedData.addReplacespare3 = value;
+            break;
+          case "addiReplaceSpare3Qty":
+            mappedData.addReplacespare3qty = value;
+            break;
+          case "consumable1":
+            mappedData.Consumable1 = value;
+            break;
+          case "consumable1Qty":
+            mappedData.Consumable1qty = value;
+            break;
+          case "consumable2":
+            mappedData.Consumable2 = value;
+            break;
+          case "consumable2Qty":
+            mappedData.Consumable2qty = value;
+            break;
+          case "consumable3":
+            mappedData.Consumable3 = value;
+            break;
+          case "consumable3Qty":
+            mappedData.Consumable3qty = value;
+            break;
+          case "consumable4":
+            mappedData.Consumable4 = value;
+            break;
+          case "consumable4Qty":
+            mappedData.Consumable4qty = value;
+            break;
+          case "consumable5":
+            mappedData.Consumable5 = value;
+            break;
+          case "consumable5Qty":
+            mappedData.Consumable5qty = value;
+            break;
+          case "userField1":
+            mappedData.userfield1 = value;
+            break;
+          case "userField2":
+            mappedData.userfield2 = value;
+            break;
+          case "userField3":
+            mappedData.userfield3 = value;
+            break;
+          case "userField4":
+            mappedData.userfield4 = value;
+            break;
+          case "userField5":
+            mappedData.userfield5 = value;
+            break;
+          default:
+            // For any unmapped fields, use the original key
+            mappedData[key] = value;
+        }
+      });
+      
+      setImportExcelData(mappedData);
+      toast.success("Excel data imported successfully!", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    } else {
+      toast.error("No Data Found In Excel Sheet", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const bstr = event.target.result;
-      const workBook = XLSX.read(bstr, { type: "binary" });
-      const workSheetName = workBook.SheetNames[0];
-      const workSheet = workBook.Sheets[workSheetName];
-      const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-      // if (excelData[1].length > 1) {
-      if (excelData.length > 1) {
-        const headers = excelData[0];
-        const rows = excelData.slice(1);
-        const parsedData = rows.map((row) => {
-          const rowData = {};
-          headers.forEach((header, index) => {
-            rowData[header] = row[index];
-          });
-          return rowData;
-        });
-        setImportExcelData(parsedData[0]);
-      } else {
-        toast("No Data Found In Excel Sheet", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          type: "error",
-        });
-      }
-    };
-    if (file) {
-    }
-    reader.readAsBinaryString(file);
   };
+  reader.readAsBinaryString(file);
+};
 
   const convertToJson = (headers, originalData) => {
     const rows = [];
@@ -1095,415 +1254,86 @@ export default function PMMRA(props) {
 
 
 
-  const InitialValues = {
-    name: name,
-    partnumber: partNumber,
-    repairable: mttrRepairable,
-    spare: mttrSpare,
-    levelofrepair: mttrLevelOfRepair,
-    levelofreplace: mttrLevelOfReplace,
-    reference: reference,
-    category: category,
-    parttype: partType,
-    quantity: quantity,
-    fmecaId: fmecaFillterData?.fmecaId,
-    endeffect: fmecaFillterData?.endEffect
-      ? fmecaFillterData.endEffect
-      : importExcelData?.endEffect
-        ? importExcelData.endEffect
-        : "",
-    reliability: fmecaFillterData?.realibilityImpact
-      ? fmecaFillterData.realibilityImpact
-      : importExcelData?.reliabilityImpact
-        ? importExcelData.reliabilityImpact
-        : "",
-    severity: fmecaFillterData?.severity
-      ? fmecaFillterData.severity
-      : importExcelData?.severity
-        ? importExcelData.severity
-        : "",
-    safetyimpact: fmecaFillterData?.safetyImpact
-      ? fmecaFillterData.safetyImpact
-      : importExcelData?.safetyImpact
-        ? importExcelData.safetyImpact
-        : "",
-    frequency: fmecaFillterData?.frequency
-      ? fmecaFillterData.frequency
-      : importExcelData?.frequency
-        ? importExcelData.frequency
-        : "",
-    riskindex: fmecaFillterData?.riskIndex
-      ? fmecaFillterData.riskIndex
-      : importExcelData?.riskIndex
-        ? importExcelData.riskIndex
-        : "",
-
-    // endeffect: pmmraData?.endEffect
-    //   ? pmmraData?.endEffect
-    //   : importExcelData?.endEffect
-    //   ? importExcelData.endEffect
-    //   : "",
-    // reliability: pmmraData?.reliabilityImpact
-    //   ? pmmraData?.reliabilityImpact
-    //   : importExcelData?.reliabilityImpact
-    //   ? importExcelData.reliabilityImpact
-    //   : "",
-    // severity: pmmraData?.severity ? { label: pmmraData?.severity, value: pmmraData?.severity } : "",
-    // safetyimpact: pmmraData?.safetyImpact
-    //   ? pmmraData?.safetyImpact
-    //   : importExcelData?.safetyImpact
-    //   ? importExcelData.safetyImpact
-    //   : "",
-    // rcmnotes: pmmraData?.rcmNotes ? pmmraData?.rcmNotes : importExcelData?.rcmNotes ? importExcelData.rcmNotes : "",
-    // frequency: pmmraData?.frequency
-    //   ? pmmraData?.frequency
-    //   : importExcelData?.frequency
-    //   ? importExcelData.frequency
-    //   : "",
-    // riskindex: pmmraData?.riskIndex ? { label: pmmraData?.riskIndex, value: pmmraData?.riskIndex } : "",
-    // pmtaskid: pmmraData?.pmTaskId ? pmmraData?.pmTaskId : importExcelData?.pmTaskId ? importExcelData.pmTaskId : "",
-    // taskintervalFrequency: pmmraData?.taskIntrvlFreq
-    //   ? pmmraData?.taskIntrvlFreq
-    //   : importExcelData?.taskIntrvlFreq
-    //   ? importExcelData.taskIntrvlFreq
-    //   : "",
-    // Evident1: pmmraData?.LossOfEvident ? { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } : "",
-    // latitudeFrequency: pmmraData?.LatitudeFreqTolrnc
-    //   ? pmmraData?.LatitudeFreqTolrnc
-    //   : importExcelData?.LatitudeFreqTolrnc
-    //   ? importExcelData.LatitudeFreqTolrnc
-    //   : "",
-    // PMtasktype: pmmraData?.pmTaskType
-    //   ? pmmraData?.pmTaskType
-    //   : importExcelData?.pmTaskType
-    //   ? importExcelData.pmTaskType
-    //   : "",
-    // taskInterval: pmmraData?.tskInteralDetermination
-    //   ? pmmraData?.tskInteralDetermination
-    //   : importExcelData?.tskInteralDetermination
-    //   ? importExcelData.tskInteralDetermination
-
-    pmtaskid: pmmraData?.pmTaskId ? pmmraData?.pmTaskId : "",
-    taskintervalFrequency: pmmraData?.taskIntrvlFreq
-      ? pmmraData?.taskIntrvlFreq
-      : "",
-    Evident1: pmmraData?.LossOfEvident
-      ? { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident }
-      : "",
-    latitudeFrequency: pmmraData?.LatitudeFreqTolrnc
-      ? pmmraData?.LatitudeFreqTolrnc
-      : "",
-    PMtasktype: pmmraData?.pmTaskType ? pmmraData?.pmTaskType : "",
-    taskInterval: pmmraData?.tskInteralDetermination
-      ? pmmraData?.tskInteralDetermination
-      : "",
-    taskIntervalunit: pmmraData?.taskIntrvlUnit
-      ? { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit }
-      : "",
-    scheduledMaintenanceTask: pmmraData?.scheduleMaintenceTsk
-      ? pmmraData?.scheduleMaintenceTsk
-      : //   : importExcelData?.scheduleMaintenceTsk
-      //   ? importExcelData.scheduleMaintenceTsk
-      //   : "",
-      // taskDescription: pmmraData?.taskDesc
-      //   ? pmmraData?.taskDesc
-      //   : importExcelData?.taskDesc
-      //   ? importExcelData.taskDesc
-      //   : "",
-      // tasktimeML1: pmmraData?.tskTimeML1
-      //   ? pmmraData?.tskTimeML1
-      //   : importExcelData?.tskTimeML1
-      //   ? importExcelData.tskTimeML1
-      //   : "",
-      // tasktimeML2: pmmraData?.tskTimeML2
-      //   ? pmmraData?.tskTimeML2
-      //   : importExcelData?.tskTimeML2
-      //   ? importExcelData.tskTimeML2
-      //   : "",
-      // tasktimeML3: pmmraData?.tskTimeML3
-      //   ? pmmraData?.tskTimeML3
-      //   : importExcelData?.tskTimeML3
-      //   ? importExcelData.tskTimeML3
-      //   : "",
-      // tasktimeML4: pmmraData?.tskTimeML4
-      //   ? pmmraData?.tskTimeML4
-      //   : importExcelData?.tskTimeML4
-      //   ? importExcelData.tskTimeML4
-      //   : "",
-      // tasktimeML5: pmmraData?.tskTimeML5
-      //   ? pmmraData?.tskTimeML5
-      //   : importExcelData?.tskTimeML5
-      //   ? importExcelData.tskTimeML5
-      //   : "",
-      // tasktimeML6: pmmraData?.tskTimeML6
-      //   ? pmmraData?.tskTimeML6
-      //   : importExcelData?.tskTimeML6
-      //   ? importExcelData.tskTimeML6
-      //   : "",
-      // tasktimeML7: pmmraData?.tskTimeML7
-      //   ? pmmraData?.tskTimeML7
-      //   : importExcelData?.tskTimeML7
-      //   ? importExcelData.tskTimeML7
-      //   : "",
-
-      // skill1contribution: pmmraData?.skillOneContribution
-      //   ? pmmraData?.skillOneContribution
-      //   : importExcelData?.skillOneContribution
-      //   ? importExcelData.skillOneContribution
-      //   : "",
-
-      // skill1nos: pmmraData?.skillOneNos
-      //   ? pmmraData?.skillOneNos
-      //   : importExcelData?.skillOneNos
-      //   ? importExcelData.skillOneNos
-      //   : "",
-      // skill1: pmmraData?.skill1 ? pmmraData?.skill1 : importExcelData?.skill1 ? importExcelData.skill1 : "",
-      // skill2contribution: pmmraData?.skillTwoContribution
-      //   ? pmmraData?.skillTwoContribution
-      //   : importExcelData?.skillTwoContribution
-      //   ? importExcelData.skillTwoContribution
-      //   : "",
-      // skill2nos: pmmraData?.skillTwoNos
-      //   ? pmmraData?.skillTwoNos
-      //   : importExcelData?.skillTwoNos
-      //   ? importExcelData.skillTwoNos
-      //   : "",
-      // skill2: pmmraData?.skill2 ? pmmraData?.skill2 : importExcelData?.skill2 ? importExcelData.skill2 : "",
-      // skill3contribution: pmmraData?.skillThreeContribution
-      //   ? pmmraData?.skillThreeContribution
-      //   : importExcelData?.skillThreeContribution
-      //   ? importExcelData.skillThreeContribution
-      //   : "",
-      // skill3nos: pmmraData?.skillThreeNos
-      //   ? pmmraData?.skillThreeNos
-      //   : importExcelData?.skillThreeNos
-      //   ? importExcelData.skillThreeNos
-      //   : "",
-      // skill3: pmmraData?.skill3 ? pmmraData?.skill3 : importExcelData?.skill3 ? importExcelData.skill3 : "",
-
-      // addReplacespare1: pmmraData?.addiReplaceSpare1
-      //   ? pmmraData?.addiReplaceSpare1
-      //   : importExcelData?.addiReplaceSpare1
-      //   ? importExcelData.addiReplaceSpare1
-      //   : "",
-
-      // addReplacespare2: pmmraData?.addiReplaceSpare2
-      //   ? pmmraData?.addiReplaceSpare2
-      //   : importExcelData?.addiReplaceSpare2
-      //   ? importExcelData.addiReplaceSpare2
-      //   : "",
-
-      // addReplacespare3: pmmraData?.addiReplaceSpare3
-      //   ? pmmraData?.addiReplaceSpare3
-      //   : importExcelData?.addiReplaceSpare3
-      //   ? importExcelData.addiReplaceSpare3
-      //   : "",
-
-      // Consumable1: pmmraData?.consumable1
-      //   ? pmmraData?.consumable1
-      //   : importExcelData?.consumable1
-      //   ? importExcelData.consumable1
-      //   : "",
-
-      // Consumable2: pmmraData?.consumable2
-      //   ? pmmraData?.consumable2
-      //   : importExcelData?.consumable2
-      //   ? importExcelData.consumable2
-      //   : "",
-
-      // Consumable3: pmmraData?.consumable3
-      //   ? pmmraData?.consumable3
-      //   : importExcelData?.consumable3
-      //   ? importExcelData.consumable3
-      //   : "",
-
-      // Consumable4: pmmraData?.consumable4
-      //   ? pmmraData?.consumable4
-      //   : importExcelData?.consumable4
-      //   ? importExcelData.consumable4
-      //   : "",
-
-      // Consumable5: pmmraData?.consumable5
-      //   ? pmmraData?.consumable5
-      //   : importExcelData?.consumable5
-      //   ? importExcelData.consumable5
-      //   : "",
-
-      // addReplacespare1qty: pmmraData?.addiReplaceSpare1Qty
-      //   ? pmmraData?.addiReplaceSpare1Qty
-      //   : importExcelData?.addiReplaceSpare1Qty
-      //   ? importExcelData.addiReplaceSpare1Qty
-      //   : "",
-
-      // addReplacespare2qty: pmmraData?.addiReplaceSpare2Qty
-      //   ? pmmraData?.addiReplaceSpare2Qty
-      //   : importExcelData?.addiReplaceSpare2Qty
-      //   ? importExcelData.addiReplaceSpare2Qty
-      //   : "",
-
-      // addReplacespare3qty: pmmraData?.addiReplaceSpare3Qty
-      //   ? pmmraData?.addiReplaceSpare3Qty
-      //   : importExcelData?.addiReplaceSpare3Qty
-      //   ? importExcelData.addiReplaceSpare3Qty
-      //   : "",
-
-      // Consumable1qty: pmmraData?.consumable1Qty
-      //   ? pmmraData?.consumable1Qty
-      //   : importExcelData?.consumable1Qty
-      //   ? importExcelData.consumable1Qty
-      //   : "",
-
-      // Consumable2qty: pmmraData?.consumable2Qty
-      //   ? pmmraData?.consumable2Qty
-      //   : importExcelData?.consumable2Qty
-      //   ? importExcelData.consumable2Qty
-      //   : "",
-
-      // Consumable3qty: pmmraData?.consumable3Qty
-      //   ? pmmraData?.consumable3Qty
-      //   : importExcelData?.consumable3Qty
-      //   ? importExcelData.consumable3Qty
-      //   : "",
-
-      // Consumable4qty: pmmraData?.consumable4Qty
-      //   ? pmmraData?.consumable4Qty
-      //   : importExcelData?.consumable4Qty
-      //   ? importExcelData.consumable4Qty
-      //   : "",
-
-      // Consumable5qty: pmmraData?.consumable5Qty
-      //   ? pmmraData?.consumable5Qty
-      //   : importExcelData?.consumable5Qty
-      //   ? importExcelData.consumable5Qty
-      //   : "",
-
-      // userfield1: pmmraData?.userField1
-      //   ? pmmraData?.userField1
-      //   : importExcelData?.userField1
-      //   ? importExcelData.userField1
-      //   : "",
-
-      // userfield2: pmmraData?.userField2
-      //   ? pmmraData?.userField2
-      //   : importExcelData?.userField2
-      //   ? importExcelData.userField2
-      //   : "",
-
-      // userfield3: pmmraData?.userField3
-      //   ? pmmraData?.userField3
-      //   : importExcelData?.userField3
-      //   ? importExcelData.userField3
-      //   : "",
-
-      // userfield4: pmmraData?.userField4
-      //   ? pmmraData?.userField4
-      //   : importExcelData?.userField4
-      //   ? importExcelData.userField4
-      //   : "",
-
-      // userfield5: pmmraData?.userField5
-      //   ? pmmraData?.userField5
-      //   : importExcelData?.userField5
-      //   ? importExcelData.userField5
-      //   : "",
-      // Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
-      "",
-    taskDescription: pmmraData?.taskDesc ? pmmraData?.taskDesc : "",
-    tasktimeML1: pmmraData?.tskTimeML1 ? pmmraData?.tskTimeML1 : "",
-    tasktimeML2: pmmraData?.tskTimeML2 ? pmmraData?.tskTimeML2 : "",
-    tasktimeML3: pmmraData?.tskTimeML3 ? pmmraData?.tskTimeML3 : "",
-    tasktimeML4: pmmraData?.tskTimeML4 ? pmmraData?.tskTimeML4 : "",
-    tasktimeML5: pmmraData?.tskTimeML5 ? pmmraData?.tskTimeML5 : "",
-    tasktimeML6: pmmraData?.tskTimeML6 ? pmmraData?.tskTimeML6 : "",
-    tasktimeML7: pmmraData?.tskTimeML7 ? pmmraData?.tskTimeML7 : "",
-    skill1contribution: pmmraData?.skillOneContribution
-      ? pmmraData?.skillOneContribution
-      : "",
-    skill1nos: pmmraData?.skillOneNos ? pmmraData?.skillOneNos : "",
-    skill1: pmmraData?.skill1 ? pmmraData?.skill1 : "",
-    skill2contribution: pmmraData?.skillTwoContribution
-      ? pmmraData?.skillTwoContribution
-      : "",
-    skill2nos: pmmraData?.skillTwoNos ? pmmraData?.skillTwoNos : "",
-    skill2: pmmraData?.skill2 ? pmmraData?.skill2 : "",
-    skill3contribution: pmmraData?.skillThreeContribution
-      ? pmmraData?.skillThreeContribution
-      : "",
-    skill3nos: pmmraData?.skillThreeNos ? pmmraData?.skillThreeNos : "",
-    skill3: pmmraData?.skill3 ? pmmraData?.skill3 : "",
-    addReplacespare1: pmmraData?.addiReplaceSpare1
-      ? pmmraData?.addiReplaceSpare1
-      : "",
-    addReplacespare2: pmmraData?.addiReplaceSpare2
-      ? pmmraData?.addiReplaceSpare2
-      : "",
-    addReplacespare3: pmmraData?.addiReplaceSpare3
-      ? pmmraData?.addiReplaceSpare3
-      : "",
-    Consumable1: pmmraData?.consumable1 ? pmmraData?.consumable1 : "",
-    Consumable2: pmmraData?.consumable2 ? pmmraData?.consumable2 : "",
-    Consumable3: pmmraData?.consumable3 ? pmmraData?.consumable3 : "",
-    Consumable4: pmmraData?.consumable4 ? pmmraData?.consumable4 : "",
-    Consumable5: pmmraData?.consumable5 ? pmmraData?.consumable5 : "",
-    addReplacespare1qty: pmmraData?.addiReplaceSpare1Qty
-      ? pmmraData?.addiReplaceSpare1Qty
-      : "",
-    addReplacespare2qty: pmmraData?.addiReplaceSpare2Qty
-      ? pmmraData?.addiReplaceSpare2Qty
-      : "",
-    addReplacespare3qty: pmmraData?.addiReplaceSpare3Qty
-      ? pmmraData?.addiReplaceSpare3Qty
-      : "",
-    Consumable1qty: pmmraData?.consumable1Qty ? pmmraData?.consumable1Qty : "",
-    Consumable2qty: pmmraData?.consumable2Qty ? pmmraData?.consumable2Qty : "",
-    Consumable3qty: pmmraData?.consumable3Qty ? pmmraData?.consumable3Qty : "",
-    Consumable4qty: pmmraData?.consumable4Qty ? pmmraData?.consumable4Qty : "",
-    Consumable5qty: pmmraData?.consumable5Qty ? pmmraData?.consumable5Qty : "",
-    userfield1: pmmraData?.userField1 ? pmmraData?.userField1 : "",
-    userfield2: pmmraData?.userField2 ? pmmraData?.userField2 : "",
-    userfield3: pmmraData?.userField3 ? pmmraData?.userField3 : "",
-    userfield4: pmmraData?.userField4 ? pmmraData?.userField4 : "",
-    userfield5: pmmraData?.userField5 ? pmmraData?.userField5 : "",
-    Items: pmmraData?.significantItem
-      ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem }
-      : "",
-    condition: pmmraData?.conditionMonitrTsk
-      ? {
-        label: pmmraData?.conditionMonitrTsk,
-        value: pmmraData?.conditionMonitrTsk,
-      }
-      : "",
-    failure: pmmraData?.failureFindTsk
-      ? { label: pmmraData?.failureFindTsk, value: pmmraData?.failureFindTsk }
-      : "",
-    redesign: pmmraData?.reDesign
-      ? { label: pmmraData?.reDesign, value: pmmraData?.reDesign }
-      : "",
-    acceptable: pmmraData?.criticalityAccept
-      ? {
-        label: pmmraData?.criticalityAccept,
-        value: pmmraData?.criticalityAccept,
-      }
-      : "",
-    lubrication: pmmraData?.LubricationservceTsk
-      ? {
-        label: pmmraData?.LubricationservceTsk,
-        value: pmmraData?.LubricationservceTsk,
-      }
-      : "",
-    task: pmmraData?.restoreDiscrdTsk
-      ? {
-        label: pmmraData?.restoreDiscrdTsk,
-        value: pmmraData?.restoreDiscrdTsk,
-      }
-      : "",
-    combination: pmmraData?.combinationOfTsk
-      ? {
-        label: pmmraData?.combinationOfTsk,
-        value: pmmraData?.combinationOfTsk,
-      }
-      : "",
-  };
+const InitialValues = {
+  name: name,
+  partnumber: partNumber,
+  repairable: mttrRepairable,
+  spare: mttrSpare,
+  levelofrepair: mttrLevelOfRepair,
+  levelofreplace: mttrLevelOfReplace,
+  reference: reference,
+  category: category,
+  parttype: partType,
+  quantity: quantity,
+  fmecaId: fmecaFillterData?.fmecaId,
+  
+  // Use imported Excel data for all fields, fall back to FMECA data or empty
+  endeffect: importExcelData?.endeffect || fmecaFillterData?.endEffect || "",
+  reliability: importExcelData?.reliability || fmecaFillterData?.realibilityImpact || "",
+  severity: importExcelData?.severity || fmecaFillterData?.severity || "",
+  safetyimpact: importExcelData?.safetyimpact || fmecaFillterData?.safetyImpact || "",
+  frequency: importExcelData?.frequency || fmecaFillterData?.frequency || "",
+  riskindex: importExcelData?.riskindex || fmecaFillterData?.riskIndex || "",
+  
+  // Map all other fields from imported Excel data
+  rcmnotes: importExcelData?.rcmnotes || pmmraData?.rcmNotes || "",
+  pmtaskid: importExcelData?.pmtaskid || pmmraData?.pmTaskId || "",
+  PMtasktype: importExcelData?.PMtasktype || pmmraData?.pmTaskType || "",
+  taskintervalFrequency: importExcelData?.taskintervalFrequency || pmmraData?.taskIntrvlFreq || "",
+  latitudeFrequency: importExcelData?.latitudeFrequency || pmmraData?.LatitudeFreqTolrnc || "",
+  scheduledMaintenanceTask: importExcelData?.scheduledMaintenanceTask || pmmraData?.scheduleMaintenceTsk || "",
+  taskInterval: importExcelData?.taskInterval || pmmraData?.tskInteralDetermination || "",
+  taskDescription: importExcelData?.taskDescription || pmmraData?.taskDesc || "",
+  tasktimeML1: importExcelData?.tasktimeML1 || pmmraData?.tskTimeML1 || "",
+  tasktimeML2: importExcelData?.tasktimeML2 || pmmraData?.tskTimeML2 || "",
+  tasktimeML3: importExcelData?.tasktimeML3 || pmmraData?.tskTimeML3 || "",
+  tasktimeML4: importExcelData?.tasktimeML4 || pmmraData?.tskTimeML4 || "",
+  tasktimeML5: importExcelData?.tasktimeML5 || pmmraData?.tskTimeML5 || "",
+  tasktimeML6: importExcelData?.tasktimeML6 || pmmraData?.tskTimeML6 || "",
+  tasktimeML7: importExcelData?.tasktimeML7 || pmmraData?.tskTimeML7 || "",
+  skill1: importExcelData?.skill1 || pmmraData?.skill1 || "",
+  skill1nos: importExcelData?.skill1nos || pmmraData?.skillOneNos || "",
+  skill1contribution: importExcelData?.skill1contribution || pmmraData?.skillOneContribution || "",
+  skill2: importExcelData?.skill2 || pmmraData?.skill2 || "",
+  skill2nos: importExcelData?.skill2nos || pmmraData?.skillTwoNos || "",
+  skill2contribution: importExcelData?.skill2contribution || pmmraData?.skillTwoContribution || "",
+  skill3: importExcelData?.skill3 || pmmraData?.skill3 || "",
+  skill3nos: importExcelData?.skill3nos || pmmraData?.skillThreeNos || "",
+  skill3contribution: importExcelData?.skill3contribution || pmmraData?.skillThreeContribution || "",
+  addReplacespare1: importExcelData?.addReplacespare1 || pmmraData?.addiReplaceSpare1 || "",
+  addReplacespare1qty: importExcelData?.addReplacespare1qty || pmmraData?.addiReplaceSpare1Qty || "",
+  addReplacespare2: importExcelData?.addReplacespare2 || pmmraData?.addiReplaceSpare2 || "",
+  addReplacespare2qty: importExcelData?.addReplacespare2qty || pmmraData?.addiReplaceSpare2Qty || "",
+  addReplacespare3: importExcelData?.addReplacespare3 || pmmraData?.addiReplaceSpare3 || "",
+  addReplacespare3qty: importExcelData?.addReplacespare3qty || pmmraData?.addiReplaceSpare3Qty || "",
+  Consumable1: importExcelData?.Consumable1 || pmmraData?.consumable1 || "",
+  Consumable1qty: importExcelData?.Consumable1qty || pmmraData?.consumable1Qty || "",
+  Consumable2: importExcelData?.Consumable2 || pmmraData?.consumable2 || "",
+  Consumable2qty: importExcelData?.Consumable2qty || pmmraData?.consumable2Qty || "",
+  Consumable3: importExcelData?.Consumable3 || pmmraData?.consumable3 || "",
+  Consumable3qty: importExcelData?.Consumable3qty || pmmraData?.consumable3Qty || "",
+  Consumable4: importExcelData?.Consumable4 || pmmraData?.consumable4 || "",
+  Consumable4qty: importExcelData?.Consumable4qty || pmmraData?.consumable4Qty || "",
+  Consumable5: importExcelData?.Consumable5 || pmmraData?.consumable5 || "",
+  Consumable5qty: importExcelData?.Consumable5qty || pmmraData?.consumable5Qty || "",
+  userfield1: importExcelData?.userfield1 || pmmraData?.userField1 || "",
+  userfield2: importExcelData?.userfield2 || pmmraData?.userField2 || "",
+  userfield3: importExcelData?.userfield3 || pmmraData?.userField3 || "",
+  userfield4: importExcelData?.userfield4 || pmmraData?.userField4 || "",
+  userfield5: importExcelData?.userfield5 || pmmraData?.userField5 || "",
+  
+  // Select fields (these need special handling with {label, value} objects)
+  Evident1: pmmraData?.LossOfEvident ? { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } : "",
+  Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
+  condition: pmmraData?.conditionMonitrTsk ? { label: pmmraData?.conditionMonitrTsk, value: pmmraData?.conditionMonitrTsk } : "",
+  failure: pmmraData?.failureFindTsk ? { label: pmmraData?.failureFindTsk, value: pmmraData?.failureFindTsk } : "",
+  redesign: pmmraData?.reDesign ? { label: pmmraData?.reDesign, value: pmmraData?.reDesign } : "",
+  acceptable: pmmraData?.criticalityAccept ? { label: pmmraData?.criticalityAccept, value: pmmraData?.criticalityAccept } : "",
+  lubrication: pmmraData?.LubricationservceTsk ? { label: pmmraData?.LubricationservceTsk, value: pmmraData?.LubricationservceTsk } : "",
+  task: pmmraData?.restoreDiscrdTsk ? { label: pmmraData?.restoreDiscrdTsk, value: pmmraData?.restoreDiscrdTsk } : "",
+  combination: pmmraData?.combinationOfTsk ? { label: pmmraData?.combinationOfTsk, value: pmmraData?.combinationOfTsk } : "",
+  taskIntervalunit: pmmraData?.taskIntrvlUnit ? { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit } : "",
+};
   return (
     <div style={{ marginTop: "90px" }} className="mx-4">
       {isLoading ? (

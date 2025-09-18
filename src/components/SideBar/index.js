@@ -243,7 +243,8 @@ const handleSliderChange = (event) => {
               </div> */}
             </div>
           ) : role === "admin" || (isOwner === true && createdBy === userId) ? (
-            <div>
+              <div className="debug-admin-content">
+                  {!projectId && (
               <div className="menu-list">
                 <NavLink
                   to={"/user"}
@@ -264,7 +265,7 @@ const handleSliderChange = (event) => {
                   <span>Users</span>
                 </NavLink>
               </div>
-
+                  )}
               <div className="menu-list mt-1">
                 <NavLink
                   to={"/project/list"}
@@ -668,7 +669,8 @@ const handleSliderChange = (event) => {
               </div>
             </div>
           ) : role === "Employee" ? (
-            <div>
+                <div className="debug-employee-content" style={{border: '2px solid yellow'}}>
+                    {!projectId && (
               <div className="menu-list">
                 <NavLink
                   to={"/user"}
@@ -690,7 +692,7 @@ const handleSliderChange = (event) => {
                   <span>Users</span>
                 </NavLink>
               </div>
-
+                    )}
               <div className="menu-list mt-1">
                 <NavLink
                   to={{

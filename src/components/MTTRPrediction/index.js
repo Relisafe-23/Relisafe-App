@@ -1050,6 +1050,7 @@ const MTTRPrediction = (props, active) => {
     if (validateData > 0) {
       const companyId = localStorage.getItem("companyId");
       const userId = localStorage.getItem("userId");
+      console.log('mMax',values)
       Api.post("api/v1/mttrPrediction", {
         companyId: companyId,
         projectId: projectId,
@@ -1068,6 +1069,8 @@ const MTTRPrediction = (props, active) => {
         token: token,
         userId: userId,
       })
+              
+
         .then((res) => {
           const mttrId = res?.data?.data?.id;
           setSuccessMessage(res?.data?.message);
