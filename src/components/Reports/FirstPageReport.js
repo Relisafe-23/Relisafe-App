@@ -108,7 +108,7 @@ function FirstPageReport(props) {
           <Row className="d-flex justify-content-between">
             <Col className="d-flex flex-column align-items-center"></Col>
             <Col className="d-flex flex-column align-items-center">
-              <h5>{projectData?.projectName}</h5>
+              <h4>{projectData?.projectName}</h4>
               {moduleType == "PBS" ?
               <h5>Product Breakdown Structure</h5> : 
               moduleType == "RA" ?

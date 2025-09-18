@@ -48,51 +48,84 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Tooltip, TableCell } from "@material-ui/core";
 
+const string255 = Yup.string()
+  .required("This field is required")
+  .max(255, "Must be at most 255 characters");
+
 const Validation = Yup.object().shape({
   category: Yup.object().required("Category is required"),
   parttype: Yup.object().required("Part type is required"),
-  partnumber: Yup.string().required("Part number is required"),
-  // quantity: Yup.string().required("Quantity is required"),
-  // repairable: Yup.object().required("Repairable is required"),
-  // levelofreplace: Yup.object().required("Level of replace is required"),
-  riskindex: Yup.string().required("Risk index is required"),
-  // levelofrepair: Yup.object().required("Level of repair is required"),
-  // spare: Yup.object().required("Spare is required"),
-  endeffect: Yup.string().required("End effect is required"),
-  reliability: Yup.string().required("Reliability impact is required"),
-  severity: Yup.string().required("Severity is required"),
-  safetyimpact: Yup.string().required("Safety impact is required"),
-  frequency: Yup.string().required("Frequency is required"),
-  // pmtaskid: Yup.string().required("PM task id is required"),
-  // taskintervalFrequency: Yup.string().required(
-  //   "Task interval frequency is required"
-  // ),
-  // PMtasktype: Yup.string().required("PM task type is required"),
-  // taskIntervalunit: Yup.object().required("Task interval unit is required"),
-  // scheduledMaintenanceTask: Yup.string().required(
-  //   "Schedule maintenance task type is required"
-  // ),
-    userfield1: Yup.string()
-    .required("User Field1 is require")
-    .max(225, "User Field 1 must be at most 225 characters")
-    .nullable(),
-  userfield2: Yup.string()
-  .required("User Field2 is require")
-    .max(225, "User Field 2 must be at most 225 characters")
-    .nullable(),
-  userfield3: Yup.string()
-  .required("User Field3 is require")
-    .max(225, "User Field 3 must be at most 225 characters")
-    .nullable(),
-  userfield4: Yup.string()
-  .required("User Field4 is require")
-    .max(225, "User Field 4 must be at most 225 characters")
-    .nullable(),
-  userfield5: Yup.string()
-  .required("User Field5 is require")
-    .max(225, "User Field 5 must be at most 225 characters")
-    .nullable(),
+  partnumber: Yup.string().required("Part number is required").max(255),
+  riskindex: Yup.string().required("Risk index is required").max(255),
+  endeffect: Yup.string().required("End effect is required").max(255),
+  reliability: Yup.string().required("Reliability impact is required").max(255),
+  severity: Yup.string().required("Severity is required").max(255),
+  safetyimpact: Yup.string().required("Safety impact is required").max(255),
+  frequency: Yup.string().required("Frequency is required").max(255),
+  Evident1: Yup.string().required("Evident1 is required").max(255),
+  condition: Yup.string().required("Condition is required").max(255),
+  failure: Yup.string().required("Failure is required").max(255),
+  redesign: Yup.string().required("Redesign is required").max(255),
+  acceptable: Yup.string().required("Acceptable is required").max(255),
+  Items: Yup.string().required("Items is required").max(255),
+  lubrication: Yup.string().required("Lubrication is required").max(255),
+  task: Yup.string().required("Task is required").max(255),
+  combination: Yup.string().required("Combination is required").max(255),
+  rcmnotes: Yup.string().required("Rcmnotes is required").max(255),
+  pmtaskid: Yup.string().required("PM Task Id is required").max(255),
+  PMtasktype: Yup.string().required("PM task type Id is required").max(255),
+  taskintervalFrequency: Yup.string().required(" Task interval frequency is required").max(255),
+  taskIntervalunit: Yup.string()
+    .required(" Task interval unit is required")
+    .matches(/^[A-Za-z\s]+$/, "Only alphabets and spaces are allowed")
+    .max(255),
+  taskInterval: Yup.string().required(" Task interval is required").max(255),
+  scheduledMaintenanceTask: Yup.string().required(" Scheduled maintenance task is required").max(255),
+  taskDescription: Yup.string().required(" Task Description is required").max(255),
+
+  tasktimeML1: Yup.string().required("Task time ML1 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML2: Yup.string().required("Task time ML2 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML3: Yup.string().required("Task time ML3 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML4: Yup.string().required("Task time ML4 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML5: Yup.string().required("Task time ML5 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML6: Yup.string().required("Task time ML6 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML7: Yup.string().required("Task time ML7 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+
+  skill1: Yup.string().required(" Skill 1 is required").max(255),
+  skill1nos: Yup.string().required(" Skill 1 nos is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  skill1contribution: Yup.string().required(" Skill 1 contribution is required").max(255),
+  skill2: Yup.string().required(" Skill 2 is required").max(255),
+  skill2nos: Yup.string().required(" Skill 2 nos is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  skill2contribution: Yup.string().required(" Skill 2 Contribution is required").max(255),
+  skill3: Yup.string().required(" Skill 3 is required").max(255),
+  skill3nos: Yup.string().required(" Skill 3 nos is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  skill3contribution: Yup.string().required(" Skill 3 contribution is required").max(255),
+
+  addReplacespare1: Yup.string().required(" Add Replacespare 1 is required").max(255),
+  addReplacespare1qty: Yup.string().required(" Add Replacespare 1 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  addReplacespare2: Yup.string().required(" Add Replacespare 2 is required").max(255),
+  addReplacespare2qty: Yup.string().required(" Add Replacespare 2 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  addReplacespare3: Yup.string().required(" Add Replacespare 3 is required").max(255),
+  addReplacespare3qty: Yup.string().required(" Add Replacespare 3 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+
+  Consumable1: Yup.string().required(" Consumable 1 is required").max(255),
+  Consumable1qty: Yup.string().required(" Consumable 1 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable2: Yup.string().required(" Consumable 2 is required").max(255),
+  Consumable2qty: Yup.string().required(" Consumable 2 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable3: Yup.string().required(" Consumable 3 is required").max(255),
+  Consumable3qty: Yup.string().required(" Consumable 3 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable4: Yup.string().required(" Consumable 4 is required").max(255),
+  Consumable4qty: Yup.string().required(" Consumable 4 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable5: Yup.string().required(" Consumable 5 is required").max(255),
+  Consumable5qty: Yup.string().required("Consumable 5 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+
+  userfield1: Yup.string().required("User field 1 is required").max(255),
+  userfield2: Yup.string().required("User field 2 is required").max(255),
+  userfield3: Yup.string().required("User field 3 is required").max(255),
+  userfield4: Yup.string().required("User field 4 is required").max(255),
+  userfield5: Yup.string().required("User field 5 is required").max(255),
 });
+
 
 export default function PMMRA(props) {
   // const pmmraPermission = props?.location?.state?.pmmraWrite;
@@ -152,7 +185,7 @@ export default function PMMRA(props) {
   const [importExcelData, setImportExcelData] = useState({});
   const [shouldReload, setShouldReload] = useState(false);
   const [open, setOpen] = useState(false);
-  
+
   const importExcel = (e) => {
     const file = e.target.files[0];
     const fileName = file.name;
@@ -225,7 +258,7 @@ export default function PMMRA(props) {
       safetyImpact: values.safetyimpact,
       reliabilityImpact: values.reliability,
       frequency: values.frequency,
-      rcmNotes: values.rcmnotes,
+      rcmnotes: values.rcmnotes,
       pmTaskId: values.pmtaskid,
       pmTaskType: values.PMtasktype,
       taskIntrvlFreq: values.taskintervalFrequency,
@@ -300,7 +333,7 @@ export default function PMMRA(props) {
       safetyImpact: value.safetyimpact,
       reliabilityImpact: value.reliability,
       frequency: value.frequency,
-      rcmNotes: value.rcmnotes,
+      rcmnotes: value.rcmnotes,
       pmTaskId: value.pmtaskid,
       pmTaskType: value.PMtasktype,
       taskIntrvlFreq: value.taskintervalFrequency,
@@ -762,7 +795,7 @@ export default function PMMRA(props) {
         ? combinationofTsk
         : value?.combinationofTsk?.value,
       reDesign: reDesign ? reDesign : value?.reDesign?.value,
-      rcmNotes:
+      rcmnotes:
         values?.rcmnotes && values?.rcmnotes?.value
           ? values?.rcmnotes?.value
           : values?.rcmnotes,
@@ -1003,7 +1036,7 @@ export default function PMMRA(props) {
       failureFindTsk: failureFindTask,
       combinationOfTsk: combinationofTsk,
       reDesign: reDesign,
-      rcmNotes: values.rcmnotes,
+      rcmnotes: values.rcmnotes,
       pmTaskId: values.pmtaskid,
       pmTaskType: values.PMtasktype,
       taskIntrvlFreq: values.taskintervalFrequency,
@@ -1594,8 +1627,8 @@ export default function PMMRA(props) {
               <Tooltip placement="right" title="Import">
                 <div style={{ marginRight: "8px" }}>
                   <label htmlFor="file-input" className="import-export-btn">
-                    <FontAwesomeIcon icon={faFileDownload} 
-                    style={{ width:"15px"}}/>
+                    <FontAwesomeIcon icon={faFileDownload}
+                      style={{ width: "15px" }} />
                   </label>
                   <input
                     type="file"
@@ -1609,7 +1642,7 @@ export default function PMMRA(props) {
               <Tooltip placement="left" title="Export">
                 <Button
                   className="import-export-btn"
-               style={{ marginLeft: "10px", borderStyle: "none",width:"40px",minWidth:"40px",padding:"0px", }}
+                  style={{ marginLeft: "10px", borderStyle: "none", width: "40px", minWidth: "40px", padding: "0px", }}
 
                   onClick={() => {
                     exportToExcel(InitialValues);
@@ -1934,6 +1967,12 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Evident1"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Significant Item ?</Label>
@@ -2033,6 +2072,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Items"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -2138,6 +2182,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="condition"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -2242,6 +2291,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="failure"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Redesign?</Label>
@@ -2345,6 +2399,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="redesign"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -2452,6 +2511,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="acceptable"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -2558,6 +2622,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="lubrication"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -2659,6 +2728,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="task"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -2765,6 +2839,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="combination"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>RCM Notes</Label>
@@ -2868,6 +2947,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="rcmnotes"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -3053,6 +3137,11 @@ export default function PMMRA(props) {
                                       title="PM Task Type"
                                     />
                                   )}
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="PMtasktype"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -3141,6 +3230,7 @@ export default function PMMRA(props) {
                                     <Form.Control
                                       name="taskintervalFrequency"
                                       id="taskintervalFrequency"
+                                      type="number"
                                       placeholder="Task Interval Frequency"
                                       value={values.taskintervalFrequency}
                                       onChange={handleChange}
@@ -3149,6 +3239,11 @@ export default function PMMRA(props) {
                                       title="Task Interval Frequency"
                                     />
                                   )}
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="taskintervalFrequency"
+                                  />
                                 </Form.Group>
                               </Col>
                               <Col md={6}>
@@ -3242,6 +3337,11 @@ export default function PMMRA(props) {
                                       title="Task Interval Unit"
                                     />
                                   )}
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="taskIntervalunit"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -3324,6 +3424,7 @@ export default function PMMRA(props) {
                                     <Form.Control
                                       name="taskInterval"
                                       id="taskInterval"
+                                      type="number"
                                       placeholder="Task Interval"
                                       value={values.taskInterval}
                                       onChange={handleChange}
@@ -3332,6 +3433,12 @@ export default function PMMRA(props) {
                                       title="Task Interval"
                                     />
                                   )}
+
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="taskInterval"
+                                  />
                                 </Form.Group>
                               </Col>
                               <Col md={6}>
@@ -3426,6 +3533,11 @@ export default function PMMRA(props) {
                                       title="Scheduled Maintenance Task"
                                     />
                                   )}
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="scheduledMaintenanceTask"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -3519,6 +3631,11 @@ export default function PMMRA(props) {
                                       title="Task Description"
                                     />
                                   )}
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="taskDescription"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -3608,6 +3725,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML1"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML1"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML2</Label>
@@ -3687,6 +3809,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML2"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML2"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML3</Label>
@@ -3766,6 +3893,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML3"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML3"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML4</Label>
@@ -3845,6 +3977,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML4"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML4"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6} className="mt-4 mb-4">
@@ -3926,6 +4063,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML5"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML5"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML6</Label>
@@ -4005,6 +4147,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML6"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML6"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML7</Label>
@@ -4084,6 +4231,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML7"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML7"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -4151,7 +4303,7 @@ export default function PMMRA(props) {
                                           onChange={(e) => {
                                             console.log("valueof eeee", e)
                                             setFieldValue("skill1", e.value);
-                                            getAllConnectedLibrary(e.value,"skill1");
+                                            getAllConnectedLibrary(e.value, "skill1");
                                           }}
                                         />
                                       </>
@@ -4169,6 +4321,11 @@ export default function PMMRA(props) {
                                     title="Skill 1"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill1"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 1 Nos</Label>
@@ -4247,6 +4404,11 @@ export default function PMMRA(props) {
                                     title="Skill 1nos"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill1nos"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -4334,6 +4496,11 @@ export default function PMMRA(props) {
                                     title="Skill 1 Contribution"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill1contribution"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -4413,6 +4580,11 @@ export default function PMMRA(props) {
                                     title="Skill 2"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill2"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 2 Nos</Label>
@@ -4491,6 +4663,11 @@ export default function PMMRA(props) {
                                     title="Skill 2nos"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill2nos"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -4578,6 +4755,11 @@ export default function PMMRA(props) {
                                     title="Skill 2 Contribution"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill2contribution"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -4659,6 +4841,11 @@ export default function PMMRA(props) {
                                     title="Skill 3"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill3"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 3 Nos</Label>
@@ -4737,6 +4924,11 @@ export default function PMMRA(props) {
                                     title="Skill 3nos"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill3nos"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -4824,6 +5016,11 @@ export default function PMMRA(props) {
                                     title="Skill 3 Contribution"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill3contribution"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -4919,6 +5116,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare1"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare1"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5009,6 +5211,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare1 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare1qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5098,6 +5305,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare2"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare2"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5187,6 +5399,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare2 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare2qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5276,6 +5493,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare3"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare3"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5366,6 +5588,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare3 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare3qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5449,6 +5676,11 @@ export default function PMMRA(props) {
                                     title="Consumable 1"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable1"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5533,6 +5765,11 @@ export default function PMMRA(props) {
                                     title="Consumable 1 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable1qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5617,6 +5854,11 @@ export default function PMMRA(props) {
                                     title="Consumable 2"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable2"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5701,6 +5943,11 @@ export default function PMMRA(props) {
                                     title="Consumable 2 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable2qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5784,6 +6031,11 @@ export default function PMMRA(props) {
                                     title="Consumable 3"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable3"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5868,6 +6120,11 @@ export default function PMMRA(props) {
                                     title="Consumable 3 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable3qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5952,6 +6209,11 @@ export default function PMMRA(props) {
                                     title="Consumable 4"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable4"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -6036,6 +6298,11 @@ export default function PMMRA(props) {
                                     title="Consumable 4 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable4qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -6120,6 +6387,11 @@ export default function PMMRA(props) {
                                     title="Consumable 5"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable5"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -6204,6 +6476,11 @@ export default function PMMRA(props) {
                                     title="Consumable 5 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable5qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -6294,11 +6571,11 @@ export default function PMMRA(props) {
                                     title="User Field 1"
                                   />
                                 )}
-                                       <ErrorMessage
-                                    className="error text-danger"
-                                    component="span"
-                                    name="userfield1"
-                                  />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="userfield1"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 2</Label>
@@ -6377,11 +6654,11 @@ export default function PMMRA(props) {
                                     title="User Field 2"
                                   />
                                 )}
-                                       <ErrorMessage
-                                    className="error text-danger"
-                                    component="span"
-                                    name="userfield2"
-                                  />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="userfield2"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 3</Label>
@@ -6460,11 +6737,11 @@ export default function PMMRA(props) {
                                     title="User Field 3"
                                   />
                                 )}
-                                       <ErrorMessage
-                                    className="error text-danger"
-                                    component="span"
-                                    name="userfield3"
-                                  />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="userfield3"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6} className="mt-4 mb-4">
@@ -6545,11 +6822,11 @@ export default function PMMRA(props) {
                                     title="User Field 4"
                                   />
                                 )}
-                                       <ErrorMessage
-                                    className="error text-danger"
-                                    component="span"
-                                    name="userfield4"
-                                  />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="userfield4"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User field 5</Label>
@@ -6628,11 +6905,11 @@ export default function PMMRA(props) {
                                     title="User Field 5"
                                   />
                                 )}
-                                       <ErrorMessage
-                                    className="error text-danger"
-                                    component="span"
-                                    name="userfield5"
-                                  />
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="userfield5"
+                                />
                               </Form.Group>
                               {/* <Form.Group className="mt-3">
                           <Label>User field 6</Label>
