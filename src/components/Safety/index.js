@@ -170,69 +170,63 @@ function Index(props) {
     // rows.push(rowData);
     // createsafetyDataFromExcel(rowData);
   };
-  const convertToJson = (headers, data) => {
-    const rows = [];
-    if (data.length > 0 && data[0].length > 1) {
-      data.forEach((row) => {
-        let rowData = {};
 
-        row.forEach((element, index) => {
-          rowData[headers[index]] = element;
-        });
-        rows.push(rowData);
-        createsafetyDataFromExcel(rowData);
-      });
 
-      return rows;
-    } else {
-      toast("No Data Found In Excel Sheet", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        type: "error",
+const convertToJson = (headers, data) => {
+  const rows = [];
+  if (data.length > 0 && data[0].length > 1) {
+    data.forEach((row) => {
+      let rowData = {};
+      row.forEach((element, index) => {
+        rowData[headers[index]] = element;
       });
-    }
+      rows.push(rowData);
+      createsafetyDataFromExcel(rowData);
+    });
+    return rows;
+  } else {
+    toast.error("No Data Found In Excel Sheet", {
+      position: "top-right",
+    });
+  }
+};
+
+const importExcel = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const fileName = file.name;
+  const validExtensions = ["xlsx", "xls"];
+  const fileExtension = fileName.split(".").pop().toLowerCase();
+
+  if (!validExtensions.includes(fileExtension)) {
+    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+      position: toast.POSITION.TOP_RIGHT,
+    });
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const data = new Uint8Array(event.target.result);
+    const workBook = XLSX.read(data, { type: "array" });
+
+    // first sheet
+    const workSheetName = workBook.SheetNames[0];
+    const workSheet = workBook.Sheets[workSheetName];
+
+    // convert sheet to array
+    const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+    const headers = fileData[0];
+    fileData.splice(0, 1); // remove header row
+
+    convertToJson(headers, fileData);
+    // console.log("fileData..",headers)
   };
 
-  const importExcel = (e) => {
-    const file = e.target.files[0];
+  reader.readAsArrayBuffer(file);
+};
 
-    const fileName = file.name;
-    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
-    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
-
-    if (!validExtensions.includes(fileExtension)) {
-      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
-      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
-      });
-      return; // Exit the function if the file is not an Excel file
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      //parse data
-      const bstr = event.target.result;
-      const workBook = XLSX.read(bstr, { type: "binary" });
-      // get first sheet
-      const workSheetName = workBook.SheetNames[0];
-      const workSheet = workBook.Sheets[workSheetName];
-
-      //convert array
-
-      const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-      const headers = fileData[0];
-      const heads = headers.map((head) => ({ title: head, field: head }));
-      fileData.splice(0, 1);
-      convertToJson(headers, fileData);
-    };
-    reader.readAsBinaryString(file);
-  };
 
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [data, setData] = useState({

@@ -22269,7 +22269,7 @@ export const nprdFRP=[
   "PartTypeId": 321,
   "PartDescrId": 1472,
   "PartDescrFull": "Circuit Card Assembly,Populated,Plated Thru Holes",
-  "Quality": "Commercial",
+  "Quality": "",
   "Environment": "GF",
   "FR": 0.529101,
   "PartTypeTxt": "Circuit Card Assembly"

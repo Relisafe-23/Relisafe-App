@@ -26,7 +26,7 @@ import LastPageReport from "./LastPageReport.js";
 import Loader from "../core/Loader.js";
 
 function PbsReport(props) {
-  
+
   const moduleType = props?.selectModule;
   const [projectId, setProjectId] = useState(props?.projectId);
   const reportType = props?.selectModuleFieldValue;
@@ -70,6 +70,7 @@ function PbsReport(props) {
 
   const token = localStorage.getItem("sessionId");
   const headers = [
+    "S.No",
     "Product Name",
     "Part Number",
     "Quantity",
@@ -213,7 +214,7 @@ function PbsReport(props) {
     getProjectDetails();
     getProjectPermission();
 
-  if (reportType == 1) {
+    if (reportType == 1) {
       getHierarchyLevelTreeProduct();
     } else {
       getTreeProduct();
@@ -229,7 +230,7 @@ function PbsReport(props) {
   };
 
   // Log sorted data to debug
-  useEffect(() => {}, [sortedData]);
+  useEffect(() => { }, [sortedData]);
 
   const exportToExcel = () => {
     if (!projectData) {
@@ -744,7 +745,7 @@ function PbsReport(props) {
           {sortedData.length > 0 ? (
             <div id="pdf-report-content">
               <div id="first-page-report">
-              <FirstPageReport projectId={projectId} moduleType={moduleType}/>
+                <FirstPageReport projectId={projectId} moduleType={moduleType} />
               </div>
 
               <div className="sheet-container mt-3" id="main-content-report">
@@ -823,9 +824,9 @@ function PbsReport(props) {
                           {headers
                             .filter((header) =>
                               header === "FR" ||
-                              header === "MTTR" ||
-                              header === "MCT" ||
-                              header === "MLH"
+                                header === "MTTR" ||
+                                header === "MCT" ||
+                                header === "MLH"
                                 ? columnVisibility[header]
                                 : true
                             )
@@ -846,26 +847,27 @@ function PbsReport(props) {
                         {sortedData.map((row, rowIndex) => (
                           <tr key={rowIndex}>
                             {headers
-                              .filter(
-                                (header) => columnVisibility[header] !== false
-                              )
-                              .map((header) => (
+                              .filter((header) => columnVisibility[header] !== false)
+                              .map((header, colIndex) => (
                                 <td key={header} style={{ textAlign: "center" }}>
-                                {header == "FR" && row[headerKeyMapping[header]]
-                                  ? parseFloat(row[headerKeyMapping[header]]).toFixed(6)
-                                  : row[headerKeyMapping[header]] || "-"}
-                              </td>
+                                  {header === "S.No"
+                                    ? rowIndex + 1 
+                                    : header === "FR" && row[headerKeyMapping[header]]
+                                      ? parseFloat(row[headerKeyMapping[header]]).toFixed(6)
+                                      : row[headerKeyMapping[header]] || "-"}
+                                </td>
                               ))}
                           </tr>
                         ))}
                       </tbody>
+
                     </table>
                   </div>
                 </div>
               </div>
 
               <div id="last-page-report">
-                <LastPageReport projectId={projectId} moduleType={moduleType}/>
+                <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
             </div>
           ) : (

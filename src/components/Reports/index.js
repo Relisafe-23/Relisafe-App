@@ -276,6 +276,7 @@ function Reports(props) {
                         </Button>
                       </div>
                     </Card>
+                    {console.log(selectModule, selectedReportType)}
                     {showReport &&
                       ((selectModule === "PBS" && selectedReportType == 5 && (
                         <PBS_ComponentType 

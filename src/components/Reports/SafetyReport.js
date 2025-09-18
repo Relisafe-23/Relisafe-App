@@ -83,6 +83,7 @@ function SafetyReport(props) {
   const userId = localStorage.getItem("userId");
 
   const headers = [
+    "S.No",
     "Product Name",
     "Part Number",
     "Quantity",
@@ -622,62 +623,66 @@ function SafetyReport(props) {
                     ) : null}
                   </div>
 
-                  {safetyData?.map((part, partIndex) => (
-                    <div style={{ overflowX: "auto" }}>
-                      <table className="report-table">
-                        <thead>
-                          <tr>
-                            {headers
-                              .filter((header) =>
-                                header === "FR" || header === "Reference"
-                                  ? columnVisibility[header]
-                                  : true
-                              )
-                              .map((header) => (
-                                <th
-                                  key={header}
-                                  style={{
-                                    width: columnWidths[header],
-                                    textAlign: "center",
-                                  }}
-                                >
-                                  {header}
-                                </th>
-                              ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {safetyData?.map((row, rowIndex) => (
-                            <tr key={rowIndex}>
-                              {headers.map((header) => {
-                                const key = headerKeyMapping[header];
-                                let value = key
-                                  ? row?.productId?.[key] ??
-                                  row?.safetyData?.[key] ??
-                                  "-"
-                                  : "-";
-                                // Check if the header is "FR" and format the value to 6 decimal places
-                                if (
-                                  header === "FR" &&
-                                  typeof value === "number"
-                                ) {
-                                  value = value.toFixed(6);
-                                }
+                  <div style={{ overflowX: "auto" }} >
+                    <table className="report-table">
+                      <thead>
+                        <tr>
+                          {headers
+                            .filter((header) =>
+                              header === "FR" || header === "Reference"
+                                ? columnVisibility[header]
+                                : true
+                            )
+                            .map((header) => (
+                              <th
+                                key={header}
+                                style={{
+                                  width: columnWidths[header],
+                                  textAlign: "center",
+                                }}
+                              >
+                                {header}
+                              </th>
+                            ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {safetyData?.map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {headers.map((header) => {
+                              // If header is S.No → show rowIndex + 1
+                              if (header === "S.No") {
                                 return (
-                                  <td
-                                    key={header}
-                                    style={{ textAlign: "center" }}
-                                  >
-                                    {value}
+                                  <td key={header} style={{ textAlign: "center" }}>
+                                    {rowIndex + 1}
                                   </td>
                                 );
-                              })}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ))}
+                              }
+
+                              const key = headerKeyMapping[header];
+                              let value = key
+                                ? row?.productId?.[key] ??
+                                row?.safetyData?.[key] ??
+                                "-"
+                                : "-";
+
+                              // Format FR to 6 decimal places if it’s a number
+                              if (header === "FR" && typeof value === "number") {
+                                value = value.toFixed(6);
+                              }
+
+                              return (
+                                <td key={header} style={{ textAlign: "center" }}>
+                                  {value}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+
+                    </table>
+                  </div>
                 </div>
               </div>
               <div id="last-page-report">

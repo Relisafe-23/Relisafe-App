@@ -118,6 +118,7 @@ function PreventiveManitenance(props) {
   const userId = localStorage.getItem("userId");
 
   const headers = [
+    "S.No",
     "Product Name",
     "Part Number",
     "Quantity",
@@ -655,6 +656,17 @@ function PreventiveManitenance(props) {
                                 row.productId[key] ?? row.pmmraData[key] ?? "-";
 
                               // Check if the header is "FR" and format the value to 6 decimal places
+                              if (header === "S.No") {
+                              return (
+                                <td
+                                  key={header}
+                                  style={{ textAlign: "center" }}
+                                >
+                                  {rowIndex + 1}
+                                </td>
+                              )
+                            }
+                              
                               if (
                                 header === "FR" &&
                                 typeof value === "number"

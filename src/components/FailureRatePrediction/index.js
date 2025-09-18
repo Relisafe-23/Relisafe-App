@@ -412,6 +412,7 @@ function Index(props) {
       const data = res?.data?.data;
 
       setPartTypeNprd2016Data(data?.getPartTypeData);
+      console.log("data",data)
       // setPartTypeNprdDesc2016Data(data?.getPartDescData)
       // setFrpValueNprd2016Data(data?.getFrpData);
     });
@@ -523,6 +524,8 @@ function Index(props) {
     partType: Yup.object().required("Part Type is required"),
     temperature: Yup.string().required("Temperature is  required"),
     frDistribution: Yup.object().required("FR Distribution is  required"),
+    frRemarks:Yup.string().min(3,'Minimum 3 characters required')
+    .max(200, 'Maximum 200 characters allowed'),
     // failureRate: Yup.string().required("Failure Rate Offset is required"),
     // operand: Yup.object().required("FR Offset Operand is required"),
     field:
@@ -1374,6 +1377,11 @@ function Index(props) {
                                         onBlur={handleBlur}
                                         onChange={(e) => { setFrRemarks(e.target.value) }}
                                         value={values.frRemarks}
+                                      />
+                                         <ErrorMessage
+                                        className="error text-danger"
+                                        component="span"
+                                        name="frRemarks"
                                       />
                                     </Form.Group>
                                   </Col>
