@@ -997,7 +997,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
                       {" "}
                       <NavLink
                         to={{
-                          pathname: `/safety/${projectId}`,
+                          pathname: ``,
                           state: {
                             projectId: projectId,
                             productId: productId,
