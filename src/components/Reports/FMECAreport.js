@@ -158,6 +158,7 @@ function FMECAreport(props) {
   const userId = localStorage.getItem("userId");
 
   const header1 = [
+    "S.No",
     "Product Name",
     "Part Number",
     "Quantity",
@@ -807,6 +808,16 @@ function FMECAreport(props) {
                                 row?.fmecaData?.[key] ??
                                 row?.pmmraData?.[key] ??
                                 "-";
+                                if (header === "S.No") {
+                              return (
+                                <td
+                                  key={header}
+                                  style={{ textAlign: "center" }}
+                                >
+                                  {rowIndex + 1}
+                                </td>
+                              )
+                            }
                               if (
                                 header === "FR" &&
                                 typeof value === "number"

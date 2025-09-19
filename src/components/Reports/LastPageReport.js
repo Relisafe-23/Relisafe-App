@@ -152,33 +152,18 @@ function LastPageReport(props) {
           <table className="report-table mt-last-page">
             <tbody>
               <tr>
-                <td colSpan="6" style={{ textAlign: "center" }}>
+                <td colSpan="7" style={{ textAlign: "center" }}>
                   Project Name : {projectData?.projectName}
                 </td>
               </tr>
               <tr>
+                <td style={{ textAlign: "center" }}>S.No</td>
                 <td style={{ textAlign: "center" }}>REVISION</td>
                 <td style={{ textAlign: "center" }}>DESCRIPTION</td>
                 <td style={{ textAlign: "center" }}>DATE</td>
                 <td style={{ textAlign: "center" }}>AUTHOR</td>
                 <td style={{ textAlign: "center" }}>CHECKED BY</td>
                 <td style={{ textAlign: "center" }}>APPROVED BY</td>
-              </tr>
-              <tr style={{ height: "35px" }}>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-              </tr>
-              <tr style={{ height: "35px" }}>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
               </tr>
             </tbody>
           </table>
