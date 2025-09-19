@@ -135,7 +135,6 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
 
   useEffect(() => {
     getProjectPermission();
-    console.log("check......",hue)
     projectSidebar();
     const root = document.querySelector(":root");
     root.style.setProperty("--primary-color", `oklch(45.12% 0.267 ${hue})`);
@@ -174,6 +173,7 @@ const handleSliderChange = (event) => {
             />
           )}
         </div>
+        <div className="nav-list-container">
         <div className="nav-list">
           {role == "SuperAdmin" ? (
             <div>
@@ -1209,6 +1209,7 @@ const handleSliderChange = (event) => {
               </Button>
             </Modal.Footer>
           </Modal>
+          </div>
         </div>
       </div>
     </div>

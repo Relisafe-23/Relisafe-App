@@ -469,4 +469,40 @@ border-radius: 8px !important;
   visibility: visible !important;
   opacity: 1 !important;
 }
+.nav-list-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 10px;
+  padding-bottom: 20px;
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  
+
+  -ms-overflow-style: none;  
+  scrollbar-width: none; 
+}
+
+.sidebar, .sidebar.active {
+  display: flex;
+  flex-direction: column;
+}
+
+// Ensure logo content stays fixed at the top
+.logo-content {
+  flex-shrink: 0;
+}
+
+* {
+  position: relative;
+}
+:root {
+  --background-color: #ffffff;
+  --primary-color: oklch(45.12% 0.267 var(--user-theme-color-hue));
+  --secondary-color: oklch(94.45% 0.03 268.81);
+  --success-color:oklch(41.53% 0.06 214.79);
+}
 
