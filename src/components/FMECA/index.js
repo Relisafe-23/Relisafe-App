@@ -555,10 +555,10 @@ ratioFields.forEach((field) => {
   useEffect(() => {
     getAllConnect();
   }, []);
+
   const importExcel = (e) => {
     const file = e.target.files[0];
 
-    // Check if the file is an Excel file by checking the extension
     const fileName = file.name;
     const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
     const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
@@ -588,7 +588,7 @@ ratioFields.forEach((field) => {
       setColDefs(heads);
       fileData.splice(0, 1);
       setData(convertToJson(headers, fileData));
-      convertToJson(headers, fileData);
+    
     };
     reader.readAsBinaryString(file);
   };
@@ -603,6 +603,7 @@ ratioFields.forEach((field) => {
     localStorage.clear(history.push("/login"));
     window.location.reload();
   };
+  
   const DownloadExcel = () => {
     const columnsToRemove = ["projectId", "companyId", "productId", "id"];
     const modifiedTableData = tableData.map((row) => {
@@ -626,7 +627,7 @@ ratioFields.forEach((field) => {
       XLSX.utils.book_append_sheet(workBook, workSheet, "FMECA Data");
 
       const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
-
+      
       // Create a Blob object and initiate a download
       const blob = new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -783,7 +784,7 @@ ratioFields.forEach((field) => {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
     Api.post("api/v1/FMECA/", {
-      operatingPhase: values.operationPhase,
+      operatingPhase: values.operatingPhase,
       function: values.function,
       failureMode: values.failureMode,
       // searchFM: values.searchFM,
@@ -992,7 +993,7 @@ ratioFields.forEach((field) => {
         endEffect: values.endEffect,
         endEffectRatioBeta: values.endEffectRatioBeta || 1,
         safetyImpact: values.safetyImpact,
-        referenceId: values.referenceHazardId,
+        referenceHazardId: values.referenceHazardId,
         realibilityImpact: values.realibilityImpact,
         serviceDisruptionTime: values.serviceDisruptionTime,
         frequency: values.frequency,
