@@ -411,8 +411,11 @@ if(!dcVoltageRated){
   newErrors.dcVoltageRated ='DC Voltage Rated is required';
   isValid = false;
 }
-if(!temperature){
-  newErrors.temperature ='Temperature is required';
+if (!temperature && temperature !== 0) {
+  newErrors.temperature = 'Temperature is required';
+  isValid = false;
+} else if (temperature < 0) {
+  newErrors.temperature = 'Negative values are not allowed';
   isValid = false;
 }
 if(!capacitance){

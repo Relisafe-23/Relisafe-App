@@ -46,14 +46,14 @@ import {
 
 // Styles
 import "../../css/SideBar.scss";
-import { useHistory } from "react-router-dom";
+import { useHistory, useLocation } from "react-router-dom";
 import { Accordion } from "react-bootstrap";
 import logo from "../core/Images/logo.png";
 import AccordionBody from "react-bootstrap/esm/AccordionBody";
 
 const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
   const open = openSideBar;
-  
+  const location = useLocation();
   const selectPbsModule = openSideBar?.[1];
   const [selectedModule, setSelectedModule] = useState(selectPbsModule ? 'pbs' : null);
   const projectId = value;
@@ -73,18 +73,51 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
   const [confirmed, setConfirmed] = useState(false);
 
   const [showConfirmation, setShowConfirmation] = useState(false);
-  
+
 
   const handleClick = (event) => {
     event.preventDefault(); // Prevents default navigation behavior
     setSelectedModule("project"); // Make sure "project" matches the condition in your NavLink
     setShowConfirmation(true); // Show confirmation if needed
   };
+  // useEffect(() => {
+  //   if (selectPbsModule === 'pbs') {
+  //     setSelectedModule('pbs');
+  //   }
+  // }, [selectPbsModule]); // Runs when selectPbsModule changes
+
+  useEffect(() => {
+    if (selectedModule) {
+      localStorage.setItem('selectedModule', selectedModule);
+    }
+  }, [selectedModule]);
+
+  useEffect(() => {
+    // Determine module from current pathname
+    const pathname = location.pathname;
+    if (pathname.includes('/pbs/')) setSelectedModule('pbs');
+    else if (pathname.includes('/failure-rate-prediction/')) setSelectedModule('failureRatePrediction');
+    else if (pathname.includes('/mttr/prediction/')) setSelectedModule('mttrPrediction');
+    else if (pathname.includes('/fmeca/')) setSelectedModule('fmeca');
+    else if (pathname.includes('/rbd/')) setSelectedModule('rbd');
+    else if (pathname.includes('/fta/')) setSelectedModule('fta');
+    else if (pathname.includes('/pmmra/')) setSelectedModule('pmmra');
+    else if (pathname.includes('/spare-parts-analysis/')) setSelectedModule('sparePartsAnalysis');
+    else if (pathname.includes('/safety/')) setSelectedModule('safety');
+    else if (pathname.includes('/separate/library/')) setSelectedModule('seperateLibrary');
+    else if (pathname.includes('/connected/library/')) setSelectedModule('connecetedLibrary');
+    else if (pathname.includes('/reports/')) setSelectedModule('reports');
+    else if (pathname.includes('/user')) setSelectedModule('user');
+    else if (pathname.includes('/project/list')) setSelectedModule('project');
+    else if (pathname.includes('/company')) setSelectedModule('company');
+    else if (pathname.includes('/theme')) setSelectedModule('theme');
+  }, [location.pathname]);
+
   useEffect(() => {
     if (selectPbsModule === 'pbs') {
       setSelectedModule('pbs');
     }
-  }, [selectPbsModule]); // Runs when selectPbsModule changes
+  }, [selectPbsModule]);
 
 
   const navigateToProject = () => {
@@ -115,16 +148,16 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
   };
 
   const projectSidebar = () => {
-    if(projectId){
-    Api.get(`/api/v1/projectCreation/${projectId}`, {
-      headers: {
-        userId: userId,
-      },
-    }).then((res) => {
-      setIsOwner(res?.data?.data?.isOwner);
-      setCreatedBy(res?.data?.data?.createdBy);
-    });
-  }
+    if (projectId) {
+      Api.get(`/api/v1/projectCreation/${projectId}`, {
+        headers: {
+          userId: userId,
+        },
+      }).then((res) => {
+        setIsOwner(res?.data?.data?.isOwner);
+        setCreatedBy(res?.data?.data?.createdBy);
+      });
+    }
   };
 
   // Log out
@@ -135,7 +168,6 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
 
   useEffect(() => {
     getProjectPermission();
-    console.log("check......",hue)
     projectSidebar();
     const root = document.querySelector(":root");
     root.style.setProperty("--primary-color", `oklch(45.12% 0.267 ${hue})`);
@@ -143,7 +175,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
     root.style.setProperty("--Default-color", `oklch(70% 0.099 197.36 ${hue})`);
     localStorage.setItem("themeHue", hue.toString());
   }, [projectId, selectedModule]);
-const handleSliderChange = (event) => {
+  const handleSliderChange = (event) => {
     const newHue = event.target.value;
     setHue(newHue);
   };
@@ -174,12 +206,13 @@ const handleSliderChange = (event) => {
             />
           )}
         </div>
+        <div className="nav-list-container">
         <div className="nav-list">
           {role == "SuperAdmin" ? (
             <div>
-              <div className="menu-list mt-5" style={{ marginTop:"20px"}}>
-                <NavLink to={"/company"} 
-              activeClassName="main-nav-active"
+              <div className="menu-list mt-5" style={{ marginTop: "20px" }}>
+                <NavLink to={"/company"}
+                  activeClassName="main-nav-active"
                   style={{
                     backgroundColor:
                       selectedModule === "company"
@@ -187,8 +220,8 @@ const handleSliderChange = (event) => {
                         : "inherit",
                   }}
                   onClick={() => setSelectedModule("company")}>
-                  
-                   
+
+
                   <FontAwesomeIcon
                     icon={faBuildingUser}
                     size="1x"
@@ -243,7 +276,8 @@ const handleSliderChange = (event) => {
               </div> */}
             </div>
           ) : role === "admin" || (isOwner === true && createdBy === userId) ? (
-            <div>
+              <div className="debug-admin-content">
+                  {!projectId && (
               <div className="menu-list">
                 <NavLink
                   to={"/user"}
@@ -264,7 +298,7 @@ const handleSliderChange = (event) => {
                   <span>Users</span>
                 </NavLink>
               </div>
-
+                  )}
               <div className="menu-list mt-1">
                 <NavLink
                   to={"/project/list"}
@@ -608,7 +642,7 @@ const handleSliderChange = (event) => {
                                 pathname: `/connected/library/${projectId}`,
                                 state: { projectId: projectId, state },
                               }}
-                             activeClassName="main-nav-active"
+                              activeClassName="main-nav-active"
                               style={{
                                 backgroundColor:
                                   selectedModule === "connecetedLibrary"
@@ -668,7 +702,8 @@ const handleSliderChange = (event) => {
               </div>
             </div>
           ) : role === "Employee" ? (
-            <div>
+                <div className="debug-employee-content" style={{border: '2px solid yellow'}}>
+                    {!projectId && (
               <div className="menu-list">
                 <NavLink
                   to={"/user"}
@@ -690,7 +725,7 @@ const handleSliderChange = (event) => {
                   <span>Users</span>
                 </NavLink>
               </div>
-
+                    )}
               <div className="menu-list mt-1">
                 <NavLink
                   to={{
@@ -991,7 +1026,7 @@ const handleSliderChange = (event) => {
                     </div>
                   ) : null}
                   {readPermission?.[10]?.read === true &&
-                  readPermission?.[11]?.read === true ? (
+                    readPermission?.[11]?.read === true ? (
                     <Accordion className="accordion-style mt-1 ">
                       <Accordion.Item eventKey="0">
                         <Accordion.Header className="accodrion-header">
@@ -1207,6 +1242,7 @@ const handleSliderChange = (event) => {
               </Button>
             </Modal.Footer>
           </Modal>
+          </div>
         </div>
       </div>
     </div>

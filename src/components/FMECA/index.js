@@ -1283,17 +1283,23 @@ ratioFields.forEach((field) => {
               />
             </div>
 
-            <div style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              marginTop: "8px",
-              height: "40px",
-            }}>
-              <Tooltip placement="right" title="Import">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                marginTop: "8px",
+                height: "40px",
+              }}
+            >
+              <Tooltip placement="right" title="Import" >
                 <div style={{ marginRight: "8px" }}>
                   <label htmlFor="file-input" className="import-export-btn">
-                    <FontAwesomeIcon icon={faFileUpload} />
+
+                    <FontAwesomeIcon
+                      icon={faFileDownload}
+                      style={{ width: "15px" }}
+                    />
                   </label>
                   <input
                     type="file"
@@ -1310,10 +1316,7 @@ ratioFields.forEach((field) => {
                   style={{ marginTop: '-2px' }}
                   onClick={() => DownloadExcel()}
                 >
-                  <FontAwesomeIcon
-                    icon={faFileDownload}
-                    style={{ width: "15px" }}
-                  />
+                  <FontAwesomeIcon icon={faFileUpload} />
                 </button>
               </Tooltip>
             </div>

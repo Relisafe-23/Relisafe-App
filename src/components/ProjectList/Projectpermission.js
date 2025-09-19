@@ -102,7 +102,7 @@ export default function Projectpermission(props) {
 
   const getPermissionData = (values) => {
     const authorizedId = values;
-
+ console.log('value@@@',values)
     const id = projectId;
     Api.get(`/api/v1/projectPermission/list`, {
       params: {

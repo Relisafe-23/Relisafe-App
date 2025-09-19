@@ -48,31 +48,84 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Tooltip, TableCell } from "@material-ui/core";
 
+const string255 = Yup.string()
+  .required("This field is required")
+  .max(255, "Must be at most 255 characters");
+
 const Validation = Yup.object().shape({
   category: Yup.object().required("Category is required"),
   parttype: Yup.object().required("Part type is required"),
-  partnumber: Yup.string().required("Part number is required"),
-  // quantity: Yup.string().required("Quantity is required"),
-  // repairable: Yup.object().required("Repairable is required"),
-  // levelofreplace: Yup.object().required("Level of replace is required"),
-  riskindex: Yup.string().required("Risk index is required"),
-  // levelofrepair: Yup.object().required("Level of repair is required"),
-  // spare: Yup.object().required("Spare is required"),
-  endeffect: Yup.string().required("End effect is required"),
-  reliability: Yup.string().required("Reliability impact is required"),
-  severity: Yup.string().required("Severity is required"),
-  safetyimpact: Yup.string().required("Safety impact is required"),
-  frequency: Yup.string().required("Frequency is required"),
-  // pmtaskid: Yup.string().required("PM task id is required"),
-  // taskintervalFrequency: Yup.string().required(
-  //   "Task interval frequency is required"
-  // ),
-  // PMtasktype: Yup.string().required("PM task type is required"),
-  // taskIntervalunit: Yup.object().required("Task interval unit is required"),
-  // scheduledMaintenanceTask: Yup.string().required(
-  //   "Schedule maintenance task type is required"
-  // ),
+  partnumber: Yup.string().required("Part number is required").max(255),
+  riskindex: Yup.string().required("Risk index is required").max(255),
+  endeffect: Yup.string().required("End effect is required").max(255),
+  reliability: Yup.string().required("Reliability impact is required").max(255),
+  severity: Yup.string().required("Severity is required").max(255),
+  safetyimpact: Yup.string().required("Safety impact is required").max(255),
+  frequency: Yup.string().required("Frequency is required").max(255),
+  Evident1: Yup.string().required("Evident1 is required").max(255),
+  condition: Yup.string().required("Condition is required").max(255),
+  failure: Yup.string().required("Failure is required").max(255),
+  redesign: Yup.string().required("Redesign is required").max(255),
+  acceptable: Yup.string().required("Acceptable is required").max(255),
+  Items: Yup.string().required("Items is required").max(255),
+  lubrication: Yup.string().required("Lubrication is required").max(255),
+  task: Yup.string().required("Task is required").max(255),
+  combination: Yup.string().required("Combination is required").max(255),
+  rcmnotes: Yup.string().required("Rcmnotes is required").max(255),
+  pmtaskid: Yup.string().required("PM Task Id is required").max(255),
+  PMtasktype: Yup.string().required("PM task type Id is required").max(255),
+  taskintervalFrequency: Yup.string().required(" Task interval frequency is required").max(255),
+  taskIntervalunit: Yup.string()
+    .required(" Task interval unit is required")
+    .matches(/^[A-Za-z\s]+$/, "Only alphabets and spaces are allowed")
+    .max(255),
+  taskInterval: Yup.string().required(" Task interval is required").max(255),
+  scheduledMaintenanceTask: Yup.string().required(" Scheduled maintenance task is required").max(255),
+  taskDescription: Yup.string().required(" Task Description is required").max(255),
+
+  tasktimeML1: Yup.string().required("Task time ML1 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML2: Yup.string().required("Task time ML2 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML3: Yup.string().required("Task time ML3 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML4: Yup.string().required("Task time ML4 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML5: Yup.string().required("Task time ML5 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML6: Yup.string().required("Task time ML6 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML7: Yup.string().required("Task time ML7 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+
+  skill1: Yup.string().required(" Skill 1 is required").max(255),
+  skill1nos: Yup.string().required(" Skill 1 nos is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  skill1contribution: Yup.string().required(" Skill 1 contribution is required").max(255),
+  skill2: Yup.string().required(" Skill 2 is required").max(255),
+  skill2nos: Yup.string().required(" Skill 2 nos is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  skill2contribution: Yup.string().required(" Skill 2 Contribution is required").max(255),
+  skill3: Yup.string().required(" Skill 3 is required").max(255),
+  skill3nos: Yup.string().required(" Skill 3 nos is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  skill3contribution: Yup.string().required(" Skill 3 contribution is required").max(255),
+
+  addReplacespare1: Yup.string().required(" Add Replacespare 1 is required").max(255),
+  addReplacespare1qty: Yup.string().required(" Add Replacespare 1 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  addReplacespare2: Yup.string().required(" Add Replacespare 2 is required").max(255),
+  addReplacespare2qty: Yup.string().required(" Add Replacespare 2 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  addReplacespare3: Yup.string().required(" Add Replacespare 3 is required").max(255),
+  addReplacespare3qty: Yup.string().required(" Add Replacespare 3 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+
+  Consumable1: Yup.string().required(" Consumable 1 is required").max(255),
+  Consumable1qty: Yup.string().required(" Consumable 1 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable2: Yup.string().required(" Consumable 2 is required").max(255),
+  Consumable2qty: Yup.string().required(" Consumable 2 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable3: Yup.string().required(" Consumable 3 is required").max(255),
+  Consumable3qty: Yup.string().required(" Consumable 3 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable4: Yup.string().required(" Consumable 4 is required").max(255),
+  Consumable4qty: Yup.string().required(" Consumable 4 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable5: Yup.string().required(" Consumable 5 is required").max(255),
+  Consumable5qty: Yup.string().required("Consumable 5 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+
+  userfield1: Yup.string().required("User field 1 is required").max(255),
+  userfield2: Yup.string().required("User field 2 is required").max(255),
+  userfield3: Yup.string().required("User field 3 is required").max(255),
+  userfield4: Yup.string().required("User field 4 is required").max(255),
+  userfield5: Yup.string().required("User field 5 is required").max(255),
 });
+
 
 export default function PMMRA(props) {
   // const pmmraPermission = props?.location?.state?.pmmraWrite;
@@ -132,57 +185,216 @@ export default function PMMRA(props) {
   const [importExcelData, setImportExcelData] = useState({});
   const [shouldReload, setShouldReload] = useState(false);
   const [open, setOpen] = useState(false);
-  
-  const importExcel = (e) => {
-    const file = e.target.files[0];
-    const fileName = file.name;
-    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
-    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
+const importExcel = (e) => {
+  const file = e.target.files[0];
+  const fileName = file.name;
+  const validExtensions = ["xlsx", "xls"];
+  const fileExtension = fileName.split(".").pop().toLowerCase();
 
-    if (!validExtensions.includes(fileExtension)) {
-      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
-      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+  if (!validExtensions.includes(fileExtension)) {
+    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+      position: toast.POSITION.TOP_RIGHT,
+    });
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const bstr = event.target.result;
+    const workBook = XLSX.read(bstr, { type: "binary" });
+    const workSheetName = workBook.SheetNames[0];
+    const workSheet = workBook.Sheets[workSheetName];
+    const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+    
+    if (excelData.length > 1) {
+      const headers = excelData[0];
+      const rows = excelData.slice(1);
+      const parsedData = rows.map((row) => {
+        const rowData = {};
+        headers.forEach((header, index) => {
+          rowData[header] = row[index];
+        });
+        return rowData;
       });
-      return; // Exit the function if the file is not an Excel file
+      
+      // Map all Excel fields to form fields
+      const mappedData = {};
+      parsedData[0] && Object.keys(parsedData[0]).forEach(key => {
+        const value = parsedData[0][key];
+        
+        // Map Excel column names to form field names
+        switch(key) {
+          case "endEffect":
+            mappedData.endeffect = value;
+            break;
+          case "safetyImpact":
+            mappedData.safetyimpact = value;
+            break;
+          case "reliabilityImpact":
+            mappedData.reliability = value;
+            break;
+          case "frequency":
+            mappedData.frequency = value;
+            break;
+          case "severity":
+            mappedData.severity = value;
+            break;
+          case "riskIndex":
+            mappedData.riskindex = value;
+            break;
+          case "rcmNotes":
+            mappedData.rcmnotes = value;
+            break;
+          case "pmTaskId":
+            mappedData.pmtaskid = value;
+            break;
+          case "pmTaskType":
+            mappedData.PMtasktype = value;
+            break;
+          case "taskIntrvlFreq":
+            mappedData.taskintervalFrequency = value;
+            break;
+          case "LatitudeFreqTolrnc":
+            mappedData.latitudeFrequency = value;
+            break;
+          case "scheduleMaintenceTsk":
+            mappedData.scheduledMaintenanceTask = value;
+            break;
+          case "tskInteralDetermination":
+            mappedData.taskInterval = value;
+            break;
+          case "taskDesc":
+            mappedData.taskDescription = value;
+            break;
+          case "tskTimeML1":
+            mappedData.tasktimeML1 = value;
+            break;
+          case "tskTimeML2":
+            mappedData.tasktimeML2 = value;
+            break;
+          case "tskTimeML3":
+            mappedData.tasktimeML3 = value;
+            break;
+          case "tskTimeML4":
+            mappedData.tasktimeML4 = value;
+            break;
+          case "tskTimeML5":
+            mappedData.tasktimeML5 = value;
+            break;
+          case "tskTimeML6":
+            mappedData.tasktimeML6 = value;
+            break;
+          case "tskTimeML7":
+            mappedData.tasktimeML7 = value;
+            break;
+          case "skill1":
+            mappedData.skill1 = value;
+            break;
+          case "skillOneNos":
+            mappedData.skill1nos = value;
+            break;
+          case "skillOneContribution":
+            mappedData.skill1contribution = value;
+            break;
+          case "skill2":
+            mappedData.skill2 = value;
+            break;
+          case "skillTwoNos":
+            mappedData.skill2nos = value;
+            break;
+          case "skillTwoContribution":
+            mappedData.skill2contribution = value;
+            break;
+          case "skill3":
+            mappedData.skill3 = value;
+            break;
+          case "skillThreeNos":
+            mappedData.skill3nos = value;
+            break;
+          case "skillThreeContribution":
+            mappedData.skill3contribution = value;
+            break;
+          case "addiReplaceSpare1":
+            mappedData.addReplacespare1 = value;
+            break;
+          case "addiReplaceSpare1Qty":
+            mappedData.addReplacespare1qty = value;
+            break;
+          case "addiReplaceSpare2":
+            mappedData.addReplacespare2 = value;
+            break;
+          case "addiReplaceSpare2Qty":
+            mappedData.addReplacespare2qty = value;
+            break;
+          case "addiReplaceSpare3":
+            mappedData.addReplacespare3 = value;
+            break;
+          case "addiReplaceSpare3Qty":
+            mappedData.addReplacespare3qty = value;
+            break;
+          case "consumable1":
+            mappedData.Consumable1 = value;
+            break;
+          case "consumable1Qty":
+            mappedData.Consumable1qty = value;
+            break;
+          case "consumable2":
+            mappedData.Consumable2 = value;
+            break;
+          case "consumable2Qty":
+            mappedData.Consumable2qty = value;
+            break;
+          case "consumable3":
+            mappedData.Consumable3 = value;
+            break;
+          case "consumable3Qty":
+            mappedData.Consumable3qty = value;
+            break;
+          case "consumable4":
+            mappedData.Consumable4 = value;
+            break;
+          case "consumable4Qty":
+            mappedData.Consumable4qty = value;
+            break;
+          case "consumable5":
+            mappedData.Consumable5 = value;
+            break;
+          case "consumable5Qty":
+            mappedData.Consumable5qty = value;
+            break;
+          case "userField1":
+            mappedData.userfield1 = value;
+            break;
+          case "userField2":
+            mappedData.userfield2 = value;
+            break;
+          case "userField3":
+            mappedData.userfield3 = value;
+            break;
+          case "userField4":
+            mappedData.userfield4 = value;
+            break;
+          case "userField5":
+            mappedData.userfield5 = value;
+            break;
+          default:
+            // For any unmapped fields, use the original key
+            mappedData[key] = value;
+        }
+      });
+      
+      setImportExcelData(mappedData);
+      toast.success("Excel data imported successfully!", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    } else {
+      toast.error("No Data Found In Excel Sheet", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
     }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const bstr = event.target.result;
-      const workBook = XLSX.read(bstr, { type: "binary" });
-      const workSheetName = workBook.SheetNames[0];
-      const workSheet = workBook.Sheets[workSheetName];
-      const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-      // if (excelData[1].length > 1) {
-      if (excelData.length > 1) {
-        const headers = excelData[0];
-        const rows = excelData.slice(1);
-        const parsedData = rows.map((row) => {
-          const rowData = {};
-          headers.forEach((header, index) => {
-            rowData[header] = row[index];
-          });
-          return rowData;
-        });
-        setImportExcelData(parsedData[0]);
-      } else {
-        toast("No Data Found In Excel Sheet", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          type: "error",
-        });
-      }
-    };
-    if (file) {
-    }
-    reader.readAsBinaryString(file);
   };
+  reader.readAsBinaryString(file);
+};
 
   const convertToJson = (headers, originalData) => {
     const rows = [];
@@ -205,7 +417,7 @@ export default function PMMRA(props) {
       safetyImpact: values.safetyimpact,
       reliabilityImpact: values.reliability,
       frequency: values.frequency,
-      rcmNotes: values.rcmnotes,
+      rcmnotes: values.rcmnotes,
       pmTaskId: values.pmtaskid,
       pmTaskType: values.PMtasktype,
       taskIntrvlFreq: values.taskintervalFrequency,
@@ -280,7 +492,7 @@ export default function PMMRA(props) {
       safetyImpact: value.safetyimpact,
       reliabilityImpact: value.reliability,
       frequency: value.frequency,
-      rcmNotes: value.rcmnotes,
+      rcmnotes: value.rcmnotes,
       pmTaskId: value.pmtaskid,
       pmTaskType: value.PMtasktype,
       taskIntrvlFreq: value.taskintervalFrequency,
@@ -742,7 +954,7 @@ export default function PMMRA(props) {
         ? combinationofTsk
         : value?.combinationofTsk?.value,
       reDesign: reDesign ? reDesign : value?.reDesign?.value,
-      rcmNotes:
+      rcmnotes:
         values?.rcmnotes && values?.rcmnotes?.value
           ? values?.rcmnotes?.value
           : values?.rcmnotes,
@@ -983,7 +1195,7 @@ export default function PMMRA(props) {
       failureFindTsk: failureFindTask,
       combinationOfTsk: combinationofTsk,
       reDesign: reDesign,
-      rcmNotes: values.rcmnotes,
+      rcmnotes: values.rcmnotes,
       pmTaskId: values.pmtaskid,
       pmTaskType: values.PMtasktype,
       taskIntrvlFreq: values.taskintervalFrequency,
@@ -1074,415 +1286,87 @@ export default function PMMRA(props) {
   }));
 
 
-  const InitialValues = {
-    name: name,
-    partnumber: partNumber,
-    repairable: mttrRepairable,
-    spare: mttrSpare,
-    levelofrepair: mttrLevelOfRepair,
-    levelofreplace: mttrLevelOfReplace,
-    reference: reference,
-    category: category,
-    parttype: partType,
-    quantity: quantity,
-    fmecaId: fmecaFillterData?.fmecaId,
-    endeffect: fmecaFillterData?.endEffect
-      ? fmecaFillterData.endEffect
-      : importExcelData?.endEffect
-        ? importExcelData.endEffect
-        : "",
-    reliability: fmecaFillterData?.realibilityImpact
-      ? fmecaFillterData.realibilityImpact
-      : importExcelData?.reliabilityImpact
-        ? importExcelData.reliabilityImpact
-        : "",
-    severity: fmecaFillterData?.severity
-      ? fmecaFillterData.severity
-      : importExcelData?.severity
-        ? importExcelData.severity
-        : "",
-    safetyimpact: fmecaFillterData?.safetyImpact
-      ? fmecaFillterData.safetyImpact
-      : importExcelData?.safetyImpact
-        ? importExcelData.safetyImpact
-        : "",
-    frequency: fmecaFillterData?.frequency
-      ? fmecaFillterData.frequency
-      : importExcelData?.frequency
-        ? importExcelData.frequency
-        : "",
-    riskindex: fmecaFillterData?.riskIndex
-      ? fmecaFillterData.riskIndex
-      : importExcelData?.riskIndex
-        ? importExcelData.riskIndex
-        : "",
 
-    // endeffect: pmmraData?.endEffect
-    //   ? pmmraData?.endEffect
-    //   : importExcelData?.endEffect
-    //   ? importExcelData.endEffect
-    //   : "",
-    // reliability: pmmraData?.reliabilityImpact
-    //   ? pmmraData?.reliabilityImpact
-    //   : importExcelData?.reliabilityImpact
-    //   ? importExcelData.reliabilityImpact
-    //   : "",
-    // severity: pmmraData?.severity ? { label: pmmraData?.severity, value: pmmraData?.severity } : "",
-    // safetyimpact: pmmraData?.safetyImpact
-    //   ? pmmraData?.safetyImpact
-    //   : importExcelData?.safetyImpact
-    //   ? importExcelData.safetyImpact
-    //   : "",
-    // rcmnotes: pmmraData?.rcmNotes ? pmmraData?.rcmNotes : importExcelData?.rcmNotes ? importExcelData.rcmNotes : "",
-    // frequency: pmmraData?.frequency
-    //   ? pmmraData?.frequency
-    //   : importExcelData?.frequency
-    //   ? importExcelData.frequency
-    //   : "",
-    // riskindex: pmmraData?.riskIndex ? { label: pmmraData?.riskIndex, value: pmmraData?.riskIndex } : "",
-    // pmtaskid: pmmraData?.pmTaskId ? pmmraData?.pmTaskId : importExcelData?.pmTaskId ? importExcelData.pmTaskId : "",
-    // taskintervalFrequency: pmmraData?.taskIntrvlFreq
-    //   ? pmmraData?.taskIntrvlFreq
-    //   : importExcelData?.taskIntrvlFreq
-    //   ? importExcelData.taskIntrvlFreq
-    //   : "",
-    // Evident1: pmmraData?.LossOfEvident ? { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } : "",
-    // latitudeFrequency: pmmraData?.LatitudeFreqTolrnc
-    //   ? pmmraData?.LatitudeFreqTolrnc
-    //   : importExcelData?.LatitudeFreqTolrnc
-    //   ? importExcelData.LatitudeFreqTolrnc
-    //   : "",
-    // PMtasktype: pmmraData?.pmTaskType
-    //   ? pmmraData?.pmTaskType
-    //   : importExcelData?.pmTaskType
-    //   ? importExcelData.pmTaskType
-    //   : "",
-    // taskInterval: pmmraData?.tskInteralDetermination
-    //   ? pmmraData?.tskInteralDetermination
-    //   : importExcelData?.tskInteralDetermination
-    //   ? importExcelData.tskInteralDetermination
-
-    pmtaskid: pmmraData?.pmTaskId ? pmmraData?.pmTaskId : "",
-    taskintervalFrequency: pmmraData?.taskIntrvlFreq
-      ? pmmraData?.taskIntrvlFreq
-      : "",
-    Evident1: pmmraData?.LossOfEvident
-      ? { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident }
-      : "",
-    latitudeFrequency: pmmraData?.LatitudeFreqTolrnc
-      ? pmmraData?.LatitudeFreqTolrnc
-      : "",
-    PMtasktype: pmmraData?.pmTaskType ? pmmraData?.pmTaskType : "",
-    taskInterval: pmmraData?.tskInteralDetermination
-      ? pmmraData?.tskInteralDetermination
-      : "",
-    taskIntervalunit: pmmraData?.taskIntrvlUnit
-      ? { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit }
-      : "",
-    scheduledMaintenanceTask: pmmraData?.scheduleMaintenceTsk
-      ? pmmraData?.scheduleMaintenceTsk
-      : //   : importExcelData?.scheduleMaintenceTsk
-      //   ? importExcelData.scheduleMaintenceTsk
-      //   : "",
-      // taskDescription: pmmraData?.taskDesc
-      //   ? pmmraData?.taskDesc
-      //   : importExcelData?.taskDesc
-      //   ? importExcelData.taskDesc
-      //   : "",
-      // tasktimeML1: pmmraData?.tskTimeML1
-      //   ? pmmraData?.tskTimeML1
-      //   : importExcelData?.tskTimeML1
-      //   ? importExcelData.tskTimeML1
-      //   : "",
-      // tasktimeML2: pmmraData?.tskTimeML2
-      //   ? pmmraData?.tskTimeML2
-      //   : importExcelData?.tskTimeML2
-      //   ? importExcelData.tskTimeML2
-      //   : "",
-      // tasktimeML3: pmmraData?.tskTimeML3
-      //   ? pmmraData?.tskTimeML3
-      //   : importExcelData?.tskTimeML3
-      //   ? importExcelData.tskTimeML3
-      //   : "",
-      // tasktimeML4: pmmraData?.tskTimeML4
-      //   ? pmmraData?.tskTimeML4
-      //   : importExcelData?.tskTimeML4
-      //   ? importExcelData.tskTimeML4
-      //   : "",
-      // tasktimeML5: pmmraData?.tskTimeML5
-      //   ? pmmraData?.tskTimeML5
-      //   : importExcelData?.tskTimeML5
-      //   ? importExcelData.tskTimeML5
-      //   : "",
-      // tasktimeML6: pmmraData?.tskTimeML6
-      //   ? pmmraData?.tskTimeML6
-      //   : importExcelData?.tskTimeML6
-      //   ? importExcelData.tskTimeML6
-      //   : "",
-      // tasktimeML7: pmmraData?.tskTimeML7
-      //   ? pmmraData?.tskTimeML7
-      //   : importExcelData?.tskTimeML7
-      //   ? importExcelData.tskTimeML7
-      //   : "",
-
-      // skill1contribution: pmmraData?.skillOneContribution
-      //   ? pmmraData?.skillOneContribution
-      //   : importExcelData?.skillOneContribution
-      //   ? importExcelData.skillOneContribution
-      //   : "",
-
-      // skill1nos: pmmraData?.skillOneNos
-      //   ? pmmraData?.skillOneNos
-      //   : importExcelData?.skillOneNos
-      //   ? importExcelData.skillOneNos
-      //   : "",
-      // skill1: pmmraData?.skill1 ? pmmraData?.skill1 : importExcelData?.skill1 ? importExcelData.skill1 : "",
-      // skill2contribution: pmmraData?.skillTwoContribution
-      //   ? pmmraData?.skillTwoContribution
-      //   : importExcelData?.skillTwoContribution
-      //   ? importExcelData.skillTwoContribution
-      //   : "",
-      // skill2nos: pmmraData?.skillTwoNos
-      //   ? pmmraData?.skillTwoNos
-      //   : importExcelData?.skillTwoNos
-      //   ? importExcelData.skillTwoNos
-      //   : "",
-      // skill2: pmmraData?.skill2 ? pmmraData?.skill2 : importExcelData?.skill2 ? importExcelData.skill2 : "",
-      // skill3contribution: pmmraData?.skillThreeContribution
-      //   ? pmmraData?.skillThreeContribution
-      //   : importExcelData?.skillThreeContribution
-      //   ? importExcelData.skillThreeContribution
-      //   : "",
-      // skill3nos: pmmraData?.skillThreeNos
-      //   ? pmmraData?.skillThreeNos
-      //   : importExcelData?.skillThreeNos
-      //   ? importExcelData.skillThreeNos
-      //   : "",
-      // skill3: pmmraData?.skill3 ? pmmraData?.skill3 : importExcelData?.skill3 ? importExcelData.skill3 : "",
-
-      // addReplacespare1: pmmraData?.addiReplaceSpare1
-      //   ? pmmraData?.addiReplaceSpare1
-      //   : importExcelData?.addiReplaceSpare1
-      //   ? importExcelData.addiReplaceSpare1
-      //   : "",
-
-      // addReplacespare2: pmmraData?.addiReplaceSpare2
-      //   ? pmmraData?.addiReplaceSpare2
-      //   : importExcelData?.addiReplaceSpare2
-      //   ? importExcelData.addiReplaceSpare2
-      //   : "",
-
-      // addReplacespare3: pmmraData?.addiReplaceSpare3
-      //   ? pmmraData?.addiReplaceSpare3
-      //   : importExcelData?.addiReplaceSpare3
-      //   ? importExcelData.addiReplaceSpare3
-      //   : "",
-
-      // Consumable1: pmmraData?.consumable1
-      //   ? pmmraData?.consumable1
-      //   : importExcelData?.consumable1
-      //   ? importExcelData.consumable1
-      //   : "",
-
-      // Consumable2: pmmraData?.consumable2
-      //   ? pmmraData?.consumable2
-      //   : importExcelData?.consumable2
-      //   ? importExcelData.consumable2
-      //   : "",
-
-      // Consumable3: pmmraData?.consumable3
-      //   ? pmmraData?.consumable3
-      //   : importExcelData?.consumable3
-      //   ? importExcelData.consumable3
-      //   : "",
-
-      // Consumable4: pmmraData?.consumable4
-      //   ? pmmraData?.consumable4
-      //   : importExcelData?.consumable4
-      //   ? importExcelData.consumable4
-      //   : "",
-
-      // Consumable5: pmmraData?.consumable5
-      //   ? pmmraData?.consumable5
-      //   : importExcelData?.consumable5
-      //   ? importExcelData.consumable5
-      //   : "",
-
-      // addReplacespare1qty: pmmraData?.addiReplaceSpare1Qty
-      //   ? pmmraData?.addiReplaceSpare1Qty
-      //   : importExcelData?.addiReplaceSpare1Qty
-      //   ? importExcelData.addiReplaceSpare1Qty
-      //   : "",
-
-      // addReplacespare2qty: pmmraData?.addiReplaceSpare2Qty
-      //   ? pmmraData?.addiReplaceSpare2Qty
-      //   : importExcelData?.addiReplaceSpare2Qty
-      //   ? importExcelData.addiReplaceSpare2Qty
-      //   : "",
-
-      // addReplacespare3qty: pmmraData?.addiReplaceSpare3Qty
-      //   ? pmmraData?.addiReplaceSpare3Qty
-      //   : importExcelData?.addiReplaceSpare3Qty
-      //   ? importExcelData.addiReplaceSpare3Qty
-      //   : "",
-
-      // Consumable1qty: pmmraData?.consumable1Qty
-      //   ? pmmraData?.consumable1Qty
-      //   : importExcelData?.consumable1Qty
-      //   ? importExcelData.consumable1Qty
-      //   : "",
-
-      // Consumable2qty: pmmraData?.consumable2Qty
-      //   ? pmmraData?.consumable2Qty
-      //   : importExcelData?.consumable2Qty
-      //   ? importExcelData.consumable2Qty
-      //   : "",
-
-      // Consumable3qty: pmmraData?.consumable3Qty
-      //   ? pmmraData?.consumable3Qty
-      //   : importExcelData?.consumable3Qty
-      //   ? importExcelData.consumable3Qty
-      //   : "",
-
-      // Consumable4qty: pmmraData?.consumable4Qty
-      //   ? pmmraData?.consumable4Qty
-      //   : importExcelData?.consumable4Qty
-      //   ? importExcelData.consumable4Qty
-      //   : "",
-
-      // Consumable5qty: pmmraData?.consumable5Qty
-      //   ? pmmraData?.consumable5Qty
-      //   : importExcelData?.consumable5Qty
-      //   ? importExcelData.consumable5Qty
-      //   : "",
-
-      // userfield1: pmmraData?.userField1
-      //   ? pmmraData?.userField1
-      //   : importExcelData?.userField1
-      //   ? importExcelData.userField1
-      //   : "",
-
-      // userfield2: pmmraData?.userField2
-      //   ? pmmraData?.userField2
-      //   : importExcelData?.userField2
-      //   ? importExcelData.userField2
-      //   : "",
-
-      // userfield3: pmmraData?.userField3
-      //   ? pmmraData?.userField3
-      //   : importExcelData?.userField3
-      //   ? importExcelData.userField3
-      //   : "",
-
-      // userfield4: pmmraData?.userField4
-      //   ? pmmraData?.userField4
-      //   : importExcelData?.userField4
-      //   ? importExcelData.userField4
-      //   : "",
-
-      // userfield5: pmmraData?.userField5
-      //   ? pmmraData?.userField5
-      //   : importExcelData?.userField5
-      //   ? importExcelData.userField5
-      //   : "",
-      // Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
-      "",
-    taskDescription: pmmraData?.taskDesc ? pmmraData?.taskDesc : "",
-    tasktimeML1: pmmraData?.tskTimeML1 ? pmmraData?.tskTimeML1 : "",
-    tasktimeML2: pmmraData?.tskTimeML2 ? pmmraData?.tskTimeML2 : "",
-    tasktimeML3: pmmraData?.tskTimeML3 ? pmmraData?.tskTimeML3 : "",
-    tasktimeML4: pmmraData?.tskTimeML4 ? pmmraData?.tskTimeML4 : "",
-    tasktimeML5: pmmraData?.tskTimeML5 ? pmmraData?.tskTimeML5 : "",
-    tasktimeML6: pmmraData?.tskTimeML6 ? pmmraData?.tskTimeML6 : "",
-    tasktimeML7: pmmraData?.tskTimeML7 ? pmmraData?.tskTimeML7 : "",
-    skill1contribution: pmmraData?.skillOneContribution
-      ? pmmraData?.skillOneContribution
-      : "",
-    skill1nos: pmmraData?.skillOneNos ? pmmraData?.skillOneNos : "",
-    skill1: pmmraData?.skill1 ? pmmraData?.skill1 : "",
-    skill2contribution: pmmraData?.skillTwoContribution
-      ? pmmraData?.skillTwoContribution
-      : "",
-    skill2nos: pmmraData?.skillTwoNos ? pmmraData?.skillTwoNos : "",
-    skill2: pmmraData?.skill2 ? pmmraData?.skill2 : "",
-    skill3contribution: pmmraData?.skillThreeContribution
-      ? pmmraData?.skillThreeContribution
-      : "",
-    skill3nos: pmmraData?.skillThreeNos ? pmmraData?.skillThreeNos : "",
-    skill3: pmmraData?.skill3 ? pmmraData?.skill3 : "",
-    addReplacespare1: pmmraData?.addiReplaceSpare1
-      ? pmmraData?.addiReplaceSpare1
-      : "",
-    addReplacespare2: pmmraData?.addiReplaceSpare2
-      ? pmmraData?.addiReplaceSpare2
-      : "",
-    addReplacespare3: pmmraData?.addiReplaceSpare3
-      ? pmmraData?.addiReplaceSpare3
-      : "",
-    Consumable1: pmmraData?.consumable1 ? pmmraData?.consumable1 : "",
-    Consumable2: pmmraData?.consumable2 ? pmmraData?.consumable2 : "",
-    Consumable3: pmmraData?.consumable3 ? pmmraData?.consumable3 : "",
-    Consumable4: pmmraData?.consumable4 ? pmmraData?.consumable4 : "",
-    Consumable5: pmmraData?.consumable5 ? pmmraData?.consumable5 : "",
-    addReplacespare1qty: pmmraData?.addiReplaceSpare1Qty
-      ? pmmraData?.addiReplaceSpare1Qty
-      : "",
-    addReplacespare2qty: pmmraData?.addiReplaceSpare2Qty
-      ? pmmraData?.addiReplaceSpare2Qty
-      : "",
-    addReplacespare3qty: pmmraData?.addiReplaceSpare3Qty
-      ? pmmraData?.addiReplaceSpare3Qty
-      : "",
-    Consumable1qty: pmmraData?.consumable1Qty ? pmmraData?.consumable1Qty : "",
-    Consumable2qty: pmmraData?.consumable2Qty ? pmmraData?.consumable2Qty : "",
-    Consumable3qty: pmmraData?.consumable3Qty ? pmmraData?.consumable3Qty : "",
-    Consumable4qty: pmmraData?.consumable4Qty ? pmmraData?.consumable4Qty : "",
-    Consumable5qty: pmmraData?.consumable5Qty ? pmmraData?.consumable5Qty : "",
-    userfield1: pmmraData?.userField1 ? pmmraData?.userField1 : "",
-    userfield2: pmmraData?.userField2 ? pmmraData?.userField2 : "",
-    userfield3: pmmraData?.userField3 ? pmmraData?.userField3 : "",
-    userfield4: pmmraData?.userField4 ? pmmraData?.userField4 : "",
-    userfield5: pmmraData?.userField5 ? pmmraData?.userField5 : "",
-    Items: pmmraData?.significantItem
-      ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem }
-      : "",
-    condition: pmmraData?.conditionMonitrTsk
-      ? {
-        label: pmmraData?.conditionMonitrTsk,
-        value: pmmraData?.conditionMonitrTsk,
-      }
-      : "",
-    failure: pmmraData?.failureFindTsk
-      ? { label: pmmraData?.failureFindTsk, value: pmmraData?.failureFindTsk }
-      : "",
-    redesign: pmmraData?.reDesign
-      ? { label: pmmraData?.reDesign, value: pmmraData?.reDesign }
-      : "",
-    acceptable: pmmraData?.criticalityAccept
-      ? {
-        label: pmmraData?.criticalityAccept,
-        value: pmmraData?.criticalityAccept,
-      }
-      : "",
-    lubrication: pmmraData?.LubricationservceTsk
-      ? {
-        label: pmmraData?.LubricationservceTsk,
-        value: pmmraData?.LubricationservceTsk,
-      }
-      : "",
-    task: pmmraData?.restoreDiscrdTsk
-      ? {
-        label: pmmraData?.restoreDiscrdTsk,
-        value: pmmraData?.restoreDiscrdTsk,
-      }
-      : "",
-    combination: pmmraData?.combinationOfTsk
-      ? {
-        label: pmmraData?.combinationOfTsk,
-        value: pmmraData?.combinationOfTsk,
-      }
-      : "",
-  };
+const InitialValues = {
+  name: name,
+  partnumber: partNumber,
+  repairable: mttrRepairable,
+  spare: mttrSpare,
+  levelofrepair: mttrLevelOfRepair,
+  levelofreplace: mttrLevelOfReplace,
+  reference: reference,
+  category: category,
+  parttype: partType,
+  quantity: quantity,
+  fmecaId: fmecaFillterData?.fmecaId,
+  
+  // Use imported Excel data for all fields, fall back to FMECA data or empty
+  endeffect: importExcelData?.endeffect || fmecaFillterData?.endEffect || "",
+  reliability: importExcelData?.reliability || fmecaFillterData?.realibilityImpact || "",
+  severity: importExcelData?.severity || fmecaFillterData?.severity || "",
+  safetyimpact: importExcelData?.safetyimpact || fmecaFillterData?.safetyImpact || "",
+  frequency: importExcelData?.frequency || fmecaFillterData?.frequency || "",
+  riskindex: importExcelData?.riskindex || fmecaFillterData?.riskIndex || "",
+  
+  // Map all other fields from imported Excel data
+  rcmnotes: importExcelData?.rcmnotes || pmmraData?.rcmNotes || "",
+  pmtaskid: importExcelData?.pmtaskid || pmmraData?.pmTaskId || "",
+  PMtasktype: importExcelData?.PMtasktype || pmmraData?.pmTaskType || "",
+  taskintervalFrequency: importExcelData?.taskintervalFrequency || pmmraData?.taskIntrvlFreq || "",
+  latitudeFrequency: importExcelData?.latitudeFrequency || pmmraData?.LatitudeFreqTolrnc || "",
+  scheduledMaintenanceTask: importExcelData?.scheduledMaintenanceTask || pmmraData?.scheduleMaintenceTsk || "",
+  taskInterval: importExcelData?.taskInterval || pmmraData?.tskInteralDetermination || "",
+  taskDescription: importExcelData?.taskDescription || pmmraData?.taskDesc || "",
+  tasktimeML1: importExcelData?.tasktimeML1 || pmmraData?.tskTimeML1 || "",
+  tasktimeML2: importExcelData?.tasktimeML2 || pmmraData?.tskTimeML2 || "",
+  tasktimeML3: importExcelData?.tasktimeML3 || pmmraData?.tskTimeML3 || "",
+  tasktimeML4: importExcelData?.tasktimeML4 || pmmraData?.tskTimeML4 || "",
+  tasktimeML5: importExcelData?.tasktimeML5 || pmmraData?.tskTimeML5 || "",
+  tasktimeML6: importExcelData?.tasktimeML6 || pmmraData?.tskTimeML6 || "",
+  tasktimeML7: importExcelData?.tasktimeML7 || pmmraData?.tskTimeML7 || "",
+  skill1: importExcelData?.skill1 || pmmraData?.skill1 || "",
+  skill1nos: importExcelData?.skill1nos || pmmraData?.skillOneNos || "",
+  skill1contribution: importExcelData?.skill1contribution || pmmraData?.skillOneContribution || "",
+  skill2: importExcelData?.skill2 || pmmraData?.skill2 || "",
+  skill2nos: importExcelData?.skill2nos || pmmraData?.skillTwoNos || "",
+  skill2contribution: importExcelData?.skill2contribution || pmmraData?.skillTwoContribution || "",
+  skill3: importExcelData?.skill3 || pmmraData?.skill3 || "",
+  skill3nos: importExcelData?.skill3nos || pmmraData?.skillThreeNos || "",
+  skill3contribution: importExcelData?.skill3contribution || pmmraData?.skillThreeContribution || "",
+  addReplacespare1: importExcelData?.addReplacespare1 || pmmraData?.addiReplaceSpare1 || "",
+  addReplacespare1qty: importExcelData?.addReplacespare1qty || pmmraData?.addiReplaceSpare1Qty || "",
+  addReplacespare2: importExcelData?.addReplacespare2 || pmmraData?.addiReplaceSpare2 || "",
+  addReplacespare2qty: importExcelData?.addReplacespare2qty || pmmraData?.addiReplaceSpare2Qty || "",
+  addReplacespare3: importExcelData?.addReplacespare3 || pmmraData?.addiReplaceSpare3 || "",
+  addReplacespare3qty: importExcelData?.addReplacespare3qty || pmmraData?.addiReplaceSpare3Qty || "",
+  Consumable1: importExcelData?.Consumable1 || pmmraData?.consumable1 || "",
+  Consumable1qty: importExcelData?.Consumable1qty || pmmraData?.consumable1Qty || "",
+  Consumable2: importExcelData?.Consumable2 || pmmraData?.consumable2 || "",
+  Consumable2qty: importExcelData?.Consumable2qty || pmmraData?.consumable2Qty || "",
+  Consumable3: importExcelData?.Consumable3 || pmmraData?.consumable3 || "",
+  Consumable3qty: importExcelData?.Consumable3qty || pmmraData?.consumable3Qty || "",
+  Consumable4: importExcelData?.Consumable4 || pmmraData?.consumable4 || "",
+  Consumable4qty: importExcelData?.Consumable4qty || pmmraData?.consumable4Qty || "",
+  Consumable5: importExcelData?.Consumable5 || pmmraData?.consumable5 || "",
+  Consumable5qty: importExcelData?.Consumable5qty || pmmraData?.consumable5Qty || "",
+  userfield1: importExcelData?.userfield1 || pmmraData?.userField1 || "",
+  userfield2: importExcelData?.userfield2 || pmmraData?.userField2 || "",
+  userfield3: importExcelData?.userfield3 || pmmraData?.userField3 || "",
+  userfield4: importExcelData?.userfield4 || pmmraData?.userField4 || "",
+  userfield5: importExcelData?.userfield5 || pmmraData?.userField5 || "",
+  
+  // Select fields (these need special handling with {label, value} objects)
+  Evident1: pmmraData?.LossOfEvident ? { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } : "",
+  Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
+  condition: pmmraData?.conditionMonitrTsk ? { label: pmmraData?.conditionMonitrTsk, value: pmmraData?.conditionMonitrTsk } : "",
+  failure: pmmraData?.failureFindTsk ? { label: pmmraData?.failureFindTsk, value: pmmraData?.failureFindTsk } : "",
+  redesign: pmmraData?.reDesign ? { label: pmmraData?.reDesign, value: pmmraData?.reDesign } : "",
+  acceptable: pmmraData?.criticalityAccept ? { label: pmmraData?.criticalityAccept, value: pmmraData?.criticalityAccept } : "",
+  lubrication: pmmraData?.LubricationservceTsk ? { label: pmmraData?.LubricationservceTsk, value: pmmraData?.LubricationservceTsk } : "",
+  task: pmmraData?.restoreDiscrdTsk ? { label: pmmraData?.restoreDiscrdTsk, value: pmmraData?.restoreDiscrdTsk } : "",
+  combination: pmmraData?.combinationOfTsk ? { label: pmmraData?.combinationOfTsk, value: pmmraData?.combinationOfTsk } : "",
+  taskIntervalunit: pmmraData?.taskIntrvlUnit ? { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit } : "",
+};
   return (
     <div style={{ marginTop: "90px" }} className="mx-4">
       {isLoading ? (
@@ -1573,8 +1457,8 @@ export default function PMMRA(props) {
               <Tooltip placement="right" title="Import">
                 <div style={{ marginRight: "8px" }}>
                   <label htmlFor="file-input" className="import-export-btn">
-                    <FontAwesomeIcon icon={faFileDownload} 
-                    style={{ width:"15px"}}/>
+                    <FontAwesomeIcon icon={faFileDownload}
+                      style={{ width: "15px" }} />
                   </label>
                   <input
                     type="file"
@@ -1588,7 +1472,7 @@ export default function PMMRA(props) {
               <Tooltip placement="left" title="Export">
                 <Button
                   className="import-export-btn"
-               style={{ marginLeft: "10px", borderStyle: "none",width:"40px",minWidth:"40px",padding:"0px", }}
+                  style={{ marginLeft: "10px", borderStyle: "none", width: "40px", minWidth: "40px", padding: "0px", }}
 
                   onClick={() => {
                     exportToExcel(InitialValues);
@@ -1913,6 +1797,12 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Evident1"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Significant Item ?</Label>
@@ -2012,6 +1902,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Items"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -2117,6 +2012,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="condition"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -2221,6 +2121,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="failure"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Redesign?</Label>
@@ -2324,6 +2229,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="redesign"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -2431,6 +2341,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="acceptable"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -2537,6 +2452,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="lubrication"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -2638,6 +2558,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="task"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -2744,6 +2669,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="combination"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>RCM Notes</Label>
@@ -2847,6 +2777,11 @@ export default function PMMRA(props) {
                                     }}
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="rcmnotes"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -3032,6 +2967,11 @@ export default function PMMRA(props) {
                                       title="PM Task Type"
                                     />
                                   )}
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="PMtasktype"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -3120,6 +3060,7 @@ export default function PMMRA(props) {
                                     <Form.Control
                                       name="taskintervalFrequency"
                                       id="taskintervalFrequency"
+                                      type="number"
                                       placeholder="Task Interval Frequency"
                                       value={values.taskintervalFrequency}
                                       onChange={handleChange}
@@ -3128,6 +3069,11 @@ export default function PMMRA(props) {
                                       title="Task Interval Frequency"
                                     />
                                   )}
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="taskintervalFrequency"
+                                  />
                                 </Form.Group>
                               </Col>
                               <Col md={6}>
@@ -3221,6 +3167,11 @@ export default function PMMRA(props) {
                                       title="Task Interval Unit"
                                     />
                                   )}
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="taskIntervalunit"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -3303,6 +3254,7 @@ export default function PMMRA(props) {
                                     <Form.Control
                                       name="taskInterval"
                                       id="taskInterval"
+                                      type="number"
                                       placeholder="Task Interval"
                                       value={values.taskInterval}
                                       onChange={handleChange}
@@ -3311,6 +3263,12 @@ export default function PMMRA(props) {
                                       title="Task Interval"
                                     />
                                   )}
+
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="taskInterval"
+                                  />
                                 </Form.Group>
                               </Col>
                               <Col md={6}>
@@ -3405,6 +3363,11 @@ export default function PMMRA(props) {
                                       title="Scheduled Maintenance Task"
                                     />
                                   )}
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="scheduledMaintenanceTask"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -3498,6 +3461,11 @@ export default function PMMRA(props) {
                                       title="Task Description"
                                     />
                                   )}
+                                  <ErrorMessage
+                                    className="error text-danger"
+                                    component="span"
+                                    name="taskDescription"
+                                  />
                                 </Form.Group>
                               </Col>
                             </Row>
@@ -3587,6 +3555,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML1"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML1"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML2</Label>
@@ -3666,6 +3639,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML2"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML2"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML3</Label>
@@ -3745,6 +3723,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML3"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML3"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML4</Label>
@@ -3824,6 +3807,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML4"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML4"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6} className="mt-4 mb-4">
@@ -3905,6 +3893,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML5"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML5"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML6</Label>
@@ -3984,6 +3977,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML6"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML6"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML7</Label>
@@ -4063,6 +4061,11 @@ export default function PMMRA(props) {
                                     title="Task Time ML7"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="tasktimeML7"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -4128,9 +4131,9 @@ export default function PMMRA(props) {
                                               : "disabled"
                                           }
                                           onChange={(e) => {
-                                            console.log("valueof eeee", e)
+                                            console.log("valueof eeeee", e)
                                             setFieldValue("skill1", e.value);
-                                            getAllConnectedLibrary(e.value,"skill1");
+                                            getAllConnectedLibrary(e.value, "skill1");
                                           }}
                                         />
                                       </>
@@ -4148,6 +4151,11 @@ export default function PMMRA(props) {
                                     title="Skill 1"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill1"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 1 Nos</Label>
@@ -4226,6 +4234,11 @@ export default function PMMRA(props) {
                                     title="Skill 1nos"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill1nos"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -4313,6 +4326,11 @@ export default function PMMRA(props) {
                                     title="Skill 1 Contribution"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill1contribution"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -4392,6 +4410,11 @@ export default function PMMRA(props) {
                                     title="Skill 2"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill2"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 2 Nos</Label>
@@ -4470,6 +4493,11 @@ export default function PMMRA(props) {
                                     title="Skill 2nos"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill2nos"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -4557,6 +4585,11 @@ export default function PMMRA(props) {
                                     title="Skill 2 Contribution"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill2contribution"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -4638,6 +4671,11 @@ export default function PMMRA(props) {
                                     title="Skill 3"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill3"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 3 Nos</Label>
@@ -4716,6 +4754,11 @@ export default function PMMRA(props) {
                                     title="Skill 3nos"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill3nos"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
@@ -4803,6 +4846,11 @@ export default function PMMRA(props) {
                                     title="Skill 3 Contribution"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="skill3contribution"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -4898,6 +4946,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare1"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare1"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -4988,6 +5041,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare1 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare1qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5077,6 +5135,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare2"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare2"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5166,6 +5229,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare2 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare2qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5255,6 +5323,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare3"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare3"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5345,6 +5418,11 @@ export default function PMMRA(props) {
                                     title="Additional Replacement Spare3 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="addReplacespare3qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5428,6 +5506,11 @@ export default function PMMRA(props) {
                                     title="Consumable 1"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable1"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5512,6 +5595,11 @@ export default function PMMRA(props) {
                                     title="Consumable 1 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable1qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5596,6 +5684,11 @@ export default function PMMRA(props) {
                                     title="Consumable 2"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable2"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5680,6 +5773,11 @@ export default function PMMRA(props) {
                                     title="Consumable 2 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable2qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5763,6 +5861,11 @@ export default function PMMRA(props) {
                                     title="Consumable 3"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable3"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -5847,6 +5950,11 @@ export default function PMMRA(props) {
                                     title="Consumable 3 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable3qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -5931,6 +6039,11 @@ export default function PMMRA(props) {
                                     title="Consumable 4"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable4"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -6015,6 +6128,11 @@ export default function PMMRA(props) {
                                     title="Consumable 4 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable4qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -6099,6 +6217,11 @@ export default function PMMRA(props) {
                                     title="Consumable 5"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable5"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -6183,6 +6306,11 @@ export default function PMMRA(props) {
                                     title="Consumable 5 Qty"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Consumable5qty"
+                                />
                               </Form.Group>
                             </Col>
                           </Row>
@@ -6273,6 +6401,11 @@ export default function PMMRA(props) {
                                     title="User Field 1"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="userfield1"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 2</Label>
@@ -6351,6 +6484,11 @@ export default function PMMRA(props) {
                                     title="User Field 2"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="userfield2"
+                                />
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 3</Label>
@@ -6429,6 +6567,11 @@ export default function PMMRA(props) {
                                     title="User Field 3"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="userfield3"
+                                />
                               </Form.Group>
                             </Col>
                             <Col md={6} className="mt-4 mb-4">
@@ -6509,6 +6652,11 @@ export default function PMMRA(props) {
                                     title="User Field 4"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="userfield4"
+                                />
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User field 5</Label>
@@ -6587,6 +6735,11 @@ export default function PMMRA(props) {
                                     title="User Field 5"
                                   />
                                 )}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="userfield5"
+                                />
                               </Form.Group>
                               {/* <Form.Group className="mt-3">
                           <Label>User field 6</Label>

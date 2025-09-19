@@ -480,8 +480,9 @@ function Index(props) {
         setPrefillData(data);
         setspareId(data?.id);
         setSuccesMessage(res?.data?.message);
-        showModal();
-        window.location.reload();
+        // showModal();
+        toast.success("Updated Successfully");
+        // window.location.reload();
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -889,7 +890,7 @@ function Index(props) {
                               <Form.Control
                                 className="mt-1 "
                                 name="afterSerialProductionPrice1"
-                                type="text"
+                                type="number"
                                 value={values.afterSerialProductionPrice1}
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -902,7 +903,7 @@ function Index(props) {
                               <Form.Control
                                 className="mt-1 "
                                 name="afterSerialProductionPrice3"
-                                type="text"
+                                type="number"
                                 value={values.afterSerialProductionPrice3}
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -917,7 +918,7 @@ function Index(props) {
                               <Form.Control
                                 className="mt-1 "
                                 name="moq_1Price"
-                                type="text"
+                                type="number"
                                 value={values.moq_1Price}
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -930,7 +931,7 @@ function Index(props) {
                               <Form.Control
                                 className="mt-1 "
                                 name="moq_3Price"
-                                type="text"
+                                type="number"
                                 value={values.moq_3Price}
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -945,7 +946,7 @@ function Index(props) {
                               <Form.Control
                                 className="mt-1 "
                                 name="afterSerialProductionPrice2"
-                                type="text"
+                                type="number"
                                 value={values.afterSerialProductionPrice2}
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -958,7 +959,7 @@ function Index(props) {
                               <Form.Control
                                 className="mt-1  "
                                 name="annualPrice"
-                                type="text"
+                                type="number"
                                 value={values.annualPrice}
                                 onBlur={handleBlur}
                                 onChange={handleChange}
@@ -973,7 +974,7 @@ function Index(props) {
                               <Form.Control
                                 className="mt-1 "
                                 name="moq_2Price"
-                                type="text"
+                                type="number"
                                 value={values.moq_2Price}
                                 onBlur={handleBlur}
                                 onChange={handleChange}

@@ -370,3 +370,139 @@ border-radius: 8px !important;
 // }
 // .accodrion-header.active:hover {
 //   --bs-accordion-active-bg: #fff;}
+
+// Fix for nav-list visibility in both states
+.sidebar .nav-list,
+.sidebar.active .nav-list {
+  margin-top: 75px;
+  z-index: 0;
+  height: calc(100vh - 100px);
+  overflow-y: auto;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+// Ensure menu-list is always visible
+.sidebar .nav-list .menu-list,
+.sidebar.active .nav-list .menu-list {
+  position: relative;
+  height: 50px;
+  width: 100%;
+  list-style: none;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+// Fix span text visibility
+.sidebar .nav-list .menu-list a span {
+  color: #fff;
+  align-items: center;
+  text-decoration: none;
+  border-radius: 8px;
+  display: none;
+}
+
+.sidebar.active .nav-list .menu-list a span {
+  display: flex !important;
+  color: #fff;
+  align-items: center;
+  text-decoration: none;
+  border-radius: 8px;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+// Ensure all content is visible in expanded state
+.sidebar.active {
+  width: 260px;
+  background-color: var(--primary-color);
+  color: var(--secondary-color);
+  top: 0;
+  left: 0;
+  height: 100vh;
+  padding: 0px 14px 6px 14px;
+  z-index: 1000;
+  position: fixed;
+  
+  .nav-list {
+    display: block !important;
+    visibility: visible !important;
+    
+    > div {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+  }
+}
+
+// Fix for Employee role specific content
+.sidebar.active .nav-list > div {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+// Remove any overflow hidden that might be hiding content
+.sidebar,
+.sidebar.active {
+  overflow: visible !important;
+  
+  .nav-list {
+    overflow: visible !important;
+  }
+}
+// Debug styles
+.debug-sidebar {
+  border: 2px solid red !important;
+}
+
+.debug-employee-content {
+  border: 2px solid green !important;
+}
+
+// Force visibility for debugging
+.sidebar.active .nav-list .debug-employee-content {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+.nav-list-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 10px;
+  padding-bottom: 20px;
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  
+
+  -ms-overflow-style: none;  
+  scrollbar-width: none; 
+}
+
+.sidebar, .sidebar.active {
+  display: flex;
+  flex-direction: column;
+}
+
+// Ensure logo content stays fixed at the top
+.logo-content {
+  flex-shrink: 0;
+}
+
+* {
+  position: relative;
+}
+:root {
+  --background-color: #ffffff;
+  --primary-color: oklch(45.12% 0.267 var(--user-theme-color-hue));
+  --secondary-color: oklch(94.45% 0.03 268.81);
+  --success-color:oklch(41.53% 0.06 214.79);
+}
+
