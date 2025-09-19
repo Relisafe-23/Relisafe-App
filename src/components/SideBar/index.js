@@ -168,7 +168,6 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
 
   useEffect(() => {
     getProjectPermission();
-    console.log("check......", hue)
     projectSidebar();
     const root = document.querySelector(":root");
     root.style.setProperty("--primary-color", `oklch(45.12% 0.267 ${hue})`);
@@ -207,6 +206,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
             />
           )}
         </div>
+        <div className="nav-list-container">
         <div className="nav-list">
           {role == "SuperAdmin" ? (
             <div>
@@ -276,7 +276,8 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
               </div> */}
             </div>
           ) : role === "admin" || (isOwner === true && createdBy === userId) ? (
-            <div>
+              <div className="debug-admin-content">
+                  {!projectId && (
               <div className="menu-list">
                 <NavLink
                   to={"/user"}
@@ -297,7 +298,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
                   <span>Users</span>
                 </NavLink>
               </div>
-
+                  )}
               <div className="menu-list mt-1">
                 <NavLink
                   to={"/project/list"}
@@ -701,7 +702,8 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
               </div>
             </div>
           ) : role === "Employee" ? (
-            <div>
+                <div className="debug-employee-content" style={{border: '2px solid yellow'}}>
+                    {!projectId && (
               <div className="menu-list">
                 <NavLink
                   to={"/user"}
@@ -723,7 +725,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
                   <span>Users</span>
                 </NavLink>
               </div>
-
+                    )}
               <div className="menu-list mt-1">
                 <NavLink
                   to={{
@@ -1240,6 +1242,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
               </Button>
             </Modal.Footer>
           </Modal>
+          </div>
         </div>
       </div>
     </div>
