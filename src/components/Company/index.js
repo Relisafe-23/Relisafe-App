@@ -64,7 +64,9 @@ function Company() {
       .required(" Name is required")
       .matches(/^[aA-zZ\s]+$/, "Enter valid name")
       .matches(/^[A-Z]/, "First Letter Must Be In Capital"),
-    phoneNumber: Yup.number().nullable("Enter Valid Number"),
+  phoneNumber: Yup.string()
+    .required('Phone number is required')
+    .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
     role: Yup.object().typeError("Company Name is Required").nullable(""),
     companyName: Yup.object().typeError("Company Name is Required").required("Company Name is Required"),
   });
@@ -251,7 +253,10 @@ console.log("currentCom.....pany",currentCompany)
           CREATE COMPANY
         </Button>
       </div>
-      <Modal show={show} size="lg" centered backdrop="static">
+      <Modal show={show} size="lg" centered backdrop="static"   onHide={() => {
+    setShow(false);
+    setSelectCategory(null); // Reset the selection when modal closes
+  }}>
         <div className="m-3">
           <Modal.Body>
             <div className="mttr-sec mt-3">
@@ -460,7 +465,8 @@ console.log("currentCom.....pany",currentCompany)
                           className="delete-cancel-btn  me-2 "
                           variant="outline-secondary"
                           type="reset"
-                          onClick={() => setShow(false)}
+                          onClick={() => { setShow(false)
+                             setSelectCategory(null); }}
                         >
                           CANCEL
                         </Button>
@@ -518,7 +524,10 @@ console.log("currentCom.....pany",currentCompany)
           </Table>
         </div>
       </div>
-      <Modal show={modalPopup} keyboard={false} backdrop="static" centered>
+      <Modal show={modalPopup} keyboard={false} backdrop="static" centered   onHide={() => {
+    setNewCompany(false);
+    setSelectCompanyName(""); // Clear the input field
+  }}>
         <div className="d-flex justify-content-center mt-5">
           {successIcon === true ? (
             <FontAwesomeIcon icon={faCircleCheck} fontSize={"40px"} color="#1D5460" />
@@ -560,6 +569,7 @@ console.log("currentCom.....pany",currentCompany)
                   type="reset"
                   onClick={() => {
                     setNewCompany(false);
+                     setSelectCompanyName("");
                   }}
                 >
                   CANCEL

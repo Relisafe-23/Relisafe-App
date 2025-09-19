@@ -1049,6 +1049,7 @@ const MTTRPrediction = (props, active) => {
   const checkingMandatoryFields = (values) => {
     if (validateData > 0) {
       const companyId = localStorage.getItem("companyId");
+      console.log('mMax',values)
       const userId = localStorage.getItem("userId");
       Api.post("api/v1/mttrPrediction", {
         companyId: companyId,
