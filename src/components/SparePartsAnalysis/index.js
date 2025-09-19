@@ -233,12 +233,18 @@ function Index(props) {
       Lcc_Price_Validity: value.lccPriceValidity,
       Recomm_Spare_Quantity: value.recommendedSpareQuantity,
       Calc_Spare_Qty: value.calculatedSpareQuantity,
+      warranty: value.warranty?.value || value.warranty || "",
+      Spare:value.spare?.value || value.spare || "",
+      Recommended_spare: value.recommended?.value || value.recommended || "",
     };
 
     // if (originalData.length > 1) working
     // if (originalData[1].length > 0)
     // {
-    const hasData = Object.values(originalData).some((value) => !!value);
+    // const hasData = Object.values(originalData).some((value) => !!value);
+      const hasData = Object.values(originalData).some(
+    (val) => val !== null && val !== undefined && val.toString().trim() !== ""
+  );
 
     if (hasData) {
       const dataArray = [];

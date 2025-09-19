@@ -157,11 +157,11 @@ const MTTRPrediction = (props, active) => {
     if (!validExtensions.includes(fileExtension)) {
       // alert('Please upload a valid Excel file (either .xlsx or .xls)');
       toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+        position: toast.POSITION.TOP_RIGHT,
       });
-      return; // Exit the function if the file is not an Excel file
-    }
+      return;
 
+    }
     const reader = new FileReader();
     reader.onload = (event) => {
       const bstr = event.target.result;
@@ -169,9 +169,7 @@ const MTTRPrediction = (props, active) => {
       const workSheetName = workBook.SheetNames[0];
       const workSheet = workBook.Sheets[workSheetName];
       const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-      // console.log(excelData);
-
-      // if (excelData.length > 1) {
+   
       if (excelData.length > 1) {
         const headers = excelData[0];
         const rows = excelData.slice(1);
@@ -223,6 +221,7 @@ const MTTRPrediction = (props, active) => {
       remarks: values.remarks,
     })
       .then((res) => {
+        console.log("res123..",res)
         const mttrId = res?.data?.data?.id;
         setSuccessMessage(res?.data?.message);
         setMttrId(res?.data?.data?.id);
@@ -238,38 +237,33 @@ const MTTRPrediction = (props, active) => {
       });
   };
 
-  const exportToExcel = (value, productName) => {
-    const originalData = {
-      remarks: value.remarks,
-    };
+const exportToExcel = (value, productName) => {
+  if (!value) {
+    toast.error("Export Failed !! No Data Found", { position: "top-right" });
+    return;
+  }
 
-    // if (originalData.length > 0) {
-
-    const hasData = Object.values(originalData).some((value) => !!value);
-
-    if (hasData) {
-      const dataArray = [];
-
-      dataArray.push(originalData);
-      const ws = XLSX?.utils?.json_to_sheet(dataArray);
-      const wb = XLSX.utils?.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "FormData");
-      const fileName = `${""}MTTR.xlsx`;
-      XLSX.writeFile(wb, fileName);
-    } else {
-      toast("Export Failed !! No Data Found", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        type: "error",
-      });
-    }
+  const originalData = {
+    remarks: value.remarks || "",
+    productName: productName || "", // optional extra field
   };
+
+  const hasData = Object.values(originalData).some((val) => val && val.toString().trim() !== "");
+
+  if (hasData) {
+    const ws = XLSX.utils.json_to_sheet([originalData]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "FormData");
+
+    const fileName = `${productName || "MTTR"}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+   console.log("fileName..",fileName)
+    toast.success("Export Successful!", { position: "top-right" });
+  } else {
+    toast.error("Export Failed !! No Data Found", { position: "top-right" });
+  }
+};
+
 
   const handleCancelClick = () => {
     const shouldReloadPage = true;
@@ -1066,10 +1060,12 @@ const MTTRPrediction = (props, active) => {
         userId: userId,
       })
         .then((res) => {
+          console.log("res1..",res)
           const mttrId = res?.data?.data?.id;
           setSuccessMessage(res?.data?.message);
           setMttrId(res?.data?.data?.id);
           NextPage();
+         
         })
         .catch((error) => {
           const errorStatus = error?.response?.status;
@@ -1085,7 +1081,7 @@ const MTTRPrediction = (props, active) => {
   const patchMttrData = (values) => {
     if (validateData > 0) {
       const companyId = localStorage.getItem("companyId");
-console.log("values.....",values)
+
       Api.patch(`/api/v1/mttrPrediction/${mttrId}`, {
         companyId: companyId,
         projectId: projectId,
@@ -1131,6 +1127,7 @@ console.log("values.....",values)
       },
     })
       .then((res) => {
+        console.log("res..",res)
         setMttrData(res?.data?.data);
         const data = res?.data?.data;
         setMttrId(res?.data?.data?.id ? res?.data?.data?.id : null);
@@ -1327,6 +1324,7 @@ console.log("values.....",values)
                                     onBlur={handleBlur}
                                     className="mt-1"
                                   />
+                                  {console.log("Values..",values)}
                                   {/* <ErrorMessage className="error text-danger" component="span" name="name" /> */}
                                 </Form.Group>
                               </Col>
@@ -1932,7 +1930,7 @@ console.log("values.....",values)
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                   />
-                       {console.log("mttrkjk...",values.mttr)}
+                    
                                 </Tooltip>
                                 <ErrorMessage
                                   className="text-danger"
@@ -1948,7 +1946,7 @@ console.log("values.....",values)
                                   type="number"
                                   name="mmax"
                                   disabled
-                                  min="0"
+                                  min="1"
                                   step="any"
                                   placeholder="Mmax"
                                   className="mt-1"
@@ -1956,6 +1954,7 @@ console.log("values.....",values)
                                   onChange={handleChange}
                                   onBlur={handleBlur}
                                 />
+                            
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
