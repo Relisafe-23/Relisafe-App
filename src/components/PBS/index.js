@@ -177,7 +177,7 @@ export default function PBS(props) {
     setISLoading(true);
     const companyId = localStorage.getItem("companyId");
     Api.post("api/v1/productBreakdownStructure", {
-      productName: values.name,
+      productName: values.productName,
       category: category.value,
       partNumber: values.partNumber,
       partType: partType ? partType : "-",
@@ -258,8 +258,10 @@ export default function PBS(props) {
       const heads = headers.map((head) => ({ title: head, field: head }));
       setColDefs(heads);
       fileData.splice(0, 1);
-      //setData(convertToJson(headers, fileData));
-      convertToJson(headers, fileData);
+      console.log("fileData", fileData);
+      console.log("headers", headers);
+      setData(convertToJson(headers, fileData));
+
     };
     reader.readAsBinaryString(file);
   };
@@ -374,7 +376,7 @@ export default function PBS(props) {
     const companyId = localStorage.getItem("companyId");
     const userId = localStorage.getItem("userId");
     Api.post("api/v1/productBreakdownStructure", {
-      productName: values.name,
+      productName: values.productName,
       category: category.value,
       partNumber: values.partNumber,
       partType: partType ? partType : "-",
@@ -438,7 +440,7 @@ export default function PBS(props) {
     const companyId = localStorage.getItem("companyId");
     const userId = localStorage.getItem("userId");
     Api.post("api/v1/product/", {
-      productName: values.name,
+      productName: values.productName,
       category: category.value,
 
       partType: partType ? partType : "-",
@@ -558,7 +560,7 @@ export default function PBS(props) {
     setISLoading(true);
     Api.patch(`/api/v1/product/update`, {
       productId: productId,
-      productName: values.name,
+      productName: values.productName,
       category: category.value,
       reference: values.referenceOrPosition,
       // environment: prefillEnviron.value,
@@ -669,7 +671,7 @@ export default function PBS(props) {
     });
   };
   const mainProductSchema = Yup.object().shape({
-    name: Yup.string().required("Name is required"),
+    productName: Yup.string().required("Name is required"),
     partNumber: Yup.string().required(" Part number is required"),
     referenceOrPosition: Yup.string().nullable(),
     quantity: Yup.number()
@@ -696,7 +698,8 @@ export default function PBS(props) {
 
   // Sort the data array using the custom sort function
   const sortedData = data.slice().sort(customSort);
-
+console.log("data",data)
+console.log("sortedData",sortedData)
 
   return (
     <div className="pbs-main px-4" style={{ marginTop: "90px" }}>
@@ -716,7 +719,7 @@ export default function PBS(props) {
             <Formik
               enableReinitialize={true}
               initialValues={{
-                name: patchName ? patchName : "",
+                productName: patchName ? patchName : "",
                 partNumber: partNumber ? partNumber : "",
                 partType: patchPartType
                   ? { label: patchPartType, value: patchPartType }
@@ -885,16 +888,16 @@ export default function PBS(props) {
                                       </Label>
                                       <Form.Control
                                         type="text"
-                                        name="name"
+                                        name="productName"
                                         placeholder="Name"
-                                        value={values.name}
+                                        value={values.productName}
                                         onChange={handleChange}
                                         onBlur={handleBlur}
                                       />
                                       <ErrorMessage
                                         className="error text-danger"
                                         component="span"
-                                        name="name"
+                                        name="productName"
                                       />
                                     </Form.Group>
                                   </Col>
