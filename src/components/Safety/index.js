@@ -63,8 +63,9 @@ function Index(props) {
       "productId",
       "id",
       "tableData",
-      "modeOfOperation",
+      // "modeOfOperation",
     ];
+
     // Create a new array with the unwanted columns removed from each object
     const modifiedTableData = tableData.map((row) => {
       const newRow = { ...row };
@@ -83,6 +84,7 @@ function Index(props) {
         title: columnName,
         field: columnName,
       }));
+          console.log('columnsToRemove',modifiedTableData)
 
       const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
         skipHeader: false,

@@ -265,22 +265,21 @@ avgday: Yup.number()
             "Only numbers allowed with max 20 digits and up to 4 decimal places"
           )
           .nullable(),
-          pdtlifeoptncycle: Yup.number()
-            .typeError("Pro life cycle must be a number")
-            .test("max-digits", "Maximum 25 digits before decimal allowed", (value) => {
-              if (value === undefined || value === null) return true;
-              const [intPart] = value.toString().split(".");
-              return intPart.length <= 25;
-            })
-            .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
-              if (value === undefined || value === null) return true;
-              return /^\d+(\.\d{1,4})?$/.test(value.toString());
-            })
-            .nullable(),
+          pdtlifeoptncycle: Yup.string()
+   .matches(
+    /^(?=.{1,29}$)\d{1,25}(\.\d{1,4})?$/,
+    "Maximum 25 digits before decimal and up to 4 digits after decimal (total 29 digits) allowed"
+  )
+       .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
+          if (value === undefined || value === null) return true;
+          return /^\d+(\.\d{1,4})?$/.test(value.toString());
+        })
+  .nullable(),
     daysopration: Yup.number()
   .typeError("You must specify a number")
   .min(1, "Minimum value is 1.")
   .max(366, "Maximum value is 366.")
+  .integer("Decimal values are not allowed") 
   .required("Days of operation per year is required"),
 
     temp: Yup.string().required("Temperature is required"),
@@ -289,6 +288,7 @@ avgday: Yup.number()
 avgcyclesperoperationnh: Yup.number()
   .typeError("You must specify a number")
   .required("Average cycles per operation is required")
+  
   .test(
     "max-3-decimals",
     "Only up to 3 decimal places are allowed",
