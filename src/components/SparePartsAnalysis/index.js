@@ -53,8 +53,8 @@ function Index(props) {
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-    ? props?.location?.state?.productId
-    : initialProductID;
+      ? props?.location?.state?.productId
+      : initialProductID;
   const history = useHistory();
   const userId = localStorage.getItem("userId");
   const [isOwner, setIsOwner] = useState(false);
@@ -75,6 +75,13 @@ function Index(props) {
     warranty: Yup.object().required("Warranty is required"),
     recommended: Yup.object().required("Recommended is required"),
     deliveryTimeDays: Yup.number().required("Delivery time required"),
+    annualPrice: Yup.string()
+    .nullable() // allows null
+    .notRequired() // not mandatory
+    .matches(
+      /^(100(\.0+)?|(\d{1,2}(\.\d+)?))%$/,
+      "Enter a valid percentage (e.g. 25%, 50.5%, 99.99%)"
+    ),
   });
 
   //chatGPt
@@ -234,7 +241,7 @@ function Index(props) {
       Recomm_Spare_Quantity: value.recommendedSpareQuantity,
       Calc_Spare_Qty: value.calculatedSpareQuantity,
       warranty: value.warranty?.value || value.warranty || "",
-      Spare:value.spare?.value || value.spare || "",
+      Spare: value.spare?.value || value.spare || "",
       Recommended_spare: value.recommended?.value || value.recommended || "",
     };
 
@@ -242,9 +249,9 @@ function Index(props) {
     // if (originalData[1].length > 0)
     // {
     // const hasData = Object.values(originalData).some((value) => !!value);
-      const hasData = Object.values(originalData).some(
-    (val) => val !== null && val !== undefined && val.toString().trim() !== ""
-  );
+    const hasData = Object.values(originalData).some(
+      (val) => val !== null && val !== undefined && val.toString().trim() !== ""
+    );
 
     if (hasData) {
       const dataArray = [];
@@ -413,7 +420,7 @@ function Index(props) {
 
   const getProductDatas = (treeId) => {
     const companyId = localStorage.getItem("companyId");
-    console.log(" treeStructureId",  treeStructureId);
+    console.log(" treeStructureId", treeStructureId);
     console.log("treeId", treeId);
 
     Api.get("/api/v1/sparePartsAnalysis/details", {
@@ -421,7 +428,7 @@ function Index(props) {
         projectId: projectId,
         productId: productId,
         companyId: companyId,
-        treeStructureId: treeStructureId? treeStructureId : treeId,
+        treeStructureId: treeStructureId ? treeStructureId : treeId,
         userId: userId,
       },
     })
@@ -538,6 +545,8 @@ function Index(props) {
     setOpen(false);
   };
 
+  {console.log(prefillData,"prefillData")}
+
   return (
     <div className=" mx-4" style={{ marginTop: "90px" }}>
       {isLoading ? (
@@ -551,75 +560,75 @@ function Index(props) {
               : "",
             warranty: prefillData?.warrantySpare
               ? {
-                  label: prefillData?.warrantySpare,
-                  value: prefillData?.warrantySpare,
-                }
+                label: prefillData?.warrantySpare,
+                value: prefillData?.warrantySpare,
+              }
               : "",
             recommended: prefillData?.recommendedSpare
               ? {
-                  label: prefillData?.recommendedSpare,
-                  value: prefillData?.recommendedSpare,
-                }
+                label: prefillData?.recommendedSpare,
+                value: prefillData?.recommendedSpare,
+              }
               : "",
             deliveryTimeDays: prefillData?.deliveryTimeDays
               ? prefillData?.deliveryTimeDays
               : importExcelData?.Delivery_Days
-              ? importExcelData?.Delivery_Days
-              : "",
+                ? importExcelData?.Delivery_Days
+                : "",
 
             lccPriceValidity: prefillData?.lccPriceValidity
               ? prefillData?.lccPriceValidity
               : importExcelData?.Lcc_Price_Validity
-              ? importExcelData?.Lcc_Price_Validity
-              : "",
+                ? importExcelData?.Lcc_Price_Validity
+                : "",
             afterSerialProductionPrice1:
               prefillData?.afterSerialProductionPrice1
                 ? prefillData?.afterSerialProductionPrice1
                 : importExcelData?.Serial_Production_Price1
-                ? importExcelData?.Serial_Production_Price1
-                : "",
+                  ? importExcelData?.Serial_Production_Price1
+                  : "",
             afterSerialProductionPrice2:
               prefillData?.afterSerialProductionPrice2
                 ? prefillData?.afterSerialProductionPrice2
                 : importExcelData?.Serial_Production_Price2
-                ? importExcelData?.Serial_Production_Price2
-                : "",
+                  ? importExcelData?.Serial_Production_Price2
+                  : "",
             afterSerialProductionPrice3:
               prefillData?.afterSerialProductionPrice3
                 ? prefillData?.afterSerialProductionPrice3
                 : importExcelData?.Serial_Production_Price3
-                ? importExcelData?.Serial_Production_Price3
-                : "",
+                  ? importExcelData?.Serial_Production_Price3
+                  : "",
             moq_1Price: prefillData?.price1MOQ
               ? prefillData?.price1MOQ
               : importExcelData?.Moq_Price_1
-              ? importExcelData?.Moq_Price_1
-              : "",
+                ? importExcelData?.Moq_Price_1
+                : "",
             moq_2Price: prefillData?.price2MOQ
               ? prefillData?.price2MOQ
               : importExcelData?.Moq_Price_2
-              ? importExcelData?.Moq_Price_2
-              : "",
+                ? importExcelData?.Moq_Price_2
+                : "",
             moq_3Price: prefillData?.price3MOQ
               ? prefillData?.price3MOQ
               : importExcelData?.Moq_Price_3
-              ? importExcelData?.Moq_Price_3
-              : "",
+                ? importExcelData?.Moq_Price_3
+                : "",
             annualPrice: prefillData?.annualPriceEscalationPercentage
               ? prefillData?.annualPriceEscalationPercentage
               : importExcelData?.Annual_Price
-              ? importExcelData?.Annual_Price
-              : "",
+                ? importExcelData?.Annual_Price
+                : "",
             calculatedSpareQuantity: calculatedSpareQuantity
               ? calculatedSpareQuantity
               : importExcelData?.Calc_Spare_Qty
-              ? importExcelData?.Calc_Spare_Qty
-              : "",
+                ? importExcelData?.Calc_Spare_Qty
+                : "",
             recommendedSpareQuantity: recommendedSpareQuantity
               ? recommendedSpareQuantity
               : importExcelData?.Recomm_Spare_Quantity
-              ? importExcelData?.Recomm_Spare_Quantity
-              : "",
+                ? importExcelData?.Recomm_Spare_Quantity
+                : "",
           }}
           validationSchema={loginSchema}
           onSubmit={(values, { resetForm }) =>
@@ -644,9 +653,9 @@ function Index(props) {
                   <fieldset
                     disabled={
                       writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
                         ? null
                         : "disabled"
                     }
@@ -743,9 +752,9 @@ function Index(props) {
                                 onBlur={handleBlur}
                                 isDisabled={
                                   writePermission === true ||
-                                  writePermission === "undefined" ||
-                                  role === "admin" ||
-                                  (isOwner === true && createdBy === userId)
+                                    writePermission === "undefined" ||
+                                    role === "admin" ||
+                                    (isOwner === true && createdBy === userId)
                                     ? null
                                     : "disabled"
                                 }
@@ -781,9 +790,9 @@ function Index(props) {
                                 type="select"
                                 isDisabled={
                                   writePermission === true ||
-                                  writePermission === "undefined" ||
-                                  role === "admin" ||
-                                  (isOwner === true && createdBy === userId)
+                                    writePermission === "undefined" ||
+                                    role === "admin" ||
+                                    (isOwner === true && createdBy === userId)
                                     ? null
                                     : "disabled"
                                 }
@@ -823,9 +832,9 @@ function Index(props) {
                                 type="select"
                                 isDisabled={
                                   writePermission === true ||
-                                  writePermission === "undefined" ||
-                                  role === "admin" ||
-                                  (isOwner === true && createdBy === userId)
+                                    writePermission === "undefined" ||
+                                    role === "admin" ||
+                                    (isOwner === true && createdBy === userId)
                                     ? null
                                     : "disabled"
                                 }
@@ -959,10 +968,15 @@ function Index(props) {
                               <Form.Control
                                 className="mt-1  "
                                 name="annualPrice"
-                                type="number"
+                                type="text"
                                 value={values.annualPrice}
                                 onBlur={handleBlur}
                                 onChange={handleChange}
+                              />
+                              <ErrorMessage
+                                className="error text-danger"
+                                component="span"
+                                name="annualPrice"
                               />
                             </Form.Group>
                           </Col>
@@ -1023,7 +1037,7 @@ function Index(props) {
                                 value={values.calculatedSpareQuantity}
                                 onBlur={handleBlur}
                                 disabled={true}
-                                // onChange={handleChange}
+                              // onChange={handleChange}
                               />
                             </Form.Group>
                           </Col>
