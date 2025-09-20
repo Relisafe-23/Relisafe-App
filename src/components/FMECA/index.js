@@ -452,7 +452,18 @@ ratioFields.forEach((field) => {
 
     // If validation passes
     setErrors({});
-    createFmeca(newFmecaData);
+    createFmeca(newFmecaData);  
+    toast.success("FMECA created successfully!", {
+    position: "top-right",
+    autoClose: 3000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+    theme: "light",
+  });
+
     setShowAddModal(false);
 
     // Reset form data
@@ -493,6 +504,7 @@ ratioFields.forEach((field) => {
       userField10: "",
     });
   };
+  
   const resetForm = () => {
     setNewFmecaData({
       operatingPhase: "",
@@ -780,6 +792,7 @@ ratioFields.forEach((field) => {
       setIsLoading(false);
     }
   };
+  
   const createFMECADataFromExcel = (values) => {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
@@ -833,9 +846,9 @@ ratioFields.forEach((field) => {
     }).then((response) => {
       setIsLoading(false);
       const status = response?.status;
-      // if (status === 204) {
-      //   setFailureModeRatioError(true);
-      // }
+      if (status === 204) {
+        setFailureModeRatioError(true);
+      }
 
       getProductData();
       setIsLoading(false);
@@ -1417,106 +1430,106 @@ ratioFields.forEach((field) => {
               <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                 <Form>
                   <Row>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("operatingPhase", "Operating Phases", "Enter Operating Phase")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("function", "Function*", "Enter Function", true)}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("failureMode", "Failure Mode*", "Enter Failure Mode", true)}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("failureModeRatioAlpha", "Failure Mode Ratio Alpha*", "Enter Failure Mode Ratio Alpha")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("cause", "Cause", "Enter Cause")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("subSystemEffect", "Sub System effect*", "Enter Sub System Effect")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("systemEffect", "System Effect*", "Enter System Effect")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("endEffect", "End Effect*", "Enter End Effect")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("endEffectRatioBeta", "End Effect ratio Beta*", "Enter End Effect Ratio Beta")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("safetyImpact", "Safety Impact*", "Enter Safety Impact")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("referenceHazardId", "Reference Hazard ID", "Enter Reference Hazard ID")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("realibilityImpact", "Reliability Impact*", "Enter Reliability Impact")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("serviceDisruptionTime", "Service Disruption Time (minutes)", "Enter Service Disruption Time")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("frequency", "Frequency", "Enter Frequency")}
                     </Col>
-                    <Col md={6}>
+                     <Col md={4}>
                       {renderModalField("severity", "Severity", "Enter Severity")}
                     </Col>
-                    <Col md={6}>
+                     <Col md={4}>
                       {renderModalField("riskIndex", "Risk Index", "Enter Risk Index")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("detectableMeansDuringOperation", "Detectable Means during operation", "Enter Detectable Means during operation")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("detectableMeansToMaintainer", "Detectable Means to Maintainer", "Enter Detectable Means to Maintainer")}
                     </Col>
-                    <Col md={6}>
+                  <Col md={4}>
                       {renderModalField("BuiltInTest", "Built-in Test", "Enter Built-in Test")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("designControl", "Design Control", "Enter Design Control")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("maintenanceControl", "Maintenance Control", "Enter Maintenance Control")}
                     </Col>
-                    <Col md={6}>
+                  <Col md={4}>
                       {renderModalField("exportConstraints", "Export constraints", "Enter Export Constraints")}
                     </Col>
-                    <Col md={6}>
+                  <Col md={4}>
                       {renderModalField("immediteActionDuringOperationalPhase", "Immediate Action during operational Phases", "Enter Immediate Action")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("immediteActionDuringNonOperationalPhase", "Immediate Action during Non-operational Phases", "Enter Immediate Action")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("userField1", "User field 1", "Enter User field 1")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("userField2", "User field 2", "Enter User field 2")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("userField3", "User field 3", "Enter User field 3")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("userField4", "User field 4", "Enter User field 4")}
                     </Col>
-                    <Col md={6}>
+                   <Col md={4}>
                       {renderModalField("userField5", "User field 5", "Enter User field 5")}
                     </Col>
-                    <Col md={6}>
+                  <Col md={4}>
                       {renderModalField("userField6", "User field 6", "Enter User field 6")}
                     </Col>
-                    <Col md={6}>
+                     <Col md={4}>
                       {renderModalField("userField7", "User field 7", "Enter User field 7")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("userField8", "User field 8", "Enter User field 8")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("userField9", "User field 9", "Enter User field 9")}
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       {renderModalField("userField10", "User field 10", "Enter User field 10")}
                     </Col>
                   </Row>
