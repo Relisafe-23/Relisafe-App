@@ -409,18 +409,18 @@ function Index(props) {
       }
     });
 
-  // Validate ratio fields (must be exactly 1)
-const ratioFields = ["failureModeRatioAlpha", "endEffectRatioBeta"];
-ratioFields.forEach((field) => {
-  if (newFmecaData[field] && newFmecaData[field].toString().trim() !== "") {
-    const value = parseFloat(newFmecaData[field]);
-    if (isNaN(value) || value !== 1) {
-      const fieldName = fieldDisplayNames[field] ||
-        field.charAt(0).toUpperCase() + field.slice(1);
-      newErrors[field] = `${fieldName} must be exactly 1`;
-    }
-  }
-});
+    // Validate ratio fields (must be exactly 1)
+    const ratioFields = ["failureModeRatioAlpha", "endEffectRatioBeta"];
+    ratioFields.forEach((field) => {
+      if (newFmecaData[field] && newFmecaData[field].toString().trim() !== "") {
+        const value = parseFloat(newFmecaData[field]);
+        if (isNaN(value) || value !== 1) {
+          const fieldName = fieldDisplayNames[field] ||
+            field.charAt(0).toUpperCase() + field.slice(1);
+          newErrors[field] = `${fieldName} must be exactly 1`;
+        }
+      }
+    });
 
     if (newFmecaData.severity && newFmecaData.severity.toString().trim() !== "") {
       const severity = parseInt(newFmecaData.severity);
@@ -452,17 +452,17 @@ ratioFields.forEach((field) => {
 
     // If validation passes
     setErrors({});
-    createFmeca(newFmecaData);  
+    createFmeca(newFmecaData);
     toast.success("FMECA created successfully!", {
-    position: "top-right",
-    autoClose: 3000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    theme: "light",
-  });
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
 
     setShowAddModal(false);
 
@@ -504,7 +504,7 @@ ratioFields.forEach((field) => {
       userField10: "",
     });
   };
-  
+
   const resetForm = () => {
     setNewFmecaData({
       operatingPhase: "",
@@ -600,7 +600,7 @@ ratioFields.forEach((field) => {
       setColDefs(heads);
       fileData.splice(0, 1);
       setData(convertToJson(headers, fileData));
-    
+
     };
     reader.readAsBinaryString(file);
   };
@@ -615,7 +615,7 @@ ratioFields.forEach((field) => {
     localStorage.clear(history.push("/login"));
     window.location.reload();
   };
-  
+
   const DownloadExcel = () => {
     const columnsToRemove = ["projectId", "companyId", "productId", "id"];
     const modifiedTableData = tableData.map((row) => {
@@ -639,7 +639,7 @@ ratioFields.forEach((field) => {
       XLSX.utils.book_append_sheet(workBook, workSheet, "FMECA Data");
 
       const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
-      
+
       // Create a Blob object and initiate a download
       const blob = new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -792,7 +792,7 @@ ratioFields.forEach((field) => {
       setIsLoading(false);
     }
   };
-  
+
   const createFMECADataFromExcel = (values) => {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
@@ -1373,7 +1373,7 @@ ratioFields.forEach((field) => {
                   wordBreak: "break-word",
                   minWidth: 250,
                   maxWidth: 400,
-                     textAlign: "center",  
+                  textAlign: "center",
                 },
                 addRowPosition: "first",
                 actionsColumnIndex: -1,
@@ -1385,7 +1385,7 @@ ratioFields.forEach((field) => {
                   zIndex: 0,
                   whiteSpace: "nowrap",
                   minWidth: 200,
-                   textAlign: "center",  
+                  textAlign: "center",
                   maxWidth: 500,
                 },
               }}
@@ -1442,13 +1442,13 @@ ratioFields.forEach((field) => {
                     <Col md={4}>
                       {renderModalField("failureModeRatioAlpha", "Failure Mode Ratio Alpha*", "Enter Failure Mode Ratio Alpha")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("cause", "Cause", "Enter Cause")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("subSystemEffect", "Sub System effect*", "Enter Sub System Effect")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("systemEffect", "System Effect*", "Enter System Effect")}
                     </Col>
                     <Col md={4}>
@@ -1457,7 +1457,7 @@ ratioFields.forEach((field) => {
                     <Col md={4}>
                       {renderModalField("endEffectRatioBeta", "End Effect ratio Beta*", "Enter End Effect Ratio Beta")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("safetyImpact", "Safety Impact*", "Enter Safety Impact")}
                     </Col>
                     <Col md={4}>
@@ -1466,43 +1466,43 @@ ratioFields.forEach((field) => {
                     <Col md={4}>
                       {renderModalField("realibilityImpact", "Reliability Impact*", "Enter Reliability Impact")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("serviceDisruptionTime", "Service Disruption Time (minutes)", "Enter Service Disruption Time")}
                     </Col>
                     <Col md={4}>
                       {renderModalField("frequency", "Frequency", "Enter Frequency")}
                     </Col>
-                     <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("severity", "Severity", "Enter Severity")}
                     </Col>
-                     <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("riskIndex", "Risk Index", "Enter Risk Index")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("detectableMeansDuringOperation", "Detectable Means during operation", "Enter Detectable Means during operation")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("detectableMeansToMaintainer", "Detectable Means to Maintainer", "Enter Detectable Means to Maintainer")}
                     </Col>
-                  <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("BuiltInTest", "Built-in Test", "Enter Built-in Test")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("designControl", "Design Control", "Enter Design Control")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("maintenanceControl", "Maintenance Control", "Enter Maintenance Control")}
                     </Col>
-                  <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("exportConstraints", "Export constraints", "Enter Export Constraints")}
                     </Col>
-                  <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("immediteActionDuringOperationalPhase", "Immediate Action during operational Phases", "Enter Immediate Action")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("immediteActionDuringNonOperationalPhase", "Immediate Action during Non-operational Phases", "Enter Immediate Action")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("userField1", "User field 1", "Enter User field 1")}
                     </Col>
                     <Col md={4}>
@@ -1514,13 +1514,13 @@ ratioFields.forEach((field) => {
                     <Col md={4}>
                       {renderModalField("userField4", "User field 4", "Enter User field 4")}
                     </Col>
-                   <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("userField5", "User field 5", "Enter User field 5")}
                     </Col>
-                  <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("userField6", "User field 6", "Enter User field 6")}
                     </Col>
-                     <Col md={4}>
+                    <Col md={4}>
                       {renderModalField("userField7", "User field 7", "Enter User field 7")}
                     </Col>
                     <Col md={4}>
@@ -1538,11 +1538,15 @@ ratioFields.forEach((field) => {
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={handleModal}>
-                  Cancel
+                  CANCEL
                 </Button>
-                <Button variant="primary" onClick={handleAddFmeca}>
-                  Save
+                <Button
+                  style={{ backgroundColor: "#007776", borderColor: "#007776" }}
+                  onClick={handleAddFmeca}
+                >
+                  SAVE
                 </Button>
+
               </Modal.Footer>
             </Modal>
           </div>
