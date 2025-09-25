@@ -345,6 +345,7 @@ function Index(props) {
         projectId: projectId,
         userId: userId,
       },
+
     })
       .then((res) => {
         const initialProductID = res?.data?.data[0]?.treeStructure?.id;
@@ -354,6 +355,8 @@ function Index(props) {
         setIsLoading(false);
         setTreeTabledata(treeData);
         setIsLoading(false);
+                console.log('data@@@@@',treeData)
+
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -361,6 +364,7 @@ function Index(props) {
           logout();
         }
       });
+
   };
   const customStyles = {
     control: (provided) => ({
