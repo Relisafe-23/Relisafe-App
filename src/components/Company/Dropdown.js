@@ -12,7 +12,7 @@ export default function Dropdown(props) {
   const history = useHistory();
 
   const getTreeProduct = () => {
-    console.log('getTreeProduct',getTreeProduct)
+    
     Api.get(`/api/v1/productTreeStructure/product/list`, { 
       params: {
         projectId: projectId,

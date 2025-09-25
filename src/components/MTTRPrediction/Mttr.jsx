@@ -85,7 +85,7 @@ const MTTRPrediction = (props, active) => {
   const [createdBy, setCreatedBy] = useState();
   const [importExcelData, setImportExcelData] = useState({});
   const [shouldReload, setShouldReload] = useState(false);
-  const [fieldValue,setFieldValue] = useState();
+
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [mergedData, setMergedData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
@@ -146,125 +146,60 @@ const MTTRPrediction = (props, active) => {
     resetForm();
   };
 
-const importExcel = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const importExcel = (e) => {
+    const file = e.target.files[0];
 
-  const fileName = file.name;
-  const validExtensions = ["xlsx", "xls"];
-  const fileExtension = fileName.split(".").pop().toLowerCase();
+    // Check if the file is an Excel file by checking the extension
+    const fileName = file.name;
+    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
+    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
 
-  if (!validExtensions.includes(fileExtension)) {
-    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-      position: "top-right",
-    });
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const bstr = event.target.result;
-    const workBook = XLSX.read(bstr, { type: "binary" });
-    const workSheetName = workBook.SheetNames[0];
-    const workSheet = workBook.Sheets[workSheetName];
-
-    // ✅ Parse rows into objects using first row as headers
-    const parsedData = XLSX.utils.sheet_to_json(workSheet, { defval: "" });
-
-    console.log("parsedData (imported)..", parsedData);
-
-    if (parsedData.length > 0) {
-      // ✅ Ensure only required fields are mapped (like exportToExcel)
-      const normalizedData = parsedData.map((row) => ({
-        remarks: row.remarks || "",
-        time: row.time || "",
-        skill: row.skill || "",
-        tools: row.tools || "",
-        partNo: row.partNo || "",
-        toolType: row.toolType || "",
-        repairable: row.repairable || "",
-        levelOfRepair: row.levelOfRepair || "",
-        levelOfReplace: row.levelOfReplace || "",
-        spare: row.spare || "",
-      }));
-
-      // ✅ Merge with existing state
-      setTableData((prevData) => [...prevData, ...normalizedData]);
-
-      // ✅ Optionally fill form with first row
-      setImportExcelData(normalizedData[0]);
-      applyExcelDataToForm(normalizedData[0]);
-
-      toast.success("Data imported successfully!", {
+    if (!validExtensions.includes(fileExtension)) {
+      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
         position: toast.POSITION.TOP_RIGHT,
       });
-    } else {
-      toast.error("No Data Found In Excel Sheet", {
-        position: "top-right",
-        autoClose: 5000,
-        theme: "light",
-      });
+      return;
+
     }
-  };
-
-  reader.readAsBinaryString(file);
-};
-
-
-
-// Add this new function to apply Excel data to form fields
-const applyExcelDataToForm = (excelData) => {
-  // Map Excel column names to your form field names
-  const fieldMappings = {
-    'remarks': 'remarks',
-    'repairable': 'repairable',
-    'levelOfRepair': 'levelOfRepair', 
-    'levelOfReplace': 'levelOfReplace',
-    'spare': 'spare',
-    'mMax': 'mmax',
-    'mttr': 'mttr',
-    'time': 'time',
-    'totalLabour': 'totalLabour',
-    'skill': 'skill',
-    'tools': 'tools',
-    'partNo': 'partNo',
-    'toolType': 'toolType',
-    'taskType': 'taskType'
-  };
-
-  // Update formik values
-  Object.keys(fieldMappings).forEach(excelField => {
-    const formField = fieldMappings[excelField];
-    if (excelData[excelField] !== undefined && excelData[excelField] !== null) {
-      // For select fields that need object format
-      if (['repairable', 'levelOfRepair', 'levelOfReplace', 'spare'].includes(formField)) {
-        setFieldValue(formField, { 
-          label: excelData[excelField], 
-          value: excelData[excelField] 
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const bstr = event.target.result;
+      const workBook = XLSX.read(bstr, { type: "binary" });
+      const workSheetName = workBook.SheetNames[0];
+      const workSheet = workBook.Sheets[workSheetName];
+      const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+   
+      if (excelData.length > 1) {
+        const headers = excelData[0];
+        const rows = excelData.slice(1);
+        const parsedData = rows.map((row) => {
+          const rowData = {};
+          headers.forEach((header, index) => {
+            rowData[header] = row[index];
+          });
+          return rowData;
         });
-        
-        // Also update the corresponding state
-        switch(formField) {
-          case 'repairable':
-            setRepairable({ label: excelData[excelField], value: excelData[excelField] });
-            break;
-          case 'levelOfRepair':
-            setLevelOfRepair({ label: excelData[excelField], value: excelData[excelField] });
-            break;
-          case 'levelOfReplace':
-            setLevelOfReplace({ label: excelData[excelField], value: excelData[excelField] });
-            break;
-          case 'spare':
-            setSpare({ label: excelData[excelField], value: excelData[excelField] });
-            break;
-        }
+        setImportExcelData(parsedData[0]);
       } else {
-        // For regular text/number fields
-        setFieldValue(formField, excelData[excelField]);
+        toast("No Data Found In Excel Sheet", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          type: "error",
+        });
       }
+    };
+    if (file) {
     }
-  });
-};
+    reader.readAsBinaryString(file);
+  };
+
   const convertToJson = (headers, data) => {
     const rows = [];
     data.forEach((row) => {
@@ -308,50 +243,21 @@ const exportToExcel = (value, productName) => {
     return;
   }
 
-  const fullTableData = tableData || [];
-  const lastRow = fullTableData.length > 0 ? fullTableData[fullTableData.length - 1] : {};
-
   const originalData = {
-    remarks: value.remarks || lastRow.remarks || "",
-    // productName: productName || lastRow.productName || "",
-    time: value.time || lastRow.time || "",
-    // numberOfLabour: value.totalLabour || lastRow.totalLabour || "",
-    skill: value.skill || lastRow.skill || "",
-    tools: value.tools || lastRow.tools || "",
-    partNo: value.partNo || lastRow.partNo || "",
-    toolType: value.toolType || lastRow.toolType || "",
-    repairable: value.repairable?.value || value.repairable || lastRow.repairable || "",
-    levelOfRepair: value.levelOfRepair?.value || value.levelOfRepair || lastRow.levelOfRepair || "",
-    levelOfReplace: value.levelOfReplace?.value || value.levelOfReplace || lastRow.levelOfReplace || "",
-    spare: value.spare?.value || value.spare || lastRow.spare || "", 
+    remarks: value.remarks || "",
+    productName: productName || "", // optional extra field
   };
 
-  console.log("originalData", originalData);
-
-  const hasData = Object.values(originalData).some(
-    (val) => val && val.toString().trim() !== ""
-  );
+  const hasData = Object.values(originalData).some((val) => val && val.toString().trim() !== "");
 
   if (hasData) {
-    const updatedTableData = [...fullTableData, originalData];
-    setTableData(updatedTableData);
-
-      const filteredData = updatedTableData.map(row => {
-      const { productId, projectId, companyId,tableData, id, ...filteredRow } = row;
-      return filteredRow;
-    });
-    
-    console.log("tableData..", updatedTableData);
-
-    // Export ALL data, not just the new row
-      const ws = XLSX.utils.json_to_sheet(filteredData);
+    const ws = XLSX.utils.json_to_sheet([originalData]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "FormData");
 
     const fileName = `${productName || "MTTR"}.xlsx`;
     XLSX.writeFile(wb, fileName);
-
-    console.log("fileName..", fileName);
+   console.log("fileName..",fileName)
     toast.success("Export Successful!", { position: "top-right" });
   } else {
     toast.error("Export Failed !! No Data Found", { position: "top-right" });
@@ -1087,11 +993,9 @@ const exportToExcel = (value, productName) => {
       },
     })
       .then((response) => {
-        //  console.log("mttrResult", response?.data?.procedureData)
         setTableData(response?.data?.procedureData);
         setValidateData(response?.data?.procedureData?.length);
         const mttrResult = response.data.mttrResult;
-       
         setLabourHour(mttrResult?.sumOfTotal);
         setMlhValue(mttrResult?.Totalmlh);
         setMctValue(mttrResult?.sumOfTime);
@@ -1276,75 +1180,39 @@ const exportToExcel = (value, productName) => {
         <Formik
           enableReinitialize={true}
           initialValues={{
-          //   name: name,
-          //   category: category,
-          //   partNumber: partNumber,
-          //   partType: partType,
-          //   reference: reference,
-          //   quantity: quantity,
-          //   environment: environment,
-          //   temperature: temperature,
-          //   repairable: repairable,
-          //   levelOfRepair: levelOfRepair,
-          //   levelOfReplace: levelOfReplace,
-          //   spare: spare,
-          //   mct: mctValue ? mctValue : "",
-          //   mlh: mlhValue ? mlhValue : "",
-          //   labourHour: totalLabourHr ? totalLabourHr : "",
-          //   mttr: mttrCalculatedValue ? mttrCalculatedValue : '',
+            name: name,
+            category: category,
+            partNumber: partNumber,
+            partType: partType,
+            reference: reference,
+            quantity: quantity,
+            environment: environment,
+            temperature: temperature,
+            repairable: repairable,
+            levelOfRepair: levelOfRepair,
+            levelOfReplace: levelOfReplace,
+            spare: spare,
+            mct: mctValue ? mctValue : "",
+            mlh: mlhValue ? mlhValue : "",
+            labourHour: totalLabourHr ? totalLabourHr : "",
+            mttr: mttrCalculatedValue ? mttrCalculatedValue : '',
 
-          //   // mttr: mttrData ? mttrData :"",
+            // mttr: mttrData ? mttrData :"",
 
-          //   remarks: mttrData?.remarks
-          //     ? mttrData?.remarks
-          //     : importExcelData?.remarks
-          //       ? importExcelData.remarks
-          //       : "",
-                
-
-          //   mmax: mttrData?.mMax ? mttrData?.mMax : "",
-          //   taskType: "",
-          //   time: "",
-          //   numberOfLabour: "",
-          //   skill: "",
-          //   tools: "",
-          //   partNo: "",
-          //   toolType: "",
-          // }}
-  name: name,
-  category: category,
-  partNumber: partNumber,
-  partType: partType,
-  reference: reference,
-  quantity: quantity,
-  environment: environment,
-  temperature: temperature,
-  repairable: importExcelData?.repairable ? 
-    { label: importExcelData.repairable, value: importExcelData.repairable } : 
-    repairable,
-  levelOfRepair: importExcelData?.levelOfRepair ? 
-    { label: importExcelData.levelOfRepair, value: importExcelData.levelOfRepair } : 
-    levelOfRepair,
-  levelOfReplace: importExcelData?.levelOfReplace ? 
-    { label: importExcelData.levelOfReplace, value: importExcelData.levelOfReplace } : 
-    levelOfReplace,
-  spare: importExcelData?.spare ? 
-    { label: importExcelData.spare, value: importExcelData.spare } : 
-    spare,
-  mct: mctValue ? mctValue : "",
-  mlh: mlhValue ? mlhValue : "",
-  labourHour: totalLabourHr ? totalLabourHr : "",
-  mttr: importExcelData?.mttr || mttrCalculatedValue || "",
-  remarks: importExcelData?.remarks || mttrData?.remarks || "",
-  mmax: importExcelData?.mMax || mttrData?.mMax || "",
-  taskType: importExcelData?.taskType || "",
-  time: importExcelData?.time || "",
-  numberOfLabour: importExcelData?.totalLabour || "", // Map to totalLabour
-  skill: importExcelData?.skill || "",
-  tools: importExcelData?.tools || "",
-  partNo: importExcelData?.partNo || "",
-  toolType: importExcelData?.toolType || "",
-}}
+            remarks: mttrData?.remarks
+              ? mttrData?.remarks
+              : importExcelData?.remarks
+                ? importExcelData.remarks
+                : "",
+            mmax: mttrData?.mMax ? mttrData?.mMax : "",
+            taskType: "",
+            time: "",
+            numberOfLabour: "",
+            skill: "",
+            tools: "",
+            partNo: "",
+            toolType: "",
+          }}
           validationSchema={submitSchema}
           onSubmit={(values, { resetForm }) => {
             mttrId ? patchMttrData(values) : submitForm(values);
@@ -1459,6 +1327,7 @@ const exportToExcel = (value, productName) => {
                                     onBlur={handleBlur}
                                     className="mt-1"
                                   />
+                                  {console.log("Values..",values)}
                                   {/* <ErrorMessage className="error text-danger" component="span" name="name" /> */}
                                 </Form.Group>
                               </Col>

@@ -743,7 +743,6 @@ const importExcel = (e) => {
       .then((res) => {
         const treeData = res?.data?.data;
         setIsLoading(false);
-
         setTreeTabledata(treeData);
         setInitialProductId(res?.data?.data[0]?.treeStructure?.id);
       })
@@ -1293,7 +1292,8 @@ const importExcel = (e) => {
 
   const fmecaOptions = fmecaData.map((item) => ({
     value: item?.fmecaId,
-    label: item?.fmecaId,
+     label: item?.failureMode,  
+    
   }));
 
 
@@ -1309,8 +1309,7 @@ const InitialValues = {
   category: category,
   parttype: partType,
   quantity: quantity,
-  fmecaId: fmecaFillterData?.fmecaId,
-  
+  fmecaId: fmecaFillterData?.fmecaModelId || "",
   // Use imported Excel data for all fields, fall back to FMECA data or empty
   endeffect: importExcelData?.endeffect || fmecaFillterData?.endEffect || "",
   reliability: importExcelData?.reliability || fmecaFillterData?.realibilityImpact || "",
@@ -1542,14 +1541,7 @@ const InitialValues = {
                                 name="FmecaId"
                                 className="mt-1"
                                 placeholder="Select Fmeca Mode"
-                                value={
-                                  values?.fmecaId
-                                    ? {
-                                      label: values?.fmecaId,
-                                      value: values?.fmecaId,
-                                    }
-                                    : ""
-                                }
+                                value={fmecaOptions?.label}       
                                 style={{ backgroundColor: "red" }}
                                 options={fmecaOptions}
                                 styles={customStyles}
@@ -4142,7 +4134,7 @@ const InitialValues = {
                                               : "disabled"
                                           }
                                           onChange={(e) => {
-                                            console.log("valueof eeeee", e)
+                                         
                                             setFieldValue("skill1", e.value);
                                             getAllConnectedLibrary(e.value, "skill1");
                                           }}
