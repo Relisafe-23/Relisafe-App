@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
-import { Modal, Button, Row, Col, Form } from "react-bootstrap";
+import { Modal, Button, Row, Col } from "react-bootstrap";
 import "../../css/FMECA.scss";
 import Api from "../../Api";
 import { tableIcons } from "../core/TableIcons";
@@ -11,12 +11,8 @@ import { toast } from "react-toastify";
 import {
   faFileDownload,
   faFileUpload,
-  faPlusCircle,
-  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
-
 import * as XLSX from "xlsx";
-
 import {
   faCircleCheck,
   faCircleExclamation,
@@ -27,57 +23,96 @@ import { TextField } from "@material-ui/core";
 import { useHistory } from "react-router-dom";
 import Dropdown from "../Company/Dropdown";
 import Tooltip from '@mui/material/Tooltip';
+import TableCell from '@mui/material/TableCell';
 import { customStyles } from "../core/select";
-import { createTheme, ThemeProvider } from "@mui/material";
+import { ButtonBase, createTheme, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, Table, TableBody, TableContainer, TableHead, TableRow, ThemeProvider } from "@mui/material";
 import MaterialTable from "material-table";
 
+// hooks/useTableValidation.js
+const useTableValidation = () => {
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+
+  const fieldConfig = {
+    operatingPhase: { label: 'Operating Phase', required: true },
+    function: { label: 'Function', required: true },
+    failureMode: { label: 'Failure Mode', required: true },
+    failureModeRatioAlpha: { label: 'Failure Mode Ratio (α)', required: true },
+    subSystemEffect: { label: 'Sub System Effect', required: true },
+    systemEffect: { label: 'System Effect', required: true },
+    endEffect: { label: 'End Effect', required: true },
+    endEffectRatioBeta: { label: 'End Effect Ratio (β)', required: true },
+    safetyImpact: { label: 'Safety Impact', required: true },
+    realibilityImpact: { label: 'Reliability Impact', required: true }
+  };
+
+  const validateAllRequiredFields = (tableData) => {
+    const errors = [];
+
+    tableData.forEach((row, rowIndex) => {
+      const rowNumber = rowIndex + 1;
+      const rowErrors = [];
+
+      Object.entries(fieldConfig).forEach(([fieldKey, config]) => {
+        if (config.required && (!row[fieldKey] || row[fieldKey].toString().trim() === '')) {
+          rowErrors.push(config.label);
+        }
+      });
+
+      if (rowErrors.length > 0) {
+        if (rowErrors.length === 1) {
+          errors.push(`Row ${rowNumber}: ${rowErrors[0]} is required`);
+        } else {
+          errors.push(`Row ${rowNumber}: ${rowErrors.join(', ')} are required`);
+        }
+      }
+    });
+
+    setValidationErrors(errors);
+    setShowValidationModal(errors.length > 0);
+
+    return errors.length === 0;
+  };
+
+  const validateSingleRow = (rowData, rowIndex) => {
+    const errors = [];
+    const rowNumber = rowIndex + 1;
+
+    Object.entries(fieldConfig).forEach(([fieldKey, config]) => {
+      if (config.required && (!rowData[fieldKey] || rowData[fieldKey].toString().trim() === '')) {
+        errors.push(`Row ${rowNumber}: ${config.label} is required`);
+      }
+    });
+
+    return errors;
+  };
+
+  const closeValidationModal = () => {
+    setShowValidationModal(false);
+    setValidationErrors([]);
+  };
+
+  return {
+    validationErrors,
+    showValidationModal,
+    validateAllRequiredFields,
+    validateSingleRow,
+    closeValidationModal
+  };
+};
+
 function Index(props) {
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [errors, setErrors] = useState({});
+  const {
+    validationErrors,
+    showValidationModal,
+    validateAllRequiredFields,
+    closeValidationModal
+  } = useTableValidation();
 
   const [initialProductID, setInitialProductID] = useState();
   const [initialTreeStructure, setInitialTreeStructure] = useState();
   const [exceldata, setExcelData] = useState(null);
 
-  // Form data for the modal
-  const initialFormData = {
-    operatingPhase: "",
-    function: "",
-    failureMode: "",
-    failureModeRatioAlpha: "",
-    cause: "",
-    subSystemEffect: "",
-    systemEffect: "",
-    endEffect: "",
-    endEffectRatioBeta: "",
-    safetyImpact: "",
-    referenceHazardId: "",
-    realibilityImpact: "",
-    serviceDisruptionTime: "",
-    frequency: "",
-    severity: "",
-    riskIndex: "",
-    detectableMeansDuringOperation: "",
-    detectableMeansToMaintainer: "",
-    BuiltInTest: "",
-    designControl: "",
-    maintenanceControl: "",
-    exportConstraints: "",
-    immediteActionDuringOperationalPhase: "",
-    immediteActionDuringNonOperationalPhase: "",
-    userField1: "",
-    userField2: "",
-    userField3: "",
-    userField4: "",
-    userField5: "",
-    userField6: "",
-    userField7: "",
-    userField8: "",
-    userField9: "",
-    userField10: "",
-  };
-
-  const [formData, setFormData] = useState(initialFormData);
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
@@ -98,7 +133,6 @@ function Index(props) {
   const handleHide = () => setFailureModeRatioError(false);
   const [writePermission, setWritePermission] = useState();
   const history = useHistory();
-
   const userId = localStorage.getItem("userId");
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
@@ -109,42 +143,6 @@ function Index(props) {
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [perviousColumnValues, setPerviousColumnValues] = useState([]);
-  const [newFmecaData, setNewFmecaData] = useState({
-    operatingPhase: "",
-    function: "",
-    failureMode: "",
-    failureModeRatioAlpha: "",
-    cause: "",
-    subSystemEffect: "",
-    systemEffect: "",
-    endEffect: "",
-    endEffectRatioBeta: "",
-    safetyImpact: "",
-    referenceHazardId: "",
-    realibilityImpact: "",
-    serviceDisruptionTime: "",
-    frequency: "",
-    severity: "",
-    riskIndex: "",
-    detectableMeansDuringOperation: "",
-    detectableMeansToMaintainer: "",
-    BuiltInTest: "",
-    designControl: "",
-    maintenanceControl: "",
-    exportConstraints: "",
-    immediteActionDuringOperationalPhase: "",
-    immediteActionDuringNonOperationalPhase: "",
-    userField1: "",
-    userField2: "",
-    userField3: "",
-    userField4: "",
-    userField5: "",
-    userField6: "",
-    userField7: "",
-    userField8: "",
-    userField9: "",
-    userField10: "",
-  });
   const [data, setData] = useState({
     operatingPhase: "",
     function: "",
@@ -182,44 +180,15 @@ function Index(props) {
     userField9: "",
     userField10: "",
   });
-  // Handle form input changes
-  const handleFormChange = (e) => {
-    console.log(e)
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
+
+  const handleInputChange = (selectedItems, name) => {
+    setData((prevData) => ({
+      ...prevData,
+      [name]: selectedItems ? selectedItems.value : "",
     }));
-
-    // Clear error if field is filled
-    if (value && errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: null
-      }));
-    }
-  };
-  const handleSelectChange = (selectedOption, fieldName) => {
-    const value = selectedOption ? selectedOption.value : "";
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: value
-    }));
-
-    // Clear error if field is filled
-    if (value && errors[fieldName]) {
-      setErrors(prev => ({
-        ...prev,
-        [fieldName]: null
-      }));
-    }
-
-    // If you need to fetch connected library data when a field changes
-    if (selectedOption) {
-      getAllConnectedLibrary(selectedOption, fieldName);
-    }
   };
   const [mergedData, setMergedData] = useState([]);
+
   const getAllSeprateLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
@@ -288,7 +257,6 @@ function Index(props) {
     });
   };
 
-
   const getAllConnectedLibraryAfterUpdate = async () => {
 
     Api.get("api/v1/library/get/all/source/value", {
@@ -302,263 +270,7 @@ function Index(props) {
       setPerviousColumnValues(data);
     });
   };
-  // Handle Add FMECA button click
-  // const handleAddModalInputChange = (e) => {
-  //   const { name, value } = e.target;
-  //   setNewFmecaData(prevData => ({
-  //     ...prevData,
-  //     [name]: value
-  //   }));
-  // };
-  // const handleAddModalSelectChange = (selectedOption, fieldName) => {
-  //   setNewFmecaData(prevData => ({
-  //     ...prevData,
-  //     [fieldName]: selectedOption ? selectedOption.value : ""
-  //   }));
-  // };
-  // Handle input change for regular text inputs
-  const handleAddModalInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewFmecaData({
-      ...newFmecaData,
-      [name]: value
-    });
 
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: null
-      });
-    }
-  };
-
-  // Handle select change for dropdowns
-  const handleAddModalSelectChange = (selectedOption, fieldName) => {
-    const value = selectedOption ? selectedOption.value : "";
-    setNewFmecaData({
-      ...newFmecaData,
-      [fieldName]: value
-    });
-
-    // Clear error when user selects an option
-    if (errors[fieldName]) {
-      setErrors({
-        ...errors,
-        [fieldName]: null
-      });
-    }
-  };
-
-  // Custom styles for the Select component to show validation state
-
-  // Create a mapping of field names to display names
-  const fieldDisplayNames = {
-    "function": "Function",
-    "failureMode": "Failure Mode",
-    "failureModeRatioAlpha": "Failure Mode Ratio Alpha",
-    "subSystemEffect": "Sub System Effect",
-    "systemEffect": "System Effect",
-    "endEffect": "End Effect",
-    "endEffectRatioBeta": "End Effect Ratio Beta",
-    "safetyImpact": "Safety Impact",
-    "realibilityImpact": "Reliability Impact"
-  };
-
-  const handleAddFmeca = () => {
-    const requiredFields = [
-      "function",
-      "failureMode",
-      "failureModeRatioAlpha",
-      "subSystemEffect",
-      "systemEffect",
-      "endEffect",
-      "endEffectRatioBeta",
-      "safetyImpact",
-      "realibilityImpact",
-    ];
-
-    let newErrors = {};
-
-    // Validate required fields with custom error messages
-    requiredFields.forEach((field) => {
-      if (!newFmecaData[field] || newFmecaData[field].toString().trim() === "") {
-        // Use the display name if available, otherwise capitalize the field name
-        const fieldName = fieldDisplayNames[field] ||
-          field.charAt(0).toUpperCase() + field.slice(1);
-        newErrors[field] = `${fieldName} is required`;
-      }
-    });
-
-    // Validate numeric fields
-    const numericFields = [
-      "failureModeRatioAlpha",
-      "endEffectRatioBeta",
-      "serviceDisruptionTime",
-      "frequency"
-    ];
-
-    numericFields.forEach((field) => {
-      if (newFmecaData[field] && newFmecaData[field].toString().trim() !== "") {
-        const value = parseFloat(newFmecaData[field]);
-        if (isNaN(value) || value < 0) {
-          const fieldName = fieldDisplayNames[field] ||
-            field.charAt(0).toUpperCase() + field.slice(1);
-          newErrors[field] = `${fieldName} must be a valid positive number`;
-        }
-      }
-    });
-
-  // Validate ratio fields (must be exactly 1)
-const ratioFields = ["failureModeRatioAlpha", "endEffectRatioBeta"];
-ratioFields.forEach((field) => {
-  if (newFmecaData[field] && newFmecaData[field].toString().trim() !== "") {
-    const value = parseFloat(newFmecaData[field]);
-    if (isNaN(value) || value !== 1) {
-      const fieldName = fieldDisplayNames[field] ||
-        field.charAt(0).toUpperCase() + field.slice(1);
-      newErrors[field] = `${fieldName} must be exactly 1`;
-    }
-  }
-});
-
-    if (newFmecaData.severity && newFmecaData.severity.toString().trim() !== "") {
-      const severity = parseInt(newFmecaData.severity);
-      if (isNaN(severity) || severity < 1 || severity > 10) {
-        newErrors.severity = "Severity must be between 1 and 10";
-      }
-    }
-
-    if (newFmecaData.riskIndex && newFmecaData.riskIndex.toString().trim() !== "") {
-      const riskIndex = parseInt(newFmecaData.riskIndex);
-      if (isNaN(riskIndex) || riskIndex < 1 || riskIndex > 100) {
-        newErrors.riskIndex = "Risk Index must be between 1 and 100";
-      }
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-
-      // Scroll to the first error
-      const firstErrorField = Object.keys(newErrors)[0];
-      const errorElement = document.querySelector(`[data-field="${firstErrorField}"]`);
-      if (errorElement) {
-        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        errorElement.focus();
-      }
-
-      return;
-    }
-
-    // If validation passes
-    setErrors({});
-    createFmeca(newFmecaData);  
-    toast.success("FMECA created successfully!", {
-    position: "top-right",
-    autoClose: 3000,
-    hideProgressBar: false,
-    closeOnClick: true,
-    pauseOnHover: true,
-    draggable: true,
-    progress: undefined,
-    theme: "light",
-  });
-
-    setShowAddModal(false);
-
-    // Reset form data
-    setNewFmecaData({
-      operatingPhase: "",
-      function: "",
-      failureMode: "",
-      failureModeRatioAlpha: "",
-      cause: "",
-      subSystemEffect: "",
-      systemEffect: "",
-      endEffect: "",
-      endEffectRatioBeta: "",
-      safetyImpact: "",
-      referenceHazardId: "",
-      realibilityImpact: "",
-      serviceDisruptionTime: "",
-      frequency: "",
-      severity: "",
-      riskIndex: "",
-      detectableMeansDuringOperation: "",
-      detectableMeansToMaintainer: "",
-      BuiltInTest: "",
-      designControl: "",
-      maintenanceControl: "",
-      exportConstraints: "",
-      immediteActionDuringOperationalPhase: "",
-      immediteActionDuringNonOperationalPhase: "",
-      userField1: "",
-      userField2: "",
-      userField3: "",
-      userField4: "",
-      userField5: "",
-      userField6: "",
-      userField7: "",
-      userField8: "",
-      userField9: "",
-      userField10: "",
-    });
-  };
-  
-  const resetForm = () => {
-    setNewFmecaData({
-      operatingPhase: "",
-      function: "",
-      failureMode: "",
-      failureModeRatioAlpha: "",
-      cause: "",
-      subSystemEffect: "",
-      systemEffect: "",
-      endEffect: "",
-      endEffectRatioBeta: "",
-      safetyImpact: "",
-      referenceHazardId: "",
-      realibilityImpact: "",
-      serviceDisruptionTime: "",
-      frequency: "",
-      severity: "",
-      riskIndex: "",
-      detectableMeansDuringOperation: "",
-      detectableMeansToMaintainer: "",
-      BuiltInTest: "",
-      designControl: "",
-      maintenanceControl: "",
-      exportConstraints: "",
-      immediteActionDuringOperationalPhase: "",
-      immediteActionDuringNonOperationalPhase: "",
-      userField1: "",
-      userField2: "",
-      userField3: "",
-      userField4: "",
-      userField5: "",
-      userField6: "",
-      userField7: "",
-      userField8: "",
-      userField9: "",
-      userField10: "",
-    });
-    setErrors({});
-  };
-  const handleModal = () => {
-    resetForm();
-    // setShowAddModal(false);
-  };
-  useEffect(() => {
-    if (showAddModal) {
-      getAllConnectedLibraryAfterUpdate();
-    }
-  }, [showAddModal]);
-  // Reset form when modal is closed
-  const handleModalClose = () => {
-    setFormData(initialFormData);
-    setErrors({});
-    setShowAddModal(false);
-  };
   useEffect(() => {
     getAllSeprateLibraryData();
     getAllLibraryData();
@@ -568,9 +280,151 @@ ratioFields.forEach((field) => {
     getAllConnect();
   }, []);
 
+  const DownloadExcel = () => {
+    const columnsToRemove = ["projectId", "companyId", "productId", "id"];
+    const modifiedTableData = tableData.map((row) => {
+      const newRow = { ...row };
+      columnsToRemove.forEach((columnName) => {
+        delete newRow[columnName];
+      });
+
+      return newRow;
+    });
+    if (modifiedTableData.length > 0) {
+      const columns = Object.keys(modifiedTableData[0])?.map((columnName) => ({
+        title: columnName,
+        field: columnName,
+      }));
+
+      const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
+        skipHeader: false,
+      });
+      const workBook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workBook, workSheet, "FMECA Data");
+
+      const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
+
+      // Create a Blob object and initiate a download
+      const blob = new Blob([buf], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "FMECA_Data.xlsx";
+      link.click();
+
+      // Clean up
+      URL.revokeObjectURL(url);
+    } else {
+      toast("Export Failed !! No Data Found", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error", // Change this to "error" to display an error message
+      });
+    }
+  };
+  const createFMECADataFromExcel = (values) => {
+    const companyId = localStorage.getItem("companyId");
+    setIsLoading(true);
+    Api.post("api/v1/FMECA/", {
+      operatingPhase: values.operationPhase,
+      function: values.function,
+      failureMode: values.failureMode,
+      // searchFM: values.searchFM,
+      cause: values.cause,
+      failureModeRatioAlpha: values?.failureModeRatioAlpha
+        ? values?.failureModeRatioAlpha
+        : 0,
+      detectableMeansDuringOperation: values.detectableMeansDuringOperation,
+      detectableMeansToMaintainer: values.detectableMeansToMaintainer,
+      BuiltInTest: values.BuiltInTest,
+      subSystemEffect: values.subSystemEffect,
+      systemEffect: values.systemEffect,
+      endEffect: values.endEffect,
+      endEffectRatioBeta: values.endEffectRatioBeta
+        ? values.endEffectRatioBeta
+        : 1,
+      safetyImpact: values.safetyImpact,
+      referenceHazardId: values.referenceHazardId,
+      realibilityImpact: values.realibilityImpact,
+      serviceDisruptionTime: values.serviceDisruptionTime,
+      frequency: values.frequency,
+      severity: values.severity,
+      riskIndex: values.riskIndex,
+      designControl: values.designControl,
+      maintenanceControl: values.maintenanceControl,
+      exportConstraints: values.exportConstraints,
+      immediteActionDuringOperationalPhase:
+        values.immediteActionDuringOperationalPhase,
+      immediteActionDuringNonOperationalPhase:
+        values.immediteActionDuringNonOperationalPhase,
+      userField1: values.userField1,
+      userField2: values.userField2,
+      userField3: values.userField3,
+      userField4: values.userField4,
+      userField5: values.userField5,
+      userField6: values.userField6,
+      userField7: values.userField7,
+      userField8: values.userField8,
+      userField9: values.userField9,
+      userField10: values.userField10,
+      projectId: projectId,
+      companyId: companyId,
+      productId: productId,
+      userId: userId,
+      Alldata: tableData,
+    }).then((response) => {
+      setIsLoading(false);
+      const status = response?.status;
+      // if (status === 204) {
+      //   setFailureModeRatioError(true);
+      // }
+
+      getProductData();
+      setIsLoading(false);
+    });
+  };
+  const convertToJson = (headers, data) => {
+    const rows = [];
+
+    // if (excelData.length > 1) {
+    if (data.length > 0 && data[0].length > 1) {
+      data.forEach((row) => {
+        let rowData = {};
+        row.forEach((element, index) => {
+          rowData[headers[index]] = element;
+        });
+        rows.push(rowData);
+        createFMECADataFromExcel(rowData);
+      });
+
+      return rows;
+    } else {
+      toast("No Data Found In Excel Sheet", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error",
+      });
+    }
+  };
+
   const importExcel = (e) => {
     const file = e.target.files[0];
 
+    // Check if the file is an Excel file by checking the extension
     const fileName = file.name;
     const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
     const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
@@ -600,7 +454,7 @@ ratioFields.forEach((field) => {
       setColDefs(heads);
       fileData.splice(0, 1);
       setData(convertToJson(headers, fileData));
-    
+      convertToJson(headers, fileData);
     };
     reader.readAsBinaryString(file);
   };
@@ -615,57 +469,39 @@ ratioFields.forEach((field) => {
     localStorage.clear(history.push("/login"));
     window.location.reload();
   };
-  
-  const DownloadExcel = () => {
-    const columnsToRemove = ["projectId", "companyId", "productId", "id"];
-    const modifiedTableData = tableData.map((row) => {
-      const newRow = { ...row };
-      columnsToRemove.forEach((columnName) => {
-        delete newRow[columnName];
-      });
-
-      return newRow;
+  //project owner
+  const projectSidebar = () => {
+    Api.get(`/api/v1/projectCreation/${projectId}`, {
+      headers: {
+        userId: userId,
+      },
+    }).then((res) => {
+      setIsOwner(res.data.data.isOwner);
+      setCreatedBy(res.data.data.createdBy);
     });
-    if (modifiedTableData.length > 0) {
-      const columns = Object.keys(modifiedTableData[0])?.map((columnName) => ({
-        title: columnName,
-        field: columnName,
-      }));
-
-      const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
-        skipHeader: false,
-      });
-      const workBook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workBook, workSheet, "FMECA Data");
-
-      const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
-      
-      // Create a Blob object and initiate a download
-      const blob = new Blob([buf], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "FMECA_Data.xlsx";
-      link.click();
-
-      // Clean up
-      URL.revokeObjectURL(url);
-    } else {
-      toast("Export Failed !! No Data Found", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        type: "error", // Change this to "error" to display an error message
-      });
-    }
   };
+  const getProductData = () => {
+    Api.get("/api/v1/fmeca/product/list", {
+      params: {
+        projectId: projectId,
+        productId: productId,
+        userId: userId,
+      },
+    })
+      .then((res) => {
+        setTableData(res?.data?.data);
+        getProjectDetails();
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        }
+      });
+  };
+
+  //handle file
+  //const fileType =[""]
 
   const getTreeData = () => {
     Api.get(`/api/v1/productTreeStructure/list`, {
@@ -681,9 +517,7 @@ ratioFields.forEach((field) => {
         setIsLoading(false);
         setInitialProductID(initialProductID);
         setInitialTreeStructure(res?.data?.data[0]?.id);
-        // console.log("New data..", treeData)
       })
-
       .catch((error) => {
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
@@ -710,6 +544,501 @@ ratioFields.forEach((field) => {
           logout();
         }
       });
+  };
+
+  useEffect(() => {
+    getProjectPermission();
+    projectSidebar();
+    getProjectDetails();
+  }, [projectId]);
+
+  const tableTheme = createTheme({
+    overrides: {
+      MuiTableRow: {
+        root: {
+          "&:hover": {
+            cursor: "pointer",
+            backgroundColor: "rgba(224, 224, 224, 1) !important",
+          },
+        },
+      },
+    },
+  });
+  //Project detail API
+  const getProjectDetails = () => {
+    Api.get(`/api/v1/projectCreation/${projectId}`, {
+      headers: { userId: userId },
+    })
+      .then((response) => {
+        setOperationPhase(response.data?.data?.operationalPhase);
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        }
+      });
+  };
+
+  const getAllConnect = () => {
+    setIsLoading(true);
+
+    Api.get("api/v1/library/get/all/connect/value", {
+      params: {
+        projectId: projectId,
+      },
+    }).then((res) => {
+      setIsLoading(false);
+      const filteredData = res.data.getData.filter(
+        (entry) => entry?.libraryId?.moduleName === "FMECA"
+      );
+      setConnectData(filteredData);
+    });
+  };
+  const [showModal, setShowModal] = useState(false);
+  const [modalInfo, setModalInfo] = useState({ title: "", message: "" });
+  const [connectData, setConnectData] = useState([]);
+  const [selectedFunction, setSelectedFunction] = useState();
+  const filterCondition = (item) => {
+    return item.sourceValue === selectedFunction?.value;
+  };
+  const [connectedValues, setConnectedValues] = useState([]);
+
+  const [selectedField, setSelectedField] = useState(null);
+  const dropdownOptions = {};
+  const fieldNames = [
+    "operatingPhase",
+    "function",
+    "failureMode",
+    // "searchFM",
+    "failureModeRatioAlpha",
+    "cause",
+    "subSystemEffect",
+    "systemEffect",
+    "endEffect",
+    "endEffectRatioBeta",
+    "safetyImpact",
+    "referenceHazardId",
+    "realibilityImpact",
+    "serviceDisruptionTime",
+    "frequency",
+    "severity",
+    "riskIndex",
+    "detectableMeansDuringOperation",
+    "detectableMeansToMaintainer",
+    "BuiltInTest",
+    "designControl",
+    "maintenanceControl",
+    "exportConstraints",
+    "immediteActionDuringOperationalPhase",
+    "immediteActionDuringNonOperationalPhase",
+    "userField1",
+    "userField2",
+    "userField3",
+    "userField4",
+    "userField6",
+    "userField7",
+    "userField8",
+    "userField9",
+    "userField10",
+  ];
+
+  fieldNames.forEach((fieldName) => {
+    const filteredData =
+      connectData?.filter((item) => item?.sourceName === fieldName) || [];
+    dropdownOptions[fieldName] = filteredData.map((item) => ({
+      value: item?.sourceValue,
+      label: item?.sourceValue,
+    }));
+  });
+
+  useEffect(() => {
+    const filteredValues = connectData?.filter(filterCondition) || [];
+    setConnectedValues(filteredValues);
+  }, [connectData, selectedFunction]);
+
+  useEffect(() => {
+    setSelectedFunction();
+    setConnectedValues([]);
+  }, []);
+
+  const createDropdownEditComponent =
+    (fieldName) =>
+      ({ value, onChange }) => {
+        const options = dropdownOptions[fieldName] || [];
+        const connectedValue = connectedValues[0]?.destinationData?.find(
+          (item) => item?.destinationName === fieldName
+        )?.destinationValue;
+
+        const isAnyDropdownSelected = selectedField !== null;
+
+        if (isAnyDropdownSelected || options.length === 0) {
+          return (
+            <TextField
+              onChange={(e) => onChange(connectedValue || e.target.value)}
+              value={connectedValue || value}
+              multiline
+            />
+          );
+        }
+
+        return (
+          <Select
+            value={options.find((option) => option.value === value)}
+            onChange={(selectedOption) => {
+              onChange(selectedOption.value);
+              setSelectedField(fieldName);
+              setSelectedFunction(selectedOption);
+            }}
+            options={options}
+          />
+        );
+      };
+
+
+
+  const handleDropdownSelection = (fieldName) => {
+    setSelectedField(fieldName);
+    setSelectedFunction(null);
+  };
+  // Validation utility
+  const validateField = (fieldName, value, isRequired) => {
+    if (isRequired && (!value || value.toString().trim() === '')) {
+      return `${fieldName} is required`;
+    }
+    return null;
+  };
+
+  // Validation Modal Component
+  const ValidationModal = ({ isOpen, errors, onClose }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          minWidth: '400px',
+          maxWidth: '500px'
+        }}>
+          <h3 style={{ color: '#d32f2f', marginBottom: '15px' }}>Validation Errors</h3>
+          <ul style={{ marginBottom: '20px' }}>
+            {errors.map((error, index) => (
+              <li key={index} style={{ color: '#d32f2f', marginBottom: '5px' }}>
+                {error}
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={onClose}
+            style={{
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const createEditComponent = (fieldName, title, isRequired = false) => {
+    return {
+      title: isRequired ? `${title} *` : title,
+      field: fieldName,
+      validate: (rowData) => {
+        const error = validateField(title, rowData[fieldName], isRequired);
+        return error ? { isValid: false, helperText: error } : true;
+      },
+      editComponent: ({ value, onChange, rowData }) => {
+        const handleChange = (newValue) => {
+          onChange(newValue);
+
+          // Validate on change and store validation state
+          const error = validateField(title, newValue, isRequired);
+          // You can store this error in a state management system
+        };
+
+        return (
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              value={value || ''}
+              onChange={(e) => handleChange(e.target.value)}
+              placeholder={isRequired ? `${title} *` : title}
+              style={{
+                height: "40px",
+                borderRadius: "4px",
+                width: "100%",
+                borderColor: isRequired && (!value || value.toString().trim() === '') ? '#d32f2f' : '#ccc'
+              }}
+              title={title}
+            />
+            {isRequired && (!value || value.toString().trim() === '') && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                color: '#d32f2f',
+                fontSize: '12px',
+                marginTop: '2px'
+              }}>
+                {title} is required!
+              </div>
+            )}
+          </div>
+        );
+      }
+    };
+  };
+
+  // Special case for operatingPhase (has different styling)
+  const operatingPhaseColumn = {
+    ...createEditComponent("operatingPhase", "Operating Phases", true), // true for required
+    editComponent: ({ value, onChange, rowData }) => {
+      const filteredData = allSepareteData?.filter(
+        (item) => item?.sourceName === "operatingPhase"
+      ) || [];
+
+      const options = filteredData.map((item) => ({
+        value: item.sourceValue,
+        label: item.sourceValue,
+      }));
+
+      const selectedOption = options.find((opt) => opt.value === value);
+      const displayOption = selectedOption || (value ? { label: value, value: value } : null);
+
+      const isRequired = true; // This field is required
+      const hasError = isRequired && (!value || value.toString().trim() === '');
+
+      if (options.length === 0) {
+        return (
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              value={value || ''}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="Enter Operating Phase *"
+              style={{
+                height: "40px",
+                borderRadius: "4px",
+                width: "100%",
+                borderColor: hasError ? '#d32f2f' : '#ccc'
+              }}
+              title="Enter Operating Phase"
+            />
+            {hasError && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                color: '#d32f2f',
+                fontSize: '12px',
+                marginTop: '2px'
+              }}>
+                Operating Phases is required!
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      return (
+        <div style={{ position: 'relative' }}>
+          <Select
+            name="operatingPhase"
+            value={displayOption}
+            onChange={(selectedOption) => {
+              onChange(selectedOption?.value);
+              handleInputChange(selectedOption, "operatingPhase");
+              getAllConnectedLibrary(selectedOption, "operatingPhase");
+            }}
+            options={options}
+            styles={{
+              container: (base) => ({
+                ...base,
+                width: "100%",
+                minHeight: "40px"
+              }),
+              control: (base, state) => ({
+                ...base,
+                borderColor: hasError ? '#d32f2f' : state.isFocused ? '#1976d2' : '#ccc',
+                '&:hover': {
+                  borderColor: hasError ? '#d32f2f' : '#1976d2'
+                }
+              })
+            }}
+          />
+          {hasError && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              color: '#d32f2f',
+              fontSize: '12px',
+              marginTop: '2px'
+            }}>
+              Required field
+            </div>
+          )}
+        </div>
+      );
+    }
+  };
+
+  // Special case for FMECA ID (not an editable field)
+  const fmecaIdColumn = {
+    render: (rowData) => `${rowData?.tableData?.id + 1}`,
+    title: "FMECA ID",
+  };
+
+  const columns = [
+    fmecaIdColumn,
+    operatingPhaseColumn,
+    createEditComponent("function", "Function", true),
+    createEditComponent("failureMode", "Failure Mode", true),
+    createEditComponent("failureModeRatioAlpha", "Failure Mode Ratio Alpha", true),
+    createEditComponent("detectableMeansDuringOperation", "Cause"),
+    createEditComponent("subSystemEffect", "Sub System effect", true),
+    createEditComponent("systemEffect", "System Effect", true),
+    createEditComponent("endEffect", "End Effect", true),
+    createEditComponent("endEffectRatioBeta", "End Effect ratio Beta (must be equal to 1)", true),
+    createEditComponent("safetyImpact", "Safety Impact", true),
+    createEditComponent("referenceHazardId", "Reference Hazard ID"),
+    createEditComponent("realibilityImpact", "Reliability Impact", true),
+    createEditComponent("serviceDisruptionTime", "Service Disruption Time (minutes)"),
+    createEditComponent("frequency", "Frequency"),
+    createEditComponent("severity", "Severity"),
+    createEditComponent("riskIndex", "Risk Index"),
+    createEditComponent("detectableMeansDuringOperation", "Detectable Means during operation"),
+    createEditComponent("detectableMeansToMaintainer", "Detectable Means to Maintainer"),
+    createEditComponent("BuiltInTest", "Built-in Test"),
+    createEditComponent("designControl", "Design Control"),
+    createEditComponent("maintenanceControl", "Maintenance Control"),
+    createEditComponent("exportConstraints", "Export constraints"),
+    createEditComponent("immediteActionDuringOperationalPhase", "Immediate Action during operational Phases"),
+    createEditComponent("immediteActionDuringNonOperationalPhase", "Immediate Action during Non-operational Phases"),
+    createEditComponent("userField1", "User field 1"),
+    createEditComponent("userField2", "User field 2"),
+    createEditComponent("userField3", "User field 3"),
+    createEditComponent("userField4", "User field 4"),
+    createEditComponent("userField5", "User field 5"),
+    createEditComponent("userField6", "User field 6"),
+    createEditComponent("userField7", "User field 7"),
+    createEditComponent("userField8", "User field 8"),
+    createEditComponent("userField9", "User field 9"),
+    createEditComponent("userField10", "User field 10"),
+  ];
+  const createFmeca = (values) => {
+
+    console.log("created values", values)
+
+    if (productId) {
+      const companyId = localStorage.getItem("companyId");
+      setIsLoading(true);
+      Api.post("api/v1/FMECA/", {
+        operatingPhase: values.operatingPhase
+          ? values.operatingPhase
+          : data.operatingPhase,
+        function: values.function ? values.function : data.function,
+        failureMode: values.failureMode ? values.failureMode : data.failureMode,
+        // searchFM: values.searchFM ? values.searchFM : data.searchFM,
+        cause: values.cause ? values.cause : data.cause,
+        failureModeRatioAlpha: values?.failureModeRatioAlpha
+          ? values?.failureModeRatioAlpha
+          : 1,
+        detectableMeansDuringOperation: values.detectableMeansDuringOperation
+          ? values.detectableMeansDuringOperation
+          : data.detectableMeansDuringOperation,
+        detectableMeansToMaintainer: values.detectableMeansToMaintainer
+          ? values.detectableMeansToMaintainer
+          : data.detectableMeansToMaintainer,
+        BuiltInTest: values.BuiltInTest ? values.BuiltInTest : data.BuiltInTest,
+        subSystemEffect: values.subSystemEffect
+          ? values.subSystemEffect
+          : data.subSystemEffect,
+        systemEffect: values.systemEffect
+          ? values.systemEffect
+          : data.systemEffect,
+        endEffect: values.endEffect ? values.endEffect : data.endEffect,
+        endEffectRatioBeta: values.endEffectRatioBeta
+          ? values.endEffectRatioBeta
+          : 1,
+        safetyImpact: values.safetyImpact
+          ? values.safetyImpact
+          : data.safetyImpact,
+        referenceId: values.referenceHazardId
+          ? values.referenceHazardId
+          : data.referenceHazardId,
+        realibilityImpact: values.realibilityImpact
+          ? values.realibilityImpact
+          : data.realibilityImpact,
+        serviceDisruptionTime: values.serviceDisruptionTime
+          ? values.serviceDisruptionTime
+          : data.serviceDisruptionTime,
+        frequency: values.frequency ? values.frequency : data.frequency,
+        severity: values.severity ? values.severity : data.severity,
+        riskIndex: values.riskIndex ? values.riskIndex : data.riskIndex,
+        designControl: values.designControl
+          ? values.designControl
+          : data.designControl,
+        maintenanceControl: values.maintenanceControl
+          ? values.maintenanceControl
+          : data.maintenanceControl,
+        exportConstraints: values.exportConstraints
+          ? values.exportConstraints
+          : data.exportConstraints,
+        immediteActionDuringOperationalPhase:
+          values.immediteActionDuringOperationalPhase
+            ? values.immediteActionDuringOperationalPhase
+            : data.immediteActionDuringOperationalPhase,
+        immediteActionDuringNonOperationalPhase:
+          values.immediteActionDuringNonOperationalPhase
+            ? values.immediteActionDuringNonOperationalPhase
+            : data.immediteActionDuringNonOperationalPhase,
+        userField1: values.userField1 ? values.userField1 : data.userField1,
+        userField2: values.userField2 ? values.userField2 : data.userField2,
+        userField3: values.userField3 ? values.userField3 : data.userField3,
+        userField4: values.userField4 ? values.userField4 : data.userField4,
+        userField5: values.userField5 ? values.userField5 : data.userField5,
+        userField6: values.userField6 ? values.userField6 : data.userField6,
+        userField7: values.userField7 ? values.userField7 : data.userField7,
+        userField8: values.userField8 ? values.userField8 : data.userField8,
+        userField9: values.userField9 ? values.userField9 : data.userField9,
+        userField10: values.userField10 ? values.userField10 : data.userField10,
+        projectId: projectId,
+        companyId: companyId,
+        productId: productId,
+        userId: userId,
+        Alldata: tableData,
+      }).then((response) => {
+        const status = response?.status;
+        // if (status === 204) {
+        //   setFailureModeRatioError(true);
+        // }
+        getProductData();
+        setIsLoading(false);
+      });
+    } else {
+      setProductModal(true);
+    }
   };
   const updateFmeca = async (values) => {
     const companyId = localStorage.getItem("companyId");
@@ -761,7 +1090,6 @@ ratioFields.forEach((field) => {
       userId: userId,
       Alldata: tableData,
     };
-    console.log("Update Payload:", payload);
 
     try {
       const response = await Api.patch("api/v1/FMECA/update", payload);
@@ -771,15 +1099,13 @@ ratioFields.forEach((field) => {
         getAllConnectedLibraryAfterUpdate();
       } else if (response?.status === 204) {
         toast.error("Failure Mode Radio Alpha Must be Equal to One !");
-        console.log("Response..", response)
       }
       else {
         toast.warning("Update request completed, but status not ideal.");
         getProductData();
         getAllConnectedLibraryAfterUpdate();
       }
-    }
-    catch (error) {
+    } catch (error) {
       const errorStatus = error?.response?.status;
       if (errorStatus === 401) {
         logout();
@@ -792,97 +1118,7 @@ ratioFields.forEach((field) => {
       setIsLoading(false);
     }
   };
-  
-  const createFMECADataFromExcel = (values) => {
-    const companyId = localStorage.getItem("companyId");
-    setIsLoading(true);
-    Api.post("api/v1/FMECA/", {
-      operatingPhase: values.operatingPhase,
-      function: values.function,
-      failureMode: values.failureMode,
-      // searchFM: values.searchFM,
-      cause: values.cause,
-      failureModeRatioAlpha: values?.failureModeRatioAlpha
-        ? values?.failureModeRatioAlpha
-        : 0,
-      detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-      detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-      BuiltInTest: values.BuiltInTest,
-      subSystemEffect: values.subSystemEffect,
-      systemEffect: values.systemEffect,
-      endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta
-        ? values.endEffectRatioBeta
-        : 1,
-      safetyImpact: values.safetyImpact,
-      referenceHazardId: values.referenceHazardId,
-      realibilityImpact: values.realibilityImpact,
-      serviceDisruptionTime: values.serviceDisruptionTime,
-      frequency: values.frequency,
-      severity: values.severity,
-      riskIndex: values.riskIndex,
-      designControl: values.designControl,
-      maintenanceControl: values.maintenanceControl,
-      exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase:
-        values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase:
-        values.immediteActionDuringNonOperationalPhase,
-      userField1: values.userField1,
-      userField2: values.userField2,
-      userField3: values.userField3,
-      userField4: values.userField4,
-      userField5: values.userField5,
-      userField6: values.userField6,
-      userField7: values.userField7,
-      userField8: values.userField8,
-      userField9: values.userField9,
-      userField10: values.userField10,
-      projectId: projectId,
-      companyId: companyId,
-      productId: productId,
-      userId: userId,
-      Alldata: tableData,
-    }).then((response) => {
-      setIsLoading(false);
-      const status = response?.status;
-      if (status === 204) {
-        setFailureModeRatioError(true);
-      }
 
-      getProductData();
-      setIsLoading(false);
-    });
-  };
-  const convertToJson = (headers, data) => {
-    const rows = [];
-
-    // if (excelData.length > 1) {
-    if (data.length > 0 && data[0].length > 1) {
-      data.forEach((row) => {
-        let rowData = {};
-        row.forEach((element, index) => {
-          rowData[headers[index]] = element;
-        });
-        rows.push(rowData);
-        createFMECADataFromExcel(rowData);
-      });
-
-      return rows;
-    } else {
-      toast("No Data Found In Excel Sheet", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        type: "error",
-      });
-    }
-  };
   const deleteFmecaData = (value) => {
     setIsLoading(true);
     const rowId = value?.id;
@@ -901,16 +1137,7 @@ ratioFields.forEach((field) => {
         }
       });
   };
-  const projectSidebar = () => {
-    Api.get(`/api/v1/projectCreation/${projectId}`, {
-      headers: {
-        userId: userId,
-      },
-    }).then((res) => {
-      setIsOwner(res.data.data.isOwner);
-      setCreatedBy(res.data.data.createdBy);
-    });
-  };
+
   const Modalopen = () => {
     setShow(true);
     setTimeout(() => {
@@ -919,363 +1146,15 @@ ratioFields.forEach((field) => {
   };
 
   const role = localStorage.getItem("role");
-  useEffect(() => {
-    getProjectPermission();
-    projectSidebar();
-    getProjectDetails();
-  }, [projectId]);
 
-  const tableTheme = createTheme({
-    overrides: {
-      MuiTableRow: {
-        root: {
-          "&:hover": {
-            cursor: "pointer",
-            backgroundColor: "rgba(224, 224, 224, 1) !important",
-          },
-        },
-      },
-    },
-  });
-  const getProductData = () => {
-    Api.get("/api/v1/fmeca/product/list", {
-      params: {
-        projectId: projectId,
-        productId: productId,
-        userId: userId,
-      },
-    })
-      .then((res) => {
-        setTableData(res?.data?.data);
-        getProjectDetails();
-      })
-      .catch((error) => {
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
-  };
-  const getProjectDetails = () => {
-    Api.get(`/api/v1/projectCreation/${projectId}`, {
-      headers: { userId: userId },
-    })
-      .then((response) => {
-        setOperationPhase(response.data?.data?.operationalPhase);
-      })
-      .catch((error) => {
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        }
-      });
-  };
-
-  const getAllConnect = () => {
-    setIsLoading(true);
-
-    Api.get("api/v1/library/get/all/connect/value", {
-      params: {
-        projectId: projectId,
-      },
-    }).then((res) => {
-      setIsLoading(false);
-      const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "FMECA"
-      );
-      setConnectData(filteredData);
-    });
+  const handleDelete = (index) => {
+    const row = tableData[index];
+    const newData = tableData.filter((_, i) => i !== index);
+    setTableData(newData);
+    deleteFmecaData(row);
   };
 
 
-  const createFmeca = (values) => {
-    if (productId) {
-      const companyId = localStorage.getItem("companyId");
-      setIsLoading(true);
-      Api.post("api/v1/FMECA/", {
-        operatingPhase: values.operatingPhase,
-        function: values.function,
-        failureMode: values.failureMode,
-        cause: values.cause,
-        failureModeRatioAlpha: values?.failureModeRatioAlpha || 1,
-        detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-        detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-        BuiltInTest: values.BuiltInTest,
-        subSystemEffect: values.subSystemEffect,
-        systemEffect: values.systemEffect,
-        endEffect: values.endEffect,
-        endEffectRatioBeta: values.endEffectRatioBeta || 1,
-        safetyImpact: values.safetyImpact,
-        referenceHazardId: values.referenceHazardId,
-        realibilityImpact: values.realibilityImpact,
-        serviceDisruptionTime: values.serviceDisruptionTime,
-        frequency: values.frequency,
-        severity: values.severity,
-        riskIndex: values.riskIndex,
-        designControl: values.designControl,
-        maintenanceControl: values.maintenanceControl,
-        exportConstraints: values.exportConstraints,
-        immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase,
-        immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase,
-        userField1: values.userField1,
-        userField2: values.userField2,
-        userField3: values.userField3,
-        userField4: values.userField4,
-        userField5: values.userField5,
-        userField6: values.userField6,
-        userField7: values.userField7,
-        userField8: values.userField8,
-        userField9: values.userField9,
-        userField10: values.userField10,
-        projectId: projectId,
-        companyId: companyId,
-        productId: productId,
-        userId: userId,
-        Alldata: tableData,
-      }).then((response) => {
-        const status = response?.status;
-        getProductData();
-        setIsLoading(false);
-
-        if (status === 200 || status === 201) {
-          toast.success("FMECA record added successfully!");
-        }
-      }).catch(error => {
-        setIsLoading(false);
-        toast.error("Failed to add FMECA record");
-        console.error("Error creating FMECA:", error);
-      });
-    } else {
-      setProductModal(true);
-    }
-  };
-  const [connectData, setConnectData] = useState([]);
-
-  const renderModalField = (fieldName, title, placeholder, required = false) => {
-    const seperateFilteredData =
-      allSepareteData?.filter((item) => item?.sourceName === fieldName) || [];
-    const conncetedFilteredData =
-      allConnectedData?.filter(
-        (item) => item?.destinationName === fieldName
-      ) || [];
-
-    const options =
-      conncetedFilteredData.length > 0
-        ? conncetedFilteredData?.map((item) => ({
-          value: item?.destinationValue,
-          label: item?.destinationValue,
-        }))
-        : seperateFilteredData?.map((item) => ({
-          value: item?.sourceValue,
-          label: item?.sourceValue,
-        }));
-
-    // Check if this field has an error
-    const hasError = !!errors[fieldName];
-
-    if (!options || options.length === 0) {
-      return (
-        <Form.Group className="mb-3">
-          <Form.Label>
-            {title}
-
-          </Form.Label>
-          <Form.Control
-            type="text"
-            name={fieldName}
-            value={newFmecaData[fieldName] || ""}
-            onChange={handleAddModalInputChange}
-            placeholder={placeholder}
-            isInvalid={hasError}
-            required={required}
-          />
-          {hasError && (
-            <Form.Control.Feedback type="invalid">
-              {errors[fieldName]}
-            </Form.Control.Feedback>
-          )}
-        </Form.Group>
-      );
-    }
-
-    return (
-      <Form.Group className="mb-3">
-        <Form.Label>
-          {title}
-
-        </Form.Label>
-        <Select
-          name={fieldName}
-          value={options.find(option => option.value === newFmecaData[fieldName]) || null}
-          onChange={(selectedOption) => handleAddModalSelectChange(selectedOption, fieldName)}
-          options={options}
-          placeholder={placeholder}
-          isClearable
-          styles={{
-            ...customStyles,
-            control: (provided, state) => ({
-              ...provided,
-              borderColor: hasError ? '#dc3545' : provided.borderColor,
-              '&:hover': {
-                borderColor: hasError ? '#dc3545' : provided.borderColor,
-              },
-              boxShadow: hasError ? '0 0 0 0.2rem rgba(220, 53, 69, 0.25)' : provided.boxShadow,
-            })
-          }}
-        />
-        {hasError && (
-          <div className="text-danger" style={{ fontSize: '0.875em', marginTop: '0.25rem' }}>
-            {errors[fieldName]}
-          </div>
-        )}
-      </Form.Group>
-    );
-  };
-
-  const columns = [
-    {
-      render: (rowData) => `${rowData.tableData.id + 1}`,
-      title: "FMECA ID",
-    },
-    {
-      field: "operatingPhase",
-      title: "Operating Phases",
-    },
-    {
-      field: "function",
-      title: "Function*",
-    },
-    {
-      field: "failureMode",
-      title: "Failure Mode*",
-    },
-    {
-      field: "failureModeRatioAlpha",
-      title: "Failure Mode Ratio Alpha*",
-    },
-    {
-      field: "detectableMeansDuringOperation",
-      title: "Cause",
-    },
-    {
-      field: "subSystemEffect",
-      title: "Sub System effect*",
-    },
-    {
-      field: "systemEffect",
-      title: "System Effect*",
-    },
-    {
-      field: "endEffect",
-      title: "End Effect*",
-    },
-    {
-      field: "endEffectRatioBeta",
-      title: "End Effect ratio Beta*",
-    },
-    {
-      field: "safetyImpact",
-      title: "Safety Impact*",
-    },
-    {
-      field: "referenceHazardId",
-      title: "Reference Hazard ID",
-    },
-    {
-      field: "realibilityImpact",
-      title: "Reliability Impact*",
-    },
-    {
-      field: "serviceDisruptionTime",
-      title: "Service Disruption Time(minutes)",
-    },
-    {
-      field: "frequency",
-      title: "Frequency",
-    },
-    {
-      field: "severity",
-      title: "Severity",
-    },
-    {
-      field: "riskIndex",
-      title: "Risk Index",
-    },
-    {
-      field: "detectableMeansDuringOperation",
-      title: "Detectable Means during operation",
-    },
-    {
-      field: "detectableMeansToMaintainer",
-      title: "Detectable Means to Maintainer",
-    },
-    {
-      field: "BuiltInTest",
-      title: "Built-in Test",
-    },
-    {
-      field: "designControl",
-      title: "Design Control",
-    },
-    {
-      field: "maintenanceControl",
-      title: "Maintenance Control",
-    },
-    {
-      field: "exportConstraints",
-      title: "Export constraints",
-    },
-    {
-      field: "immediteActionDuringOperationalPhase",
-      title: "Immediate Action during operational Phases",
-    },
-    {
-      field: "immediteActionDuringNonOperationalPhase",
-      title: "Immediate Action during Non-operational Phases",
-    },
-    {
-      field: "userField1",
-      title: "User field 1",
-    },
-    {
-      field: "userField2",
-      title: "User field 2",
-    },
-    {
-      field: "userField3",
-      title: "User field 3",
-    },
-    {
-      field: "userField4",
-      title: "User field 4",
-    },
-    {
-      field: "userField5",
-      title: "User field 5",
-    },
-    {
-      field: "userField6",
-      title: "User field 6",
-    },
-    {
-      field: "userField7",
-      title: "User field 7",
-    },
-    {
-      field: "userField8",
-      title: "User field 8",
-    },
-    {
-      field: "userField9",
-      title: "User field 9",
-    },
-    {
-      field: "userField10",
-      title: "User field 10",
-    },
-
-
-  ];
 
   return (
     <div className="mx-4 mt-5">
@@ -1283,8 +1162,12 @@ ratioFields.forEach((field) => {
         <Loader />
       ) : (
         <div>
-          {/* Header section */}
-          <div style={{ display: "flex", alignItems: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
             <div style={{ width: "30%" }}>
               <Projectname projectId={projectId} />
             </div>
@@ -1335,227 +1218,113 @@ ratioFields.forEach((field) => {
               </Tooltip>
             </div>
           </div>
+          <div>
+            <div className="mt-5" style={{ bottom: "35px" }}>
+              <ThemeProvider theme={tableTheme}>
+                <MaterialTable
+                  editable={{
+                    onRowAdd:
+                      writePermission === true ||
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
+                        ? (newRow) =>
+                          new Promise((resolve, reject) => {
+                            createFmeca(newRow);
+                            resolve();
+                          })
+                        : null,
+                    onRowUpdate:
+                      writePermission === true ||
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
+                        ? (newRow, oldData) =>
+                          new Promise((resolve, reject) => {
+                            updateFmeca(newRow);
+                            resolve();
+                          })
+                        : null,
 
-          {/* Add button */}
-          <div className="d-flex justify-content-end mb-4">
-            <Tooltip placement="top" title="Add FMECA">
-              <Button
-                className="add-product-btn"
-                onClick={() => setShowAddModal(true)}
-                disabled={
-                  !writePermission &&
-                  role !== "admin" &&
-                  !(isOwner === true && createdBy === userId)
-                }
-              >
-                <FontAwesomeIcon icon={faPlus} style={{ width: "15px" }} />
-              </Button>
-            </Tooltip>
+                    onRowDelete:
+                      writePermission === true ||
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
+                        ? (selectedRow) =>
+                          new Promise((resolve, reject) => {
+                            deleteFmecaData(selectedRow);
+                            resolve();
+                          })
+                        : null,
+                  }}
+                  title="FMECA"
+                  icons={tableIcons}
+                  columns={columns}
+                  data={tableData}
+                  options={{
+                    cellStyle: {
+                      border: "1px solid #eee",
+                      whiteSpace: "normal",
+                      wordBreak: "break-word",
+                      minWidth: 250,
+                      maxWidth: 400,
+                      textAlign: "center",
+                    },
+                    addRowPosition: "first",
+                    actionsColumnIndex: -1,
+                    pageSize: 5,
+                    pageSizeOptions: [5, 10, 20, 50],
+                    headerStyle: {
+                      backgroundColor: "#CCE6FF",
+                      fontWeight: "bold",
+                      zIndex: 0,
+                      whiteSpace: "nowrap",
+                      minWidth: 200,
+                      textAlign: "center",
+                      maxWidth: 500,
+                    },
+                  }}
+                  localization={{
+                    toolbar: { function: "Placeholder" },
+                    body: {
+                      addTooltip: "Add FMECA",
+                    },
+                  }}
+                />
+              </ThemeProvider>
+              <ValidationModal
+                isOpen={showValidationModal}
+                errors={validationErrors}
+                onClose={closeValidationModal}
+              />
+
+            </div>
           </div>
 
-          {/* Material Table */}
-          <ThemeProvider theme={tableTheme}>
-            <MaterialTable
-              title="FMECA"
-              icons={tableIcons}
-              columns={columns}
-              data={tableData}
-              options={{
-                // cellStyle: {
-                //   border: "1px solid #eee",
-                //   whiteSpace: "nowrap",
-                //   textOverflow: "ellipsis",
-                //   overflow: "hidden",
-                // },
-                cellStyle: {
-                  border: "1px solid #eee",
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  minWidth: 250,
-                  maxWidth: 400,
-                     textAlign: "center",  
-                },
-                addRowPosition: "first",
-                actionsColumnIndex: -1,
-                pageSize: 5,
-                pageSizeOptions: [5, 10, 20, 50],
-                headerStyle: {
-                  backgroundColor: "#CCE6FF",
-                  fontWeight: "bold",
-                  zIndex: 0,
-                  whiteSpace: "nowrap",
-                  minWidth: 200,
-                   textAlign: "center",  
-                  maxWidth: 500,
-                },
-              }}
-              editable={{
-                onRowUpdate:
-                  writePermission === true ||
-                    writePermission === "undefined" ||
-                    role === "admin" ||
-                    (isOwner === true && createdBy === userId)
-                    ? (newRow, oldData) =>
-                      new Promise((resolve) => {
-                        updateFmeca(newRow);
-                        resolve();
-                      })
-                    : null,
-
-                onRowDelete:
-                  writePermission === true ||
-                    writePermission === "undefined" ||
-                    role === "admin" ||
-                    (isOwner === true && createdBy === userId)
-                    ? (selectedRow) =>
-                      new Promise((resolve) => {
-                        deleteFmecaData(selectedRow);
-                        resolve();
-                      })
-                    : null,
-              }}
-            />
-          </ThemeProvider>
-
-          {/* Add Modal */}
-          <div className="main-div-product">
-            <Modal show={showAddModal} onHide={handleModalClose} size="xl">
-              <Modal.Header closeButton></Modal.Header>
-              <div className="mttr-sec text-center">
-                <p className="mb-0 para-tag">
-                  Add New FMECA
-                </p>
+          <Modal show={show} centered>
+            <div className="d-flex justify-content-center mt-5">
+              <FontAwesomeIcon
+                icon={faCircleCheck}
+                fontSize={"40px"}
+                color="#1D5460"
+              />
+            </div>
+            <Modal.Footer className=" d-flex justify-content-center success-message mt-3 mb-4">
+              <div>
+                <h4 className="text-center">Row Deleted Successfully</h4>
               </div>
-
-              <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                <Form>
-                  <Row>
-                    <Col md={4}>
-                      {renderModalField("operatingPhase", "Operating Phases", "Enter Operating Phase")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("function", "Function*", "Enter Function", true)}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("failureMode", "Failure Mode*", "Enter Failure Mode", true)}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("failureModeRatioAlpha", "Failure Mode Ratio Alpha*", "Enter Failure Mode Ratio Alpha")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("cause", "Cause", "Enter Cause")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("subSystemEffect", "Sub System effect*", "Enter Sub System Effect")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("systemEffect", "System Effect*", "Enter System Effect")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("endEffect", "End Effect*", "Enter End Effect")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("endEffectRatioBeta", "End Effect ratio Beta*", "Enter End Effect Ratio Beta")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("safetyImpact", "Safety Impact*", "Enter Safety Impact")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("referenceHazardId", "Reference Hazard ID", "Enter Reference Hazard ID")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("realibilityImpact", "Reliability Impact*", "Enter Reliability Impact")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("serviceDisruptionTime", "Service Disruption Time (minutes)", "Enter Service Disruption Time")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("frequency", "Frequency", "Enter Frequency")}
-                    </Col>
-                     <Col md={4}>
-                      {renderModalField("severity", "Severity", "Enter Severity")}
-                    </Col>
-                     <Col md={4}>
-                      {renderModalField("riskIndex", "Risk Index", "Enter Risk Index")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("detectableMeansDuringOperation", "Detectable Means during operation", "Enter Detectable Means during operation")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("detectableMeansToMaintainer", "Detectable Means to Maintainer", "Enter Detectable Means to Maintainer")}
-                    </Col>
-                  <Col md={4}>
-                      {renderModalField("BuiltInTest", "Built-in Test", "Enter Built-in Test")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("designControl", "Design Control", "Enter Design Control")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("maintenanceControl", "Maintenance Control", "Enter Maintenance Control")}
-                    </Col>
-                  <Col md={4}>
-                      {renderModalField("exportConstraints", "Export constraints", "Enter Export Constraints")}
-                    </Col>
-                  <Col md={4}>
-                      {renderModalField("immediteActionDuringOperationalPhase", "Immediate Action during operational Phases", "Enter Immediate Action")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("immediteActionDuringNonOperationalPhase", "Immediate Action during Non-operational Phases", "Enter Immediate Action")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("userField1", "User field 1", "Enter User field 1")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("userField2", "User field 2", "Enter User field 2")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("userField3", "User field 3", "Enter User field 3")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("userField4", "User field 4", "Enter User field 4")}
-                    </Col>
-                   <Col md={4}>
-                      {renderModalField("userField5", "User field 5", "Enter User field 5")}
-                    </Col>
-                  <Col md={4}>
-                      {renderModalField("userField6", "User field 6", "Enter User field 6")}
-                    </Col>
-                     <Col md={4}>
-                      {renderModalField("userField7", "User field 7", "Enter User field 7")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("userField8", "User field 8", "Enter User field 8")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("userField9", "User field 9", "Enter User field 9")}
-                    </Col>
-                    <Col md={4}>
-                      {renderModalField("userField10", "User field 10", "Enter User field 10")}
-                    </Col>
-                  </Row>
-
-                </Form>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary" onClick={handleModal}>
-                  Cancel
-                </Button>
-                <Button variant="primary" onClick={handleAddFmeca}>
-                  Save
-                </Button>
-              </Modal.Footer>
-            </Modal>
-          </div>
-
-          {/* Other modals */}
+            </Modal.Footer>
+          </Modal>
           <Modal show={productModal} centered onHide={handleClose}>
             <div className="d-flex justify-content-center mt-5">
               <FaExclamationCircle size={45} color="#de2222b0" />
             </div>
-            <Modal.Footer className="d-flex justify-content-center success-message mb-4">
+            <Modal.Footer className=" d-flex justify-content-center success-message mb-4">
               <div>
                 <h5 className="text-center">
-                  Please select product from <b>Dropdown</b> before adding a new row!
+                  Please select product from <b>Dropdown </b>before adding a new
+                  row!
                 </h5>
                 <Button
                   className="save-btn fw-bold fmeca-button mt-3"
@@ -1566,7 +1335,6 @@ ratioFields.forEach((field) => {
               </div>
             </Modal.Footer>
           </Modal>
-
           <Modal show={failureModeRatioError} centered onHide={handleHide}>
             <div className="d-flex justify-content-center mt-5">
               <FontAwesomeIcon
@@ -1575,10 +1343,10 @@ ratioFields.forEach((field) => {
                 color="#de2222b0"
               />
             </div>
-            <Modal.Footer className="d-flex justify-content-center success-message mb-4">
+            <Modal.Footer className=" d-flex justify-content-center success-message mb-4">
               <div>
                 <h5 className="text-center">
-                  Sum of Failure Mode must be equal to <b>1</b>
+                  Sum of Failure Mode must be equal to<b>1</b>
                 </h5>
                 <Button
                   className="save-btn fw-bold fmeca-button mt-3"
@@ -1594,5 +1362,6 @@ ratioFields.forEach((field) => {
     </div>
   );
 }
-
 export default Index;
+
+
