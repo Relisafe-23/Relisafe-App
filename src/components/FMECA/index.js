@@ -140,6 +140,7 @@ function Index(props) {
   const [colDefs, setColDefs] = useState();
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
   const [companyId, setCompanyId] = useState();
+  const [selectedProductName, setSelectedProductName] = useState("");
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [perviousColumnValues, setPerviousColumnValues] = useState([]);
@@ -253,7 +254,7 @@ function Index(props) {
       const data = res?.data?.libraryData;
       setAllConnectedData(data ? data : perviousColumnValues);
       setPerviousColumnValues(data);
-      console.log("connected Library data", data)
+
     });
   };
 
@@ -280,16 +281,27 @@ function Index(props) {
     getAllConnect();
   }, []);
 
-  const DownloadExcel = () => {
+  const DownloadExcel = (values) => {
     const columnsToRemove = ["projectId", "companyId", "productId", "id"];
+    const CompanyName = treeTableData[0]?.companyId?.companyName;
+    const ProjectName = treeTableData[0]?.projectId?.projectName;
+    const data = tableData[0];
+    const productName = data?.productId?.productName
+    console.log("ProductName",productName)
+    console.log("tableData",tableData)
     const modifiedTableData = tableData.map((row) => {
-      const newRow = { ...row };
+      const newRow = {
+        ...row,
+        CompanyName,
+        ProjectName,
+        productName
+      };
       columnsToRemove.forEach((columnName) => {
         delete newRow[columnName];
       });
-
       return newRow;
     });
+
     if (modifiedTableData.length > 0) {
       const columns = Object.keys(modifiedTableData[0])?.map((columnName) => ({
         title: columnName,
@@ -302,6 +314,7 @@ function Index(props) {
       const workBook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workBook, workSheet, "FMECA Data");
 
+
       const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
 
       // Create a Blob object and initiate a download
@@ -313,7 +326,7 @@ function Index(props) {
       link.href = url;
       link.download = "FMECA_Data.xlsx";
       link.click();
-
+     
       // Clean up
       URL.revokeObjectURL(url);
     } else {
@@ -326,10 +339,11 @@ function Index(props) {
         draggable: true,
         progress: undefined,
         theme: "light",
-        type: "error", // Change this to "error" to display an error message
+        type: "error",
       });
     }
   };
+
   const createFMECADataFromExcel = (values) => {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
@@ -606,6 +620,14 @@ function Index(props) {
 
   const [selectedField, setSelectedField] = useState(null);
   const dropdownOptions = {};
+
+  const handleDropdownChange = (selectedValue) => {
+    const selectedItem = treeTableData.find(
+      (item) => item.productId === selectedValue
+    );
+    setSelectedProductName(selectedItem?.treeStructure?.productName || "");
+  };
+
   const fieldNames = [
     "operatingPhase",
     "function",
@@ -948,7 +970,7 @@ function Index(props) {
   ];
   const createFmeca = (values) => {
 
-    console.log("created values", values)
+
 
     if (productId) {
       const companyId = localStorage.getItem("companyId");
@@ -1097,7 +1119,9 @@ function Index(props) {
         toast.success("FMECA updated successfully!");
         getProductData();
         getAllConnectedLibraryAfterUpdate();
-      } else if (response?.status === 204) {
+        
+      }
+       else if (response?.status === 204) {
         toast.error("Failure Mode Radio Alpha Must be Equal to One !");
       }
       else {
@@ -1154,8 +1178,6 @@ function Index(props) {
     deleteFmecaData(row);
   };
 
-
-
   return (
     <div className="mx-4 mt-5">
       {isLoading ? (
@@ -1177,9 +1199,10 @@ function Index(props) {
                 value={projectId}
                 productId={productId}
                 data={treeTableData}
+                onChange={handleDropdownChange}
               />
             </div>
-
+            {/* {console.log("ProductName", treeTableData[0]?.treeStructure?.productName)}  */}
             <div
               style={{
                 display: "flex",
