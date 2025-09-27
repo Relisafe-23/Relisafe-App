@@ -36,7 +36,7 @@ function Index(props) {
   console.log("props", props.location.state);
 
   const treeStructureId = props?.location?.state?.parentId;
-
+  const [name, setName] = useState();
   const [open, setOpen] = useState(false);
   const [show, setShow] = useState(false);
   const [treeTableData, setTreeTabledata] = useState([]);
@@ -229,6 +229,9 @@ function Index(props) {
 
   const exportToExcel = (value) => {
     const originalData = {
+         CompanyName:treeTableData[0]?.companyId?.companyName,
+      ProjectName: treeTableData[0]?.projectId?.projectName,
+      productName: value.productName,
       Delivery_Days: value.deliveryTimeDays,
       Serial_Production_Price1: value.afterSerialProductionPrice1,
       Moq_Price_1: value.moq_1Price,
@@ -555,6 +558,7 @@ function Index(props) {
         <Formik
           enableReinitialize={true}
           initialValues={{
+            productName:productName,
             spare: prefillData?.spare
               ? { label: prefillData?.spare, value: prefillData?.spare }
               : "",
@@ -705,7 +709,7 @@ function Index(props) {
                           </div>
                         </Tooltip>
                         <Tooltip placement="left" title="Export">
-                          <Button
+                          <label
                             className="import-export-btn"
                             onClick={() => exportToExcel(values)}
                           >
@@ -713,7 +717,7 @@ function Index(props) {
                               icon={faFileUpload}
                               style={{ width: "15px" }}
                             />
-                          </Button>
+                          </label>
                         </Tooltip>
                       </div>
                     </div>

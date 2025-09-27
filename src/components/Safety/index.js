@@ -55,71 +55,70 @@ function Index(props) {
   const handleHide = () => setFailureModeRatioError(false);
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
 
-  const DownloadExcel = () => {
-    // Assuming 'tableData' is an array of objects, and you want to remove multiple columns
-    const columnsToRemove = [
-      "projectId",
-      "companyId",
-      "productId",
-      "id",
-      "tableData",
-      // "modeOfOperation",
-    ];
-
-    // Create a new array with the unwanted columns removed from each object
-    const modifiedTableData = tableData.map((row) => {
-      const newRow = { ...row };
-      columnsToRemove.forEach((columnName) => {
-        delete newRow[columnName];
-      });
-
-      // rowsToRemove.forEach(rowName=>{
-      //   delete columns[rowName]
-      // });
-
-      return newRow;
+const DownloadExcel = () => {
+  // Check if tableData exists and has data
+  if (!tableData || tableData.length === 0) {
+    toast("Export Failed !! No Data Found", {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      type: "error",
     });
-    if (modifiedTableData.length > 0) {
-      const columns = Object.keys(modifiedTableData[0]).map((columnName) => ({
-        title: columnName,
-        field: columnName,
-      }));
-          console.log('columnsToRemove',modifiedTableData)
+    return;
+  }
 
-      const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
-        skipHeader: false,
-      });
-      const workBook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workBook, workSheet, "safety Data");
+  const firstRow = tableData[0];
+  const companyName = firstRow?.companyId?.companyName || "Unknown Company";
+  const projectName = firstRow?.projectId?.projectName || "Unknown Project";
+  const data = tableData[0];
+  const productName = data?.productId?.productName || "Unknown Product"; 
+  const columnsToRemove = [
+    "projectId", "companyId", "productId", "id", "tableData",
+  ];
 
-      const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
+  const modifiedTableData = tableData.map((row) => {
+    const newRow = { 
+      Company: companyName,
+      Project: projectName,
+      Product: productName
+    };
+    Object.keys(row).forEach(key => {
+      // Only copy if it's not in columnsToRemove
+      if (!columnsToRemove.includes(key)) {
+        newRow[key] = row[key];
+      }
+    });
 
-      // Create a Blob object and initiate a download
-      const blob = new Blob([buf], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "Safety_Data.xlsx";
-      link.click();
+    return newRow;
+  });
 
-      // Clean up
-      URL.revokeObjectURL(url);
-    } else {
-      toast("Export Failed !! No Data Found", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        type: "error",
-      });
-    }
-  };
+  if (modifiedTableData.length > 0) {
+    const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
+      skipHeader: false,
+    });
+    const workBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workBook, workSheet, "Safety Data");
+
+    // Generate Excel file and trigger download
+    XLSX.writeFile(workBook, "Safety_Data.xlsx");
+  } else {
+    toast("Export Failed !! No Data Found", {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      type: "error",
+    });
+  }
+};
   const createsafetyDataFromExcel = (values) => {
     const companyId = localStorage.getItem("companyId");
 

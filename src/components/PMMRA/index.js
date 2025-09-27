@@ -1,4 +1,4 @@
-/* eslint-disable no-unused-vars */
+
 import React, { useEffect, useState } from "react";
 import { Row, Col, Card, Form, Modal, Button } from "react-bootstrap";
 import Label from "../core/Label";
@@ -133,6 +133,7 @@ export default function PMMRA(props) {
     ? props?.location?.state?.projectId
     : props?.match?.params?.id;
   const [partType, setPartType] = useState();
+  const [companyName,setCompanyName] = useState();
   const [category, setCategory] = useState();
   const [repairable, setRepairable] = useState();
   const [levelofreplace, setLevelofRaplace] = useState();
@@ -167,6 +168,7 @@ export default function PMMRA(props) {
     : props?.location?.state?.productId
       ? props?.location?.state?.productId
       : initialProductId;
+      const[projectname, setProjectName] = useState()
   const [reference, setReference] = useState();
   const [pmmraData, setpmmraData] = useState([]);
   const [fmecaData, setFmecaData] = useState([]);
@@ -488,6 +490,9 @@ const importExcel = (e) => {
 
   const exportToExcel = (value) => {
     const originalData = {
+      CompanyName:treeTableData[0]?.companyId?.companyName,
+      ProjectName: treeTableData[0]?.projectId?.projectName,
+      productName:value.name,
       endEffect: value.endeffect,
       safetyImpact: value.safetyimpact,
       reliabilityImpact: value.reliability,
@@ -599,6 +604,7 @@ const importExcel = (e) => {
   const [fmecaId, setFmecaId] = useState();
   const [fmecaFillterData, setFmecaFillterData] = useState();
   const [data, setData] = useState({
+    projectName:"",
     endEffect: "",
     safetyImpact: "",
     reliability: "",
@@ -675,7 +681,9 @@ const importExcel = (e) => {
       params: {
         projectId: projectId,
       },
-    }).then((res) => {
+    }).then((res, response) => {
+         setCompanyName(response?.data?.data?.companyId?.companyName);
+        setProjectName(response?.data?.data?.projectName);
       const filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "PMMRA"
       );
@@ -1299,7 +1307,11 @@ const importExcel = (e) => {
 
 
 const InitialValues = {
+  projectname:projectname,
+  companyId:companyId,
   name: name,
+  companyName:companyName,
+ projectId:projectId,
   partnumber: partNumber,
   repairable: mttrRepairable,
   spare: mttrSpare,
