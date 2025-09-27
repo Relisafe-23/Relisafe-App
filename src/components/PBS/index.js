@@ -64,6 +64,7 @@ export default function PBS(props) {
   const [subProductError, setSubProductError] = useState(false);
   const [data, setData] = useState([]);
   const [count, setCount] = useState();
+  const[treeTableData,setTreeTableData]=useState([])
   const [parentId, setParentId] = useState("");
 
   const [isLoading, setISLoading] = useState(true);
@@ -85,7 +86,8 @@ export default function PBS(props) {
   const [patchModal, setPatchModal] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [open, setOpen] = useState(false);
-
+  const [companyName,setCompanyName]=useState("");
+   const [projectName,setProjectName]=useState("");
   const [parentsId, setParentsId] = useState();
   const [colId, setColId] = useState("");
   const [deleteMessage, setDeleteMessage] = useState();
@@ -106,7 +108,7 @@ export default function PBS(props) {
   const DownloadExcel = () => {
     // Assuming 'tableData' is an array of objects, and you want to remove multiple columns
     const columnsToRemove = [
-      // "indexCount",
+      "indexCount",
       "type",
       "productId",
       "id",
@@ -119,9 +121,15 @@ export default function PBS(props) {
       "environment",
       "quantity",
     ];
+    const CompanyName = companyName;
+    const ProjectName = projectName; 
+  
     // Create a new array with the unwanted columns removed from each object
     const modifiedTableData = data.map((row) => {
-      const newRow = { ...row };
+      const newRow = { ...row,
+           CompanyName,
+        ProjectName
+       };
       columnsToRemove.forEach((columnName) => {
         delete newRow[columnName];
       });
@@ -258,8 +266,7 @@ export default function PBS(props) {
       const heads = headers.map((head) => ({ title: head, field: head }));
       setColDefs(heads);
       fileData.splice(0, 1);
-      console.log("fileData", fileData);
-      console.log("headers", headers);
+    
       setData(convertToJson(headers, fileData));
 
     };
@@ -279,6 +286,7 @@ export default function PBS(props) {
       },
     })
       .then((res) => {
+       
         const data = res?.data?.data;
         setPermission(data?.modules[0]);
       })
@@ -515,7 +523,7 @@ export default function PBS(props) {
       .then((res) => {
         const treeData = res?.data?.data;
         setData(treeData);
-        console.log("treeDataaa.......................", res)
+      
         setISLoading(false);
       })
       .catch((error) => {
@@ -538,6 +546,11 @@ export default function PBS(props) {
       headers: { token: token, userId: userId },
     })
       .then((res) => {
+        
+            const ProjectName= res.data.data.projectName;
+            const CompanyName= res.data.data.companyId.companyName;  
+            setCompanyName(CompanyName)
+            setProjectName(ProjectName)
         const data = res.data.data;
         setPrefillEnviron(
           data?.environment
@@ -635,6 +648,7 @@ export default function PBS(props) {
         copyProductId: pasteProductIds,
       },
     }).then((response) => {
+     
       const copyData = response.data.treeData;
       setSelectCopyData(copyData);
     });
@@ -660,6 +674,7 @@ export default function PBS(props) {
       setSelectCopyData();
     });
   };
+  
   const copyAndPasteProduct = (pasteProductTreeIds, pasteProductIds) => {
     Api.post("/api/v1/product/copy/paste/sub/product", {
       copyProductTreeId: copyProductTreeId,
@@ -698,8 +713,7 @@ export default function PBS(props) {
 
   // Sort the data array using the custom sort function
   const sortedData = data.slice().sort(customSort);
-console.log("data",data)
-console.log("sortedData",sortedData)
+
 
   return (
     <div className="pbs-main px-4" style={{ marginTop: "90px" }}>
