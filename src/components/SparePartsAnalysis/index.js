@@ -719,22 +719,7 @@ function Index(props) {
                     </div>
 
                     <Row className="d-flex mt-2">
-                      {/* <Button className=" btn-aligne"  data={data} onClick={() => DownloadExcel}>
-                        Export
-                      </Button> */}
-                      {/* <Button className=" btn-aligne" onClick={DownloadExcel}> */}
-                      {/* 
-                      <input type="file" className=" btn-impor mt-2" onChange={importExcel} />
-
-                      <Button
-                        className=" btn-aligne mb-2 export-btns-spareparts"
-                        onClick={() => {
-                          exportToExcel(values);
-                        }}
-                      >
-                        Export
-                      </Button> */}
-
+            
                       <div className="mttr-sec">
                         <p className=" mb-0 para-tag">Spare Parts Analysis</p>
                       </div>
