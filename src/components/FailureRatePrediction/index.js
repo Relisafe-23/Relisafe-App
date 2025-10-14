@@ -226,6 +226,7 @@ function Index(props) {
     : props?.location?.state?.productId
       ? props?.location?.state?.productId
       : initialProductID;
+      console.log("initialTreeStructure.....",initialProductID);
 
   const treeStructure = props?.location?.state?.parentId
     ? props?.location?.state?.parentId
@@ -234,7 +235,7 @@ function Index(props) {
 
   const [dutyCycle, setDutyCycle] = useState('');
   const [frDistribution, setFrDistribution] = useState();
-  const [allocated, setAllocated] = useState('');
+  const [allocated, setAllocated] = useState(''); 
   const [otherFr, setOtherFr] = useState('');
   const [frRemarks, setFrRemarks] = useState('');
 

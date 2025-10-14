@@ -383,7 +383,7 @@ avgcycleperhour: Yup.number()
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mt-3">
-                        <Label>Product life in miles</Label>
+                        <Label notify={true}>Product life in miles</Label>
                         <Form.Control
                           name="productlifemiles"
                           type="number"
@@ -474,7 +474,7 @@ avgcycleperhour: Yup.number()
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mt-3">
-                        <Label>Average cycles per operational hour</Label>
+                        <Label notify={true}>Average cycles per operational hour</Label>
                         <Form.Control
                           name="avgcycleperhour"
                           id="avgcycleperhour"
@@ -491,7 +491,7 @@ avgcycleperhour: Yup.number()
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mt-3">
-                        <Label>Average cycles per power on hour</Label>
+                        <Label notify={true}>Average cycles per power on hour</Label>
                         <Form.Control
                           type="number"
                           min="0"
@@ -549,7 +549,7 @@ avgcycleperhour: Yup.number()
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mt-3">
-                        <Label>Average annual mileage km</Label>
+                        <Label notify={true}>Average annual mileage km</Label>
                         <Form.Control
                           type="number"
                           min="0"
@@ -566,7 +566,7 @@ avgcycleperhour: Yup.number()
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mt-3">
-                        <Label>Average annual mileage miles</Label>
+                        <Label notify={true}>Average annual mileage miles</Label>
                         <Form.Control
                           name="avgannualmileagemiles"
                           id="avgannualmileagemiles"
@@ -585,7 +585,7 @@ avgcycleperhour: Yup.number()
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mt-3">
-                        <Label>Average annual operation cycles</Label>
+                        <Label notify={true}>Average annual operation cycles</Label>
                         <Form.Control
                           name="avgannualoprationcycle"
                           id="avgannualoprationcycle"
@@ -603,7 +603,7 @@ avgcycleperhour: Yup.number()
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mt-3">
-                        <Label>Average annual power on cycles</Label>
+                        <Label notify={true}>Average annual power on cycles</Label>
                         <Form.Control
                           type="number"
                           min="0"
@@ -622,7 +622,7 @@ avgcycleperhour: Yup.number()
                   <Row>
                     <Col md={6}>
                       <Form.Group className="mt-3">
-                        <Label>Average speed km</Label>
+                        <Label notify={true}>Average speed km</Label>
                         <Form.Control
                           type="number"
                           min="0"
@@ -639,7 +639,7 @@ avgcycleperhour: Yup.number()
                     </Col>
                     <Col md={6}>
                       <Form.Group className="mt-3">
-                        <Label>Average speed miles</Label>
+                        <Label notify={true}>Average speed miles</Label>
                         <Form.Control
                           type="number"
                           min="0"

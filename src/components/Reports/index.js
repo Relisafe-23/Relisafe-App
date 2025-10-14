@@ -128,6 +128,12 @@ function Reports(props) {
           <div className="mttr-sec mt-0">
             <p className="mb-0 para-tag d-flex justify-content-center">Report</p>
           </div>
+              {isLoading ? (
+          <div className="text-center mt-5">
+            <p>Loading...</p>
+          </div>
+        ) : (
+          <>
           {permission?.read === true ||
           permission?.read === "undefined" ||
           role === "admin" ||
@@ -400,6 +406,8 @@ function Reports(props) {
               </Card>
             </div>
           )}
+       </>
+        )}
         </div>
       </div>
     </div>
