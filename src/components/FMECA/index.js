@@ -463,12 +463,15 @@ function Index(props) {
       //convert array
 
       const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+      console.log("fileData", fileData);
       const headers = fileData[0];
+      console.log("headers", headers);
       const heads = headers.map((head) => ({ title: head, field: head }));
+      console.log("heads", heads);
       setColDefs(heads);
       fileData.splice(0, 1);
       setData(convertToJson(headers, fileData));
-      convertToJson(headers, fileData);
+      console.log(convertToJson(headers, fileData),"convertToJson(headers, fileData)") ;
     };
     reader.readAsBinaryString(file);
   };
@@ -504,6 +507,7 @@ function Index(props) {
     })
       .then((res) => {
         setTableData(res?.data?.data);
+        console.log(res?.data?.data, "res?.data?.data");
         getProjectDetails();
       })
       .catch((error) => {
@@ -782,6 +786,9 @@ function Index(props) {
   };
 
   const createEditComponent = (fieldName, title, isRequired = false) => {
+    console.log("fieldName", fieldName);
+    console.log("title", title);
+    console.log("isRequired", isRequired);
     return {
       title: isRequired ? `${title} *` : title,
       field: fieldName,
@@ -833,8 +840,11 @@ function Index(props) {
 
   // Special case for operatingPhase (has different styling)
   const operatingPhaseColumn = {
+    
     ...createEditComponent("operatingPhase", "Operating Phases", true), // true for required
     editComponent: ({ value, onChange, rowData }) => {
+      console.log("allSepareteData.....", allSepareteData);
+      
       const filteredData = allSepareteData?.filter(
         (item) => item?.sourceName === "operatingPhase"
       ) || [];
@@ -930,10 +940,11 @@ function Index(props) {
     render: (rowData) => `${rowData?.tableData?.id + 1}`,
     title: "FMECA ID",
   };
-
+//  const operatingPhaseColumn = createEditComponent("operatingPhase", "Operating Phase"),
   const columns = [
     fmecaIdColumn,
-    operatingPhaseColumn,
+    // operatingPhaseColumn, operatingPhase
+    createEditComponent("operatingPhase", "Operating Phases", true),
     createEditComponent("function", "Function", true),
     createEditComponent("failureMode", "Failure Mode", true),
     createEditComponent("failureModeRatioAlpha", "Failure Mode Ratio Alpha", true),
@@ -969,9 +980,6 @@ function Index(props) {
     createEditComponent("userField10", "User field 10"),
   ];
   const createFmeca = (values) => {
-
-
-
     if (productId) {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);

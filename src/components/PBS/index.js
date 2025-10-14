@@ -72,7 +72,6 @@ export default function PBS(props) {
   const [errorCode, setErrorCode] = useState(0);
   const [newProId, setNewProId] = useState();
   const [permission, setPermission] = useState();
-
   const token = localStorage.getItem("sessionId");
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
@@ -145,7 +144,7 @@ export default function PBS(props) {
         title: columnName,
         field: columnName,
       }));
-
+          console.log("modifiedTableData", modifiedTableData);
       const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
         skipHeader: false,
       });
@@ -153,13 +152,15 @@ export default function PBS(props) {
       XLSX.utils.book_append_sheet(workBook, workSheet, "PBS Data");
 
       const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
-
+       
       // Create a Blob object and initiate a download
       const blob = new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
+      console.log("url", url);
+      console.log("link", link);
       link.href = url;
       link.download = "PBS.xlsx";
       link.click();
@@ -183,6 +184,7 @@ export default function PBS(props) {
 
   const createPBSDataFromExcel = (values) => {
     setISLoading(true);
+    console.log("values", values);
     const companyId = localStorage.getItem("companyId");
     Api.post("api/v1/productBreakdownStructure", {
       productName: values.productName,
@@ -258,18 +260,21 @@ export default function PBS(props) {
       const workBook = XLSX.read(bstr, { type: "binary" });
       // get first sheet
       const workSheetName = workBook.SheetNames[0];
+      console.log("workSheetName", workSheetName)
+      
       const workSheet = workBook.Sheets[workSheetName];
-
+      console.log("workSheet", workSheet)
       //convert array
       const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
       const headers = fileData[0];
+      console.log("headers", headers)
       const heads = headers.map((head) => ({ title: head, field: head }));
       setColDefs(heads);
       fileData.splice(0, 1);
-    
       setData(convertToJson(headers, fileData));
-
+      console.log("convertToJson(headers, fileData)",convertToJson(headers, fileData))
     };
+
     reader.readAsBinaryString(file);
   };
 
@@ -421,11 +426,9 @@ export default function PBS(props) {
   };
 
   function hueToLCH(hue) {
-    // Convert hue to LCH color
     const l = 45.12; // Lightness value
     const c = 0.267; // Chroma value
     const h = hue; // Hue value
-
     return `oklch(${l}% ${c} ${h})`;
   }
 
@@ -523,7 +526,7 @@ export default function PBS(props) {
       .then((res) => {
         const treeData = res?.data?.data;
         setData(treeData);
-      
+      console.log("treeData",treeData)
         setISLoading(false);
       })
       .catch((error) => {
@@ -579,9 +582,8 @@ export default function PBS(props) {
       // environment: prefillEnviron.value,
       environment: values.environment?.value || environment,
       temperature: values.temperature,
-      partType: values.partType.value,
       partNumber: values.partNumber,
-
+      partType: values.partType.value,
       quantity: values.quantity,
       token: token,
       userId: userId,
@@ -704,15 +706,19 @@ export default function PBS(props) {
 
   const role = localStorage.getItem("role");
 
-  const customSort = (a, b) => {
-    const indexA = a.indexCount.toString();
-    const indexB = b.indexCount.toString();
+ const customSort = (a, b) => {
+  const indexA = a.indexCount?.toString();
+  const indexB = b.indexCount?.toString();
+ console.log("Comparing objects:", a, b);
+  console.log("indexCount values:", indexA, "vs", indexB);
 
-    return indexA.localeCompare(indexB, undefined, { numeric: true });
-  };
+  return indexA?.localeCompare(indexB, undefined, { numeric: true });
+};
 
-  // Sort the data array using the custom sort function
-  const sortedData = data.slice().sort(customSort);
+// Sort the data array
+const sortedData = data.slice().sort(customSort);
+
+console.log("Sorted Data:", sortedData);
 
 
   return (
@@ -781,7 +787,7 @@ export default function PBS(props) {
                               htmlFor="file-input"
                               className="add-product-btn"
                             >
-                              <FontAwesomeIcon icon={faFileUpload} style={{ width: '20px' }} />
+                              <FontAwesomeIcon icon={faFileUpload} />
                             </label>
                             <input
                               type="file"
@@ -850,7 +856,8 @@ export default function PBS(props) {
                       </Tooltip>
                     </div>
 
-                    <div className="main-div-product">
+                    <div className="main-div-product"
+                    style={{position:"absolute"}}>
                       <Modal
                         show={mainProductModalOpen}
                         size="lg"
@@ -866,15 +873,13 @@ export default function PBS(props) {
                           setPatchName("");
                           setPatchModal(false);
                         }}
+                        style={{ right:"200px" }}
                         backdrop="static"
                       >
                         <Form onSubmit={handleSubmit} className="px-4">
-                          <Modal.Header
-                            closeButton
-                            style={{ borderBottom: 0 }}
-                          />
-                          <Modal.Body>
-                            {patchModal === true ? (
+                            <Modal.Header style={{ borderBottom: 0, display: "flex", alignItems: "center" }} closeButton>
+                             <div style={{ flexGrow: 1 }}>
+                               {patchModal === true ? (
                               <h3 className=" d-flex justify-content-center mb-2">
                                 Edit Product
                               </h3>
@@ -883,11 +888,14 @@ export default function PBS(props) {
                                 Create Sub Product
                               </h3>
                             ) : (
-                              <h3 className=" d-flex justify-content-center mb-2">
+                              <h3 className="d-flex justify-content-center mb-1">
                                 Create Product
                               </h3>
                             )}
-                            <Row>
+                            </div>
+                              </Modal.Header>
+                          <Modal.Body>
+                            <Row  className="mb-4"style={{top:"-40px"}}>
                               <div className="mttr-sec">
                                 <p className=" mb-0 para-tag">
                                   General Information
@@ -1058,7 +1066,7 @@ export default function PBS(props) {
                                                       label: list.label,
                                                     })
                                                   ).sort((a, b) =>
-                                                    a.label.localeCompare(
+                                                    a.label?.localeCompare(
                                                       b.label
                                                     )
                                                   ),
@@ -1070,7 +1078,7 @@ export default function PBS(props) {
                                                       label: list.label,
                                                     })
                                                   ).sort((a, b) =>
-                                                    a.label.localeCompare(
+                                                    a.label?.localeCompare(
                                                       b.label
                                                     )
                                                   ),

@@ -11,6 +11,7 @@ import Api from "../../Api.js";
 import "../../css/User.scss";
 
 function Login() {
+  const [loading, setLoading] = useState(false);
   const [passwordShown, setPasswordShown] = useState(false);
   const [responseSuccess, setResponseSuccess] = useState(false);
   const [responseExist, setResponseExist] = useState(false);
@@ -71,17 +72,23 @@ function Login() {
           setResponseExist(true);
           setExistMessage(error?.response?.data?.message ? error?.response?.data?.message : "Invalid Credentials");
         }
+      })
+      .finally(() => {
+        // Ensure spinner is shown for at least 2 seconds
+        setTimeout(() => {
+          setLoading(false);
+        }, 2000);
       });
   };
 
   return (
-    <div style={{ marginTop: "120px"}}>
+    <div style={{ marginTop: "120px" }}>
       <Container>
         <Row>
           <Col></Col>
           <Col sm={8} md={6}>
             <div className="shadow">
-              <div  className="d-flex justify-content-center login-heading-div">
+              <div className="d-flex justify-content-center login-heading-div">
                 <p className="font-weight-bold mb-0 h3 text-white">Log In</p>
               </div>
               <Formik
@@ -133,12 +140,16 @@ function Login() {
                         <ErrorMessage className="error text-danger" component="span" name="password" />
                       </Form.Group>
                       <div className="d-flex justify-content-center ">
-                      <button
-  className="login-btn-css-new"
-  type="submit"
->
+                        {/* <button
+                          className="login-btn-css-new"
+                          type="submit"
+                        >
                           <b>Log In</b>
+                        </button> */}
+                        <button className="login-btn-css-new" type="submit" disabled={loading}>
+                          <b>{loading ? "Logging in..." : "Login"}</b>
                         </button>
+
                       </div>
                       {/* <div className="d-flex justify-content-center">
                         <p className="fs-6 mt-3 mb-4">
