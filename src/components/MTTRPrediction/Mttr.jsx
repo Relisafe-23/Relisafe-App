@@ -146,7 +146,7 @@ const MTTRPrediction = (props, active) => {
     resetForm();
   };
 
-  const importExcel = (e) => {
+  const  importExcel = (e) => {
     const file = e.target.files[0];
 
     // Check if the file is an Excel file by checking the extension

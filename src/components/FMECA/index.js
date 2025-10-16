@@ -287,8 +287,7 @@ function Index(props) {
     const ProjectName = treeTableData[0]?.projectId?.projectName;
     const data = tableData[0];
     const productName = data?.productId?.productName
-    console.log("ProductName",productName)
-    console.log("tableData",tableData)
+  
     const modifiedTableData = tableData.map((row) => {
       const newRow = {
         ...row,
@@ -471,7 +470,6 @@ function Index(props) {
       setColDefs(heads);
       fileData.splice(0, 1);
       setData(convertToJson(headers, fileData));
-      console.log(convertToJson(headers, fileData),"convertToJson(headers, fileData)") ;
     };
     reader.readAsBinaryString(file);
   };
@@ -507,7 +505,6 @@ function Index(props) {
     })
       .then((res) => {
         setTableData(res?.data?.data);
-        console.log(res?.data?.data, "res?.data?.data");
         getProjectDetails();
       })
       .catch((error) => {
@@ -786,9 +783,7 @@ function Index(props) {
   };
 
   const createEditComponent = (fieldName, title, isRequired = false) => {
-    console.log("fieldName", fieldName);
-    console.log("title", title);
-    console.log("isRequired", isRequired);
+
     return {
       title: isRequired ? `${title} *` : title,
       field: fieldName,
@@ -806,33 +801,51 @@ function Index(props) {
         };
 
         return (
-          <div style={{ position: 'relative' }}>
-            <input
-              type="text"
-              value={value || ''}
-              onChange={(e) => handleChange(e.target.value)}
-              placeholder={isRequired ? `${title} *` : title}
-              style={{
-                height: "40px",
-                borderRadius: "4px",
-                width: "100%",
-                borderColor: isRequired && (!value || value.toString().trim() === '') ? '#d32f2f' : '#ccc'
-              }}
-              title={title}
-            />
-            {isRequired && (!value || value.toString().trim() === '') && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                color: '#d32f2f',
-                fontSize: '12px',
-                marginTop: '2px'
-              }}>
-                {title} is required!
-              </div>
-            )}
-          </div>
+         <div style={{ position: 'relative' }}>
+  <input
+    type="text"
+    value={value || ''}
+    onChange={(e) => {
+      const newValue = e.target.value;
+      if (
+        (fieldName === 'Failure Mode Ratio Alpha (must be equal to 1)' ||
+          fieldName === 'End Effect ratio Beta (must be equal to 1)') &&
+        newValue !== '' &&
+        newValue !== '1'
+      ) {
+        return;
+      }
+
+      handleChange(newValue);
+    }}
+    placeholder={isRequired ? `${title} *` : title}
+    style={{
+      height: "40px",
+      borderRadius: "4px",
+      width: "100%",
+      borderColor:
+        isRequired && (!value || value.toString().trim() === '')
+          ? '#d32f2f'
+          : '#ccc',
+    }}
+    title={title}
+  />
+  {isRequired && (!value || value.toString().trim() === '') && (
+    <div
+      style={{
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        color: '#d32f2f',
+        fontSize: '12px',
+        marginTop: '2px',
+      }}
+    >
+      {title} is required!
+    </div>
+  )}
+</div>
+
         );
       }
     };
@@ -843,7 +856,7 @@ function Index(props) {
     
     ...createEditComponent("operatingPhase", "Operating Phases", true), // true for required
     editComponent: ({ value, onChange, rowData }) => {
-      console.log("allSepareteData.....", allSepareteData);
+
       
       const filteredData = allSepareteData?.filter(
         (item) => item?.sourceName === "operatingPhase"
@@ -947,7 +960,7 @@ function Index(props) {
     createEditComponent("operatingPhase", "Operating Phases", true),
     createEditComponent("function", "Function", true),
     createEditComponent("failureMode", "Failure Mode", true),
-    createEditComponent("failureModeRatioAlpha", "Failure Mode Ratio Alpha", true),
+    createEditComponent("failureModeRatioAlpha", "Failure Mode Ratio Alpha (must be equal to 1)", true),
     createEditComponent("detectableMeansDuringOperation", "Cause"),
     createEditComponent("subSystemEffect", "Sub System effect", true),
     createEditComponent("systemEffect", "System Effect", true),
@@ -1014,7 +1027,7 @@ function Index(props) {
         safetyImpact: values.safetyImpact
           ? values.safetyImpact
           : data.safetyImpact,
-        referenceId: values.referenceHazardId
+        referenceHazardId: values.referenceHazardId
           ? values.referenceHazardId
           : data.referenceHazardId,
         realibilityImpact: values.realibilityImpact
@@ -1059,6 +1072,7 @@ function Index(props) {
         userId: userId,
         Alldata: tableData,
       }).then((response) => {
+       
         const status = response?.status;
         // if (status === 204) {
         //   setFailureModeRatioError(true);
@@ -1127,8 +1141,9 @@ function Index(props) {
         toast.success("FMECA updated successfully!");
         getProductData();
         getAllConnectedLibraryAfterUpdate();
-        
+          console.log("response", response)
       }
+    
        else if (response?.status === 204) {
         toast.error("Failure Mode Radio Alpha Must be Equal to One !");
       }

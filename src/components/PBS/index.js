@@ -272,7 +272,7 @@ export default function PBS(props) {
       setColDefs(heads);
       fileData.splice(0, 1);
       setData(convertToJson(headers, fileData));
-      console.log("convertToJson(headers, fileData)",convertToJson(headers, fileData))
+
     };
 
     reader.readAsBinaryString(file);
@@ -291,7 +291,7 @@ export default function PBS(props) {
       },
     })
       .then((res) => {
-       
+       console.log("res", res);
         const data = res?.data?.data;
         setPermission(data?.modules[0]);
       })
@@ -311,6 +311,7 @@ export default function PBS(props) {
         userId: userId,
       },
     }).then((res) => {
+      console.log("res", res);
       setIsOwner(res?.data?.data?.isOwner);
       setCreatedBy(res?.data?.data?.createdBy);
     });
@@ -552,9 +553,11 @@ export default function PBS(props) {
         
             const ProjectName= res.data.data.projectName;
             const CompanyName= res.data.data.companyId.companyName;  
+         
             setCompanyName(CompanyName)
             setProjectName(ProjectName)
         const data = res.data.data;
+    
         setPrefillEnviron(
           data?.environment
             ? { value: data?.environment, label: data?.environment }
