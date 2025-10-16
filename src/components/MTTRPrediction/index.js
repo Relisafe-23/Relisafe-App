@@ -528,7 +528,7 @@ const MTTRPrediction = (props, active) => {
     },
 
     {
-      title: "TaskType",
+      title: "taskType",
       field: "taskType",
       type: "string",
       headerStyle: { textAlign: "center" },
@@ -541,9 +541,9 @@ const MTTRPrediction = (props, active) => {
       },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
-          allSepareteData?.filter((item) => item?.sourceName === "TaskType") || [];
+          allSepareteData?.filter((item) => item?.sourceName === "taskType") || [];
         const conncetedFilteredData =
-          allConnectedData?.filter((item) => item?.destinationName === "TaskType") || [];
+          allConnectedData?.filter((item) => item?.destinationName === "taskType") || [];
 
         const options =
           conncetedFilteredData.length > 0
@@ -562,7 +562,7 @@ const MTTRPrediction = (props, active) => {
           return (
             <input
               type="text"
-              name="TaskType"
+              name="taskType"
               value={value || ""}
               onChange={(e) => onChange(e.target.value)}
               placeholder="Task Type"
@@ -574,13 +574,13 @@ const MTTRPrediction = (props, active) => {
 
         return (
           <Select
-            name="TaskType"
+            name="taskType"
             value={selectedOption}
             onChange={(selectedItems) => {
               const newValue = selectedItems ? selectedItems.value : "";
               onChange(newValue);
               handleInputChange(selectedItems, "taskType");
-              getAllConnectedLibrary(selectedItems, "TaskType");
+              getAllConnectedLibrary(selectedItems, "taskType");
             }}
             options={options}
             isClearable
