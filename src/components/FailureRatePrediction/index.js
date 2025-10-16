@@ -242,7 +242,7 @@ function Index(props) {
   const [frOffset, setFrOffSet] = useState();
   const [operand, setOperand] = useState();
   const [frOffsetOperand, setOffSetOperand] = useState();
-
+  const [permissionsChecked, setPermissionsChecked] = useState(false);
   const [frpId, setFrpId] = useState();
   const [source, setSource] = useState({
     value: "Predicted",
@@ -405,18 +405,21 @@ function Index(props) {
         authorizedPersonnel: userId,
         projectId: projectId,
         userId: userId,
+        
       },
     })
       .then((res) => {
         const data = res?.data?.data;
         setWritePermission(data?.modules[1].write);
         setPermission(data?.modules[1]);
+         setPermissionsChecked(true); 
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
         }
+          setPermissionsChecked(true);
       });
   };
 
@@ -740,7 +743,7 @@ function Index(props) {
 
   return (
     <Container className="mttr-main-div mx-1" style={{ marginTop: "90px" }}>
-      {isLoading ? (
+      {isLoading || !permissionsChecked ? (
         <Loader />
       ) : permission?.read === true ||
         permission?.read === "undefined" ||
