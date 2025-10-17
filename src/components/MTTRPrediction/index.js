@@ -189,7 +189,7 @@ const MTTRPrediction = (props, active) => {
 
 
         setImportExcelData(normalizedData[0]);
-        applyExcelDataToForm(normalizedData[0]);
+       applyExcelDataToForm(normalizedData[normalizedData.length - 1]);
 
         toast.success("Data imported successfully!", {
           position: toast.POSITION.TOP_RIGHT,
