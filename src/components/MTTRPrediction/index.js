@@ -186,9 +186,10 @@ const MTTRPrediction = (props, active) => {
 
 
         setTableData((prevData) => [...prevData, ...normalizedData]);
+        console.log("normalizedData....",normalizedData)
 
 
-        setImportExcelData(normalizedData[0]);
+        setImportExcelData(normalizedData[normalizedData.length - 1]);
        applyExcelDataToForm(normalizedData[normalizedData.length - 1]);
 
         toast.success("Data imported successfully!", {
@@ -208,6 +209,7 @@ const MTTRPrediction = (props, active) => {
 
   // Add this new function to apply Excel data to form fields
   const applyExcelDataToForm = (excelData) => {
+     console.log('Excel data to apply:', excelData)
     // Map Excel column names to your form field names
     const fieldMappings = {
       'remarks': 'remarks',
@@ -275,11 +277,13 @@ const MTTRPrediction = (props, active) => {
     const companyId = localStorage.getItem("companyId");
 
     setIsLoading(true);
+    console.log("before create from excel")
 
     Api.post("/api/v1/mttrPrediction/create/procedure", {
-      remarks: values.remarks,
+      remarks: values?.remarks,
     })
       .then((res) => {
+console.log("res....",res.data)
         const mttrId = res?.data?.data?.id;
         setSuccessMessage(res?.data?.message);
         setMttrId(res?.data?.data?.id);
@@ -312,7 +316,7 @@ const MTTRPrediction = (props, active) => {
       ProjectName: treeTableData[0]?.projectId?.projectName,
       ProductName: value.name,
 
-      remarks: value.remarks || lastRow.remarks || "",
+      remarks: value?.remarks || lastRow?.remarks || "",
       // productName: productName || lastRow.productName || "" ,
       time: value.time || lastRow.time || "",
       // numberOfLabour: value.totalLabour || lastRow.totalLabour || "",
@@ -1222,6 +1226,7 @@ const MTTRPrediction = (props, active) => {
       },
     })
       .then((res) => {
+        console.log("res?.data?.data....",res?.data?.data)
       
         setMttrData(res?.data?.data);
         const data = res?.data?.data;
@@ -1266,6 +1271,8 @@ const MTTRPrediction = (props, active) => {
   };
   return (
     <Container className="mttr-main-div mx-1" style={{ marginTop: "45px" }}>
+     {console.log('importExcelData',importExcelData)}
+     {console.log("mttrData.....",mttrData)}
       {isLoading ? (
         <Loader />
       ) : (
@@ -1296,7 +1303,7 @@ const MTTRPrediction = (props, active) => {
             mlh: mlhValue ? mlhValue : "",
             labourHour: totalLabourHr ? totalLabourHr : "",
             mttr: importExcelData?.mttr || mttrCalculatedValue || "",
-            remarks: importExcelData?.remarks || mttrData?.remarks || "",
+            remarks: importExcelData?.remarks ?? mttrData?.remarks ?? "test",
             mmax: importExcelData?.mMax || mttrData?.mMax || "",
             taskType: importExcelData?.taskType || "",
             time: importExcelData?.time || "",
@@ -1311,6 +1318,7 @@ const MTTRPrediction = (props, active) => {
             mttrId ? patchMttrData(values) : submitForm(values);
           }}
         >
+
           {(formik) => {
             const {
               values,
