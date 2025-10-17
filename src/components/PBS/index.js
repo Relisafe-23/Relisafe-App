@@ -64,7 +64,7 @@ export default function PBS(props) {
   const [subProductError, setSubProductError] = useState(false);
   const [data, setData] = useState([]);
   const [count, setCount] = useState();
-  const[treeTableData,setTreeTableData]=useState([])
+  const [treeTableData, setTreeTableData] = useState([])
   const [parentId, setParentId] = useState("");
 
   const [isLoading, setISLoading] = useState(true);
@@ -85,8 +85,8 @@ export default function PBS(props) {
   const [patchModal, setPatchModal] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [open, setOpen] = useState(false);
-  const [companyName,setCompanyName]=useState("");
-   const [projectName,setProjectName]=useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [projectName, setProjectName] = useState("");
   const [parentsId, setParentsId] = useState();
   const [colId, setColId] = useState("");
   const [deleteMessage, setDeleteMessage] = useState();
@@ -121,14 +121,15 @@ export default function PBS(props) {
       "quantity",
     ];
     const CompanyName = companyName;
-    const ProjectName = projectName; 
-  
+    const ProjectName = projectName;
+
     // Create a new array with the unwanted columns removed from each object
     const modifiedTableData = data.map((row) => {
-      const newRow = { ...row,
-           CompanyName,
+      const newRow = {
+        ...row,
+        CompanyName,
         ProjectName
-       };
+      };
       columnsToRemove.forEach((columnName) => {
         delete newRow[columnName];
       });
@@ -144,7 +145,7 @@ export default function PBS(props) {
         title: columnName,
         field: columnName,
       }));
-          console.log("modifiedTableData", modifiedTableData);
+      console.log("modifiedTableData", modifiedTableData);
       const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
         skipHeader: false,
       });
@@ -152,7 +153,7 @@ export default function PBS(props) {
       XLSX.utils.book_append_sheet(workBook, workSheet, "PBS Data");
 
       const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
-       
+
       // Create a Blob object and initiate a download
       const blob = new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -261,7 +262,7 @@ export default function PBS(props) {
       // get first sheet
       const workSheetName = workBook.SheetNames[0];
       console.log("workSheetName", workSheetName)
-      
+
       const workSheet = workBook.Sheets[workSheetName];
       console.log("workSheet", workSheet)
       //convert array
@@ -291,7 +292,7 @@ export default function PBS(props) {
       },
     })
       .then((res) => {
-       console.log("res", res);
+        console.log("res", res);
         const data = res?.data?.data;
         setPermission(data?.modules[0]);
       })
@@ -527,7 +528,7 @@ export default function PBS(props) {
       .then((res) => {
         const treeData = res?.data?.data;
         setData(treeData);
-      console.log("treeData",treeData)
+        console.log("treeData", treeData)
         setISLoading(false);
       })
       .catch((error) => {
@@ -550,14 +551,14 @@ export default function PBS(props) {
       headers: { token: token, userId: userId },
     })
       .then((res) => {
-        
-            const ProjectName= res.data.data.projectName;
-            const CompanyName= res.data.data.companyId.companyName;  
-         
-            setCompanyName(CompanyName)
-            setProjectName(ProjectName)
+
+        const ProjectName = res.data.data.projectName;
+        const CompanyName = res.data.data.companyId.companyName;
+
+        setCompanyName(CompanyName)
+        setProjectName(ProjectName)
         const data = res.data.data;
-    
+
         setPrefillEnviron(
           data?.environment
             ? { value: data?.environment, label: data?.environment }
@@ -653,7 +654,7 @@ export default function PBS(props) {
         copyProductId: pasteProductIds,
       },
     }).then((response) => {
-     
+
       const copyData = response.data.treeData;
       setSelectCopyData(copyData);
     });
@@ -679,7 +680,7 @@ export default function PBS(props) {
       setSelectCopyData();
     });
   };
-  
+
   const copyAndPasteProduct = (pasteProductTreeIds, pasteProductIds) => {
     Api.post("/api/v1/product/copy/paste/sub/product", {
       copyProductTreeId: copyProductTreeId,
@@ -709,19 +710,16 @@ export default function PBS(props) {
 
   const role = localStorage.getItem("role");
 
- const customSort = (a, b) => {
-  const indexA = a.indexCount?.toString();
-  const indexB = b.indexCount?.toString();
- console.log("Comparing objects:", a, b);
-  console.log("indexCount values:", indexA, "vs", indexB);
+  const customSort = (a, b) => {
+    const indexA = a.indexCount?.toString();
+    const indexB = b.indexCount?.toString();
+    return indexA?.localeCompare(indexB, undefined, { numeric: true });
+  };
 
-  return indexA?.localeCompare(indexB, undefined, { numeric: true });
-};
+  // Sort the data array
+  const sortedData = data.slice().sort(customSort);
 
-// Sort the data array
-const sortedData = data.slice().sort(customSort);
-
-console.log("Sorted Data:", sortedData);
+  console.log("Sorted Data:", sortedData);
 
 
   return (
@@ -860,7 +858,7 @@ console.log("Sorted Data:", sortedData);
                     </div>
 
                     <div className="main-div-product"
-                    style={{position:"absolute"}}>
+                      style={{ position: "absolute" }}>
                       <Modal
                         show={mainProductModalOpen}
                         size="lg"
@@ -876,29 +874,29 @@ console.log("Sorted Data:", sortedData);
                           setPatchName("");
                           setPatchModal(false);
                         }}
-                        style={{ right:"200px" }}
+                        style={{ right: "200px" }}
                         backdrop="static"
                       >
                         <Form onSubmit={handleSubmit} className="px-4">
-                            <Modal.Header style={{ borderBottom: 0, display: "flex", alignItems: "center" }} closeButton>
-                             <div style={{ flexGrow: 1 }}>
-                               {patchModal === true ? (
-                              <h3 className=" d-flex justify-content-center mb-2">
-                                Edit Product
-                              </h3>
-                            ) : subProduct === true ? (
-                              <h3 className=" d-flex justify-content-center mb-2">
-                                Create Sub Product
-                              </h3>
-                            ) : (
-                              <h3 className="d-flex justify-content-center mb-1">
-                                Create Product
-                              </h3>
-                            )}
+                          <Modal.Header style={{ borderBottom: 0, display: "flex", alignItems: "center" }} closeButton>
+                            <div style={{ flexGrow: 1 }}>
+                              {patchModal === true ? (
+                                <h3 className=" d-flex justify-content-center mb-2">
+                                  Edit Product
+                                </h3>
+                              ) : subProduct === true ? (
+                                <h3 className=" d-flex justify-content-center mb-2">
+                                  Create Sub Product
+                                </h3>
+                              ) : (
+                                <h3 className="d-flex justify-content-center mb-1">
+                                  Create Product
+                                </h3>
+                              )}
                             </div>
-                              </Modal.Header>
+                          </Modal.Header>
                           <Modal.Body>
-                            <Row  className="mb-4"style={{top:"-40px"}}>
+                            <Row className="mb-4" style={{ top: "-40px" }}>
                               <div className="mttr-sec">
                                 <p className=" mb-0 para-tag">
                                   General Information
@@ -1247,26 +1245,26 @@ console.log("Sorted Data:", sortedData);
                         </div>
                       </Modal.Body>
                       <Modal.Footer className="d-flex justify-content-center py-4">
-<Button
-  variant="outline-secondary"
-  onClick={() => setDeleteMessage(false)}
-  className="delete-cancel-btn mx-2"
-  style={{ minWidth: "100px" }}
->
-  No
-</Button>
-<Button
-  className="yes-btn"
-  onClick={() => deleteForm(deleteProduct)}
-  style={{ 
-    minWidth: "100px",
-    backgroundColor: "#218838",  
-    borderColor: "#218838",
-    color: "white"
-  }}
->
-  Yes
-</Button>
+                        <Button
+                          variant="outline-secondary"
+                          onClick={() => setDeleteMessage(false)}
+                          className="delete-cancel-btn mx-2"
+                          style={{ minWidth: "100px" }}
+                        >
+                          No
+                        </Button>
+                        <Button
+                          className="yes-btn"
+                          onClick={() => deleteForm(deleteProduct)}
+                          style={{
+                            minWidth: "100px",
+                            backgroundColor: "#218838",
+                            borderColor: "#218838",
+                            color: "white"
+                          }}
+                        >
+                          Yes
+                        </Button>
                       </Modal.Footer>
                     </Modal>
                     <Modal

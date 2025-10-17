@@ -1,5 +1,5 @@
 import React, { Component, useEffect, useState } from "react";
-import { Table, Row, Col, Form, Modal, Card, Button, Dropdown,Spinner } from "react-bootstrap";
+import { Table, Row, Col, Form, Modal, Card, Button, Dropdown, Spinner } from "react-bootstrap";
 import "../../css/ProjectList.scss";
 import { Link } from "react-router-dom";
 import Api from "../../Api";
@@ -20,14 +20,14 @@ import { red } from "@mui/material/colors";
 import { customStyles } from "../core/select";
 
 
-export default function ProjectList(props,list) {
+export default function ProjectList(props, list) {
   const pbspermission = props?.location?.state?.pbsWrite;
   const [projectList, setProjectList] = useState([]);
   const [projectId, setProjectId] = useState();
   const [projectName, setProjectName] = useState();
   const [companyName, setCompanyName] = useState();
   const [projectNum, setProjectNum] = useState();
-  
+
   const [projectOwner, setProjectOwner] = useState();
   const [confirmDeleteMsg, setConfirmDeleteMsg] = useState(false);
   const [projectDeleteMessage, setProjectDeleteMessage] = useState(false);
@@ -293,6 +293,7 @@ export default function ProjectList(props,list) {
                     <td className="viewRow ">{i + 1}</td>
                     <td className="viewRow">{list?.projectNumber}</td>
                     <td className="viewRow">{list?.projectName}</td>
+
                     {/* <td className="viewRow">{list?.projectOwner?.name}</td> */}
                     {role === "admin" || (list.isOwner === true && list.createdBy === userId) ? (
                       <td className="d-flex justify-content-center ">
@@ -343,7 +344,21 @@ export default function ProjectList(props,list) {
                             <Dropdown.Item
                               style={{ textAlign: "center", position: "relative" }}
                               className="user-dropitem-project"
-                              onClick={handleEditPermission}
+                              onClick={() => {
+                                setIsLoading(true); // show spinner
+                                setTimeout(() => {  // simulate loading delay
+                                  history.push({
+                                    pathname: `/permissions/${list?.id}`,
+                                    state: {
+                                      projectID: list?.id,
+                                      companyName: list?.companyId?.companyName,
+                                      projectName: list?.projectName,
+                                      companyId: list?.companyId?._id,
+                                    },
+                                  });
+                                  setIsLoading(false); // optional, if you stay on page it will reset
+                                }, 500); // adjust delay as needed
+                              }}
                               disabled={isLoading}
                             >
                               {isLoading ? (

@@ -347,7 +347,7 @@ function Index(props) {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
     Api.post("api/v1/FMECA/", {
-      operatingPhase: values.operationPhase,
+      operatingPhase: values.operatingPhase,
       function: values.function,
       failureMode: values.failureMode,
       // searchFM: values.searchFM,
@@ -458,15 +458,9 @@ function Index(props) {
       // get first sheet
       const workSheetName = workBook.SheetNames[0];
       const workSheet = workBook.Sheets[workSheetName];
-
-      //convert array
-
       const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-      console.log("fileData", fileData);
       const headers = fileData[0];
-      console.log("headers", headers);
       const heads = headers.map((head) => ({ title: head, field: head }));
-      console.log("heads", heads);
       setColDefs(heads);
       fileData.splice(0, 1);
       setData(convertToJson(headers, fileData));
@@ -852,7 +846,7 @@ function Index(props) {
   };
 
   // Special case for operatingPhase (has different styling)
-  const operatingPhaseColumn = {
+  const operatingPhase = {
     
     ...createEditComponent("operatingPhase", "Operating Phases", true), // true for required
     editComponent: ({ value, onChange, rowData }) => {
@@ -956,8 +950,8 @@ function Index(props) {
 //  const operatingPhaseColumn = createEditComponent("operatingPhase", "Operating Phase"),
   const columns = [
     fmecaIdColumn,
-    // operatingPhaseColumn, operatingPhase
-    createEditComponent("operatingPhase", "Operating Phases", true),
+    operatingPhase,
+    // createEditComponent("operatingPhase", "Operating Phases", true),
     createEditComponent("function", "Function", true),
     createEditComponent("failureMode", "Failure Mode", true),
     createEditComponent("failureModeRatioAlpha", "Failure Mode Ratio Alpha (must be equal to 1)", true),
@@ -992,6 +986,7 @@ function Index(props) {
     createEditComponent("userField9", "User field 9"),
     createEditComponent("userField10", "User field 10"),
   ];
+  
   const createFmeca = (values) => {
     if (productId) {
       const companyId = localStorage.getItem("companyId");
@@ -1090,7 +1085,7 @@ function Index(props) {
       toast.error("Operating Phase, Function, and Failure Mode are required.");
       return;
     }
-    setIsLoading(true);
+    // setIsLoading(true);
     const payload = {
       operatingPhase: values.operatingPhase,
       function: values.function,
@@ -1141,7 +1136,7 @@ function Index(props) {
         toast.success("FMECA updated successfully!");
         getProductData();
         getAllConnectedLibraryAfterUpdate();
-          console.log("response", response)
+          
       }
     
        else if (response?.status === 204) {
@@ -1225,7 +1220,6 @@ function Index(props) {
                 onChange={handleDropdownChange}
               />
             </div>
-            {/* {console.log("ProductName", treeTableData[0]?.treeStructure?.productName)}  */}
             <div
               style={{
                 display: "flex",

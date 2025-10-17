@@ -13,7 +13,9 @@ import { customStyles } from "../core/select";
 
 export default function Projectpermission(props) {
   const companyName = props?.location?.state?.companyName;
+  console.log("Company Name:", companyName);
   const projectName = props?.location?.state?.projectName;
+  console.log("Project Name:", projectName);
   const companyId = props?.location?.state?.companyId;
   const projectId = props?.location?.state?.projectID;
   const [permissions, setPermissions] = useState([]);
@@ -26,6 +28,7 @@ export default function Projectpermission(props) {
 
   // Module names in correct order as they come from API
   const moduleNames = [
+    "Projects",
     "PBS",
     "Failure Rate Prediction",
     "MTTR Prediction",
@@ -33,8 +36,7 @@ export default function Projectpermission(props) {
     "RBD",
     "FTA",
     "PM MRA",
-    "Spare Part Analysis",
-    "Projects",
+    "Spare Part Analysis",  
     "Safety",
     "Seprate Library",
     "Connected Library",
@@ -149,14 +151,13 @@ export default function Projectpermission(props) {
   // };
   const handlePermissionChange = (index, field) => {
     const newPermissions = [...permissions];
-
     newPermissions[index] = {
       ...newPermissions[index],
-      [field]: !newPermissions[index][field], // just toggle that field
+      [field]: !newPermissions[index][field],
     };
-
     setPermissions(newPermissions);
   };
+
 
   const arePermissionsEqual = (perms1, perms2) => {
     if (!perms1 || !perms2 || perms1.length !== perms2.length) return false;
@@ -166,6 +167,7 @@ export default function Projectpermission(props) {
       perm.write === perms2[index].write
     );
   };
+
 
   const permissionUpdate = (values, { resetForm }) => {
     const noChanges =
@@ -212,13 +214,15 @@ export default function Projectpermission(props) {
   const disableSave =
     isLoading ||
     !user ||
-    (user?.value === initialUser?.value && arePermissionsEqual(permissions, initialPermissions));
+    (user?.value === initialUser?.value &&
+      arePermissionsEqual(permissions, initialPermissions));
+
 
   return (
     <div className="mx-4" style={{ marginTop: "90px" }}>
       <Formik
         enableReinitialize={true}
-        initialValues={{ user }}
+        initialValues={{user}}
         validationSchema={userValidation}
         onSubmit={permissionUpdate}
       >
@@ -316,11 +320,16 @@ export default function Projectpermission(props) {
                   className="save-btn mb-5"
                   type="submit"
                   disabled={disableSave}
+                  style={{
+                    opacity: disableSave ? 0.5 : 1,
+                    cursor: disableSave ? "not-allowed" : "pointer",
+                    filter: disableSave ? "blur(0.5px)" : "none",
+                    transition: "all 0.3s ease",
+                  }}
                 >
                   {isLoading ? "SAVING..." : "SAVE CHANGES"}
                 </Button>
               </div>
-
               <Modal show={show} centered>
                 <Modal.Body className="modal-body-user">
                   <FontAwesomeIcon icon={faCircleCheck} fontSize={"40px"} color="#1d5460" />
