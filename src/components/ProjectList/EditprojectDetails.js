@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "../../css/ProjectList.scss";
-import { Form, Row, Col, Card, Modal, Button,Tooltip,OverlayTrigger } from "react-bootstrap";
+import { Form, Row, Col, Card, Modal, Button, Tooltip, OverlayTrigger } from "react-bootstrap";
 import Label from "../core/Label";
 import * as Yup from "yup";
 import { Formik, ErrorMessage } from "formik";
@@ -163,9 +163,9 @@ export default function EditprojectDetails(props) {
         setprojectOwner(
           data?.projectOwner
             ? {
-                label: data?.projectOwner?.name,
-                value: data?.projectOwner?._id,
-              }
+              label: data?.projectOwner?.name,
+              value: data?.projectOwner?._id,
+            }
             : ""
         );
         // setprojectOwner(data?.projectOwner?.name);
@@ -212,31 +212,31 @@ export default function EditprojectDetails(props) {
     number: Yup.string().required("Project number is required"),
     description: Yup.string().required("Project description is required"),
     opreationalPhase: Yup.string().required("Operational phase is required"),
-avgday: Yup.number()
-  .typeError("You must specify a number")
-  .min(0, "Min value 0.")
-  .max(24, "Max value 24.")
-  .required("Average operational hours per day is required")
-  .test("max-decimals", "Only up to 2 decimal places allowed", (value) => {
-    if (value === undefined || value === null) return true;
-    return /^\d+(\.\d{1,2})?$/.test(value.toString());
-  }),
+    avgday: Yup.number()
+      .typeError("You must specify a number")
+      .min(0, "Min value 0.")
+      .max(24, "Max value 24.")
+      .required("Average operational hours per day is required")
+      .test("max-decimals", "Only up to 2 decimal places allowed", (value) => {
+        if (value === undefined || value === null) return true;
+        return /^\d+(\.\d{1,2})?$/.test(value.toString());
+      }),
 
     avghour: Yup.number().max(8784, "max value 8784").required("Average annual operational hours is required"),
     avgannualpweronhr: Yup.number().max(8784, "max value 8784"),
 
- avgpoweronhrday: Yup.number()
-  .typeError("You must specify a number")
-  .min(0, "Min value 0.")
-  .max(24, "Max value 24.")
-  .test(
-    "max-2-decimals",
-    "Only up to 2 decimal places are allowed",
-    (value) => {
-      if (value === undefined || value === null) return true; // skip empty
-      return /^\d+(\.\d{1,2})?$/.test(value.toString());
-    }
-  ),
+    avgpoweronhrday: Yup.number()
+      .typeError("You must specify a number")
+      .min(0, "Min value 0.")
+      .max(24, "Max value 24.")
+      .test(
+        "max-2-decimals",
+        "Only up to 2 decimal places are allowed",
+        (value) => {
+          if (value === undefined || value === null) return true; // skip empty
+          return /^\d+(\.\d{1,2})?$/.test(value.toString());
+        }
+      ),
     environment: Yup.object().required("Environment is required"),
     // nonShortProbability: Yup.string().required("Non Short Probability(NSP) is required"),
     // mMaxValue: Yup.string().required("Phi for Mmax required"),
@@ -249,142 +249,142 @@ avgday: Yup.number()
         if (value === undefined || value === null) return true;
         return /^\d+(\.\d{1,2})?$/.test(value.toString());
       }),
-      productlifekm:Yup.number()
-        .typeError("You must specify a number")
-        .min(1, "Minimum 1 value is required")
-        .max(999999999, "Maximum value is 999999999")
-        .nullable()
-        .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
-          if (value === undefined || value === null) return true;
-          return /^\d+(\.\d{1,4})?$/.test(value.toString());
-        }),
-            pdtlifeinmiles: Yup.string()
-          .required("Product life miles is required")
-          .matches(
-            /^\d{1,20}(\.\d{1,4})?$/,
-            "Only numbers allowed with max 20 digits and up to 4 decimal places"
-          )
-          .nullable(),
-          pdtlifeoptncycle: Yup.string()
-   .matches(
-    /^(?=.{1,29}$)\d{1,25}(\.\d{1,4})?$/,
-    "Maximum 25 digits before decimal and up to 4 digits after decimal (total 29 digits) allowed"
-  )
-       .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
-          if (value === undefined || value === null) return true;
-          return /^\d+(\.\d{1,4})?$/.test(value.toString());
-        })
-  .nullable(),
+    productlifekm: Yup.number()
+      .typeError("You must specify a number")
+      .min(1, "Minimum 1 value is required")
+      .max(999999999, "Maximum value is 999999999")
+      .nullable()
+      .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
+        if (value === undefined || value === null) return true;
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      }),
+    pdtlifeinmiles: Yup.string()
+      .required("Product life miles is required")
+      .matches(
+        /^\d{1,20}(\.\d{1,4})?$/,
+        "Only numbers allowed with max 20 digits and up to 4 decimal places"
+      )
+      .nullable(),
+    pdtlifeoptncycle: Yup.string()
+      .matches(
+        /^(?=.{1,29}$)\d{1,25}(\.\d{1,4})?$/,
+        "Maximum 25 digits before decimal and up to 4 digits after decimal (total 29 digits) allowed"
+      )
+      .test("max-decimals", "Only up to 4 decimal places allowed", (value) => {
+        if (value === undefined || value === null) return true;
+        return /^\d+(\.\d{1,4})?$/.test(value.toString());
+      })
+      .nullable(),
     daysopration: Yup.number()
-  .typeError("You must specify a number")
-  .min(1, "Minimum value is 1.")
-  .max(366, "Maximum value is 366.")
-  .integer("Decimal values are not allowed") 
-  .required("Days of operation per year is required"),
+      .typeError("You must specify a number")
+      .min(1, "Minimum value is 1.")
+      .max(366, "Maximum value is 366.")
+      .integer("Decimal values are not allowed")
+      .required("Days of operation per year is required"),
 
     temp: Yup.string().required("Temperature is required"),
     customerName: Yup.string().required("Customer name is required"),
 
-avgcyclesperoperationnh: Yup.number()
-  .typeError("You must specify a number")
-  .required("Average cycles per operation is required")
-  
-  .test(
-    "max-3-decimals",
-    "Only up to 3 decimal places are allowed",
-    (value) => {
-      if (value === undefined || value === null) return false; // required, so must fail if empty
-      return /^\d+(\.\d{1,3})?$/.test(value.toString());
-    }
-  ),
-  avgcycleperpoweronhr: Yup.number()
-  .typeError("You must specify a number")
-  .required("Average cycles per power on hour is required")
-  .test(
-    "max-3-decimals",
-    "Only up to 3 decimal places are allowed",
-    (value) => {
-      if (value === undefined || value === null) return false; // required
-      return /^\d+(\.\d{1,3})?$/.test(value.toString());
-    }
-  ),
-  avgannualmilekm: Yup.number()
-  .typeError("You must specify a number")
-  .required("Average annual mileage (km) is required")
-  .test(
-    "max-4-decimals",
-    "Only up to 4 decimal places are allowed",
-    (value) => {
-      if (value === undefined || value === null) return false; // required
-      return /^\d+(\.\d{1,4})?$/.test(value.toString());
-    }
-  ),
+    avgcyclesperoperationnh: Yup.number()
+      .typeError("You must specify a number")
+      .required("Average cycles per operation is required")
+
+      .test(
+        "max-3-decimals",
+        "Only up to 3 decimal places are allowed",
+        (value) => {
+          if (value === undefined || value === null) return false; // required, so must fail if empty
+          return /^\d+(\.\d{1,3})?$/.test(value.toString());
+        }
+      ),
+    avgcycleperpoweronhr: Yup.number()
+      .typeError("You must specify a number")
+      .required("Average cycles per power on hour is required")
+      .test(
+        "max-3-decimals",
+        "Only up to 3 decimal places are allowed",
+        (value) => {
+          if (value === undefined || value === null) return false; // required
+          return /^\d+(\.\d{1,3})?$/.test(value.toString());
+        }
+      ),
+    avgannualmilekm: Yup.number()
+      .typeError("You must specify a number")
+      .required("Average annual mileage (km) is required")
+      .test(
+        "max-4-decimals",
+        "Only up to 4 decimal places are allowed",
+        (value) => {
+          if (value === undefined || value === null) return false; // required
+          return /^\d+(\.\d{1,4})?$/.test(value.toString());
+        }
+      ),
     avgannualmilegemile: Yup.number()
-    .typeError("You must specify a number")
-    .required("Average annual mileage miles is required")
-    .test(
-      "max-4-decimals",
-      "Only up to 4 decimal places are allowed",
-      (value) => {
-        if (value === undefined || value === null) return false; // required
-        return /^\d+(\.\d{1,4})?$/.test(value.toString());
-      }
-    ),
+      .typeError("You must specify a number")
+      .required("Average annual mileage miles is required")
+      .test(
+        "max-4-decimals",
+        "Only up to 4 decimal places are allowed",
+        (value) => {
+          if (value === undefined || value === null) return false; // required
+          return /^\d+(\.\d{1,4})?$/.test(value.toString());
+        }
+      ),
     avgannualoperationcycle: Yup.number()
-  .typeError("You must specify a number")
-  .required("Average annual operation cycle is required")
-  .test(
-    "max-4-decimals",
-    "Only up to 4 decimal places are allowed",
-    (value) => {
-      if (value === undefined || value === null) return false; // required
-      return /^\d+(\.\d{1,4})?$/.test(value.toString());
-    }
-  ),
-  
-      avgannualpwroncycle: Yup.number()
-  .typeError("You must specify a number")
-  .required("Average annual power on cycle is required")
-  .test(
-    "max-4-decimals",
-    "Only up to 4 decimal places are allowed",
-    (value) => {
-      if (value === undefined || value === null) return false; // required
-      return /^\d+(\.\d{1,4})?$/.test(value.toString());
-    }
-  ), 
-        avgspeedkm: Yup.number()
-  .typeError("You must specify a number")
-  .required("Average speed (km) is required")
-  .test(
-    "max-4-decimals",
-    "Only up to 4 decimal places are allowed",
-    (value) => {
-      if (value === undefined || value === null) return false; // required
-      return /^\d+(\.\d{1,4})?$/.test(value.toString());
-    }
-  ),
-          avgspeedmiles: Yup.number()
-  .typeError("You must specify a number")
-  .required("Average speed (miles) is required")
-  .test(
-    "max-4-decimals",
-    "Only up to 4 decimal places are allowed",
-    (value) => {
-      if (value === undefined || value === null) return false; // required
-      return /^\d+(\.\d{1,4})?$/.test(value.toString());
-    }
-  ),
-      deliverylocation: Yup.string()
-    .matches(/^[A-Za-z]+$/, "Only letters are allowed")
-    .nullable()
-    .optional(),
-  
+      .typeError("You must specify a number")
+      .required("Average annual operation cycle is required")
+      .test(
+        "max-4-decimals",
+        "Only up to 4 decimal places are allowed",
+        (value) => {
+          if (value === undefined || value === null) return false; // required
+          return /^\d+(\.\d{1,4})?$/.test(value.toString());
+        }
+      ),
 
-    
+    avgannualpwroncycle: Yup.number()
+      .typeError("You must specify a number")
+      .required("Average annual power on cycle is required")
+      .test(
+        "max-4-decimals",
+        "Only up to 4 decimal places are allowed",
+        (value) => {
+          if (value === undefined || value === null) return false; // required
+          return /^\d+(\.\d{1,4})?$/.test(value.toString());
+        }
+      ),
+    avgspeedkm: Yup.number()
+      .typeError("You must specify a number")
+      .required("Average speed (km) is required")
+      .test(
+        "max-4-decimals",
+        "Only up to 4 decimal places are allowed",
+        (value) => {
+          if (value === undefined || value === null) return false; // required
+          return /^\d+(\.\d{1,4})?$/.test(value.toString());
+        }
+      ),
+    avgspeedmiles: Yup.number()
+      .typeError("You must specify a number")
+      .required("Average speed (miles) is required")
+      .test(
+        "max-4-decimals",
+        "Only up to 4 decimal places are allowed",
+        (value) => {
+          if (value === undefined || value === null) return false; // required
+          return /^\d+(\.\d{1,4})?$/.test(value.toString());
+        }
+      ),
+    deliverylocation: Yup.string()
+      .matches(/^[A-Za-z]+$/, "Only letters are allowed")
+      .nullable()
+      .optional(),
 
 
-  
+
+
+
+
 
   });
   const submitForm = (values) => {
@@ -493,7 +493,7 @@ avgcyclesperoperationnh: Yup.number()
           onSubmit={(values) => submitForm(values)}
         >
           {(formik) => {
-            const { handleSubmit, handleBlur, setFieldValue, handleChange, values } = formik;
+            const { handleSubmit, handleBlur, setFieldValue, handleChange, values,dirty } = formik;
             return (
               <div className="mx-4">
                 <div className="mttr-sec">
@@ -503,9 +503,9 @@ avgcyclesperoperationnh: Yup.number()
                   <fieldset
                     disabled={
                       permission?.write === true ||
-                      permission?.write === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                        permission?.write === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
                         ? null
                         : "disabled"
                     }
@@ -709,7 +709,7 @@ avgcyclesperoperationnh: Yup.number()
                                   className="mt-1"
                                   value={values.pdtlifeoptncycle}
                                 />
-                                 <ErrorMessage name="pdtlifeoptncycle" component="span" className="error" />
+                                <ErrorMessage name="pdtlifeoptncycle" component="span" className="error" />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -861,7 +861,7 @@ avgcyclesperoperationnh: Yup.number()
                                   name="avgannualmilekm"
                                   id="avgannualmilekm"
                                 />
-                                 <ErrorMessage name="avgannualmilekm" component="span" className="error" />
+                                <ErrorMessage name="avgannualmilekm" component="span" className="error" />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -879,7 +879,7 @@ avgcyclesperoperationnh: Yup.number()
                                   value={values.avgannualmilegemile}
                                   className="mt-1"
                                 />
-                                 <ErrorMessage name="avgannualmilegemile" component="span" className="error" />
+                                <ErrorMessage name="avgannualmilegemile" component="span" className="error" />
                               </Form.Group>
                             </Col>
                           </Row>{" "}
@@ -899,7 +899,7 @@ avgcyclesperoperationnh: Yup.number()
                                   name="avgannualoperationcycle"
                                   id="avgannualoperationcycle"
                                 />
-                                 <ErrorMessage name="avgannualoperationcycle" component="span" className="error" />
+                                <ErrorMessage name="avgannualoperationcycle" component="span" className="error" />
 
                               </Form.Group>
                             </Col>
@@ -936,7 +936,7 @@ avgcyclesperoperationnh: Yup.number()
                                   value={values.avgspeedkm}
                                   id="avgspeedkm"
                                 />
-                                 <ErrorMessage name="avgspeedkm" component="span" className="error" />
+                                <ErrorMessage name="avgspeedkm" component="span" className="error" />
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -954,7 +954,7 @@ avgcyclesperoperationnh: Yup.number()
                                   value={values.avgspeedmiles}
                                   className="mt-1"
                                 />
-                                 <ErrorMessage name="avgspeedmiles" component="span" className="error" />
+                                <ErrorMessage name="avgspeedmiles" component="span" className="error" />
 
                               </Form.Group>
                             </Col>
@@ -1125,7 +1125,7 @@ avgcyclesperoperationnh: Yup.number()
                                   name="temp"
                                   id="temp"
                                   value={values.temp}
-                                  placeholder="°C "
+                                  placeholder="°C"
                                 />
                                 <ErrorMessage name="temp" component="span" className="error" />
                               </Form.Group>
@@ -1133,32 +1133,30 @@ avgcyclesperoperationnh: Yup.number()
                           </Row>
                           <Row>
                             <Col>
-                               <Form.Group className="mt-3">
+                              <Form.Group className="mt-3">
                                 <Label>Non Short Probability(NSP) </Label>
-                                    <OverlayTrigger
-                                    placement="bottom"
-                                    // delay={{ show: 250, hide: 400 }}
-                                    overlay={
-                                  
-<Tooltip id="nsp-tooltip" style={{ 
-}}>
-  NSP value must be 1 when calculating the Calculated Spare Quantity
-</Tooltip>
-
-                                 }
-                           >
-                                <Form.Control
-                                  type="number"
-                                  id="nonShortProbability"
-                                  min="0"
-                                  step="any"
-                                  value={values.nonShortProbability}
-                                  onChange={handleChange}
-                                  onBlur={handleBlur}
-                                  placeholder="Non Short Probability(NSP)"
-                                  name="nonShortProbability"
-                                />
-                                {/* <ErrorMessage name="nonShortProbability" component="span" className="error" /> */}
+                                <OverlayTrigger
+                                  placement="bottom"
+                                  // delay={{ show: 250, hide: 400 }}
+                                  overlay={
+                                    <Tooltip id="nsp-tooltip" style={{
+                                    }}>
+                                      NSP value must be 1 when calculating the Calculated Spare Quantity
+                                    </Tooltip>
+                                  }
+                                >
+                                  <Form.Control
+                                    type="number"
+                                    id="nonShortProbability"
+                                    min="0"
+                                    step="any"
+                                    value={values.nonShortProbability}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    placeholder="Non Short Probability(NSP)"
+                                    name="nonShortProbability"
+                                  />
+                                  {/* <ErrorMessage name="nonShortProbability" component="span" className="error" /> */}
                                 </OverlayTrigger>
                               </Form.Group>
                             </Col>
@@ -1192,7 +1190,7 @@ avgcyclesperoperationnh: Yup.number()
                           >
                             CANCEL
                           </Button>
-                          <Button className=" save-btn  " type="submit">
+                          <Button className=" save-btn  " type="submit" disabled={!dirty}>
                             SAVE CHANGES
                           </Button>
                         </Col>

@@ -434,7 +434,7 @@ function Index(props) {
       const data = res?.data?.data;
 
       setPartTypeNprd2016Data(data?.getPartTypeData);
-      console.log("data",data)
+      console.log("data", data)
       // setPartTypeNprdDesc2016Data(data?.getPartDescData)
       // setFrpValueNprd2016Data(data?.getFrpData);
     });
@@ -544,8 +544,8 @@ function Index(props) {
     partType: Yup.object().required("Part Type is required"),
     temperature: Yup.string().required("Temperature is  required"),
     frDistribution: Yup.object().required("FR Distribution is  required"),
-    frRemarks:Yup.string().min(3,'Minimum 3 characters required')
-    .max(200, 'Maximum 200 characters allowed'),
+    frRemarks: Yup.string().min(3, 'Minimum 3 characters required')
+      .max(200, 'Maximum 200 characters allowed'),
     // failureRate: Yup.string().required("Failure Rate Offset is required"),
     // operand: Yup.object().required("FR Offset Operand is required"),
     field:
@@ -1400,15 +1400,20 @@ function Index(props) {
                                         name="frRemarks"
                                         placeholder="FR Remarks"
                                         onBlur={handleBlur}
-                                        onChange={(e) => { setFrRemarks(e.target.value) }}
+                                        onChange={(e) => {
+                                          const value = e.target.value;
+                                          if (value.length <= 200) {
+                                            setFrRemarks(value); // update state
+                                          }
+                                        }}
                                         value={values.frRemarks}
                                       />
-                                         <ErrorMessage
-                                        className="error text-danger"
-                                        component="span"
-                                        name="frRemarks"
-                                      />
+                                      {values.frRemarks.length > 200 && (
+                                        <span className="text-danger">Maximum 200 characters allowed</span>
+                                      )}
+                                      <ErrorMessage className="error text-danger" component="span" name="frRemarks"/>
                                     </Form.Group>
+
                                   </Col>
                                   <Col>
                                     <Label notify={true} >Standard</Label>

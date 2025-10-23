@@ -17,8 +17,10 @@ const ThemeSlider = () => {
 
   const handleSliderChange = (event) => {
     const newHue = event.target.value;
+  
     setHue(newHue);
     document.documentElement.style.setProperty("--user-theme-color-hue", newHue);
+
   };
 
   return (
