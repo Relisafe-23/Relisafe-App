@@ -1,5 +1,5 @@
 import React, { Component, useEffect, useState } from "react";
-import { Table, Row, Col, Form, Modal, Card, Button, Dropdown } from "react-bootstrap";
+import { Table, Row, Col, Form, Modal, Card, Button, Dropdown, Spinner } from "react-bootstrap";
 import "../../css/ProjectList.scss";
 import { Link } from "react-router-dom";
 import Api from "../../Api";
@@ -20,13 +20,14 @@ import { red } from "@mui/material/colors";
 import { customStyles } from "../core/select";
 
 
-export default function ProjectList(props) {
+export default function ProjectList(props, list) {
   const pbspermission = props?.location?.state?.pbsWrite;
   const [projectList, setProjectList] = useState([]);
   const [projectId, setProjectId] = useState();
   const [projectName, setProjectName] = useState();
   const [companyName, setCompanyName] = useState();
   const [projectNum, setProjectNum] = useState();
+
   const [projectOwner, setProjectOwner] = useState();
   const [confirmDeleteMsg, setConfirmDeleteMsg] = useState(false);
   const [projectDeleteMessage, setProjectDeleteMessage] = useState(false);
@@ -45,15 +46,51 @@ export default function ProjectList(props) {
   const storedHue = localStorage.getItem("themeHue");
   const initialHue = storedHue ? parseInt(storedHue, 10) : 0;
   const [hue, setHue] = useState(initialHue);
-  
+
+  // const getDeleteProjectData = (value) => {
+  //   setConfirmDeleteMsg(true);
+  //   setProjectId(value?.id);
+  //   setCompanyName(value?.companyId?.companyName);
+  //   setProjectName(value?.projectName);
+  //   setProjectNum(value?.projectNumber);
+  //   setProjectOwner(value?.projectOwner?.name);
+  // };
+  const handleEditPermission = () => {
+    setIsLoading(true);
+
+    // Optional delay for smoother UX
+    setTimeout(() => {
+      history.push({
+        pathname: `/permissions/${list?.id}`,
+        state: {
+          projectID: list?.id,
+          companyName: list?.companyId?.companyName,
+          projectName: list?.projectName,
+          companyId: list?.companyId?._id,
+        },
+      });
+    }, 500);
+  };
   const getDeleteProjectData = (value) => {
-    setConfirmDeleteMsg(true);
+    setIsLoading(true);
+    setTimeout(() => {
+      setConfirmDeleteMsg(true);
+      setIsLoading(false);
+    }, 1000);
     setProjectId(value?.id);
     setCompanyName(value?.companyId?.companyName);
     setProjectName(value?.projectName);
     setProjectNum(value?.projectNumber);
     setProjectOwner(value?.projectOwner?.name);
   };
+
+  const handleOpenModal = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setShow(true);
+      setIsLoading(false);
+    }, 500);
+  }
 
   const deleteProject = () => {
     Api.delete(`api/v1/projectCreation/${projectId}`, {
@@ -90,12 +127,12 @@ export default function ProjectList(props) {
   const getUsers = () => {
     const companyId = localStorage.getItem("companyId");
     const userId = localStorage.getItem("userId");
-    
+
     Api.get("/api/v1/user/list", {
       params: {
         userId: userId,
         companyId: companyId,
-       
+
       },
     })
       .then((response) => {
@@ -167,15 +204,15 @@ export default function ProjectList(props) {
       .test('no-whitespace', 'Project description cannot contain only whitespace', (value) => {
         return value && value.trim().length > 0;
       })
-     .max(50, "Maximum 50 character is allowed"),
+      .max(50, "Maximum 50 character is allowed"),
     // owner: Yup.object().required("Project owner Is required"),
   });
   const submitForm = (values, { resetForm }, id) => {
-    
+
     const companyId = localStorage.getItem("companyId");
     const userId = localStorage.getItem("userId");
     Api.post("api/v1/projectCreation/", {
-    
+
       projectName: values.name,
       projectDesc: values.description,
       projectNumber: values.number,
@@ -235,8 +272,8 @@ export default function ProjectList(props) {
           </div>
 
           <div className="d-flex justify-content-end mt-4 low-length-responsive">
-            <Button className="save-btn  mb-3" variant="secondary" onClick={() => setShow(true)}>
-              CREATE PROJECT
+            <Button className="save-btn  mb-3" variant="secondary" onClick={handleOpenModal} disabled={isLoading}>
+              {isLoading ? "Loading..." : "CREATE PROJECT"}
             </Button>
           </div>
           <Table bordered hover className="mt-4" style={{ bottom: "30px" }}>
@@ -256,6 +293,7 @@ export default function ProjectList(props) {
                     <td className="viewRow ">{i + 1}</td>
                     <td className="viewRow">{list?.projectNumber}</td>
                     <td className="viewRow">{list?.projectName}</td>
+
                     {/* <td className="viewRow">{list?.projectOwner?.name}</td> */}
                     {role === "admin" || (list.isOwner === true && list.createdBy === userId) ? (
                       <td className="d-flex justify-content-center ">
@@ -288,7 +326,7 @@ export default function ProjectList(props) {
                                 history.push({
                                   pathname: `/pbs/${list?.id}`,
 
-                                  state: { projectId: list?.id, state: ["openSidebar", "pbs"],  pbsWrite: pbspermission },
+                                  state: { projectId: list?.id, state: ["openSidebar", "pbs"], pbsWrite: pbspermission },
                                 });
                               }}
                             >
@@ -304,21 +342,38 @@ export default function ProjectList(props) {
                             </Dropdown.Item>
                             <Dropdown.Divider />
                             <Dropdown.Item
-                              style={{ textAlign: "center" }}
-                              className="user-dropitem-project "
+                              style={{ textAlign: "center", position: "relative" }}
+                              className="user-dropitem-project"
                               onClick={() => {
-                                history.push({
-                                  pathname: `/permissions/${list?.id}`,
-                                  state: {
-                                    projectID: list?.id,
-                                    companyName: list?.companyId?.companyName,
-                                    projectName: list?.projectName,
-                                    companyId: list?.companyId?._id,
-                                  },
-                                });
+                                setIsLoading(true); // show spinner
+                                setTimeout(() => {  // simulate loading delay
+                                  history.push({
+                                    pathname: `/permissions/${list?.id}`,
+                                    state: {
+                                      projectID: list?.id,
+                                      companyName: list?.companyId?.companyName,
+                                      projectName: list?.projectName,
+                                      companyId: list?.companyId?._id,
+                                    },
+                                  });
+                                  setIsLoading(false); // optional, if you stay on page it will reset
+                                }, 500); // adjust delay as needed
                               }}
+                              disabled={isLoading}
                             >
-                              Edit Permission
+                              {isLoading ? (
+                                <>
+                                  <Spinner
+                                    animation="border"
+                                    size="sm"
+                                    role="status"
+                                    className="me-2"
+                                  />
+                                  Loading...
+                                </>
+                              ) : (
+                                "Edit Permission"
+                              )}
                             </Dropdown.Item>
                           </Dropdown.Menu>
                         </Dropdown>
@@ -378,6 +433,7 @@ export default function ProjectList(props) {
           </Table>
 
           <div>
+            {isLoading && <Loader />}
             <Modal show={show} size="lg" centered backdrop="static">
               <Modal.Body>
                 <div className="mttr-sec mt-3 mx-2">
@@ -397,7 +453,7 @@ export default function ProjectList(props) {
                 {(formik) => {
                   const { values, handleChange, handleSubmit, handleBlur, isValid } = formik;
                   return (
-                    <div className=" mx-4"style={{width:"1000px"}}>
+                    <div className=" mx-4" style={{ width: "1000px" }}>
                       <Form onSubmit={handleSubmit}>
                         <Card className="card-color">
                           <div className="pb-4 px-4">
@@ -532,6 +588,7 @@ export default function ProjectList(props) {
           </div>
 
           <div>
+            {isLoading && <Loader />}
             <Modal show={confirmDeleteMsg} centered className="project-delete-modal-use" backdrop="static">
               <Modal.Body>
                 <div style={{ marginTop: "25px" }}>

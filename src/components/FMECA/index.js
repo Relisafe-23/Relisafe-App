@@ -287,8 +287,7 @@ function Index(props) {
     const ProjectName = treeTableData[0]?.projectId?.projectName;
     const data = tableData[0];
     const productName = data?.productId?.productName
-    console.log("ProductName",productName)
-    console.log("tableData",tableData)
+  
     const modifiedTableData = tableData.map((row) => {
       const newRow = {
         ...row,
@@ -348,7 +347,7 @@ function Index(props) {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
     Api.post("api/v1/FMECA/", {
-      operatingPhase: values.operationPhase,
+      operatingPhase: values.operatingPhase,
       function: values.function,
       failureMode: values.failureMode,
       // searchFM: values.searchFM,
@@ -459,16 +458,12 @@ function Index(props) {
       // get first sheet
       const workSheetName = workBook.SheetNames[0];
       const workSheet = workBook.Sheets[workSheetName];
-
-      //convert array
-
       const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
       const headers = fileData[0];
       const heads = headers.map((head) => ({ title: head, field: head }));
       setColDefs(heads);
       fileData.splice(0, 1);
       setData(convertToJson(headers, fileData));
-      convertToJson(headers, fileData);
     };
     reader.readAsBinaryString(file);
   };
@@ -782,6 +777,7 @@ function Index(props) {
   };
 
   const createEditComponent = (fieldName, title, isRequired = false) => {
+
     return {
       title: isRequired ? `${title} *` : title,
       field: fieldName,
@@ -799,42 +795,63 @@ function Index(props) {
         };
 
         return (
-          <div style={{ position: 'relative' }}>
-            <input
-              type="text"
-              value={value || ''}
-              onChange={(e) => handleChange(e.target.value)}
-              placeholder={isRequired ? `${title} *` : title}
-              style={{
-                height: "40px",
-                borderRadius: "4px",
-                width: "100%",
-                borderColor: isRequired && (!value || value.toString().trim() === '') ? '#d32f2f' : '#ccc'
-              }}
-              title={title}
-            />
-            {isRequired && (!value || value.toString().trim() === '') && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                color: '#d32f2f',
-                fontSize: '12px',
-                marginTop: '2px'
-              }}>
-                {title} is required!
-              </div>
-            )}
-          </div>
+         <div style={{ position: 'relative' }}>
+  <input
+    type="text"
+    value={value || ''}
+    onChange={(e) => {
+      const newValue = e.target.value;
+      if (
+        (fieldName === 'Failure Mode Ratio Alpha (must be equal to 1)' ||
+          fieldName === 'End Effect ratio Beta (must be equal to 1)') &&
+        newValue !== '' &&
+        newValue !== '1'
+      ) {
+        return;
+      }
+
+      handleChange(newValue);
+    }}
+    placeholder={isRequired ? `${title} *` : title}
+    style={{
+      height: "40px",
+      borderRadius: "4px",
+      width: "100%",
+      borderColor:
+        isRequired && (!value || value.toString().trim() === '')
+          ? '#d32f2f'
+          : '#ccc',
+    }}
+    title={title}
+  />
+  {isRequired && (!value || value.toString().trim() === '') && (
+    <div
+      style={{
+        position: 'absolute',
+        top: '100%',
+        left: 0,
+        color: '#d32f2f',
+        fontSize: '12px',
+        marginTop: '2px',
+      }}
+    >
+      {title} is required!
+    </div>
+  )}
+</div>
+
         );
       }
     };
   };
 
   // Special case for operatingPhase (has different styling)
-  const operatingPhaseColumn = {
+  const operatingPhase = {
+    
     ...createEditComponent("operatingPhase", "Operating Phases", true), // true for required
     editComponent: ({ value, onChange, rowData }) => {
+
+      
       const filteredData = allSepareteData?.filter(
         (item) => item?.sourceName === "operatingPhase"
       ) || [];
@@ -930,13 +947,14 @@ function Index(props) {
     render: (rowData) => `${rowData?.tableData?.id + 1}`,
     title: "FMECA ID",
   };
-
+//  const operatingPhaseColumn = createEditComponent("operatingPhase", "Operating Phase"),
   const columns = [
     fmecaIdColumn,
-    operatingPhaseColumn,
+    operatingPhase,
+    // createEditComponent("operatingPhase", "Operating Phases", true),
     createEditComponent("function", "Function", true),
     createEditComponent("failureMode", "Failure Mode", true),
-    createEditComponent("failureModeRatioAlpha", "Failure Mode Ratio Alpha", true),
+    createEditComponent("failureModeRatioAlpha", "Failure Mode Ratio Alpha (must be equal to 1)", true),
     createEditComponent("detectableMeansDuringOperation", "Cause"),
     createEditComponent("subSystemEffect", "Sub System effect", true),
     createEditComponent("systemEffect", "System Effect", true),
@@ -968,10 +986,8 @@ function Index(props) {
     createEditComponent("userField9", "User field 9"),
     createEditComponent("userField10", "User field 10"),
   ];
+  
   const createFmeca = (values) => {
-
-
-
     if (productId) {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
@@ -1006,7 +1022,7 @@ function Index(props) {
         safetyImpact: values.safetyImpact
           ? values.safetyImpact
           : data.safetyImpact,
-        referenceId: values.referenceHazardId
+        referenceHazardId: values.referenceHazardId
           ? values.referenceHazardId
           : data.referenceHazardId,
         realibilityImpact: values.realibilityImpact
@@ -1051,6 +1067,7 @@ function Index(props) {
         userId: userId,
         Alldata: tableData,
       }).then((response) => {
+       
         const status = response?.status;
         // if (status === 204) {
         //   setFailureModeRatioError(true);
@@ -1068,7 +1085,7 @@ function Index(props) {
       toast.error("Operating Phase, Function, and Failure Mode are required.");
       return;
     }
-    setIsLoading(true);
+    // setIsLoading(true);
     const payload = {
       operatingPhase: values.operatingPhase,
       function: values.function,
@@ -1119,8 +1136,9 @@ function Index(props) {
         toast.success("FMECA updated successfully!");
         getProductData();
         getAllConnectedLibraryAfterUpdate();
-        
+          
       }
+    
        else if (response?.status === 204) {
         toast.error("Failure Mode Radio Alpha Must be Equal to One !");
       }
@@ -1202,7 +1220,6 @@ function Index(props) {
                 onChange={handleDropdownChange}
               />
             </div>
-            {/* {console.log("ProductName", treeTableData[0]?.treeStructure?.productName)}  */}
             <div
               style={{
                 display: "flex",
