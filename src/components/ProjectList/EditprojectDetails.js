@@ -678,7 +678,7 @@ export default function EditprojectDetails(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 {" "}
-                                <Label>Product life in miles</Label>
+                                <Label notify={true}>Product life in miles</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"

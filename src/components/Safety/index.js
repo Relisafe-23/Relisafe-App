@@ -145,13 +145,12 @@ const DownloadExcel = () => {
       opernalMaintanMitigation: values.opernalMaintanMitigation,
       opernalMitigatonResbility: values.opernalMitigatonResbility,
       operatnalMitigationEvidence: values.operatnalMitigationEvidence,
-      residualSeverity: values.residualresidualSeverity,
+      residualSeverity: values.residualSeverity,
       residualLikelihood: values.residualLikelihood,
       residualRiskLevel: values.residualRiskLevel,
       hazardStatus: values.hazardStatus,
       ftaNameId: values.ftaNameId,
-      userField1:
-        values.userField1,
+      userField1: values.userField1,
       userField2:
         values.userField2,
       projectId: projectId,
