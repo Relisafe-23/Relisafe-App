@@ -859,7 +859,8 @@ export default function PBS(props) {
 
                     <div className="main-div-product"
                       style={{ position: "absolute" }}>
-                      <Modal
+                      <Modal 
+
                         show={mainProductModalOpen}
                         size="lg"
                         onHide={() => {
@@ -868,14 +869,17 @@ export default function PBS(props) {
                           setSubProduct(false);
                           setPatchCategory("");
                           setPatchPartType("");
-                          setReference("");
+                           setReference("");
                           setQuantity("");
                           setPartNumber("");
                           setPatchName("");
                           setPatchModal(false);
+
                         }}
-                        style={{ right: "200px" }}
+                        style={{left: "-80px" }}
                         backdrop="static"
+                          contentClassName="no-vertical-scroll"
+                        //  dialogClassName="modal-full-height"
                       >
                         <Form onSubmit={handleSubmit} className="px-4">
                           <Modal.Header style={{ borderBottom: 0, display: "flex", alignItems: "center" }} closeButton>
@@ -895,7 +899,9 @@ export default function PBS(props) {
                               )}
                             </div>
                           </Modal.Header>
-                          <Modal.Body>
+                          <Modal.Body
+                          
+                          >
                             <Row className="mb-4" style={{ top: "-40px" }}>
                               <div className="mttr-sec">
                                 <p className=" mb-0 para-tag">
