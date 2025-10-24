@@ -68,6 +68,7 @@ export default function PBS(props) {
   const [parentId, setParentId] = useState("");
 
   const [isLoading, setISLoading] = useState(true);
+  const [permissionsChecked, setPermissionsChecked] = useState(false);
   const [productMessage, setProductMessage] = useState("");
   const [errorCode, setErrorCode] = useState(0);
   const [newProId, setNewProId] = useState();
@@ -295,6 +296,7 @@ export default function PBS(props) {
         console.log("res", res);
         const data = res?.data?.data;
         setPermission(data?.modules[0]);
+           setPermissionsChecked(true); 
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -523,6 +525,7 @@ export default function PBS(props) {
         projectId: projectId,
         userId: userId,
         token: sessionId,
+        
       },
     })
       .then((res) => {
@@ -530,6 +533,7 @@ export default function PBS(props) {
         setData(treeData);
         console.log("treeData", treeData)
         setISLoading(false);
+        console.log("data@@@@", data);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -654,7 +658,6 @@ export default function PBS(props) {
         copyProductId: pasteProductIds,
       },
     }).then((response) => {
-
       const copyData = response.data.treeData;
       setSelectCopyData(copyData);
     });
@@ -724,7 +727,7 @@ export default function PBS(props) {
 
   return (
     <div className="pbs-main px-4" style={{ marginTop: "90px" }}>
-      {isLoading ? (
+     {isLoading || !permissionsChecked ? (
         <Loader />
       ) : permission?.read === true ||
         permission?.read === "undefined" ||
@@ -810,7 +813,7 @@ export default function PBS(props) {
                         <Tooltip placement="right" title="Export">
                           <button
                             className="add-product-btn"
-                            style={{ marginLeft: "10px", borderStyle: "none" }}
+                            style={{ marginLeft: "8px", borderStyle: "none" }}
                             onClick={() => {
                               DownloadExcel();
                             }}
