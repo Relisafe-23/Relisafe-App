@@ -146,7 +146,7 @@ export default function PBS(props) {
         title: columnName,
         field: columnName,
       }));
-      console.log("modifiedTableData", modifiedTableData);
+
       const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
         skipHeader: false,
       });
@@ -161,8 +161,7 @@ export default function PBS(props) {
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      console.log("url", url);
-      console.log("link", link);
+     
       link.href = url;
       link.download = "PBS.xlsx";
       link.click();
@@ -186,7 +185,7 @@ export default function PBS(props) {
 
   const createPBSDataFromExcel = (values) => {
     setISLoading(true);
-    console.log("values", values);
+  
     const companyId = localStorage.getItem("companyId");
     Api.post("api/v1/productBreakdownStructure", {
       productName: values.productName,
@@ -201,6 +200,7 @@ export default function PBS(props) {
       companyId: companyId,
       token: token,
     }).then((response) => {
+    
       setISLoading(false);
       const status = response?.status;
       if (status === 204) {
@@ -262,14 +262,14 @@ export default function PBS(props) {
       const workBook = XLSX.read(bstr, { type: "binary" });
       // get first sheet
       const workSheetName = workBook.SheetNames[0];
-      console.log("workSheetName", workSheetName)
+
 
       const workSheet = workBook.Sheets[workSheetName];
-      console.log("workSheet", workSheet)
+      
       //convert array
       const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
       const headers = fileData[0];
-      console.log("headers", headers)
+    
       const heads = headers.map((head) => ({ title: head, field: head }));
       setColDefs(heads);
       fileData.splice(0, 1);
@@ -293,7 +293,7 @@ export default function PBS(props) {
       },
     })
       .then((res) => {
-        console.log("res", res);
+       
         const data = res?.data?.data;
         setPermission(data?.modules[0]);
            setPermissionsChecked(true); 
@@ -314,7 +314,7 @@ export default function PBS(props) {
         userId: userId,
       },
     }).then((res) => {
-      console.log("res", res);
+    
       setIsOwner(res?.data?.data?.isOwner);
       setCreatedBy(res?.data?.data?.createdBy);
     });
@@ -531,9 +531,9 @@ export default function PBS(props) {
       .then((res) => {
         const treeData = res?.data?.data;
         setData(treeData);
-        console.log("treeData", treeData)
+ 
         setISLoading(false);
-        console.log("data@@@@", data);
+        
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -722,7 +722,6 @@ export default function PBS(props) {
   // Sort the data array
   const sortedData = data.slice().sort(customSort);
 
-  console.log("Sorted Data:", sortedData);
 
 
   return (
@@ -730,7 +729,7 @@ export default function PBS(props) {
      {isLoading || !permissionsChecked ? (
         <Loader />
       ) : permission?.read === true ||
-        permission?.read === "undefined" ||
+        permission?.read === undefined ||
         role === "admin" ||
         (isOwner === true && createdBy === userId) ? (
         <div>
@@ -791,7 +790,9 @@ export default function PBS(props) {
                               htmlFor="file-input"
                               className="add-product-btn"
                             >
-                              <FontAwesomeIcon icon={faFileUpload} />
+                              <FontAwesomeIcon
+                              icon={faFileDownload}
+                            />
                             </label>
                             <input
                               type="file"
@@ -827,10 +828,8 @@ export default function PBS(props) {
                                 : null // Otherwise, the button is enabled
                             }
                           >
-                            <FontAwesomeIcon
-                              icon={faFileDownload}
-
-                            />
+   
+                            <FontAwesomeIcon icon={faFileUpload} />
                           </button>
                         </Tooltip>
                       </div>
@@ -1153,8 +1152,6 @@ export default function PBS(props) {
                                         step="any"
                                         name="temperature"
                                         value={values.temperature}
-
-
                                         onChange={handleChange}
                                         onBlur={handleBlur}
                                       />

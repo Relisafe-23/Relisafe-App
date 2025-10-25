@@ -746,13 +746,10 @@ function Index(props) {
       {isLoading || !permissionsChecked ? (
         <Loader />
       ) : permission?.read === true ||
-        permission?.read === "undefined" ||
+        permission?.read === undefined ||
         role === "admin" ||
         (isOwner === true && createdBy === userId) ? (
         <div>
-          {console.log(dutyCycle, "dutyCycle................")}
-          {/* {console.log(predicted?.FR,"predicted?.FR................")} */}
-
           <Formik
             enableReinitialize={true}
             initialValues={{

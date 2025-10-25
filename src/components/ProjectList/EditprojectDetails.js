@@ -449,7 +449,7 @@ export default function EditprojectDetails(props) {
       {isLoading ? (
         <Loader />
       ) : permission?.read === true ||
-        permission?.read === "undefined" ||
+        permission?.read === undefined ||
         role === "admin" ||
         (isOwner === true && createdBy === userId) ? (
         <Formik
