@@ -232,15 +232,17 @@ function ConnectedLibrary(props) {
     const comId = localStorage.getItem("companyId");
 
     Api.put("api/v1/library/update/connect/value", {
-      moduleName: values.Module.label,
+      moduleName: values.Module.value,
       projectId: projectId,
       companyId: comId,
       sourceId: sourceId,
       sourceName: values.Field.label,
-      sourceValue: values.Value,
+      sourceValue:  values.FieldValueAndValue.value,
       destinationData: values,
       destinationModuleName: values.destinationModule.value,
     }).then((res) => {
+      console.log("res",res)
+      console.log("values",values)
       // window.location.reload();
       // setIsLoading(false);
          resetForm({
@@ -577,7 +579,7 @@ function ConnectedLibrary(props) {
                                 <Label>
                                   Enter custom value for {values.Field.label}
                                 </Label>
-                                {console.log("values...", values)}
+                                {/* {console.log("values...", values)} */}
                                 <Form.Group>
                                   {namesToFilter.includes(
                                     values.Field.value

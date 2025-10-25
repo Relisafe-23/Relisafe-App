@@ -660,7 +660,7 @@ export default function EditprojectDetails(props) {
                           <Row>
                             <Col md={6}>
                               <Form.Group className="mt-3">
-                                <Label>Product life in km</Label>
+                                <Label notify={true}>Product life in km</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
@@ -774,7 +774,7 @@ export default function EditprojectDetails(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 {" "}
-                                <Label>Average cycles per operational hour</Label>
+                                <Label notify={true}>Average cycles per operational hour</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
@@ -791,7 +791,7 @@ export default function EditprojectDetails(props) {
                             </Col>
                             <Col md={6}>
                               <Form.Group className="mt-3">
-                                <Label>Average cycles per power on hour</Label>
+                                <Label notify={true}>Average cycles per power on hour</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
@@ -829,7 +829,7 @@ export default function EditprojectDetails(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 {" "}
-                                <Label>Average annual power on hours</Label>
+                                <Label notify={true}>Average annual power on hours</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
@@ -849,7 +849,7 @@ export default function EditprojectDetails(props) {
                           <Row>
                             <Col md={6}>
                               <Form.Group className="mt-3">
-                                <Label>Average annual mileage km</Label>
+                                <Label notify={true}>Average annual mileage km</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
@@ -867,7 +867,7 @@ export default function EditprojectDetails(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 {" "}
-                                <Label>Average annual mileage miles</Label>
+                                <Label notify={true}>Average annual mileage miles</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
@@ -887,7 +887,7 @@ export default function EditprojectDetails(props) {
                             <Col md={6}>
                               {" "}
                               <Form.Group className="mt-3">
-                                <Label>Average annual operation cycles</Label>
+                                <Label notify={true}>Average annual operation cycles</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
@@ -905,7 +905,7 @@ export default function EditprojectDetails(props) {
                             </Col>
                             <Col md={6}>
                               <Form.Group className="mt-3">
-                                <Label>Average annual power on cycles</Label>
+                                <Label notify={true}>Average annual power on cycles</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
@@ -924,7 +924,7 @@ export default function EditprojectDetails(props) {
                           <Row>
                             <Col md={6}>
                               <Form.Group className="mt-3">
-                                <Label>Average speed Km</Label>
+                                <Label notify={true}>Average speed Km</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
@@ -942,7 +942,7 @@ export default function EditprojectDetails(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 {" "}
-                                <Label>Average speed miles</Label>
+                                <Label notify={true}>Average speed miles</Label>
                                 <Form.Control
                                   type="number"
                                   min="0"
