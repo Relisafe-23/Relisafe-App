@@ -717,7 +717,7 @@ const importExcel = (e) => {
     });
   };
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
-    console.log("projectId", projectId)
+   
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
@@ -1303,8 +1303,6 @@ const importExcel = (e) => {
      label: item?.failureMode,  
     
   }));
-
-
 
 const InitialValues = {
   projectname:projectname,

@@ -287,7 +287,7 @@ function Index(props) {
     const ProjectName = treeTableData[0]?.projectId?.projectName;
     const data = tableData[0];
     const productName = data?.productId?.productName
-  
+
     const modifiedTableData = tableData.map((row) => {
       const newRow = {
         ...row,
@@ -325,7 +325,7 @@ function Index(props) {
       link.href = url;
       link.download = "FMECA_Data.xlsx";
       link.click();
-     
+
       // Clean up
       URL.revokeObjectURL(url);
     } else {
@@ -795,52 +795,52 @@ function Index(props) {
         };
 
         return (
-         <div style={{ position: 'relative' }}>
-         <input
-  type="text"
-  value={value || ''}
-  onChange={(e) => {
-    const newValue = e.target.value;
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              value={value || ''}
+              onChange={(e) => {
+                const newValue = e.target.value;
 
-    // Restrict specific fields to only allow 1
-    if (
-      (fieldName === 'failureModeRatioAlpha' || fieldName === 'endEffectRatioBeta') &&
-      newValue !== '' &&
-      parseFloat(newValue) > 1
-    ) {
-      return; // ignore if greater than 1
-    }
+                // Restrict specific fields to only allow 1
+                if (
+                  (fieldName === 'failureModeRatioAlpha' || fieldName === 'endEffectRatioBeta') &&
+                  newValue !== '' &&
+                  parseFloat(newValue) > 1
+                ) {
+                  return; // ignore if greater than 1
+                }
 
-    handleChange(newValue);
-  }}
+                handleChange(newValue);
+              }}
 
-    placeholder={isRequired ? `${title} *` : title}
-    style={{
-      height: "40px",
-      borderRadius: "4px",
-      width: "100%",
-      borderColor:
-        isRequired && (!value || value.toString().trim() === '')
-          ? '#d32f2f'
-          : '#ccc',
-    }}
-    title={title}
-  />
-  {isRequired && (!value || value.toString().trim() === '') && (
-    <div
-      style={{
-        position: 'absolute',
-        top: '100%',
-        left: 0,
-        color: '#d32f2f',
-        fontSize: '12px',
-        marginTop: '2px',
-      }}
-    >
-      {title} is required!
-    </div>
-  )}
-</div>
+              placeholder={isRequired ? `${title} *` : title}
+              style={{
+                height: "40px",
+                borderRadius: "4px",
+                width: "100%",
+                borderColor:
+                  isRequired && (!value || value.toString().trim() === '')
+                    ? '#d32f2f'
+                    : '#ccc',
+              }}
+              title={title}
+            />
+            {isRequired && (!value || value.toString().trim() === '') && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  color: '#d32f2f',
+                  fontSize: '12px',
+                  marginTop: '2px',
+                }}
+              >
+                {title} is required!
+              </div>
+            )}
+          </div>
 
         );
       }
@@ -849,11 +849,11 @@ function Index(props) {
 
   // Special case for operatingPhase (has different styling)
   const operatingPhase = {
-    
+
     ...createEditComponent("operatingPhase", "Operating Phases", true), // true for required
     editComponent: ({ value, onChange, rowData }) => {
 
-      
+
       const filteredData = allSepareteData?.filter(
         (item) => item?.sourceName === "operatingPhase"
       ) || [];
@@ -949,7 +949,7 @@ function Index(props) {
     render: (rowData) => `${rowData?.tableData?.id + 1}`,
     title: "FMECA ID",
   };
-//  const operatingPhaseColumn = createEditComponent("operatingPhase", "Operating Phase"),
+  //  const operatingPhaseColumn = createEditComponent("operatingPhase", "Operating Phase"),
   const columns = [
     fmecaIdColumn,
     operatingPhase,
@@ -988,7 +988,7 @@ function Index(props) {
     createEditComponent("userField9", "User field 9"),
     createEditComponent("userField10", "User field 10"),
   ];
-  
+
   const createFmeca = (values) => {
     if (productId) {
       const companyId = localStorage.getItem("companyId");
@@ -1069,7 +1069,7 @@ function Index(props) {
         userId: userId,
         Alldata: tableData,
       }).then((response) => {
-       
+
         const status = response?.status;
         // if (status === 204) {
         //   setFailureModeRatioError(true);
@@ -1138,10 +1138,10 @@ function Index(props) {
         toast.success("FMECA updated successfully!");
         getProductData();
         getAllConnectedLibraryAfterUpdate();
-          
+
       }
-    
-       else if (response?.status === 204) {
+
+      else if (response?.status === 204) {
         toast.error("Failure Mode Radio Alpha Must be Equal to One !");
       }
       else {
