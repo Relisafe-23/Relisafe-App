@@ -702,7 +702,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
               </div>
             </div>
           ) : role === "Employee" ? (
-                <div className="debug-employee-content" style={{border: '2px solid yellow'}}>
+                <div className="debug-employee-content">
                     {!projectId && (
               <div className="menu-list">
                 <NavLink

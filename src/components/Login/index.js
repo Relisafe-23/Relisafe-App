@@ -16,6 +16,7 @@ function Login() {
   const [responseSuccess, setResponseSuccess] = useState(false);
   const [responseExist, setResponseExist] = useState(false);
   const [existMessage, setExistMessage] = useState();
+  const [isLoginSubmit, setIsLoginSubmit] = useState(false);
 
   const history = useHistory();
 
@@ -48,6 +49,7 @@ function Login() {
       password: values.password,
     })
       .then((res) => {
+      
         const status = res.status;
         if (status === 200) {
           setResponseSuccess(true);
@@ -61,16 +63,20 @@ function Login() {
           localStorage.setItem("sessionId", token);
           localStorage.setItem("companyId", companyId);
           localStorage.setItem("role", role);
-
           history.push(role == "SuperAdmin" ? "/company" : "/project/list");
-          // window.location.reload();
+          window.location.reload();
+           setIsLoginSubmit(false);
         }
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
+        window.location.reload();
+ 
+         setIsLoginSubmit(false);
         if (errorStatus >= 400) {
           setResponseExist(true);
           setExistMessage(error?.response?.data?.message ? error?.response?.data?.message : "Invalid Credentials");
+         
         }
       })
       .finally(() => {
@@ -96,11 +102,16 @@ function Login() {
                   email: "",
                   password: "",
                 }}
+                validateOnMount={true}
                 validationSchema={loginSchema}
-                onSubmit={(values) => submitForm(values)}
+                onSubmit={(values) =>{
+                    setIsLoginSubmit(true);  
+                  
+                  submitForm(values)}
+                }
               >
                 {(formik) => {
-                  const { handleChange, handleSubmit, handleBlur } = formik;
+                  const { handleChange, handleSubmit, handleBlur, isValid, isSubmitting } = formik;
                   return (
                     <Form onSubmit={handleSubmit}>
                       <Form.Group className="login-fields-email">
@@ -146,8 +157,12 @@ function Login() {
                         >
                           <b>Log In</b>
                         </button> */}
-                        <button className="login-btn-css-new" type="submit" disabled={loading}>
-                          <b>{loading ? "Logging in..." : "Login"}</b>
+                        <button
+                          className="login-btn-css-new"
+                          type="submit"
+                          disabled={!isValid || isSubmitting}
+                        >
+                          <b>{isLoginSubmit ? "Logging in..." : "Login"}</b>
                         </button>
 
                       </div>

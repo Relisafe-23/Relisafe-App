@@ -27,7 +27,7 @@ export default function ProjectList(props, list) {
   const [projectName, setProjectName] = useState();
   const [companyName, setCompanyName] = useState();
   const [projectNum, setProjectNum] = useState();
-
+  const [loading, setLoading] = useState(false);
   const [projectOwner, setProjectOwner] = useState();
   const [confirmDeleteMsg, setConfirmDeleteMsg] = useState(false);
   const [projectDeleteMessage, setProjectDeleteMessage] = useState(false);
@@ -42,7 +42,7 @@ export default function ProjectList(props, list) {
   const [isOwner, setIsOwner] = useState(false);
 
   const role = localStorage.getItem("role");
-
+  const [isCreateSubmit, setIsCreateSubmit] = useState(false);
   const storedHue = localStorage.getItem("themeHue");
   const initialHue = storedHue ? parseInt(storedHue, 10) : 0;
   const [hue, setHue] = useState(initialHue);
@@ -93,12 +93,14 @@ export default function ProjectList(props, list) {
   }
 
   const deleteProject = () => {
+    
     Api.delete(`api/v1/projectCreation/${projectId}`, {
       headers: {
         userId: userId,
       },
     })
       .then((res) => {
+        setLoading(false);
         setConfirmDeleteMsg(false);
         ProjectDeleteMessageClose();
         getProjectList();
@@ -222,6 +224,7 @@ export default function ProjectList(props, list) {
     })
       .then((res) => {
         if (res.status === 201) {
+            setIsCreateSubmit(true);  
           const projectlistId = res?.data?.data?.createData?.id;
           const projectName = res?.data?.data?.createData?.projectName;
           getUserDetails();
@@ -448,10 +451,13 @@ export default function ProjectList(props, list) {
                   owner: "",
                 }}
                 validationSchema={SignInSchema}
-                onSubmit={(values, { resetForm }) => submitForm(values, { resetForm })}
+                
+                onSubmit={(values, { resetForm }) =>{setIsCreateSubmit(true);
+                  submitForm(values, { resetForm }
+                  )}}
               >
                 {(formik) => {
-                  const { values, handleChange, handleSubmit, handleBlur, isValid } = formik;
+                  const { values, handleChange, handleSubmit, handleBlur,  isValid, isSubmitting } = formik;
                   return (
                     <div className=" mx-4" style={{ width: "1000px" }}>
                       <Form onSubmit={handleSubmit}>
@@ -561,8 +567,8 @@ export default function ProjectList(props, list) {
                             >
                               CANCEL
                             </Button>
-                            <Button className=" save-btn" type="submit" disabled={!isValid}>
-                              CREATE
+                            <Button className=" save-btn" type="submit"   disabled={!isValid || isSubmitting}>
+                                <b>{isCreateSubmit ? "Creating..." : "CREATE"}</b>
                             </Button>
                           </Col>
                         </Row>
@@ -588,7 +594,7 @@ export default function ProjectList(props, list) {
           </div>
 
           <div>
-            {isLoading && <Loader />}
+            {loading && <Loader />}
             <Modal show={confirmDeleteMsg} centered className="project-delete-modal-use" backdrop="static">
               <Modal.Body>
                 <div style={{ marginTop: "25px" }}>
@@ -620,8 +626,12 @@ export default function ProjectList(props, list) {
                 >
                   NO
                 </Button>
-                <Button className=" save-btn  " onClick={() => deleteProject()}>
-                  YES
+                <Button className="save-btn" 
+                onClick={() => {
+                  setLoading(true);
+                  deleteProject()
+                }}>
+                {loading ? "Deleting..." : "YES"}
                 </Button>
               </Modal.Footer>
             </Modal>

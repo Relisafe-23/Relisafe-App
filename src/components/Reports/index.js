@@ -135,7 +135,7 @@ function Reports(props) {
         ) : (
           <>
           {permission?.read === true ||
-          permission?.read === "undefined" ||
+          permission?.read === undefined ||
           role === "admin" ||
           (isOwner === true && createdBy === userId) ? (
             <div>

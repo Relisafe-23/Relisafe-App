@@ -41,6 +41,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import { faAdd } from "@fortawesome/free-solid-svg-icons";
+import { CropPortrait } from "@mui/icons-material";
 
 const MTTRPrediction = (props, active) => {
   const projectId = props?.location?.state?.projectId
@@ -93,7 +94,7 @@ const MTTRPrediction = (props, active) => {
   const [selectedField, setSelectedField] = useState(null);
   const [treeTable, setTreeTable] = useState([]);
   const [selectedFunction, setSelectedFunction] = useState();
- 
+
 
   const [data, setData] = useState({
     toolType: "",
@@ -120,11 +121,12 @@ const MTTRPrediction = (props, active) => {
         projectId: projectId,
       },
     }).then((res) => {
+   
       const filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "MTTR"
       );
       setAllSepareteData(filteredData);
-      console.log("allSepareteData", filteredData);
+      // console.log("allSepareteData", filteredData);
       const merged = [...tableData, ...filteredData];
       setMergedData(merged);
     });
@@ -134,7 +136,7 @@ const MTTRPrediction = (props, active) => {
     getAllSeprateLibraryData();
   }, []);
 
- const productId = props?.location?.props?.data?.id
+  const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
       ? props?.location?.state?.productId
@@ -146,70 +148,9 @@ const MTTRPrediction = (props, active) => {
     resetForm();
   };
 
-  const importExcel = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const fileName = file.name;
-    const validExtensions = ["xlsx", "xls"];
-    const fileExtension = fileName.split(".").pop().toLowerCase();
-
-    if (!validExtensions.includes(fileExtension)) {
-      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-        position: "top-right",
-      });
-      return;
-    }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-      const bstr = event.target.result;
-      const workBook = XLSX.read(bstr, { type: "binary" });
-      const workSheetName = workBook.SheetNames[0];
-      const workSheet = workBook.Sheets[workSheetName];
-      const parsedData = XLSX.utils.sheet_to_json(workSheet, { defval: "" });
-
-      if (parsedData.length > 0) {
-
-        const normalizedData = parsedData.map((row) => ({
-          remarks: row.remarks || "",
-          time: row.time || "",
-          skill: row.skill || "",
-          tools: row.tools || "",
-          partNo: row.partNo || "",
-          toolType: row.toolType || "",
-          repairable: row.repairable || "",
-          levelOfRepair: row.levelOfRepair || "",
-          levelOfReplace: row.levelOfReplace || "",
-          spare: row.spare || "",
-        }));
-
-
-        setTableData((prevData) => [...prevData, ...normalizedData]);
-        console.log("normalizedData....",normalizedData)
-
-
-        setImportExcelData(normalizedData[normalizedData.length - 1]);
-       applyExcelDataToForm(normalizedData[normalizedData.length - 1]);
-
-        toast.success("Data imported successfully!", {
-          position: toast.POSITION.TOP_RIGHT,
-        });
-      } else {
-        toast.error("No Data Found In Excel Sheet", {
-          position: "top-right",
-          autoClose: 5000,
-          theme: "light",
-        });
-      }
-    };
-
-    reader.readAsBinaryString(file);
-  };
-
   // Add this new function to apply Excel data to form fields
   const applyExcelDataToForm = (excelData) => {
-     console.log('Excel data to apply:', excelData)
+    // console.log('Excel data to apply:', excelData)
     // Map Excel column names to your form field names
     const fieldMappings = {
       'remarks': 'remarks',
@@ -272,95 +213,193 @@ const MTTRPrediction = (props, active) => {
       createMTTRDataFromExcel(rowData);
     });
   };
-
-  const createMTTRDataFromExcel = (values) => {
-    const companyId = localStorage.getItem("companyId");
-
-    setIsLoading(true);
-    console.log("before create from excel")
-
-    Api.post("/api/v1/mttrPrediction/create/procedure", {
-      remarks: values?.remarks,
-    })
-      .then((res) => {
-console.log("res....",res.data)
-        const mttrId = res?.data?.data?.id;
-        setSuccessMessage(res?.data?.message);
-        setMttrId(res?.data?.data?.id);
-        NextPage();
-      })
-      .catch((error) => {
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          logout();
-        } else {
-          setOpen(true);
-        }
-      });
-  };
-
-  const exportToExcel = (value, productName) => {
-    if (!value) {
-      toast.error("Export Failed !! No Data Found", { position: "top-right" });
-      return;
-    }
-
-    const fullTableData = tableData || [];
-    const lastRow = fullTableData.length > 0 ? fullTableData[fullTableData.length - 1] : {};
-  // const productNames = treeTableData.map(item => item?.treeStructure?.productName);
-  //   setTreeTable(productNames)
-  //   console.log("All product names:", productNames);
-
-    const originalData = {
-      CompanyName:treeTableData[0]?.companyId?.companyName,
-      ProjectName: treeTableData[0]?.projectId?.projectName,
-      ProductName: value.name,
-
-      remarks: value?.remarks || lastRow?.remarks || "",
-      // productName: productName || lastRow.productName || "" ,
-      time: value.time || lastRow.time || "",
-      // numberOfLabour: value.totalLabour || lastRow.totalLabour || "",
-      skill: value.skill || lastRow.skill || "",
-      tools: value.tools || lastRow.tools || "",
-      partNo: value.partNo || lastRow.partNo || "",
-      toolType: value.toolType || lastRow.toolType || "",
-      repairable: value.repairable?.value || value.repairable || lastRow.repairable || "",
-      levelOfRepair: value.levelOfRepair?.value || value.levelOfRepair || lastRow.levelOfRepair || "",
-      levelOfReplace: value.levelOfReplace?.value || value.levelOfReplace || lastRow.levelOfReplace || "",
-      spare: value.spare?.value || value.spare || lastRow.spare || "",
-    };
-
-    const hasData = Object.values(originalData).some(
-      (val) => val && val.toString().trim() !== ""
-    );
-
-    if (hasData) {
-      const updatedTableData = [...fullTableData, originalData];
-      setTableData(updatedTableData);
-      // setTreeTable(treeTableData[0]?.companyId?.companyName);
-
-
-      const filteredData = updatedTableData.map(row => {
-        const { productId, projectId, companyId, tableData, id, ...filteredRow } = row;
-        return filteredRow;
-      });
-
+const createMTTRDataFromExcel = async (values) => {
+  try {
     
-
-      // Export ALL data, not just the new row
-      const ws = XLSX.utils.json_to_sheet(filteredData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "FormData");
-
-      const fileName = `${productName || "MTTR"}.xlsx`;
-      XLSX.writeFile(wb, fileName);
-
-      
-      toast.success("Export Successful!", { position: "top-right" });
+    const companyId = localStorage.getItem("companyId");
+    setCompanyId(companyId);
+    
+    const response = await Api.post("/api/v1/mttrPrediction/create/procedure", {
+      projectId: projectId,
+      productId: productId,
+      companyId: companyId,
+      remarks: values?.remarks,
+      taskType: values?.taskType,
+      time: values.time,
+      totalLabour: values.totalLabour,
+      skill: values.skill,
+      tools: values.tools,
+      partNo: values.partNo,
+      toolType: values.toolType,
+      repairable: values.repairable,
+      levelOfRepair: values.levelOfRepair,
+      levelOfReplace: values.levelOfReplace,
+      spare: values.spare,
+    });
+    
+  
+    const mttrId = response?.data?.data?.id;
+    setSuccessMessage(response?.data?.message);
+    setMttrId(response?.data?.data?.id);
+    
+    return { success: true, data: response.data };
+  } catch (error) {
+    const errorStatus = error?.response?.status;
+    if (errorStatus === 401) {
+      logout();
     } else {
-      toast.error("Export Failed !! No Data Found", { position: "top-right" });
+      setOpen(true);
+    }
+    return { success: false, error };
+  }
+};
+
+const importExcel = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const fileName = file.name;
+  const validExtensions = ["xlsx", "xls"];
+  const fileExtension = fileName.split(".").pop().toLowerCase();
+
+  if (!validExtensions.includes(fileExtension)) {
+    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+      position: "top-right",
+    });
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    const bstr = event.target.result;
+    const workBook = XLSX.read(bstr, { type: "binary" });
+    const workSheetName = workBook.SheetNames[0];
+    const workSheet = workBook.Sheets[workSheetName];
+    const parsedData = XLSX.utils.sheet_to_json(workSheet, { defval: "" });
+
+    if (parsedData.length > 0) {
+      const normalizedData = parsedData.map((row, index) => ({
+        remarks: row.remarks || "",
+        time: row.time || "",
+        skill: row.skill || "",
+        tools: row.tools || "",
+        taskType: row.taskType || "",
+        totalLabour: row.totalLabour || "",
+        partNo: row.partNo || "",
+        toolType: row.toolType || "",
+        repairable: row.repairable || "",
+        levelOfRepair: row.levelOfRepair || "",
+        levelOfReplace: row.levelOfReplace || "",
+        spare: row.spare || "",
+      }));
+
+      setTableData((prevData) => [...prevData, ...normalizedData]);
+        //       setTableData((prevData) => [...prevData, ...normalizedData]);
+       setImportExcelData(normalizedData[normalizedData.length - 1]);
+       applyExcelDataToForm(normalizedData[normalizedData.length - 1]);
+      
+      // Show loading
+      setIsLoading(true);
+      
+      // Process each row with delay to avoid overwhelming the server
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (let i = 0; i < normalizedData.length; i++) {
+        const rowData = normalizedData[i];
+        const result = await createMTTRDataFromExcel(rowData);
+        
+        if (result.success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+        
+        // Optional: Add delay between requests
+        if (i < normalizedData.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+      
+      setIsLoading(false);
+      
+      if (errorCount === 0) {
+        toast.success(`All ${successCount} records imported successfully!`, {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      } else {
+        toast.warning(`${successCount} records saved, ${errorCount} failed.`, {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      }
+    } else {
+      toast.error("No Data Found In Excel Sheet", {
+        position: "top-right",
+        autoClose: 5000,
+        theme: "light",
+      });
     }
   };
+
+  reader.readAsBinaryString(file);
+};
+
+const exportToExcel = (value, productName) => {
+  if (!value) {
+    toast.error("Export Failed !! No Data Found", { position: "top-right" });
+    return;
+  }
+
+  const fullTableData = tableData || [];
+  
+  // Remove the last row to avoid duplication
+  const dataWithoutLastRow = fullTableData.slice(0, -1);
+  
+  const lastRow = fullTableData.length > 0 ? fullTableData[fullTableData.length - 1] : {};
+
+  const originalData = {
+    CompanyName: treeTableData[0]?.companyId?.companyName,
+    ProjectName: treeTableData[0]?.projectId?.projectName,
+    ProductName: value.name,
+    remarks: value?.remarks || lastRow?.remarks || "-",
+    taskType: value?.taskType || lastRow.taskType || "-",
+    time: value.time || lastRow.time || "-",
+    totalLabour: value.totalLabour || lastRow.totalLabour || "-",
+    skill: value.skill || lastRow.skill || "-",
+    tools: value.tools || lastRow.tools || "-",
+    partNo: value.partNo || lastRow.partNo || "-",
+    toolType: value.toolType || lastRow.toolType || "-",
+    repairable: value.repairable?.value || value.repairable || lastRow.repairable || "-",
+    levelOfRepair: value.levelOfRepair?.value || value.levelOfRepair || lastRow.levelOfRepair || "-",
+    levelOfReplace: value.levelOfReplace?.value || value.levelOfReplace || lastRow.levelOfReplace || "-",
+    spare: value.spare?.value || value.spare || lastRow.spare || "-",
+  };
+
+  const hasData = Object.values(originalData).some(
+    (val) => val && val.toString().trim() !== ""
+  );
+
+  if (hasData) {
+    // Use dataWithoutLastRow instead of fullTableData
+    const updatedTableData = [...dataWithoutLastRow, originalData];
+    
+    const filteredData = updatedTableData.map(row => {
+      const { productId, projectId, companyId, tableData, id, ...filteredRow } = row;
+      return filteredRow;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(filteredData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "FormData");
+
+    const fileName = `${productName || "MTTR"}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+
+    toast.success("Export Successful!", { position: "top-right" });
+  } else {
+    toast.error("Export Failed !! No Data Found", { position: "top-right" });
+  }
+};
 
 
   const handleCancelClick = () => {
@@ -375,7 +414,7 @@ console.log("res....",res.data)
   };
 
   if (shouldReload) {
-    // Reload the page
+  
     window.location.reload();
   }
 
@@ -389,6 +428,7 @@ console.log("res....",res.data)
       },
     })
       .then((res) => {
+       
         const treeData = res?.data?.data;
         setInitialProductId(res?.data?.data[0]?.treeStructure?.id);
         setInitialTreeStructure(res?.data?.data[0]?.id);
@@ -403,7 +443,7 @@ console.log("res....",res.data)
       });
   };
 
-  //ProjectOwner validation
+
   const projectSidebar = () => {
     const userId = localStorage.getItem("userId");
     Api.get(`/api/v1/projectCreation/${projectId}`, {
@@ -470,6 +510,7 @@ console.log("res....",res.data)
     propstoGetTreeData();
     getProcedureData();
     getMttrData();
+
   }, [productId]);
 
   const propstoGetTreeData = () => {
@@ -484,8 +525,8 @@ console.log("res....",res.data)
       },
     })
       .then((res) => {
+     
         const data = res?.data?.data;
-
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""
         );
@@ -706,7 +747,7 @@ console.log("res....",res.data)
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
-              handleInputChange(selectedItems, "totalLabour");
+              handleInputChange(selectedItems,"totalLabour");
               getAllConnectedLibrary(selectedItems, "totalLabour");
             }}
             options={options}
@@ -986,6 +1027,7 @@ console.log("res....",res.data)
       userId: userId,
     })
       .then((response) => {
+     
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
@@ -1031,14 +1073,14 @@ console.log("res....",res.data)
   //       }
   //     });
   // };
-  
+
 
   const updateProcedureData = (value) => {
- 
+
     const companyId = localStorage.getItem("companyId");
     const rowId = value?.id;
     const userId = localStorage.getItem("userId");
-   
+
     // Prepare the data object with all required fields
     const requestData = {
       time: value.time || "",
@@ -1057,14 +1099,14 @@ console.log("res....",res.data)
 
     };
 
-   
+
     Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, requestData)
       .then((response) => {
         getProcedureData();
         toast.success("Procedure Updated Successfully");
       })
       .catch((error) => {
-        console.error("Error updating procedure:", error);
+
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
@@ -1088,6 +1130,7 @@ console.log("res....",res.data)
       },
     })
       .then((response) => {
+        
         //  console.log("mttrResult", response?.data?.procedureData)
         setTableData(response?.data?.procedureData);
         setValidateData(response?.data?.procedureData?.length);
@@ -1134,12 +1177,13 @@ console.log("res....",res.data)
 
   const submitForm = (values) => {
     checkingMandatoryFields(values);
+        getMttrData();
   };
 
   const checkingMandatoryFields = (values) => {
     if (validateData > 0) {
       const companyId = localStorage.getItem("companyId");
-     
+
       const userId = localStorage.getItem("userId");
       Api.post("api/v1/mttrPrediction", {
         companyId: companyId,
@@ -1226,8 +1270,7 @@ console.log("res....",res.data)
       },
     })
       .then((res) => {
-        console.log("res?.data?.data....",res?.data?.data)
-      
+       
         setMttrData(res?.data?.data);
         const data = res?.data?.data;
         setMttrId(res?.data?.data?.id ? res?.data?.data?.id : null);
@@ -1269,10 +1312,9 @@ console.log("res....",res.data)
       setShow(false);
     }, 2000);
   };
+
   return (
     <Container className="mttr-main-div mx-1" style={{ marginTop: "45px" }}>
-     {console.log('importExcelData',importExcelData)}
-     {console.log("mttrData.....",mttrData)}
       {isLoading ? (
         <Loader />
       ) : (
@@ -1307,7 +1349,7 @@ console.log("res....",res.data)
             mmax: importExcelData?.mMax || mttrData?.mMax || "",
             taskType: importExcelData?.taskType || "",
             time: importExcelData?.time || "",
-            numberOfLabour: importExcelData?.totalLabour || "",
+           totalLabour: importExcelData?.totalLabour || "",
             skill: importExcelData?.skill || "",
             tools: importExcelData?.tools || "",
             partNo: importExcelData?.partNo || "",
@@ -1363,7 +1405,7 @@ console.log("res....",res.data)
                           display: "flex",
                           justifyContent: "flex-end",
                           alignItems: "center",
-                          marginTop: "8px",
+                          marginTop: "1px",
                           height: "40px",
                         }}
                       >
@@ -1387,12 +1429,12 @@ console.log("res....",res.data)
                         <Tooltip placement="left" title="Export">
                           <Button
                             className="import-export-btn"
-                            style={{ marginLeft: "10px", borderStyle: "none", width: "40px", minWidth: "40px", padding: "0px", }}
+                            style={{ marginLeft: "10px", borderStyle: "none", width: "40px", top: "-2px", minWidth: "38px", padding: "0px", }}
                             onClick={() => exportToExcel(values)}
                           >
                             <FontAwesomeIcon
                               icon={faFileUpload}
-                              style={{ width: "15px" }}
+                              style={{ width: "12px" }}
                             />
                           </Button>
                         </Tooltip>
@@ -2174,11 +2216,12 @@ console.log("res....",res.data)
                                     updateProcedureData(newRow);
                                     resolve();
                                   }),
-                                onRowDelete: (selectedRow) =>
+                                  onRowDelete: (selectedRow) =>
                                   new Promise((resolve, reject) => {
                                     deleteProcedureData(selectedRow);
                                     resolve();
                                   }),
+
                               }}
                               title="Separate Library"
                               icons={tableIcons}

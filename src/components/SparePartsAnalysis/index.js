@@ -33,7 +33,7 @@ function Index(props) {
   // const productId = props?.location?.props?.data?.id
   //   ? props?.location?.props?.data?.id
   //   : props?.location?.state?.productId;
-  console.log("props", props.location.state);
+  
 
   const treeStructureId = props?.location?.state?.parentId;
   const [name, setName] = useState();
@@ -423,8 +423,7 @@ function Index(props) {
 
   const getProductDatas = (treeId) => {
     const companyId = localStorage.getItem("companyId");
-    console.log(" treeStructureId", treeStructureId);
-    console.log("treeId", treeId);
+  
 
     Api.get("/api/v1/sparePartsAnalysis/details", {
       params: {
@@ -438,14 +437,17 @@ function Index(props) {
       .then((res) => {
         const data = res?.data?.data;
 
+
         setRecommendedSpareQuantity(
           data?.recommendedSpareQuantity ? data?.recommendedSpareQuantity : ""
         );
-        setCalculatedSpareQuantity(
-          res?.data?.CalculatedSpareQuantity
-            ? res?.data?.CalculatedSpareQuantity
-            : ""
-        );
+       
+       setCalculatedSpareQuantity(
+  res?.data?.CalculatedSpareQuantity !== null && res?.data?.CalculatedSpareQuantity !== undefined
+    ? res?.data?.CalculatedSpareQuantity
+    : ""
+);
+       
         setPrefillData(data ? data : "");
         setspareId(data?.id);
         setIsLoading(false);
@@ -548,7 +550,6 @@ function Index(props) {
     setOpen(false);
   };
 
-  {console.log(prefillData,"prefillData")}
 
   return (
     <div className=" mx-4" style={{ marginTop: "90px" }}>
@@ -557,6 +558,7 @@ function Index(props) {
       ) : (
         <Formik
           enableReinitialize={true}
+         
           initialValues={{
             productName:productName,
             spare: prefillData?.spare
@@ -623,11 +625,11 @@ function Index(props) {
               : importExcelData?.Annual_Price
                 ? importExcelData?.Annual_Price
                 : "",
-            calculatedSpareQuantity: calculatedSpareQuantity
-              ? calculatedSpareQuantity
-              : importExcelData?.Calc_Spare_Qty
-                ? importExcelData?.Calc_Spare_Qty
-                : "",
+            calculatedSpareQuantity: calculatedSpareQuantity !== null && calculatedSpareQuantity !== undefined
+  ? calculatedSpareQuantity
+  : importExcelData?.Calc_Spare_Qty
+    ? importExcelData?.Calc_Spare_Qty
+    : "",
             recommendedSpareQuantity: recommendedSpareQuantity
               ? recommendedSpareQuantity
               : importExcelData?.Recomm_Spare_Quantity
@@ -1015,6 +1017,7 @@ function Index(props) {
                             </Form.Group>
                           </Col>
                           <Col>
+                       
                             <Form.Group className="mt-3">
                               <Label>Calculated Spare Quantity</Label>
                               <Form.Control
