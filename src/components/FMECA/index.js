@@ -796,22 +796,24 @@ function Index(props) {
 
         return (
          <div style={{ position: 'relative' }}>
-  <input
-    type="text"
-    value={value || ''}
-    onChange={(e) => {
-      const newValue = e.target.value;
-      if (
-        (fieldName === 'Failure Mode Ratio Alpha (must be equal to 1)' ||
-          fieldName === 'End Effect ratio Beta (must be equal to 1)') &&
-        newValue !== '' &&
-        newValue !== '1'
-      ) {
-        return;
-      }
+         <input
+  type="text"
+  value={value || ''}
+  onChange={(e) => {
+    const newValue = e.target.value;
 
-      handleChange(newValue);
-    }}
+    // Restrict specific fields to only allow 1
+    if (
+      (fieldName === 'failureModeRatioAlpha' || fieldName === 'endEffectRatioBeta') &&
+      newValue !== '' &&
+      parseFloat(newValue) > 1
+    ) {
+      return; // ignore if greater than 1
+    }
+
+    handleChange(newValue);
+  }}
+
     placeholder={isRequired ? `${title} *` : title}
     style={{
       height: "40px",

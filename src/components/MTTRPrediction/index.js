@@ -125,7 +125,7 @@ const MTTRPrediction = (props, active) => {
         (item) => item?.moduleName === "MTTR"
       );
       setAllSepareteData(filteredData);
-      console.log("allSepareteData", filteredData);
+      // console.log("allSepareteData", filteredData);
       const merged = [...tableData, ...filteredData];
       setMergedData(merged);
     });
@@ -189,11 +189,11 @@ const MTTRPrediction = (props, active) => {
 
 
         setTableData((prevData) => [...prevData, ...normalizedData]);
-        console.log("normalizedData....", normalizedData)
+        // console.log("normalizedData....", normalizedData)
 
 
         setImportExcelData(normalizedData[normalizedData.length - 1]);
-        console.log("importExcelData....", importExcelData)
+        // console.log("importExcelData....", importExcelData)
         applyExcelDataToForm(normalizedData[normalizedData.length - 1]);
 
 
@@ -214,7 +214,7 @@ const MTTRPrediction = (props, active) => {
 
   // Add this new function to apply Excel data to form fields
   const applyExcelDataToForm = (excelData) => {
-    console.log('Excel data to apply:', excelData)
+    // console.log('Excel data to apply:', excelData)
     // Map Excel column names to your form field names
     const fieldMappings = {
       'remarks': 'remarks',
@@ -321,21 +321,21 @@ const MTTRPrediction = (props, active) => {
       ProjectName: treeTableData[0]?.projectId?.projectName,
       ProductName: value.name,
       
-      remarks: value?.remarks || lastRow?.remarks || "",
-      taskType: value?.taskType || lastRow.taskType || "",
+      remarks: value?.remarks || lastRow?.remarks || "-",
+      taskType: value?.taskType || lastRow.taskType || "-",
       // productName: productName || lastRow.productName || "" ,
-      time: value.time || lastRow.time || "",
-      totalLabour: value.totalLabour || lastRow.totalLabour || "",
-      skill: value.skill || lastRow.skill || "",
-      tools: value.tools || lastRow.tools || "",
-      partNo: value.partNo || lastRow.partNo || "",
-      toolType: value.toolType || lastRow.toolType || "",
-      repairable: value.repairable?.value || value.repairable || lastRow.repairable || "",
-      levelOfRepair: value.levelOfRepair?.value || value.levelOfRepair || lastRow.levelOfRepair || "",
-      levelOfReplace: value.levelOfReplace?.value || value.levelOfReplace || lastRow.levelOfReplace || "",
-      spare: value.spare?.value || value.spare || lastRow.spare || "",
+      time: value.time || lastRow.time || "-",
+      totalLabour: value.totalLabour || lastRow.totalLabour || "-",
+      skill: value.skill || lastRow.skill || "-",
+      tools: value.tools || lastRow.tools || "-",
+      partNo: value.partNo || lastRow.partNo || "-",
+      toolType: value.toolType || lastRow.toolType || "-",
+      repairable: value.repairable?.value || value.repairable || lastRow.repairable || "-",
+      levelOfRepair: value.levelOfRepair?.value || value.levelOfRepair || lastRow.levelOfRepair || "-",
+      levelOfReplace: value.levelOfReplace?.value || value.levelOfReplace || lastRow.levelOfReplace || "-",
+      spare: value.spare?.value || value.spare || lastRow.spare || "-",
     };
-    console.log("originalData....", originalData)
+   
 
     const hasData = Object.values(originalData).some(
       (val) => val && val.toString().trim() !== ""
@@ -343,8 +343,10 @@ const MTTRPrediction = (props, active) => {
 
     if (hasData) {
       const updatedTableData = [...fullTableData, originalData];
-      console.log("updatedTableData123....", originalData)
-      setTableData(updatedTableData);
+      console.log("originalData",originalData)
+      console.log("updatedTableData",fullTableData)
+   
+      // setTableData(updatedTableData);
       // setTreeTable(treeTableData[0]?.companyId?.companyName);
 
 
@@ -363,13 +365,12 @@ const MTTRPrediction = (props, active) => {
       const fileName = `${productName || "MTTR"}.xlsx`;
       XLSX.writeFile(wb, fileName);
 
-      console.log("exported data:", filteredData);
+      // console.log("exported data:", filteredData);
       toast.success("Export Successful!", { position: "top-right" });
     } else {
       toast.error("Export Failed !! No Data Found", { position: "top-right" });
     }
   };
-
 
   const handleCancelClick = () => {
     const shouldReloadPage = true;
@@ -1279,8 +1280,6 @@ const MTTRPrediction = (props, active) => {
   };
   return (
     <Container className="mttr-main-div mx-1" style={{ marginTop: "45px" }}>
-      {console.log('importExcelData', importExcelData)}
-      {console.log("mttrData.....", mttrData)}
       {isLoading ? (
         <Loader />
       ) : (
