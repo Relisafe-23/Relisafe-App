@@ -113,7 +113,7 @@ function ReliabilityAnalysis(props) {
     "FR",
     "Source",
     "Predicted",
-    "DutyCycle",
+    "Duty Cycle",
     "FR Distribution",
     "FR Remarks",
     "Standard",
@@ -124,7 +124,7 @@ function ReliabilityAnalysis(props) {
   const FTPHeader = [
     "Source",
     "Predicted",
-    "DutyCycle",
+    "Duty Cycle",
     "FR Distribution",
     "FR Remarks",
     "Standard",
@@ -206,6 +206,7 @@ function ReliabilityAnalysis(props) {
       },
     })
       .then((res) => {
+        console.log("Tree Data:", res);
         const treeData = res?.data?.data;
         setData(treeData);
         setIsLoading(false);
@@ -253,6 +254,7 @@ function ReliabilityAnalysis(props) {
     })
       .then((res) => {
         const treeData = res?.data?.data;
+        console.log("Hierarchy Level Tree Data:", treeData);
         setData(treeData);
         setIsLoading(false);
       })
