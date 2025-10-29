@@ -49,7 +49,7 @@ function Login() {
       password: values.password,
     })
       .then((res) => {
-      
+
         const status = res.status;
         if (status === 200) {
           setResponseSuccess(true);
@@ -65,18 +65,18 @@ function Login() {
           localStorage.setItem("role", role);
           history.push(role == "SuperAdmin" ? "/company" : "/project/list");
           window.location.reload();
-           setIsLoginSubmit(false);
+          setIsLoginSubmit(false);
         }
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
         window.location.reload();
- 
-         setIsLoginSubmit(false);
+
+        setIsLoginSubmit(false);
         if (errorStatus >= 400) {
           setResponseExist(true);
           setExistMessage(error?.response?.data?.message ? error?.response?.data?.message : "Invalid Credentials");
-         
+
         }
       })
       .finally(() => {
@@ -104,10 +104,11 @@ function Login() {
                 }}
                 validateOnMount={true}
                 validationSchema={loginSchema}
-                onSubmit={(values) =>{
-                    setIsLoginSubmit(true);  
-                  
-                  submitForm(values)}
+                onSubmit={(values) => {
+                  setIsLoginSubmit(true);
+
+                  submitForm(values)
+                }
                 }
               >
                 {(formik) => {
@@ -160,19 +161,23 @@ function Login() {
                         <button
                           className="login-btn-css-new"
                           type="submit"
+                          style={{
+                            cursor:
+                              isValid && !isSubmitting && !isLoginSubmit ? "pointer" : "not-allowed",
+                            backgroundColor: isLoginSubmit
+                              ? "#b0b0b0"
+                              : "#1D5460",
+                            color: isLoginSubmit ? "#ffffff" : "#fff",
+                            opacity: isLoginSubmit ? 0.7 : 1,
+                          }}
                           disabled={!isValid || isSubmitting}
                         >
-                          <b>{isLoginSubmit ? "Logging in..." : "Login"}</b>
+                          <b>{isLoginSubmit ? "Logging in..." : "Login"} </b>
                         </button>
 
+
                       </div>
-                      {/* <div className="d-flex justify-content-center">
-                        <p className="fs-6 mt-3 mb-4">
-                          <Link className="userPass" to={{ pathname: "/Login" }}>
-                            Forgot Password?
-                          </Link>
-                        </p>
-                      </div> */}
+
                     </Form>
                   );
                 }}
