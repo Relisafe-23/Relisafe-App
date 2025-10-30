@@ -132,8 +132,12 @@ function Index(props) {
       setSelectedCheckboxes(
         selectedCheckboxes.filter((item) => item !== rowData)
       );
+      
+    setSelectedNprdFR(null); 
     } else {
-      setSelectedCheckboxes([...selectedCheckboxes, rowData]);
+         setSelectedCheckboxes([rowData]);
+    setSelectedNprdFR(rowData);
+          
     }
   };
   const nprdPartType = nprdPartTypes;
@@ -277,6 +281,7 @@ function Index(props) {
         <Checkbox
           checked={selectedCheckboxes.includes(rowData)}
           onChange={() => handleChange(rowData)}
+          // isDisabled={rowClicked}
         />
       ),
     },
@@ -1670,6 +1675,7 @@ function Index(props) {
                                           handleBlur,
                                           isSubmitting,
                                           isValid,
+                                          isRowClicked,
                                           setFieldValue,
                                         } = formik;
 
@@ -2023,7 +2029,8 @@ function Index(props) {
                                                 <Button
                                                   className="save-btn"
                                                   type="submit"   // only submit
-                                                  disabled={!isValid || isSubmitting}  // Formik gives these
+                                                  disabled={!isValid || selectedCheckboxes.length === 0 || isSubmitting}  // Formik gives these
+                                                  // disabled={}  // disable if row clicked
                                                 >
                                                   CALCULATE FR
                                                 </Button>
@@ -2455,7 +2462,7 @@ function Index(props) {
                                                 <Button
                                                   className="save-btn"
                                                   type="submit"
-                                                  disabled={!isValid}
+                                                  disabled={!isValid ||  selectedCheckboxes.length === 0}
                                                 >
                                                   CALCULATE FR
                                                 </Button>
