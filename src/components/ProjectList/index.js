@@ -627,6 +627,7 @@ export default function ProjectList(props, list) {
                   NO
                 </Button>
                 <Button className="save-btn" 
+                disabled={loading} 
                 onClick={() => {
                   setLoading(true);
                   deleteProject()

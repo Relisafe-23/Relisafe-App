@@ -106,7 +106,7 @@ export default function PBS(props) {
   const [selectCopyData, setSelectCopyData] = useState([[]]);
 
   const DownloadExcel = () => {
-    // Assuming 'tableData' is an array of objects, and you want to remove multiple columns
+
     const columnsToRemove = [
       "indexCount",
       "type",
@@ -123,8 +123,6 @@ export default function PBS(props) {
     ];
     const CompanyName = companyName;
     const ProjectName = projectName;
-
-    // Create a new array with the unwanted columns removed from each object
     const modifiedTableData = data.map((row) => {
       const newRow = {
         ...row,
@@ -185,13 +183,12 @@ export default function PBS(props) {
 
   const createPBSDataFromExcel = (values) => {
     setISLoading(true);
-  
     const companyId = localStorage.getItem("companyId");
     Api.post("api/v1/productBreakdownStructure", {
       productName: values.productName,
-      category: category.value,
+      category: values.category,
       partNumber: values.partNumber,
-      partType: partType ? partType : "-",
+      partType: values.partType,
       reference: values.referenceOrPosition,
       quantity: values.quantity,
       environment: prefillEnviron.value,
@@ -200,7 +197,7 @@ export default function PBS(props) {
       companyId: companyId,
       token: token,
     }).then((response) => {
-    
+       console.log("createPBSDataFromExcel response", response);
       setISLoading(false);
       const status = response?.status;
       if (status === 204) {
@@ -293,7 +290,7 @@ export default function PBS(props) {
       },
     })
       .then((res) => {
-       
+       console.log("permission res", res);
         const data = res?.data?.data;
         setPermission(data?.modules[0]);
            setPermissionsChecked(true); 
@@ -314,7 +311,7 @@ export default function PBS(props) {
         userId: userId,
       },
     }).then((res) => {
-    
+      
       setIsOwner(res?.data?.data?.isOwner);
       setCreatedBy(res?.data?.data?.createdBy);
     });
@@ -529,6 +526,7 @@ export default function PBS(props) {
       },
     })
       .then((res) => {
+        console.log("tree product res", res);
         const treeData = res?.data?.data;
         setData(treeData);
  
@@ -807,7 +805,7 @@ export default function PBS(props) {
                                   ? null
                                   : "disabled"
                               }
-                              style={{ display: "none" }} // Hide the actual input
+                              style={{ display: "none" }} 
                             />
                           </div>
                         </Tooltip>
@@ -819,13 +817,13 @@ export default function PBS(props) {
                               DownloadExcel();
                             }}
                             disabled={
-                              data?.length === 0 || // Disable if no data
+                              data?.length === 0 || 
                                 (permission?.write !== true &&
                                   permission?.write !== undefined &&
                                   role !== "admin" &&
-                                  !(isOwner === true && createdBy === userId)) // Enable only if all these conditions are false
-                                ? "disabled" // If any of these conditions are met, disable the button
-                                : null // Otherwise, the button is enabled
+                                  !(isOwner === true && createdBy === userId)) 
+                                ? "disabled"
+                                : null 
                             }
                           >
    
