@@ -105,177 +105,253 @@ export default function PBS(props) {
   const [copyProdctId, setCopyProdctId] = useState();
   const [selectCopyData, setSelectCopyData] = useState([[]]);
 
-  const DownloadExcel = () => {
-
-    const columnsToRemove = [
-      "indexCount",
-      "type",
-      "productId",
-      "id",
-      "reference",
-      "children",
-      "tableData",
-      "parentId",
-      "status",
-      "temperature",
-      "environment",
-      "quantity",
-    ];
-    const CompanyName = companyName;
-    const ProjectName = projectName;
-    const modifiedTableData = data.map((row) => {
-      const newRow = {
-        ...row,
-        CompanyName,
-        ProjectName
-      };
-      columnsToRemove.forEach((columnName) => {
-        delete newRow[columnName];
-      });
-
-      // rowsToRemove.forEach(rowName=>{
-      //   delete columns[rowName]
-      // });
-
-      return newRow;
-    });
-    if (modifiedTableData?.length > 0) {
-      const columns = Object.keys(modifiedTableData[0]).map((columnName) => ({
-        title: columnName,
-        field: columnName,
-      }));
-
-      const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
-        skipHeader: false,
-      });
-      const workBook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workBook, workSheet, "PBS Data");
-
-      const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
-
-      // Create a Blob object and initiate a download
-      const blob = new Blob([buf], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-     
-      link.href = url;
-      link.download = "PBS.xlsx";
-      link.click();
-
-      // Clean up
-      URL.revokeObjectURL(url);
-    } else {
-      toast("Export Failed !! No Data Found", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        type: "error", // Change this to "error" to display an error message
-      });
-    }
-  };
-
-  const createPBSDataFromExcel = (values) => {
-    setISLoading(true);
-    const companyId = localStorage.getItem("companyId");
-    Api.post("api/v1/productBreakdownStructure", {
-      productName: values.productName,
-      category: values.category,
-      partNumber: values.partNumber,
-      partType: values.partType,
-      reference: values.referenceOrPosition,
-      quantity: values.quantity,
-      environment: prefillEnviron.value,
-      temperature: values.temperature,
-      projectId: projectId,
-      companyId: companyId,
-      token: token,
-    }).then((response) => {
-       console.log("createPBSDataFromExcel response", response);
-      setISLoading(false);
-      const status = response?.status;
-      if (status === 204) {
-        //setFailureModeRatioError(true);
-      }
-      //getProductData();
-      setISLoading(false);
-    });
-  };
-
-  const convertToJson = (headers, data) => {
-    const rows = [];
-    if (data?.length > 0 && data[0]?.length > 1) {
-      data.forEach((row) => {
-        let rowData = {};
-        row.forEach((element, index) => {
-          rowData[headers[index]] = element;
-        });
-        rows.push(rowData);
-        createPBSDataFromExcel(rowData);
-      });
-
-      return rows;
-    } else {
-      toast("No Data Found In Excel Sheet", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        type: "error",
-      });
-    }
-  };
-
-  const importExcel = (e) => {
-    const file = e.target.files[0];
-
-    // Check if the file is an Excel file by checking the extension
-    const fileName = file.name;
-    const validExtensions = ['xlsx', 'xls']; // Allowed file extensions
-    const fileExtension = fileName.split('.').pop().toLowerCase(); // Get file extension
-
-    if (!validExtensions.includes(fileExtension)) {
-      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
-      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
-      });
-      return; // Exit the function if the file is not an Excel file
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      //parse data
-      const bstr = event.target.result;
-      const workBook = XLSX.read(bstr, { type: "binary" });
-      // get first sheet
-      const workSheetName = workBook.SheetNames[0];
-
-
-      const workSheet = workBook.Sheets[workSheetName];
-      
-      //convert array
-      const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-      const headers = fileData[0];
-    
-      const heads = headers.map((head) => ({ title: head, field: head }));
-      setColDefs(heads);
-      fileData.splice(0, 1);
-      setData(convertToJson(headers, fileData));
-
+const DownloadExcel = () => {
+  const columnsToRemove = [
+    "type",
+    "productId",
+    "id",
+    "reference",
+    "children",
+    "tableData",
+    "parentId",
+    "status",
+    "temperature",
+    "environment",
+    "quantity",
+  ];
+  
+  const CompanyName = companyName;
+  const ProjectName = projectName;
+  
+  const modifiedTableData = data.map((row) => {
+    const newRow = {
+      ...row,
+      CompanyName,
+      ProjectName
     };
+    columnsToRemove.forEach((columnName) => {
+      delete newRow[columnName];
+    });
+    return newRow;
+  });
 
-    reader.readAsBinaryString(file);
+  if (modifiedTableData?.length > 0) {
+    console.log("modifiedTableData", modifiedTableData);
+    
+    const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
+      skipHeader: false,
+    });
+    const workBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workBook, workSheet, "PBS Data");
+
+    const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
+
+    // Create a Blob object and initiate a download
+    const blob = new Blob([buf], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+   
+    link.href = url;
+    link.download = "PBS.xlsx";
+    link.click();
+
+    // Clean up
+    URL.revokeObjectURL(url);
+  } else {
+    toast("Export Failed !! No Data Found", {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      type: "error",
+    });
+  }
+};
+
+
+
+const convertToJson = (headers, data) => {
+  const rows = [];
+  if (data?.length > 0 && data[0]?.length > 1) {
+    data.forEach((row) => {
+      let rowData = {};
+      row.forEach((element, index) => {
+        rowData[headers[index]] = element;
+      });
+      rows.push(rowData);
+    });
+    return rows;
+  } else {
+    toast("No Data Found In Excel Sheet", {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      type: "error",
+    });
+    return [];
+  }
+};
+
+const importExcel = (e) => {
+  // Check if data already exists
+  if (data && data.length > 0) {
+    toast.error("Data already exists! Please clear existing data before importing new file.", {
+      position: toast.POSITION.TOP_RIGHT,
+    });
+    return;
+  }
+
+  const file = e.target.files[0];
+  const fileName = file.name;
+  const validExtensions = ['xlsx', 'xls'];
+  const fileExtension = fileName.split('.').pop().toLowerCase();
+
+  if (!validExtensions.includes(fileExtension)) {
+    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+      position: toast.POSITION.TOP_RIGHT,
+    });
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const bstr = event.target.result;
+    const workBook = XLSX.read(bstr, { type: "binary" });
+    const workSheetName = workBook.SheetNames[0];
+    const workSheet = workBook.Sheets[workSheetName];
+    
+    const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+    const headers = fileData[0];
+  
+    const heads = headers.map((head) => ({ title: head, field: head }));
+    setColDefs(heads);
+    fileData.splice(0, 1);
+    
+    // Convert to JSON with proper indexCount handling
+    const jsonData = convertToJsonWithIndexCount(headers, fileData);
+    
+    if (jsonData.length > 0) {
+      // Send ALL data in a single API call
+      sendCompleteExcelData(jsonData);
+    }
   };
+
+  reader.readAsBinaryString(file);
+};
+
+// New function to handle indexCount properly
+const convertToJsonWithIndexCount = (headers, data) => {
+  const rows = [];
+  
+  if (data?.length > 0 && data[0]?.length > 1) {
+    data.forEach((row, index) => {
+      let rowData = {};
+      row.forEach((element, colIndex) => {
+        rowData[headers[colIndex]] = element;
+      });
+      
+      // If indexCount is not present in Excel, generate it based on row number
+      if (!rowData.hasOwnProperty('indexCount') || !rowData.indexCount) {
+        rowData.indexCount = (index + 1).toString(); // Generate sequential index
+      }
+      
+      // Ensure required fields have default values
+      rowData.partType = rowData.partType || '-';
+      rowData.reference = rowData.reference || '';
+      rowData.quantity = rowData.quantity || 1;
+      rowData.environment = rowData.environment || 'AIF';
+      rowData.temperature = rowData.temperature || 0;
+      rowData.fr = rowData.fr || 0;
+      rowData.mttr = rowData.mttr || 0;
+      rowData.mct = rowData.mct || 0;
+      rowData.mlh = rowData.mlh || 0;
+      
+      rows.push(rowData);
+    });
+    return rows;
+  } else {
+    toast("No Data Found In Excel Sheet", {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      type: "error",
+    });
+    return [];
+  }
+};
+
+
+
+const sendCompleteExcelData = (allRowsData) => {
+  setISLoading(true);
+  const companyId = localStorage.getItem("companyId");
+
+  console.log("All rows data to send:", allRowsData);
+
+  // Transform Excel data to match backend expected format
+  const rowData = allRowsData.map(row => ({
+    indexCount: row['S.No']?.toString() || row.indexCount?.toString() || "1",
+    productName: row['Product Name'] || row.productName || "",
+    category: row['Category'] || row.category || "",
+    partNumber: row['Part Number']?.toString() || row.partNumber?.toString() || "",
+    partType: row['Part Type'] || row.partType || "",
+    reference: row.reference || row.referenceOrPosition || "",
+    quantity: row.quantity || 1,
+    environment: prefillEnviron?.value || "AIF",
+    temperature: row.temperature || 0,
+    fr: row['FR'] || row.fr || 0,
+    mttr: row['MTTR'] || row.mttr || 0,
+    mct: row['MCT'] || row.mct || 0,
+    mlh: row['MLH'] || row.mlh || 0,
+  }));
+
+  console.log("Sending complete hierarchical data to backend:", rowData);
+
+  Api.post("api/v1/productBreakdownStructure/import/record/create", {
+    rowData: rowData, // Send ALL rows together
+    projectId: projectId,
+    companyId: companyId,
+    token: token,
+  }).then((response) => {
+    console.log("Excel import response", response);
+    setISLoading(false);
+    
+    if (response?.status === 201) {
+      toast.success("Excel data imported successfully!", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+      // Refresh the tree data
+      getTreeProduct();
+    } else if (response?.status === 204) {
+      toast.success("Excel data imported successfully!", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+      getTreeProduct();
+    }
+  }).catch((error) => {
+    console.error("API Error:", error);
+    setISLoading(false);
+    toast.error("Failed to import Excel data!", {
+      position: toast.POSITION.TOP_RIGHT,
+    });
+  });
+};
 
 
 
