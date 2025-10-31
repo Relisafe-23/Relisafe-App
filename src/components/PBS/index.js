@@ -136,7 +136,6 @@ const DownloadExcel = () => {
   });
 
   if (modifiedTableData?.length > 0) {
-    console.log("modifiedTableData", modifiedTableData);
     
     const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
       skipHeader: false,
@@ -271,11 +270,11 @@ const convertToJsonWithIndexCount = (headers, data) => {
       rowData.reference = rowData.reference || '';
       rowData.quantity = rowData.quantity || 1;
       rowData.environment = rowData.environment || 'AIF';
-      rowData.temperature = rowData.temperature || 0;
-      rowData.fr = rowData.fr || 0;
-      rowData.mttr = rowData.mttr || 0;
-      rowData.mct = rowData.mct || 0;
-      rowData.mlh = rowData.mlh || 0;
+      rowData.temperature = rowData.temperature ;
+      rowData.fr = rowData.fr;
+      rowData.mttr = rowData.mttr;
+      rowData.mct = rowData.mct ;
+      rowData.mlh = rowData.mlh;
       
       rows.push(rowData);
     });
@@ -302,7 +301,7 @@ const sendCompleteExcelData = (allRowsData) => {
   setISLoading(true);
   const companyId = localStorage.getItem("companyId");
 
-  console.log("All rows data to send:", allRowsData);
+  
 
   // Transform Excel data to match backend expected format
   const rowData = allRowsData.map(row => ({
@@ -314,14 +313,17 @@ const sendCompleteExcelData = (allRowsData) => {
     reference: row.reference || row.referenceOrPosition || "",
     quantity: row.quantity || 1,
     environment: prefillEnviron?.value || "AIF",
-    temperature: row.temperature || 0,
-    fr: row['FR'] || row.fr || 0,
-    mttr: row['MTTR'] || row.mttr || 0,
-    mct: row['MCT'] || row.mct || 0,
-    mlh: row['MLH'] || row.mlh || 0,
+    temperature: row.temperature ,
+    fr: row['FR'] || row.fr ,
+    mttr: row['MTTR'] || row.mttr ,
+    mct: row['MCT'] || row.mct ,
+    mlh: row['MLH'] || row.mlh ,
+    
+    productTreeStructureId: treeId,
+      projectId: projectId,
   }));
 
-  console.log("Sending complete hierarchical data to backend:", rowData);
+
 
   Api.post("api/v1/productBreakdownStructure/import/record/create", {
     rowData: rowData, // Send ALL rows together
@@ -329,7 +331,7 @@ const sendCompleteExcelData = (allRowsData) => {
     companyId: companyId,
     token: token,
   }).then((response) => {
-    console.log("Excel import response", response);
+    
     setISLoading(false);
     
     if (response?.status === 201) {
@@ -366,7 +368,6 @@ const sendCompleteExcelData = (allRowsData) => {
       },
     })
       .then((res) => {
-       console.log("permission res", res);
         const data = res?.data?.data;
         setPermission(data?.modules[0]);
            setPermissionsChecked(true); 
@@ -602,8 +603,9 @@ const sendCompleteExcelData = (allRowsData) => {
       },
     })
       .then((res) => {
-        console.log("tree product res", res);
+      
         const treeData = res?.data?.data;
+        console.log("treeData", treeData);
         setData(treeData);
  
         setISLoading(false);
@@ -656,6 +658,7 @@ const sendCompleteExcelData = (allRowsData) => {
   const patchForm = (values) => {
     const userId = localStorage.getItem("userId");
     setISLoading(true);
+   
     Api.patch(`/api/v1/product/update`, {
       productId: productId,
       productName: values.productName,
@@ -1442,6 +1445,7 @@ const sendCompleteExcelData = (allRowsData) => {
                               <FaEllipsisV className="icon" />
                             </Dropdown.Toggle>
                           ) : null}
+                        
                           {permission?.write === true ||
                             permission?.write === "undefined" ||
                             role === "admin" ||
@@ -1517,8 +1521,10 @@ const sendCompleteExcelData = (allRowsData) => {
                               <Dropdown.Item
                                 className="user-dropitem-project text-center"
                                 onClick={() => {
+                              
                                   setProductId(rowData.id);
                                   setTreeId(rowData.parentId);
+                             
                                   setChildProductCriteria(
                                     rowData?.children?.length > 0
                                       ? true
@@ -1528,7 +1534,7 @@ const sendCompleteExcelData = (allRowsData) => {
                                   setPatchModal(true);
                                   setPatchCategory(rowData.category);
                                   setPatchPartType(rowData.partType);
-                                  setReference(rowData.referenceOrPosition);
+                                  setReference(rowData.reference || rowData.referenceOrPosition || "");
                                   setQuantity(rowData.quantity);
                                   setPartNumber(rowData.partNumber);
                                   setPatchName(rowData.productName);

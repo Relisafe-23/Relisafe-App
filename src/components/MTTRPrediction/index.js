@@ -1343,7 +1343,7 @@ const exportToExcel = (value, productName) => {
             mlh: mlhValue ? mlhValue : "",
             labourHour: totalLabourHr ? totalLabourHr : "",
             mttr: importExcelData?.mttr || mttrCalculatedValue || "",
-            remarks: importExcelData?.remarks ?? mttrData?.remarks ?? "test",
+            remarks: importExcelData?.remarks ?? mttrData?.remarks ?? "",
             mmax: importExcelData?.mMax || mttrData?.mMax || "",
             taskType: importExcelData?.taskType || "",
             time: importExcelData?.time || "",
