@@ -1538,6 +1538,7 @@ const sendCompleteExcelData = (allRowsData) => {
                                   setQuantity(rowData.quantity);
                                   setPartNumber(rowData.partNumber);
                                   setPatchName(rowData.productName);
+                                  setPrefillTemp(rowData.temperature);
                                   setCategory(
                                     rowData.category
                                       ? {
