@@ -204,12 +204,12 @@ const convertToJson = (headers, data) => {
 
 const importExcel = (e) => {
   // Check if data already exists
-  if (data && data.length > 0) {
-    toast.error("Data already exists! Please clear existing data before importing new file.", {
-      position: toast.POSITION.TOP_RIGHT,
-    });
-    return;
-  }
+  // if (data && data.length > 0) {
+  //   toast.error("Data already exists! Please clear existing data before importing new file.", {
+  //     position: toast.POSITION.TOP_RIGHT,
+  //   });
+  //   return;
+  // }
 
   const file = e.target.files[0];
   const fileName = file.name;
@@ -300,9 +300,6 @@ const convertToJsonWithIndexCount = (headers, data) => {
 const sendCompleteExcelData = (allRowsData) => {
   setISLoading(true);
   const companyId = localStorage.getItem("companyId");
-
-  
-
   // Transform Excel data to match backend expected format
   const rowData = allRowsData.map(row => ({
     indexCount: row['S.No']?.toString() || row.indexCount?.toString() || "1",
