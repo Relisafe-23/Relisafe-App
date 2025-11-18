@@ -507,7 +507,7 @@ function User() {
         enableReinitialize={true}
         initialValues={{
           editEmail: editEmail,
-          editPassword: editPassword,
+          editPassword: editConfirmPassword,
           editConfirmPassword: editConfirmPassword,
           editName: editName,
           editPhone: editPhone,
