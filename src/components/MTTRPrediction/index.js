@@ -126,7 +126,6 @@ const MTTRPrediction = (props, active) => {
         (item) => item?.moduleName === "MTTR"
       );
       setAllSepareteData(filteredData);
-      // console.log("allSepareteData", filteredData);
       const merged = [...tableData, ...filteredData];
       setMergedData(merged);
     });
@@ -150,8 +149,6 @@ const MTTRPrediction = (props, active) => {
 
   // Add this new function to apply Excel data to form fields
   const applyExcelDataToForm = (excelData) => {
-    // console.log('Excel data to apply:', excelData)
-    // Map Excel column names to your form field names
     const fieldMappings = {
       'remarks': 'remarks',
       'repairable': 'repairable',
@@ -218,7 +215,6 @@ const createMTTRDataFromExcel = async (values) => {
     
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
-    
     const response = await Api.post("/api/v1/mttrPrediction/create/procedure", {
       projectId: projectId,
       productId: productId,
@@ -235,12 +231,16 @@ const createMTTRDataFromExcel = async (values) => {
       levelOfRepair: values.levelOfRepair,
       levelOfReplace: values.levelOfReplace,
       spare: values.spare,
+   
     });
+  
     
   
     const mttrId = response?.data?.data?.id;
     setSuccessMessage(response?.data?.message);
     setMttrId(response?.data?.data?.id);
+     setValidateData(response?.data?.data);
+      getProcedureData();
     
     return { success: true, data: response.data };
   } catch (error) {
@@ -486,7 +486,6 @@ const exportToExcel = (value, productName) => {
   };
 
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
-    // console.log("getAllConnectedLibrary called", fieldValue, fieldName);
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
@@ -1131,7 +1130,6 @@ const exportToExcel = (value, productName) => {
     })
       .then((response) => {
         
-        //  console.log("mttrResult", response?.data?.procedureData)
         setTableData(response?.data?.procedureData);
         setValidateData(response?.data?.procedureData?.length);
         const mttrResult = response.data.mttrResult;
@@ -1345,7 +1343,7 @@ const exportToExcel = (value, productName) => {
             mlh: mlhValue ? mlhValue : "",
             labourHour: totalLabourHr ? totalLabourHr : "",
             mttr: importExcelData?.mttr || mttrCalculatedValue || "",
-            remarks: importExcelData?.remarks ?? mttrData?.remarks ?? "test",
+            remarks: importExcelData?.remarks ?? mttrData?.remarks ?? "",
             mmax: importExcelData?.mMax || mttrData?.mMax || "",
             taskType: importExcelData?.taskType || "",
             time: importExcelData?.time || "",
