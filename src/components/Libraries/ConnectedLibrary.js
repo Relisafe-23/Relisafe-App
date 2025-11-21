@@ -907,7 +907,7 @@ function ConnectedLibrary(props) {
                           <FontAwesomeIcon
                             icon={faEdit}
                             style={{ fontSize: "20px" }}
-                            title="Edit"
+                            title="Edit1"
                           />
                         </Col>
                       </Row>

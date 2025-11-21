@@ -199,27 +199,21 @@ const MiscellaneousPartsCalculator = ({onCalculate}) => {
       <br/>
 
 <br/>
-      <Button
+<Button
   variant="primary"
   className="btn-calculate float-end"
   onClick={calculateFailureRate}
+  disabled={!partType || ((partType.includes('Ferrite') || partType.includes('DummyLoads') || partType === 'Terminations') && !environment)}
   style={{
-    backgroundColor: '#1e88e5',  // Bright dolphin blue
-    borderColor: '#0d47a1',      // Darker blue for border
+    backgroundColor: !partType || ((partType.includes('Ferrite') || partType.includes('DummyLoads') || partType === 'Terminations') && !environment) ? '#cccccc' : '#1e88e5',
+    borderColor: !partType || ((partType.includes('Ferrite') || partType.includes('DummyLoads') || partType === 'Terminations') && !environment) ? '#999999' : '#0d47a1',
     color: 'white',
     fontWeight: 'bold',
     padding: '8px 20px',
     borderRadius: '4px',
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
     transition: 'all 0.3s ease',
-    ':hover': {
-      backgroundColor: '#1565c0',  // Slightly darker on hover
-      transform: 'translateY(-1px)'
-    },
-    ':active': {
-      backgroundColor: '#0d47a1',
-      transform: 'translateY(0)'
-    }
+    cursor: !partType || ((partType.includes('Ferrite') || partType.includes('DummyLoads') || partType === 'Terminations') && !environment) ? 'not-allowed' : 'pointer'
   }}
 >
   Calculate Failure Rate

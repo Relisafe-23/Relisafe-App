@@ -327,6 +327,7 @@ function Index(props) {
     Math.exp(S / stressDivider) *
     (T / temperatureBase);
   let [baseFailureRate, setBaseFailureRate] = useState(1e-6);
+  const [isSaving, setIsSaving] = useState(false);
   let [resistanceFactor, setResistanceFactor] = useState(1);
   let [qualityFactor, setQualityFactor] = useState(0.03);
   let [enviromentFactor, setEnviromentFactor] = useState(5);
@@ -661,6 +662,7 @@ function Index(props) {
   ];
 
   const updateFrpData = (values) => {
+    setIsSaving(true);
     const companyId = localStorage.getItem("companyId");
     Api.patch("/api/v1/failureRatePrediction/update", {
       predicted: values.predicted,
@@ -687,6 +689,7 @@ function Index(props) {
         setSuccessMessage(response.data.message);
         NextPage();
         toast.success("FR  Updated Successfully");
+        setIsSaving(false);
         // window.location.reload();
       })
       .catch((error) => {
@@ -694,12 +697,13 @@ function Index(props) {
         if (errorStatus === 401) {
           logout();
         }
+        setIsSaving(false); 
       });
   };
   const submitForm = (values) => {
 
     console.log(values, "values from submit form")
-
+setIsSaving(true);
     const companyId = localStorage.getItem("companyId");
     const standard = values?.standard?.value;
     Api.post("/api/v1/failureRatePrediction/", {
@@ -729,6 +733,7 @@ function Index(props) {
         NextPage();
         getProductFRPData();
         toast.success("FR Created Successfully");
+        setIsSaving(false);
         window.location.reload();
       })
       .catch((error) => {
@@ -736,6 +741,7 @@ function Index(props) {
         if (errorStatus === 401) {
           logout();
         }
+         setIsSaving(false); 
       });
   };
 
@@ -1621,13 +1627,24 @@ function Index(props) {
                                 >
                                   CANCEL
                                 </Button>
-                                <Button
-                                  className="save-btn "
-                                  type="submit"
-                                  disabled={!productId}
-                                >
-                                  SAVE CHANGES
-                                </Button>
+                              <Button
+  className="save-btn "
+  type="submit"
+  disabled={!productId || isSaving}
+>
+  {isSaving ? (
+    <>
+      <Spinner
+        animation="border"
+        size="sm"
+        className="me-2"
+      />
+      UPDATING...
+    </>
+  ) : (
+    "SAVE CHANGES"
+  )}
+</Button>
                                 <div>
                                   <Modal
                                     show={nprdModel}
@@ -1984,16 +2001,30 @@ function Index(props) {
                                                 )}
                                               </Card>
                                               <div className="d-flex flex-direction-row justify-content-end m-2">
-                                                <Button
-                                                  className="delete-cancel-btn me-2"
-                                                  variant="outline-secondary"
-                                                  type="reset"
-                                                  onClick={(e) => {
-                                                    setNprdModel(false);
-                                                  }}
-                                                >
-                                                  CANCEL
-                                                </Button>
+                                 <Button
+  className="delete-cancel-btn me-2"
+  variant="outline-secondary"
+  type="button"
+  onClick={(e) => {
+    // Manually clear modal state without affecting main form
+    setPartTypeNprd();
+    setPartTypeDescr();
+    setPartTypeQuality();
+    setFR();
+    setRowClicked(false);
+    setData([]);
+    setSelectedCheckboxes([]);
+    setSelectedNprdFR(null);
+    
+    // Manually reset modal form fields
+    setFieldValue("partTypeNprd", "");
+    setFieldValue("quality", "");
+    setFieldValue("partTypeDescr", "");
+    setFieldValue("FR", "");
+  }}
+>
+  CANCEL2
+</Button>
                                                 {/* <Button
                                                   className="save-btn"
                                                   type="submit"
@@ -2449,16 +2480,30 @@ function Index(props) {
                                                 )}
                                               </Card>
                                               <div className="d-flex flex-direction-row justify-content-end m-2">
-                                                <Button
-                                                  className="delete-cancel-btn me-2"
-                                                  variant="outline-secondary"
-                                                  type="reset"
-                                                  onClick={(e) => {
-                                                    setNprd2016Model(false);
-                                                  }}
-                                                >
-                                                  CANCEL
-                                                </Button>
+                                             <Button
+  className="delete-cancel-btn me-2"
+  variant="outline-secondary"
+  type="button"
+  onClick={(e) => {
+    // Manually clear modal state without affecting main form
+    setPartType2016Nprd();
+    setPartType2016Descr();
+    setPartType2016Quality();
+    setFR();
+    setRowClicked(false);
+    setData([]);
+    setSelectedCheckboxes([]);
+    setSelectedNprdFR(null);
+    
+    // Manually reset modal form fields
+    setFieldValue("partTypeNprd", "");
+    setFieldValue("quality2016", "");
+    setFieldValue("partTypeDescr", "");
+    setFieldValue("FR", "");
+  }}
+>
+  CANCEL1
+</Button>
                                                 <Button
                                                   className="save-btn"
                                                   type="submit"
