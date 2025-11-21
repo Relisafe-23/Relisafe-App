@@ -587,6 +587,8 @@ const importExcel = (e) => {
       title: "Hazard*",
       cellStyle: { minWidth: "140px", textAlign: "center" },
       headerStyle: { minWidth: "140px", textAlign: "center" },
+   
+  
     },
     {
       field: "modeOfOperation",
@@ -594,6 +596,12 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "200px", textAlign: "center" },
       headerStyle: { minWidth: "200px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.modeOfOperation || rowData.modeOfOperation.trim() === "") {
+        return { isValid: false, helperText: "Mode of Operation is required" };
+      }
+      return true;
+    },
       onCellClick: () => handleDropdownSelection("modeOfOperation"),
       editComponent: ({ value, onChange, rowData }) => {
         const filteredData =
@@ -640,6 +648,12 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "200px", textAlign: "center" },
       headerStyle: { minWidth: "200px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.hazardCause || rowData.hazardCause.trim() === "") {
+        return { isValid: false, helperText: "Hazard Cause is required" };
+      }
+      return true;
+    },
       onCellClick: () => handleDropdownSelection("hazardCause"),
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -696,6 +710,12 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
       headerStyle: { minWidth: "230px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.effectOfHazard || rowData.effectOfHazard.trim() === "") {
+        return { isValid: false, helperText: "Effect of the Hazard is required" };
+      }
+      return true;
+    },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -752,6 +772,12 @@ const importExcel = (e) => {
       title: "Hazard Clasification*",
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.hazardClasification || rowData.hazardClasification.trim() === "") {
+        return { isValid: false, helperText: "Hazard Classification is required" };
+      }
+      return true;
+    },
       headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -863,6 +889,12 @@ const importExcel = (e) => {
       title: "Means of detection*",
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.meansOfDetection || rowData.meansOfDetection.trim() === "") {
+        return { isValid: false, helperText: "Means of detection is required" };
+      }
+      return true;
+    },
       headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -919,6 +951,12 @@ const importExcel = (e) => {
       title: "Crew response*",
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
+         validate: (rowData) => {
+      if (!rowData.crewResponse || rowData.crewResponse.trim() === "") {
+        return { isValid: false, helperText: "Crew response is required" };
+      }
+      return true;
+    },
       headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -976,6 +1014,12 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
       headerStyle: { minWidth: "230px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.uniqueHazardIdentifier || rowData.uniqueHazardIdentifier.trim() === "") {
+        return { isValid: false, helperText: "Unique Hazard Identifier is required" };
+      }
+      return true;
+    },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "uniqueHazardIdentifier") ||

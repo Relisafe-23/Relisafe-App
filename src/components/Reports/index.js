@@ -213,7 +213,7 @@ function Reports(props) {
                               options={[
                                 {
                                   value: "0",
-                                  label: "Relisafe Standard",
+                                  label: "rams360 standard",
                                 },
                                 {
                                   value: "1",
