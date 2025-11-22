@@ -53,8 +53,8 @@ const string255 = Yup.string()
   .max(255, "Must be at most 255 characters");
 
 const Validation = Yup.object().shape({
-  category: Yup.object().required("Category is required"),
-  parttype: Yup.object().required("Part type is required"),
+  // category: Yup.object().required("Category is required"),
+  // parttype: Yup.object().required("Part type is required"),
   partnumber: Yup.string().required("Part number is required").max(255),
   riskindex: Yup.string().required("Risk index is required").max(255),
   endeffect: Yup.string().required("End effect is required").max(255),
@@ -133,7 +133,7 @@ export default function PMMRA(props) {
     ? props?.location?.state?.projectId
     : props?.match?.params?.id;
   const [partType, setPartType] = useState();
-  const [companyName,setCompanyName] = useState();
+  const [companyName, setCompanyName] = useState();
   const [category, setCategory] = useState();
   const [repairable, setRepairable] = useState();
   const [levelofreplace, setLevelofRaplace] = useState();
@@ -168,7 +168,7 @@ export default function PMMRA(props) {
     : props?.location?.state?.productId
       ? props?.location?.state?.productId
       : initialProductId;
-      const[projectname, setProjectName] = useState()
+  const [projectname, setProjectName] = useState()
   const [reference, setReference] = useState();
   const [pmmraData, setpmmraData] = useState([]);
   const [fmecaData, setFmecaData] = useState([]);
@@ -187,216 +187,216 @@ export default function PMMRA(props) {
   const [importExcelData, setImportExcelData] = useState({});
   const [shouldReload, setShouldReload] = useState(false);
   const [open, setOpen] = useState(false);
-const importExcel = (e) => {
-  const file = e.target.files[0];
-  const fileName = file.name;
-  const validExtensions = ["xlsx", "xls"];
-  const fileExtension = fileName.split(".").pop().toLowerCase();
+  const importExcel = (e) => {
+    const file = e.target.files[0];
+    const fileName = file.name;
+    const validExtensions = ["xlsx", "xls"];
+    const fileExtension = fileName.split(".").pop().toLowerCase();
 
-  if (!validExtensions.includes(fileExtension)) {
-    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-      position: toast.POSITION.TOP_RIGHT,
-    });
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const bstr = event.target.result;
-    const workBook = XLSX.read(bstr, { type: "binary" });
-    const workSheetName = workBook.SheetNames[0];
-    const workSheet = workBook.Sheets[workSheetName];
-    const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-    
-    if (excelData.length > 1) {
-      const headers = excelData[0];
-      const rows = excelData.slice(1);
-      const parsedData = rows.map((row) => {
-        const rowData = {};
-        headers.forEach((header, index) => {
-          rowData[header] = row[index];
-        });
-        return rowData;
-      });
-      
-      // Map all Excel fields to form fields
-      const mappedData = {};
-      parsedData[0] && Object.keys(parsedData[0]).forEach(key => {
-        const value = parsedData[0][key];
-        
-        // Map Excel column names to form field names
-        switch(key) {
-          case "endEffect":
-            mappedData.endeffect = value;
-            break;
-          case "safetyImpact":
-            mappedData.safetyimpact = value;
-            break;
-          case "reliabilityImpact":
-            mappedData.reliability = value;
-            break;
-          case "frequency":
-            mappedData.frequency = value;
-            break;
-          case "severity":
-            mappedData.severity = value;
-            break;
-          case "riskIndex":
-            mappedData.riskindex = value;
-            break;
-          case "rcmNotes":
-            mappedData.rcmnotes = value;
-            break;
-          case "pmTaskId":
-            mappedData.pmtaskid = value;
-            break;
-          case "pmTaskType":
-            mappedData.PMtasktype = value;
-            break;
-          case "taskIntrvlFreq":
-            mappedData.taskintervalFrequency = value;
-            break;
-          case "LatitudeFreqTolrnc":
-            mappedData.latitudeFrequency = value;
-            break;
-          case "scheduleMaintenceTsk":
-            mappedData.scheduledMaintenanceTask = value;
-            break;
-          case "tskInteralDetermination":
-            mappedData.taskInterval = value;
-            break;
-          case "taskDesc":
-            mappedData.taskDescription = value;
-            break;
-          case "tskTimeML1":
-            mappedData.tasktimeML1 = value;
-            break;
-          case "tskTimeML2":
-            mappedData.tasktimeML2 = value;
-            break;
-          case "tskTimeML3":
-            mappedData.tasktimeML3 = value;
-            break;
-          case "tskTimeML4":
-            mappedData.tasktimeML4 = value;
-            break;
-          case "tskTimeML5":
-            mappedData.tasktimeML5 = value;
-            break;
-          case "tskTimeML6":
-            mappedData.tasktimeML6 = value;
-            break;
-          case "tskTimeML7":
-            mappedData.tasktimeML7 = value;
-            break;
-          case "skill1":
-            mappedData.skill1 = value;
-            break;
-          case "skillOneNos":
-            mappedData.skill1nos = value;
-            break;
-          case "skillOneContribution":
-            mappedData.skill1contribution = value;
-            break;
-          case "skill2":
-            mappedData.skill2 = value;
-            break;
-          case "skillTwoNos":
-            mappedData.skill2nos = value;
-            break;
-          case "skillTwoContribution":
-            mappedData.skill2contribution = value;
-            break;
-          case "skill3":
-            mappedData.skill3 = value;
-            break;
-          case "skillThreeNos":
-            mappedData.skill3nos = value;
-            break;
-          case "skillThreeContribution":
-            mappedData.skill3contribution = value;
-            break;
-          case "addiReplaceSpare1":
-            mappedData.addReplacespare1 = value;
-            break;
-          case "addiReplaceSpare1Qty":
-            mappedData.addReplacespare1qty = value;
-            break;
-          case "addiReplaceSpare2":
-            mappedData.addReplacespare2 = value;
-            break;
-          case "addiReplaceSpare2Qty":
-            mappedData.addReplacespare2qty = value;
-            break;
-          case "addiReplaceSpare3":
-            mappedData.addReplacespare3 = value;
-            break;
-          case "addiReplaceSpare3Qty":
-            mappedData.addReplacespare3qty = value;
-            break;
-          case "consumable1":
-            mappedData.Consumable1 = value;
-            break;
-          case "consumable1Qty":
-            mappedData.Consumable1qty = value;
-            break;
-          case "consumable2":
-            mappedData.Consumable2 = value;
-            break;
-          case "consumable2Qty":
-            mappedData.Consumable2qty = value;
-            break;
-          case "consumable3":
-            mappedData.Consumable3 = value;
-            break;
-          case "consumable3Qty":
-            mappedData.Consumable3qty = value;
-            break;
-          case "consumable4":
-            mappedData.Consumable4 = value;
-            break;
-          case "consumable4Qty":
-            mappedData.Consumable4qty = value;
-            break;
-          case "consumable5":
-            mappedData.Consumable5 = value;
-            break;
-          case "consumable5Qty":
-            mappedData.Consumable5qty = value;
-            break;
-          case "userField1":
-            mappedData.userfield1 = value;
-            break;
-          case "userField2":
-            mappedData.userfield2 = value;
-            break;
-          case "userField3":
-            mappedData.userfield3 = value;
-            break;
-          case "userField4":
-            mappedData.userfield4 = value;
-            break;
-          case "userField5":
-            mappedData.userfield5 = value;
-            break;
-          default:
-            // For any unmapped fields, use the original key
-            mappedData[key] = value;
-        }
-      });
-      
-      setImportExcelData(mappedData);
-      toast.success("Excel data imported successfully!", {
+    if (!validExtensions.includes(fileExtension)) {
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
         position: toast.POSITION.TOP_RIGHT,
       });
-    } else {
-      toast.error("No Data Found In Excel Sheet", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const bstr = event.target.result;
+      const workBook = XLSX.read(bstr, { type: "binary" });
+      const workSheetName = workBook.SheetNames[0];
+      const workSheet = workBook.Sheets[workSheetName];
+      const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+
+      if (excelData.length > 1) {
+        const headers = excelData[0];
+        const rows = excelData.slice(1);
+        const parsedData = rows.map((row) => {
+          const rowData = {};
+          headers.forEach((header, index) => {
+            rowData[header] = row[index];
+          });
+          return rowData;
+        });
+
+        // Map all Excel fields to form fields
+        const mappedData = {};
+        parsedData[0] && Object.keys(parsedData[0]).forEach(key => {
+          const value = parsedData[0][key];
+
+          // Map Excel column names to form field names
+          switch (key) {
+            case "endEffect":
+              mappedData.endeffect = value;
+              break;
+            case "safetyImpact":
+              mappedData.safetyimpact = value;
+              break;
+            case "reliabilityImpact":
+              mappedData.reliability = value;
+              break;
+            case "frequency":
+              mappedData.frequency = value;
+              break;
+            case "severity":
+              mappedData.severity = value;
+              break;
+            case "riskIndex":
+              mappedData.riskindex = value;
+              break;
+            case "rcmNotes":
+              mappedData.rcmnotes = value;
+              break;
+            case "pmTaskId":
+              mappedData.pmtaskid = value;
+              break;
+            case "pmTaskType":
+              mappedData.PMtasktype = value;
+              break;
+            case "taskIntrvlFreq":
+              mappedData.taskintervalFrequency = value;
+              break;
+            case "LatitudeFreqTolrnc":
+              mappedData.latitudeFrequency = value;
+              break;
+            case "scheduleMaintenceTsk":
+              mappedData.scheduledMaintenanceTask = value;
+              break;
+            case "tskInteralDetermination":
+              mappedData.taskInterval = value;
+              break;
+            case "taskDesc":
+              mappedData.taskDescription = value;
+              break;
+            case "tskTimeML1":
+              mappedData.tasktimeML1 = value;
+              break;
+            case "tskTimeML2":
+              mappedData.tasktimeML2 = value;
+              break;
+            case "tskTimeML3":
+              mappedData.tasktimeML3 = value;
+              break;
+            case "tskTimeML4":
+              mappedData.tasktimeML4 = value;
+              break;
+            case "tskTimeML5":
+              mappedData.tasktimeML5 = value;
+              break;
+            case "tskTimeML6":
+              mappedData.tasktimeML6 = value;
+              break;
+            case "tskTimeML7":
+              mappedData.tasktimeML7 = value;
+              break;
+            case "skill1":
+              mappedData.skill1 = value;
+              break;
+            case "skillOneNos":
+              mappedData.skill1nos = value;
+              break;
+            case "skillOneContribution":
+              mappedData.skill1contribution = value;
+              break;
+            case "skill2":
+              mappedData.skill2 = value;
+              break;
+            case "skillTwoNos":
+              mappedData.skill2nos = value;
+              break;
+            case "skillTwoContribution":
+              mappedData.skill2contribution = value;
+              break;
+            case "skill3":
+              mappedData.skill3 = value;
+              break;
+            case "skillThreeNos":
+              mappedData.skill3nos = value;
+              break;
+            case "skillThreeContribution":
+              mappedData.skill3contribution = value;
+              break;
+            case "addiReplaceSpare1":
+              mappedData.addReplacespare1 = value;
+              break;
+            case "addiReplaceSpare1Qty":
+              mappedData.addReplacespare1qty = value;
+              break;
+            case "addiReplaceSpare2":
+              mappedData.addReplacespare2 = value;
+              break;
+            case "addiReplaceSpare2Qty":
+              mappedData.addReplacespare2qty = value;
+              break;
+            case "addiReplaceSpare3":
+              mappedData.addReplacespare3 = value;
+              break;
+            case "addiReplaceSpare3Qty":
+              mappedData.addReplacespare3qty = value;
+              break;
+            case "consumable1":
+              mappedData.Consumable1 = value;
+              break;
+            case "consumable1Qty":
+              mappedData.Consumable1qty = value;
+              break;
+            case "consumable2":
+              mappedData.Consumable2 = value;
+              break;
+            case "consumable2Qty":
+              mappedData.Consumable2qty = value;
+              break;
+            case "consumable3":
+              mappedData.Consumable3 = value;
+              break;
+            case "consumable3Qty":
+              mappedData.Consumable3qty = value;
+              break;
+            case "consumable4":
+              mappedData.Consumable4 = value;
+              break;
+            case "consumable4Qty":
+              mappedData.Consumable4qty = value;
+              break;
+            case "consumable5":
+              mappedData.Consumable5 = value;
+              break;
+            case "consumable5Qty":
+              mappedData.Consumable5qty = value;
+              break;
+            case "userField1":
+              mappedData.userfield1 = value;
+              break;
+            case "userField2":
+              mappedData.userfield2 = value;
+              break;
+            case "userField3":
+              mappedData.userfield3 = value;
+              break;
+            case "userField4":
+              mappedData.userfield4 = value;
+              break;
+            case "userField5":
+              mappedData.userfield5 = value;
+              break;
+            default:
+              // For any unmapped fields, use the original key
+              mappedData[key] = value;
+          }
+        });
+
+        setImportExcelData(mappedData);
+        toast.success("Excel data imported successfully!", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      } else {
+        toast.error("No Data Found In Excel Sheet", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      }
+    };
+    reader.readAsBinaryString(file);
   };
-  reader.readAsBinaryString(file);
-};
 
   const convertToJson = (headers, originalData) => {
     const rows = [];
@@ -490,9 +490,9 @@ const importExcel = (e) => {
 
   const exportToExcel = (value) => {
     const originalData = {
-      CompanyName:treeTableData[0]?.companyId?.companyName,
+      CompanyName: treeTableData[0]?.companyId?.companyName,
       ProjectName: treeTableData[0]?.projectId?.projectName,
-      productName:value.name,
+      productName: value.name,
       endEffect: value.endeffect,
       safetyImpact: value.safetyimpact,
       reliabilityImpact: value.reliability,
@@ -604,7 +604,7 @@ const importExcel = (e) => {
   const [fmecaId, setFmecaId] = useState();
   const [fmecaFillterData, setFmecaFillterData] = useState();
   const [data, setData] = useState({
-    projectName:"",
+    projectName: "",
     endEffect: "",
     safetyImpact: "",
     reliability: "",
@@ -682,8 +682,8 @@ const importExcel = (e) => {
         projectId: projectId,
       },
     }).then((res, response) => {
-         setCompanyName(response?.data?.data?.companyId?.companyName);
-        setProjectName(response?.data?.data?.projectName);
+      setCompanyName(response?.data?.data?.companyId?.companyName);
+      setProjectName(response?.data?.data?.projectName);
       const filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "PMMRA"
       );
@@ -712,12 +712,13 @@ const importExcel = (e) => {
         productId: productId,
       },
     }).then((res) => {
+      console.log(res,"res")
       const data = res?.data?.data;
       setFmecaData(data);
     });
   };
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
-   
+
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
@@ -845,6 +846,7 @@ const importExcel = (e) => {
     })
       .then((res) => {
         const pmmraData = res?.data?.data;
+        console.log(pmmraData, "..........pmmraData........")
         setSeverity(pmmraData?.severity);
         setRepairable(pmmraData?.repairable);
         setLevelofRaplace(pmmraData?.levelOfReplace);
@@ -862,7 +864,8 @@ const importExcel = (e) => {
         setRestoreDiscardTsk(pmmraData?.restoreDiscrdTsk);
         setSignificantItem(pmmraData?.significantItem);
         setTaskIntervalUnit(pmmraData?.taskIntrvlUnit);
-        const pmmraId = res?.data?.data?.id;
+        // const pmmraId = res?.data?.data?.id;
+        const pmmraId = pmmraData?.id
         setpmmraId(pmmraId);
         setpmmraData(pmmraData);
       })
@@ -912,250 +915,82 @@ const importExcel = (e) => {
 
   const submit = (values) => {
     const companyId = localStorage.getItem("companyId");
+
+    // Debug: Check what's actually in values
+    console.log("Form Values:", values);
+
     Api.post("/api/v1/pmMra/", {
-      name: name,
-      partNumber: partNumber,
-      category:
-        category && values?.category?.value
-          ? values?.category?.value
-          : values?.category,
-      quantity: quantity,
-      partType:
-        partType && values?.partType?.value
-          ? values?.partType?.value
-          : values?.partType,
-      fmecaId: fmecaFillterData?.fmecaId,
-      repairable: repairable,
-      levelOfRepair: levelofRepair,
-      levelOfReplace: levelofreplace,
-      spare: spare,
-      endEffect:
-        values?.endeffect && values?.endeffect?.value
-          ? values?.endeffect?.value
-          : values?.endeffect,
-      safetyImpact:
-        values?.safetyimpact && values?.safetyimpact?.value
-          ? values?.safetyimpact?.value
-          : values?.safetyimpact,
-      reliabilityImpact:
-        values?.reliability && values?.reliability?.value
-          ? values?.reliability?.value
-          : values?.reliability,
-      frequency:
-        values?.frequency && values?.frequency?.value
-          ? values?.frequency?.value
-          : values?.frequency,
-      severity: Severity ? Severity : value?.severity?.value,
-      riskIndex: riskIndex ? riskIndex : value?.riskIndex?.value,
-      LossOfEvident: lossofFuntEvident
-        ? lossofFuntEvident
-        : value?.lossofFuntEvident?.value,
-      significantItem: significantItem
-        ? significantItem
-        : value?.significantItem?.value,
-      criticalityAccept: criticallyAccept
-        ? criticallyAccept
-        : value?.criticallyAccept?.value,
-      LubricationservceTsk: lubrication
-        ? lubrication
-        : value?.lubrication?.value,
-      conditionMonitrTsk: conditionMonitrTsk
-        ? conditionMonitrTsk
-        : value?.conditionMonitrTsk?.value,
-      restoreDiscrdTsk: restoreDiscardTsk
-        ? restoreDiscardTsk
-        : value?.restoreDiscardTsk?.value,
-      failureFindTsk: failureFindTask
-        ? failureFindTask
-        : value?.failureFindTask?.value,
-      combinationOfTsk: combinationofTsk
-        ? combinationofTsk
-        : value?.combinationofTsk?.value,
-      reDesign: reDesign ? reDesign : value?.reDesign?.value,
-      rcmnotes:
-        values?.rcmnotes && values?.rcmnotes?.value
-          ? values?.rcmnotes?.value
-          : values?.rcmnotes,
-      pmTaskId:
-        values?.pmtaskid && values?.pmtaskid?.value
-          ? values?.pmtaskid?.value
-          : values?.pmtaskid,
-      pmTaskType:
-        values?.PMtasktype && values?.PMtasktype?.value
-          ? values?.PMtasktype?.value
-          : values?.PMtasktype,
-      taskIntrvlFreq:
-        values?.taskintervalFrequency && values?.taskintervalFrequency?.value
-          ? values?.taskintervalFrequency?.value
-          : values?.taskintervalFrequency,
-      taskIntrvlUnit: taskIntervalUnit
-        ? taskIntervalUnit
-        : value?.taskIntervalUnit?.value,
-      LatitudeFreqTolrnc:
-        values?.latitudeFrequency && values?.latitudeFrequency?.value
-          ? values?.latitudeFrequency?.value
-          : values?.latitudeFrequency,
-      scheduleMaintenceTsk:
-        values?.scheduledMaintenanceTask &&
-          values?.scheduledMaintenanceTask?.value
-          ? values?.scheduledMaintenanceTask?.value
-          : values?.scheduledMaintenanceTask,
-      tskInteralDetermination:
-        values?.taskInterval && values?.taskInterval?.value
-          ? values?.taskInterval?.value
-          : values?.taskInterval,
-      taskDesc:
-        values?.taskDescription && values?.taskDescription?.value
-          ? values?.taskDescription?.value
-          : values?.taskDescription,
-      tskTimeML1:
-        values?.tasktimeML1 && values?.tasktimeML1?.value
-          ? values?.tasktimeML1?.value
-          : values?.tasktimeML1,
-      tskTimeML2:
-        values?.tasktimeML2 && values?.tasktimeML2?.value
-          ? values?.tasktimeML2?.value
-          : values?.tasktimeML2,
-      tskTimeML3:
-        values?.tasktimeML3 && values?.tasktimeML3?.value
-          ? values?.tasktimeML3?.value
-          : values?.tasktimeML3,
-      tskTimeML4:
-        values?.tasktimeML4 && values?.tasktimeML4?.value
-          ? values?.tasktimeML4?.value
-          : values?.tasktimeML4,
-      tskTimeML5:
-        values?.tasktimeML5 && values?.tasktimeML5?.value
-          ? values?.tasktimeML5?.value
-          : values?.tasktimeML5,
-      tskTimeML6:
-        values?.tasktimeML6 && values?.tasktimeML6?.value
-          ? values?.tasktimeML6?.value
-          : values?.tasktimeML6,
-      tskTimeML7:
-        values?.tasktimeML7 && values?.tasktimeML7.value
-          ? values?.tasktimeML7?.value
-          : values?.tasktimeML7,
-      skill1:
-        values?.skill1 && values?.skill1?.value
-          ? values?.skill1?.value
-          : values?.skill1,
-      skillOneNos:
-        values?.skill1nos && values?.skill1nos?.value
-          ? values?.skill1nos?.value
-          : values?.skill1nos,
-      skillOneContribution:
-        values?.skill1contribution && values?.skill1contribution?.value
-          ? values?.skill1contribution?.value
-          : values?.skill1contribution,
-      skill2:
-        values?.skill2 && values?.skill2?.value
-          ? values?.skill2?.value
-          : values?.skill2,
-      skillTwoNos:
-        values?.skill2nos && values?.skill2nos?.value
-          ? values?.skill2nos?.value
-          : values?.skill2nos,
-      skillTwoContribution:
-        values?.skill2contribution && values?.skill2contribution?.value
-          ? values?.skill2contribution?.value
-          : values?.skill2contribution,
-      skill3:
-        values?.skill3 && values?.skill3?.value
-          ? values?.skill3?.value
-          : values?.skill3,
-      skillThreeNos:
-        values?.skill3nos && values?.skill3nos?.value
-          ? values?.skill3nos?.value
-          : values?.skill3nos,
-      skillThreeContribution:
-        values?.skill3contribution && values?.skill3contribution?.value
-          ? values?.skill3contribution?.value
-          : values?.skill3contribution,
-      addiReplaceSpare1:
-        values?.addReplacespare1 && values?.addReplacespare1?.value
-          ? values?.addReplacespare1?.value
-          : values?.addReplacespare1,
-      addiReplaceSpare1Qty:
-        values?.addReplacespare1qty && values?.addReplacespare1qty?.value
-          ? values?.addReplacespare1qty?.value
-          : values?.addReplacespare1qty,
-      addiReplaceSpare2:
-        values?.addReplacespare2 && values?.addReplacespare2?.value
-          ? values?.addReplacespare2?.value
-          : values?.addReplacespare2,
-      addiReplaceSpare2Qty:
-        values?.addReplacespare2qty && values?.addReplacespare2qty?.value
-          ? values?.addReplacespare2qty?.value
-          : values?.addReplacespare2qty,
-      addiReplaceSpare3:
-        values?.addReplacespare3 && values?.addReplacespare3?.value
-          ? values?.addReplacespare3?.value
-          : values?.addReplacespare3,
-      addiReplaceSpare3Qty:
-        values?.addReplacespare3qty && values?.addReplacespare3qty?.value
-          ? values?.addReplacespare3qty?.value
-          : values?.addReplacespare3qty,
-      consumable1:
-        values?.Consumable1 && values?.Consumable1?.value
-          ? values?.Consumable1?.value
-          : values?.Consumable1,
-      consumable1Qty:
-        values?.Consumable1qty && values?.consumable1Qty?.value
-          ? values?.consumable1Qty?.value
-          : values?.consumable1Qty,
-      consumable2:
-        values?.Consumable2 && values?.consumable2?.value
-          ? values?.consumable2?.value
-          : values?.consumable2,
-      consumable2Qty:
-        values?.Consumable2qty && values?.Consumable2qty?.value
-          ? values?.Consumable2qty?.value
-          : values?.Consumable2qty,
-      consumable3:
-        values?.Consumable3 && values?.Consumable3?.value
-          ? values?.Consumable3?.value
-          : values?.Consumable3,
-      consumable3Qty:
-        values?.Consumable3qty && values?.Consumable3qty?.value
-          ? values?.Consumable3qty?.value
-          : values?.Consumable3qty,
-      consumable4:
-        values?.Consumable4 && values?.Consumable4?.value
-          ? values?.Consumable4?.value
-          : values?.Consumable4,
-      consumable4Qty:
-        values?.Consumable4qty && values?.Consumable4qty?.value
-          ? values?.Consumable4qty?.value
-          : values?.Consumable4qty,
-      consumable5:
-        values?.Consumable5 && values?.Consumable5?.value
-          ? values?.Consumable5?.value
-          : values?.Consumable5,
-      consumable5Qty:
-        values?.Consumable5qty && values?.Consumable5qty?.value
-          ? values?.Consumable5qty?.value
-          : values?.Consumable5qty,
-      userField1:
-        values?.userfield1 && values?.userfield1?.value
-          ? values?.userfield1?.value
-          : values?.userfield1,
-      userField2:
-        values?.userfield2 && values?.userfield2?.value
-          ? values?.userfield2?.value
-          : values?.userfield2,
-      userField3:
-        values?.userfield3 && values?.userfield3?.value
-          ? values?.userfield3?.value
-          : values?.userfield3,
-      userField4:
-        values?.userfield4 && values?.userfield4?.value
-          ? values?.userfield4?.value
-          : values?.userfield4,
-      userField5:
-        values?.userfield5 && values?.userfield5?.value
-          ? values?.userfield5?.value
-          : values?.userfield5,
+      name: values.name,
+      partNumber: values.partnumber,
+      category: values?.category?.value,
+      quantity: values.quantity,
+      partType: values?.partType?.value,
+      // fmecaId: fmecaFillterData?.fmecaId,
+      fmecaId: values.fmecaId || fmecaFillterData?.fmecaId,
+      repairable: values.repairable,
+      levelOfRepair: values.levelofrepair,
+      levelOfReplace: values.levelofreplace,
+      spare: values.spare,
+      endEffect: values.endeffect,
+      safetyImpact: values.safetyimpact,
+      reliabilityImpact: values.reliability,
+      frequency: values.frequency,
+      severity: values.severity,
+      riskIndex: values.riskindex,
+      LossOfEvident: values?.Evident1,
+      significantItem: values.Items,
+      criticalityAccept: values.acceptable,
+      LubricationservceTsk: values.lubrication,
+      conditionMonitrTsk: values.condition,
+      restoreDiscrdTsk: values.task,
+      failureFindTsk: values.failure,
+      combinationOfTsk: values.combination,
+      reDesign: values.redesign,
+      rcmnotes: values.rcmnotes,
+      pmTaskId: values.pmtaskid,
+      pmTaskType: values.PMtasktype,
+      taskIntrvlFreq: values.taskintervalFrequency,
+      taskIntrvlUnit: values.taskIntervalunit,
+      LatitudeFreqTolrnc: values.latitudeFrequency,
+      scheduleMaintenceTsk: values?.scheduledMaintenanceTask,
+      tskInteralDetermination: values?.taskInterval,
+      taskDesc: values?.taskDescription,
+      tskTimeML1: values?.tasktimeML1,
+      tskTimeML2: values?.tasktimeML2,
+      tskTimeML3: values?.tasktimeML3,
+      tskTimeML4: values?.tasktimeML4,
+      tskTimeML5: values?.tasktimeML5,
+      tskTimeML6: values?.tasktimeML6,
+      tskTimeML7: values?.tasktimeML7,
+      skill1: values?.skill1,
+      skillOneNos: values?.skill1nos,
+      skillOneContribution: values?.skill1contribution,
+      skillTwoNos: values?.skill2nos,
+      skillTwoContribution: values?.skill2contribution,
+      skill3: values?.skill3,
+      skillThreeNos: values?.skill3nos,
+      skillThreeContribution: values?.skill3contribution,
+      addiReplaceSpare1: values?.addReplacespare1,
+      addiReplaceSpare1Qty: values?.addReplacespare1qty,
+      addiReplaceSpare2: values?.addReplacespare2,
+      addiReplaceSpare2Qty: values?.addReplacespare2qty,
+      addiReplaceSpare3: values?.addReplacespare3,
+      addiReplaceSpare3Qty: values?.addReplacespare3qty,
+      consumable1: values?.Consumable1,
+      consumable1Qty: values?.Consumable1qty,
+      consumable2: values?.Consumable2,
+      consumable2Qty: values?.Consumable2qty,
+      consumable3: values?.Consumable3,
+      consumable3Qty: values?.Consumable3qty,
+      consumable4: values?.Consumable4,
+      consumable4Qty: values?.Consumable4qty,
+      consumable5: values?.Consumable5,
+      consumable5Qty: values?.Consumable5qty,
+      userField1: values?.userfield1,
+      userField2: values?.userfield2,
+      userField3: values?.userfield3,
+      userField4: values?.userfield4,
+      userField5: values?.userfield5,
       projectId: projectId,
       companyId: companyId,
       productId: productId,
@@ -1186,6 +1021,7 @@ const importExcel = (e) => {
   };
 
   const UpdatepmmraDetails = (values) => {
+    console.log("values........", values)
     const companyId = localStorage.getItem("companyId");
     Api.patch("/api/v1/pmMra/update", {
       name: name,
@@ -1197,27 +1033,27 @@ const importExcel = (e) => {
       levelOfRepair: levelofRepair,
       levelOfReplace: levelofreplace,
       fmecaId: fmecaFillterData?.fmecaId,
-      spare: spare,
+      spare: values.spare,
       endEffect: values.endeffect,
       safetyImpact: values.safetyimpact,
       reliabilityImpact: values.reliability,
       frequency: values.frequency,
-      severity: Severity,
-      riskIndex: riskIndex,
-      LossOfEvident: lossofFuntEvident,
-      significantItem: significantItem,
-      criticalityAccept: criticallyAccept,
-      LubricationservceTsk: lubrication,
-      conditionMonitrTsk: conditionMonitrTsk,
-      restoreDiscrdTsk: restoreDiscardTsk,
-      failureFindTsk: failureFindTask,
-      combinationOfTsk: combinationofTsk,
-      reDesign: reDesign,
+      severity: values.severity,
+      riskIndex: values.riskindex,
+      LossOfEvident: values.Evident1,
+      significantItem: values.Items,
+      criticalityAccept: values.acceptable,
+      LubricationservceTsk: values.lubrication,
+      conditionMonitrTsk: values.condition,
+      restoreDiscrdTsk: values.task,
+      failureFindTsk: values.failure,
+      combinationOfTsk: values.combination,
+      reDesign: values.redesign,
       rcmnotes: values.rcmnotes,
       pmTaskId: values.pmtaskid,
       pmTaskType: values.PMtasktype,
       taskIntrvlFreq: values.taskintervalFrequency,
-      taskIntrvlUnit: taskIntervalUnit,
+      taskIntrvlUnit: values.taskIntervalunit,
       LatitudeFreqTolrnc: values.latitudeFrequency,
       scheduleMaintenceTsk: values.scheduledMaintenanceTask,
       tskInteralDetermination: values.taskInterval,
@@ -1293,100 +1129,131 @@ const importExcel = (e) => {
     }, 2000);
   };
 
+  // const getFmecaFilterData = (value) => {
+  //   const filteredData = fmecaData.filter((item) => item.fmecaId === value);
+  //   setFmecaFillterData(filteredData[0]);
+  // };
+
   const getFmecaFilterData = (value) => {
     const filteredData = fmecaData.filter((item) => item.fmecaId === value);
-    setFmecaFillterData(filteredData[0]);
+    setFmecaFillterData(filteredData[0] || null);
+    // Also update the fmecaId state if needed
+    setFmecaId(value);
   };
 
   const fmecaOptions = fmecaData.map((item) => ({
     value: item?.fmecaId,
-     label: item?.failureMode,  
-    
+    label: item?.failureMode,
+
   }));
 
-const InitialValues = {
-  projectname:projectname,
-  companyId:companyId,
-  name: name,
-  companyName:companyName,
- projectId:projectId,
-  partnumber: partNumber,
-  repairable: mttrRepairable,
-  spare: mttrSpare,
-  levelofrepair: mttrLevelOfRepair,
-  levelofreplace: mttrLevelOfReplace,
-  reference: reference,
-  category: category,
-  parttype: partType,
-  quantity: quantity,
-  fmecaId: fmecaFillterData?.fmecaModelId || "",
-  // Use imported Excel data for all fields, fall back to FMECA data or empty
-  endeffect: importExcelData?.endeffect || fmecaFillterData?.endEffect || "",
-  reliability: importExcelData?.reliability || fmecaFillterData?.realibilityImpact || "",
-  severity: importExcelData?.severity || fmecaFillterData?.severity || "",
-  safetyimpact: importExcelData?.safetyimpact || fmecaFillterData?.safetyImpact || "",
-  frequency: importExcelData?.frequency || fmecaFillterData?.frequency || "",
-  riskindex: importExcelData?.riskindex || fmecaFillterData?.riskIndex || "",
-  
-  // Map all other fields from imported Excel data
-  rcmnotes: importExcelData?.rcmnotes || pmmraData?.rcmNotes || "",
-  pmtaskid: importExcelData?.pmtaskid || pmmraData?.pmTaskId || "",
-  PMtasktype: importExcelData?.PMtasktype || pmmraData?.pmTaskType || "",
-  taskintervalFrequency: importExcelData?.taskintervalFrequency || pmmraData?.taskIntrvlFreq || "",
-  latitudeFrequency: importExcelData?.latitudeFrequency || pmmraData?.LatitudeFreqTolrnc || "",
-  scheduledMaintenanceTask: importExcelData?.scheduledMaintenanceTask || pmmraData?.scheduleMaintenceTsk || "",
-  taskInterval: importExcelData?.taskInterval || pmmraData?.tskInteralDetermination || "",
-  taskDescription: importExcelData?.taskDescription || pmmraData?.taskDesc || "",
-  tasktimeML1: importExcelData?.tasktimeML1 || pmmraData?.tskTimeML1 || "",
-  tasktimeML2: importExcelData?.tasktimeML2 || pmmraData?.tskTimeML2 || "",
-  tasktimeML3: importExcelData?.tasktimeML3 || pmmraData?.tskTimeML3 || "",
-  tasktimeML4: importExcelData?.tasktimeML4 || pmmraData?.tskTimeML4 || "",
-  tasktimeML5: importExcelData?.tasktimeML5 || pmmraData?.tskTimeML5 || "",
-  tasktimeML6: importExcelData?.tasktimeML6 || pmmraData?.tskTimeML6 || "",
-  tasktimeML7: importExcelData?.tasktimeML7 || pmmraData?.tskTimeML7 || "",
-  skill1: importExcelData?.skill1 || pmmraData?.skill1 || "",
-  skill1nos: importExcelData?.skill1nos || pmmraData?.skillOneNos || "",
-  skill1contribution: importExcelData?.skill1contribution || pmmraData?.skillOneContribution || "",
-  skill2: importExcelData?.skill2 || pmmraData?.skill2 || "",
-  skill2nos: importExcelData?.skill2nos || pmmraData?.skillTwoNos || "",
-  skill2contribution: importExcelData?.skill2contribution || pmmraData?.skillTwoContribution || "",
-  skill3: importExcelData?.skill3 || pmmraData?.skill3 || "",
-  skill3nos: importExcelData?.skill3nos || pmmraData?.skillThreeNos || "",
-  skill3contribution: importExcelData?.skill3contribution || pmmraData?.skillThreeContribution || "",
-  addReplacespare1: importExcelData?.addReplacespare1 || pmmraData?.addiReplaceSpare1 || "",
-  addReplacespare1qty: importExcelData?.addReplacespare1qty || pmmraData?.addiReplaceSpare1Qty || "",
-  addReplacespare2: importExcelData?.addReplacespare2 || pmmraData?.addiReplaceSpare2 || "",
-  addReplacespare2qty: importExcelData?.addReplacespare2qty || pmmraData?.addiReplaceSpare2Qty || "",
-  addReplacespare3: importExcelData?.addReplacespare3 || pmmraData?.addiReplaceSpare3 || "",
-  addReplacespare3qty: importExcelData?.addReplacespare3qty || pmmraData?.addiReplaceSpare3Qty || "",
-  Consumable1: importExcelData?.Consumable1 || pmmraData?.consumable1 || "",
-  Consumable1qty: importExcelData?.Consumable1qty || pmmraData?.consumable1Qty || "",
-  Consumable2: importExcelData?.Consumable2 || pmmraData?.consumable2 || "",
-  Consumable2qty: importExcelData?.Consumable2qty || pmmraData?.consumable2Qty || "",
-  Consumable3: importExcelData?.Consumable3 || pmmraData?.consumable3 || "",
-  Consumable3qty: importExcelData?.Consumable3qty || pmmraData?.consumable3Qty || "",
-  Consumable4: importExcelData?.Consumable4 || pmmraData?.consumable4 || "",
-  Consumable4qty: importExcelData?.Consumable4qty || pmmraData?.consumable4Qty || "",
-  Consumable5: importExcelData?.Consumable5 || pmmraData?.consumable5 || "",
-  Consumable5qty: importExcelData?.Consumable5qty || pmmraData?.consumable5Qty || "",
-  userfield1: importExcelData?.userfield1 || pmmraData?.userField1 || "",
-  userfield2: importExcelData?.userfield2 || pmmraData?.userField2 || "",
-  userfield3: importExcelData?.userfield3 || pmmraData?.userField3 || "",
-  userfield4: importExcelData?.userfield4 || pmmraData?.userField4 || "",
-  userfield5: importExcelData?.userfield5 || pmmraData?.userField5 || "",
-  
-  // Select fields (these need special handling with {label, value} objects)
-  Evident1: pmmraData?.LossOfEvident ? { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } : "",
-  Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
-  condition: pmmraData?.conditionMonitrTsk ? { label: pmmraData?.conditionMonitrTsk, value: pmmraData?.conditionMonitrTsk } : "",
-  failure: pmmraData?.failureFindTsk ? { label: pmmraData?.failureFindTsk, value: pmmraData?.failureFindTsk } : "",
-  redesign: pmmraData?.reDesign ? { label: pmmraData?.reDesign, value: pmmraData?.reDesign } : "",
-  acceptable: pmmraData?.criticalityAccept ? { label: pmmraData?.criticalityAccept, value: pmmraData?.criticalityAccept } : "",
-  lubrication: pmmraData?.LubricationservceTsk ? { label: pmmraData?.LubricationservceTsk, value: pmmraData?.LubricationservceTsk } : "",
-  task: pmmraData?.restoreDiscrdTsk ? { label: pmmraData?.restoreDiscrdTsk, value: pmmraData?.restoreDiscrdTsk } : "",
-  combination: pmmraData?.combinationOfTsk ? { label: pmmraData?.combinationOfTsk, value: pmmraData?.combinationOfTsk } : "",
-  taskIntervalunit: pmmraData?.taskIntrvlUnit ? { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit } : "",
-};
+  const InitialValues = {
+    projectname: projectname,
+    companyId: companyId,
+    name: name,
+    companyName: companyName,
+    projectId: projectId,
+    partnumber: partNumber,
+    repairable: mttrRepairable,
+    spare: mttrSpare,
+    levelofrepair: mttrLevelOfRepair,
+    levelofreplace: mttrLevelOfReplace,
+    reference: reference,
+    category: category,
+    parttype: partType,
+    quantity: quantity,
+    // fmecaId: fmecaFillterData?.fmecaModelId || "",
+    fmecaId: fmecaFillterData?.fmecaId || "",
+    // Use imported Excel data for all fields, fall back to FMECA data or empty
+    endeffect: importExcelData?.endeffect || fmecaFillterData?.endEffect || "",
+    reliability: importExcelData?.reliability || fmecaFillterData?.realibilityImpact || "",
+    severity: importExcelData?.severity || fmecaFillterData?.severity || "",
+    safetyimpact: importExcelData?.safetyimpact || fmecaFillterData?.safetyImpact || "",
+    frequency: importExcelData?.frequency || fmecaFillterData?.frequency || "",
+    riskindex: importExcelData?.riskindex || fmecaFillterData?.riskIndex || "",
+
+    // Map all other fields from imported Excel data
+    rcmnotes: importExcelData?.rcmnotes || pmmraData?.rcmNotes || "",
+    pmtaskid: importExcelData?.pmtaskid || pmmraData?.pmTaskId || "",
+    PMtasktype: importExcelData?.PMtasktype || pmmraData?.pmTaskType || "",
+    taskintervalFrequency: importExcelData?.taskintervalFrequency || pmmraData?.taskIntrvlFreq || "",
+    latitudeFrequency: importExcelData?.latitudeFrequency || pmmraData?.LatitudeFreqTolrnc || "",
+    scheduledMaintenanceTask: importExcelData?.scheduledMaintenanceTask || pmmraData?.scheduleMaintenceTsk || "",
+    taskInterval: importExcelData?.taskInterval || pmmraData?.tskInteralDetermination || "",
+    taskDescription: importExcelData?.taskDescription || pmmraData?.taskDesc || "",
+    tasktimeML1: importExcelData?.tasktimeML1 || pmmraData?.tskTimeML1 || "",
+    tasktimeML2: importExcelData?.tasktimeML2 || pmmraData?.tskTimeML2 || "",
+    tasktimeML3: importExcelData?.tasktimeML3 || pmmraData?.tskTimeML3 || "",
+    tasktimeML4: importExcelData?.tasktimeML4 || pmmraData?.tskTimeML4 || "",
+    tasktimeML5: importExcelData?.tasktimeML5 || pmmraData?.tskTimeML5 || "",
+    tasktimeML6: importExcelData?.tasktimeML6 || pmmraData?.tskTimeML6 || "",
+    tasktimeML7: importExcelData?.tasktimeML7 || pmmraData?.tskTimeML7 || "",
+    skill1: importExcelData?.skill1 || pmmraData?.skill1 || "",
+    skill1nos: importExcelData?.skill1nos || pmmraData?.skillOneNos || "",
+    skill1contribution: importExcelData?.skill1contribution || pmmraData?.skillOneContribution || "",
+    skill2: importExcelData?.skill2 || pmmraData?.skill2 || "",
+    skill2nos: importExcelData?.skill2nos || pmmraData?.skillTwoNos || "",
+    skill2contribution: importExcelData?.skill2contribution || pmmraData?.skillTwoContribution || "",
+    skill3: importExcelData?.skill3 || pmmraData?.skill3 || "",
+    skill3nos: importExcelData?.skill3nos || pmmraData?.skillThreeNos || "",
+    skill3contribution: importExcelData?.skill3contribution || pmmraData?.skillThreeContribution || "",
+    addReplacespare1: importExcelData?.addReplacespare1 || pmmraData?.addiReplaceSpare1 || "",
+    addReplacespare1qty: importExcelData?.addReplacespare1qty || pmmraData?.addiReplaceSpare1Qty || "",
+    addReplacespare2: importExcelData?.addReplacespare2 || pmmraData?.addiReplaceSpare2 || "",
+    addReplacespare2qty: importExcelData?.addReplacespare2qty || pmmraData?.addiReplaceSpare2Qty || "",
+    addReplacespare3: importExcelData?.addReplacespare3 || pmmraData?.addiReplaceSpare3 || "",
+    addReplacespare3qty: importExcelData?.addReplacespare3qty || pmmraData?.addiReplaceSpare3Qty || "",
+    Consumable1: importExcelData?.Consumable1 || pmmraData?.consumable1 || "",
+    Consumable1qty: importExcelData?.Consumable1qty || pmmraData?.consumable1Qty || "",
+    Consumable2: importExcelData?.Consumable2 || pmmraData?.consumable2 || "",
+    Consumable2qty: importExcelData?.Consumable2qty || pmmraData?.consumable2Qty || "",
+    Consumable3: importExcelData?.Consumable3 || pmmraData?.consumable3 || "",
+    Consumable3qty: importExcelData?.Consumable3qty || pmmraData?.consumable3Qty || "",
+    Consumable4: importExcelData?.Consumable4 || pmmraData?.consumable4 || "",
+    Consumable4qty: importExcelData?.Consumable4qty || pmmraData?.consumable4Qty || "",
+    Consumable5: importExcelData?.Consumable5 || pmmraData?.consumable5 || "",
+    Consumable5qty: importExcelData?.Consumable5qty || pmmraData?.consumable5Qty || "",
+    userfield1: importExcelData?.userfield1 || pmmraData?.userField1 || "",
+    userfield2: importExcelData?.userfield2 || pmmraData?.userField2 || "",
+    userfield3: importExcelData?.userfield3 || pmmraData?.userField3 || "",
+    userfield4: importExcelData?.userfield4 || pmmraData?.userField4 || "",
+    userfield5: importExcelData?.userfield5 || pmmraData?.userField5 || "",
+
+    // Select fields (these need special handling with {label, value} objects)
+    // Evident1: pmmraData?.LossOfEvident ? { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } : "",
+    // Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
+    // condition: pmmraData?.conditionMonitrTsk ? { label: pmmraData?.conditionMonitrTsk, value: pmmraData?.conditionMonitrTsk } : "",
+    // failure: pmmraData?.failureFindTsk ? { label: pmmraData?.failureFindTsk, value: pmmraData?.failureFindTsk } : "",
+    // redesign: pmmraData?.reDesign ? { label: pmmraData?.reDesign, value: pmmraData?.reDesign } : "",
+    // acceptable: pmmraData?.criticalityAccept ? { label: pmmraData?.criticalityAccept, value: pmmraData?.criticalityAccept } : "",
+    // lubrication: pmmraData?.LubricationservceTsk ? { label: pmmraData?.LubricationservceTsk, value: pmmraData?.LubricationservceTsk } : "",
+    // task: pmmraData?.restoreDiscrdTsk ? { label: pmmraData?.restoreDiscrdTsk, value: pmmraData?.restoreDiscrdTsk } : "",
+    // combination: pmmraData?.combinationOfTsk ? { label: pmmraData?.combinationOfTsk, value: pmmraData?.combinationOfTsk } : "",
+    // taskIntervalunit: pmmraData?.taskIntrvlUnit ? { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit } : "",
+
+    Evident1: pmmraData?.LossOfEvident || null,
+    Items: pmmraData?.significantItem || null,
+    condition: pmmraData?.conditionMonitrTsk || null,
+    failure: pmmraData?.failureFindTsk || null,
+    redesign: pmmraData?.reDesign || null,
+    acceptable: pmmraData?.criticalityAccept || null,
+    lubrication: pmmraData?.LubricationservceTsk || null,
+    task: pmmraData?.restoreDiscrdTsk || null,
+    combination: pmmraData?.combinationOfTsk || null,
+    taskIntervalunit: pmmraData?.taskIntrvlUnit || null,
+  };
+
+
+  // Add this inside your component to debug
+  // useEffect(() => {
+  //   console.log("Current fmecaId values:", {
+  //     formikValue: values.fmecaId,
+  //     fmecaFillterDataId: fmecaFillterData?.fmecaId,
+  //     fmecaState: fmecaId
+  //   });
+  // }, [values.fmecaId, fmecaFillterData, fmecaId]);
+
+
   return (
     <div style={{ marginTop: "90px" }} className="mx-4">
       {isLoading ? (
@@ -1495,7 +1362,8 @@ const InitialValues = {
                   style={{ marginLeft: "10px", borderStyle: "none", width: "40px", minWidth: "40px", padding: "0px", }}
 
                   onClick={() => {
-                    exportToExcel(InitialValues);
+                    // exportToExcel(InitialValues);
+                    console.log(InitialValues, "InitialValues")
                   }}
                 >
                   <FontAwesomeIcon
@@ -1515,6 +1383,7 @@ const InitialValues = {
                 pmmraId && fmecaId
                   ? UpdatepmmraDetails(values)
                   : submit(values, { resetForm })
+                // console.log(pmmraId," => pmmraId", fmecaId," => fmecaId")
               }
             >
               {(formik) => {
@@ -1545,7 +1414,7 @@ const InitialValues = {
                         </div>
                         <Row>
                           <Col>
-                            <Form.Group>
+                            {/* <Form.Group>
                               <Label notify={true}>FMECA Mode</Label>
                               <Select
                                 name="FmecaId"
@@ -1570,6 +1439,64 @@ const InitialValues = {
                                   getFmecaFilterData(e.value);
                                 }}
                               />
+                            </Form.Group> */}
+                            <Form.Group>
+                              <Label notify={true}>FMECA Mode</Label>
+                              {/* <Select
+                                name="fmecaId"
+                                className="mt-1"
+                                placeholder="Select Fmeca Mode"
+                                value={fmecaOptions.find(option => option.value === values.fmecaId) || null}
+                                options={fmecaOptions}
+                                styles={customStyles}
+                                onBlur={handleBlur}
+                                isDisabled={
+                                  writePermission === true ||
+                                    writePermission === "undefined" ||
+                                    role === "admin" ||
+                                    (isOwner === true && createdBy === userId)
+                                    ? null
+                                    : "disabled"
+                                }
+                                onChange={(selectedOption) => {
+                                  setFieldValue("fmecaId", selectedOption?.value || "");
+                                  getFmecaFilterData(selectedOption?.value);
+                                }}
+                              /> */}
+
+
+                              <Select
+                                name="fmecaId"
+                                className="mt-1"
+                                placeholder="Select Fmeca Mode"
+                                value={fmecaOptions.find(option => option.value === values.fmecaId) || null}
+                                options={fmecaOptions}
+                                styles={customStyles}
+                                onBlur={handleBlur}
+                                isDisabled={
+                                  writePermission === true ||
+                                    writePermission === "undefined" ||
+                                    role === "admin" ||
+                                    (isOwner === true && createdBy === userId)
+                                    ? null
+                                    : "disabled"
+                                }
+                                onChange={(selectedOption) => {
+                                  const selectedValue = selectedOption?.value || "";
+                                  setFieldValue("fmecaId", selectedValue);
+                                  getFmecaFilterData(selectedValue);
+                                  console.log("FMECA ID selected:", selectedValue); // Debug log
+                                }}
+                              />
+
+
+                              <ErrorMessage
+                                name="fmecaId"
+                                component="div"
+                                className="error-message"
+                              />
+
+
                             </Form.Group>
                           </Col>
                         </Row>
@@ -1716,6 +1643,7 @@ const InitialValues = {
                                 <Label notify={true}>
                                   Loss of Function Evident?
                                 </Label>
+                                {console.log(allConnectedData, "allConnectedData")}
                                 {allConnectedData.some(
                                   (item) =>
                                     item.sourceName === "Evident1" &&
@@ -1738,37 +1666,60 @@ const InitialValues = {
                                         : null;
 
                                     return (
+                                      // <Select
+                                      //   name="Evident1"
+                                      //   className="mt-1"
+                                      //   placeholder="Evident1"
+                                      //   // value={
+                                      //   //   values?.Evident1
+                                      //   //     ? {
+                                      //   //       label: values?.Evident1,
+                                      //   //       value: values?.Evident1,
+                                      //   //     }
+                                      //   //     : ""
+                                      //   // }
+                                      //   value={
+                                      //     values.Evident1
+                                      //       ? { label: values.Evident1, value: values.Evident1 }
+                                      //       : null
+                                      //   }
+                                      //   style={{ backgroundColor: "red" }}
+                                      //   options={options}
+                                      //   styles={customStyles}
+                                      //   onBlur={handleBlur}
+                                      //   isDisabled={
+                                      //     writePermission === true ||
+                                      //       writePermission === "undefined" ||
+                                      //       role === "admin" ||
+                                      //       (isOwner === true &&
+                                      //         createdBy === userId)
+                                      //       ? null
+                                      //       : "disabled"
+                                      //   }
+                                      //   onChange={(e) => {
+                                      //     setFieldValue("Evident1", e.value);
+                                      //     getAllConnectedLibrary(
+                                      //       e.value,
+                                      //       "Evident1"
+                                      //     );
+                                      //   }}
+                                      // />
+
                                       <Select
                                         name="Evident1"
                                         className="mt-1"
                                         placeholder="Evident1"
                                         value={
-                                          values?.Evident1
-                                            ? {
-                                              label: values?.Evident1,
-                                              value: values?.Evident1,
-                                            }
-                                            : ""
+                                          values.Evident1
+                                            ? { label: values.Evident1, value: values.Evident1 }
+                                            : null
                                         }
-                                        style={{ backgroundColor: "red" }}
                                         options={options}
                                         styles={customStyles}
                                         onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("Evident1", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Evident1"
-                                          );
+                                        onChange={(selectedOption) => {
+                                          setFieldValue("Evident1", selectedOption?.value || "");
+                                          getAllConnectedLibrary(selectedOption?.value, "Evident1");
                                         }}
                                       />
                                     );
@@ -1784,7 +1735,7 @@ const InitialValues = {
                                           label: values?.Evident1,
                                           value: values?.Evident1,
                                         }
-                                        : ""
+                                        : null
                                     }
                                     style={{ backgroundColor: "red" }}
                                     options={[
@@ -1856,7 +1807,7 @@ const InitialValues = {
                                               label: values?.Items,
                                               value: values?.Items,
                                             }
-                                            : ""
+                                            : null
                                         }
                                         style={{ backgroundColor: "red" }}
                                         options={options}
@@ -1892,7 +1843,7 @@ const InitialValues = {
                                           label: values?.Items,
                                           value: values?.Items,
                                         }
-                                        : ""
+                                        : null
                                     }
                                     style={{ backgroundColor: "red" }}
                                     options={[
@@ -1963,7 +1914,7 @@ const InitialValues = {
                                               label: values?.condition,
                                               value: values?.condition,
                                             }
-                                            : ""
+                                            : null
                                         }
                                         style={{ backgroundColor: "red" }}
                                         options={options}
@@ -1999,7 +1950,7 @@ const InitialValues = {
                                           label: values?.condition,
                                           value: values?.condition,
                                         }
-                                        : ""
+                                        : null
                                     }
                                     style={{ backgroundColor: "red" }}
                                     options={[
@@ -2072,7 +2023,7 @@ const InitialValues = {
                                               label: values?.failure,
                                               value: values?.failure,
                                             }
-                                            : ""
+                                            : null
                                         }
                                         style={{ backgroundColor: "red" }}
                                         options={options}
@@ -2108,7 +2059,7 @@ const InitialValues = {
                                           label: values?.failure,
                                           value: values?.failure,
                                         }
-                                        : ""
+                                        : null
                                     }
                                     style={{ backgroundColor: "red" }}
                                     options={[
@@ -2180,7 +2131,7 @@ const InitialValues = {
                                               label: values?.redesign,
                                               value: values?.redesign,
                                             }
-                                            : ""
+                                            : null
                                         }
                                         style={{ backgroundColor: "red" }}
                                         options={options}
@@ -2216,7 +2167,7 @@ const InitialValues = {
                                           label: values?.redesign,
                                           value: values?.redesign,
                                         }
-                                        : ""
+                                        : null
                                     }
                                     style={{ backgroundColor: "red" }}
                                     options={[
@@ -2292,7 +2243,7 @@ const InitialValues = {
                                               label: values?.acceptable,
                                               value: values?.acceptable,
                                             }
-                                            : ""
+                                            : null
                                         }
                                         style={{ backgroundColor: "red" }}
                                         options={options}
@@ -2328,7 +2279,7 @@ const InitialValues = {
                                           label: values?.acceptable,
                                           value: values?.acceptable,
                                         }
-                                        : ""
+                                        : null
                                     }
                                     style={{ backgroundColor: "red" }}
                                     options={[
@@ -2403,7 +2354,7 @@ const InitialValues = {
                                               label: values?.lubrication,
                                               value: values?.lubrication,
                                             }
-                                            : ""
+                                            : null
                                         }
                                         style={{ backgroundColor: "red" }}
                                         options={options}
@@ -2439,7 +2390,7 @@ const InitialValues = {
                                           label: values?.lubrication,
                                           value: values?.lubrication,
                                         }
-                                        : ""
+                                        : null
                                     }
                                     style={{ backgroundColor: "red" }}
                                     options={[
@@ -2512,7 +2463,7 @@ const InitialValues = {
                                               label: values?.task,
                                               value: values?.task,
                                             }
-                                            : ""
+                                            : null
                                         }
                                         style={{ backgroundColor: "red" }}
                                         options={options}
@@ -2548,7 +2499,7 @@ const InitialValues = {
                                           label: values?.task,
                                           value: values?.task,
                                         }
-                                        : ""
+                                        : null
                                     }
                                     style={{ backgroundColor: "red" }}
                                     options={[
@@ -2620,7 +2571,7 @@ const InitialValues = {
                                               label: values?.combination,
                                               value: values?.combination,
                                             }
-                                            : ""
+                                            : null
                                         }
                                         style={{ backgroundColor: "red" }}
                                         options={options}
@@ -2656,7 +2607,7 @@ const InitialValues = {
                                           label: values?.combination,
                                           value: values?.combination,
                                         }
-                                        : ""
+                                        : null
                                     }
                                     style={{ backgroundColor: "red" }}
                                     options={[
@@ -2691,21 +2642,15 @@ const InitialValues = {
                               <Form.Group className="mt-3">
                                 <Label notify={true}>RCM Notes</Label>
                                 {allSepareteData.some(
-                                  (item) =>
-                                    item.sourceName === "rcmnotes" &&
-                                    item.sourceValue
+                                  (item) => item.sourceName === "rcmnotes" && item.sourceValue
                                 ) ? (
                                   (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "rcmnotes"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "rcmnotes"
-                                      ) || [];
+                                    const seperateFilteredData = allSepareteData?.filter(
+                                      (item) => item?.sourceName === "rcmnotes"
+                                    ) || [];
+                                    const connectedFilteredData = allConnectedData?.filter(
+                                      (item) => item?.destinationName === "rcmnotes"
+                                    ) || [];
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
@@ -2722,15 +2667,7 @@ const InitialValues = {
                                         name="rcmnotes"
                                         className="mt-1"
                                         placeholder="Rcm Notes"
-                                        value={
-                                          values?.rcmnotes
-                                            ? {
-                                              label: values?.rcmnotes,
-                                              value: values?.rcmnotes,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
+                                        value={options.find(option => option.value === values.rcmnotes) || null}
                                         options={options}
                                         styles={customStyles}
                                         onBlur={handleBlur}
@@ -2738,17 +2675,13 @@ const InitialValues = {
                                           writePermission === true ||
                                             writePermission === "undefined" ||
                                             role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
+                                            (isOwner === true && createdBy === userId)
+                                            ? false
+                                            : true
                                         }
-                                        onChange={(e) => {
-                                          setFieldValue("rcmnotes", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "rcmnotes"
-                                          );
+                                        onChange={(selectedOption) => {
+                                          setFieldValue("rcmnotes", selectedOption?.value || "");
+                                          getAllConnectedLibrary(selectedOption?.value, "rcmnotes");
                                         }}
                                       />
                                     );
@@ -2757,19 +2690,16 @@ const InitialValues = {
                                   <Select
                                     name="rcmnotes"
                                     className="mt-1"
-                                    placeholder="rcmnotes"
+                                    placeholder="Rcm Notes"
                                     value={
-                                      values?.rcmnotes
-                                        ? {
-                                          label: values?.rcmnotes,
-                                          value: values?.rcmnotes,
-                                        }
-                                        : ""
+                                      values.rcmnotes
+                                        ? { label: values.rcmnotes, value: values.rcmnotes }
+                                        : null
                                     }
-                                    style={{ backgroundColor: "red" }}
                                     options={[
                                       { label: "Yes", value: "Yes" },
                                       { label: "No", value: "No" },
+                                      // Add more options if needed, or consider making this a text input
                                     ]}
                                     styles={customStyles}
                                     onBlur={handleBlur}
@@ -2778,15 +2708,12 @@ const InitialValues = {
                                         writePermission === "undefined" ||
                                         role === "admin" ||
                                         (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
+                                        ? false
+                                        : true
                                     }
-                                    onChange={(e) => {
-                                      setFieldValue("rcmnotes", e.value);
-                                      getAllConnectedLibrary(
-                                        e.value,
-                                        "rcmnotes"
-                                      );
+                                    onChange={(selectedOption) => {
+                                      setFieldValue("rcmnotes", selectedOption?.value || "");
+                                      getAllConnectedLibrary(selectedOption?.value, "rcmnotes");
                                     }}
                                   />
                                 )}
@@ -2850,7 +2777,7 @@ const InitialValues = {
                                                 label: values?.pmtaskid,
                                                 value: values?.pmtaskid,
                                               }
-                                              : ""
+                                              : null
                                           }
                                           style={{ backgroundColor: "red" }}
                                           options={options}
@@ -2940,7 +2867,7 @@ const InitialValues = {
                                                 label: values?.PMtasktype,
                                                 value: values?.PMtasktype,
                                               }
-                                              : ""
+                                              : null
                                           }
                                           style={{ backgroundColor: "red" }}
                                           options={options}
@@ -4144,7 +4071,7 @@ const InitialValues = {
                                               : "disabled"
                                           }
                                           onChange={(e) => {
-                                         
+
                                             setFieldValue("skill1", e.value);
                                             getAllConnectedLibrary(e.value, "skill1");
                                           }}
@@ -5476,14 +5403,14 @@ const InitialValues = {
                                         name="Consumable1"
                                         className="mt-1"
                                         placeholder="Consumable 1"
-                                        value={
-                                          values?.Consumable1
-                                            ? {
-                                              label: values?.Consumable1,
-                                              value: values?.Consumable1,
-                                            }
-                                            : ""
-                                        }
+                                        // value={
+                                        //   values?.Consumable1
+                                        //     ? {
+                                        //       label: values?.Consumable1,
+                                        //       value: values?.Consumable1,
+                                        //     }
+                                        //     : ""
+                                        // }
                                         style={{ backgroundColor: "red" }}
                                         options={options}
                                         styles={customStyles}

@@ -195,6 +195,8 @@ function ConnectedLibrary(props) {
 
   //create Api
   const createConnectLibrary = (values) => {
+
+    console.log(values,"values.....")
     setIsLoading(true);
     const comId = localStorage.getItem("companyId");
     Api.post("api/v1/library/create/connect/value", {
