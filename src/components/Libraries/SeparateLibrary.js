@@ -75,7 +75,7 @@ function SeparateLibrary(props) {
     {
       title: "Fields",
       field: "sourceName",
-      render: (rowData) => rowData.sourceName.charAt(0).toUpperCase() + rowData.sourceName.slice(1),
+      render: (rowData) => rowData?.sourceName?.charAt(0).toUpperCase() + rowData?.sourceName?.slice(1),
     },
     {
       title: "Value",
@@ -158,6 +158,7 @@ function SeparateLibrary(props) {
       }
 
       getAllSeprateLibraryData();
+    
     });
   };
   // update Api
@@ -222,8 +223,8 @@ function SeparateLibrary(props) {
           </div>
           <Formik
             initialValues={{
-              Module: selectModule ? { label: selectModule, value: selectModule } : "",
-              Field: selectModuleFieldValue ? { label: selectModuleFieldValue, value: selectModuleFieldValue } : "",
+              Module:"",
+              Field: "",
               Value: "",
             }}
             validationSchema={validation}

@@ -108,7 +108,10 @@ export default function ProjectDetails(props) {
       .min(0, "Min value 0.")
       .max(24, "Max value 24.")
       .required("Average operational hours per day is required"),
-    avghour: Yup.number().max(8784, "max value 8784").required("Average annual operational hours is required"),
+    avghour: Yup.number()  .min(1, "Minimum value is 1").max(8784, "max value 8784").required("Average annual operational hours is required")  .test("decimals", "Only up to 2 decimal places allowed", (value) => {
+    if (value === undefined || value === null) return true;
+    return /^\d+(\.\d{1,2})?$/.test(value.toString());
+  }),
     environment: Yup.object().required("Environment is required"),
 productlife: Yup.number()
   .typeError("Product life must be a number")
