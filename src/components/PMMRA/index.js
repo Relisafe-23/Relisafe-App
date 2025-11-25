@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef  } from "react";
 import { Row, Col, Card, Form, Modal, Button } from "react-bootstrap";
 import Label from "../core/Label";
 import { Formik, ErrorMessage } from "formik";
@@ -198,6 +198,7 @@ const Validation = Yup.object().shape({
 });
 
 export default function PMMRA(props) {
+  
   // const pmmraPermission = props?.location?.state?.pmmraWrite;
   const projectId = props?.location?.state?.projectId
     ? props?.location?.state?.projectId
@@ -297,9 +298,41 @@ export default function PMMRA(props) {
 
             // Map Excel column names to form field names
             switch (key) {
+
               case "endEffect":
                 mappedData.endeffect = value;
                 break;
+                // Add these case statements to your importExcel function's switch statement
+case "Evident1":
+  mappedData.Evident1 = value;
+  break;
+case "Items":
+  mappedData.Items = value;
+  break;
+case "condition":
+  mappedData.condition = value;
+  break;
+case "failure":
+  mappedData.failure = value;
+  break;
+case "redesign":
+  mappedData.redesign = value;
+  break;
+case "acceptable":
+  mappedData.acceptable = value;
+  break;
+case "lubrication":
+  mappedData.lubrication = value;
+  break;
+case "task":
+  mappedData.task = value;
+  break;
+case "combination":
+  mappedData.combination = value;
+  break;
+case "taskIntervalunit":
+  mappedData.taskIntervalunit = value;
+  break;
               case "safetyImpact":
                 mappedData.safetyimpact = value;
                 break;
@@ -329,6 +362,9 @@ export default function PMMRA(props) {
                 break;
               case "LatitudeFreqTolrnc":
                 mappedData.latitudeFrequency = value;
+                break;
+                case "lossofFuntEvident":
+                mappedData.Evident1 = value;  
                 break;
               case "scheduleMaintenceTsk":
                 mappedData.scheduledMaintenanceTask = value;
@@ -450,6 +486,7 @@ export default function PMMRA(props) {
               case "userField5":
                 mappedData.userfield5 = value;
                 break;
+                
               default:
                 // For any unmapped fields, use the original key
                 mappedData[key] = value;
@@ -457,6 +494,7 @@ export default function PMMRA(props) {
           });
 
         setImportExcelData(mappedData);
+        console.log("Mapped Data: ", mappedData);
         toast.success("Excel data imported successfully!", {
           position: toast.POSITION.TOP_RIGHT,
         });
@@ -999,6 +1037,8 @@ export default function PMMRA(props) {
 
   const submit = (values) => {
     const companyId = localStorage.getItem("companyId");
+    console.log("LossOfEvident....",lossofFuntEvident)
+    console.log("values..while creatae..",values)
 
     Api.post("/api/v1/pmMra/", {
       name: name,
@@ -1033,33 +1073,33 @@ export default function PMMRA(props) {
         values?.frequency && values?.frequency?.value
           ? values?.frequency?.value
           : values?.frequency,
-      severity: Severity ? Severity : value?.severity?.value,
-      riskIndex: riskIndex ? riskIndex : value?.riskIndex?.value,
+      severity: Severity ? Severity : value?.severity?.value || values.severity,
+      riskIndex: riskIndex ? riskIndex : value?.riskIndex?.value || values.riskindex,
       LossOfEvident: lossofFuntEvident
         ? lossofFuntEvident
-        : value?.lossofFuntEvident?.value,
+        : value?.lossofFuntEvident?.value || values.Evident1,
       significantItem: significantItem
         ? significantItem
-        : value?.significantItem?.value,
+        : value?.significantItem?.value || values.Items,
       criticalityAccept: criticallyAccept
         ? criticallyAccept
-        : value?.criticallyAccept?.value,
+        : value?.criticallyAccept?.value || values.acceptable,
       LubricationservceTsk: lubrication
         ? lubrication
-        : value?.lubrication?.value,
+        : value?.lubrication?.value || values.lubrication,
       conditionMonitrTsk: conditionMonitrTsk
         ? conditionMonitrTsk
-        : value?.conditionMonitrTsk?.value,
+        : value?.conditionMonitrTsk?.value || values.condition,
       restoreDiscrdTsk: restoreDiscardTsk
         ? restoreDiscardTsk
-        : value?.restoreDiscardTsk?.value,
+        : value?.restoreDiscardTsk?.value || values.task,
       failureFindTsk: failureFindTask
         ? failureFindTask
-        : value?.failureFindTask?.value,
+        : value?.failureFindTask?.value || values.failure,
       combinationOfTsk: combinationofTsk
         ? combinationofTsk
-        : value?.combinationofTsk?.value,
-      reDesign: reDesign ? reDesign : value?.reDesign?.value,
+        : value?.combinationofTsk?.value || values.combination,
+      reDesign: reDesign ? reDesign : value?.reDesign?.value || values.redesign,
       rcmnotes:
         values?.rcmnotes && values?.rcmnotes?.value
           ? values?.rcmnotes?.value
@@ -1078,7 +1118,7 @@ export default function PMMRA(props) {
           : values?.taskintervalFrequency,
       taskIntrvlUnit: taskIntervalUnit
         ? taskIntervalUnit
-        : value?.taskIntervalUnit?.value,
+        : value?.taskIntervalUnit?.value || values.taskIntervalunit,
       LatitudeFreqTolrnc:
         values?.latitudeFrequency && values?.latitudeFrequency?.value
           ? values?.latitudeFrequency?.value
@@ -1195,7 +1235,7 @@ export default function PMMRA(props) {
       consumable2:
         values?.Consumable2 && values?.consumable2?.value
           ? values?.consumable2?.value
-          : values?.consumable2,
+          : values?.Consumable2,
       consumable2Qty:
         values?.Consumable2qty && values?.Consumable2qty?.value
           ? values?.Consumable2qty?.value
@@ -1499,16 +1539,16 @@ export default function PMMRA(props) {
     userfield5: importExcelData?.userfield5 || pmmraData?.userField5 || "",
 
     // Select fields (these need special handling with {label, value} objects)
-    Evident1: pmmraData?.LossOfEvident || "",
-    Items: pmmraData?.significantItem || "",
-    condition: pmmraData?.conditionMonitrTsk || "",
-    failure: pmmraData?.failureFindTsk || "",
-    redesign: pmmraData?.reDesign || "",
-    acceptable: pmmraData?.criticalityAccept || "",
-    lubrication: pmmraData?.LubricationservceTsk || "",
-    task: pmmraData?.restoreDiscrdTsk || "",
-    combination: pmmraData?.combinationOfTsk || "",
-    taskIntervalunit: pmmraData?.taskIntrvlUnit || "",
+  Evident1: importExcelData?.Evident1 || pmmraData?.LossOfEvident || "",
+  Items: importExcelData?.Items || pmmraData?.significantItem || "",
+  condition: importExcelData?.condition || pmmraData?.conditionMonitrTsk || "",
+  failure: importExcelData?.failure || pmmraData?.failureFindTsk || "",
+  redesign: importExcelData?.redesign || pmmraData?.reDesign || "",
+  acceptable: importExcelData?.acceptable || pmmraData?.criticalityAccept || "",
+  lubrication: importExcelData?.lubrication || pmmraData?.LubricationservceTsk || "",
+  task: importExcelData?.task || pmmraData?.restoreDiscrdTsk || "",
+  combination: importExcelData?.combination || pmmraData?.combinationOfTsk || "",
+  taskIntervalunit: importExcelData?.taskIntervalunit || pmmraData?.taskIntrvlUnit || "",
     // Evident1: pmmraData?.LossOfEvident || { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } || "",
     // Items: pmmraData?.significantItem || { label: pmmraData?.significantItem, value: pmmraData?.significantItem } || "",
     // condition: pmmraData?.conditionMonitrTsk || { label: pmmraData?.conditionMonitrTsk, value: pmmraData?.conditionMonitrTsk } || "",
