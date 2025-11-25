@@ -957,7 +957,7 @@ function Index(props) {
     createEditComponent("function", "Function", true),
     createEditComponent("failureMode", "Failure Mode", true),
     createEditComponent("failureModeRatioAlpha", "Failure Mode Ratio Alpha (must be equal to 1)", true),
-    createEditComponent("detectableMeansDuringOperation", "Cause"),
+    createEditComponent("cause", "Cause", true),
     createEditComponent("subSystemEffect", "Sub System effect", true),
     createEditComponent("systemEffect", "System Effect", true),
     createEditComponent("endEffect", "End Effect", true),

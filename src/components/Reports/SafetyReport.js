@@ -47,7 +47,7 @@ function SafetyReport(props) {
     Category: "category", // Mapped to productId
     "Part Type": "partType", // Mapped to productId
     FR: "fr", // Mapped to productId
-    "Function associated with the hazard": "function", // Mapped to safetyData
+    // "Function associated with the hazard": "function", // Mapped to safetyData
     Hazard: "failureMode", // Mapped to safetyData
     "Mode of Operation": "modeOfOperation", // Mapped to safetyData
     "Hazard Cause": "hazardCause", // Mapped to safetyData
@@ -91,7 +91,7 @@ function SafetyReport(props) {
     "Category",
     "Part Type",
     "FR",
-    "Function associated with the hazard",
+    // "Function associated with the hazard",
     "Hazard",
     "Mode of Operation",
     "Hazard Cause",
@@ -107,18 +107,18 @@ function SafetyReport(props) {
     "Design Mitigation",
     "Mitigation Responsibility",
     "Mitigation Evidence",
-    "Operational/Maintenance Mitigation",
+    "Opernal Maintan Mitigation",
     "Residual Severity ((impact))",
     "Residual Likelihood (probability)",
     "Residual Risk Level",
     "Hazard Status",
     "FTA Name/ID",
-    "Other Relevant Information",
+    // "Other Relevant Information",
     "User Field 1",
     "User Field 2",
-    "User Field 3",
-    "User Field 4",
-    "User Field 5",
+    // "User Field 3",
+    // "User Field 4",
+    // "User Field 5",
   ];
   const columnWidths = {
     "Product Name": "130px",
@@ -646,41 +646,78 @@ function SafetyReport(props) {
                             ))}
                         </tr>
                       </thead>
-                      <tbody>
-                        {safetyData?.map((row, rowIndex) => (
-                          <tr key={rowIndex}>
-                            {headers.map((header) => {
-                              // If header is S.No → show rowIndex + 1
-                              if (header === "S.No") {
-                                return (
-                                  <td key={header} style={{ textAlign: "center" }}>
-                                    {rowIndex + 1}
-                                  </td>
-                                );
-                              }
+<tbody>
+  {(() => {
+    // Group hazards by product name to create separate numbering for each product
+    const productHazardMap = {};
+    let hazardCounter = 1;
+    
+    return safetyData?.map((row, rowIndex) => {
+      const productName = row?.productId?.productName || "Unknown";
+      
+      // Check if this row has any hazard-related data
+      const hasHazardData = Object.keys(headerKeyMapping).some(header => {
+        if (header === "Hazard" || header === "Mode of Operation" || header === "Hazard Cause" || 
+            header === "Effect of the Hazard" || header === "Hazard Classification") {
+          const key = headerKeyMapping[header];
+          const value = key ? row?.productId?.[key] ?? row?.safetyData?.[key] : null;
+          return value && value !== "-" && value !== "" && value !== null;
+        }
+        return false;
+      });
 
-                              const key = headerKeyMapping[header];
-                              let value = key
-                                ? row?.productId?.[key] ??
-                                row?.safetyData?.[key] ??
-                                "-"
-                                : "-";
+      // Initialize product in map if not exists
+      if (!productHazardMap[productName]) {
+        productHazardMap[productName] = 1;
+      }
 
-                              // Format FR to 6 decimal places if it’s a number
-                              if (header === "FR" && typeof value === "number") {
-                                value = value.toFixed(6);
-                              }
+      // Get hazard index for this product
+      const hazardIndex = hasHazardData ? productHazardMap[productName]++ : "";
 
-                              return (
-                                <td key={header} style={{ textAlign: "center" }}>
-                                  {value}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
+      return (
+        <tr key={rowIndex}>
+          {headers.map((header) => {
+            // If header is S.No → show rowIndex + 1
+            if (header === "S.No") {
+              return (
+                <td key={header} style={{ textAlign: "center" }}>
+                  {rowIndex + 1}
+                </td>
+              );
+            }
+            
+            // If header is Hazard → show hazard index only if row has hazard data
+            if (header === "Hazard") {
+              return (
+                <td key={header} style={{ textAlign: "center" }}>
+                  {hazardIndex}
+                </td>
+              );
+            }
 
+            const key = headerKeyMapping[header];
+            let value = key
+              ? row?.productId?.[key] ??
+              row?.safetyData?.[key] ??
+              "-"
+              : "-";
+
+            // Format FR to 6 decimal places if it's a number
+            if (header === "FR" && typeof value === "number") {
+              value = value.toFixed(6);
+            }
+
+            return (
+              <td key={header} style={{ textAlign: "center" }}>
+                {value}
+              </td>
+            );
+          })}
+        </tr>
+      );
+    });
+  })()}
+</tbody>
                     </table>
                   </div>
                 </div>

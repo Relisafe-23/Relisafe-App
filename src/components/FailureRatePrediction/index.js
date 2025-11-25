@@ -765,7 +765,7 @@ setIsSaving(true);
             enableReinitialize={true}
             initialValues={{
               name: name,
-              reference: reference,
+              reference: reference, 
               partNumber: partNumber,
               category: category,
               quantity: quantity,
