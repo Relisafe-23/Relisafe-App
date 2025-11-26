@@ -92,7 +92,7 @@ function ConnectedLibrary(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-        console.log("permission data", data);
+      
         setWritePermission(data?.modules);
       })
       .catch((error) => {
@@ -109,7 +109,7 @@ function ConnectedLibrary(props) {
         token: token,
       },
     }).then((res) => {
-      console.log("res1", res);
+    
       setIsOwner(res.data.data.isOwner);
       setCreatedBy(res.data.data.createdBy);
     });
@@ -122,7 +122,7 @@ function ConnectedLibrary(props) {
       projectId: projectId,
       companyId: companyId,
     }).then((response) => {
-      console.log("response", response.data.libraryData.moduleName)
+    
       const data = response?.data?.libraryData;
       setModuleData(data?.moduleData);
     });
@@ -173,27 +173,109 @@ function ConnectedLibrary(props) {
       },
     },
   ];
+
+const validateSameSourceDestination = (values) => {
+  const errors = {};
+
+  // Check if source field is selected in destination
+  if (values.Field && values.end && values.end.length > 0) {
+    const sourceFieldName = values.Field.value;
+    const hasSameField = values.end.some(dest => dest.value === sourceFieldName);
+    
+    if (hasSameField) {
+      toast.error("Source field cannot be selected as destination field");
+      errors.end = "Source field cannot be selected as destination field";
+    }
+  }
+
+  // Validate valueEnd array and check for duplicate destination values
+  if (values.end && values.end.length > 0) {
+    const valueEndErrors = [];
+    let hasEmptyValue = false;
+    let hasDuplicateDestination = false;
+
+    values.end.forEach((selectedOption, index) => {
+      const destinationField = selectedOption.value;
+      const destinationValue = values.valueEnd[index];
+      
+      // Check for empty values
+      if (!destinationValue || destinationValue.trim() === "") {
+        valueEndErrors[index] = "Value is required";
+        hasEmptyValue = true;
+      } 
+      // Check for duplicate destination values
+      else {
+        valueEndErrors[index] = "";
+        
+        // Check if this destination value already exists for the same field
+        const existingDestination = connectData.find(connection => {
+          // Check if any destination in this connection matches our field and value
+          return connection.destinationData.some(dest => 
+            dest.destinationName === destinationField &&
+            dest.destinationValue === destinationValue &&
+            // If editing, exclude the current row being edited
+            (!editRowData || connection.sourceId !== editRowData.sourceId)
+          );
+        });
+
+        if (existingDestination) {
+          valueEndErrors[index] = `Destination value "${destinationValue}" already exists for ${selectedOption.label}`;
+          hasDuplicateDestination = true;
+        }
+      }
+    });
+
+    if (hasEmptyValue) {
+      errors.valueEnd = valueEndErrors;
+      toast.error("Please fill all destination values");
+    }
+    
+    if (hasDuplicateDestination) {
+      errors.valueEnd = valueEndErrors;
+      toast.error("Some destination values already exist");
+    }
+  }
+
+  // Check for duplicate source value in existing connections
+  if (values.Module && values.Field && values.FieldValueAndValue.value) {
+    const sourceModule = values.Module.value;
+    const sourceField = values.Field.value;
+    const sourceValue = values.FieldValueAndValue.value;
+    
+    // Check if this source value already exists in connectData
+    const existingConnection = connectData.find(connection => 
+      connection.libraryId?.moduleName === sourceModule &&
+      connection.sourceName === sourceField &&
+      connection.sourceValue === sourceValue &&
+      // If editing, exclude the current row being edited
+      (!editRowData || connection.sourceId !== editRowData.sourceId)
+    );
+
+    if (existingConnection) {
+      toast.error(`Source value "${sourceValue}" already exists for ${sourceField} in ${sourceModule}`);
+      errors.FieldValueAndValue = {
+        value: `This source value already exists for ${sourceField}`
+      };
+    }
+  }
+
+  return errors;
+};
+
   const validation = Yup.object().shape({
     Module: Yup.object().required("Module is required"),
+    destinationModule: Yup.object().required("Destination Module is required"),
     Field: Yup.object().required("Field is required"),
-    Value: Yup.string().required("Field is required"),
+    FieldValueAndValue: Yup.object().shape({
+      value: Yup.string().required("Source value is required"),
+    }),
     end: Yup.array()
       .min(1, "Select at least one destination")
       .required("Field is required"),
-    valueEnd: Yup.array().min(1, "At least one value is required"),
+    valueEnd: Yup.array()
+      .of(Yup.string().required("Destination value is required"))
+      .min(1, "At least one value is required"),
   });
-  const validateValueEnd = (end, valueEnd) => {
-    if (end && end.length > 0) {
-      return end.every((_, index) => {
-        const value = valueEnd[index];
-        return typeof value === "string" && value.trim() !== "";
-      });
-    }
-    // If 'end' is present but 'valueEnd' is empty, return false to indicate validation failure
-    return false;
-  };
-
-  // reset the form
 
   //create Api
   const createConnectLibrary = (values) => {
@@ -210,7 +292,7 @@ function ConnectedLibrary(props) {
       destinationData: values,
     })
       .then((res) => {
-        console.log("res create", res)
+       
         const data = res.data;
         setIsLoading(false);
         if (res.status === 201) {
@@ -229,9 +311,10 @@ function ConnectedLibrary(props) {
         }
       });
   };
+
   // update Api
   const updateConnectLibrary = (values, { resetForm }) => {
-    console.log("values.....", values.destinationModule.value);
+
     const comId = localStorage.getItem("companyId");
 
     Api.put("api/v1/library/update/connect/value", {
@@ -244,10 +327,7 @@ function ConnectedLibrary(props) {
       destinationData: values,
       destinationModuleName: values.destinationModule.value,
     }).then((res) => {
-      console.log("res", res)
-      console.log("values", values)
-      // window.location.reload();
-      // setIsLoading(false);
+   
       resetForm({
         Module: "",
         destinationModule: "",
@@ -263,6 +343,7 @@ function ConnectedLibrary(props) {
       getAllConnect();
     });
   };
+
   const resetFormFields = () => {
     setEditRowData(null);
     setSelectModule("");
@@ -277,7 +358,7 @@ function ConnectedLibrary(props) {
 
   //delete-Api
   const deleteConnectLibarary = (values) => {
-    console.log(values)
+   
     setIsLoading(true);
     const sourceId = values.sourceId;
     Api.delete("api/v1/library/delete/connect/value", {
@@ -291,13 +372,11 @@ function ConnectedLibrary(props) {
       getAllConnect();
     }).catch((error) => {
     setIsLoading(false);
-    
-    // Show error toast
     toast.error("Failed to delete connection. Please try again.");
-    
     console.error("Delete error:", error);
   });
   };
+
   //get Api
   const getAllConnect = (values) => {
     // setIsLoading(true);
@@ -311,6 +390,7 @@ function ConnectedLibrary(props) {
       setConnectData(res.data.getData);
     });
   };
+
   // useffect
   useEffect(() => {
     getAllConnect();
@@ -320,7 +400,7 @@ function ConnectedLibrary(props) {
     projectSidebar();
   }, [projectId]);
 
-  console.log("@@@@sdd")
+ 
   const getCustomValue = (value) => {
 
     Api.get("api/v1/library/get/separate/module/data", {
@@ -332,6 +412,7 @@ function ConnectedLibrary(props) {
       setSeparateData(res.data.getData);
     });
   };
+
   const getDestinationValue = (selectedOptions) => {
     const fieldIds = selectedOptions.map((option) => option.id);
     Promise.all(
@@ -345,7 +426,7 @@ function ConnectedLibrary(props) {
       )
     )
       .then((responses) => {
-        console.log("response", responses)
+       
         const destinationData = responses.map(
           (response) => response.data.getData
         );
@@ -353,7 +434,6 @@ function ConnectedLibrary(props) {
       })
       .catch((error) => {
         console.error("Error fetching destination data:", error);
-        // Handle error, e.g., show error message to user
       });
   };
 
@@ -441,14 +521,18 @@ function ConnectedLibrary(props) {
               }}
               enableReinitialize={true}
               onSubmit={(values, { resetForm }) => {
-                if (validateValueEnd(values.end, values.valueEnd)) {
-                  // Custom validation passed, proceed with submission
+                // Run custom validation before submission
+                const customErrors = validateSameSourceDestination(values);
+                
+                if (Object.keys(customErrors).length === 0) {
+                  // No custom errors, proceed with submission
                   editRowData
                     ? updateConnectLibrary(values, { resetForm })
                     : createConnectLibrary(values, { resetForm });
                 }
               }}
-            //validationSchema={validation}
+              validationSchema={validation}
+              validate={validateSameSourceDestination}
             >
               {(Formik) => {
                 const {
@@ -459,11 +543,14 @@ function ConnectedLibrary(props) {
                   values,
                   resetForm,
                   touched,
+                  errors,
                 } = Formik;
+                
                 const handleFieldChange = (fieldName, fieldValue) => {
                   handleChange(fieldName)(fieldValue);
-                  setFieldValue(`errors.${fieldName}`, ""); // Reset the error
+                  setFieldValue(`errors.${fieldName}`, "");
                 };
+
                 return (
                   <Form onSubmit={handleSubmit}>
                     <div className="connected">
@@ -589,7 +676,6 @@ function ConnectedLibrary(props) {
                                 <Label>
                                   Enter custom value for {values.Field.label}
                                 </Label>
-                                {/* {console.log("values...", values)} */}
                                 <Form.Group>
                                   {namesToFilter.includes(
                                     values.Field?.value
@@ -608,7 +694,7 @@ function ConnectedLibrary(props) {
                                       onChange={(selectedOption) => {
                                         setFieldValue("FieldValueAndValue", {
                                           field: values.Field,
-                                          value: selectedOption,
+                                          value: selectedOption?.value || "",
                                         });
                                       }}
                                     />
@@ -631,7 +717,6 @@ function ConnectedLibrary(props) {
                                         if (
                                           actionMeta.action === "create-option"
                                         ) {
-                                          // Handle creating a new option
                                           setFieldValue("FieldValueAndValue", {
                                             field: values.Field.value,
                                             value: selectedOption.value,
@@ -639,7 +724,6 @@ function ConnectedLibrary(props) {
                                         } else if (
                                           actionMeta.action === "select-option"
                                         ) {
-                                          // Handle selecting an existing option
                                           setFieldValue("FieldValueAndValue", {
                                             field: values.Field.value,
                                             value: selectedOption.value,
@@ -647,7 +731,6 @@ function ConnectedLibrary(props) {
                                         }
                                       }}
                                       onCreateOption={(inputValue) => {
-                                        // This will be called when a new option is created
                                         setFieldValue("FieldValueAndValue", {
                                           field: values.Field.value,
                                           value: inputValue,
@@ -677,7 +760,7 @@ function ConnectedLibrary(props) {
                                   )}
                                   <ErrorMessage
                                     component="span"
-                                    name="FieldValueAndValue"
+                                    name="FieldValueAndValue.value"
                                     className="error text-danger"
                                   />
                                 </Form.Group>
@@ -707,10 +790,8 @@ function ConnectedLibrary(props) {
                                       value: e.value,
                                     });
 
-
                                     await getModuleFieldDetails(e.value);
                                     await getAllConnect(e.value);
-
 
                                     setTimeout(() => {
                                       if (currentField) {
@@ -732,11 +813,14 @@ function ConnectedLibrary(props) {
                                     { value: "MTTR", label: "MTTR" },
                                   ]}
                                 />
-                                <ErrorMessage
+                                {/* <ErrorMessage
                                   component="span"
                                   name="destinationModule"
                                   className="error text-danger"
-                                />
+                                /> */}
+                                {errors.destinationModule && typeof errors.destinationModule === 'string' && (
+                                  <div className="error text-danger">{errors.destinationModule}</div>
+                                )}
                               </Form.Group>
                             </Col>
                             <Col className="col-lg-4 mt-2">
@@ -752,35 +836,28 @@ function ConnectedLibrary(props) {
                                   placeholder="Select Field"
                                   name="end"
                                   options={
-
                                     moduleData
                                       ?.filter(
                                         (item) =>
                                           item.key !== "Failure Mode Ratio Alpha" &&
-                                          item.name !== "failureModeRatioAlpha"
+                                          item.name !== "failureModeRatioAlpha" &&
+                                          item.name !== values.Field?.value // Exclude source field from destination options
                                       )
                                       .map((list) => ({
                                         value: list.name,
                                         label: list.key,
                                         id: list,
                                       }))
-
-                                    // moduleData
-                                    //   ?.filter((list) => {
-                                    //     return list.name !== values.Field.label;
-                                    //   })
-                                    //   .map((list) => ({
-                                    //     value: list.name,
-                                    //     label: list.key,
-                                    //     id: list._id,
-                                    //   }))
                                   }
                                 />
-                                <ErrorMessage
+                                {/* <ErrorMessage
                                   component="span"
                                   name="end"
                                   className="error text-danger"
-                                />
+                                /> */}
+                                {errors.end && typeof errors.end === 'string' && (
+                                  <div className="error text-danger">{errors.end}</div>
+                                )}
                               </Form.Group>
                             </Col>
                             {values.end &&
@@ -850,11 +927,11 @@ function ConnectedLibrary(props) {
                                         value={values.valueEnd[index] || ""}
                                       />
                                     )}
-                                    {/* <ErrorMessage
+                                    <ErrorMessage
                                       component="span"
-                                      name={`FieldValueAndValueEnd${index}`}
+                                      name={`valueEnd[${index}]`}
                                       className="error text-danger"
-                                    /> */}
+                                    />
                                   </Form.Group>
                                 </Col>
                               ))}
