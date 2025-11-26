@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef  } from "react";
 import { Row, Col, Card, Form, Modal, Button } from "react-bootstrap";
 import Label from "../core/Label";
 import { Formik, ErrorMessage } from "formik";
@@ -74,50 +73,122 @@ const Validation = Yup.object().shape({
   rcmnotes: Yup.string().required("Rcmnotes is required").max(255),
   pmtaskid: Yup.string().required("PM Task Id is required").max(255),
   PMtasktype: Yup.string().required("PM task type Id is required").max(255),
-  taskintervalFrequency: Yup.string().required(" Task interval frequency is required").max(255),
+  taskintervalFrequency: Yup.string()
+    .required(" Task interval frequency is required")
+    .max(255),
   taskIntervalunit: Yup.string()
     .required(" Task interval unit is required")
     .matches(/^[A-Za-z\s]+$/, "Only alphabets and spaces are allowed")
     .max(255),
   taskInterval: Yup.string().required(" Task interval is required").max(255),
-  scheduledMaintenanceTask: Yup.string().required(" Scheduled maintenance task is required").max(255),
-  taskDescription: Yup.string().required(" Task Description is required").max(255),
+  scheduledMaintenanceTask: Yup.string()
+    .required(" Scheduled maintenance task is required")
+    .max(255),
+  taskDescription: Yup.string()
+    .required(" Task Description is required")
+    .max(255),
 
-  tasktimeML1: Yup.string().required("Task time ML1 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  tasktimeML2: Yup.string().required("Task time ML2 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  tasktimeML3: Yup.string().required("Task time ML3 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  tasktimeML4: Yup.string().required("Task time ML4 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  tasktimeML5: Yup.string().required("Task time ML5 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  tasktimeML6: Yup.string().required("Task time ML6 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  tasktimeML7: Yup.string().required("Task time ML7 is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  tasktimeML1: Yup.string()
+    .required("Task time ML1 is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  tasktimeML2: Yup.string()
+    .required("Task time ML2 is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  tasktimeML3: Yup.string()
+    .required("Task time ML3 is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  tasktimeML4: Yup.string()
+    .required("Task time ML4 is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  tasktimeML5: Yup.string()
+    .required("Task time ML5 is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  tasktimeML6: Yup.string()
+    .required("Task time ML6 is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  tasktimeML7: Yup.string()
+    .required("Task time ML7 is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
 
   skill1: Yup.string().required(" Skill 1 is required").max(255),
-  skill1nos: Yup.string().required(" Skill 1 nos is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  skill1contribution: Yup.string().required(" Skill 1 contribution is required").max(255),
+  skill1nos: Yup.string()
+    .required(" Skill 1 nos is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  skill1contribution: Yup.string()
+    .required(" Skill 1 contribution is required")
+    .max(255),
   skill2: Yup.string().required(" Skill 2 is required").max(255),
-  skill2nos: Yup.string().required(" Skill 2 nos is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  skill2contribution: Yup.string().required(" Skill 2 Contribution is required").max(255),
+  skill2nos: Yup.string()
+    .required(" Skill 2 nos is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  skill2contribution: Yup.string()
+    .required(" Skill 2 Contribution is required")
+    .max(255),
   skill3: Yup.string().required(" Skill 3 is required").max(255),
-  skill3nos: Yup.string().required(" Skill 3 nos is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  skill3contribution: Yup.string().required(" Skill 3 contribution is required").max(255),
+  skill3nos: Yup.string()
+    .required(" Skill 3 nos is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  skill3contribution: Yup.string()
+    .required(" Skill 3 contribution is required")
+    .max(255),
 
-  addReplacespare1: Yup.string().required(" Add Replacespare 1 is required").max(255),
-  addReplacespare1qty: Yup.string().required(" Add Replacespare 1 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  addReplacespare2: Yup.string().required(" Add Replacespare 2 is required").max(255),
-  addReplacespare2qty: Yup.string().required(" Add Replacespare 2 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
-  addReplacespare3: Yup.string().required(" Add Replacespare 3 is required").max(255),
-  addReplacespare3qty: Yup.string().required(" Add Replacespare 3 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  addReplacespare1: Yup.string()
+    .required(" Add Replacespare 1 is required")
+    .max(255),
+  addReplacespare1qty: Yup.string()
+    .required(" Add Replacespare 1 qty is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  addReplacespare2: Yup.string()
+    .required(" Add Replacespare 2 is required")
+    .max(255),
+  addReplacespare2qty: Yup.string()
+    .required(" Add Replacespare 2 qty is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
+  addReplacespare3: Yup.string()
+    .required(" Add Replacespare 3 is required")
+    .max(255),
+  addReplacespare3qty: Yup.string()
+    .required(" Add Replacespare 3 qty is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
 
   Consumable1: Yup.string().required(" Consumable 1 is required").max(255),
-  Consumable1qty: Yup.string().required(" Consumable 1 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  consumable1Qty: Yup.string()
+    .required(" Consumable 1 qty is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
   Consumable2: Yup.string().required(" Consumable 2 is required").max(255),
-  Consumable2qty: Yup.string().required(" Consumable 2 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable2qty: Yup.string()
+    .required(" Consumable 2 qty is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
   Consumable3: Yup.string().required(" Consumable 3 is required").max(255),
-  Consumable3qty: Yup.string().required(" Consumable 3 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable3qty: Yup.string()
+    .required(" Consumable 3 qty is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
   Consumable4: Yup.string().required(" Consumable 4 is required").max(255),
-  Consumable4qty: Yup.string().required(" Consumable 4 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable4qty: Yup.string()
+    .required(" Consumable 4 qty is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
   Consumable5: Yup.string().required(" Consumable 5 is required").max(255),
-  Consumable5qty: Yup.string().required("Consumable 5 qty is required").matches(/^[0-9]+$/, "Only numeric values are allowed").max(255),
+  Consumable5qty: Yup.string()
+    .required("Consumable 5 qty is required")
+    .matches(/^[0-9]+$/, "Only numeric values are allowed")
+    .max(255),
 
   userfield1: Yup.string().required("User field 1 is required").max(255),
   userfield2: Yup.string().required("User field 2 is required").max(255),
@@ -126,14 +197,14 @@ const Validation = Yup.object().shape({
   userfield5: Yup.string().required("User field 5 is required").max(255),
 });
 
-
 export default function PMMRA(props) {
+  
   // const pmmraPermission = props?.location?.state?.pmmraWrite;
   const projectId = props?.location?.state?.projectId
     ? props?.location?.state?.projectId
     : props?.match?.params?.id;
   const [partType, setPartType] = useState();
-  const [companyName,setCompanyName] = useState();
+  const [companyName, setCompanyName] = useState();
   const [category, setCategory] = useState();
   const [repairable, setRepairable] = useState();
   const [levelofreplace, setLevelofRaplace] = useState();
@@ -166,9 +237,9 @@ export default function PMMRA(props) {
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-      ? props?.location?.state?.productId
-      : initialProductId;
-      const[projectname, setProjectName] = useState()
+    ? props?.location?.state?.productId
+    : initialProductId;
+  const [projectname, setProjectName] = useState();
   const [reference, setReference] = useState();
   const [pmmraData, setpmmraData] = useState([]);
   const [fmecaData, setFmecaData] = useState([]);
@@ -187,216 +258,254 @@ export default function PMMRA(props) {
   const [importExcelData, setImportExcelData] = useState({});
   const [shouldReload, setShouldReload] = useState(false);
   const [open, setOpen] = useState(false);
-const importExcel = (e) => {
-  const file = e.target.files[0];
-  const fileName = file.name;
-  const validExtensions = ["xlsx", "xls"];
-  const fileExtension = fileName.split(".").pop().toLowerCase();
+  const importExcel = (e) => {
+    const file = e.target.files[0];
+    const fileName = file.name;
+    const validExtensions = ["xlsx", "xls"];
+    const fileExtension = fileName.split(".").pop().toLowerCase();
 
-  if (!validExtensions.includes(fileExtension)) {
-    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-      position: toast.POSITION.TOP_RIGHT,
-    });
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const bstr = event.target.result;
-    const workBook = XLSX.read(bstr, { type: "binary" });
-    const workSheetName = workBook.SheetNames[0];
-    const workSheet = workBook.Sheets[workSheetName];
-    const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-    
-    if (excelData.length > 1) {
-      const headers = excelData[0];
-      const rows = excelData.slice(1);
-      const parsedData = rows.map((row) => {
-        const rowData = {};
-        headers.forEach((header, index) => {
-          rowData[header] = row[index];
-        });
-        return rowData;
-      });
-      
-      // Map all Excel fields to form fields
-      const mappedData = {};
-      parsedData[0] && Object.keys(parsedData[0]).forEach(key => {
-        const value = parsedData[0][key];
-        
-        // Map Excel column names to form field names
-        switch(key) {
-          case "endEffect":
-            mappedData.endeffect = value;
-            break;
-          case "safetyImpact":
-            mappedData.safetyimpact = value;
-            break;
-          case "reliabilityImpact":
-            mappedData.reliability = value;
-            break;
-          case "frequency":
-            mappedData.frequency = value;
-            break;
-          case "severity":
-            mappedData.severity = value;
-            break;
-          case "riskIndex":
-            mappedData.riskindex = value;
-            break;
-          case "rcmNotes":
-            mappedData.rcmnotes = value;
-            break;
-          case "pmTaskId":
-            mappedData.pmtaskid = value;
-            break;
-          case "pmTaskType":
-            mappedData.PMtasktype = value;
-            break;
-          case "taskIntrvlFreq":
-            mappedData.taskintervalFrequency = value;
-            break;
-          case "LatitudeFreqTolrnc":
-            mappedData.latitudeFrequency = value;
-            break;
-          case "scheduleMaintenceTsk":
-            mappedData.scheduledMaintenanceTask = value;
-            break;
-          case "tskInteralDetermination":
-            mappedData.taskInterval = value;
-            break;
-          case "taskDesc":
-            mappedData.taskDescription = value;
-            break;
-          case "tskTimeML1":
-            mappedData.tasktimeML1 = value;
-            break;
-          case "tskTimeML2":
-            mappedData.tasktimeML2 = value;
-            break;
-          case "tskTimeML3":
-            mappedData.tasktimeML3 = value;
-            break;
-          case "tskTimeML4":
-            mappedData.tasktimeML4 = value;
-            break;
-          case "tskTimeML5":
-            mappedData.tasktimeML5 = value;
-            break;
-          case "tskTimeML6":
-            mappedData.tasktimeML6 = value;
-            break;
-          case "tskTimeML7":
-            mappedData.tasktimeML7 = value;
-            break;
-          case "skill1":
-            mappedData.skill1 = value;
-            break;
-          case "skillOneNos":
-            mappedData.skill1nos = value;
-            break;
-          case "skillOneContribution":
-            mappedData.skill1contribution = value;
-            break;
-          case "skill2":
-            mappedData.skill2 = value;
-            break;
-          case "skillTwoNos":
-            mappedData.skill2nos = value;
-            break;
-          case "skillTwoContribution":
-            mappedData.skill2contribution = value;
-            break;
-          case "skill3":
-            mappedData.skill3 = value;
-            break;
-          case "skillThreeNos":
-            mappedData.skill3nos = value;
-            break;
-          case "skillThreeContribution":
-            mappedData.skill3contribution = value;
-            break;
-          case "addiReplaceSpare1":
-            mappedData.addReplacespare1 = value;
-            break;
-          case "addiReplaceSpare1Qty":
-            mappedData.addReplacespare1qty = value;
-            break;
-          case "addiReplaceSpare2":
-            mappedData.addReplacespare2 = value;
-            break;
-          case "addiReplaceSpare2Qty":
-            mappedData.addReplacespare2qty = value;
-            break;
-          case "addiReplaceSpare3":
-            mappedData.addReplacespare3 = value;
-            break;
-          case "addiReplaceSpare3Qty":
-            mappedData.addReplacespare3qty = value;
-            break;
-          case "consumable1":
-            mappedData.Consumable1 = value;
-            break;
-          case "consumable1Qty":
-            mappedData.Consumable1qty = value;
-            break;
-          case "consumable2":
-            mappedData.Consumable2 = value;
-            break;
-          case "consumable2Qty":
-            mappedData.Consumable2qty = value;
-            break;
-          case "consumable3":
-            mappedData.Consumable3 = value;
-            break;
-          case "consumable3Qty":
-            mappedData.Consumable3qty = value;
-            break;
-          case "consumable4":
-            mappedData.Consumable4 = value;
-            break;
-          case "consumable4Qty":
-            mappedData.Consumable4qty = value;
-            break;
-          case "consumable5":
-            mappedData.Consumable5 = value;
-            break;
-          case "consumable5Qty":
-            mappedData.Consumable5qty = value;
-            break;
-          case "userField1":
-            mappedData.userfield1 = value;
-            break;
-          case "userField2":
-            mappedData.userfield2 = value;
-            break;
-          case "userField3":
-            mappedData.userfield3 = value;
-            break;
-          case "userField4":
-            mappedData.userfield4 = value;
-            break;
-          case "userField5":
-            mappedData.userfield5 = value;
-            break;
-          default:
-            // For any unmapped fields, use the original key
-            mappedData[key] = value;
-        }
-      });
-      
-      setImportExcelData(mappedData);
-      toast.success("Excel data imported successfully!", {
+    if (!validExtensions.includes(fileExtension)) {
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
         position: toast.POSITION.TOP_RIGHT,
       });
-    } else {
-      toast.error("No Data Found In Excel Sheet", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const bstr = event.target.result;
+      const workBook = XLSX.read(bstr, { type: "binary" });
+      const workSheetName = workBook.SheetNames[0];
+      const workSheet = workBook.Sheets[workSheetName];
+      const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+
+      if (excelData.length > 1) {
+        const headers = excelData[0];
+        const rows = excelData.slice(1);
+        const parsedData = rows.map((row) => {
+          const rowData = {};
+          headers.forEach((header, index) => {
+            rowData[header] = row[index];
+          });
+          return rowData;
+        });
+
+        // Map all Excel fields to form fields
+        const mappedData = {};
+        parsedData[0] &&
+          Object.keys(parsedData[0]).forEach((key) => {
+            const value = parsedData[0][key];
+
+            // Map Excel column names to form field names
+            switch (key) {
+
+              case "endEffect":
+                mappedData.endeffect = value;
+                break;
+                // Add these case statements to your importExcel function's switch statement
+case "Evident1":
+  mappedData.Evident1 = value;
+  break;
+case "Items":
+  mappedData.Items = value;
+  break;
+case "condition":
+  mappedData.condition = value;
+  break;
+case "failure":
+  mappedData.failure = value;
+  break;
+case "redesign":
+  mappedData.redesign = value;
+  break;
+case "acceptable":
+  mappedData.acceptable = value;
+  break;
+case "lubrication":
+  mappedData.lubrication = value;
+  break;
+case "task":
+  mappedData.task = value;
+  break;
+case "combination":
+  mappedData.combination = value;
+  break;
+case "taskIntervalunit":
+  mappedData.taskIntervalunit = value;
+  break;
+              case "safetyImpact":
+                mappedData.safetyimpact = value;
+                break;
+              case "reliabilityImpact":
+                mappedData.reliability = value;
+                break;
+              case "frequency":
+                mappedData.frequency = value;
+                break;
+              case "severity":
+                mappedData.severity = value;
+                break;
+              case "riskIndex":
+                mappedData.riskindex = value;
+                break;
+              case "rcmNotes":
+                mappedData.rcmnotes = value;
+                break;
+              case "pmTaskId":
+                mappedData.pmtaskid = value;
+                break;
+              case "pmTaskType":
+                mappedData.PMtasktype = value;
+                break;
+              case "taskIntrvlFreq":
+                mappedData.taskintervalFrequency = value;
+                break;
+              case "LatitudeFreqTolrnc":
+                mappedData.latitudeFrequency = value;
+                break;
+                case "lossofFuntEvident":
+                mappedData.Evident1 = value;  
+                break;
+              case "scheduleMaintenceTsk":
+                mappedData.scheduledMaintenanceTask = value;
+                break;
+              case "tskInteralDetermination":
+                mappedData.taskInterval = value;
+                break;
+              case "taskDesc":
+                mappedData.taskDescription = value;
+                break;
+              case "tskTimeML1":
+                mappedData.tasktimeML1 = value;
+                break;
+              case "tskTimeML2":
+                mappedData.tasktimeML2 = value;
+                break;
+              case "tskTimeML3":
+                mappedData.tasktimeML3 = value;
+                break;
+              case "tskTimeML4":
+                mappedData.tasktimeML4 = value;
+                break;
+              case "tskTimeML5":
+                mappedData.tasktimeML5 = value;
+                break;
+              case "tskTimeML6":
+                mappedData.tasktimeML6 = value;
+                break;
+              case "tskTimeML7":
+                mappedData.tasktimeML7 = value;
+                break;
+              case "skill1":
+                mappedData.skill1 = value;
+                break;
+              case "skillOneNos":
+                mappedData.skill1nos = value;
+                break;
+              case "skillOneContribution":
+                mappedData.skill1contribution = value;
+                break;
+              case "skill2":
+                mappedData.skill2 = value;
+                break;
+              case "skillTwoNos":
+                mappedData.skill2nos = value;
+                break;
+              case "skillTwoContribution":
+                mappedData.skill2contribution = value;
+                break;
+              case "skill3":
+                mappedData.skill3 = value;
+                break;
+              case "skillThreeNos":
+                mappedData.skill3nos = value;
+                break;
+              case "skillThreeContribution":
+                mappedData.skill3contribution = value;
+                break;
+              case "addiReplaceSpare1":
+                mappedData.addReplacespare1 = value;
+                break;
+              case "addiReplaceSpare1Qty":
+                mappedData.addReplacespare1qty = value;
+                break;
+              case "addiReplaceSpare2":
+                mappedData.addReplacespare2 = value;
+                break;
+              case "addiReplaceSpare2Qty":
+                mappedData.addReplacespare2qty = value;
+                break;
+              case "addiReplaceSpare3":
+                mappedData.addReplacespare3 = value;
+                break;
+              case "addiReplaceSpare3Qty":
+                mappedData.addReplacespare3qty = value;
+                break;
+              case "consumable1":
+                mappedData.Consumable1 = value;
+                break;
+              case "consumable1Qty":
+                mappedData.consumable1Qty = value;
+                break;
+              case "consumable2":
+                mappedData.Consumable2 = value;
+                break;
+              case "consumable2Qty":
+                mappedData.Consumable2qty = value;
+                break;
+              case "consumable3":
+                mappedData.Consumable3 = value;
+                break;
+              case "consumable3Qty":
+                mappedData.Consumable3qty = value;
+                break;
+              case "consumable4":
+                mappedData.Consumable4 = value;
+                break;
+              case "consumable4Qty":
+                mappedData.Consumable4qty = value;
+                break;
+              case "consumable5":
+                mappedData.Consumable5 = value;
+                break;
+              case "consumable5Qty":
+                mappedData.Consumable5qty = value;
+                break;
+              case "userField1":
+                mappedData.userfield1 = value;
+                break;
+              case "userField2":
+                mappedData.userfield2 = value;
+                break;
+              case "userField3":
+                mappedData.userfield3 = value;
+                break;
+              case "userField4":
+                mappedData.userfield4 = value;
+                break;
+              case "userField5":
+                mappedData.userfield5 = value;
+                break;
+                
+              default:
+                // For any unmapped fields, use the original key
+                mappedData[key] = value;
+            }
+          });
+
+        setImportExcelData(mappedData);
+        console.log("Mapped Data: ", mappedData);
+        toast.success("Excel data imported successfully!", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      } else {
+        toast.error("No Data Found In Excel Sheet", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      }
+    };
+    reader.readAsBinaryString(file);
   };
-  reader.readAsBinaryString(file);
-};
 
   const convertToJson = (headers, originalData) => {
     const rows = [];
@@ -450,7 +559,7 @@ const importExcel = (e) => {
       addiReplaceSpare3: values.addReplacespare3,
       addiReplaceSpare3Qty: values.addReplacespare3qty,
       consumable1: values.Consumable1,
-      consumable1Qty: values.Consumable1qty,
+      consumable1Qty: values.consumable1Qty,
       consumable2: values.Consumable2,
       consumable2Qty: values.Consumable2qty,
       consumable3: values.Consumable3,
@@ -490,9 +599,9 @@ const importExcel = (e) => {
 
   const exportToExcel = (value) => {
     const originalData = {
-      CompanyName:treeTableData[0]?.companyId?.companyName,
+      CompanyName: treeTableData[0]?.companyId?.companyName,
       ProjectName: treeTableData[0]?.projectId?.projectName,
-      productName:value.name,
+      productName: value.name,
       endEffect: value.endeffect,
       safetyImpact: value.safetyimpact,
       reliabilityImpact: value.reliability,
@@ -539,7 +648,7 @@ const importExcel = (e) => {
       addiReplaceSpare3: value.addReplacespare3,
       addiReplaceSpare3Qty: value.addReplacespare3qty,
       consumable1: value.Consumable1,
-      consumable1Qty: value.Consumable1qty,
+      consumable1Qty: value.consumable1Qty,
       consumable2: value.Consumable2,
       consumable2Qty: value.Consumable2qty,
       consumable3: value.Consumable3,
@@ -604,7 +713,7 @@ const importExcel = (e) => {
   const [fmecaId, setFmecaId] = useState();
   const [fmecaFillterData, setFmecaFillterData] = useState();
   const [data, setData] = useState({
-    projectName:"",
+    projectName: "",
     endEffect: "",
     safetyImpact: "",
     reliability: "",
@@ -651,7 +760,7 @@ const importExcel = (e) => {
     addReplacespare3: "",
     addReplacespare3qty: "",
     Consumable1: "",
-    Consumable1qty: "",
+    consumable1Qty: "",
     Consumable2: "",
     Consumable2qty: "",
     Consumable3: "",
@@ -682,15 +791,14 @@ const importExcel = (e) => {
         projectId: projectId,
       },
     }).then((res, response) => {
-         setCompanyName(response?.data?.data?.companyId?.companyName);
-        setProjectName(response?.data?.data?.projectName);
+      setCompanyName(response?.data?.data?.companyId?.companyName);
+      setProjectName(response?.data?.data?.projectName);
       const filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "PMMRA"
       );
 
-      // console.log(filteredData)
       setAllSepareteData(filteredData);
-      // const merged = [...tableData, ...filteredData];
+
       const merged = [...(tableData || []), ...filteredData];
       setMergedData(merged);
     });
@@ -716,8 +824,22 @@ const importExcel = (e) => {
       setFmecaData(data);
     });
   };
+  const getFMECADataAfterChange = (fmecaId) => {
+    Api.get("/api/v1/FMECA/product/list", {
+      params: {
+        projectId: projectId,
+        productId: productId,
+      },
+    }).then((res) => {
+      const data = res?.data?.data;
+
+      setFmecaData(data);
+      const filteredData = data.filter((item) => item.fmecaId === fmecaId);
+
+      setFmecaFillterData(filteredData[0]);
+    });
+  };
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
-   
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
@@ -864,7 +986,10 @@ const importExcel = (e) => {
         setTaskIntervalUnit(pmmraData?.taskIntrvlUnit);
         const pmmraId = res?.data?.data?.id;
         setpmmraId(pmmraId);
+
         setpmmraData(pmmraData);
+        setFmecaId(pmmraData?.fmecaId);
+        getFMECADataAfterChange(pmmraData?.fmecaId);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -912,6 +1037,9 @@ const importExcel = (e) => {
 
   const submit = (values) => {
     const companyId = localStorage.getItem("companyId");
+    console.log("LossOfEvident....",lossofFuntEvident)
+    console.log("values..while creatae..",values)
+
     Api.post("/api/v1/pmMra/", {
       name: name,
       partNumber: partNumber,
@@ -945,33 +1073,33 @@ const importExcel = (e) => {
         values?.frequency && values?.frequency?.value
           ? values?.frequency?.value
           : values?.frequency,
-      severity: Severity ? Severity : value?.severity?.value,
-      riskIndex: riskIndex ? riskIndex : value?.riskIndex?.value,
+      severity: Severity ? Severity : value?.severity?.value || values.severity,
+      riskIndex: riskIndex ? riskIndex : value?.riskIndex?.value || values.riskindex,
       LossOfEvident: lossofFuntEvident
         ? lossofFuntEvident
-        : value?.lossofFuntEvident?.value,
+        : value?.lossofFuntEvident?.value || values.Evident1,
       significantItem: significantItem
         ? significantItem
-        : value?.significantItem?.value,
+        : value?.significantItem?.value || values.Items,
       criticalityAccept: criticallyAccept
         ? criticallyAccept
-        : value?.criticallyAccept?.value,
+        : value?.criticallyAccept?.value || values.acceptable,
       LubricationservceTsk: lubrication
         ? lubrication
-        : value?.lubrication?.value,
+        : value?.lubrication?.value || values.lubrication,
       conditionMonitrTsk: conditionMonitrTsk
         ? conditionMonitrTsk
-        : value?.conditionMonitrTsk?.value,
+        : value?.conditionMonitrTsk?.value || values.condition,
       restoreDiscrdTsk: restoreDiscardTsk
         ? restoreDiscardTsk
-        : value?.restoreDiscardTsk?.value,
+        : value?.restoreDiscardTsk?.value || values.task,
       failureFindTsk: failureFindTask
         ? failureFindTask
-        : value?.failureFindTask?.value,
+        : value?.failureFindTask?.value || values.failure,
       combinationOfTsk: combinationofTsk
         ? combinationofTsk
-        : value?.combinationofTsk?.value,
-      reDesign: reDesign ? reDesign : value?.reDesign?.value,
+        : value?.combinationofTsk?.value || values.combination,
+      reDesign: reDesign ? reDesign : value?.reDesign?.value || values.redesign,
       rcmnotes:
         values?.rcmnotes && values?.rcmnotes?.value
           ? values?.rcmnotes?.value
@@ -990,14 +1118,14 @@ const importExcel = (e) => {
           : values?.taskintervalFrequency,
       taskIntrvlUnit: taskIntervalUnit
         ? taskIntervalUnit
-        : value?.taskIntervalUnit?.value,
+        : value?.taskIntervalUnit?.value || values.taskIntervalunit,
       LatitudeFreqTolrnc:
         values?.latitudeFrequency && values?.latitudeFrequency?.value
           ? values?.latitudeFrequency?.value
           : values?.latitudeFrequency,
       scheduleMaintenceTsk:
         values?.scheduledMaintenanceTask &&
-          values?.scheduledMaintenanceTask?.value
+        values?.scheduledMaintenanceTask?.value
           ? values?.scheduledMaintenanceTask?.value
           : values?.scheduledMaintenanceTask,
       tskInteralDetermination:
@@ -1101,13 +1229,13 @@ const importExcel = (e) => {
           ? values?.Consumable1?.value
           : values?.Consumable1,
       consumable1Qty:
-        values?.Consumable1qty && values?.consumable1Qty?.value
+        values?.consumable1Qty && values?.consumable1Qty?.value
           ? values?.consumable1Qty?.value
           : values?.consumable1Qty,
       consumable2:
         values?.Consumable2 && values?.consumable2?.value
           ? values?.consumable2?.value
-          : values?.consumable2,
+          : values?.Consumable2,
       consumable2Qty:
         values?.Consumable2qty && values?.Consumable2qty?.value
           ? values?.Consumable2qty?.value
@@ -1202,22 +1330,22 @@ const importExcel = (e) => {
       safetyImpact: values.safetyimpact,
       reliabilityImpact: values.reliability,
       frequency: values.frequency,
-      severity: Severity,
-      riskIndex: riskIndex,
-      LossOfEvident: lossofFuntEvident,
-      significantItem: significantItem,
-      criticalityAccept: criticallyAccept,
-      LubricationservceTsk: lubrication,
-      conditionMonitrTsk: conditionMonitrTsk,
-      restoreDiscrdTsk: restoreDiscardTsk,
-      failureFindTsk: failureFindTask,
-      combinationOfTsk: combinationofTsk,
-      reDesign: reDesign,
+      severity: Severity || values.severity,
+      riskIndex: riskIndex || values.riskindex,
+      LossOfEvident: lossofFuntEvident || values.Evident1,
+      significantItem: significantItem || values.Items,
+      criticalityAccept: criticallyAccept || values.acceptable,
+      LubricationservceTsk: lubrication || values.lubrication,
+      conditionMonitrTsk: conditionMonitrTsk || values.condition,
+      restoreDiscrdTsk: restoreDiscardTsk || values.task,
+      failureFindTsk: failureFindTask || values.failure,
+      combinationOfTsk: combinationofTsk || values.combination,
+      reDesign: reDesign || values.redesign,
       rcmnotes: values.rcmnotes,
       pmTaskId: values.pmtaskid,
       pmTaskType: values.PMtasktype,
       taskIntrvlFreq: values.taskintervalFrequency,
-      taskIntrvlUnit: taskIntervalUnit,
+      taskIntrvlUnit: taskIntervalUnit || values.taskIntervalunit,
       LatitudeFreqTolrnc: values.latitudeFrequency,
       scheduleMaintenceTsk: values.scheduledMaintenanceTask,
       tskInteralDetermination: values.taskInterval,
@@ -1245,7 +1373,7 @@ const importExcel = (e) => {
       addiReplaceSpare3: values.addReplacespare3,
       addiReplaceSpare3Qty: values.addReplacespare3qty,
       consumable1: values.Consumable1,
-      consumable1Qty: values.Consumable1qty,
+      consumable1Qty: values.consumable1Qty,
       consumable2: values.Consumable2,
       consumable2Qty: values.Consumable2qty,
       consumable3: values.Consumable3,
@@ -1295,98 +1423,143 @@ const importExcel = (e) => {
 
   const getFmecaFilterData = (value) => {
     const filteredData = fmecaData.filter((item) => item.fmecaId === value);
+
     setFmecaFillterData(filteredData[0]);
   };
 
   const fmecaOptions = fmecaData.map((item) => ({
     value: item?.fmecaId,
-     label: item?.failureMode,  
-    
+    label: item?.fmecaId,
   }));
 
-const InitialValues = {
-  projectname:projectname,
-  companyId:companyId,
-  name: name,
-  companyName:companyName,
- projectId:projectId,
-  partnumber: partNumber,
-  repairable: mttrRepairable,
-  spare: mttrSpare,
-  levelofrepair: mttrLevelOfRepair,
-  levelofreplace: mttrLevelOfReplace,
-  reference: reference,
-  category: category,
-  parttype: partType,
-  quantity: quantity,
-  fmecaId: fmecaFillterData?.fmecaModelId || "",
-  // Use imported Excel data for all fields, fall back to FMECA data or empty
-  endeffect: importExcelData?.endeffect || fmecaFillterData?.endEffect || "",
-  reliability: importExcelData?.reliability || fmecaFillterData?.realibilityImpact || "",
-  severity: importExcelData?.severity || fmecaFillterData?.severity || "",
-  safetyimpact: importExcelData?.safetyimpact || fmecaFillterData?.safetyImpact || "",
-  frequency: importExcelData?.frequency || fmecaFillterData?.frequency || "",
-  riskindex: importExcelData?.riskindex || fmecaFillterData?.riskIndex || "",
-  
-  // Map all other fields from imported Excel data
-  rcmnotes: importExcelData?.rcmnotes || pmmraData?.rcmNotes || "",
-  pmtaskid: importExcelData?.pmtaskid || pmmraData?.pmTaskId || "",
-  PMtasktype: importExcelData?.PMtasktype || pmmraData?.pmTaskType || "",
-  taskintervalFrequency: importExcelData?.taskintervalFrequency || pmmraData?.taskIntrvlFreq || "",
-  latitudeFrequency: importExcelData?.latitudeFrequency || pmmraData?.LatitudeFreqTolrnc || "",
-  scheduledMaintenanceTask: importExcelData?.scheduledMaintenanceTask || pmmraData?.scheduleMaintenceTsk || "",
-  taskInterval: importExcelData?.taskInterval || pmmraData?.tskInteralDetermination || "",
-  taskDescription: importExcelData?.taskDescription || pmmraData?.taskDesc || "",
-  tasktimeML1: importExcelData?.tasktimeML1 || pmmraData?.tskTimeML1 || "",
-  tasktimeML2: importExcelData?.tasktimeML2 || pmmraData?.tskTimeML2 || "",
-  tasktimeML3: importExcelData?.tasktimeML3 || pmmraData?.tskTimeML3 || "",
-  tasktimeML4: importExcelData?.tasktimeML4 || pmmraData?.tskTimeML4 || "",
-  tasktimeML5: importExcelData?.tasktimeML5 || pmmraData?.tskTimeML5 || "",
-  tasktimeML6: importExcelData?.tasktimeML6 || pmmraData?.tskTimeML6 || "",
-  tasktimeML7: importExcelData?.tasktimeML7 || pmmraData?.tskTimeML7 || "",
-  skill1: importExcelData?.skill1 || pmmraData?.skill1 || "",
-  skill1nos: importExcelData?.skill1nos || pmmraData?.skillOneNos || "",
-  skill1contribution: importExcelData?.skill1contribution || pmmraData?.skillOneContribution || "",
-  skill2: importExcelData?.skill2 || pmmraData?.skill2 || "",
-  skill2nos: importExcelData?.skill2nos || pmmraData?.skillTwoNos || "",
-  skill2contribution: importExcelData?.skill2contribution || pmmraData?.skillTwoContribution || "",
-  skill3: importExcelData?.skill3 || pmmraData?.skill3 || "",
-  skill3nos: importExcelData?.skill3nos || pmmraData?.skillThreeNos || "",
-  skill3contribution: importExcelData?.skill3contribution || pmmraData?.skillThreeContribution || "",
-  addReplacespare1: importExcelData?.addReplacespare1 || pmmraData?.addiReplaceSpare1 || "",
-  addReplacespare1qty: importExcelData?.addReplacespare1qty || pmmraData?.addiReplaceSpare1Qty || "",
-  addReplacespare2: importExcelData?.addReplacespare2 || pmmraData?.addiReplaceSpare2 || "",
-  addReplacespare2qty: importExcelData?.addReplacespare2qty || pmmraData?.addiReplaceSpare2Qty || "",
-  addReplacespare3: importExcelData?.addReplacespare3 || pmmraData?.addiReplaceSpare3 || "",
-  addReplacespare3qty: importExcelData?.addReplacespare3qty || pmmraData?.addiReplaceSpare3Qty || "",
-  Consumable1: importExcelData?.Consumable1 || pmmraData?.consumable1 || "",
-  Consumable1qty: importExcelData?.Consumable1qty || pmmraData?.consumable1Qty || "",
-  Consumable2: importExcelData?.Consumable2 || pmmraData?.consumable2 || "",
-  Consumable2qty: importExcelData?.Consumable2qty || pmmraData?.consumable2Qty || "",
-  Consumable3: importExcelData?.Consumable3 || pmmraData?.consumable3 || "",
-  Consumable3qty: importExcelData?.Consumable3qty || pmmraData?.consumable3Qty || "",
-  Consumable4: importExcelData?.Consumable4 || pmmraData?.consumable4 || "",
-  Consumable4qty: importExcelData?.Consumable4qty || pmmraData?.consumable4Qty || "",
-  Consumable5: importExcelData?.Consumable5 || pmmraData?.consumable5 || "",
-  Consumable5qty: importExcelData?.Consumable5qty || pmmraData?.consumable5Qty || "",
-  userfield1: importExcelData?.userfield1 || pmmraData?.userField1 || "",
-  userfield2: importExcelData?.userfield2 || pmmraData?.userField2 || "",
-  userfield3: importExcelData?.userfield3 || pmmraData?.userField3 || "",
-  userfield4: importExcelData?.userfield4 || pmmraData?.userField4 || "",
-  userfield5: importExcelData?.userfield5 || pmmraData?.userField5 || "",
-  
-  // Select fields (these need special handling with {label, value} objects)
-  Evident1: pmmraData?.LossOfEvident ? { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } : "",
-  Items: pmmraData?.significantItem ? { label: pmmraData?.significantItem, value: pmmraData?.significantItem } : "",
-  condition: pmmraData?.conditionMonitrTsk ? { label: pmmraData?.conditionMonitrTsk, value: pmmraData?.conditionMonitrTsk } : "",
-  failure: pmmraData?.failureFindTsk ? { label: pmmraData?.failureFindTsk, value: pmmraData?.failureFindTsk } : "",
-  redesign: pmmraData?.reDesign ? { label: pmmraData?.reDesign, value: pmmraData?.reDesign } : "",
-  acceptable: pmmraData?.criticalityAccept ? { label: pmmraData?.criticalityAccept, value: pmmraData?.criticalityAccept } : "",
-  lubrication: pmmraData?.LubricationservceTsk ? { label: pmmraData?.LubricationservceTsk, value: pmmraData?.LubricationservceTsk } : "",
-  task: pmmraData?.restoreDiscrdTsk ? { label: pmmraData?.restoreDiscrdTsk, value: pmmraData?.restoreDiscrdTsk } : "",
-  combination: pmmraData?.combinationOfTsk ? { label: pmmraData?.combinationOfTsk, value: pmmraData?.combinationOfTsk } : "",
-  taskIntervalunit: pmmraData?.taskIntrvlUnit ? { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit } : "",
-};
+  const InitialValues = {
+    projectname: projectname,
+    companyId: companyId,
+    name: name,
+    companyName: companyName,
+    projectId: projectId,
+    partnumber: partNumber,
+    repairable: mttrRepairable,
+    spare: mttrSpare,
+    levelofrepair: mttrLevelOfRepair,
+    levelofreplace: mttrLevelOfReplace,
+    reference: reference,
+    category: category,
+    parttype: partType,
+    quantity: quantity,
+    fmecaId: fmecaFillterData?.fmecaModelId || "",
+    // Use imported Excel data for all fields, fall back to FMECA data or empty
+    endeffect: importExcelData?.endeffect || fmecaFillterData?.endEffect || "",
+    reliability:
+      importExcelData?.reliability || fmecaFillterData?.realibilityImpact || "",
+    severity: importExcelData?.severity || fmecaFillterData?.severity || "",
+    safetyimpact:
+      importExcelData?.safetyimpact || fmecaFillterData?.safetyImpact || "",
+    frequency: importExcelData?.frequency || fmecaFillterData?.frequency || "",
+    riskindex: importExcelData?.riskindex || fmecaFillterData?.riskIndex || "",
+
+    // Map all other fields from imported Excel data
+    rcmnotes: importExcelData?.rcmnotes || pmmraData?.rcmNotes || "",
+    pmtaskid: importExcelData?.pmtaskid || pmmraData?.pmTaskId || "",
+    PMtasktype: importExcelData?.PMtasktype || pmmraData?.pmTaskType || "",
+    taskintervalFrequency:
+      importExcelData?.taskintervalFrequency || pmmraData?.taskIntrvlFreq || "",
+    latitudeFrequency:
+      importExcelData?.latitudeFrequency || pmmraData?.LatitudeFreqTolrnc || "",
+    scheduledMaintenanceTask:
+      importExcelData?.scheduledMaintenanceTask ||
+      pmmraData?.scheduleMaintenceTsk ||
+      "",
+    taskInterval:
+      importExcelData?.taskInterval || pmmraData?.tskInteralDetermination || "",
+    taskDescription:
+      importExcelData?.taskDescription || pmmraData?.taskDesc || "",
+    tasktimeML1: importExcelData?.tasktimeML1 || pmmraData?.tskTimeML1 || "",
+    tasktimeML2: importExcelData?.tasktimeML2 || pmmraData?.tskTimeML2 || "",
+    tasktimeML3: importExcelData?.tasktimeML3 || pmmraData?.tskTimeML3 || "",
+    tasktimeML4: importExcelData?.tasktimeML4 || pmmraData?.tskTimeML4 || "",
+    tasktimeML5: importExcelData?.tasktimeML5 || pmmraData?.tskTimeML5 || "",
+    tasktimeML6: importExcelData?.tasktimeML6 || pmmraData?.tskTimeML6 || "",
+    tasktimeML7: importExcelData?.tasktimeML7 || pmmraData?.tskTimeML7 || "",
+    skill1: importExcelData?.skill1 || pmmraData?.skill1 || "",
+    skill1nos: importExcelData?.skill1nos || pmmraData?.skillOneNos || "",
+    skill1contribution:
+      importExcelData?.skill1contribution ||
+      pmmraData?.skillOneContribution ||
+      "",
+    skill2: importExcelData?.skill2 || pmmraData?.skill2 || "",
+    skill2nos: importExcelData?.skill2nos || pmmraData?.skillTwoNos || "",
+    skill2contribution:
+      importExcelData?.skill2contribution ||
+      pmmraData?.skillTwoContribution ||
+      "",
+    skill3: importExcelData?.skill3 || pmmraData?.skill3 || "",
+    skill3nos: importExcelData?.skill3nos || pmmraData?.skillThreeNos || "",
+    skill3contribution:
+      importExcelData?.skill3contribution ||
+      pmmraData?.skillThreeContribution ||
+      "",
+    addReplacespare1:
+      importExcelData?.addReplacespare1 || pmmraData?.addiReplaceSpare1 || "",
+    addReplacespare1qty:
+      importExcelData?.addReplacespare1qty ||
+      pmmraData?.addiReplaceSpare1Qty ||
+      "",
+    addReplacespare2:
+      importExcelData?.addReplacespare2 || pmmraData?.addiReplaceSpare2 || "",
+    addReplacespare2qty:
+      importExcelData?.addReplacespare2qty ||
+      pmmraData?.addiReplaceSpare2Qty ||
+      "",
+    addReplacespare3:
+      importExcelData?.addReplacespare3 || pmmraData?.addiReplaceSpare3 || "",
+    addReplacespare3qty:
+      importExcelData?.addReplacespare3qty ||
+      pmmraData?.addiReplaceSpare3Qty ||
+      "",
+    Consumable1: importExcelData?.Consumable1 || pmmraData?.consumable1 || "",
+    consumable1Qty:
+      importExcelData?.consumable1Qty || pmmraData?.consumable1Qty || "",
+    Consumable2: importExcelData?.Consumable2 || pmmraData?.consumable2 || "",
+    Consumable2qty:
+      importExcelData?.Consumable2qty || pmmraData?.consumable2Qty || "",
+    Consumable3: importExcelData?.Consumable3 || pmmraData?.consumable3 || "",
+    Consumable3qty:
+      importExcelData?.Consumable3qty || pmmraData?.consumable3Qty || "",
+    Consumable4: importExcelData?.Consumable4 || pmmraData?.consumable4 || "",
+    Consumable4qty:
+      importExcelData?.Consumable4qty || pmmraData?.consumable4Qty || "",
+    Consumable5: importExcelData?.Consumable5 || pmmraData?.consumable5 || "",
+    Consumable5qty:
+      importExcelData?.Consumable5qty || pmmraData?.consumable5Qty || "",
+    userfield1: importExcelData?.userfield1 || pmmraData?.userField1 || "",
+    userfield2: importExcelData?.userfield2 || pmmraData?.userField2 || "",
+    userfield3: importExcelData?.userfield3 || pmmraData?.userField3 || "",
+    userfield4: importExcelData?.userfield4 || pmmraData?.userField4 || "",
+    userfield5: importExcelData?.userfield5 || pmmraData?.userField5 || "",
+
+    // Select fields (these need special handling with {label, value} objects)
+  Evident1: importExcelData?.Evident1 || pmmraData?.LossOfEvident || "",
+  Items: importExcelData?.Items || pmmraData?.significantItem || "",
+  condition: importExcelData?.condition || pmmraData?.conditionMonitrTsk || "",
+  failure: importExcelData?.failure || pmmraData?.failureFindTsk || "",
+  redesign: importExcelData?.redesign || pmmraData?.reDesign || "",
+  acceptable: importExcelData?.acceptable || pmmraData?.criticalityAccept || "",
+  lubrication: importExcelData?.lubrication || pmmraData?.LubricationservceTsk || "",
+  task: importExcelData?.task || pmmraData?.restoreDiscrdTsk || "",
+  combination: importExcelData?.combination || pmmraData?.combinationOfTsk || "",
+  taskIntervalunit: importExcelData?.taskIntervalunit || pmmraData?.taskIntrvlUnit || "",
+    // Evident1: pmmraData?.LossOfEvident || { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } || "",
+    // Items: pmmraData?.significantItem || { label: pmmraData?.significantItem, value: pmmraData?.significantItem } || "",
+    // condition: pmmraData?.conditionMonitrTsk || { label: pmmraData?.conditionMonitrTsk, value: pmmraData?.conditionMonitrTsk } || "",
+    // failure: pmmraData?.failureFindTsk || { label: pmmraData?.failureFindTsk, value: pmmraData?.failureFindTsk } || "",
+    // redesign: pmmraData?.reDesign || { label: pmmraData?.reDesign, value: pmmraData?.reDesign } || "",
+    // acceptable: pmmraData?.criticalityAccept || { label: pmmraData?.criticalityAccept, value: pmmraData?.criticalityAccept } || "",
+    // lubrication: pmmraData?.LubricationservceTsk || { label: pmmraData?.LubricationservceTsk, value: pmmraData?.LubricationservceTsk } || "",
+    // task: pmmraData?.restoreDiscrdTsk || { label: pmmraData?.restoreDiscrdTsk, value: pmmraData?.restoreDiscrdTsk } || "",
+    // combination: pmmraData?.combinationOfTsk || { label: pmmraData?.combinationOfTsk, value: pmmraData?.combinationOfTsk } || "",
+    // taskIntervalunit: pmmraData?.taskIntrvlUnit || { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit } || "",
+  };
   return (
     <div style={{ marginTop: "90px" }} className="mx-4">
       {isLoading ? (
@@ -1477,8 +1650,10 @@ const InitialValues = {
               <Tooltip placement="right" title="Import">
                 <div style={{ marginRight: "8px" }}>
                   <label htmlFor="file-input" className="import-export-btn">
-                    <FontAwesomeIcon icon={faFileDownload}
-                      style={{ width: "15px" }} />
+                    <FontAwesomeIcon
+                      icon={faFileDownload}
+                      style={{ width: "15px" }}
+                    />
                   </label>
                   <input
                     type="file"
@@ -1492,8 +1667,13 @@ const InitialValues = {
               <Tooltip placement="left" title="Export">
                 <Button
                   className="import-export-btn"
-                  style={{ marginLeft: "10px", borderStyle: "none", width: "40px", minWidth: "40px", padding: "0px", }}
-
+                  style={{
+                    marginLeft: "10px",
+                    borderStyle: "none",
+                    width: "40px",
+                    minWidth: "40px",
+                    padding: "0px",
+                  }}
                   onClick={() => {
                     exportToExcel(InitialValues);
                   }}
@@ -1531,9 +1711,9 @@ const InitialValues = {
                       <fieldset
                         disabled={
                           writePermission === true ||
-                            writePermission === "undefined" ||
-                            role === "admin" ||
-                            (isOwner === true && createdBy === userId)
+                          writePermission === "undefined" ||
+                          role === "admin" ||
+                          (isOwner === true && createdBy === userId)
                             ? null
                             : "disabled"
                         }
@@ -1547,7 +1727,7 @@ const InitialValues = {
                           <Col>
                             <Form.Group>
                               <Label notify={true}>FMECA Mode</Label>
-                              <Select
+                              {/* <Select
                                 name="FmecaId"
                                 className="mt-1"
                                 placeholder="Select Fmeca Mode"
@@ -1566,8 +1746,34 @@ const InitialValues = {
                                 }
                                 onChange={(e) => {
                                   setFieldValue("FmecaId", e.value);
-                                  setFmecaId("");
                                   getFmecaFilterData(e.value);
+                                  setFmecaId(e.value);
+                                }}
+                              /> */}
+                              <Select
+                                name="FmecaId"
+                                className="mt-1"
+                                placeholder="Select Fmeca Mode"
+                                value={
+                                  fmecaOptions.find(
+                                    (option) => option.value === fmecaId
+                                  ) || null
+                                }
+                                options={fmecaOptions}
+                                styles={customStyles}
+                                onBlur={handleBlur}
+                                isDisabled={
+                                  writePermission === true ||
+                                  writePermission === "undefined" ||
+                                  role === "admin" ||
+                                  (isOwner === true && createdBy === userId)
+                                    ? null
+                                    : "disabled"
+                                }
+                                onChange={(e) => {
+                                  setFieldValue("FmecaId", e.value);
+                                  getFmecaFilterData(e.value);
+                                  setFmecaId(e.value);
                                 }}
                               />
                             </Form.Group>
@@ -1730,11 +1936,11 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData?.length > 0
                                         ? connectedFilteredData?.map(
-                                          (item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          })
-                                        )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                         : null;
 
                                     return (
@@ -1745,9 +1951,9 @@ const InitialValues = {
                                         value={
                                           values?.Evident1
                                             ? {
-                                              label: values?.Evident1,
-                                              value: values?.Evident1,
-                                            }
+                                                label: values?.Evident1,
+                                                value: values?.Evident1,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -1756,10 +1962,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1781,9 +1987,9 @@ const InitialValues = {
                                     value={
                                       values?.Evident1
                                         ? {
-                                          label: values?.Evident1,
-                                          value: values?.Evident1,
-                                        }
+                                            label: values?.Evident1,
+                                            value: values?.Evident1,
+                                          }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -1795,9 +2001,9 @@ const InitialValues = {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                      writePermission === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -1837,13 +2043,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -1853,9 +2059,9 @@ const InitialValues = {
                                         value={
                                           values?.Items
                                             ? {
-                                              label: values?.Items,
-                                              value: values?.Items,
-                                            }
+                                                label: values?.Items,
+                                                value: values?.Items,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -1864,10 +2070,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1889,9 +2095,9 @@ const InitialValues = {
                                     value={
                                       values?.Items
                                         ? {
-                                          label: values?.Items,
-                                          value: values?.Items,
-                                        }
+                                            label: values?.Items,
+                                            value: values?.Items,
+                                          }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -1903,9 +2109,9 @@ const InitialValues = {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                      writePermission === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -1944,13 +2150,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -1960,9 +2166,9 @@ const InitialValues = {
                                         value={
                                           values?.condition
                                             ? {
-                                              label: values?.condition,
-                                              value: values?.condition,
-                                            }
+                                                label: values?.condition,
+                                                value: values?.condition,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -1971,10 +2177,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1996,9 +2202,9 @@ const InitialValues = {
                                     value={
                                       values?.condition
                                         ? {
-                                          label: values?.condition,
-                                          value: values?.condition,
-                                        }
+                                            label: values?.condition,
+                                            value: values?.condition,
+                                          }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2010,9 +2216,9 @@ const InitialValues = {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                      writePermission === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2053,13 +2259,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -2069,9 +2275,9 @@ const InitialValues = {
                                         value={
                                           values?.failure
                                             ? {
-                                              label: values?.failure,
-                                              value: values?.failure,
-                                            }
+                                                label: values?.failure,
+                                                value: values?.failure,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2080,10 +2286,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2105,9 +2311,9 @@ const InitialValues = {
                                     value={
                                       values?.failure
                                         ? {
-                                          label: values?.failure,
-                                          value: values?.failure,
-                                        }
+                                            label: values?.failure,
+                                            value: values?.failure,
+                                          }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2119,9 +2325,9 @@ const InitialValues = {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                      writePermission === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2161,13 +2367,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -2177,9 +2383,9 @@ const InitialValues = {
                                         value={
                                           values?.redesign
                                             ? {
-                                              label: values?.redesign,
-                                              value: values?.redesign,
-                                            }
+                                                label: values?.redesign,
+                                                value: values?.redesign,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2188,10 +2394,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2213,9 +2419,9 @@ const InitialValues = {
                                     value={
                                       values?.redesign
                                         ? {
-                                          label: values?.redesign,
-                                          value: values?.redesign,
-                                        }
+                                            label: values?.redesign,
+                                            value: values?.redesign,
+                                          }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2227,9 +2433,9 @@ const InitialValues = {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                      writePermission === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2273,13 +2479,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -2289,9 +2495,9 @@ const InitialValues = {
                                         value={
                                           values?.acceptable
                                             ? {
-                                              label: values?.acceptable,
-                                              value: values?.acceptable,
-                                            }
+                                                label: values?.acceptable,
+                                                value: values?.acceptable,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2300,10 +2506,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2325,9 +2531,9 @@ const InitialValues = {
                                     value={
                                       values?.acceptable
                                         ? {
-                                          label: values?.acceptable,
-                                          value: values?.acceptable,
-                                        }
+                                            label: values?.acceptable,
+                                            value: values?.acceptable,
+                                          }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2339,9 +2545,9 @@ const InitialValues = {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                      writePermission === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2384,13 +2590,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -2400,9 +2606,9 @@ const InitialValues = {
                                         value={
                                           values?.lubrication
                                             ? {
-                                              label: values?.lubrication,
-                                              value: values?.lubrication,
-                                            }
+                                                label: values?.lubrication,
+                                                value: values?.lubrication,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2411,10 +2617,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2436,9 +2642,9 @@ const InitialValues = {
                                     value={
                                       values?.lubrication
                                         ? {
-                                          label: values?.lubrication,
-                                          value: values?.lubrication,
-                                        }
+                                            label: values?.lubrication,
+                                            value: values?.lubrication,
+                                          }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2450,9 +2656,9 @@ const InitialValues = {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                      writePermission === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2493,13 +2699,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -2509,9 +2715,9 @@ const InitialValues = {
                                         value={
                                           values?.task
                                             ? {
-                                              label: values?.task,
-                                              value: values?.task,
-                                            }
+                                                label: values?.task,
+                                                value: values?.task,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2520,10 +2726,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2545,9 +2751,9 @@ const InitialValues = {
                                     value={
                                       values?.task
                                         ? {
-                                          label: values?.task,
-                                          value: values?.task,
-                                        }
+                                            label: values?.task,
+                                            value: values?.task,
+                                          }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2559,9 +2765,9 @@ const InitialValues = {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                      writePermission === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2601,13 +2807,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -2617,9 +2823,9 @@ const InitialValues = {
                                         value={
                                           values?.combination
                                             ? {
-                                              label: values?.combination,
-                                              value: values?.combination,
-                                            }
+                                                label: values?.combination,
+                                                value: values?.combination,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2628,10 +2834,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2653,9 +2859,9 @@ const InitialValues = {
                                     value={
                                       values?.combination
                                         ? {
-                                          label: values?.combination,
-                                          value: values?.combination,
-                                        }
+                                            label: values?.combination,
+                                            value: values?.combination,
+                                          }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2667,9 +2873,9 @@ const InitialValues = {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                      writePermission === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2709,13 +2915,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -2725,9 +2931,9 @@ const InitialValues = {
                                         value={
                                           values?.rcmnotes
                                             ? {
-                                              label: values?.rcmnotes,
-                                              value: values?.rcmnotes,
-                                            }
+                                                label: values?.rcmnotes,
+                                                value: values?.rcmnotes,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2736,10 +2942,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2761,9 +2967,9 @@ const InitialValues = {
                                     value={
                                       values?.rcmnotes
                                         ? {
-                                          label: values?.rcmnotes,
-                                          value: values?.rcmnotes,
-                                        }
+                                            label: values?.rcmnotes,
+                                            value: values?.rcmnotes,
+                                          }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2775,9 +2981,9 @@ const InitialValues = {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
+                                      writePermission === "undefined" ||
+                                      role === "admin" ||
+                                      (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2827,17 +3033,17 @@ const InitialValues = {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
+                                              (item) => ({
+                                                value: item?.destinationValue,
+                                                label: item?.destinationValue,
+                                              })
+                                            )
                                           : seperateFilteredData.map(
-                                            (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                              (item) => ({
+                                                value: item?.sourceValue,
+                                                label: item?.sourceValue,
+                                              })
+                                            );
 
                                       return (
                                         <Select
@@ -2847,9 +3053,9 @@ const InitialValues = {
                                           value={
                                             values?.pmtaskid
                                               ? {
-                                                label: values?.pmtaskid,
-                                                value: values?.pmtaskid,
-                                              }
+                                                  label: values?.pmtaskid,
+                                                  value: values?.pmtaskid,
+                                                }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -2858,10 +3064,10 @@ const InitialValues = {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -2917,17 +3123,17 @@ const InitialValues = {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
+                                              (item) => ({
+                                                value: item?.destinationValue,
+                                                label: item?.destinationValue,
+                                              })
+                                            )
                                           : seperateFilteredData.map(
-                                            (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                              (item) => ({
+                                                value: item?.sourceValue,
+                                                label: item?.sourceValue,
+                                              })
+                                            );
 
                                       return (
                                         <Select
@@ -2937,9 +3143,9 @@ const InitialValues = {
                                           value={
                                             values?.PMtasktype
                                               ? {
-                                                label: values?.PMtasktype,
-                                                value: values?.PMtasktype,
-                                              }
+                                                  label: values?.PMtasktype,
+                                                  value: values?.PMtasktype,
+                                                }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -2948,10 +3154,10 @@ const InitialValues = {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -2997,7 +3203,7 @@ const InitialValues = {
                                   {allSepareteData.some(
                                     (item) =>
                                       item.sourceName ===
-                                      "taskintervalFrequency" &&
+                                        "taskintervalFrequency" &&
                                       item.sourceValue
                                   ) ? (
                                     (() => {
@@ -3016,17 +3222,17 @@ const InitialValues = {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
+                                              (item) => ({
+                                                value: item?.destinationValue,
+                                                label: item?.destinationValue,
+                                              })
+                                            )
                                           : seperateFilteredData.map(
-                                            (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                              (item) => ({
+                                                value: item?.sourceValue,
+                                                label: item?.sourceValue,
+                                              })
+                                            );
 
                                       return (
                                         <Select
@@ -3036,11 +3242,11 @@ const InitialValues = {
                                           value={
                                             values?.taskintervalFrequency
                                               ? {
-                                                label:
-                                                  values?.taskintervalFrequency,
-                                                value:
-                                                  values?.taskintervalFrequency,
-                                              }
+                                                  label:
+                                                    values?.taskintervalFrequency,
+                                                  value:
+                                                    values?.taskintervalFrequency,
+                                                }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3049,10 +3255,10 @@ const InitialValues = {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3115,17 +3321,17 @@ const InitialValues = {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
+                                              (item) => ({
+                                                value: item?.destinationValue,
+                                                label: item?.destinationValue,
+                                              })
+                                            )
                                           : seperateFilteredData.map(
-                                            (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                              (item) => ({
+                                                value: item?.sourceValue,
+                                                label: item?.sourceValue,
+                                              })
+                                            );
 
                                       return (
                                         <Select
@@ -3135,11 +3341,11 @@ const InitialValues = {
                                           value={
                                             values?.taskIntervalunit
                                               ? {
-                                                label:
-                                                  values?.taskIntervalunit,
-                                                value:
-                                                  values?.taskIntervalunit,
-                                              }
+                                                  label:
+                                                    values?.taskIntervalunit,
+                                                  value:
+                                                    values?.taskIntervalunit,
+                                                }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3148,10 +3354,10 @@ const InitialValues = {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3212,17 +3418,17 @@ const InitialValues = {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
+                                              (item) => ({
+                                                value: item?.destinationValue,
+                                                label: item?.destinationValue,
+                                              })
+                                            )
                                           : seperateFilteredData.map(
-                                            (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                              (item) => ({
+                                                value: item?.sourceValue,
+                                                label: item?.sourceValue,
+                                              })
+                                            );
 
                                       return (
                                         <Select
@@ -3232,9 +3438,9 @@ const InitialValues = {
                                           value={
                                             values?.taskInterval
                                               ? {
-                                                label: values?.taskInterval,
-                                                value: values?.taskInterval,
-                                              }
+                                                  label: values?.taskInterval,
+                                                  value: values?.taskInterval,
+                                                }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3243,10 +3449,10 @@ const InitialValues = {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3292,7 +3498,7 @@ const InitialValues = {
                                   {allSepareteData.some(
                                     (item) =>
                                       item.sourceName ===
-                                      "scheduledMaintenanceTask" &&
+                                        "scheduledMaintenanceTask" &&
                                       item.sourceValue
                                   ) ? (
                                     (() => {
@@ -3311,17 +3517,17 @@ const InitialValues = {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
+                                              (item) => ({
+                                                value: item?.destinationValue,
+                                                label: item?.destinationValue,
+                                              })
+                                            )
                                           : seperateFilteredData.map(
-                                            (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                              (item) => ({
+                                                value: item?.sourceValue,
+                                                label: item?.sourceValue,
+                                              })
+                                            );
 
                                       return (
                                         <Select
@@ -3331,11 +3537,11 @@ const InitialValues = {
                                           value={
                                             values?.scheduledMaintenanceTask
                                               ? {
-                                                label:
-                                                  values?.scheduledMaintenanceTask,
-                                                value:
-                                                  values?.scheduledMaintenanceTask,
-                                              }
+                                                  label:
+                                                    values?.scheduledMaintenanceTask,
+                                                  value:
+                                                    values?.scheduledMaintenanceTask,
+                                                }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3344,10 +3550,10 @@ const InitialValues = {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3409,17 +3615,17 @@ const InitialValues = {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
+                                              (item) => ({
+                                                value: item?.destinationValue,
+                                                label: item?.destinationValue,
+                                              })
+                                            )
                                           : seperateFilteredData.map(
-                                            (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                              (item) => ({
+                                                value: item?.sourceValue,
+                                                label: item?.sourceValue,
+                                              })
+                                            );
 
                                       return (
                                         <Select
@@ -3429,11 +3635,11 @@ const InitialValues = {
                                           value={
                                             values?.taskDescription
                                               ? {
-                                                label:
-                                                  values?.taskDescription,
-                                                value:
-                                                  values?.taskDescription,
-                                              }
+                                                  label:
+                                                    values?.taskDescription,
+                                                  value:
+                                                    values?.taskDescription,
+                                                }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3442,10 +3648,10 @@ const InitialValues = {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3512,13 +3718,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -3528,9 +3734,9 @@ const InitialValues = {
                                         value={
                                           values?.tasktimeML1
                                             ? {
-                                              label: values?.tasktimeML1,
-                                              value: values?.tasktimeML1,
-                                            }
+                                                label: values?.tasktimeML1,
+                                                value: values?.tasktimeML1,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3539,10 +3745,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3596,13 +3802,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -3612,9 +3818,9 @@ const InitialValues = {
                                         value={
                                           values?.tasktimeML2
                                             ? {
-                                              label: values?.tasktimeML2,
-                                              value: values?.tasktimeML2,
-                                            }
+                                                label: values?.tasktimeML2,
+                                                value: values?.tasktimeML2,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3623,10 +3829,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3680,13 +3886,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -3696,9 +3902,9 @@ const InitialValues = {
                                         value={
                                           values?.tasktimeML3
                                             ? {
-                                              label: values?.tasktimeML3,
-                                              value: values?.tasktimeML3,
-                                            }
+                                                label: values?.tasktimeML3,
+                                                value: values?.tasktimeML3,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3707,10 +3913,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3764,13 +3970,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -3780,9 +3986,9 @@ const InitialValues = {
                                         value={
                                           values?.tasktimeML4
                                             ? {
-                                              label: values?.tasktimeML4,
-                                              value: values?.tasktimeML4,
-                                            }
+                                                label: values?.tasktimeML4,
+                                                value: values?.tasktimeML4,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3791,10 +3997,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3850,13 +4056,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -3866,9 +4072,9 @@ const InitialValues = {
                                         value={
                                           values?.tasktimeML5
                                             ? {
-                                              label: values?.tasktimeML5,
-                                              value: values?.tasktimeML5,
-                                            }
+                                                label: values?.tasktimeML5,
+                                                value: values?.tasktimeML5,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3877,10 +4083,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3934,13 +4140,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -3950,9 +4156,9 @@ const InitialValues = {
                                         value={
                                           values?.tasktimeML6
                                             ? {
-                                              label: values?.tasktimeML6,
-                                              value: values?.tasktimeML6,
-                                            }
+                                                label: values?.tasktimeML6,
+                                                value: values?.tasktimeML6,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3961,10 +4167,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4018,13 +4224,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -4034,9 +4240,9 @@ const InitialValues = {
                                         value={
                                           values?.tasktimeML7
                                             ? {
-                                              label: values?.tasktimeML7,
-                                              value: values?.tasktimeML7,
-                                            }
+                                                label: values?.tasktimeML7,
+                                                value: values?.tasktimeML7,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4045,10 +4251,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4093,7 +4299,8 @@ const InitialValues = {
                                 <Label notify={true}>Skill 1</Label>
                                 {allSepareteData.some(
                                   (item) =>
-                                    item.sourceName === "skill1" && item.sourceValue
+                                    item.sourceName === "skill1" &&
+                                    item.sourceValue
                                 ) ? (
                                   (() => {
                                     const seperateFilteredData =
@@ -4108,13 +4315,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <>
@@ -4125,9 +4332,9 @@ const InitialValues = {
                                           value={
                                             values?.skill1
                                               ? {
-                                                label: values?.skill1,
-                                                value: values?.skill1,
-                                              }
+                                                  label: values?.skill1,
+                                                  value: values?.skill1,
+                                                }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -4136,17 +4343,19 @@ const InitialValues = {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
                                           onChange={(e) => {
-                                         
                                             setFieldValue("skill1", e.value);
-                                            getAllConnectedLibrary(e.value, "skill1");
+                                            getAllConnectedLibrary(
+                                              e.value,
+                                              "skill1"
+                                            );
                                           }}
                                         />
                                       </>
@@ -4191,13 +4400,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -4207,9 +4416,9 @@ const InitialValues = {
                                         value={
                                           values?.skill1nos
                                             ? {
-                                              label: values?.skill1nos,
-                                              value: values?.skill1nos,
-                                            }
+                                                label: values?.skill1nos,
+                                                value: values?.skill1nos,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4218,10 +4427,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4278,13 +4487,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -4294,11 +4503,11 @@ const InitialValues = {
                                         value={
                                           values?.skill1contribution
                                             ? {
-                                              label:
-                                                values?.skill1contribution,
-                                              value:
-                                                values?.skill1contribution,
-                                            }
+                                                label:
+                                                  values?.skill1contribution,
+                                                value:
+                                                  values?.skill1contribution,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4307,10 +4516,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4367,13 +4576,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -4383,9 +4592,9 @@ const InitialValues = {
                                         value={
                                           values?.skill2
                                             ? {
-                                              label: values?.skill2,
-                                              value: values?.skill2,
-                                            }
+                                                label: values?.skill2,
+                                                value: values?.skill2,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4394,10 +4603,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4450,13 +4659,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -4466,9 +4675,9 @@ const InitialValues = {
                                         value={
                                           values?.skill2nos
                                             ? {
-                                              label: values?.skill2nos,
-                                              value: values?.skill2nos,
-                                            }
+                                                label: values?.skill2nos,
+                                                value: values?.skill2nos,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4477,10 +4686,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4537,13 +4746,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -4553,11 +4762,11 @@ const InitialValues = {
                                         value={
                                           values?.skill2contribution
                                             ? {
-                                              label:
-                                                values?.skill2contribution,
-                                              value:
-                                                values?.skill2contribution,
-                                            }
+                                                label:
+                                                  values?.skill2contribution,
+                                                value:
+                                                  values?.skill2contribution,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4566,10 +4775,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4628,13 +4837,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -4644,9 +4853,9 @@ const InitialValues = {
                                         value={
                                           values?.skill3
                                             ? {
-                                              label: values?.skill3,
-                                              value: values?.skill3,
-                                            }
+                                                label: values?.skill3,
+                                                value: values?.skill3,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4655,10 +4864,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4711,13 +4920,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -4727,9 +4936,9 @@ const InitialValues = {
                                         value={
                                           values?.skill3nos
                                             ? {
-                                              label: values?.skill3nos,
-                                              value: values?.skill3nos,
-                                            }
+                                                label: values?.skill3nos,
+                                                value: values?.skill3nos,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4738,10 +4947,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4798,13 +5007,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -4814,11 +5023,11 @@ const InitialValues = {
                                         value={
                                           values?.skill3contribution
                                             ? {
-                                              label:
-                                                values?.skill3contribution,
-                                              value:
-                                                values?.skill3contribution,
-                                            }
+                                                label:
+                                                  values?.skill3contribution,
+                                                value:
+                                                  values?.skill3contribution,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4827,10 +5036,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4900,13 +5109,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -4916,9 +5125,9 @@ const InitialValues = {
                                         value={
                                           values?.addReplacespare1
                                             ? {
-                                              label: values?.addReplacespare1,
-                                              value: values?.addReplacespare1,
-                                            }
+                                                label: values?.addReplacespare1,
+                                                value: values?.addReplacespare1,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4927,10 +5136,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4993,13 +5202,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -5009,11 +5218,11 @@ const InitialValues = {
                                         value={
                                           values?.addReplacespare1qty
                                             ? {
-                                              label:
-                                                values?.addReplacespare1qty,
-                                              value:
-                                                values?.addReplacespare1qty,
-                                            }
+                                                label:
+                                                  values?.addReplacespare1qty,
+                                                value:
+                                                  values?.addReplacespare1qty,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5022,10 +5231,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5089,13 +5298,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -5105,9 +5314,9 @@ const InitialValues = {
                                         value={
                                           values?.addReplacespare2
                                             ? {
-                                              label: values?.addReplacespare2,
-                                              value: values?.addReplacespare2,
-                                            }
+                                                label: values?.addReplacespare2,
+                                                value: values?.addReplacespare2,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5116,10 +5325,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5181,13 +5390,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -5197,11 +5406,11 @@ const InitialValues = {
                                         value={
                                           values?.addReplacespare2qty
                                             ? {
-                                              label:
-                                                values?.addReplacespare2qty,
-                                              value:
-                                                values?.addReplacespare2qty,
-                                            }
+                                                label:
+                                                  values?.addReplacespare2qty,
+                                                value:
+                                                  values?.addReplacespare2qty,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5210,10 +5419,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5277,13 +5486,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -5293,9 +5502,9 @@ const InitialValues = {
                                         value={
                                           values?.addReplacespare3
                                             ? {
-                                              label: values?.addReplacespare3,
-                                              value: values?.addReplacespare3,
-                                            }
+                                                label: values?.addReplacespare3,
+                                                value: values?.addReplacespare3,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5304,10 +5513,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5370,13 +5579,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -5386,11 +5595,11 @@ const InitialValues = {
                                         value={
                                           values?.addReplacespare3qty
                                             ? {
-                                              label:
-                                                values?.addReplacespare3qty,
-                                              value:
-                                                values?.addReplacespare3qty,
-                                            }
+                                                label:
+                                                  values?.addReplacespare3qty,
+                                                value:
+                                                  values?.addReplacespare3qty,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5399,10 +5608,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5463,13 +5672,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -5479,9 +5688,9 @@ const InitialValues = {
                                         value={
                                           values?.Consumable1
                                             ? {
-                                              label: values?.Consumable1,
-                                              value: values?.Consumable1,
-                                            }
+                                                label: values?.Consumable1,
+                                                value: values?.Consumable1,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5490,10 +5699,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5531,43 +5740,43 @@ const InitialValues = {
                                 <Label notify={true}>Consumable 1 Qty</Label>
                                 {allSepareteData.some(
                                   (item) =>
-                                    item.sourceName === "Consumable1qty" &&
+                                    item.sourceName === "consumable1Qty" &&
                                     item.sourceValue
                                 ) ? (
                                   (() => {
                                     const seperateFilteredData =
                                       allSepareteData?.filter(
                                         (item) =>
-                                          item?.sourceName === "Consumable1qty"
+                                          item?.sourceName === "consumable1Qty"
                                       ) || [];
                                     const connectedFilteredData =
                                       allConnectedData?.filter(
                                         (item) =>
                                           item?.destinationName ===
-                                          "Consumable1qty"
+                                          "consumable1Qty"
                                       ) || [];
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
-                                        name="Consumable1qty"
+                                        name="consumable1Qty"
                                         className="mt-1"
                                         placeholder="Consumable 1 Qty"
                                         value={
-                                          values?.Consumable1qty
+                                          values?.consumable1Qty
                                             ? {
-                                              label: values?.Consumable1qty,
-                                              value: values?.Consumable1qty,
-                                            }
+                                                label: values?.consumable1Qty,
+                                                value: values?.consumable1Qty,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5576,21 +5785,21 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
                                         onChange={(e) => {
                                           setFieldValue(
-                                            "Consumable1qty",
+                                            "consumable1Qty",
                                             e.value
                                           );
                                           getAllConnectedLibrary(
                                             e.value,
-                                            "Consumable1qty"
+                                            "consumable1Qty"
                                           );
                                         }}
                                       />
@@ -5598,10 +5807,10 @@ const InitialValues = {
                                   })()
                                 ) : (
                                   <Form.Control
-                                    name="Consumable1qty"
-                                    id="Consumable1qty"
+                                    name="consumable1Qty"
+                                    id="consumable1Qty"
                                     placeholder="Consumable 1 Qty"
-                                    value={values.Consumable1qty}
+                                    value={values.consumable1Qty}
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                     className="mt-1"
@@ -5611,7 +5820,7 @@ const InitialValues = {
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
-                                  name="Consumable1qty"
+                                  name="consumable1Qty"
                                 />
                               </Form.Group>
                             </Col>
@@ -5641,13 +5850,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -5657,9 +5866,9 @@ const InitialValues = {
                                         value={
                                           values?.Consumable2
                                             ? {
-                                              label: values?.Consumable2,
-                                              value: values?.Consumable2,
-                                            }
+                                                label: values?.Consumable2,
+                                                value: values?.Consumable2,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5668,10 +5877,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5727,13 +5936,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -5743,9 +5952,9 @@ const InitialValues = {
                                         value={
                                           values?.Consumable2qty
                                             ? {
-                                              label: values?.Consumable2qty,
-                                              value: values?.Consumable2qty,
-                                            }
+                                                label: values?.Consumable2qty,
+                                                value: values?.Consumable2qty,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5754,10 +5963,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5818,13 +6027,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -5834,9 +6043,9 @@ const InitialValues = {
                                         value={
                                           values?.Consumable3
                                             ? {
-                                              label: values?.Consumable3,
-                                              value: values?.Consumable3,
-                                            }
+                                                label: values?.Consumable3,
+                                                value: values?.Consumable3,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5845,10 +6054,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5904,13 +6113,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -5920,9 +6129,9 @@ const InitialValues = {
                                         value={
                                           values?.Consumable3qty
                                             ? {
-                                              label: values?.Consumable3qty,
-                                              value: values?.Consumable3qty,
-                                            }
+                                                label: values?.Consumable3qty,
+                                                value: values?.Consumable3qty,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5931,10 +6140,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5996,13 +6205,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -6012,9 +6221,9 @@ const InitialValues = {
                                         value={
                                           values?.Consumable4
                                             ? {
-                                              label: values?.Consumable4,
-                                              value: values?.Consumable4,
-                                            }
+                                                label: values?.Consumable4,
+                                                value: values?.Consumable4,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6023,10 +6232,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6082,13 +6291,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -6098,9 +6307,9 @@ const InitialValues = {
                                         value={
                                           values?.Consumable4qty
                                             ? {
-                                              label: values?.Consumable4qty,
-                                              value: values?.Consumable4qty,
-                                            }
+                                                label: values?.Consumable4qty,
+                                                value: values?.Consumable4qty,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6109,10 +6318,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6174,13 +6383,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -6190,9 +6399,9 @@ const InitialValues = {
                                         value={
                                           values?.Consumable5
                                             ? {
-                                              label: values?.Consumable5,
-                                              value: values?.Consumable5,
-                                            }
+                                                label: values?.Consumable5,
+                                                value: values?.Consumable5,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6201,10 +6410,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6260,13 +6469,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -6276,9 +6485,9 @@ const InitialValues = {
                                         value={
                                           values?.Consumable5qty
                                             ? {
-                                              label: values?.Consumable5qty,
-                                              value: values?.Consumable5qty,
-                                            }
+                                                label: values?.Consumable5qty,
+                                                value: values?.Consumable5qty,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6287,10 +6496,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6358,13 +6567,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -6374,9 +6583,9 @@ const InitialValues = {
                                         value={
                                           values?.userfield1
                                             ? {
-                                              label: values?.userfield1,
-                                              value: values?.userfield1,
-                                            }
+                                                label: values?.userfield1,
+                                                value: values?.userfield1,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6385,10 +6594,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6441,13 +6650,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -6457,9 +6666,9 @@ const InitialValues = {
                                         value={
                                           values?.userfield2
                                             ? {
-                                              label: values?.userfield2,
-                                              value: values?.userfield2,
-                                            }
+                                                label: values?.userfield2,
+                                                value: values?.userfield2,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6468,10 +6677,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6524,13 +6733,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -6540,9 +6749,9 @@ const InitialValues = {
                                         value={
                                           values?.userfield3
                                             ? {
-                                              label: values?.userfield3,
-                                              value: values?.userfield3,
-                                            }
+                                                label: values?.userfield3,
+                                                value: values?.userfield3,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6551,10 +6760,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6609,13 +6818,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -6625,9 +6834,9 @@ const InitialValues = {
                                         value={
                                           values?.userfield4
                                             ? {
-                                              label: values?.userfield4,
-                                              value: values?.userfield4,
-                                            }
+                                                label: values?.userfield4,
+                                                value: values?.userfield4,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6636,10 +6845,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6692,13 +6901,13 @@ const InitialValues = {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
+                                            value: item?.sourceValue,
+                                            label: item?.sourceValue,
+                                          }));
 
                                     return (
                                       <Select
@@ -6708,9 +6917,9 @@ const InitialValues = {
                                         value={
                                           values?.userfield5
                                             ? {
-                                              label: values?.userfield5,
-                                              value: values?.userfield5,
-                                            }
+                                                label: values?.userfield5,
+                                                value: values?.userfield5,
+                                              }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6719,10 +6928,10 @@ const InitialValues = {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                          writePermission === "undefined" ||
+                                          role === "admin" ||
+                                          (isOwner === true &&
+                                            createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
