@@ -48,7 +48,7 @@ import {
 import "../../css/SideBar.scss";
 import { useHistory, useLocation } from "react-router-dom";
 import { Accordion } from "react-bootstrap";
-import logo from "../core/Images/logo.png";
+import Relisafe from "../core/Images/Relisafe.png";
 import AccordionBody from "react-bootstrap/esm/AccordionBody";
 
 const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
@@ -185,7 +185,7 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
       <div className={`${active ? "sidebar" : "sidebar active"}`}>
         <div className="logo-content">
           <div className="logo">
-            <img src={logo} alt="Snow" width={"80%"} height={"100%"} />
+            <img src={Relisafe} alt="Snow" width={"80%"} height={"100%"} />
           </div>
           {active === true ? (
             <FontAwesomeIcon

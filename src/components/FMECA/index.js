@@ -10,8 +10,11 @@ import Projectname from "../Company/projectname";
 import { toast } from "react-toastify";
 import {
   faFileDownload,
+  faTrash,
+  faEdit,
   faFileUpload,
 } from "@fortawesome/free-solid-svg-icons";
+import CreatableSelect from "react-select/creatable";
 import * as XLSX from "xlsx";
 import {
   faCircleCheck,
@@ -27,6 +30,7 @@ import TableCell from '@mui/material/TableCell';
 import { customStyles } from "../core/select";
 import { ButtonBase, createTheme, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, Table, TableBody, TableContainer, TableHead, TableRow, ThemeProvider } from "@mui/material";
 import MaterialTable from "material-table";
+import { connect } from "formik";
 
 // hooks/useTableValidation.js
 const useTableValidation = () => {
@@ -198,6 +202,7 @@ function Index(props) {
         projectId: projectId,
       },
     }).then((res) => {
+      console.log("res separate", res)
       let filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "FMECA"
       );
@@ -266,6 +271,7 @@ function Index(props) {
         moduleName: "FMECA",
       },
     }).then((res) => {
+      console.log("res connected after update", res)
       const data = res?.data?.libraryData;
       setAllConnectedData(data ? data : perviousColumnValues);
       setPerviousColumnValues(data);
@@ -275,6 +281,7 @@ function Index(props) {
   useEffect(() => {
     getAllSeprateLibraryData();
     getAllLibraryData();
+    getAllConnectedLibraryAfterUpdate();
   }, []);
 
   useEffect(() => {
@@ -402,7 +409,20 @@ function Index(props) {
 
       getProductData();
       setIsLoading(false);
-    });
+    }).catch((error) => {
+      setIsLoading(false);
+
+      // Backend error message available?
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Something went wrong";
+
+      // Show toast
+      toast.error(errorMessage);
+
+      console.error("Error creating FMECA data:", errorMessage);
+    })
   };
   const convertToJson = (headers, data) => {
     const rows = [];
@@ -589,22 +609,12 @@ function Index(props) {
       });
   };
 
-  const getAllConnect = () => {
-    setIsLoading(true);
 
-    Api.get("api/v1/library/get/all/connect/value", {
-      params: {
-        projectId: projectId,
-      },
-    }).then((res) => {
-      setIsLoading(false);
-      const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "FMECA"
-      );
-      setConnectData(filteredData);
-    });
-  };
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [rowToDelete, setRowToDelete] = useState(null);
   const [showModal, setShowModal] = useState(false);
+    const [flattenedConnect, setFlattenedConnect] = useState([]); 
+  const [dropdownOptions, setDropdownOptions] = useState({});
   const [modalInfo, setModalInfo] = useState({ title: "", message: "" });
   const [connectData, setConnectData] = useState([]);
   const [selectedFunction, setSelectedFunction] = useState();
@@ -614,7 +624,39 @@ function Index(props) {
   const [connectedValues, setConnectedValues] = useState([]);
 
   const [selectedField, setSelectedField] = useState(null);
-  const dropdownOptions = {};
+  // const dropdownOptions = {};
+    const getAllConnect = () => {
+    setIsLoading(true);
+
+    Api.get("api/v1/library/get/all/connect/value", {
+      params: {
+        projectId: projectId,
+      },
+    }).then((res) => {
+      console.log("res connect", res.data.getData)
+      setIsLoading(false);
+      const filteredData = res.data.getData.filter(
+        (entry) => entry?.libraryId?.moduleName === "FMECA" || entry?.destinationModuleName === "FMECA"
+      );
+     
+      setConnectData(filteredData);
+const flattened = filteredData
+  .flatMap((item) =>
+    (item.destinationData || [])
+      .filter(d => d.destinationModuleName === "FMECA") // Filter destinations by module
+      .map((d) => ({
+        fieldName: item.sourceName,         
+        fieldValue: item.sourceValue,
+        destName: d.destinationName,         
+        destValue: d.destinationValue,
+        destModule: d.destinationModuleName // Keep module info for reference
+      }))
+  );
+setFlattenedConnect(flattened);
+  console.log("filteredData", filteredData);
+    });
+
+  };
 
   const handleDropdownChange = (selectedValue) => {
     const selectedItem = treeTableData.find(
@@ -660,14 +702,19 @@ function Index(props) {
     "userField10",
   ];
 
-  fieldNames.forEach((fieldName) => {
-    const filteredData =
-      connectData?.filter((item) => item?.sourceName === fieldName) || [];
-    dropdownOptions[fieldName] = filteredData.map((item) => ({
-      value: item?.sourceValue,
-      label: item?.sourceValue,
-    }));
-  });
+fieldNames.forEach((fieldName) => {
+  const matches = flattenedConnect?.filter(
+    (row) =>
+      row.fieldName === fieldName ||
+      row.destName === fieldName
+  ) || [];
+
+  dropdownOptions[fieldName] = matches.map((row) => ({
+    value: row.destValue || row.fieldValue,
+    label: row.destValue || row.fieldValue,
+  }));
+});
+
 
   useEffect(() => {
     const filteredValues = connectData?.filter(filterCondition) || [];
@@ -700,7 +747,7 @@ function Index(props) {
         }
 
         return (
-          <Select
+          <CreatableSelect
             value={options.find((option) => option.value === value)}
             onChange={(selectedOption) => {
               onChange(selectedOption.value);
@@ -712,7 +759,42 @@ function Index(props) {
         );
       };
 
+  const handleCustomDelete = (rowData) => {
+    setRowToDelete(rowData);
+    setDeleteModalOpen(true);
+  };
 
+  const confirmDelete = () => {
+    if (!rowToDelete) return;
+
+    setIsLoading(true);
+    const rowId = rowToDelete?.id;
+
+    Api.delete(`api/v1/FMECA/${rowId}`, { headers: { userId: userId } })
+      .then((response) => {
+        console.log("Delete successful");
+        getProductData();
+        Modalopen();
+        setIsLoading(false);
+        setDeleteModalOpen(false);
+        setRowToDelete(null);
+      })
+      .catch((error) => {
+        console.error("Delete failed:", error);
+        if (error?.response?.status === 204) {
+          getProductData();
+          Modalopen();
+        }
+        setIsLoading(false);
+        setDeleteModalOpen(false);
+        setRowToDelete(null);
+      });
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setRowToDelete(null);
+  };
 
   const handleDropdownSelection = (fieldName) => {
     setSelectedField(fieldName);
@@ -847,102 +929,122 @@ function Index(props) {
     };
   };
 
-  // Special case for operatingPhase (has different styling)
-  const operatingPhase = {
+const createSmartSelectField = (fieldName, label, required = false) => ({
+  ...createEditComponent(fieldName, label, required),
 
-    ...createEditComponent("operatingPhase", "Operating Phases", true), // true for required
-    editComponent: ({ value, onChange, rowData }) => {
+  editComponent: ({ value, onChange }) => {
+
+    const separateFilteredData =
+      allSepareteData?.filter((item) => item?.sourceName === fieldName) || [];
+
+   
+    const connectedFilteredData =
+      connectData?.flatMap((item) => {
+        const isSourceMatch = item?.sourceName === fieldName;
+
+        const sourceOption = isSourceMatch
+          ? [{ value: item.sourceValue, label: item.sourceValue }]
+          : [];
+// console.log("connectedFilteredData item", isSourceMatch);
+        const matchedDestinations =
+          item?.destinationData?.filter((d) => d?.destinationName === fieldName) || [];
+
+        const destinationOptions = matchedDestinations.map((d) => ({
+          value: d.destinationValue,
+          label: d.destinationValue,
+        }));
+      
+        return [...sourceOption, ...destinationOptions];
+      }) || [];
+
+ console.log("connectedFilteredData", connectedFilteredData);
+    const options =
+      connectedFilteredData.length > 0
+        ? connectedFilteredData
+        : separateFilteredData.map((item) => ({
+            value: item.sourceValue,
+            label: item.sourceValue,
+          }));
+
+  
+    const selectedOption =
+      options.find((opt) => opt.value === value) ||
+      (value ? { label: value, value } : null);
 
 
-      const filteredData = allSepareteData?.filter(
-        (item) => item?.sourceName === "operatingPhase"
-      ) || [];
+    const hasError = required && (!value || value.trim() === "");
 
-      const options = filteredData.map((item) => ({
-        value: item.sourceValue,
-        label: item.sourceValue,
-      }));
 
-      const selectedOption = options.find((opt) => opt.value === value);
-      const displayOption = selectedOption || (value ? { label: value, value: value } : null);
-
-      const isRequired = true; // This field is required
-      const hasError = isRequired && (!value || value.toString().trim() === '');
-
-      if (options.length === 0) {
-        return (
-          <div style={{ position: 'relative' }}>
-            <input
-              type="text"
-              value={value || ''}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="Enter Operating Phase *"
-              style={{
-                height: "40px",
-                borderRadius: "4px",
-                width: "100%",
-                borderColor: hasError ? '#d32f2f' : '#ccc'
-              }}
-              title="Enter Operating Phase"
-            />
-            {hasError && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                color: '#d32f2f',
-                fontSize: '12px',
-                marginTop: '2px'
-              }}>
-                Operating Phases is required!
-              </div>
-            )}
-          </div>
-        );
-      }
-
+    if (!options || options.length === 0) {
       return (
-        <div style={{ position: 'relative' }}>
-          <Select
-            name="operatingPhase"
-            value={displayOption}
-            onChange={(selectedOption) => {
-              onChange(selectedOption?.value);
-              handleInputChange(selectedOption, "operatingPhase");
-              getAllConnectedLibrary(selectedOption, "operatingPhase");
-            }}
-            options={options}
-            styles={{
-              container: (base) => ({
-                ...base,
-                width: "100%",
-                minHeight: "40px"
-              }),
-              control: (base, state) => ({
-                ...base,
-                borderColor: hasError ? '#d32f2f' : state.isFocused ? '#1976d2' : '#ccc',
-                '&:hover': {
-                  borderColor: hasError ? '#d32f2f' : '#1976d2'
-                }
-              })
+        <div style={{ position: "relative" }}>
+          <input
+            type="text"
+            value={value || ""}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={label + (required ? " *" : "")}
+            style={{
+              height: "40px",
+              borderRadius: "4px",
+              width: "100%",
+              borderColor: hasError ? "#d32f2f" : "#ccc",
             }}
           />
           {hasError && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              color: '#d32f2f',
-              fontSize: '12px',
-              marginTop: '2px'
-            }}>
-              Required field
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                color: "#d32f2f",
+                fontSize: "12px",
+              }}
+            >
+              {label} is required
             </div>
           )}
         </div>
       );
     }
-  };
+
+ 
+    return (
+      <div style={{ position: "relative" }}>
+        <CreatableSelect
+          name={fieldName}
+          value={selectedOption}
+          onChange={(selected) => {
+            onChange(selected?.value || "");
+          }}
+          options={options}
+          isClearable
+          menuPortalTarget={document.body}
+          styles={{
+            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            control: (base) => ({
+              ...base,
+              borderColor: hasError ? "#d32f2f" : base.borderColor,
+            }),
+          }}
+        />
+
+        {hasError && (
+          <div
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              color: "#d32f2f",
+              fontSize: "12px",
+            }}
+          >
+            {label} is required
+          </div>
+        )}
+      </div>
+    );
+  },
+});
 
   // Special case for FMECA ID (not an editable field)
   const fmecaIdColumn = {
@@ -952,43 +1054,87 @@ function Index(props) {
   //  const operatingPhaseColumn = createEditComponent("operatingPhase", "Operating Phase"),
   const columns = [
     fmecaIdColumn,
-    operatingPhase,
-    // createEditComponent("operatingPhase", "Operating Phases", true),
-    createEditComponent("function", "Function", true),
-    createEditComponent("failureMode", "Failure Mode", true),
+    // operatingPhase,
+
+   createSmartSelectField("operatingPhase", "Operating Phases", true),
+    createSmartSelectField("function", "Function", true),
+    createSmartSelectField("failureMode", "Failure Mode", true),
     createEditComponent("failureModeRatioAlpha", "Failure Mode Ratio Alpha (must be equal to 1)", true),
-    createEditComponent("cause", "Cause", true),
-    createEditComponent("subSystemEffect", "Sub System effect", true),
-    createEditComponent("systemEffect", "System Effect", true),
-    createEditComponent("endEffect", "End Effect", true),
+    createSmartSelectField("cause", "Cause"),
+    createSmartSelectField("subSystemEffect", "Sub System effect", true),
+    createSmartSelectField("systemEffect", "System Effect", true),
+    createSmartSelectField("endEffect", "End Effect", true),
     createEditComponent("endEffectRatioBeta", "End Effect ratio Beta (must be equal to 1)", true),
     createEditComponent("safetyImpact", "Safety Impact", true),
-    createEditComponent("referenceHazardId", "Reference Hazard ID"),
-    createEditComponent("realibilityImpact", "Reliability Impact", true),
-    createEditComponent("serviceDisruptionTime", "Service Disruption Time (minutes)"),
-    createEditComponent("frequency", "Frequency"),
-    createEditComponent("severity", "Severity"),
-    createEditComponent("riskIndex", "Risk Index"),
-    createEditComponent("detectableMeansDuringOperation", "Detectable Means during operation"),
-    createEditComponent("detectableMeansToMaintainer", "Detectable Means to Maintainer"),
-    createEditComponent("BuiltInTest", "Built-in Test"),
-    createEditComponent("designControl", "Design Control"),
-    createEditComponent("maintenanceControl", "Maintenance Control"),
-    createEditComponent("exportConstraints", "Export constraints"),
-    createEditComponent("immediteActionDuringOperationalPhase", "Immediate Action during operational Phases"),
-    createEditComponent("immediteActionDuringNonOperationalPhase", "Immediate Action during Non-operational Phases"),
-    createEditComponent("userField1", "User field 1"),
-    createEditComponent("userField2", "User field 2"),
-    createEditComponent("userField3", "User field 3"),
-    createEditComponent("userField4", "User field 4"),
-    createEditComponent("userField5", "User field 5"),
-    createEditComponent("userField6", "User field 6"),
-    createEditComponent("userField7", "User field 7"),
-    createEditComponent("userField8", "User field 8"),
-    createEditComponent("userField9", "User field 9"),
-    createEditComponent("userField10", "User field 10"),
+    createSmartSelectField("referenceHazardId", "Reference Hazard ID"),
+    createSmartSelectField("realibilityImpact", "Reliability Impact", true),
+
+    createSmartSelectField("serviceDisruptionTime", "Service Disruption Time (minutes)"),
+    createSmartSelectField("frequency", "Frequency"),
+    createSmartSelectField("severity", "Severity"),
+    createSmartSelectField("riskIndex", "Risk Index"),
+    createSmartSelectField("serviceDisruptionTime", "Service Disruption Time (minutes)"),
+    createSmartSelectField("frequency", "Frequency"),
+    createSmartSelectField("severity", "Severity"),
+    createSmartSelectField("riskIndex", "Risk Index"),
+    createSmartSelectField("detectableMeansDuringOperation", "Detectable Means during operation"),
+    createSmartSelectField("detectableMeansToMaintainer", "Detectable Means to Maintainer"),
+    createSmartSelectField("BuiltInTest", "Built-in Test"),
+    createSmartSelectField("designControl", "Design Control"),
+    createSmartSelectField("maintenanceControl", "Maintenance Control"),
+    createSmartSelectField("exportConstraints", "Export constraints"),
+    createSmartSelectField("immediteActionDuringOperationalPhase", "Immediate Action during operational Phases"),
+    createSmartSelectField("immediteActionDuringNonOperationalPhase", "Immediate Action during Non-operational Phases"),
+    createSmartSelectField("userField1", "User field 1"),
+    createSmartSelectField("userField2", "User field 2"),
+    createSmartSelectField("userField3", "User field 3"),
+    createSmartSelectField("userField4", "User field 4"),
+    createSmartSelectField("userField5", "User field 5"),
+    createSmartSelectField("userField6", "User field 6"),
+    createSmartSelectField("userField7", "User field 7"),
+    createSmartSelectField("userField8", "User field 8"),
+    createSmartSelectField("userField9", "User field 9"),
+    createSmartSelectField("userField10", "User field 10"),
+
+    // {
+    //   // field: "actions",
+    //   render: (rowData) => (
+    //     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+    //       {/* Custom Delete Button with FontAwesome icon */}
+    //       <button
+    //         onClick={() => handleCustomDelete(rowData)}
+    //         style={{
+
+    //           color: '#ff4444',
+    //           border: 'none',
+    //           padding: '8px 12px',
+    //            borderRadius: '4px',
+    //           cursor: 'pointer',
+    //           marginLeft: '5px',
+    //           display: 'flex',
+    //           alignItems: 'center',
+    //           justifyContent: 'center'
+    //         }}
+    //         disabled={!(
+    //           writePermission === true ||
+    //           writePermission === "undefined" ||
+    //           role === "admin" ||
+    //           (isOwner === true && createdBy === userId)
+    //         )}
+    //         title="Delete Row"
+    //       >
+    //         <FontAwesomeIcon icon={faTrash} style={{ fontSize: '14px' }} />
+    //       </button>
+    //     </div>
+    //   ),
+    //   sorting: false,
+    //   filtering: false,
+    //   editable: 'never'
+    // }
   ];
 
+
+  // };
   const createFmeca = (values) => {
     if (productId) {
       const companyId = localStorage.getItem("companyId");
@@ -1076,7 +1222,21 @@ function Index(props) {
         // }
         getProductData();
         setIsLoading(false);
-      });
+      }).catch((error) => {
+        setIsLoading(false);
+
+        // Backend error message available?
+        const errorMessage =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          "Something went wrong";
+
+        // Show toast
+        toast.error(errorMessage);
+
+        console.error("Error creating FMECA data:", errorMessage);
+      }
+      )
     } else {
       setProductModal(true);
     }
@@ -1164,15 +1324,21 @@ function Index(props) {
   };
 
   const deleteFmecaData = (value) => {
+    console.log("@@uhg")
     setIsLoading(true);
+    console.log("@@uhg")
     const rowId = value?.id;
+
     Api.delete(`api/v1/FMECA/${rowId}`, { headers: { userId: userId } })
       .then((res) => {
+        console.log("res delete", res);
         // getTableData();
         // setShow(!show);
         getProductData();
         setIsLoading(false);
         Modalopen();
+
+
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -1180,6 +1346,7 @@ function Index(props) {
           logout();
         }
       });
+
   };
 
   const Modalopen = () => {
@@ -1188,6 +1355,9 @@ function Index(props) {
       setShow(false);
     }, 2000);
   };
+
+  // In your table configuration
+
 
   const role = localStorage.getItem("role");
 
@@ -1214,7 +1384,7 @@ function Index(props) {
               <Projectname projectId={projectId} />
             </div>
 
-            <div style={{ width: "100%", marginRight: "20px" }}>
+            <div style={{ width: "100%", marginRight: "20px",position:"relative", zIndex:999 }}>
               <Dropdown
                 value={projectId}
                 productId={productId}
@@ -1264,6 +1434,11 @@ function Index(props) {
             <div className="mt-5" style={{ bottom: "35px" }}>
               <ThemeProvider theme={tableTheme}>
                 <MaterialTable
+                  title="FMECA"
+                  icons={tableIcons}
+                  data={tableData}
+                  columns={columns}
+
                   editable={{
                     onRowAdd:
                       writePermission === true ||
@@ -1271,62 +1446,70 @@ function Index(props) {
                         role === "admin" ||
                         (isOwner === true && createdBy === userId)
                         ? (newRow) =>
-                          new Promise((resolve, reject) => {
+                          new Promise((resolve) => {
                             createFmeca(newRow);
                             resolve();
                           })
                         : null,
+
                     onRowUpdate:
                       writePermission === true ||
-                        writePermission === "undefined" ||
+                        writePermission === undefined ||
                         role === "admin" ||
                         (isOwner === true && createdBy === userId)
                         ? (newRow, oldData) =>
-                          new Promise((resolve, reject) => {
+                          new Promise((resolve) => {
                             updateFmeca(newRow);
                             resolve();
                           })
                         : null,
+                  }}
 
-                    onRowDelete:
-                      writePermission === true ||
+                  actions={[
+                    {
+                      icon: () => (
+                        <FontAwesomeIcon
+                          icon={faTrash}
+                          style={{ fontSize: "14px", color: "#ff4444" }}
+                        />
+                      ),
+                      tooltip: "Delete Row",
+                      onClick: (event, rowData) => handleCustomDelete(rowData),
+                      disabled: !(
+                        writePermission === true ||
                         writePermission === "undefined" ||
                         role === "admin" ||
                         (isOwner === true && createdBy === userId)
-                        ? (selectedRow) =>
-                          new Promise((resolve, reject) => {
-                            deleteFmecaData(selectedRow);
-                            resolve();
-                          })
-                        : null,
-                  }}
-                  title="FMECA"
-                  icons={tableIcons}
-                  columns={columns}
-                  data={tableData}
+                      ),
+                      position: "row"
+                    }
+                  ]}
+
                   options={{
                     cellStyle: {
                       border: "1px solid #eee",
                       whiteSpace: "normal",
                       wordBreak: "break-word",
-                      minWidth: 250,
+                      minWidth: 300,
                       maxWidth: 400,
                       textAlign: "center",
                     },
                     addRowPosition: "first",
-                    actionsColumnIndex: -1,
+                    actionsColumnIndex: -1,   // Put actions at the end
+                    showEditIcon: false,      // Hide default edit icon
+                    showDeleteIcon: false,    // Hide default delete icon
                     pageSize: 5,
                     pageSizeOptions: [5, 10, 20, 50],
                     headerStyle: {
                       backgroundColor: "#CCE6FF",
                       fontWeight: "bold",
-                      zIndex: 0,
                       whiteSpace: "nowrap",
                       minWidth: 200,
-                      textAlign: "center",
                       maxWidth: 500,
+                      textAlign: "center",
                     },
                   }}
+
                   localization={{
                     toolbar: { function: "Placeholder" },
                     body: {
@@ -1334,6 +1517,7 @@ function Index(props) {
                     },
                   }}
                 />
+
               </ThemeProvider>
               <ValidationModal
                 isOpen={showValidationModal}
@@ -1375,6 +1559,22 @@ function Index(props) {
                   OK
                 </Button>
               </div>
+            </Modal.Footer>
+          </Modal>
+          <Modal show={deleteModalOpen} onHide={cancelDelete} centered>
+            <Modal.Header closeButton>
+              <Modal.Title>Confirm Delete</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              Are you sure you want to delete this row?
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={cancelDelete}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={confirmDelete}>
+                Delete
+              </Button>
             </Modal.Footer>
           </Modal>
           <Modal show={failureModeRatioError} centered onHide={handleHide}>
