@@ -546,11 +546,11 @@ const flattened = filteredData
   });
 
   useEffect(() => {
-    // Filter connectData based on the current selectedFunction
+    
     const filteredValues = connectData?.filter(filterCondition) || [];
     setConnectedValues(filteredValues);
   }, [connectData, selectedFunction]);
-// console.log("jhycr")
+
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
     console.log("fieldValue");
     Api.get("api/v1/library/get/all/source/value", {
@@ -634,9 +634,7 @@ const flattened = filteredData
       );
     };
 
-  // ...
 
-  // Reset the state when another dropdown is selected
   const handleDropdownSelection = (fieldName) => {
     setSelectedField(fieldName);
     setSelectedFunction(null);
