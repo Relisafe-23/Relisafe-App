@@ -92,6 +92,7 @@ function ConnectedLibrary(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
+        console.log("permission data", data);
         setWritePermission(data?.modules);
       })
       .catch((error) => {
@@ -108,6 +109,7 @@ function ConnectedLibrary(props) {
         token: token,
       },
     }).then((res) => {
+      console.log("res1", res);
       setIsOwner(res.data.data.isOwner);
       setCreatedBy(res.data.data.createdBy);
     });
@@ -208,6 +210,7 @@ function ConnectedLibrary(props) {
       destinationData: values,
     })
       .then((res) => {
+        console.log("res create", res)
         const data = res.data;
         setIsLoading(false);
         if (res.status === 201) {
@@ -227,7 +230,7 @@ function ConnectedLibrary(props) {
       });
   };
   // update Api
-  const updateConnectLibrary = (values,{resetForm}) => {
+  const updateConnectLibrary = (values, { resetForm }) => {
     console.log("values.....", values.destinationModule.value);
     const comId = localStorage.getItem("companyId");
 
@@ -237,41 +240,41 @@ function ConnectedLibrary(props) {
       companyId: comId,
       sourceId: sourceId,
       sourceName: values.Field.label,
-      sourceValue:  values.FieldValueAndValue.value,
+      sourceValue: values.FieldValueAndValue.value,
       destinationData: values,
       destinationModuleName: values.destinationModule.value,
     }).then((res) => {
-      console.log("res",res)
-      console.log("values",values)
+      console.log("res", res)
+      console.log("values", values)
       // window.location.reload();
       // setIsLoading(false);
-         resetForm({
-          Module: "",
-          destinationModule: "",
-          Field: "",
-          Value: "",
-          FieldValueAndValue: { field: "", value: "" },
-          end: [],
-          valueEnd: [],
-          FieldValueAndValueEnd: { field: "", value: "" }
-        });
-         resetFormFields();
-       toast.success("Updated successfully!");
+      resetForm({
+        Module: "",
+        destinationModule: "",
+        Field: "",
+        Value: "",
+        FieldValueAndValue: { field: "", value: "" },
+        end: [],
+        valueEnd: [],
+        FieldValueAndValueEnd: { field: "", value: "" }
+      });
+      resetFormFields();
+      toast.success("Updated successfully!");
       getAllConnect();
     });
   };
   const resetFormFields = () => {
-  setEditRowData(null);
-  setSelectModule("");
-  setSelectDestinationModule("");
-  setModuleData([]);
-  setModuleFieldValue("");
-  setSeparateData([]);
-  setSeparateDestinationData([]);
-  setSourceId(null);
-  setDestinationId(null);
-};
-  
+    setEditRowData(null);
+    setSelectModule("");
+    setSelectDestinationModule("");
+    setModuleData([]);
+    setModuleFieldValue("");
+    setSeparateData([]);
+    setSeparateDestinationData([]);
+    setSourceId(null);
+    setDestinationId(null);
+  };
+
   //delete-Api
   const deleteConnectLibarary = (values) => {
     console.log(values)
@@ -284,8 +287,16 @@ function ConnectedLibrary(props) {
       },
     }).then((res) => {
       setIsLoading(false);
+        toast.error(`Deleted Successfully`);
       getAllConnect();
-    });
+    }).catch((error) => {
+    setIsLoading(false);
+    
+    // Show error toast
+    toast.error("Failed to delete connection. Please try again.");
+    
+    console.error("Delete error:", error);
+  });
   };
   //get Api
   const getAllConnect = (values) => {
@@ -296,7 +307,6 @@ function ConnectedLibrary(props) {
         moduleName: values ? values : "",
       },
     }).then((res) => {
-
       setIsLoading(false);
       setConnectData(res.data.getData);
     });
@@ -434,7 +444,7 @@ function ConnectedLibrary(props) {
                 if (validateValueEnd(values.end, values.valueEnd)) {
                   // Custom validation passed, proceed with submission
                   editRowData
-                    ? updateConnectLibrary(values,{resetForm})
+                    ? updateConnectLibrary(values, { resetForm })
                     : createConnectLibrary(values, { resetForm });
                 }
               }}
@@ -582,10 +592,10 @@ function ConnectedLibrary(props) {
                                 {/* {console.log("values...", values)} */}
                                 <Form.Group>
                                   {namesToFilter.includes(
-                                    values.Field.value
+                                    values.Field?.value
                                   ) ? (
                                     <Select
-                                      name={values.Field.value}
+                                      name={values.Field?.value}
                                       className="mt-1"
                                       placeholder={`Select value for ${values.Field.label}`}
                                       value={values?.FieldValueAndValue.value ?
@@ -597,8 +607,8 @@ function ConnectedLibrary(props) {
                                       onBlur={handleBlur}
                                       onChange={(selectedOption) => {
                                         setFieldValue("FieldValueAndValue", {
-                                          field: values.Field.value,
-                                          value: selectedOption.value,
+                                          field: values.Field,
+                                          value: selectedOption,
                                         });
                                       }}
                                     />
@@ -673,6 +683,7 @@ function ConnectedLibrary(props) {
                                 </Form.Group>
                               </Col>
                             ) : null}
+                         
                             <Col className="col-lg-4 mt-2">
                               <Label>Destination Module</Label>
                               <Form.Group>
@@ -685,39 +696,40 @@ function ConnectedLibrary(props) {
                                       }
                                       : null
                                   }
-                                  onChange={(e) => {
+                                  onChange={async (e) => {
+                                    const hasUnsavedChanges = values.FieldValueAndValue?.value || values.Field?.value;
+                                    const currentField = values.Field;
+                                    const currentFieldValue = values.FieldValueAndValue;
+
                                     setSelectDestinationModule(e.value);
-                                    setFieldValue("Field", "");
-                                    setFieldValue("end", []);
-                                    setModuleData([]);
-                                    getModuleFieldDetails(e.value);
                                     setFieldValue("destinationModule", {
                                       label: e.value,
                                       value: e.value,
                                     });
-                                    getAllConnect(e.value);
+
+
+                                    await getModuleFieldDetails(e.value);
+                                    await getAllConnect(e.value);
+
+
+                                    setTimeout(() => {
+                                      if (currentField) {
+                                        setFieldValue("Field", currentField);
+                                      }
+                                      if (currentFieldValue) {
+                                        setFieldValue("FieldValueAndValue", currentFieldValue);
+                                      }
+                                    }, 100);
                                   }}
                                   placeholder="Select Destination Module"
                                   type="select"
                                   name="destinationModule"
                                   styles={customStyles}
                                   options={[
-                                    {
-                                      value: "FMECA",
-                                      label: "FMECA",
-                                    },
-                                    {
-                                      value: "SAFETY",
-                                      label: "SAFETY",
-                                    },
-                                    {
-                                      value: "PMMRA",
-                                      label: "PMMRA",
-                                    },
-                                    {
-                                      value: "MTTR",
-                                      label: "MTTR",
-                                    },
+                                    { value: "FMECA", label: "FMECA" },
+                                    { value: "SAFETY", label: "SAFETY" },
+                                    { value: "PMMRA", label: "PMMRA" },
+                                    { value: "MTTR", label: "MTTR" },
                                   ]}
                                 />
                                 <ErrorMessage
@@ -727,7 +739,6 @@ function ConnectedLibrary(props) {
                                 />
                               </Form.Group>
                             </Col>
-
                             <Col className="col-lg-4 mt-2">
                               <Label>Destination</Label>
                               <Form.Group>
@@ -855,19 +866,19 @@ function ConnectedLibrary(props) {
                                 type="reset"
                                 onClick={() => {
                                   resetForm();
-                                   resetFormFields();
+                                  resetFormFields();
                                   setEditRowData(null);
                                   setModuleData([]);
                                   setSelectModule("");
-                                     setEditRowData(null);
-    setSelectModule("");
-    setSelectDestinationModule(""); 
-    setModuleData([]);
-    setModuleFieldValue("");
-    setSeparateData([]);
-    setSeparateDestinationData([]);
-    setSourceId(null);
-    setDestinationId(null);
+                                  setEditRowData(null);
+                                  setSelectModule("");
+                                  setSelectDestinationModule("");
+                                  setModuleData([]);
+                                  setModuleFieldValue("");
+                                  setSeparateData([]);
+                                  setSeparateDestinationData([]);
+                                  setSourceId(null);
+                                  setDestinationId(null);
                                 }}
                               >
                                 CANCEL

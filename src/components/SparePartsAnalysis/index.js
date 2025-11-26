@@ -41,8 +41,8 @@ function Index(props) {
   const [show, setShow] = useState(false);
   const [treeTableData, setTreeTabledata] = useState([]);
   const [spare, setSpare] = useState("");
-  const [recommended, setRecommended] = useState("");
-  const [warranty, setWarranty] = useState("");
+  const [reCommendedSpare, setReCommendedSpare] = useState("");
+  const [warrantySpare, setWarrantySpare] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [succesMessage, setSuccesMessage] = useState("");
   const [prefillData, setPrefillData] = useState([]);
@@ -63,6 +63,7 @@ function Index(props) {
   const [calculatedSpareQuantity, setCalculatedSpareQuantity] = useState();
   //  const handleShow = () => setShow(true);
   const [tableData, setTableData] = useState();
+  const [hasImportedData, setHasImportedData] = useState(false);
   const [data, setData] = useState([]);
   const [treeData, setTreeData] = useState([]);
   const [productName, setProductName] = useState();
@@ -72,8 +73,8 @@ function Index(props) {
 
   const loginSchema = Yup.object().shape({
     spare: Yup.object().required("Spare is required"),
-    warranty: Yup.object().required("Warranty is required"),
-    recommended: Yup.object().required("Recommended is required"),
+  warrantySpare: Yup.object().required("Warranty is required"),
+    recommendedSpare: Yup.object().required("Recommended is required"),
     deliveryTimeDays: Yup.number().required("Delivery time required"),
     annualPrice: Yup.string()
     .nullable() // allows null
@@ -125,60 +126,113 @@ function Index(props) {
   //   URL.revokeObjectURL(url);
   // };
 
-  const importExcel = (e) => {
-    const file = e.target.files[0];
+  // const importExcel = (e) => {
+  //   const file = e.target.files[0];
 
-    const fileName = file.name;
-    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
-    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
+  //   const fileName = file.name;
+  //   const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
+  //   const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
 
-    if (!validExtensions.includes(fileExtension)) {
-      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
-      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+  //   if (!validExtensions.includes(fileExtension)) {
+  //     // alert('Please upload a valid Excel file (either .xlsx or .xls)');
+  //     toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+  //       position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+  //     });
+  //     return; // Exit the function if the file is not an Excel file
+  //   }
+
+  //   const reader = new FileReader();
+  //   reader.onload = (event) => {
+  //     const bstr = event.target.result;
+  //     const workBook = XLSX.read(bstr, { type: "binary" });
+
+  //     const workSheetName = workBook.SheetNames[0];
+  //     const workSheet = workBook.Sheets[workSheetName];
+
+  //     const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+  //     if (excelData.length > 1) {
+  //       const headers = excelData[0];
+  //       const rows = excelData.slice(1);
+  //       const parsedData = rows.map((row) => {
+  //         const rowData = {};
+  //         headers.forEach((header, index) => {
+  //           rowData[header] = row[index];
+  //         });
+  //         return rowData;
+  //       });
+  //       setImportExcelData(parsedData[0]);
+  //     } else {
+  //       toast("No Data Found In Excel Sheet", {
+  //         position: "top-right",
+  //         autoClose: 5000,
+  //         hideProgressBar: false,
+  //         closeOnClick: true,
+  //         pauseOnHover: true,
+  //         draggable: true,
+  //         progress: undefined,
+  //         theme: "light",
+  //         type: "error",
+  //       });
+  //     }
+  //   };
+  //   if (file) {
+  //     reader.readAsBinaryString(file);
+  //   }
+  // };
+const importExcel = (e) => {
+  const file = e.target.files[0];
+
+  const fileName = file.name;
+  const validExtensions = ["xlsx", "xls"];
+  const fileExtension = fileName.split(".").pop().toLowerCase();
+
+  if (!validExtensions.includes(fileExtension)) {
+    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+      position: toast.POSITION.TOP_RIGHT,
+    });
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const bstr = event.target.result;
+    const workBook = XLSX.read(bstr, { type: "binary" });
+
+    const workSheetName = workBook.SheetNames[0];
+    const workSheet = workBook.Sheets[workSheetName];
+
+    const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+    if (excelData.length > 1) {
+      const headers = excelData[0];
+      const rows = excelData.slice(1);
+      const parsedData = rows.map((row) => {
+        const rowData = {};
+        headers.forEach((header, index) => {
+          rowData[header] = row[index];
+        });
+        return rowData;
       });
-      return; // Exit the function if the file is not an Excel file
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const bstr = event.target.result;
-      const workBook = XLSX.read(bstr, { type: "binary" });
-
-      const workSheetName = workBook.SheetNames[0];
-      const workSheet = workBook.Sheets[workSheetName];
-
-      const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-      if (excelData.length > 1) {
-        const headers = excelData[0];
-        const rows = excelData.slice(1);
-        const parsedData = rows.map((row) => {
-          const rowData = {};
-          headers.forEach((header, index) => {
-            rowData[header] = row[index];
-          });
-          return rowData;
-        });
-        setImportExcelData(parsedData[0]);
-      } else {
-        toast("No Data Found In Excel Sheet", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          type: "error",
-        });
-      }
-    };
-    if (file) {
-      reader.readAsBinaryString(file);
+      
+      // Set a flag to indicate that imported data should take precedence
+      setHasImportedData(true);
+      setImportExcelData(parsedData[0]);
+    } else {
+      toast.error("No Data Found In Excel Sheet", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
     }
   };
-
+  if (file) {
+    reader.readAsBinaryString(file);
+  }
+};
   const createSpareAnalysisDataFromExcel = (values) => {
     setIsLoading(true);
 
@@ -187,7 +241,7 @@ function Index(props) {
     Api.patch("api/v1/sparePartsAnalysis/update", {
       spare: spare,
       // recommendedSpare: reCommendedSpare,
-      warrantySpare: warranty,
+      warrantySpare: warrantySpare,
       deliveryTimeDays: values.deliveryTimeDays,
       afterSerialProductionPrice1: values.afterSerialProductionPrice1,
       price1MOQ: values.moq_1Price,
@@ -243,9 +297,9 @@ function Index(props) {
       Lcc_Price_Validity: value.lccPriceValidity,
       Recomm_Spare_Quantity: value.recommendedSpareQuantity,
       Calc_Spare_Qty: value.calculatedSpareQuantity,
-      warranty: value.warranty?.value || value.warranty || "",
+    warrantySpare: value.warrantySpare?.value || value.warrantySpare || "",
       Spare: value.spare?.value || value.spare || "",
-      Recommended_spare: value.recommended?.value || value.recommended || "",
+      recommendedSpare: value.recommendedSpare?.value || value.recommendedSpare|| "",
     };
 
     // if (originalData.length > 1) working
@@ -357,6 +411,7 @@ function Index(props) {
       },
     })
       .then((res) => {
+        console.log("res2",res)
         const data = res?.data?.data;
         setProductName(data.productName);
         setIsLoading(false);
@@ -385,6 +440,7 @@ function Index(props) {
       },
     })
       .then((res) => {
+        console.log("res3",res)
         const treeData = res?.data?.data;
         const treeStructureId = res?.data?.data[0]?.id;
         setIsLoading(false);
@@ -435,6 +491,7 @@ function Index(props) {
       },
     })
       .then((res) => {
+        console.log("res1",res)
         const data = res?.data?.data;
 
 
@@ -462,13 +519,13 @@ function Index(props) {
 
   const SparePartsAnalysisUpdate = (values, { resetForm }) => {
     const companyId = localStorage.getItem("companyId");
-    const reCommendedSpare = values?.recommended?.value;
+    const recommendedSpare = values?.recommendedSpare?.value;
     const spare = values?.spare?.value;
-    const warranty = values?.warranty?.value;
+    const warrantySpare = values?.warrantySpare?.value;
     Api.patch("api/v1/sparePartsAnalysis/update", {
       spare: spare,
-      recommendedSpare: reCommendedSpare,
-      warrantySpare: warranty,
+      recommendedSpare: recommendedSpare,
+      warrantySpare: warrantySpare,
       deliveryTimeDays: values.deliveryTimeDays,
       afterSerialProductionPrice1: values.afterSerialProductionPrice1,
       price1MOQ: values.moq_1Price,
@@ -506,16 +563,16 @@ function Index(props) {
 
   const submitForm = (values, { resetForm }) => {
     const companyId = localStorage.getItem("companyId");
-    const reCommendedSpare = values?.recommended?.value;
+    const recommendedSpare = values?.recommendedSpare?.value;
     const spare = values?.spare?.value;
-    const warranty = values?.warranty?.value;
+    const warrantySpare = values?.warrantySpare?.value;
     Api.post("api/v1/sparePartsAnalysis", {
       companyId: companyId,
       projectId: projectId,
       productId: productId,
       spare: spare,
-      recommendedSpare: reCommendedSpare,
-      warrantySpare: warranty,
+      recommendedSpare: recommendedSpare,
+      warrantySpare:  warrantySpare,
       deliveryTimeDays: values.deliveryTimeDays,
       afterSerialProductionPrice1: values.afterSerialProductionPrice1,
       afterSerialProductionPrice2: values.afterSerialProductionPrice2,
@@ -530,6 +587,7 @@ function Index(props) {
       userId: userId,
     })
       .then((response) => {
+        console.log("response",response)
         getProductDatas();
         setSuccesMessage(response?.data?.message);
         showModal();
@@ -557,85 +615,67 @@ function Index(props) {
         <Loader />
       ) : (
         <Formik
-          enableReinitialize={true}
-         
-          initialValues={{
-            productName:productName,
-            spare: prefillData?.spare
-              ? { label: prefillData?.spare, value: prefillData?.spare }
-              : "",
-            warranty: prefillData?.warrantySpare
-              ? {
-                label: prefillData?.warrantySpare,
-                value: prefillData?.warrantySpare,
-              }
-              : "",
-            recommended: prefillData?.recommendedSpare
-              ? {
-                label: prefillData?.recommendedSpare,
-                value: prefillData?.recommendedSpare,
-              }
-              : "",
-            deliveryTimeDays: prefillData?.deliveryTimeDays
-              ? prefillData?.deliveryTimeDays
-              : importExcelData?.Delivery_Days
-                ? importExcelData?.Delivery_Days
-                : "",
+           enableReinitialize={true}
+         // Add this state to track if data was imported
 
-            lccPriceValidity: prefillData?.lccPriceValidity
-              ? prefillData?.lccPriceValidity
-              : importExcelData?.Lcc_Price_Validity
-                ? importExcelData?.Lcc_Price_Validity
-                : "",
-            afterSerialProductionPrice1:
-              prefillData?.afterSerialProductionPrice1
-                ? prefillData?.afterSerialProductionPrice1
-                : importExcelData?.Serial_Production_Price1
-                  ? importExcelData?.Serial_Production_Price1
-                  : "",
-            afterSerialProductionPrice2:
-              prefillData?.afterSerialProductionPrice2
-                ? prefillData?.afterSerialProductionPrice2
-                : importExcelData?.Serial_Production_Price2
-                  ? importExcelData?.Serial_Production_Price2
-                  : "",
-            afterSerialProductionPrice3:
-              prefillData?.afterSerialProductionPrice3
-                ? prefillData?.afterSerialProductionPrice3
-                : importExcelData?.Serial_Production_Price3
-                  ? importExcelData?.Serial_Production_Price3
-                  : "",
-            moq_1Price: prefillData?.price1MOQ
-              ? prefillData?.price1MOQ
-              : importExcelData?.Moq_Price_1
-                ? importExcelData?.Moq_Price_1
-                : "",
-            moq_2Price: prefillData?.price2MOQ
-              ? prefillData?.price2MOQ
-              : importExcelData?.Moq_Price_2
-                ? importExcelData?.Moq_Price_2
-                : "",
-            moq_3Price: prefillData?.price3MOQ
-              ? prefillData?.price3MOQ
-              : importExcelData?.Moq_Price_3
-                ? importExcelData?.Moq_Price_3
-                : "",
-            annualPrice: prefillData?.annualPriceEscalationPercentage
-              ? prefillData?.annualPriceEscalationPercentage
-              : importExcelData?.Annual_Price
-                ? importExcelData?.Annual_Price
-                : "",
-            calculatedSpareQuantity: calculatedSpareQuantity !== null && calculatedSpareQuantity !== undefined
-  ? calculatedSpareQuantity
-  : importExcelData?.Calc_Spare_Qty
-    ? importExcelData?.Calc_Spare_Qty
-    : "",
-            recommendedSpareQuantity: recommendedSpareQuantity
-              ? recommendedSpareQuantity
-              : importExcelData?.Recomm_Spare_Quantity
-                ? importExcelData?.Recomm_Spare_Quantity
-                : "",
-          }}
+
+// Modified initialValues
+initialValues={{
+  productName: productName,
+
+  spare: hasImportedData && importExcelData?.Spare 
+    ? { label: importExcelData?.Spare, value: importExcelData?.Spare }
+    : prefillData?.spare
+      ? { label: prefillData?.spare, value: prefillData?.spare }
+      : "",
+warrantySpare: hasImportedData && importExcelData?.warrantySpare
+    ? { label: importExcelData?.warrantySpare, value: importExcelData?.warrantySpare }
+    : prefillData?.warrantySpare
+      ? { label: prefillData?.warrantySpare, value: prefillData?.warrantySpare }
+      : "",
+// Try these common variations
+recommendedSpare: hasImportedData && importExcelData?.recommendedSpare
+    ? { label: importExcelData?.recommendedSpare, value: importExcelData?.recommendedSpare }
+    : prefillData?.recommendedSpare
+      ? { label: prefillData?.recommendedSpare, value: prefillData?.recommendedSpare }
+      : "", 
+  deliveryTimeDays: hasImportedData 
+    ? importExcelData?.Delivery_Days || ""
+    : prefillData?.deliveryTimeDays || "",
+  lccPriceValidity: hasImportedData
+    ? importExcelData?.Lcc_Price_Validity || ""
+    : prefillData?.lccPriceValidity || "",
+  afterSerialProductionPrice1: hasImportedData
+    ? importExcelData?.Serial_Production_Price1 || ""
+    : prefillData?.afterSerialProductionPrice1 || "",
+  afterSerialProductionPrice2: hasImportedData
+    ? importExcelData?.Serial_Production_Price2 || ""
+    : prefillData?.afterSerialProductionPrice2 || "",
+  afterSerialProductionPrice3: hasImportedData
+    ? importExcelData?.Serial_Production_Price3 || ""
+    : prefillData?.afterSerialProductionPrice3 || "",
+  moq_1Price: hasImportedData
+    ? importExcelData?.Moq_Price_1 || ""
+    : prefillData?.price1MOQ || "",
+  moq_2Price: hasImportedData
+    ? importExcelData?.Moq_Price_2 || ""
+    : prefillData?.price2MOQ || "",
+  moq_3Price: hasImportedData
+    ? importExcelData?.Moq_Price_3 || ""
+    : prefillData?.price3MOQ || "",
+  annualPrice: hasImportedData
+    ? importExcelData?.Annual_Price || ""
+    : prefillData?.annualPriceEscalationPercentage || "",
+  calculatedSpareQuantity: hasImportedData
+    ? importExcelData?.Calc_Spare_Qty || ""
+    : calculatedSpareQuantity !== null && calculatedSpareQuantity !== undefined
+      ? calculatedSpareQuantity
+      : "",
+  recommendedSpareQuantity: hasImportedData
+    ? importExcelData?.Recomm_Spare_Quantity || ""
+    : recommendedSpareQuantity || "",
+}}
+
           validationSchema={loginSchema}
           onSubmit={(values, { resetForm }) =>
             spareId
@@ -776,7 +816,7 @@ function Index(props) {
                               <Label notify={true}>Warranty Spare?</Label>
                               <Select
                                 className="mt-1"
-                                name="warranty"
+                                name="warrantySpare"
                                 styles={customStyles}
                                 type="select"
                                 isDisabled={
@@ -787,10 +827,10 @@ function Index(props) {
                                     ? null
                                     : "disabled"
                                 }
-                                value={values.warranty}
+                                value={values.warrantySpare}
                                 onBlur={handleBlur}
                                 onChange={(e) => {
-                                  setFieldValue("warranty", e);
+                                  setFieldValue("warrantySpare", e);
                                 }}
                                 options={[
                                   {
@@ -807,7 +847,7 @@ function Index(props) {
                               <ErrorMessage
                                 className="error text-danger"
                                 component="span"
-                                name="warranty"
+                                name="warrantySpare"
                               />
                             </Form.Group>
                           </Col>
@@ -818,7 +858,7 @@ function Index(props) {
                               <Label notify={true}>Recommended Spare?</Label>
                               <Select
                                 className="mt-1"
-                                name="recommended"
+                                name="recommendedSpare"
                                 styles={customStyles}
                                 type="select"
                                 isDisabled={
@@ -829,10 +869,10 @@ function Index(props) {
                                     ? null
                                     : "disabled"
                                 }
-                                value={values.recommended}
+                                value={values.recommendedSpare}
                                 onBlur={handleBlur}
                                 onChange={(e) => {
-                                  setFieldValue("recommended", e);
+                                  setFieldValue("recommendedSpare", e);
                                 }}
                                 options={[
                                   {
@@ -849,7 +889,7 @@ function Index(props) {
                               <ErrorMessage
                                 className="error text-danger"
                                 component="span"
-                                name="recommended"
+                                name="reCommendedSpare"
                               />
                             </Form.Group>
                           </Col>

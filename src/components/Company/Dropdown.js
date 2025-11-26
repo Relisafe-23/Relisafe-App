@@ -10,6 +10,46 @@ export default function Dropdown(props) {
   const [productData, setProductData] = useState([]);
   const [prefillData, setPrefillData] = useState(null);
   const history = useHistory();
+const customStyles = {
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected ? '#007bff' : 'white',
+    color: state.isSelected ? 'white' : 'black',
+    '&:hover': {
+      backgroundColor: state.isSelected ? '#007bff' : '#f8f9fa',
+      color: state.isSelected ? 'white' : 'black',
+    },
+  }),
+control: (provided, state) => ({
+  ...provided,
+  border: state.isFocused || state.hasValue ? '2px solid #007bff' : '1px solid #ced4da',
+  borderRadius: '0.375rem',
+  boxShadow:
+    state.isFocused || state.hasValue
+      ? '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
+      : 'none',
+  '&:hover': {
+    border: state.isFocused || state.hasValue ? '2px solid #007bff' : '1px solid #007bff',
+  },
+}),
+
+  singleValue: (provided, state) => ({
+    ...provided,
+    color: '#212529',
+    fontWeight: state.isFocused ? '600' : '400',
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: '#6c757d',
+  }),
+  menu: (provided) => ({
+    ...provided,
+    borderRadius: '0.375rem',
+    boxShadow: '0 0.5rem 1rem rgba(0, 0, 0, 0.15)',
+  }),
+};
+
+// In your component
 
   const getTreeProduct = () => {
     
@@ -93,14 +133,25 @@ export default function Dropdown(props) {
           <div>
             <Select
               type="select"
+                styles={customStyles}
               placeholder="Select Product"
-              value={prefillData}
+              value={productData
+  .map((list) => ({
+    value: list.id,
+    label: list.indexCount + "." + list.productName,
+  }))
+  .find((item) => item.value === prefillData)}
+
+              
               options={productData.map((list) => ({
                 value: list.id,
                 label: list.indexCount + "." + list.productName,
               }))}
               onChange={handleChange}
             />
+            <div>
+
+</div>
           </div>
         </Col>
         <Col className="d-flex justify-content-end mt-1" sm={12} md={4}>
