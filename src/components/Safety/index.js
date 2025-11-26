@@ -8,6 +8,7 @@ import { ThemeProvider } from "@material-ui/core/styles";
 import { createTheme } from "@material-ui/core/styles";
 //import Tree from "../Tree";
 import Dropdown from "../Company/Dropdown";
+import CreatableSelect from "react-select/creatable";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
 import { FaExclamationCircle } from "react-icons/fa";
@@ -347,6 +348,7 @@ const importExcel = (e) => {
       },
     })
       .then((res) => {
+        console.log("safety res", res)
         const data = res?.data?.data;
         getProjectDetails();
 
@@ -416,21 +418,76 @@ const importExcel = (e) => {
       });
   };
 
-  const getAllConnect = () => {
-    setIsLoading(true);
+  // const getAllConnect = () => {
+  //   setIsLoading(true);
 
-    Api.get("api/v1/library/get/all/connect/value", {
-      params: {
-        projectId: projectId,
-      },
-    }).then((res) => {
-      setIsLoading(false);
-      const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "SAFETY"
+  //   Api.get("api/v1/library/get/all/connect/value", {
+  //     params: {
+  //       projectId: projectId,
+  //     },
+  //   }).then((res) => {
+  //     console.log("res connect", res)
+  //     setIsLoading(false);
+  //     const filteredData = res.data.getData.filter(
+  //       (entry) => entry?.libraryId?.moduleName === "SAFETY" || entry?.destinationModuleName === "SAFETY"
+  //     );
+  //     setConnectData(filteredData);
+  //     console.log("filteredData777", filteredData)
+  //   });
+  // }; 
+  const getAllConnect = () => {
+  setIsLoading(true);
+  Api.get("api/v1/library/get/all/connect/value", {
+    params: {
+      projectId: projectId,
+    },
+  }).then((res) => {
+    console.log("res connect00", res)
+    setIsLoading(false);
+
+    // const filteredData = res.data.getData.filter((entry) => {
+    //   const isSafetySourceModule =
+    //     entry?.libraryId?.moduleName === "SAFETY";
+         
+    //   const isSafetyDestinationModule =
+    //     entry?.destinationModuleName === "SAFETY";
+
+    //   const isSafetySourceName =
+    //     entry?.sourceName === "SAFETY";
+
+    //   const isSafetyInDestinations =
+    //     entry?.destinationData?.some(
+    //       (d) => d?.destinationName === "SAFETY"
+    //     );
+    const filteredData = res.data.getData.filter(
+        (entry) => entry?.libraryId?.moduleName === "SAFETY" || entry?.destinationModuleName === "SAFETY"
       );
+     
       setConnectData(filteredData);
+const flattened = filteredData
+  .flatMap((item) =>
+    (item.destinationData || [])
+      .filter(d => d.destinationModuleName === "SAFETY") // Filter destinations by module
+      .map((d) => ({
+        sourceName: item.sourceName,         
+        sourceValue: item.sourceValue,
+           destinationName: d.destinationName,
+          destinationValue: d.destinationValue,
+        destinationModule: d.destinationModuleName 
+      }))
+  );
+// setFlattenedConnect(flattened);
+   setConnectData(flattened)
+  console.log("filteredData", flattened);
+
+ 
     });
-  };
+
+ ;
+ 
+  
+};
+
 
   useEffect(() => {
     getAllConnect();
@@ -493,8 +550,9 @@ const importExcel = (e) => {
     const filteredValues = connectData?.filter(filterCondition) || [];
     setConnectedValues(filteredValues);
   }, [connectData, selectedFunction]);
-
+// console.log("jhycr")
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
+    console.log("fieldValue");
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
@@ -504,6 +562,7 @@ const importExcel = (e) => {
         sourceValue: fieldValue.value,
       },
     }).then((res) => {
+      console.log("res data", res)
       const data = res?.data?.libraryData;
       if (data.length > 0) {
         setAllConnectedData(data);
@@ -528,6 +587,7 @@ const importExcel = (e) => {
         }
       );
       const safetyData = safetyResponse?.data?.libraryData;
+      console.log("safetyData", safetyData);
       setAllConnectedData(safetyData);
     } catch (error) {
       console.error("Error fetching SAFETY data:", error);
@@ -562,7 +622,7 @@ const importExcel = (e) => {
       }
 
       return (
-        <Select
+        <CreatableSelect
           value={options.find((option) => option.value === value)}
           onChange={(selectedOption) => {
             onChange(selectedOption.value);
@@ -587,6 +647,8 @@ const importExcel = (e) => {
       title: "Hazard*",
       cellStyle: { minWidth: "140px", textAlign: "center" },
       headerStyle: { minWidth: "140px", textAlign: "center" },
+   
+  
     },
     {
       field: "modeOfOperation",
@@ -594,16 +656,30 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "200px", textAlign: "center" },
       headerStyle: { minWidth: "200px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.modeOfOperation || rowData.modeOfOperation.trim() === "") {
+        return { isValid: false, helperText: "Mode of Operation is required" };
+      }
+      return true;
+    },
       onCellClick: () => handleDropdownSelection("modeOfOperation"),
       editComponent: ({ value, onChange, rowData }) => {
-        const filteredData =
+        const seperateFilteredData=
           allSepareteData?.filter(
             (item) => item?.sourceName === "modeOfOperation"
           ) || [];
-        const options = filteredData?.map((item) => ({
-          value: item?.sourceValue,
-          label: item?.sourceValue,
-        }));
+           const connectedFilteredData =
+      connectData?.filter((item) => item?.destinationName === "modeOfOperation") || [];
+       const options =
+      connectedFilteredData.length > 0
+        ? connectedFilteredData.map((item) => ({
+            value: item.destinationValue,
+            label: item.destinationValue,
+          }))
+        : seperateFilteredData.map((item) => ({
+            value: item.sourceValue,
+            label: item.sourceValue,
+          }));
         if (options.length === 0) {
           return (
             <input
@@ -617,7 +693,7 @@ const importExcel = (e) => {
           );
         } else {
           return (
-            <Select
+            <CreatableSelect
               name="modeOfOperation"
               value={
                 data.modeOfOperation
@@ -640,6 +716,12 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "200px", textAlign: "center" },
       headerStyle: { minWidth: "200px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.hazardCause || rowData.hazardCause.trim() === "") {
+        return { isValid: false, helperText: "Hazard Cause is required" };
+      }
+      return true;
+    },
       onCellClick: () => handleDropdownSelection("hazardCause"),
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -677,7 +759,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="hazardCause"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -696,6 +778,12 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
       headerStyle: { minWidth: "230px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.effectOfHazard || rowData.effectOfHazard.trim() === "") {
+        return { isValid: false, helperText: "Effect of the Hazard is required" };
+      }
+      return true;
+    },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter(
@@ -733,7 +821,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="effectOfHazard"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -749,9 +837,15 @@ const importExcel = (e) => {
     },
     {
       field: "hazardClasification",
-      title: "Hazard Clasification*",
+      title: "Hazard Classification*",
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.hazardClasification || rowData.hazardClasification.trim() === "") {
+        return { isValid: false, helperText: "Hazard Classification is required" };
+      }
+      return true;
+    },
       headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -790,7 +884,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="hazardClasification"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -844,7 +938,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="designAssuranceLevel"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -863,6 +957,12 @@ const importExcel = (e) => {
       title: "Means of detection*",
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.meansOfDetection || rowData.meansOfDetection.trim() === "") {
+        return { isValid: false, helperText: "Means of detection is required" };
+      }
+      return true;
+    },
       headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -901,7 +1001,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="meansOfDetection"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -919,6 +1019,12 @@ const importExcel = (e) => {
       title: "Crew response*",
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
+         validate: (rowData) => {
+      if (!rowData.crewResponse || rowData.crewResponse.trim() === "") {
+        return { isValid: false, helperText: "Crew response is required" };
+      }
+      return true;
+    },
       headerStyle: { minWidth: "230px", textAlign: "center" },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
@@ -957,7 +1063,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="crewResponse"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -976,6 +1082,12 @@ const importExcel = (e) => {
       type: "string",
       cellStyle: { minWidth: "230px", textAlign: "center" },
       headerStyle: { minWidth: "230px", textAlign: "center" },
+          validate: (rowData) => {
+      if (!rowData.uniqueHazardIdentifier || rowData.uniqueHazardIdentifier.trim() === "") {
+        return { isValid: false, helperText: "Unique Hazard Identifier is required" };
+      }
+      return true;
+    },
       editComponent: ({ value, onChange }) => {
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "uniqueHazardIdentifier") ||
@@ -1012,7 +1124,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="uniqueHazardIdentifier"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1068,7 +1180,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="initialSeverity"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1130,7 +1242,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="initialLikelihood"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1186,7 +1298,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="initialRiskLevel"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1248,7 +1360,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="designMitigation"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1304,7 +1416,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="designMitigatonResbiity"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1359,7 +1471,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="designMitigtonEvidence"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1414,7 +1526,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="opernalMaintanMitigation"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1469,7 +1581,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="opernalMitigatonResbility"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1525,7 +1637,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="operatnalMitigationEvidence"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1587,7 +1699,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="residualSeverity"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1646,7 +1758,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="residualLikelihood"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1703,7 +1815,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="residualRiskLevel"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1759,7 +1871,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="hazardStatus"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1815,7 +1927,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="ftaNameId"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1871,7 +1983,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="userField1"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1927,7 +2039,7 @@ const importExcel = (e) => {
           );
         }
         return (
-          <Select
+          <CreatableSelect
             name="userField2"
             value={value ? { label: value, value: value } : ""}
             onChange={(selectedItems) => {
@@ -1954,7 +2066,7 @@ const importExcel = (e) => {
         effectOfHazard: values.effectOfHazard ? values.effectOfHazard : data.effectOfHazard,
         hazardClasification: values.hazardClasification ? values.hazardClasification : data.hazardClasification,
         designAssuranceLevel: values.designAssuranceLevel
-          ? values.designAssuranceLevel
+          ? data.designAssuranceLevel
           : 1,
         meansOfDetection: values.meansOfDetection
           ? values.meansOfDetection
@@ -2208,73 +2320,18 @@ const importExcel = (e) => {
                     zIndex: 0,
                   },
                 }}
-                //Export
-                // action={[
-                //   {
-                //     icon: () => <Button>Export</Button>,
-                //     tooltip: "Export to Excel",
-                //     onClick: "DownloadExcel",
-                //     isFreeAction: true,
-                //   },
-                // ]}
-
-                // actions={[
-                //   {
-                //     icon: () => <Button className="export-btns">Export</Button>,
-                //     tooltip: "Export to Excel",
-                //     onClick: DownloadExcel,
-                //     isFreeAction: true,
-                //   },
-                // ]}
+             
                 localization={{
                   body: {
                     addTooltip: "Add Safety",
                   },
                 }}
 
-                // actions={[
-                //   {
-                //     icon: tableIcons.Delete,
-                //     tooltip: "Delete User",
-                //     onClick: (event, rowData) => alert("You want to delete "),
-                //   },
-                //   {
-                //     icon: tableIcons.Edit,
-                //     tooltip: "Edit User",
-                //     isFreeAction: true,
-                //     onClick: (event, rowData) => alert("You want to edit a new row"),
-                //   },
-                //   {
-                //     icon: tableIcons.Add,
-                //     tooltip: "Add User",
-                //     isFreeAction: true,
-                //     onClick: (event) => alert("You want to add a new row"),
-                //   },
-                // ]}
+            
               />
             </ThemeProvider>
           </div>
-          {/* <Modal show={show} centered className="user-delete-modal">
-            <Modal.Body className="modal-body-user">
-              <div>
-                <h4 className="d-flex justify-content-center">
-                  Row Deleted successfully
-                </h4>
-              </div>
-            </Modal.Body>
-            <Modal.Footer
-              className=" d-flex justify-content-center"
-              style={{ borderTop: 0, bottom: "30px" }}
-            >
-              <Button
-                className="px-5 "
-                style={{ backgroundColor: "#398935", borderColor: "#398935" }}
-                onClick={() => setShow(false)}
-              >
-                ok
-              </Button>
-            </Modal.Footer>
-          </Modal> */}
+  
           <Modal show={show} centered>
             <div className="d-flex justify-content-center mt-5">
               <FontAwesomeIcon

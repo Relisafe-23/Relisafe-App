@@ -3,7 +3,7 @@ import { Nav, UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem }
 import { Avatar } from "@material-ui/core";
 import "../../css/HeaderNavBar.scss";
 import Tooltip from "@mui/material/Tooltip";
-import logo from "../core/Images/logo.png";
+import Relisafe from "../core/Images/Relisafe.png";
 import { useHistory, Link } from "react-router-dom";
 import { useModal } from "../ModalContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -252,7 +252,7 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
       ) : (
         <div className={"nav-head-main"}>
           <div className="header-logo">
-            <img src={logo} alt="Snow" className="mx-1 head-nav-image" />
+            <img src={Relisafe} alt="Snow" className="mx-1 head-nav-image" />
           </div>
         </div>
       )}
