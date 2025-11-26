@@ -728,20 +728,20 @@ const flattened = filteredData
           allSepareteData?.filter((item) => item?.sourceName === "hazardCause") ||
           [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+          connectData?.filter(
             (item) => item?.destinationName === "hazardCause"
           ) || [];
 
-        const options =
-          conncetedFilteredData.length > 0
-            ? conncetedFilteredData?.map((item) => ({
-                value: item?.destinationValue,
-                label: item?.destinationValue,
-              }))
-            : seperateFilteredData?.map((item) => ({
-                value: item?.sourceValue,
-                label: item?.sourceValue,
-              }));
+          const options =
+       conncetedFilteredData.length > 0
+        ? conncetedFilteredData.map((item) => ({
+            value: item.destinationValue,
+            label: item.destinationValue,
+          }))
+        : seperateFilteredData.map((item) => ({
+            value: item.sourceValue,
+            label: item.sourceValue,
+          }));
         if (!options || options.length === 0) {
           return (
             <input
@@ -790,7 +790,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "effectOfHazard"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+          connectData?.filter(
             (item) => item?.destinationName === "effectOfHazard"
           ) || [];
 
@@ -853,7 +853,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "hazardClasification"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+          connectData?.filter(
             (item) => item?.destinationName === "hazardClasification"
           ) || [];
 
@@ -907,7 +907,7 @@ const flattened = filteredData
         const seperateFilteredData =
           allSepareteData?.filter((item) => item?.sourceName === "designAssuranceLevel") || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "designAssuranceLevel"
           ) || [];
 
@@ -970,7 +970,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "meansOfDetection"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "meansOfDetection"
           ) || [];
 
@@ -1032,7 +1032,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "crewResponse"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "crewResponse"
           ) || [];
 
@@ -1093,7 +1093,7 @@ const flattened = filteredData
           allSepareteData?.filter((item) => item?.sourceName === "uniqueHazardIdentifier") ||
           [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "uniqueHazardIdentifier"
           ) || [];
 
@@ -1149,7 +1149,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "initialSeverity"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "initialSeverity"
           ) || [];
 
@@ -1211,7 +1211,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "initialLikelihood"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "initialLikelihood"
           ) || [];
 
@@ -1267,7 +1267,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "initialRiskLevel"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "initialRiskLevel"
           ) || [];
 
@@ -1329,7 +1329,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "designMitigation"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+          connectData?.filter(
             (item) => item?.destinationName === "designMitigation"
           ) || [];
 
@@ -1385,7 +1385,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "designMitigatonResbiity"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+          connectData?.filter(
             (item) => item?.destinationName === "designMitigatonResbiity"
           ) || [];
 
@@ -1440,7 +1440,7 @@ const flattened = filteredData
           allSepareteData?.filter((item) => item?.sourceName === "designMitigtonEvidence") ||
           [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "designMitigtonEvidence"
           ) || [];
 
@@ -1495,7 +1495,7 @@ const flattened = filteredData
           allSepareteData?.filter((item) => item?.sourceName === "opernalMaintanMitigation") ||
           [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+          connectData?.filter(
             (item) => item?.destinationName === "opernalMaintanMitigation"
           ) || [];
 
@@ -1550,7 +1550,7 @@ const flattened = filteredData
           allSepareteData?.filter((item) => item?.sourceName === "opernalMitigatonResbility") ||
           [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "opernalMitigatonResbility"
           ) || [];
 
@@ -1606,7 +1606,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "operatnalMitigationEvidence"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "operatnalMitigationEvidence"
           ) || [];
 
@@ -1668,7 +1668,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "residualSeverity"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "residualSeverity"
           ) || [];
 
@@ -1727,7 +1727,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "residualLikelihood"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "residualLikelihood"
           ) || [];
 
@@ -1784,7 +1784,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "residualRiskLevel"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "residualRiskLevel"
           ) || [];
 
@@ -1840,7 +1840,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "hazardStatus"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "hazardStatus"
           ) || [];
 
@@ -1896,7 +1896,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "ftaNameId"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "ftaNameId"
           ) || [];
 
@@ -1952,7 +1952,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "userField1"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "userField1"
           ) || [];
 
@@ -2008,7 +2008,7 @@ const flattened = filteredData
             (item) => item?.sourceName === "userField2"
           ) || [];
         const conncetedFilteredData =
-          allConnectedData?.filter(
+           connectData?.filter(
             (item) => item?.destinationName === "userField2"
           ) || [];
 
