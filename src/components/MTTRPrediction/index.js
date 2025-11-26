@@ -55,6 +55,7 @@ const MTTRPrediction = (props, active) => {
     ? props?.location?.state?.parentId
     : initialTreeStructure;
   const [open, setOpen] = useState(false);
+   const [isSaving, setIsSaving] = useState(false);
   const [category, setCategory] = useState("");
   const [successMessage, setSuccessMessage] = useState();
   const [repairable, setRepairable] = useState("");
@@ -463,6 +464,9 @@ const exportToExcel = (value, productName) => {
 
 
   const handleCancelClick = () => {
+      if (isSaving) {
+    setIsSaving(false); // Stop spinner if cancel is clicked during save
+  }
     const shouldReloadPage = true;
 
     if (shouldReloadPage) {
@@ -1301,6 +1305,7 @@ editComponent: ({ value, onChange }) => {
   };
 
   const submitForm = (values) => {
+     setIsSaving(true);
     checkingMandatoryFields(values);
         getMttrData();
   };
@@ -1332,22 +1337,26 @@ editComponent: ({ value, onChange }) => {
           const mttrId = res?.data?.data?.id;
           setSuccessMessage(res?.data?.message);
           setMttrId(res?.data?.data?.id);
+           setIsSaving(false);
           NextPage();
 
         })
         .catch((error) => {
           const errorStatus = error?.response?.status;
+           setIsSaving(false);
           if (errorStatus === 401) {
             logout();
           }
         });
     } else {
       setOpen(true);
+       setIsSaving(false);
     }
   };
 
   const patchMttrData = (values) => {
     if (validateData > 0) {
+      setIsSaving(true); 
       const companyId = localStorage.getItem("companyId");
 
       Api.patch(`/api/v1/mttrPrediction/${mttrId}`, {
@@ -1371,15 +1380,18 @@ editComponent: ({ value, onChange }) => {
         .then((res) => {
           setSuccessMessage(res.data.message);
           NextPage();
+           setIsSaving(false); 
         })
         .catch((error) => {
           const errorStatus = error?.response?.status;
+           setIsSaving(false);
           if (errorStatus === 401) {
             logout();
           }
         });
     } else {
       setOpen(true);
+       setIsSaving(false); 
     }
   };
   const getMttrData = () => {
@@ -1482,6 +1494,7 @@ editComponent: ({ value, onChange }) => {
           }}
           validationSchema={submitSchema}
           onSubmit={(values, { resetForm }) => {
+            setIsSaving(true); 
             mttrId ? patchMttrData(values) : submitForm(values);
           }}
         >
@@ -2257,27 +2270,41 @@ editComponent: ({ value, onChange }) => {
                         </div>{" "}
                       </Card>
 
-                      <div className="d-flex flex-direction-row justify-content-end  mt-4 mb-5">
-                        <Button
-                          className="delete-cancel-btn me-2 "
-                          variant="outline-secondary"
-                          type="reset"
-                          // onClick={() => {
-                          //   formik.resetForm();
-                          // }}
-                          onClick={handleCancelClick}
-                        >
-                          CANCEL
-                        </Button>
+<div className="d-flex flex-direction-row justify-content-end mt-4 mb-5">
+  <Button
+    className="delete-cancel-btn me-2"
+    variant="outline-secondary"
+    type="reset"
+    onClick={handleCancelClick}
+    disabled={isSaving} // Disable cancel when saving
+  >
+    CANCEL
+  </Button>
 
-                        <Button
-                          className="save-btn  "
-                          type="submit"
-                          disabled={!productId}
-                        >
-                          SAVE CHANGES
-                        </Button>
-                      </div>
+  <Button
+    className="save-btn position-relative"
+    type="submit"
+    disabled={!productId || isSaving}
+    style={{ minWidth: "140px" }}
+  >
+    {isSaving ? (
+      <>
+        <Spinner
+          as="span"
+          animation="border"
+          size="sm"
+          role="status"
+          aria-hidden="true"
+          className="me-2"
+          style={{ width: "1rem", height: "1rem" }}
+        />
+        SAVING...
+      </>
+    ) : (
+      "SAVE CHANGES"
+    )}
+  </Button>
+</div>
                       <Modal show={show} centered onHide={() => setShow(!show)}>
                         <div className="d-flex justify-content-center mt-5">
                           <FontAwesomeIcon

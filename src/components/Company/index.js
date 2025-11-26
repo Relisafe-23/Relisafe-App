@@ -65,7 +65,7 @@ function Company() {
       .matches(/^[aA-zZ\s]+$/, "Enter valid name")
       .matches(/^[A-Z]/, "First Letter Must Be In Capital"),
   phoneNumber: Yup.string()
-    .required('Phone number is required')
+    // .required('Phone number is required')
     .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits'),
     role: Yup.object().typeError("Company Name is Required").nullable(""),
     companyName: Yup.object().typeError("Company Name is Required").required("Company Name is Required"),

@@ -90,7 +90,7 @@ function MaintainabilityReport(props) {
     "User Field 3": true,
     "User Field 4": true,
     "User Field 5": true,
-    "User Field 6": true,
+    // "User Field 6": true,
   });
 
   // Mapping of headers to data keys

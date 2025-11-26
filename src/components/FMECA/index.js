@@ -1384,7 +1384,7 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
               <Projectname projectId={projectId} />
             </div>
 
-            <div style={{ width: "100%", marginRight: "20px" }}>
+            <div style={{ width: "100%", marginRight: "20px",position:"relative", zIndex:999 }}>
               <Dropdown
                 value={projectId}
                 productId={productId}

@@ -18,6 +18,7 @@ function CompanyAdmin() {
     password: "",
     phoneNumber: "",
     companyName: "",
+    role: "",
   });
       const [editMode, setEditMode] = useState(false);
         const handleInputChange = (e) => {
@@ -78,6 +79,7 @@ const deleteUser = (id) => {
       password: user.password,
        phoneNumber: user.phoneNumber,
      companyName: user.companyId?.companyName,
+      role: user.role
     });
     setEditMode(true);
   }
@@ -130,7 +132,9 @@ console.log("userData", userData)
                 <th>Password</th>
                 <th>Phone Number</th>
                 <th>Company name</th>
+                   <th>Role</th> 
                 <th>Action</th> 
+               
               </tr>
             </thead>
             <tbody>
@@ -143,6 +147,7 @@ console.log("userData", userData)
                     <td>{list?.password}</td>
                     <td>{list?.phoneNumber}</td>
                     <td>{list?.companyId?.companyName}</td>
+                   <td>{list?.role}</td>
                     <td>
  <FontAwesomeIcon 
               icon={faTrash} 

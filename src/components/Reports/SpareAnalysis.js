@@ -78,11 +78,11 @@ function SpareAnalysis(props) {
     "Recommended Spare": "recommendedSpare",
     "Delivery Time Days": "deliveryTimeDays",
     "After Serial Production Price 1": "afterSerialProductionPrice1",
-    Price1MOQ: "price1MOQ",
+    "Price 1 MOQ": "price1MOQ",
     "After Serial Production Price 2": "afterSerialProductionPrice2",
-    Price2MOQ: "price2MOQ",
+    "Price 2 MOQ": "price2MOQ",
     "After Serial Production Price 3": "afterSerialProductionPrice3",
-    Price3MOQ: "price3MOQ",
+    "Price 3 MOQ": "price3MOQ",
     "Annual Price Escalation Percentage": "annualPriceEscalationPercentage",
     "LCC-Price Validity to be Included": "lccPriceValidity",
     "Recommended Spare Quantity": "recommendedSpareQuantity",
@@ -203,6 +203,7 @@ function SpareAnalysis(props) {
     })
       .then((res) => {
         const treeData = res?.data?.data;
+        console.log("Spare Parts Data:", treeData);
         setData(treeData);
         setIsLoading(false);
       })
@@ -597,6 +598,7 @@ function SpareAnalysis(props) {
                                 row?.mttrData?.[key] ??
                                 row?.spareData?.[key] ??
                                 "-";
+                            
                               if (header === "S.No") {
                                 return (
                                   <td
