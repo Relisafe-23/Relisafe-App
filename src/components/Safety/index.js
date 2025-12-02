@@ -122,7 +122,7 @@ const DownloadExcel = () => {
 };
   const createsafetyDataFromExcel = (values) => {
     const companyId = localStorage.getItem("companyId");
-
+console.log("values..",values);
     setIsLoading(true);
     Api.post("api/v1/safety/", {
       modeOfOperation: values.modeOfOperation,
@@ -348,7 +348,6 @@ const importExcel = (e) => {
       },
     })
       .then((res) => {
-        console.log("safety res", res)
         const data = res?.data?.data;
         getProjectDetails();
 
@@ -443,7 +442,6 @@ const importExcel = (e) => {
       projectId: projectId,
     },
   }).then((res) => {
-    console.log("res connect00", res)
     setIsLoading(false);
 
     // const filteredData = res.data.getData.filter((entry) => {
@@ -479,7 +477,6 @@ const flattened = filteredData
   );
 // setFlattenedConnect(flattened);
    setConnectData(flattened)
-  console.log("filteredData", flattened);
 
  
     });
@@ -553,7 +550,6 @@ const flattened = filteredData
   }, [connectData, selectedFunction]);
 
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
-    console.log("fieldValue");
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
@@ -563,7 +559,6 @@ const flattened = filteredData
         sourceValue: fieldValue.value,
       },
     }).then((res) => {
-      console.log("res data", res)
       const data = res?.data?.libraryData;
       if (data.length > 0) {
         setAllConnectedData(data);
@@ -588,7 +583,6 @@ const flattened = filteredData
         }
       );
       const safetyData = safetyResponse?.data?.libraryData;
-      console.log("safetyData", safetyData);
       setAllConnectedData(safetyData);
     } catch (error) {
       console.error("Error fetching SAFETY data:", error);
