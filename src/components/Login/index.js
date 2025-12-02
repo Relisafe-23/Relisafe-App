@@ -162,15 +162,16 @@ function Login() {
                           className="login-btn-css-new"
                           type="submit"
                           style={{
-                            cursor:
-                              isValid && !isSubmitting && !isLoginSubmit ? "pointer" : "not-allowed",
+                             cursor: "pointer", 
                             backgroundColor: isLoginSubmit
                               ? "#b0b0b0"
                               : "#1D5460",
                             color: isLoginSubmit ? "#ffffff" : "#fff",
                             opacity: isLoginSubmit ? 0.7 : 1,
                           }}
-                          disabled={!isValid || isSubmitting}
+                          disabled={isSubmitting}
+
+                          // disabled={!isValid || isSubmitting}
                         >
                           <b>{isLoginSubmit ? "Logging in..." : "Login"} </b>
                         </button>

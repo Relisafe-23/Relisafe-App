@@ -84,6 +84,7 @@ export default function Projectpermission(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
+        console.log("Permission Data:", data);
         setPermissionId(data?.id || null);
 
         if (data?.modules) {
