@@ -35,11 +35,13 @@ function SafetyReport(props) {
   const [data, setData] = useState([]);
   const [columnLength, setColumnLength] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState({
+    Id: true,
     Reference: true,
     FR: true,
   });
 
   const headerKeyMapping = {
+    Id: "indexCount",
     "Product Name": "productName", // Mapped to productId
     "Part Number": "partNumber", // Mapped to productId
     Quantity: "quantity", // Mapped to productId
@@ -84,6 +86,7 @@ function SafetyReport(props) {
 
   const headers = [
     "S.No",
+    "Id",
     "Product Name",
     "Part Number",
     "Quantity",
@@ -513,7 +516,7 @@ function SafetyReport(props) {
                     <FaFileExcel style={{ marginRight: "8px" }} />
                     Excel
                   </Button>
-
+{/* 
                   <Button
                     className="report-save-btn"
                     onClick={generatePDFReport}
@@ -544,17 +547,17 @@ function SafetyReport(props) {
                   >
                     <FaFileWord style={{ marginRight: "8px" }} />
                     Word
-                  </Button>
+                  </Button> */}
                 </Col>
               </Row>
 
               {columnLength && (
                 <Row>
                   <Col className="d-flex justify-content-end">
-                    <p style={{ color: "red", textAlign: "right" }}>
+                    {/* <p style={{ color: "red", textAlign: "right" }}>
                       *You cannot download the PDF or Word document when the
                       number of columns exceeds the limit.
-                    </p>
+                    </p> */}
                   </Col>
                 </Row>
               )}
