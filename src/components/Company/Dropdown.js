@@ -10,50 +10,50 @@ export default function Dropdown(props) {
   const [productData, setProductData] = useState([]);
   const [prefillData, setPrefillData] = useState(null);
   const history = useHistory();
-const customStyles = {
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: state.isSelected ? '#007bff' : 'white',
-    color: state.isSelected ? 'white' : 'black',
-    '&:hover': {
-      backgroundColor: state.isSelected ? '#007bff' : '#f8f9fa',
+  const customStyles = {
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#007bff' : 'white',
       color: state.isSelected ? 'white' : 'black',
-    },
-  }),
-control: (provided, state) => ({
-  ...provided,
-  border: state.isFocused || state.hasValue ? '2px solid #007bff' : '1px solid #ced4da',
-  borderRadius: '0.375rem',
-  boxShadow:
-    state.isFocused || state.hasValue
-      ? '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
-      : 'none',
-  '&:hover': {
-    border: state.isFocused || state.hasValue ? '2px solid #007bff' : '1px solid #007bff',
-  },
-}),
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#007bff' : '#f8f9fa',
+        color: state.isSelected ? 'white' : 'black',
+      },
+    }),
+    control: (provided, state) => ({
+      ...provided,
+      border: state.isFocused || state.hasValue ? '2px solid #007bff' : '1px solid #ced4da',
+      borderRadius: '0.375rem',
+      boxShadow:
+        state.isFocused || state.hasValue
+          ? '0 0 0 0.2rem rgba(0, 123, 255, 0.25)'
+          : 'none',
+      '&:hover': {
+        border: state.isFocused || state.hasValue ? '2px solid #007bff' : '1px solid #007bff',
+      },
+    }),
 
-  singleValue: (provided, state) => ({
-    ...provided,
-    color: '#212529',
-    fontWeight: state.isFocused ? '600' : '400',
-  }),
-  placeholder: (provided) => ({
-    ...provided,
-    color: '#6c757d',
-  }),
-  menu: (provided) => ({
-    ...provided,
-    borderRadius: '0.375rem',
-    boxShadow: '0 0.5rem 1rem rgba(0, 0, 0, 0.15)',
-  }),
-};
+    singleValue: (provided, state) => ({
+      ...provided,
+      color: '#212529',
+      fontWeight: state.isFocused ? '600' : '400',
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#6c757d',
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: '0.375rem',
+      boxShadow: '0 0.5rem 1rem rgba(0, 0, 0, 0.15)',
+    }),
+  };
 
-// In your component
+  // In your component
 
   const getTreeProduct = () => {
-    
-    Api.get(`/api/v1/productTreeStructure/product/list`, { 
+
+    Api.get(`/api/v1/productTreeStructure/product/list`, {
       params: {
         projectId: projectId,
       },
@@ -103,21 +103,51 @@ control: (provided, state) => ({
     history.push({ state: { productId: selectedOption.value } });
   };
 
-  const getNextProduct = () => {
+  // const getNextProduct = () => {
+  //   const currentIndex = productData.findIndex((item) => item.id === productId);
+  //   const nextIndex = currentIndex + 1 < productData.length ? currentIndex + 1 : 0;
+  //   const nextProduct = productData[nextIndex];
+  //   setProductId(nextProduct.id);
+  //   history.push({ state: { productId: nextProduct.id } });
+  // };
+
+  // const getPreviousProduct = () => {
+  //   const currentIndex = productData.findIndex((item) => item.id === productId);
+  //   const prevIndex = currentIndex - 1 >= 0 ? currentIndex - 1 : productData.length - 1;
+  //   const prevProduct = productData[prevIndex];
+  //   setProductId(prevProduct.id);
+  //   history.push({ state: { productId: prevProduct.id } });
+  // };
+
+
+    const getNextProduct = () => {
     const currentIndex = productData.findIndex((item) => item.id === productId);
     const nextIndex = currentIndex + 1 < productData.length ? currentIndex + 1 : 0;
     const nextProduct = productData[nextIndex];
+
     setProductId(nextProduct.id);
+    setPrefillData({
+      value: nextProduct.id,
+      label: nextProduct.indexCount + "." + nextProduct.productName,
+    });
+
     history.push({ state: { productId: nextProduct.id } });
   };
 
+
   const getPreviousProduct = () => {
-    const currentIndex = productData.findIndex((item) => item.id === productId);
-    const prevIndex = currentIndex - 1 >= 0 ? currentIndex - 1 : productData.length - 1;
-    const prevProduct = productData[prevIndex];
-    setProductId(prevProduct.id);
-    history.push({ state: { productId: prevProduct.id } });
-  };
+  const currentIndex = productData.findIndex((item) => item.id === productId);
+  const prevIndex = currentIndex - 1 >= 0 ? currentIndex - 1 : productData.length - 1;
+  const prevProduct = productData[prevIndex];
+
+  setProductId(prevProduct.id);
+  setPrefillData({
+    value: prevProduct.id,
+    label: prevProduct.indexCount + "." + prevProduct.productName,
+  });
+
+  history.push({ state: { productId: prevProduct.id } });
+};
 
   return (
     <div>
@@ -133,16 +163,9 @@ control: (provided, state) => ({
           <div>
             <Select
               type="select"
-                styles={customStyles}
+              styles={customStyles}
               placeholder="Select Product"
-              value={productData
-  .map((list) => ({
-    value: list.id,
-    label: list.indexCount + "." + list.productName,
-  }))
-  .find((item) => item.value === prefillData)}
-
-              
+              value={prefillData}
               options={productData.map((list) => ({
                 value: list.id,
                 label: list.indexCount + "." + list.productName,
@@ -151,7 +174,7 @@ control: (provided, state) => ({
             />
             <div>
 
-</div>
+            </div>
           </div>
         </Col>
         <Col className="d-flex justify-content-end mt-1" sm={12} md={4}>

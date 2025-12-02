@@ -33,7 +33,7 @@ function Index(props) {
   // const productId = props?.location?.props?.data?.id
   //   ? props?.location?.props?.data?.id
   //   : props?.location?.state?.productId;
-  
+
 
   const treeStructureId = props?.location?.state?.parentId;
   const [name, setName] = useState();
@@ -73,16 +73,16 @@ function Index(props) {
 
   const loginSchema = Yup.object().shape({
     spare: Yup.object().required("Spare is required"),
-  warrantySpare: Yup.object().required("Warranty is required"),
+    warrantySpare: Yup.object().required("Warranty is required"),
     recommendedSpare: Yup.object().required("Recommended is required"),
     deliveryTimeDays: Yup.number().required("Delivery time required"),
     annualPrice: Yup.string()
-    .nullable() // allows null
-    .notRequired() // not mandatory
-    .matches(
-      /^(100(\.0+)?|(\d{1,2}(\.\d+)?))%$/,
-      "Enter a valid percentage (e.g. 25%, 50.5%, 99.99%)"
-    ),
+      .nullable() // allows null
+      .notRequired() // not mandatory
+      .matches(
+        /^(100(\.0+)?|(\d{1,2}(\.\d+)?))%$/,
+        "Enter a valid percentage (e.g. 25%, 50.5%, 99.99%)"
+      ),
   });
 
   //chatGPt
@@ -179,60 +179,60 @@ function Index(props) {
   //     reader.readAsBinaryString(file);
   //   }
   // };
-const importExcel = (e) => {
-  const file = e.target.files[0];
+  const importExcel = (e) => {
+    const file = e.target.files[0];
 
-  const fileName = file.name;
-  const validExtensions = ["xlsx", "xls"];
-  const fileExtension = fileName.split(".").pop().toLowerCase();
+    const fileName = file.name;
+    const validExtensions = ["xlsx", "xls"];
+    const fileExtension = fileName.split(".").pop().toLowerCase();
 
-  if (!validExtensions.includes(fileExtension)) {
-    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-      position: toast.POSITION.TOP_RIGHT,
-    });
-    return;
-  }
+    if (!validExtensions.includes(fileExtension)) {
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+      return;
+    }
 
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const bstr = event.target.result;
-    const workBook = XLSX.read(bstr, { type: "binary" });
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const bstr = event.target.result;
+      const workBook = XLSX.read(bstr, { type: "binary" });
 
-    const workSheetName = workBook.SheetNames[0];
-    const workSheet = workBook.Sheets[workSheetName];
+      const workSheetName = workBook.SheetNames[0];
+      const workSheet = workBook.Sheets[workSheetName];
 
-    const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-    if (excelData.length > 1) {
-      const headers = excelData[0];
-      const rows = excelData.slice(1);
-      const parsedData = rows.map((row) => {
-        const rowData = {};
-        headers.forEach((header, index) => {
-          rowData[header] = row[index];
+      const excelData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+      if (excelData.length > 1) {
+        const headers = excelData[0];
+        const rows = excelData.slice(1);
+        const parsedData = rows.map((row) => {
+          const rowData = {};
+          headers.forEach((header, index) => {
+            rowData[header] = row[index];
+          });
+          return rowData;
         });
-        return rowData;
-      });
-      
-      // Set a flag to indicate that imported data should take precedence
-      setHasImportedData(true);
-      setImportExcelData(parsedData[0]);
-    } else {
-      toast.error("No Data Found In Excel Sheet", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-      });
+
+        // Set a flag to indicate that imported data should take precedence
+        setHasImportedData(true);
+        setImportExcelData(parsedData[0]);
+      } else {
+        toast.error("No Data Found In Excel Sheet", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
+      }
+    };
+    if (file) {
+      reader.readAsBinaryString(file);
     }
   };
-  if (file) {
-    reader.readAsBinaryString(file);
-  }
-};
   const createSpareAnalysisDataFromExcel = (values) => {
     setIsLoading(true);
 
@@ -283,7 +283,7 @@ const importExcel = (e) => {
 
   const exportToExcel = (value) => {
     const originalData = {
-         CompanyName:treeTableData[0]?.companyId?.companyName,
+      CompanyName: treeTableData[0]?.companyId?.companyName,
       ProjectName: treeTableData[0]?.projectId?.projectName,
       productName: value.productName,
       Delivery_Days: value.deliveryTimeDays,
@@ -297,9 +297,9 @@ const importExcel = (e) => {
       Lcc_Price_Validity: value.lccPriceValidity,
       Recomm_Spare_Quantity: value.recommendedSpareQuantity,
       Calc_Spare_Qty: value.calculatedSpareQuantity,
-    warrantySpare: value.warrantySpare?.value || value.warrantySpare || "",
+      warrantySpare: value.warrantySpare?.value || value.warrantySpare || "",
       Spare: value.spare?.value || value.spare || "",
-      recommendedSpare: value.recommendedSpare?.value || value.recommendedSpare|| "",
+      recommendedSpare: value.recommendedSpare?.value || value.recommendedSpare || "",
     };
 
     // if (originalData.length > 1) working
@@ -411,7 +411,7 @@ const importExcel = (e) => {
       },
     })
       .then((res) => {
-        console.log("res2",res)
+        console.log("res2", res)
         const data = res?.data?.data;
         setProductName(data.productName);
         setIsLoading(false);
@@ -440,7 +440,7 @@ const importExcel = (e) => {
       },
     })
       .then((res) => {
-        console.log("res3",res)
+        console.log("res3", res)
         const treeData = res?.data?.data;
         const treeStructureId = res?.data?.data[0]?.id;
         setIsLoading(false);
@@ -479,7 +479,7 @@ const importExcel = (e) => {
 
   const getProductDatas = (treeId) => {
     const companyId = localStorage.getItem("companyId");
-  
+
 
     Api.get("/api/v1/sparePartsAnalysis/details", {
       params: {
@@ -491,20 +491,20 @@ const importExcel = (e) => {
       },
     })
       .then((res) => {
-        console.log("res1",res)
+        console.log("res1", res)
         const data = res?.data?.data;
 
 
         setRecommendedSpareQuantity(
           data?.recommendedSpareQuantity ? data?.recommendedSpareQuantity : ""
         );
-       
-       setCalculatedSpareQuantity(
-  res?.data?.CalculatedSpareQuantity !== null && res?.data?.CalculatedSpareQuantity !== undefined
-    ? res?.data?.CalculatedSpareQuantity
-    : ""
-);
-       
+
+        setCalculatedSpareQuantity(
+          res?.data?.CalculatedSpareQuantity !== null && res?.data?.CalculatedSpareQuantity !== undefined
+            ? res?.data?.CalculatedSpareQuantity
+            : ""
+        );
+
         setPrefillData(data ? data : "");
         setspareId(data?.id);
         setIsLoading(false);
@@ -548,6 +548,13 @@ const importExcel = (e) => {
         const data = res?.data?.editDetail;
         setPrefillData(data);
         setspareId(data?.id);
+
+        getTreedata();
+        productTreeData();
+
+        getProjectPermission();
+        projectSidebar();
+
         setSuccesMessage(res?.data?.message);
         // showModal();
         toast.success("Updated Successfully");
@@ -572,7 +579,7 @@ const importExcel = (e) => {
       productId: productId,
       spare: spare,
       recommendedSpare: recommendedSpare,
-      warrantySpare:  warrantySpare,
+      warrantySpare: warrantySpare,
       deliveryTimeDays: values.deliveryTimeDays,
       afterSerialProductionPrice1: values.afterSerialProductionPrice1,
       afterSerialProductionPrice2: values.afterSerialProductionPrice2,
@@ -587,10 +594,17 @@ const importExcel = (e) => {
       userId: userId,
     })
       .then((response) => {
-        console.log("response",response)
+        console.log("response", response)
         getProductDatas();
         setSuccesMessage(response?.data?.message);
         showModal();
+
+        getTreedata();
+        productTreeData();
+
+        getProjectPermission();
+        projectSidebar();
+
         setPrefillData(response?.data?.data?.createData);
         setspareId(response?.data?.data?.createData?.id);
         window.location.reload();
@@ -615,66 +629,66 @@ const importExcel = (e) => {
         <Loader />
       ) : (
         <Formik
-           enableReinitialize={true}
-         // Add this state to track if data was imported
+          enableReinitialize={true}
+          // Add this state to track if data was imported
 
 
-// Modified initialValues
-initialValues={{
-  productName: productName,
+          // Modified initialValues
+          initialValues={{
+            productName: productName,
 
-  spare: hasImportedData && importExcelData?.Spare 
-    ? { label: importExcelData?.Spare, value: importExcelData?.Spare }
-    : prefillData?.spare
-      ? { label: prefillData?.spare, value: prefillData?.spare }
-      : "",
-warrantySpare: hasImportedData && importExcelData?.warrantySpare
-    ? { label: importExcelData?.warrantySpare, value: importExcelData?.warrantySpare }
-    : prefillData?.warrantySpare
-      ? { label: prefillData?.warrantySpare, value: prefillData?.warrantySpare }
-      : "",
-// Try these common variations
-recommendedSpare: hasImportedData && importExcelData?.recommendedSpare
-    ? { label: importExcelData?.recommendedSpare, value: importExcelData?.recommendedSpare }
-    : prefillData?.recommendedSpare
-      ? { label: prefillData?.recommendedSpare, value: prefillData?.recommendedSpare }
-      : "", 
-  deliveryTimeDays: hasImportedData 
-    ? importExcelData?.Delivery_Days || ""
-    : prefillData?.deliveryTimeDays || "",
-  lccPriceValidity: hasImportedData
-    ? importExcelData?.Lcc_Price_Validity || ""
-    : prefillData?.lccPriceValidity || "",
-  afterSerialProductionPrice1: hasImportedData
-    ? importExcelData?.Serial_Production_Price1 || ""
-    : prefillData?.afterSerialProductionPrice1 || "",
-  afterSerialProductionPrice2: hasImportedData
-    ? importExcelData?.Serial_Production_Price2 || ""
-    : prefillData?.afterSerialProductionPrice2 || "",
-  afterSerialProductionPrice3: hasImportedData
-    ? importExcelData?.Serial_Production_Price3 || ""
-    : prefillData?.afterSerialProductionPrice3 || "",
-  moq_1Price: hasImportedData
-    ? importExcelData?.Moq_Price_1 || ""
-    : prefillData?.price1MOQ || "",
-  moq_2Price: hasImportedData
-    ? importExcelData?.Moq_Price_2 || ""
-    : prefillData?.price2MOQ || "",
-  moq_3Price: hasImportedData
-    ? importExcelData?.Moq_Price_3 || ""
-    : prefillData?.price3MOQ || "",
-  annualPrice: hasImportedData
-    ? importExcelData?.Annual_Price || ""
-    : prefillData?.annualPriceEscalationPercentage || "",
-  calculatedSpareQuantity: hasImportedData
-    ? importExcelData?.Calc_Spare_Qty || ""
-    : calculatedSpareQuantity !== null && calculatedSpareQuantity !== undefined
-      ? calculatedSpareQuantity
-      : "",
-  recommendedSpareQuantity: hasImportedData
-    ? importExcelData?.Recomm_Spare_Quantity || ""
-    : recommendedSpareQuantity || "",
-}}
+            spare: hasImportedData && importExcelData?.Spare
+              ? { label: importExcelData?.Spare, value: importExcelData?.Spare }
+              : prefillData?.spare
+                ? { label: prefillData?.spare, value: prefillData?.spare }
+                : "",
+            warrantySpare: hasImportedData && importExcelData?.warrantySpare
+              ? { label: importExcelData?.warrantySpare, value: importExcelData?.warrantySpare }
+              : prefillData?.warrantySpare
+                ? { label: prefillData?.warrantySpare, value: prefillData?.warrantySpare }
+                : "",
+            // Try these common variations
+            recommendedSpare: hasImportedData && importExcelData?.recommendedSpare
+              ? { label: importExcelData?.recommendedSpare, value: importExcelData?.recommendedSpare }
+              : prefillData?.recommendedSpare
+                ? { label: prefillData?.recommendedSpare, value: prefillData?.recommendedSpare }
+                : "",
+            deliveryTimeDays: hasImportedData
+              ? importExcelData?.Delivery_Days || ""
+              : prefillData?.deliveryTimeDays || "",
+            lccPriceValidity: hasImportedData
+              ? importExcelData?.Lcc_Price_Validity || ""
+              : prefillData?.lccPriceValidity || "",
+            afterSerialProductionPrice1: hasImportedData
+              ? importExcelData?.Serial_Production_Price1 || ""
+              : prefillData?.afterSerialProductionPrice1 || "",
+            afterSerialProductionPrice2: hasImportedData
+              ? importExcelData?.Serial_Production_Price2 || ""
+              : prefillData?.afterSerialProductionPrice2 || "",
+            afterSerialProductionPrice3: hasImportedData
+              ? importExcelData?.Serial_Production_Price3 || ""
+              : prefillData?.afterSerialProductionPrice3 || "",
+            moq_1Price: hasImportedData
+              ? importExcelData?.Moq_Price_1 || ""
+              : prefillData?.price1MOQ || "",
+            moq_2Price: hasImportedData
+              ? importExcelData?.Moq_Price_2 || ""
+              : prefillData?.price2MOQ || "",
+            moq_3Price: hasImportedData
+              ? importExcelData?.Moq_Price_3 || ""
+              : prefillData?.price3MOQ || "",
+            annualPrice: hasImportedData
+              ? importExcelData?.Annual_Price || ""
+              : prefillData?.annualPriceEscalationPercentage || "",
+            calculatedSpareQuantity: hasImportedData
+              ? importExcelData?.Calc_Spare_Qty || ""
+              : calculatedSpareQuantity !== null && calculatedSpareQuantity !== undefined
+                ? calculatedSpareQuantity
+                : "",
+            recommendedSpareQuantity: hasImportedData
+              ? importExcelData?.Recomm_Spare_Quantity || ""
+              : recommendedSpareQuantity || "",
+          }}
 
           validationSchema={loginSchema}
           onSubmit={(values, { resetForm }) =>
@@ -765,7 +779,7 @@ recommendedSpare: hasImportedData && importExcelData?.recommendedSpare
                     </div>
 
                     <Row className="d-flex mt-2">
-            
+
                       <div className="mttr-sec">
                         <p className=" mb-0 para-tag">Spare Parts Analysis</p>
                       </div>
@@ -1057,7 +1071,7 @@ recommendedSpare: hasImportedData && importExcelData?.recommendedSpare
                             </Form.Group>
                           </Col>
                           <Col>
-                       
+
                             <Form.Group className="mt-3">
                               <Label>Calculated Spare Quantity</Label>
                               <Form.Control
