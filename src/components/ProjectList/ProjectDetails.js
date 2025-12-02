@@ -104,14 +104,37 @@ export default function ProjectDetails(props) {
     .test("no-whitwespace", "Customer name cannot contain only whitespace", (value) => {
       return value && value.trim().length > 0;}),
     avgday: Yup.number()
-      .typeError("you must specify a number")
-      .min(0, "Min value 0.")
-      .max(24, "Max value 24.")
-      .required("Average operational hours per day is required"),
-    avghour: Yup.number()  .min(1, "Minimum value is 1").max(8784, "max value 8784").required("Average annual operational hours is required")  .test("decimals", "Only up to 2 decimal places allowed", (value) => {
-    if (value === undefined || value === null) return true;
-    return /^\d+(\.\d{1,2})?$/.test(value.toString());
-  }),
+       .typeError("You must specify a number")
+       .min(1, "Min value 1.")
+       .max(24, "Max value 24.")
+       .required("Average operational hours per day is required")
+       .test("max-decimals", "Only up to 2 decimal places allowed", (value) => {
+         if (value === undefined || value === null) return true;
+         return /^\d+(\.\d{1,2})?$/.test(value.toString());
+       }),
+  
+    
+    
+  frtarget: Yup.string()
+    .nullable()   // allows null
+    .test(
+      "valid-frtarget",
+      "Value must be a number with up to 20 decimal places",
+      (value) => {
+        if (!value || value.trim() === "") return true; // optional field → skip if empty
+  
+        // Check valid numeric format with up to 20 decimals
+        return /^(\d+(\.\d{1,20})?)$/.test(value);
+      }
+    ),
+    
+    
+    
+    
+    
+    
+    
+      
     environment: Yup.object().required("Environment is required"),
 productlife: Yup.number()
   .typeError("Product life must be a number")
@@ -122,6 +145,11 @@ productlife: Yup.number()
     if (value === undefined || value === null) return true;
     return /^\d+(\.\d{1,2})?$/.test(value.toString());
   }),
+   avghour: Yup.number() .min(1, "Min value 1.").max(8784, "max value 8784").required("Average annual operational hours is required") .test("max-decimals", "Only up to 2 decimal places allowed", (value) => {
+          if (value === undefined || value === null) return true;
+          return /^\d+(\.\d{1,2})?$/.test(value.toString());
+        }),
+        
         daysopration: Yup.number()
       .typeError("You must specify a number")
       .min(1, "Minimum value is 1.")
@@ -254,16 +282,17 @@ avgcycleperhour: Yup.number()
         return /^\d+(\.\d{1,4})?$/.test(value.toString());
       }
     ), 
-    deliverylocation: Yup.string()
-  .matches(/^[A-Za-z]+$/, "Only letters are allowed")
-  .nullable()
-  .optional(),
-
+      avgAnnualPoweronhour: Yup.number().min(1, "Min value 1.").max(8784, "max value 8784") .test("max-decimals", "Only up to 2 decimal places allowed", (value) => {
+            if (value === undefined || value === null) return true;
+            return /^\d+(\.\d{1,2})?$/.test(value.toString());
+          }),
+   deliverylocation: Yup.string()
+      .nullable()
+      .optional()
+      .matches(/^[A-Za-z, ]*$/, "Only letters and comma are allowed")
+      .max(20, "Maximum 20 characters allowed"),
     
-
-
-
-  });
+ });
 
   return (
     <Formik
@@ -433,6 +462,8 @@ avgcycleperhour: Yup.number()
                           className="mt-1"
                           value={values.avgAnnualPoweronhour}
                         />
+                    <ErrorMessage name="avgAnnualPoweronhour" component="span" className="error" />
+
                       </Form.Group>
                     </Col>
                   </Row>
@@ -664,7 +695,7 @@ avgcycleperhour: Yup.number()
                       <Form.Group className="mt-3">
                         <Label>FR target</Label>
                         <Form.Control
-                          type="number"
+                          type="text"
                           min="0"
                           step="any"
                           name="frtarget"
@@ -674,6 +705,7 @@ avgcycleperhour: Yup.number()
                           value={values.frtarget}
                           className="mt-1"
                         />
+                         <ErrorMessage name="frtarget" component="span" className="error" />
                       </Form.Group>
                     </Col>
                     <Col md={6}>
