@@ -352,6 +352,7 @@ const importExcel = (e) => {
         getProjectDetails();
 
         setIsLoading(false);
+        console.log(data,'data value')
         setTableData(data);
       })
       .catch((error) => {
@@ -2047,6 +2048,7 @@ const flattened = filteredData
   ];
 
   const submit = (values) => {
+    console.log(values,"submiting values.....")
     if (productId) {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
@@ -2057,9 +2059,7 @@ const flattened = filteredData
         hazardCause: values.hazardCause ? values.hazardCause : data.hazardCause,
         effectOfHazard: values.effectOfHazard ? values.effectOfHazard : data.effectOfHazard,
         hazardClasification: values.hazardClasification ? values.hazardClasification : data.hazardClasification,
-        designAssuranceLevel: values.designAssuranceLevel
-          ? data.designAssuranceLevel
-          : 1,
+        designAssuranceLevel: values.designAssuranceLevel,
         meansOfDetection: values.meansOfDetection
           ? values.meansOfDetection
           : data.meansOfDetection,
@@ -2115,6 +2115,7 @@ const flattened = filteredData
         userId: userId,
       })
         .then((response) => {
+          console.log(response,"responsose from backend")
           getProductData();
           setIsLoading(false);
         })
