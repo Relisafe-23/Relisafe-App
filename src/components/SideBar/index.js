@@ -757,7 +757,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
               <hr className="divider-color" />
               {projectId ? (
                 <div>
-                  {readPermission?.[0]?.read === true ? (
+                  {readPermission?.[1]?.read === true ? (
                     <div className="menu-list">
                       <NavLink
                         to={{
@@ -786,7 +786,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                       </NavLink>
                     </div>
                   ) : null}
-                  {readPermission?.[1]?.read === true ? (
+                  {readPermission?.[2]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
@@ -817,7 +817,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                       </NavLink>
                     </div>
                   ) : null}
-                  {readPermission?.[2]?.read === true ? (
+                  {readPermission?.[3]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
@@ -847,7 +847,8 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                       </NavLink>
                     </div>
                   ) : null}
-                  {readPermission?.[3]?.read === true ? (
+                {console.log("FMECA Permission123:", readPermission)}
+                  {readPermission?.[4]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
@@ -877,7 +878,8 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                       </NavLink>
                     </div>
                   ) : null}
-                  {readPermission?.[4]?.read === true ? (
+                    {console.log("RBD Permission:", readPermission?.[4])}
+                  {readPermission?.[5]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
@@ -895,6 +897,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                               : "inherit",
                         }}
                         onClick={() => setSelectedModule("rbd")}
+
                       >
                         <FontAwesomeIcon
                           icon={faChartBar}
@@ -903,16 +906,18 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                           title="RBD"
                         />{" "}
                         <span>RBD</span>
+                        {console.log("RBD Permission:", readPermission?.[4])}
                       </NavLink>
                     </div>
                   ) : null}
-                  {readPermission?.[5]?.read === true ? (
+                  {readPermission?.[6]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
                           pathname: `/fta/${projectId}`,
                           state: {
                             projectId: projectId,
+                               productId: productId,
                             ftaWrite: readPermission?.[5].write,
                           },
                         }}
@@ -935,7 +940,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                       </NavLink>
                     </div>
                   ) : null}
-                  {readPermission?.[6]?.read === true ? (
+                  {readPermission?.[7]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
@@ -965,7 +970,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                       </NavLink>
                     </div>
                   ) : null}
-                  {readPermission?.[7]?.read === true ? (
+                  {readPermission?.[8]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
@@ -1112,7 +1117,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                   ) : readPermission?.[10]?.read === true ||
                     readPermission?.[11]?.read === true ? (
                     <div>
-                      {readPermission?.[10]?.read === true ? (
+                      {readPermission?.[11]?.read === true ? (
                         <div className="menu-list mt-1">
                           {" "}
                           <NavLink
@@ -1143,7 +1148,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                           </NavLink>
                         </div>
                       ) : null}
-                      {readPermission?.[11]?.read === true ? (
+                      {readPermission?.[12]?.read === true ? (
                         <div className="menu-list mt-1">
                           {" "}
                           <NavLink
@@ -1178,7 +1183,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                       ) : null}
                     </div>
                   ) : null}
-                  {readPermission?.[12]?.read === true ? (
+                  {readPermission?.[13]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
