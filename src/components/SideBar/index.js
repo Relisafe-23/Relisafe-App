@@ -109,7 +109,8 @@ const SideBar = ({ onClick, active, value, props, openSideBar, selectPbs }) => {
     else if (pathname.includes('/reports/')) setSelectedModule('reports');
     else if (pathname.includes('/user')) setSelectedModule('user');
     else if (pathname.includes('/project/list')) setSelectedModule('project');
-    else if (pathname.includes('/company')) setSelectedModule('company');
+  else if (pathname.includes('/company/admin')) setSelectedModule('user'); // Add this line FIRST
+else if (pathname.includes('/company')) setSelectedModule('company');  
     else if (pathname.includes('/theme')) setSelectedModule('theme');
   }, [location.pathname]);
 

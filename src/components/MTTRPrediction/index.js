@@ -2356,18 +2356,51 @@ editComponent: ({ value, onChange }) => {
                           <ThemeProvider theme={tableTheme}>
                             <MaterialTable
                               editable={{
-                                onRowAdd: productId
-                                  ? (newRow) =>
-                                    new Promise((resolve, reject) => {
-                                      CreateProcedureData(newRow);
-                                      resolve();
-                                    })
-                                  : null,
-                                   onRowUpdate: (newRow, oldData) =>
-    new Promise((resolve) => {
-      updateProcedureData(newRow);
+                          onRowAdd: productId
+  ? (newRow) =>
+    new Promise((resolve, reject) => {
+      // Check if any required fields are filled
+      const hasData = 
+        newRow.taskType?.trim() || 
+        newRow.time?.trim() || 
+        newRow.totalLabour?.trim() || 
+        newRow.skill?.trim() || 
+        newRow.tools?.trim() || 
+        newRow.partNo?.trim() || 
+        newRow.toolType?.trim();
+      
+      if (!hasData) {
+        toast.error("Please fill at least one field before saving");
+        reject();
+        return;
+      }
+      
+      CreateProcedureData(newRow);
       resolve();
-    }),
+    })
+  : null,
+
+onRowUpdate: (newRow, oldData) =>
+  new Promise((resolve, reject) => {
+    // Check if any data has actually changed
+    const hasChanges = 
+      newRow.taskType !== oldData.taskType ||
+      newRow.time !== oldData.time ||
+      newRow.totalLabour !== oldData.totalLabour ||
+      newRow.skill !== oldData.skill ||
+      newRow.tools !== oldData.tools ||
+      newRow.partNo !== oldData.partNo ||
+      newRow.toolType !== oldData.toolType;
+    
+    if (!hasChanges) {
+      toast.error("No changes detected");
+      reject();
+      return;
+    }
+    
+    updateProcedureData(newRow);
+    resolve();
+  }),
                                 // onRowUpdate: (newRow, oldData) =>
                                 //   new Promise((resolve, reject) => {
                                 //     updateProcedureData(newRow);
