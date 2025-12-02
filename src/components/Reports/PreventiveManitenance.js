@@ -110,7 +110,7 @@ function PreventiveManitenance(props) {
     "User Field 3": "userField3",
     "User Field 4": "userField4",
     "User Field 5": "userField5",
-    "User Field 6": "userField6",
+    // "User Field 6": "userField6",
   };
 
   const token = localStorage.getItem("sessionId");
@@ -176,7 +176,7 @@ function PreventiveManitenance(props) {
     "User Field 3",
     "User Field 4",
     "User Field 5",
-    "User Field 6",
+    // "User Field 6",
   ];
 
   const columnWidths = {};
