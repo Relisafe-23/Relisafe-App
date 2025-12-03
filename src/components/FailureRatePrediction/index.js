@@ -2021,9 +2021,10 @@ setIsSaving(true);
     setFieldValue("quality", "");
     setFieldValue("partTypeDescr", "");
     setFieldValue("FR", "");
+     setPredicted("");
   }}
 >
-  CANCEL2
+  CANCEL
 </Button>
                                                 {/* <Button
                                                   className="save-btn"
@@ -2500,9 +2501,10 @@ setIsSaving(true);
     setFieldValue("quality2016", "");
     setFieldValue("partTypeDescr", "");
     setFieldValue("FR", "");
+     setPredicted("");
   }}
 >
-  CANCEL1
+  CANCEL
 </Button>
                                                 <Button
                                                   className="save-btn"
