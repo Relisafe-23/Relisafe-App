@@ -222,11 +222,11 @@ values.end.forEach((selectedOption, index) => {
 
   const numericValue = parseFloat(val);
 
-  if (isNaN(numericValue)) {
-    errors.valueEnd = errors.valueEnd || [];
-    errors.valueEnd[index] = "Value must be a number";
-    return;
-  }
+  // if (isNaN(numericValue)) {
+  //   errors.valueEnd = errors.valueEnd || [];
+  //   errors.valueEnd[index] = "Value must be ah number";
+  //   return;
+  // }
 
   if (ratioFields.includes(selectedOption.value)) {
     // Must be < 1

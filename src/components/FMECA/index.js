@@ -803,12 +803,11 @@ const importExcel = (e) => {
       const filteredData = res.data.getData.filter(
         (entry) => entry?.libraryId?.moduleName === "FMECA" || entry?.destinationModuleName === "FMECA"
       );
-     
       setConnectData(filteredData);
-const flattened = filteredData
+     const flattened = filteredData
   .flatMap((item) =>
     (item.destinationData || [])
-      .filter(d => d.destinationModuleName === "FMECA") // Filter destinations by module
+      .filter(d => d.destinationModuleName === "FMECA") 
       .map((d) => ({
         fieldName: item.sourceName,         
         fieldValue: item.sourceValue,
@@ -1606,11 +1605,11 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
 
                   editable={{
                     onRowAdd:
-                      writePermission === true ||
+                       writePermission === true ||
                         writePermission === "undefined" ||
                         role === "admin" ||
                         (isOwner === true && createdBy === userId)
-                        ? (newRow) =>
+                        ?(newRow) =>
                           new Promise((resolve) => {
                             createFmeca(newRow);
                             resolve();
