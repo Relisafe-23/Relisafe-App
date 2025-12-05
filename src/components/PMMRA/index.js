@@ -2020,12 +2020,16 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Loss of Function Evident?
                                 </Label>
-                                {allConnectedData.some(
+                                {allConnectedData || allConnectedData.some(
                                   (item) =>
                                     item.sourceName === "Evident1" &&
                                     item.sourceValue
                                 ) ? (
                                   (() => {
+                                     const seperateFilteredData =
+                                      allSepareteData?.filter(
+                                        (item) => item?.sourceName === "Evident1"
+                                      ) || [];
                                     const connectedFilteredData =
                                       allConnectedData?.filter(
                                         (item) =>
@@ -2039,7 +2043,10 @@ export default function PMMRA(props) {
                                             label: item?.destinationValue,
                                           })
                                         )
-                                        : null;
+                                        : seperateFilteredData.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2123,7 +2130,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Significant Item ?</Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Items" &&
                                     item.sourceValue
@@ -2145,8 +2152,8 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                                                                                                                      value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
 
                                     return (
@@ -2229,7 +2236,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Condition Monitoring Task
                                 </Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "condition" &&
                                     item.sourceValue
@@ -2252,8 +2259,8 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                                                                                                                      value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
 
                                     return (
@@ -2339,7 +2346,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Failure Finding Task
                                 </Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "failure" &&
                                     item.sourceValue
@@ -2361,8 +2368,8 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                                                                                                                  value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
 
                                     return (
@@ -2446,7 +2453,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Redesign?</Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "redesign" &&
                                     item.sourceValue
@@ -2469,8 +2476,8 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
 
                                     return (
@@ -2558,7 +2565,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Criticality Acceptable ?
                                 </Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "acceptable" &&
                                     item.sourceValue
@@ -2581,8 +2588,8 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                                                                                                                  value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
 
                                     return (
@@ -2668,7 +2675,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Lubrication / Service Task
                                 </Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "lubrication" &&
                                     item.sourceValue
@@ -2692,8 +2699,8 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                                                                                                                   value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
 
                                     return (
@@ -2779,7 +2786,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Restore or Discard Task
                                 </Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "task" &&
                                     item.sourceValue
@@ -2801,8 +2808,8 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                                                                                                                   value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
 
                                     return (
@@ -2885,7 +2892,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Combination of Tasks
                                 </Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "combination" &&
                                     item.sourceValue
@@ -2909,8 +2916,8 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
 
                                     return (
@@ -2994,7 +3001,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>RCM Notes</Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "rcmnotes" &&
                                     item.sourceValue
@@ -3017,9 +3024,10 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
+                             
 
                                     return (
                                       <Select
@@ -3112,7 +3120,7 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>PM Task ID</Label>
-                                  {allSepareteData?.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "pmtaskid" &&
                                       item.sourceValue
@@ -3138,10 +3146,23 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                                                                                                                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                 <Form.Control
+                                      name="pmtaskid"
+                                      id="pmtaskid"
+                                      placeholder="Pm Task ID"
+                                      value={values.pmtaskid}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Enter Pm Task ID"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3201,7 +3222,7 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>PM Task type</Label>
-                                  {allSepareteData?.some(
+                                  {allConnectedData|| allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "PMtasktype" &&
                                       item.sourceValue
@@ -3228,10 +3249,23 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                                                                                                                                  value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                    <Form.Control
+                                      name="PMtasktype"
+                                      id="PMtasktype"
+                                      placeholder="PM Task Type"
+                                      value={values.PMtasktype}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="PM Task Type"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3298,7 +3332,7 @@ export default function PMMRA(props) {
                                   <Label notify={true}>
                                     Task Interval Frequency
                                   </Label>
-                                  {allSepareteData?.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName ===
                                       "taskintervalFrequency" &&
@@ -3327,10 +3361,24 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                                                                                                                           value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                  <Form.Control
+                                      name="taskintervalFrequency"
+                                      id="taskintervalFrequency"
+                                      type="number"
+                                      placeholder="Task Interval Frequency"
+                                      value={values.taskintervalFrequency}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Task Interval Frequency"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3398,7 +3446,7 @@ export default function PMMRA(props) {
                                   <Label notify={true}>
                                     Task Interval Unit
                                   </Label>
-                                  {allSepareteData?.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "taskIntervalunit" &&
                                       item.sourceValue
@@ -3426,10 +3474,23 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                                                                                                                 value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                      <Form.Control
+                                      name="taskIntervalunit"
+                                      id="taskIntervalunit"
+                                      placeholder="Task Interval Unit"
+                                      value={values.taskIntervalunit}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Task Interval Unit"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3496,7 +3557,7 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>Task Interval</Label>
-                                  {allSepareteData?.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "taskInterval" &&
                                       item.sourceValue
@@ -3523,10 +3584,25 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                                                                                                      value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                  <Form.Control
+                                      name="taskInterval"
+                                      id="taskInterval"
+                                      type="number"
+                                      placeholder="Task Interval"
+                                      value={values.taskInterval}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Task Interval"
+                                    />
+
+                            )}
 
                                       return (
                                         <Select
@@ -3593,7 +3669,7 @@ export default function PMMRA(props) {
                                   <Label notify={true}>
                                     Scheduled Maintenance Task
                                   </Label>
-                                  {allSepareteData?.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName ===
                                       "scheduledMaintenanceTask" &&
@@ -3622,10 +3698,23 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                                                                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                   <Form.Control
+                                      name="scheduledMaintenanceTask"
+                                      id="scheduledMaintenanceTask"
+                                      placeholder="Scheduled Maintenance Task"
+                                      value={values.scheduledMaintenanceTask}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Scheduled Maintenance Task"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3692,7 +3781,7 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>Task Description</Label>
-                                  {allSepareteData?.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "taskDescription" &&
                                       item.sourceValue
@@ -3720,10 +3809,23 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                              value: item?.sourceValue,
-                                              label: item?.sourceValue,
-                                            })
-                                          );
+                                                                                               value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                   <Form.Control
+                                      name="taskDescription"
+                                      id="taskDescription"
+                                      placeholder="Task Description"
+                                      value={values.taskDescription}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Task Description"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3796,7 +3898,7 @@ export default function PMMRA(props) {
                             <Col md={6} className="mt-4 mb-4">
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML1</Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML1" &&
                                     item.sourceValue
@@ -3820,9 +3922,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                                     value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                <Form.Control
+                                    name="tasktimeML1"
+                                    id="tasktimeML1"
+                                    placeholder="Task Time ML1"
+                                    value={values.tasktimeML1}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML1"
+                                  />
+                            )}
 
                                     return (
                                       <Select
@@ -3880,7 +3996,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML2</Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML2" &&
                                     item.sourceValue
@@ -3904,10 +4020,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                           value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
-
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                   <Form.Control
+                                    name="tasktimeML2"
+                                    id="tasktimeML2"
+                                    placeholder="Task Time ML2"
+                                    value={values.tasktimeML2}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML2"
+                                  />
+                            )}
                                     return (
                                       <Select
                                         name="tasktimeML2"
@@ -3964,7 +4093,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML3</Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML3" &&
                                     item.sourceValue
@@ -3988,9 +4117,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                                    value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                   <Form.Control
+                                    name="tasktimeML3"
+                                    id="tasktimeML3"
+                                    placeholder="Task Time ML3"
+                                    value={values.tasktimeML3}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML3"
+                                  />
+                            )}
 
                                     return (
                                       <Select
@@ -4048,7 +4191,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML4</Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML4" &&
                                     item.sourceValue
@@ -4072,9 +4215,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                            value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                  <Form.Control
+                                    name="tasktimeML4"
+                                    id="tasktimeML4"
+                                    placeholder="Task Time ML4"
+                                    value={values.tasktimeML4}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML4"
+                                  />
+                            )}
 
                                     return (
                                       <Select
@@ -4134,7 +4291,7 @@ export default function PMMRA(props) {
                             <Col md={6} className="mt-4 mb-4">
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML5</Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML5" &&
                                     item.sourceValue
@@ -4158,9 +4315,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                                  value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                 <Form.Control
+                                    name="tasktimeML5"
+                                    id="tasktimeML5"
+                                    placeholder="Task Time ML5"
+                                    value={values.tasktimeML5}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML5"
+                                  />
+                            )}
 
                                     return (
                                       <Select
@@ -4218,7 +4389,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML6</Label>
-                                {allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML6" &&
                                     item.sourceValue
@@ -4235,17 +4406,30 @@ export default function PMMRA(props) {
                                           item?.destinationName ===
                                           "tasktimeML6"
                                       ) || [];
-                                    const options =
+                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
+                                          value: item.destinationValue,
+                                          label: item.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
                                         }));
-
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                     <Form.Control
+                                    name="tasktimeML6"
+                                    id="tasktimeML6"
+                                    placeholder="Task Time ML6"
+                                    value={values.tasktimeML6}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML6"
+                                  />
+                            )}
                                     return (
                                       <Select
                                         name="tasktimeML6"
@@ -4431,18 +4615,18 @@ export default function PMMRA(props) {
 
                                     // If no options - show empty dropdown
                                     if (!options || options.length === 0) {
-                                      return(
-                                                <Form.Control
-                                    name="skill1"
-                                    id="skill1"
-                                    placeholder="Skill 1"
-                                    value={values.skill1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                  />
+                                      return (
+                                        <Form.Control
+                                          name="skill1"
+                                          id="skill1"
+                                          placeholder="Skill 1"
+                                          value={values.skill1}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                        />
                                       )
-                                 
+
                                     }
 
                                     return (
@@ -4505,7 +4689,7 @@ export default function PMMRA(props) {
                                     const seperateFilteredData =
                                       allSepareteData?.filter(
                                         (item) =>
-                                          item.sourceName === "skill1nos" 
+                                          item.sourceName === "skill1nos"
                                       ) || [];
 
                                     const connectedFilteredData =
@@ -4527,16 +4711,16 @@ export default function PMMRA(props) {
 
                                     if (!options || options.length === 0) {
                                       return (
-                                           <Form.Control
-                                    name="skill1nos"
-                                    id="skill1nos"
-                                    placeholder="Skill 1nos"
-                                    value={values.skill1nos}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 1nos"
-                                  />
+                                        <Form.Control
+                                          name="skill1nos"
+                                          id="skill1nos"
+                                          placeholder="Skill 1nos"
+                                          value={values.skill1nos}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 1nos"
+                                        />
                                       );
                                     }
                                     return (
@@ -4599,7 +4783,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Skill 1 Contribution
                                 </Label>
-                                {allConnectedData||allSepareteData?.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "skill1contribution" &&
                                     item.sourceValue
@@ -4627,20 +4811,20 @@ export default function PMMRA(props) {
                                           value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-       if (!options || options.length === 0) {
-      return (
-        <Form.Control
-          name="skill1contribution"
-          id="skill1contribution"
-          placeholder="Skill 1 Contribution"
-          value={values.skill1contribution}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          className="mt-1"
-          title="Skill 1 Contribution"
-        />
-      );
-    }
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill1contribution"
+                                          id="skill1contribution"
+                                          placeholder="Skill 1 Contribution"
+                                          value={values.skill1contribution}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 1 Contribution"
+                                        />
+                                      );
+                                    }
                                     return (
                                       <Select
                                         name="skill1contribution"
@@ -4681,7 +4865,7 @@ export default function PMMRA(props) {
                                         }}
                                       />
                                     );
-                                    
+
                                   })()
                                 ) : (
                                   <Form.Control
@@ -4727,22 +4911,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                  value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-   if (!options || options.length === 0) {
-    return(
-           <Form.Control
-                                    name="skill2"
-                                    id="skill2"
-                                    placeholder="Skill 2"
-                                    value={values.skill2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 2"
-                                  />
-    )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill2"
+                                          id="skill2"
+                                          placeholder="Skill 2"
+                                          value={values.skill2}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 2"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="skill2"
@@ -4825,19 +5010,20 @@ export default function PMMRA(props) {
                                           value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) {
-                                  return(
-     <Form.Control
-                                    name="skill2nos"
-                                    id="skill2nos"
-                                    placeholder="Skill 2nos"
-                                    value={values.skill2nos}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 2nos"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill2nos"
+                                          id="skill2nos"
+                                          placeholder="Skill 2nos"
+                                          value={values.skill2nos}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 2nos"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="skill2nos"
@@ -4921,22 +5107,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                              value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) {
-                                     return(
-                                          <Form.Control
-                                    name="skill2contribution"
-                                    id="skill2contribution"
-                                    placeholder="Skill 2 Contribution"
-                                    value={values.skill2contribution}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 2 Contribution"
-                                  />
-                                     )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill2contribution"
+                                          id="skill2contribution"
+                                          placeholder="Skill 2 Contribution"
+                                          value={values.skill2contribution}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 2 Contribution"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="skill2contribution"
@@ -5024,22 +5211,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                     value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) {
-                                     return(
-                                           <Form.Control
-                                    name="skill3"
-                                    id="skill3"
-                                    placeholder="Skill 3"
-                                    value={values.skill3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 3"
-                                  />
-                                     )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill3"
+                                          id="skill3"
+                                          placeholder="Skill 3"
+                                          value={values.skill3}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 3"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5120,22 +5308,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                    value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) {
-                                  return(
-                                         <Form.Control
-                                    name="skill3nos"
-                                    id="skill3nos"
-                                    placeholder="Skill 3nos"
-                                    value={values.skill3nos}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 3nos"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill3nos"
+                                          id="skill3nos"
+                                          placeholder="Skill 3nos"
+                                          value={values.skill3nos}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 3nos"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5220,22 +5409,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                            value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-   <Form.Control
-                                    name="skill3contribution"
-                                    id="skill3contribution"
-                                    placeholder="Skill 3 Contribution"
-                                    value={values.skill3contribution}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 3 Contribution"
-                                  />
-                                 )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill3contribution"
+                                          id="skill3contribution"
+                                          placeholder="Skill 3 Contribution"
+                                          value={values.skill3contribution}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 3 Contribution"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5335,22 +5525,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                              value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-                                       <Form.Control
-                                    name="addReplacespare1"
-                                    id="addReplacespare1"
-                                    placeholder="Additional Replacement Spare1"
-                                    value={values.addReplacespare1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare1"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare1"
+                                          id="addReplacespare1"
+                                          placeholder="Additional Replacement Spare1"
+                                          value={values.addReplacespare1}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare1"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5441,22 +5632,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                   value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                           return(
-   <Form.Control
-                                    name="addReplacespare1qty"
-                                    id="addReplacespare1qty"
-                                    placeholder="Additional Replacement Spare1 Qty"
-                                    value={values.addReplacespare1qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare1 Qty"
-                                  />
-                                           )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare1qty"
+                                          id="addReplacespare1qty"
+                                          placeholder="Additional Replacement Spare1 Qty"
+                                          value={values.addReplacespare1qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare1 Qty"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="addReplacespare1qty"
@@ -5549,23 +5741,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                            value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-                                     <Form.Control
-                                    name="addReplacespare2"
-                                    id="addReplacespare2"
-                                    placeholder="Additional Replacement Spare2"
-                                    value={values.addReplacespare2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare2"
-                                  />
-                                  )
-                                }
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare2"
+                                          id="addReplacespare2"
+                                          placeholder="Additional Replacement Spare2"
+                                          value={values.addReplacespare2}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare2"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="addReplacespare2"
@@ -5654,22 +5846,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                              value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                       return(
-                                            <Form.Control
-                                    name="addReplacespare2qty"
-                                    id="addReplacespare2qty"
-                                    placeholder="Additional Replacement Spare2 Qty"
-                                    value={values.addReplacespare2qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare2 Qty"
-                                  />
-                                       )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare2qty"
+                                          id="addReplacespare2qty"
+                                          placeholder="Additional Replacement Spare2 Qty"
+                                          value={values.addReplacespare2qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare2 Qty"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="addReplacespare2qty"
@@ -5762,22 +5955,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                   value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-     <Form.Control
-                                    name="addReplacespare3"
-                                    id="addReplacespare3"
-                                    placeholder="Additional Replacement Spare3"
-                                    value={values.addReplacespare3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare3"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare3"
+                                          id="addReplacespare3"
+                                          placeholder="Additional Replacement Spare3"
+                                          value={values.addReplacespare3}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare3"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5868,22 +6062,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                          value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                        return(
-     <Form.Control
-                                    name="addReplacespare3qty"
-                                    id="addReplacespare3qty"
-                                    placeholder="Additional Replacement Spare3 Qty"
-                                    value={values.addReplacespare3qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare3 Qty"
-                                  />
-                                        )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare3qty"
+                                          id="addReplacespare3qty"
+                                          placeholder="Additional Replacement Spare3 Qty"
+                                          value={values.addReplacespare3qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare3 Qty"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="addReplacespare3qty"
@@ -5973,22 +6168,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                          value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-                                               <Form.Control
-                                    name="Consumable1"
-                                    id="Consumable1"
-                                    placeholder="Consumable 1"
-                                    value={values.Consumable1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 1"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable1"
+                                          id="Consumable1"
+                                          placeholder="Consumable 1"
+                                          value={values.Consumable1}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 1"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6164,22 +6360,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                               value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-    <Form.Control
-                                    name="Consumable2"
-                                    id="Consumable2"
-                                    placeholder="Consumable 2"
-                                    value={values.Consumable2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 2"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable2"
+                                          id="Consumable2"
+                                          placeholder="Consumable 2"
+                                          value={values.Consumable2}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 2"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6263,22 +6460,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                   value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-                                      <Form.Control
-                                    name="Consumable2qty"
-                                    id="Consumable2qty"
-                                    placeholder="Consumable 2 Qty"
-                                    value={values.Consumable2qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 2 Qty"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable2qty"
+                                          id="Consumable2qty"
+                                          placeholder="Consumable 2 Qty"
+                                          value={values.Consumable2qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 2 Qty"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6367,22 +6565,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                          value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-                                       <Form.Control
-                                    name="Consumable3"
-                                    id="Consumable3"
-                                    placeholder="Consumable 3"
-                                    value={values.Consumable3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 3"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable3"
+                                          id="Consumable3"
+                                          placeholder="Consumable 3"
+                                          value={values.Consumable3}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 3"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="Consumable3"
@@ -6465,22 +6664,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                  value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-                                      <Form.Control
-                                    name="Consumable3qty"
-                                    id="Consumable3qty"
-                                    placeholder="Consumable 3 Qty"
-                                    value={values.Consumable3qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 3 Qty"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable3qty"
+                                          id="Consumable3qty"
+                                          placeholder="Consumable 3 Qty"
+                                          value={values.Consumable3qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 3 Qty"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6570,22 +6770,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                   value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return( 
-                                         <Form.Control
-                                    name="Consumable4"
-                                    id="Consumable4"
-                                    placeholder="Consumable 4"
-                                    value={values.Consumable4}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 4"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable4"
+                                          id="Consumable4"
+                                          placeholder="Consumable 4"
+                                          value={values.Consumable4}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 4"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6669,22 +6870,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                          value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return( 
-                                       <Form.Control
-                                    name="Consumable4qty"
-                                    id="Consumable4qty"
-                                    placeholder="Consumable 4 Qty"
-                                    value={values.Consumable4qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 4 Qty"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable4qty"
+                                          id="Consumable4qty"
+                                          placeholder="Consumable 4 Qty"
+                                          value={values.Consumable4qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 4 Qty"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6774,22 +6976,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                  value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return( 
-                                         <Form.Control
-                                    name="Consumable5"
-                                    id="Consumable5"
-                                    placeholder="Consumable 5"
-                                    value={values.Consumable5}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 5"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable5"
+                                          id="Consumable5"
+                                          placeholder="Consumable 5"
+                                          value={values.Consumable5}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 5"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6873,22 +7076,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                           value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-                                           <Form.Control
-                                    name="Consumable5qty"
-                                    id="Consumable5qty"
-                                    placeholder="Consumable 5 Qty"
-                                    value={values.Consumable5qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 5 Qty"
-                                  />
-                                   )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable5qty"
+                                          id="Consumable5qty"
+                                          placeholder="Consumable 5 Qty"
+                                          value={values.Consumable5qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 5 Qty"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6984,22 +7188,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                               value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-                                         <Form.Control
-                                    name="userfield1"
-                                    id="userfield1"
-                                    placeholder="User Field 1"
-                                    value={values.userfield1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="User Field 1"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="userfield1"
+                                          id="userfield1"
+                                          placeholder="User Field 1"
+                                          value={values.userfield1}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="User Field 1"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -7080,22 +7285,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                         value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
+                                    if (!options || options.length === 0) {
+                                      return (
                                         <Form.Control
-                                    name="userfield2"
-                                    id="userfield2"
-                                    placeholder="User Field 2"
-                                    value={values.userfield2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="User Field 2"
-                                  />
-                                  )}
+                                          name="userfield2"
+                                          id="userfield2"
+                                          placeholder="User Field 2"
+                                          value={values.userfield2}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="User Field 2"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -7176,22 +7382,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                             value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return( 
+                                    if (!options || options.length === 0) {
+                                      return (
                                         <Form.Control
-                                    name="userfield3"
-                                    id="userfield3"
-                                    placeholder="User Field 3"
-                                    value={values.userfield3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="User Field 3"
-                                  />
-                                  )}
+                                          name="userfield3"
+                                          id="userfield3"
+                                          placeholder="User Field 3"
+                                          value={values.userfield3}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="User Field 3"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -7274,22 +7481,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                                   value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
-                                       <Form.Control
-                                    name="userfield4"
-                                    id="userfield4"
-                                    placeholder="User Field 4"
-                                    value={values.userfield4}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="User Field 4"
-                                  />
-                                  )}
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="userfield4"
+                                          id="userfield4"
+                                          placeholder="User Field 4"
+                                          value={values.userfield4}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="User Field 4"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -7370,22 +7578,23 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                                        value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                 if (!options || options.length === 0) { 
-                                  return(
+                                    if (!options || options.length === 0) {
+                                      return (
                                         <Form.Control
-                                    name="userfield5"
-                                    id="userfield5"
-                                    placeholder="User Field 5"
-                                    value={values.userfield5}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="User Field 5"
-                                  />
-                                  )}
+                                          name="userfield5"
+                                          id="userfield5"
+                                          placeholder="User Field 5"
+                                          value={values.userfield5}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="User Field 5"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
