@@ -96,6 +96,7 @@ const MTTRPrediction = (props, active) => {
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [companyId, setCompanyId] = useState();
   const [selectedField, setSelectedField] = useState(null);
+  const[connectedLibraryData,setConnectedLibraryData]=useState([]);
   const [treeTable, setTreeTable] = useState([]);
   const [selectedFunction, setSelectedFunction] = useState();
 
@@ -135,40 +136,79 @@ const MTTRPrediction = (props, active) => {
   //     console.log("merged data", filteredData);
   //   });
   // };
-const getAllConnect = (moduleName) => {
+  const getAllConnect = (moduleName, sourceValue) => {
+  console.log("=== FRONTEND DEBUG ===");
+  console.log("Calling API with:", { moduleName, sourceValue });
+  console.log("sourceValue type:", typeof sourceValue);
+  console.log("sourceValue value:", `"${sourceValue}"`);
+  
   Api.get("api/v1/library/get/all/connect/value", {
     params: {
       projectId: projectId,
       moduleName: moduleName || "",
+      sourceValue: sourceValue,
     },
   })
     .then((res) => {
-      // const rawData = res?.data?.getData || [];
-    const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
-      );
-      console.log("raw connect data", res); 
-      const flattened = filteredData
-  .flatMap((item) =>
-    (item.destinationData || [])
-      .filter(d => d.destinationModuleName === "MTTR") // Filter destinations by module
-      .map((d) => ({
-        sourceName: item.sourceName,
-        sourceValue: item.sourceValue,
-           destinationName: d.destinationName,
-          destinationValue: d.destinationValue,
-          destinationModuleName: d.destinationModuleName,
-      }))
-  );
-
-      console.log("flattened connect data", flattened);
-
-      setConnectData(flattened);
+      console.log("=== API RESPONSE ===");
+      console.log("Full response:", res.data);
+      console.log("getData length:", res.data.getData?.length || 0);
+      
+      if (res.data.getData && res.data.getData.length > 0) {
+        res.data.getData.forEach((item, index) => {
+          console.log(`Item ${index}:`);
+          console.log(`  sourceValue: "${item.sourceValue}"`);
+          console.log(`  destinationData length: ${item.destinationData?.length || 0}`);
+          if (item.destinationData && item.destinationData.length > 0) {
+            item.destinationData.forEach((dest, idx) => {
+              console.log(`    Dest ${idx}: ${dest.destinationName} = "${dest.destinationValue}"`);
+              setConnectedLibraryData(dest.destinationValue)
+            });
+          }
+        });
+      }
+      
+      // Rest of your code...
     })
     .catch((err) => {
-      console.error("Error fetching connect data:", err);
+      console.error("Error:", err.response?.data || err.message);
     });
 };
+// const getAllConnect = (moduleName,sourceValue) => {
+//   Api.get("api/v1/library/get/all/connect/value", {
+//     params: {
+//       projectId: projectId,
+//       moduleName: moduleName || "",
+//         sourceValue: sourceValue,
+//     },
+//   })
+//     .then((res) => {
+//       // const rawData = res?.data?.getData || [];
+//     const filteredData = res.data.getData.filter(
+//         (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
+//       );
+//       console.log("raw connect data", res); 
+//       const flattened = filteredData
+//   .flatMap((item) =>
+//     (item.destinationData || [])
+//       .filter(d => d.destinationModuleName === "MTTR") // Filter destinations by module
+//       .map((d) => ({
+//         sourceName: item.sourceName,
+//         sourceValue: item.sourceValue,
+//            destinationName: d.destinationName,
+//           destinationValue: d.destinationValue,
+//           destinationModuleName: d.destinationModuleName,
+//       }))
+//   );
+
+//       console.log("flattened connect data", flattened);
+
+//       setConnectData(flattened);
+//     })
+//     .catch((err) => {
+//       console.error("Error fetching connect data:", err);
+//     });
+// };
 
 
   const getAllSeprateLibraryData = async () => {
@@ -741,7 +781,7 @@ editComponent: ({ value, onChange }) => {
         : seperateFilteredData.map((item) => ({
             value: item.sourceValue,
             label: item.sourceValue,
-          }));
+          }))  || connectedLibraryData;
 
     // If dropdown has no options → show normal input
     if (!options || options.length === 0) {
@@ -774,7 +814,7 @@ editComponent: ({ value, onChange }) => {
           onChange={(selected) => {
           onChange(selected?.value || "");               // MUST be simple string
         }}
-        options={options}
+        options={options || connectedLibraryData}
         isClearable
         menuPortalTarget={document.body}       
         styles={{

@@ -352,273 +352,312 @@ const [existingEndBeta, setExistingEndBeta] = useState(1);
       });
     }
   };
-const createFMECADataFromExcel = (values) => {
-  // --------------------------------------------
-  // 🔥 VALIDATION BEFORE CALLING API
-  // --------------------------------------------
-  const alpha = parseFloat(values.failureModeRatioAlpha || 0);
-  const beta = parseFloat(values.endEffectRatioBeta || 0);
 
-  if (alpha > 1) {
-    toast.error(
-      `failureModeRatioAlpha must be ≤ 1. Received: ${alpha}`
-    );
-    return; // ❌ Stop creation
-  }
 
-  if (beta > 1) {
-    toast.error(
-      `endEffectRatioBeta must be ≤ 1. Received: ${beta}`
-    );
-    return; // ❌ Stop creation
-  }
-
-  // --------------------------------------------
-  // ✔ Proceed only if ratios are valid
-  // --------------------------------------------
-  const companyId = localStorage.getItem("companyId");
-  setIsLoading(true);
-
-  Api.post("api/v1/FMECA/", {
-    operatingPhase: values.operatingPhase,
-    function: values.function,
-    failureMode: values.failureMode,
-    cause: values.cause,
-
-    failureModeRatioAlpha: alpha,
-    detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-    detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-    BuiltInTest: values.BuiltInTest,
-    subSystemEffect: values.subSystemEffect,
-    systemEffect: values.systemEffect,
-
-    endEffect: values.endEffect,
-    endEffectRatioBeta: beta,
-
-    safetyImpact: values.safetyImpact,
-    referenceHazardId: values.referenceHazardId,
-    realibilityImpact: values.realibilityImpact,
-    serviceDisruptionTime: values.serviceDisruptionTime,
-    frequency: values.frequency,
-    severity: values.severity,
-    riskIndex: values.riskIndex,
-    designControl: values.designControl,
-    maintenanceControl: values.maintenanceControl,
-    exportConstraints: values.exportConstraints,
-    immediteActionDuringOperationalPhase:
-      values.immediteActionDuringOperationalPhase,
-    immediteActionDuringNonOperationalPhase:
-      values.immediteActionDuringNonOperationalPhase,
-    userField1: values.userField1,
-    userField2: values.userField2,
-    userField3: values.userField3,
-    userField4: values.userField4,
-    userField5: values.userField5,
-    userField6: values.userField6,
-    userField7: values.userField7,
-    userField8: values.userField8,
-    userField9: values.userField9,
-    userField10: values.userField10,
-    projectId: projectId,
-    companyId: companyId,
-    productId: productId,
-    userId: userId,
-    Alldata: tableData,
-  })
-    .then((response) => {
+  const createFMECADataFromExcel = (values) => {
+    const companyId = localStorage.getItem("companyId");
+    setIsLoading(true);
+    Api.post("api/v1/FMECA/", {
+      operatingPhase: values.operatingPhase,
+      function: values.function,
+      failureMode: values.failureMode,
+      // searchFM: values.searchFM,
+      cause: values.cause,
+      failureModeRatioAlpha: values?.failureModeRatioAlpha
+        ? values?.failureModeRatioAlpha
+        : 0,
+      detectableMeansDuringOperation: values.detectableMeansDuringOperation,
+      detectableMeansToMaintainer: values.detectableMeansToMaintainer,
+      BuiltInTest: values.BuiltInTest,
+      subSystemEffect: values.subSystemEffect,
+      systemEffect: values.systemEffect,
+      endEffect: values.endEffect,
+      endEffectRatioBeta: values.endEffectRatioBeta
+        ? values.endEffectRatioBeta
+        : 1,
+      safetyImpact: values.safetyImpact,
+      referenceHazardId: values.referenceHazardId,
+      realibilityImpact: values.realibilityImpact,
+      serviceDisruptionTime: values.serviceDisruptionTime,
+      frequency: values.frequency,
+      severity: values.severity,
+      riskIndex: values.riskIndex,
+      designControl: values.designControl,
+      maintenanceControl: values.maintenanceControl,
+      exportConstraints: values.exportConstraints,
+      immediteActionDuringOperationalPhase:
+        values.immediteActionDuringOperationalPhase,
+      immediteActionDuringNonOperationalPhase:
+        values.immediteActionDuringNonOperationalPhase,
+      userField1: values.userField1,
+      userField2: values.userField2,
+      userField3: values.userField3,
+      userField4: values.userField4,
+      userField5: values.userField5,
+      userField6: values.userField6,
+      userField7: values.userField7,
+      userField8: values.userField8,
+      userField9: values.userField9,
+      userField10: values.userField10,
+      projectId: projectId,
+      companyId: companyId,
+      productId: productId,
+      userId: userId,
+      Alldata: tableData,
+    }).then((response) => {
       setIsLoading(false);
+      const status = response?.status;
+      // if (status === 204) {
+      //   setFailureModeRatioError(true);
+      // }
+
       getProductData();
-    })
-    .catch((error) => {
+      setIsLoading(false);
+    }).catch((error) => {
       setIsLoading(false);
 
+      // Backend error message available?
       const errorMessage =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
         "Something went wrong";
 
+      // Show toast
       toast.error(errorMessage);
+
       console.error("Error creating FMECA data:", errorMessage);
-    });
-};
-
-  // const createFMECADataFromExcel = (values) => {
-  //   const companyId = localStorage.getItem("companyId");
-  //   setIsLoading(true);
-  //   Api.post("api/v1/FMECA/", {
-  //     operatingPhase: values.operatingPhase,
-  //     function: values.function,
-  //     failureMode: values.failureMode,
-  //     // searchFM: values.searchFM,
-  //     cause: values.cause,
-  //     failureModeRatioAlpha: values?.failureModeRatioAlpha
-  //       ? values?.failureModeRatioAlpha
-  //       : 0,
-  //     detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-  //     detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-  //     BuiltInTest: values.BuiltInTest,
-  //     subSystemEffect: values.subSystemEffect,
-  //     systemEffect: values.systemEffect,
-  //     endEffect: values.endEffect,
-  //     endEffectRatioBeta: values.endEffectRatioBeta
-  //       ? values.endEffectRatioBeta
-  //       : 1,
-  //     safetyImpact: values.safetyImpact,
-  //     referenceHazardId: values.referenceHazardId,
-  //     realibilityImpact: values.realibilityImpact,
-  //     serviceDisruptionTime: values.serviceDisruptionTime,
-  //     frequency: values.frequency,
-  //     severity: values.severity,
-  //     riskIndex: values.riskIndex,
-  //     designControl: values.designControl,
-  //     maintenanceControl: values.maintenanceControl,
-  //     exportConstraints: values.exportConstraints,
-  //     immediteActionDuringOperationalPhase:
-  //       values.immediteActionDuringOperationalPhase,
-  //     immediteActionDuringNonOperationalPhase:
-  //       values.immediteActionDuringNonOperationalPhase,
-  //     userField1: values.userField1,
-  //     userField2: values.userField2,
-  //     userField3: values.userField3,
-  //     userField4: values.userField4,
-  //     userField5: values.userField5,
-  //     userField6: values.userField6,
-  //     userField7: values.userField7,
-  //     userField8: values.userField8,
-  //     userField9: values.userField9,
-  //     userField10: values.userField10,
-  //     projectId: projectId,
-  //     companyId: companyId,
-  //     productId: productId,
-  //     userId: userId,
-  //     Alldata: tableData,
-  //   }).then((response) => {
-  //     setIsLoading(false);
-  //     const status = response?.status;
-  //     // if (status === 204) {
-  //     //   setFailureModeRatioError(true);
-  //     // }
-
-  //     getProductData();
-  //     setIsLoading(false);
-  //   }).catch((error) => {
-  //     setIsLoading(false);
-
-  //     // Backend error message available?
-  //     const errorMessage =
-  //       error?.response?.data?.message ||
-  //       error?.response?.data?.error ||
-  //       "Something went wrong";
-
-  //     // Show toast
-  //     toast.error(errorMessage);
-
-  //     console.error("Error creating FMECA data:", errorMessage);
-  //   })
-  // };
-  const convertToJson = (headers, data) => {
-    const rows = [];
-
-    // if (excelData.length > 1) {
-    if (data.length > 0 && data[0].length > 1) {
-      data.forEach((row) => {
-        let rowData = {};
-        row.forEach((element, index) => {
-          rowData[headers[index]] = element;
-        });
-        rows.push(rowData);
-        createFMECADataFromExcel(rowData);
-      });
-
-      return rows;
-    } else {
-      toast("No Data Found In Excel Sheet", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        type: "error",
-      });
-    }
+    })
   };
+  // const convertToJson = (headers, data) => {
+  //   const rows = [];
+
+  //   // if (excelData.length > 1) {
+  //   if (data.length > 0 && data[0].length > 1) {
+  //     data.forEach((row) => {
+  //       let rowData = {};
+  //       row.forEach((element, index) => {
+  //         rowData[headers[index]] = element;
+  //       });
+  //       rows.push(rowData);
+  //       createFMECADataFromExcel(rowData);
+  //     });
+
+  //     return rows;
+  //   } else {
+  //     toast("No Data Found In Excel Sheet", {
+  //       position: "top-right",
+  //       autoClose: 5000,
+  //       hideProgressBar: false,
+  //       closeOnClick: true,
+  //       pauseOnHover: true,
+  //       draggable: true,
+  //       progress: undefined,
+  //       theme: "light",
+  //       type: "error",
+  //     });
+  //   }
+  // };
+
 
 const importExcel = (e) => {
-  const file = e.target.files[0];
+    const file = e.target.files[0];
 
-  const fileName = file.name;
-  const validExtensions = ["xlsx", "xls"];
-  const fileExtension = fileName.split(".").pop().toLowerCase();
+    // Check if the file is an Excel file by checking the extension
+    const fileName = file.name;
+    const validExtensions = ["xlsx", "xls"];
+    const fileExtension = fileName.split(".").pop().toLowerCase();
 
-  if (!validExtensions.includes(fileExtension)) {
-    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!");
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = (event) => {
-    const bstr = event.target.result;
-    const workBook = XLSX.read(bstr, { type: "binary" });
-    const workSheetName = workBook.SheetNames[0];
-    const workSheet = workBook.Sheets[workSheetName];
-    const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-
-    const headers = fileData[0];
-    const heads = headers.map((head) => ({ title: head, field: head }));
-    setColDefs(heads);
-
-    fileData.splice(0, 1);
-
-    const jsonData = convertToJson(headers, fileData);
-
-  
-    const existing = {
-      failureModeRatioAlpha: existingFailureAlpha,  
-      endEffectRatioBeta: existingEndBeta,         
-    };
-
-    let invalidRow = jsonData.find((row, index) => {
-      const alpha = parseFloat(row.failureModeRatioAlpha);
-      const beta = parseFloat(row.endEffectRatioBeta);
-
-      if (alpha > 1 || beta > 1) {
-        toast.error(
-          `Row ${index + 2}: Ratio values must be ≤ 1.`
-        );
-        return true;
-      }
-
-     
-      if (alpha > existing.failureModeRatioAlpha) {
-        toast.error(
-          `Row ${index + 2}: failureModeRatioAlpha (${alpha}) exceeds existing value (${existing.failureModeRatioAlpha}).`
-        );
-        return true;
-      }
-
-      if (beta > existing.endEffectRatioBeta) {
-        toast.error(
-          `Row ${index + 2}: endEffectRatioBeta (${beta}) exceeds existing value (${existing.endEffectRatioBeta}).`
-        );
-        return true;
-      }
-
-      return false;
-    });
-
-    if (invalidRow) {
-      return;
+    if (!validExtensions.includes(fileExtension)) {
+        toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+            position: toast.POSITION.TOP_RIGHT,
+        });
+        return;
     }
 
-    setData(jsonData);
-  };
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        // Parse data
+        const bstr = event.target.result;
+        const workBook = XLSX.read(bstr, { type: "binary" });
+        const workSheetName = workBook.SheetNames[0];
+        const workSheet = workBook.Sheets[workSheetName];
+        const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+        const headers = fileData[0];
+        
+        // Check if required columns exist
+        const hasFailureModeRatioAlpha = headers.includes("failureModeRatioAlpha");
+        const hasEndEffectRatioBeta = headers.includes("endEffectRatioBeta");
+        
+        if (!hasFailureModeRatioAlpha || !hasEndEffectRatioBeta) {
+            toast.error("Excel file must contain 'failureModeRatioAlpha' and 'endEffectRatioBeta' columns!", {
+                position: toast.POSITION.TOP_RIGHT,
+            });
+            return;
+        }
 
-  reader.readAsBinaryString(file);
+        const heads = headers.map((head) => ({ title: head, field: head }));
+        setColDefs(heads);
+        
+        // Remove header row
+        fileData.splice(0, 1);
+        
+        // Validate data before setting
+        const jsonData = convertToJson(headers, fileData);
+        
+        // Validation variables
+        let alphaTotal = 0;
+        let betaTotal = 0;
+        const invalidAlphaRows = []; // For individual values > 1
+        const invalidBetaRows = []; // For individual values > 1
+        const invalidAlphaValues = []; // For non-numeric values
+        const invalidBetaValues = []; // For non-numeric values
+        
+        // Validate each row
+        jsonData.forEach((row, index) => {
+            const rowNumber = index + 2; // +2 for header row and 1-based indexing
+            
+            // Parse values
+            const alphaValue = parseFloat(row.failureModeRatioAlpha);
+            const betaValue = parseFloat(row.endEffectRatioBeta);
+            
+            // Check if values are valid numbers
+            if (isNaN(alphaValue)) {
+                invalidAlphaValues.push(`Row ${rowNumber}: "${row.failureModeRatioAlpha}" (not a number)`);
+            } else {
+                // Check individual value
+                if (alphaValue > 1) {
+                    invalidAlphaRows.push(rowNumber);
+                }
+                // Add to total
+                alphaTotal += alphaValue;
+            }
+            
+            if (isNaN(betaValue)) {
+                invalidBetaValues.push(`Row ${rowNumber}: "${row.endEffectRatioBeta}" (not a number)`);
+            } else {
+                // Check individual value
+                if (betaValue > 1) {
+                    invalidBetaRows.push(rowNumber);
+                }
+                // Add to total
+                betaTotal += betaValue;
+            }
+        });
+
+        // Prepare error messages
+        let errorMessages = [];
+        
+        // Check for non-numeric values
+        if (invalidAlphaValues.length > 0) {
+            errorMessages.push(`Invalid failureModeRatioAlpha values:\n${invalidAlphaValues.join("\n")}`);
+        }
+        
+        if (invalidBetaValues.length > 0) {
+            errorMessages.push(`Invalid endEffectRatioBeta values:\n${invalidBetaValues.join("\n")}`);
+        }
+        
+        // Check for individual values > 1
+        if (invalidAlphaRows.length > 0) {
+            errorMessages.push(`failureModeRatioAlpha > 1 in rows: ${invalidAlphaRows.join(", ")}`);
+        }
+        
+        if (invalidBetaRows.length > 0) {
+            errorMessages.push(`endEffectRatioBeta > 1 in rows: ${invalidBetaRows.join(", ")}`);
+        }
+        
+        // Check column totals > 1
+        if (alphaTotal > 1) {
+            errorMessages.push(`Total failureModeRatioAlpha = ${alphaTotal.toFixed(4)} (exceeds 1)`);
+        }
+        
+        if (betaTotal > 1) {
+            errorMessages.push(`Total endEffectRatioBeta = ${betaTotal.toFixed(4)} (exceeds 1)`);
+        }
+        
+        // Show all validation errors
+        if (errorMessages.length > 0) {
+            toast.error(`Validation failed:\n\n${errorMessages.join("\n\n")}`, {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: false,
+                style: { 
+                    whiteSpace: 'pre-line',
+                    maxWidth: '500px'
+                }
+            });
+            return;
+        }
+
+        // Show warnings for edge cases
+        let warningMessages = [];
+        
+        // Check for individual values = 1
+        const hasAlphaEqualsOne = jsonData.some(row => parseFloat(row.failureModeRatioAlpha) === 1);
+        const hasBetaEqualsOne = jsonData.some(row => parseFloat(row.endEffectRatioBeta) === 1);
+        
+        if (hasAlphaEqualsOne) {
+            warningMessages.push("Some failureModeRatioAlpha values equal to 1");
+        }
+        
+        if (hasBetaEqualsOne) {
+            warningMessages.push("Some endEffectRatioBeta values equal to 1");
+        }
+        
+        // Check column totals = 1
+        if (alphaTotal === 1) {
+            warningMessages.push(`Total failureModeRatioAlpha = 1.0000`);
+        }
+        
+        if (betaTotal === 1) {
+            warningMessages.push(`Total endEffectRatioBeta = 1.0000`);
+        }
+        
+        if (warningMessages.length > 0) {
+            toast.warning(`Note:\n\n${warningMessages.join("\n")}`, {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 5000,
+                style: { whiteSpace: 'pre-line' }
+            });
+        }
+
+        // If validation passes, set the data
+        setData(jsonData);
+        
+        // Success message with totals
+        let successMessage = `Successfully imported ${jsonData.length} rows!\n\n`;
+        successMessage += `Column Totals:\n`;
+        successMessage += `- failureModeRatioAlpha: ${alphaTotal.toFixed(4)}\n`;
+        successMessage += `- endEffectRatioBeta: ${betaTotal.toFixed(4)}`;
+        
+        toast.success(successMessage, {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 5000,
+            style: { whiteSpace: 'pre-line' }
+        });
+        
+        // Clear the file input
+        e.target.value = '';
+          createFMECADataFromExcel()
+    };
+    
+    reader.readAsBinaryString(file);
 };
 
+// Helper function
+const convertToJson = (headers, data) => {
+    const result = [];
+    
+    data.forEach((row) => {
+        const rowData = {};
+        headers.forEach((header, index) => {
+            rowData[header] = row[index] !== undefined ? row[index] : null;
+        });
+        result.push(rowData);
+         
+        //  createFMECADataFromExcel(rowData);
+    });
+    
+    return result;
+};
 
   // const importExcel = (e) => {
   //   const file = e.target.files[0];
@@ -1136,7 +1175,14 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
       (value ? { label: value, value } : null);
 
 
-    const hasError = required && (!value || value.trim() === "");
+    // const hasError = required && (!value || value?.trim() === "");
+    const hasError = required && (
+  value === undefined ||
+  value === null ||
+  (typeof value === "string" && value.trim() === "") ||
+  (typeof value !== "string" && !value) 
+);
+
 
 
     if (!options || options.length === 0) {

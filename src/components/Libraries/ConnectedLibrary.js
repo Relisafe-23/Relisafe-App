@@ -418,7 +418,7 @@ values.end.forEach((selectedOption, index) => {
   //get Api
   const getAllConnect = (values) => {
     // setIsLoading(true);
-    Api.get("api/v1/library/get/all/connect/value", {
+    Api.get("api/v1/library/get/all/connect/library/value", {
       params: {
         projectId: projectId,
         moduleName: values ? values : "",
