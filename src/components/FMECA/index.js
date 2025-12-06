@@ -138,6 +138,9 @@ function Index(props) {
   const [writePermission, setWritePermission] = useState();
   const history = useHistory();
   const userId = localStorage.getItem("userId");
+  const [existingFailureAlpha, setExistingFailureAlpha] = useState(1);
+const [existingEndBeta, setExistingEndBeta] = useState(1);
+
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
   const [operationPhase, setOperationPhase] = useState();
@@ -350,6 +353,7 @@ function Index(props) {
     }
   };
 
+
   const createFMECADataFromExcel = (values) => {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
@@ -424,69 +428,270 @@ function Index(props) {
       console.error("Error creating FMECA data:", errorMessage);
     })
   };
-  const convertToJson = (headers, data) => {
-    const rows = [];
+  // const convertToJson = (headers, data) => {
+  //   const rows = [];
 
-    // if (excelData.length > 1) {
-    if (data.length > 0 && data[0].length > 1) {
-      data.forEach((row) => {
-        let rowData = {};
-        row.forEach((element, index) => {
-          rowData[headers[index]] = element;
-        });
-        rows.push(rowData);
-        createFMECADataFromExcel(rowData);
-      });
+  //   // if (excelData.length > 1) {
+  //   if (data.length > 0 && data[0].length > 1) {
+  //     data.forEach((row) => {
+  //       let rowData = {};
+  //       row.forEach((element, index) => {
+  //         rowData[headers[index]] = element;
+  //       });
+  //       rows.push(rowData);
+  //       createFMECADataFromExcel(rowData);
+  //     });
 
-      return rows;
-    } else {
-      toast("No Data Found In Excel Sheet", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "light",
-        type: "error",
-      });
-    }
-  };
+  //     return rows;
+  //   } else {
+  //     toast("No Data Found In Excel Sheet", {
+  //       position: "top-right",
+  //       autoClose: 5000,
+  //       hideProgressBar: false,
+  //       closeOnClick: true,
+  //       pauseOnHover: true,
+  //       draggable: true,
+  //       progress: undefined,
+  //       theme: "light",
+  //       type: "error",
+  //     });
+  //   }
+  // };
 
-  const importExcel = (e) => {
+
+const importExcel = (e) => {
     const file = e.target.files[0];
 
     // Check if the file is an Excel file by checking the extension
     const fileName = file.name;
-    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
-    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
+    const validExtensions = ["xlsx", "xls"];
+    const fileExtension = fileName.split(".").pop().toLowerCase();
 
     if (!validExtensions.includes(fileExtension)) {
-      // alert('Please upload a valid Excel file (either .xlsx or .xls)');
-      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-        position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
-      });
-      return; // Exit the function if the file is not an Excel file
+        toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+            position: toast.POSITION.TOP_RIGHT,
+        });
+        return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      //parse data
-      const bstr = event.target.result;
-      const workBook = XLSX.read(bstr, { type: "binary" });
-      // get first sheet
-      const workSheetName = workBook.SheetNames[0];
-      const workSheet = workBook.Sheets[workSheetName];
-      const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-      const headers = fileData[0];
-      const heads = headers.map((head) => ({ title: head, field: head }));
-      setColDefs(heads);
-      fileData.splice(0, 1);
-      setData(convertToJson(headers, fileData));
+        // Parse data
+        const bstr = event.target.result;
+        const workBook = XLSX.read(bstr, { type: "binary" });
+        const workSheetName = workBook.SheetNames[0];
+        const workSheet = workBook.Sheets[workSheetName];
+        const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+        const headers = fileData[0];
+        
+        // Check if required columns exist
+        const hasFailureModeRatioAlpha = headers.includes("failureModeRatioAlpha");
+        const hasEndEffectRatioBeta = headers.includes("endEffectRatioBeta");
+        
+        if (!hasFailureModeRatioAlpha || !hasEndEffectRatioBeta) {
+            toast.error("Excel file must contain 'failureModeRatioAlpha' and 'endEffectRatioBeta' columns!", {
+                position: toast.POSITION.TOP_RIGHT,
+            });
+            return;
+        }
+
+        const heads = headers.map((head) => ({ title: head, field: head }));
+        setColDefs(heads);
+        
+        // Remove header row
+        fileData.splice(0, 1);
+        
+        // Validate data before setting
+        const jsonData = convertToJson(headers, fileData);
+        
+        // Validation variables
+        let alphaTotal = 0;
+        let betaTotal = 0;
+        const invalidAlphaRows = []; // For individual values > 1
+        const invalidBetaRows = []; // For individual values > 1
+        const invalidAlphaValues = []; // For non-numeric values
+        const invalidBetaValues = []; // For non-numeric values
+        
+        // Validate each row
+        jsonData.forEach((row, index) => {
+            const rowNumber = index + 2; // +2 for header row and 1-based indexing
+            
+            // Parse values
+            const alphaValue = parseFloat(row.failureModeRatioAlpha);
+            const betaValue = parseFloat(row.endEffectRatioBeta);
+            
+            // Check if values are valid numbers
+            if (isNaN(alphaValue)) {
+                invalidAlphaValues.push(`Row ${rowNumber}: "${row.failureModeRatioAlpha}" (not a number)`);
+            } else {
+                // Check individual value
+                if (alphaValue > 1) {
+                    invalidAlphaRows.push(rowNumber);
+                }
+                // Add to total
+                alphaTotal += alphaValue;
+            }
+            
+            if (isNaN(betaValue)) {
+                invalidBetaValues.push(`Row ${rowNumber}: "${row.endEffectRatioBeta}" (not a number)`);
+            } else {
+                // Check individual value
+                if (betaValue > 1) {
+                    invalidBetaRows.push(rowNumber);
+                }
+                // Add to total
+                betaTotal += betaValue;
+            }
+        });
+
+        // Prepare error messages
+        let errorMessages = [];
+        
+        // Check for non-numeric values
+        if (invalidAlphaValues.length > 0) {
+            errorMessages.push(`Invalid failureModeRatioAlpha values:\n${invalidAlphaValues.join("\n")}`);
+        }
+        
+        if (invalidBetaValues.length > 0) {
+            errorMessages.push(`Invalid endEffectRatioBeta values:\n${invalidBetaValues.join("\n")}`);
+        }
+        
+        // Check for individual values > 1
+        if (invalidAlphaRows.length > 0) {
+            errorMessages.push(`failureModeRatioAlpha > 1 in rows: ${invalidAlphaRows.join(", ")}`);
+        }
+        
+        if (invalidBetaRows.length > 0) {
+            errorMessages.push(`endEffectRatioBeta > 1 in rows: ${invalidBetaRows.join(", ")}`);
+        }
+        
+        // Check column totals > 1
+        if (alphaTotal > 1) {
+            errorMessages.push(`Total failureModeRatioAlpha = ${alphaTotal.toFixed(4)} (exceeds 1)`);
+        }
+        
+        if (betaTotal > 1) {
+            errorMessages.push(`Total endEffectRatioBeta = ${betaTotal.toFixed(4)} (exceeds 1)`);
+        }
+        
+        // Show all validation errors
+        if (errorMessages.length > 0) {
+            toast.error(`Validation failed:\n\n${errorMessages.join("\n\n")}`, {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: false,
+                style: { 
+                    whiteSpace: 'pre-line',
+                    maxWidth: '500px'
+                }
+            });
+            return;
+        }
+
+        // Show warnings for edge cases
+        let warningMessages = [];
+        
+        // Check for individual values = 1
+        const hasAlphaEqualsOne = jsonData.some(row => parseFloat(row.failureModeRatioAlpha) === 1);
+        const hasBetaEqualsOne = jsonData.some(row => parseFloat(row.endEffectRatioBeta) === 1);
+        
+        if (hasAlphaEqualsOne) {
+            warningMessages.push("Some failureModeRatioAlpha values equal to 1");
+        }
+        
+        if (hasBetaEqualsOne) {
+            warningMessages.push("Some endEffectRatioBeta values equal to 1");
+        }
+        
+        // Check column totals = 1
+        if (alphaTotal === 1) {
+            warningMessages.push(`Total failureModeRatioAlpha = 1.0000`);
+        }
+        
+        if (betaTotal === 1) {
+            warningMessages.push(`Total endEffectRatioBeta = 1.0000`);
+        }
+        
+        if (warningMessages.length > 0) {
+            toast.warning(`Note:\n\n${warningMessages.join("\n")}`, {
+                position: toast.POSITION.TOP_RIGHT,
+                autoClose: 5000,
+                style: { whiteSpace: 'pre-line' }
+            });
+        }
+
+        // If validation passes, set the data
+        setData(jsonData);
+        
+        // Success message with totals
+        let successMessage = `Successfully imported ${jsonData.length} rows!\n\n`;
+        successMessage += `Column Totals:\n`;
+        successMessage += `- failureModeRatioAlpha: ${alphaTotal.toFixed(4)}\n`;
+        successMessage += `- endEffectRatioBeta: ${betaTotal.toFixed(4)}`;
+        
+        toast.success(successMessage, {
+            position: toast.POSITION.TOP_RIGHT,
+            autoClose: 5000,
+            style: { whiteSpace: 'pre-line' }
+        });
+        
+        // Clear the file input
+        e.target.value = '';
+          createFMECADataFromExcel()
     };
+    
     reader.readAsBinaryString(file);
-  };
+};
+
+// Helper function
+const convertToJson = (headers, data) => {
+    const result = [];
+    
+    data.forEach((row) => {
+        const rowData = {};
+        headers.forEach((header, index) => {
+            rowData[header] = row[index] !== undefined ? row[index] : null;
+        });
+        result.push(rowData);
+         
+        //  createFMECADataFromExcel(rowData);
+    });
+    
+    return result;
+};
+
+  // const importExcel = (e) => {
+  //   const file = e.target.files[0];
+
+  //   // Check if the file is an Excel file by checking the extension
+  //   const fileName = file.name;
+  //   const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
+  //   const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
+
+  //   if (!validExtensions.includes(fileExtension)) {
+  //     // alert('Please upload a valid Excel file (either .xlsx or .xls)');
+  //     toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+  //       position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
+  //     });
+  //     return; // Exit the function if the file is not an Excel file
+  //   }
+
+  //   const reader = new FileReader();
+  //   reader.onload = (event) => {
+  //     //parse data
+  //     const bstr = event.target.result;
+  //     const workBook = XLSX.read(bstr, { type: "binary" });
+  //     // get first sheet
+  //     const workSheetName = workBook.SheetNames[0];
+  //     const workSheet = workBook.Sheets[workSheetName];
+  //     const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+  //     const headers = fileData[0];
+  //     const heads = headers.map((head) => ({ title: head, field: head }));
+  //     setColDefs(heads);
+  //     fileData.splice(0, 1);
+  //     setData(convertToJson(headers, fileData));
+  //   };
+  //   reader.readAsBinaryString(file);
+  // };
 
   useEffect(() => {
     getTreeData();
@@ -498,7 +703,7 @@ function Index(props) {
     localStorage.clear(history.push("/login"));
     window.location.reload();
   };
-  //project owner
+
   const projectSidebar = () => {
     Api.get(`/api/v1/projectCreation/${projectId}`, {
       headers: {
@@ -529,8 +734,7 @@ function Index(props) {
       });
   };
 
-  //handle file
-  //const fileType =[""]
+
 
   const getTreeData = () => {
     Api.get(`/api/v1/productTreeStructure/list`, {
@@ -638,12 +842,11 @@ function Index(props) {
       const filteredData = res.data.getData.filter(
         (entry) => entry?.libraryId?.moduleName === "FMECA" || entry?.destinationModuleName === "FMECA"
       );
-     
       setConnectData(filteredData);
-const flattened = filteredData
+     const flattened = filteredData
   .flatMap((item) =>
     (item.destinationData || [])
-      .filter(d => d.destinationModuleName === "FMECA") // Filter destinations by module
+      .filter(d => d.destinationModuleName === "FMECA") 
       .map((d) => ({
         fieldName: item.sourceName,         
         fieldValue: item.sourceValue,
@@ -972,7 +1175,14 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
       (value ? { label: value, value } : null);
 
 
-    const hasError = required && (!value || value.trim() === "");
+    // const hasError = required && (!value || value?.trim() === "");
+    const hasError = required && (
+  value === undefined ||
+  value === null ||
+  (typeof value === "string" && value.trim() === "") ||
+  (typeof value !== "string" && !value) 
+);
+
 
 
     if (!options || options.length === 0) {
@@ -1059,13 +1269,13 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
    createSmartSelectField("operatingPhase", "Operating Phases", true),
     createSmartSelectField("function", "Function", true),
     createSmartSelectField("failureMode", "Failure Mode", true),
-    createEditComponent("failureModeRatioAlpha", "Failure Mode Ratio Alpha (must be equal to 1)", true),
+   createSmartSelectField("failureModeRatioAlpha", "Failure Mode Ratio Alpha (must be equal to 1)", true),
     createSmartSelectField("cause", "Cause"),
     createSmartSelectField("subSystemEffect", "Sub System effect", true),
     createSmartSelectField("systemEffect", "System Effect", true),
     createSmartSelectField("endEffect", "End Effect", true),
-    createEditComponent("endEffectRatioBeta", "End Effect ratio Beta (must be equal to 1)", true),
-    createEditComponent("safetyImpact", "Safety Impact", true),
+    createSmartSelectField("endEffectRatioBeta", "End Effect ratio Beta (must be equal to 1)", true),
+   createSmartSelectField("safetyImpact", "Safety Impact", true),
     createSmartSelectField("referenceHazardId", "Reference Hazard ID"),
     createSmartSelectField("realibilityImpact", "Reliability Impact", true),
 
@@ -1441,11 +1651,11 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
 
                   editable={{
                     onRowAdd:
-                      writePermission === true ||
+                       writePermission === true ||
                         writePermission === "undefined" ||
                         role === "admin" ||
                         (isOwner === true && createdBy === userId)
-                        ? (newRow) =>
+                        ?(newRow) =>
                           new Promise((resolve) => {
                             createFmeca(newRow);
                             resolve();

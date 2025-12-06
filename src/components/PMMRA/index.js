@@ -6,6 +6,7 @@ import { useHistory } from "react-router-dom";
 import Api from "../../Api";
 import Select from "react-select";
 import * as Yup from "yup";
+import CreatableSelect from "react-select/creatable";
 import MaterialTable from "material-table";
 import { ThemeProvider } from "@material-ui/core/styles";
 import Tree from "../Tree";
@@ -50,6 +51,8 @@ import { Tooltip, TableCell } from "@material-ui/core";
 const string255 = Yup.string()
   .required("This field is required")
   .max(255, "Must be at most 255 characters");
+
+
 
 const Validation = Yup.object().shape({
   category: Yup.object().required("Category is required"),
@@ -236,8 +239,8 @@ export default function PMMRA(props) {
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-    ? props?.location?.state?.productId
-    : initialProductId;
+      ? props?.location?.state?.productId
+      : initialProductId;
   const [projectname, setProjectName] = useState();
   const [reference, setReference] = useState();
   const [pmmraData, setpmmraData] = useState([]);
@@ -254,9 +257,16 @@ export default function PMMRA(props) {
   const [mttrLevelOfReplace, setMttrLevelOfReplace] = useState();
   const [mttrSpare, setMttrSpare] = useState();
   const [colDefs, setColDefs] = useState();
+  const [connectData, setConnectData] = useState([]);
+  const [flattenedConnect, setFlattenedConnect] = useState([]);
+
   const [importExcelData, setImportExcelData] = useState({});
   const [shouldReload, setShouldReload] = useState(false);
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    getAllConnectedLibrary();
+  }, []);
+
   const importExcel = (e) => {
     const file = e.target.files[0];
     const fileName = file.name;
@@ -802,6 +812,7 @@ export default function PMMRA(props) {
     });
   };
   useEffect(() => {
+    // getAllConnectedLibrary(); 
     getAllSeprateLibraryData();
     getFMECAData();
   }, [productId]);
@@ -837,19 +848,96 @@ export default function PMMRA(props) {
       setFmecaFillterData(filteredData[0]);
     });
   };
+
+  //  const getAllConnectedLibrary = async () => {
+  //   try {
+  //     setIsLoading(true);
+
+  //     const res = await Api.get("api/v1/library/get/all/connect/value", {
+  //       params: {
+  //         projectId: projectId,
+  //       },
+  //     });
+
+  //     console.log("res connect123",res.data.getData);
+
+  //     const filteredData = res.data.getData?.filter(
+  //       (entry) =>
+  //         entry?.libraryId?.moduleName === "PMMR" ||
+  //         entry?.destinationModuleName === "PMMR"
+  //     );
+
+  //     setConnectData(filteredData);
+  //  console.log("res connect", filteredData);
+  //     const flattened = filteredData.flatMap((item) =>
+  //       (item?.destinationData || [])
+  //         .filter((d) => d?.destinationModuleName === "PMMR")
+  //         .map((d) => ({
+  //           fieldName: item?.sourceName,
+  //           fieldValue: item?.sourceValue,
+  //           destName: d?.destinationName,
+  //           destValue: d?.destinationValue,
+  //           destModule: d?.destinationModuleName,
+  //         }))
+  //     );
+
+  //      setAllConnectedData(flattened);
+
+  //     console.log("filteredData",flattened );
+  //   } catch (error) {
+  //     console.error("Error fetching connect data:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
-    Api.get("api/v1/library/get/all/source/value", {
+    Api.get("api/v1/library/get/all/connect/value", {
       params: {
         projectId: projectId,
-        moduleName: "PMMRA",
-        sourceName: fieldName,
-        sourceValue: fieldValue.value,
+
       },
     }).then((res) => {
-      const data = res?.data?.libraryData;
-      setAllConnectedData(data);
+      console.log("res1", res.data.getData);
+      const filteredData = res.data.getData?.filter(
+        (entry) =>
+          entry?.libraryId?.moduleName === "PMMRA" ||
+          entry?.destinationModuleName === "PMMRA"
+      );
+      console.log("filteredData", filteredData)
+      const flattened = filteredData.flatMap((item) =>
+        (item?.destinationData || [])
+          .filter((d) => d?.destinationModuleName === "PMMRA")
+          .map((d) => ({
+            fieldName: item?.sourceName,
+            fieldValue: item?.sourceValue,
+            destinationName: d?.destinationName,
+            destinationValue: d?.destinationValue,
+            destinationModule: d?.destinationModuleName,
+          }))
+      );
+      console.log("flattened", flattened)
+      setAllConnectedData(flattened);
+
     });
   };
+  // const getAllConnectedLibrary = async (fieldValue, fieldName) => {
+  //   Api.get("api/v1/library/get/all/source/value", {
+  //     params: {
+  //       projectId: projectId,
+  //       moduleName: "PMMRA",
+  //       sourceName: fieldName,
+  //       sourceValue: fieldValue.value,
+  //       destinationName:fieldName,
+  //       destinationValue:fieldValue.value,
+  //     },
+  //   }).then((res) => {
+  //     console.log("res1", res);
+  //     const data = res?.data?.libraryData;
+  //     setAllConnectedData(data);
+  //   });
+  // };
   //project owner
   const projectSidebar = () => {
     Api.get(`/api/v1/projectCreation/${projectId}`, {
@@ -1010,6 +1098,7 @@ export default function PMMRA(props) {
     })
 
       .then((res) => {
+        console.log("res", res);
         const data = res?.data?.data;
         setProductName(data.productName);
         setIsLoading(false);
@@ -1123,7 +1212,7 @@ export default function PMMRA(props) {
           : values?.latitudeFrequency,
       scheduleMaintenceTsk:
         values?.scheduledMaintenanceTask &&
-        values?.scheduledMaintenanceTask?.value
+          values?.scheduledMaintenanceTask?.value
           ? values?.scheduledMaintenanceTask?.value
           : values?.scheduledMaintenanceTask,
       tskInteralDetermination:
@@ -1720,9 +1809,9 @@ export default function PMMRA(props) {
                       <fieldset
                         disabled={
                           writePermission === true ||
-                          writePermission === "undefined" ||
-                          role === "admin" ||
-                          (isOwner === true && createdBy === userId)
+                            writePermission === "undefined" ||
+                            role === "admin" ||
+                            (isOwner === true && createdBy === userId)
                             ? null
                             : "disabled"
                         }
@@ -1773,9 +1862,9 @@ export default function PMMRA(props) {
                                 onBlur={handleBlur}
                                 isDisabled={
                                   writePermission === true ||
-                                  writePermission === "undefined" ||
-                                  role === "admin" ||
-                                  (isOwner === true && createdBy === userId)
+                                    writePermission === "undefined" ||
+                                    role === "admin" ||
+                                    (isOwner === true && createdBy === userId)
                                     ? null
                                     : "disabled"
                                 }
@@ -1931,12 +2020,16 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Loss of Function Evident?
                                 </Label>
-                                {allConnectedData.some(
+                                {allConnectedData || allConnectedData.some(
                                   (item) =>
                                     item.sourceName === "Evident1" &&
                                     item.sourceValue
                                 ) ? (
                                   (() => {
+                                     const seperateFilteredData =
+                                      allSepareteData?.filter(
+                                        (item) => item?.sourceName === "Evident1"
+                                      ) || [];
                                     const connectedFilteredData =
                                       allConnectedData?.filter(
                                         (item) =>
@@ -1945,12 +2038,15 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData?.length > 0
                                         ? connectedFilteredData?.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
-                                        : null;
+                                          (item) => ({
+                                            value: item?.destinationValue,
+                                            label: item?.destinationValue,
+                                          })
+                                        )
+                                        : seperateFilteredData.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -1960,9 +2056,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Evident1
                                             ? {
-                                                label: values?.Evident1,
-                                                value: values?.Evident1,
-                                              }
+                                              label: values?.Evident1,
+                                              value: values?.Evident1,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -1971,10 +2067,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -1996,9 +2092,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.Evident1
                                         ? {
-                                            label: values?.Evident1,
-                                            value: values?.Evident1,
-                                          }
+                                          label: values?.Evident1,
+                                          value: values?.Evident1,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2010,9 +2106,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2034,7 +2130,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Significant Item ?</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Items" &&
                                     item.sourceValue
@@ -2052,13 +2148,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                                                                                                                      value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2068,9 +2164,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Items
                                             ? {
-                                                label: values?.Items,
-                                                value: values?.Items,
-                                              }
+                                              label: values?.Items,
+                                              value: values?.Items,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2079,10 +2175,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2104,9 +2200,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.Items
                                         ? {
-                                            label: values?.Items,
-                                            value: values?.Items,
-                                          }
+                                          label: values?.Items,
+                                          value: values?.Items,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2118,9 +2214,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2140,7 +2236,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Condition Monitoring Task
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "condition" &&
                                     item.sourceValue
@@ -2159,13 +2255,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                                                                                                                      value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2175,9 +2271,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.condition
                                             ? {
-                                                label: values?.condition,
-                                                value: values?.condition,
-                                              }
+                                              label: values?.condition,
+                                              value: values?.condition,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2186,10 +2282,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2211,9 +2307,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.condition
                                         ? {
-                                            label: values?.condition,
-                                            value: values?.condition,
-                                          }
+                                          label: values?.condition,
+                                          value: values?.condition,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2225,9 +2321,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2250,7 +2346,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Failure Finding Task
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "failure" &&
                                     item.sourceValue
@@ -2268,13 +2364,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                                                                                                                  value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2284,9 +2380,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.failure
                                             ? {
-                                                label: values?.failure,
-                                                value: values?.failure,
-                                              }
+                                              label: values?.failure,
+                                              value: values?.failure,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2295,10 +2391,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2320,9 +2416,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.failure
                                         ? {
-                                            label: values?.failure,
-                                            value: values?.failure,
-                                          }
+                                          label: values?.failure,
+                                          value: values?.failure,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2334,9 +2430,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2357,7 +2453,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Redesign?</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "redesign" &&
                                     item.sourceValue
@@ -2376,13 +2472,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2392,9 +2488,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.redesign
                                             ? {
-                                                label: values?.redesign,
-                                                value: values?.redesign,
-                                              }
+                                              label: values?.redesign,
+                                              value: values?.redesign,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2403,10 +2499,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2428,9 +2524,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.redesign
                                         ? {
-                                            label: values?.redesign,
-                                            value: values?.redesign,
-                                          }
+                                          label: values?.redesign,
+                                          value: values?.redesign,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2442,9 +2538,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2469,7 +2565,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Criticality Acceptable ?
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "acceptable" &&
                                     item.sourceValue
@@ -2488,13 +2584,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                                                                                                                  value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2504,9 +2600,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.acceptable
                                             ? {
-                                                label: values?.acceptable,
-                                                value: values?.acceptable,
-                                              }
+                                              label: values?.acceptable,
+                                              value: values?.acceptable,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2515,10 +2611,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2540,9 +2636,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.acceptable
                                         ? {
-                                            label: values?.acceptable,
-                                            value: values?.acceptable,
-                                          }
+                                          label: values?.acceptable,
+                                          value: values?.acceptable,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2554,9 +2650,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2579,7 +2675,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Lubrication / Service Task
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "lubrication" &&
                                     item.sourceValue
@@ -2599,13 +2695,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                                                                                                                   value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2615,9 +2711,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.lubrication
                                             ? {
-                                                label: values?.lubrication,
-                                                value: values?.lubrication,
-                                              }
+                                              label: values?.lubrication,
+                                              value: values?.lubrication,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2626,10 +2722,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2651,9 +2747,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.lubrication
                                         ? {
-                                            label: values?.lubrication,
-                                            value: values?.lubrication,
-                                          }
+                                          label: values?.lubrication,
+                                          value: values?.lubrication,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2665,9 +2761,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2690,7 +2786,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Restore or Discard Task
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "task" &&
                                     item.sourceValue
@@ -2708,13 +2804,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                                                                                                                   value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2724,9 +2820,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.task
                                             ? {
-                                                label: values?.task,
-                                                value: values?.task,
-                                              }
+                                              label: values?.task,
+                                              value: values?.task,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2735,10 +2831,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2760,9 +2856,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.task
                                         ? {
-                                            label: values?.task,
-                                            value: values?.task,
-                                          }
+                                          label: values?.task,
+                                          value: values?.task,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2774,9 +2870,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2796,7 +2892,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Combination of Tasks
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "combination" &&
                                     item.sourceValue
@@ -2816,13 +2912,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -2832,9 +2928,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.combination
                                             ? {
-                                                label: values?.combination,
-                                                value: values?.combination,
-                                              }
+                                              label: values?.combination,
+                                              value: values?.combination,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2843,10 +2939,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2868,9 +2964,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.combination
                                         ? {
-                                            label: values?.combination,
-                                            value: values?.combination,
-                                          }
+                                          label: values?.combination,
+                                          value: values?.combination,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2882,9 +2978,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -2905,7 +3001,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>RCM Notes</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "rcmnotes" &&
                                     item.sourceValue
@@ -2924,13 +3020,14 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                             
 
                                     return (
                                       <Select
@@ -2940,9 +3037,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.rcmnotes
                                             ? {
-                                                label: values?.rcmnotes,
-                                                value: values?.rcmnotes,
-                                              }
+                                              label: values?.rcmnotes,
+                                              value: values?.rcmnotes,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -2951,10 +3048,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -2976,9 +3073,9 @@ export default function PMMRA(props) {
                                     value={
                                       values?.rcmnotes
                                         ? {
-                                            label: values?.rcmnotes,
-                                            value: values?.rcmnotes,
-                                          }
+                                          label: values?.rcmnotes,
+                                          value: values?.rcmnotes,
+                                        }
                                         : ""
                                     }
                                     style={{ backgroundColor: "red" }}
@@ -2990,9 +3087,9 @@ export default function PMMRA(props) {
                                     onBlur={handleBlur}
                                     isDisabled={
                                       writePermission === true ||
-                                      writePermission === "undefined" ||
-                                      role === "admin" ||
-                                      (isOwner === true && createdBy === userId)
+                                        writePermission === "undefined" ||
+                                        role === "admin" ||
+                                        (isOwner === true && createdBy === userId)
                                         ? null
                                         : "disabled"
                                     }
@@ -3023,7 +3120,7 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>PM Task ID</Label>
-                                  {allSepareteData.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "pmtaskid" &&
                                       item.sourceValue
@@ -3042,17 +3139,30 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                                                                                                                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                 <Form.Control
+                                      name="pmtaskid"
+                                      id="pmtaskid"
+                                      placeholder="Pm Task ID"
+                                      value={values.pmtaskid}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Enter Pm Task ID"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3062,9 +3172,9 @@ export default function PMMRA(props) {
                                           value={
                                             values?.pmtaskid
                                               ? {
-                                                  label: values?.pmtaskid,
-                                                  value: values?.pmtaskid,
-                                                }
+                                                label: values?.pmtaskid,
+                                                value: values?.pmtaskid,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3073,10 +3183,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3112,7 +3222,7 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>PM Task type</Label>
-                                  {allSepareteData.some(
+                                  {allConnectedData|| allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "PMtasktype" &&
                                       item.sourceValue
@@ -3132,17 +3242,30 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                                                                                                                                  value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                    <Form.Control
+                                      name="PMtasktype"
+                                      id="PMtasktype"
+                                      placeholder="PM Task Type"
+                                      value={values.PMtasktype}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="PM Task Type"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3152,9 +3275,9 @@ export default function PMMRA(props) {
                                           value={
                                             values?.PMtasktype
                                               ? {
-                                                  label: values?.PMtasktype,
-                                                  value: values?.PMtasktype,
-                                                }
+                                                label: values?.PMtasktype,
+                                                value: values?.PMtasktype,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3163,10 +3286,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3209,10 +3332,10 @@ export default function PMMRA(props) {
                                   <Label notify={true}>
                                     Task Interval Frequency
                                   </Label>
-                                  {allSepareteData.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName ===
-                                        "taskintervalFrequency" &&
+                                      "taskintervalFrequency" &&
                                       item.sourceValue
                                   ) ? (
                                     (() => {
@@ -3231,17 +3354,31 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                                                                                                                           value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                  <Form.Control
+                                      name="taskintervalFrequency"
+                                      id="taskintervalFrequency"
+                                      type="number"
+                                      placeholder="Task Interval Frequency"
+                                      value={values.taskintervalFrequency}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Task Interval Frequency"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3251,11 +3388,11 @@ export default function PMMRA(props) {
                                           value={
                                             values?.taskintervalFrequency
                                               ? {
-                                                  label:
-                                                    values?.taskintervalFrequency,
-                                                  value:
-                                                    values?.taskintervalFrequency,
-                                                }
+                                                label:
+                                                  values?.taskintervalFrequency,
+                                                value:
+                                                  values?.taskintervalFrequency,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3264,10 +3401,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3309,7 +3446,7 @@ export default function PMMRA(props) {
                                   <Label notify={true}>
                                     Task Interval Unit
                                   </Label>
-                                  {allSepareteData.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "taskIntervalunit" &&
                                       item.sourceValue
@@ -3330,17 +3467,30 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                                                                                                                 value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                      <Form.Control
+                                      name="taskIntervalunit"
+                                      id="taskIntervalunit"
+                                      placeholder="Task Interval Unit"
+                                      value={values.taskIntervalunit}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Task Interval Unit"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3350,11 +3500,11 @@ export default function PMMRA(props) {
                                           value={
                                             values?.taskIntervalunit
                                               ? {
-                                                  label:
-                                                    values?.taskIntervalunit,
-                                                  value:
-                                                    values?.taskIntervalunit,
-                                                }
+                                                label:
+                                                  values?.taskIntervalunit,
+                                                value:
+                                                  values?.taskIntervalunit,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3363,10 +3513,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3407,7 +3557,7 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>Task Interval</Label>
-                                  {allSepareteData.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "taskInterval" &&
                                       item.sourceValue
@@ -3427,17 +3577,32 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                                                                                                      value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                  <Form.Control
+                                      name="taskInterval"
+                                      id="taskInterval"
+                                      type="number"
+                                      placeholder="Task Interval"
+                                      value={values.taskInterval}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Task Interval"
+                                    />
+
+                            )}
 
                                       return (
                                         <Select
@@ -3447,9 +3612,9 @@ export default function PMMRA(props) {
                                           value={
                                             values?.taskInterval
                                               ? {
-                                                  label: values?.taskInterval,
-                                                  value: values?.taskInterval,
-                                                }
+                                                label: values?.taskInterval,
+                                                value: values?.taskInterval,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3458,10 +3623,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3504,10 +3669,10 @@ export default function PMMRA(props) {
                                   <Label notify={true}>
                                     Scheduled Maintenance Task
                                   </Label>
-                                  {allSepareteData.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName ===
-                                        "scheduledMaintenanceTask" &&
+                                      "scheduledMaintenanceTask" &&
                                       item.sourceValue
                                   ) ? (
                                     (() => {
@@ -3526,17 +3691,30 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                                                                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                   <Form.Control
+                                      name="scheduledMaintenanceTask"
+                                      id="scheduledMaintenanceTask"
+                                      placeholder="Scheduled Maintenance Task"
+                                      value={values.scheduledMaintenanceTask}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Scheduled Maintenance Task"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3546,11 +3724,11 @@ export default function PMMRA(props) {
                                           value={
                                             values?.scheduledMaintenanceTask
                                               ? {
-                                                  label:
-                                                    values?.scheduledMaintenanceTask,
-                                                  value:
-                                                    values?.scheduledMaintenanceTask,
-                                                }
+                                                label:
+                                                  values?.scheduledMaintenanceTask,
+                                                value:
+                                                  values?.scheduledMaintenanceTask,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3559,10 +3737,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3603,7 +3781,7 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>Task Description</Label>
-                                  {allSepareteData.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "taskDescription" &&
                                       item.sourceValue
@@ -3624,17 +3802,30 @@ export default function PMMRA(props) {
                                       const options =
                                         connectedFilteredData.length > 0
                                           ? connectedFilteredData.map(
-                                              (item) => ({
-                                                value: item?.destinationValue,
-                                                label: item?.destinationValue,
-                                              })
-                                            )
+                                            (item) => ({
+                                              value: item?.destinationValue,
+                                              label: item?.destinationValue,
+                                            })
+                                          )
                                           : seperateFilteredData.map(
-                                              (item) => ({
-                                                value: item?.sourceValue,
-                                                label: item?.sourceValue,
-                                              })
-                                            );
+                                            (item) => ({
+                                                                                               value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                   <Form.Control
+                                      name="taskDescription"
+                                      id="taskDescription"
+                                      placeholder="Task Description"
+                                      value={values.taskDescription}
+                                      onChange={handleChange}
+                                      onBlur={handleBlur}
+                                      className="mt-1"
+                                      title="Task Description"
+                                    />
+                            )}
 
                                       return (
                                         <Select
@@ -3644,11 +3835,11 @@ export default function PMMRA(props) {
                                           value={
                                             values?.taskDescription
                                               ? {
-                                                  label:
-                                                    values?.taskDescription,
-                                                  value:
-                                                    values?.taskDescription,
-                                                }
+                                                label:
+                                                  values?.taskDescription,
+                                                value:
+                                                  values?.taskDescription,
+                                              }
                                               : ""
                                           }
                                           style={{ backgroundColor: "red" }}
@@ -3657,10 +3848,10 @@ export default function PMMRA(props) {
                                           onBlur={handleBlur}
                                           isDisabled={
                                             writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
+                                              writePermission === "undefined" ||
+                                              role === "admin" ||
+                                              (isOwner === true &&
+                                                createdBy === userId)
                                               ? null
                                               : "disabled"
                                           }
@@ -3707,7 +3898,7 @@ export default function PMMRA(props) {
                             <Col md={6} className="mt-4 mb-4">
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML1</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML1" &&
                                     item.sourceValue
@@ -3727,13 +3918,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                                     value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                <Form.Control
+                                    name="tasktimeML1"
+                                    id="tasktimeML1"
+                                    placeholder="Task Time ML1"
+                                    value={values.tasktimeML1}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML1"
+                                  />
+                            )}
 
                                     return (
                                       <Select
@@ -3743,9 +3948,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML1
                                             ? {
-                                                label: values?.tasktimeML1,
-                                                value: values?.tasktimeML1,
-                                              }
+                                              label: values?.tasktimeML1,
+                                              value: values?.tasktimeML1,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3754,10 +3959,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3791,7 +3996,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML2</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML2" &&
                                     item.sourceValue
@@ -3811,14 +4016,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                                                           value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                   <Form.Control
+                                    name="tasktimeML2"
+                                    id="tasktimeML2"
+                                    placeholder="Task Time ML2"
+                                    value={values.tasktimeML2}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML2"
+                                  />
+                            )}
                                     return (
                                       <Select
                                         name="tasktimeML2"
@@ -3827,9 +4045,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML2
                                             ? {
-                                                label: values?.tasktimeML2,
-                                                value: values?.tasktimeML2,
-                                              }
+                                              label: values?.tasktimeML2,
+                                              value: values?.tasktimeML2,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3838,10 +4056,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3875,7 +4093,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML3</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML3" &&
                                     item.sourceValue
@@ -3895,13 +4113,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                                    value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                   <Form.Control
+                                    name="tasktimeML3"
+                                    id="tasktimeML3"
+                                    placeholder="Task Time ML3"
+                                    value={values.tasktimeML3}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML3"
+                                  />
+                            )}
 
                                     return (
                                       <Select
@@ -3911,9 +4143,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML3
                                             ? {
-                                                label: values?.tasktimeML3,
-                                                value: values?.tasktimeML3,
-                                              }
+                                              label: values?.tasktimeML3,
+                                              value: values?.tasktimeML3,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -3922,10 +4154,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -3959,7 +4191,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML4</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML4" &&
                                     item.sourceValue
@@ -3979,13 +4211,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                            value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                  <Form.Control
+                                    name="tasktimeML4"
+                                    id="tasktimeML4"
+                                    placeholder="Task Time ML4"
+                                    value={values.tasktimeML4}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML4"
+                                  />
+                            )}
 
                                     return (
                                       <Select
@@ -3995,9 +4241,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML4
                                             ? {
-                                                label: values?.tasktimeML4,
-                                                value: values?.tasktimeML4,
-                                              }
+                                              label: values?.tasktimeML4,
+                                              value: values?.tasktimeML4,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4006,10 +4252,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4045,7 +4291,7 @@ export default function PMMRA(props) {
                             <Col md={6} className="mt-4 mb-4">
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML5</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML5" &&
                                     item.sourceValue
@@ -4065,13 +4311,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                                  value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                 <Form.Control
+                                    name="tasktimeML5"
+                                    id="tasktimeML5"
+                                    placeholder="Task Time ML5"
+                                    value={values.tasktimeML5}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML5"
+                                  />
+                            )}
 
                                     return (
                                       <Select
@@ -4081,9 +4341,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML5
                                             ? {
-                                                label: values?.tasktimeML5,
-                                                value: values?.tasktimeML5,
-                                              }
+                                              label: values?.tasktimeML5,
+                                              value: values?.tasktimeML5,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4092,10 +4352,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4129,7 +4389,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML6</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML6" &&
                                     item.sourceValue
@@ -4146,17 +4406,30 @@ export default function PMMRA(props) {
                                           item?.destinationName ===
                                           "tasktimeML6"
                                       ) || [];
-                                    const options =
+                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item.destinationValue,
+                                          label: item.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                        
+                                    if (!options || options.length === 0) {
+                            return(
+                                     <Form.Control
+                                    name="tasktimeML6"
+                                    id="tasktimeML6"
+                                    placeholder="Task Time ML6"
+                                    value={values.tasktimeML6}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className="mt-1"
+                                    title="Task Time ML6"
+                                  />
+                            )}
                                     return (
                                       <Select
                                         name="tasktimeML6"
@@ -4165,9 +4438,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML6
                                             ? {
-                                                label: values?.tasktimeML6,
-                                                value: values?.tasktimeML6,
-                                              }
+                                              label: values?.tasktimeML6,
+                                              value: values?.tasktimeML6,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4176,10 +4449,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4213,7 +4486,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML7</Label>
-                                {allSepareteData.some(
+                                {allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "tasktimeML7" &&
                                     item.sourceValue
@@ -4233,13 +4506,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -4249,9 +4522,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.tasktimeML7
                                             ? {
-                                                label: values?.tasktimeML7,
-                                                value: values?.tasktimeML7,
-                                              }
+                                              label: values?.tasktimeML7,
+                                              value: values?.tasktimeML7,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4260,10 +4533,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4306,68 +4579,84 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group>
                                 <Label notify={true}>Skill 1</Label>
-                                {allSepareteData.some(
+
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
-                                    item.sourceName === "skill1" &&
-                                    item.sourceValue
+                                    (item.sourceName === "skill1" && item.sourceValue) ||
+                                    (item.destinationName === "skill1" && item.destinationValue)
                                 ) ? (
                                   (() => {
+                                    // Filter source OR destination
                                     const seperateFilteredData =
                                       allSepareteData?.filter(
-                                        (item) => item?.sourceName === "skill1"
+                                        (item) =>
+                                          item.sourceName === "skill1" ||
+                                          item.destinationName === "skill1"
                                       ) || [];
+
                                     const connectedFilteredData =
                                       allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "skill1"
+                                        (item) => item.destinationName === "skill1"
                                       ) || [];
+
+                                    // Build options (Estimated values must list)
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item.destinationValue,
+                                          label: item.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+
+                                    console.log("options", options);
+
+                                    // If no options - show empty dropdown
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill1"
+                                          id="skill1"
+                                          placeholder="Skill 1"
+                                          value={values.skill1}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                        />
+                                      )
+
+                                    }
 
                                     return (
-                                      <>
-                                        <Select
-                                          name="skill1"
-                                          className="mt-1"
-                                          placeholder="Skill 1"
-                                          value={
-                                            values?.skill1
-                                              ? {
-                                                  label: values?.skill1,
-                                                  value: values?.skill1,
-                                                }
-                                              : ""
-                                          }
-                                          style={{ backgroundColor: "red" }}
-                                          options={options}
-                                          styles={customStyles}
-                                          onBlur={handleBlur}
-                                          isDisabled={
-                                            writePermission === true ||
+                                      <CreatableSelect
+                                        name="skill1"
+                                        className="mt-1"
+                                        placeholder="Skill 1"
+                                        value={
+                                          values?.skill1
+                                            ? { label: values?.skill1, value: values?.skill1 }
+                                            : ""
+                                        }
+                                        options={options}
+                                        styles={customStyles}
+
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          writePermission === true ||
                                             writePermission === "undefined" ||
                                             role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                              ? null
-                                              : "disabled"
-                                          }
-                                          onChange={(e) => {
-                                            setFieldValue("skill1", e.value);
-                                            getAllConnectedLibrary(
-                                              e.value,
-                                              "skill1"
-                                            );
-                                          }}
-                                        />
-                                      </>
+                                            (isOwner === true && createdBy === userId)
+                                            ? null
+                                            : "disabled"
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("skill1", e.value);
+                                          getAllConnectedLibrary(e.value, "skill1");
+                                        }}
+                                        isClearable
+                                      />
                                     );
                                   })()
                                 ) : (
@@ -4379,18 +4668,19 @@ export default function PMMRA(props) {
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                     className="mt-1"
-                                    title="Skill 1"
                                   />
                                 )}
+
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
                                   name="skill1"
                                 />
+
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 1 Nos</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "skill1nos" &&
                                     item.sourceValue
@@ -4399,35 +4689,51 @@ export default function PMMRA(props) {
                                     const seperateFilteredData =
                                       allSepareteData?.filter(
                                         (item) =>
-                                          item?.sourceName === "skill1nos"
+                                          item.sourceName === "skill1nos"
                                       ) || [];
+
                                     const connectedFilteredData =
                                       allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "skill1nos"
+                                        (item) => item.destinationName === "skill1nos"
                                       ) || [];
+
+                                    // Build options (Estimated values must list)
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item.destinationValue,
+                                          label: item.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
 
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill1nos"
+                                          id="skill1nos"
+                                          placeholder="Skill 1nos"
+                                          value={values.skill1nos}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 1nos"
+                                        />
+                                      );
+                                    }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="skill1nos"
                                         className="mt-1"
                                         placeholder="Skill 1nos"
                                         value={
                                           values?.skill1nos
                                             ? {
-                                                label: values?.skill1nos,
-                                                value: values?.skill1nos,
-                                              }
+                                              label: values?.skill1nos,
+                                              value: values?.skill1nos,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4436,10 +4742,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4451,7 +4757,8 @@ export default function PMMRA(props) {
                                           );
                                         }}
                                       />
-                                    );
+                                    )
+
                                   })()
                                 ) : (
                                   <Form.Control
@@ -4465,6 +4772,7 @@ export default function PMMRA(props) {
                                     title="Skill 1nos"
                                   />
                                 )}
+
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
@@ -4475,7 +4783,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Skill 1 Contribution
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "skill1contribution" &&
                                     item.sourceValue
@@ -4496,14 +4804,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill1contribution"
+                                          id="skill1contribution"
+                                          placeholder="Skill 1 Contribution"
+                                          value={values.skill1contribution}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 1 Contribution"
+                                        />
+                                      );
+                                    }
                                     return (
                                       <Select
                                         name="skill1contribution"
@@ -4512,11 +4833,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill1contribution
                                             ? {
-                                                label:
-                                                  values?.skill1contribution,
-                                                value:
-                                                  values?.skill1contribution,
-                                              }
+                                              label:
+                                                values?.skill1contribution,
+                                              value:
+                                                values?.skill1contribution,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4525,10 +4846,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4544,6 +4865,7 @@ export default function PMMRA(props) {
                                         }}
                                       />
                                     );
+
                                   })()
                                 ) : (
                                   <Form.Control
@@ -4567,7 +4889,7 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group>
                                 <Label notify={true}>Skill 2</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "skill2" &&
                                     item.sourceValue
@@ -4585,14 +4907,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill2"
+                                          id="skill2"
+                                          placeholder="Skill 2"
+                                          value={values.skill2}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 2"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="skill2"
@@ -4601,9 +4936,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill2
                                             ? {
-                                                label: values?.skill2,
-                                                value: values?.skill2,
-                                              }
+                                              label: values?.skill2,
+                                              value: values?.skill2,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4612,10 +4947,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4649,7 +4984,7 @@ export default function PMMRA(props) {
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 2 Nos</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "skill2nos" &&
                                     item.sourceValue
@@ -4668,14 +5003,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill2nos"
+                                          id="skill2nos"
+                                          placeholder="Skill 2nos"
+                                          value={values.skill2nos}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 2nos"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="skill2nos"
@@ -4684,9 +5032,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill2nos
                                             ? {
-                                                label: values?.skill2nos,
-                                                value: values?.skill2nos,
-                                              }
+                                              label: values?.skill2nos,
+                                              value: values?.skill2nos,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4695,10 +5043,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4734,7 +5082,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Skill 2 Contribution
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "skill2contribution" &&
                                     item.sourceValue
@@ -4755,14 +5103,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill2contribution"
+                                          id="skill2contribution"
+                                          placeholder="Skill 2 Contribution"
+                                          value={values.skill2contribution}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 2 Contribution"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="skill2contribution"
@@ -4771,11 +5132,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill2contribution
                                             ? {
-                                                label:
-                                                  values?.skill2contribution,
-                                                value:
-                                                  values?.skill2contribution,
-                                              }
+                                              label:
+                                                values?.skill2contribution,
+                                              value:
+                                                values?.skill2contribution,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4784,10 +5145,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4828,7 +5189,7 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group>
                                 <Label notify={true}>Skill 3</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "skill3" &&
                                     item.sourceValue
@@ -4846,13 +5207,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill3"
+                                          id="skill3"
+                                          placeholder="Skill 3"
+                                          value={values.skill3}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 3"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -4862,9 +5237,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill3
                                             ? {
-                                                label: values?.skill3,
-                                                value: values?.skill3,
-                                              }
+                                              label: values?.skill3,
+                                              value: values?.skill3,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4873,10 +5248,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4910,7 +5285,7 @@ export default function PMMRA(props) {
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 3 Nos</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "skill3nos" &&
                                     item.sourceValue
@@ -4929,13 +5304,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill3nos"
+                                          id="skill3nos"
+                                          placeholder="Skill 3nos"
+                                          value={values.skill3nos}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 3nos"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -4945,9 +5334,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill3nos
                                             ? {
-                                                label: values?.skill3nos,
-                                                value: values?.skill3nos,
-                                              }
+                                              label: values?.skill3nos,
+                                              value: values?.skill3nos,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -4956,10 +5345,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -4995,7 +5384,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Skill 3 Contribution
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "skill3contribution" &&
                                     item.sourceValue
@@ -5016,13 +5405,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="skill3contribution"
+                                          id="skill3contribution"
+                                          placeholder="Skill 3 Contribution"
+                                          value={values.skill3contribution}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Skill 3 Contribution"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5032,11 +5435,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.skill3contribution
                                             ? {
-                                                label:
-                                                  values?.skill3contribution,
-                                                value:
-                                                  values?.skill3contribution,
-                                              }
+                                              label:
+                                                values?.skill3contribution,
+                                              value:
+                                                values?.skill3contribution,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5045,10 +5448,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5097,7 +5500,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Additional Replacement Spare1
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "addReplacespare1" &&
                                     item.sourceValue
@@ -5118,13 +5521,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare1"
+                                          id="addReplacespare1"
+                                          placeholder="Additional Replacement Spare1"
+                                          value={values.addReplacespare1}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare1"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5134,9 +5551,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare1
                                             ? {
-                                                label: values?.addReplacespare1,
-                                                value: values?.addReplacespare1,
-                                              }
+                                              label: values?.addReplacespare1,
+                                              value: values?.addReplacespare1,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5145,10 +5562,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5190,7 +5607,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Additional Replacement Spare1 Qty
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "addReplacespare1qty" &&
                                     item.sourceValue
@@ -5211,14 +5628,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare1qty"
+                                          id="addReplacespare1qty"
+                                          placeholder="Additional Replacement Spare1 Qty"
+                                          value={values.addReplacespare1qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare1 Qty"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="addReplacespare1qty"
@@ -5227,11 +5657,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare1qty
                                             ? {
-                                                label:
-                                                  values?.addReplacespare1qty,
-                                                value:
-                                                  values?.addReplacespare1qty,
-                                              }
+                                              label:
+                                                values?.addReplacespare1qty,
+                                              value:
+                                                values?.addReplacespare1qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5240,10 +5670,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5286,7 +5716,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Additional replacement spare2
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "addReplacespare2" &&
                                     item.sourceValue
@@ -5307,14 +5737,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare2"
+                                          id="addReplacespare2"
+                                          placeholder="Additional Replacement Spare2"
+                                          value={values.addReplacespare2}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare2"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="addReplacespare2"
@@ -5323,9 +5766,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare2
                                             ? {
-                                                label: values?.addReplacespare2,
-                                                value: values?.addReplacespare2,
-                                              }
+                                              label: values?.addReplacespare2,
+                                              value: values?.addReplacespare2,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5334,10 +5777,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5378,7 +5821,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Additional Replacement Spare2 Qty
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "addReplacespare2qty" &&
                                     item.sourceValue
@@ -5399,14 +5842,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare2qty"
+                                          id="addReplacespare2qty"
+                                          placeholder="Additional Replacement Spare2 Qty"
+                                          value={values.addReplacespare2qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare2 Qty"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="addReplacespare2qty"
@@ -5415,11 +5871,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare2qty
                                             ? {
-                                                label:
-                                                  values?.addReplacespare2qty,
-                                                value:
-                                                  values?.addReplacespare2qty,
-                                              }
+                                              label:
+                                                values?.addReplacespare2qty,
+                                              value:
+                                                values?.addReplacespare2qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5428,10 +5884,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5474,7 +5930,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Additional replacement spare3
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "addReplacespare3" &&
                                     item.sourceValue
@@ -5495,13 +5951,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare3"
+                                          id="addReplacespare3"
+                                          placeholder="Additional Replacement Spare3"
+                                          value={values.addReplacespare3}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare3"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5511,9 +5981,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare3
                                             ? {
-                                                label: values?.addReplacespare3,
-                                                value: values?.addReplacespare3,
-                                              }
+                                              label: values?.addReplacespare3,
+                                              value: values?.addReplacespare3,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5522,10 +5992,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5567,7 +6037,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Additional Replacement Spare3 Qty
                                 </Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "addReplacespare3qty" &&
                                     item.sourceValue
@@ -5588,14 +6058,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="addReplacespare3qty"
+                                          id="addReplacespare3qty"
+                                          placeholder="Additional Replacement Spare3 Qty"
+                                          value={values.addReplacespare3qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Additional Replacement Spare3 Qty"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="addReplacespare3qty"
@@ -5604,11 +6087,11 @@ export default function PMMRA(props) {
                                         value={
                                           values?.addReplacespare3qty
                                             ? {
-                                                label:
-                                                  values?.addReplacespare3qty,
-                                                value:
-                                                  values?.addReplacespare3qty,
-                                              }
+                                              label:
+                                                values?.addReplacespare3qty,
+                                              value:
+                                                values?.addReplacespare3qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5617,10 +6100,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5661,7 +6144,7 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 1</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Consumable1" &&
                                     item.sourceValue
@@ -5681,13 +6164,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable1"
+                                          id="Consumable1"
+                                          placeholder="Consumable 1"
+                                          value={values.Consumable1}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 1"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5697,9 +6194,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable1
                                             ? {
-                                                label: values?.Consumable1,
-                                                value: values?.Consumable1,
-                                              }
+                                              label: values?.Consumable1,
+                                              value: values?.Consumable1,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5708,10 +6205,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5747,7 +6244,7 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 1 Qty</Label>
-                                {allSepareteData.some(
+                                {allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "consumable1Qty" &&
                                     item.sourceValue
@@ -5767,13 +6264,13 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item?.sourceValue,
+                                          label: item?.sourceValue,
+                                        }));
 
                                     return (
                                       <Select
@@ -5783,9 +6280,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.consumable1Qty
                                             ? {
-                                                label: values?.consumable1Qty,
-                                                value: values?.consumable1Qty,
-                                              }
+                                              label: values?.consumable1Qty,
+                                              value: values?.consumable1Qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5794,10 +6291,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5839,7 +6336,7 @@ export default function PMMRA(props) {
                               {" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 2</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Consumable2" &&
                                     item.sourceValue
@@ -5859,13 +6356,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable2"
+                                          id="Consumable2"
+                                          placeholder="Consumable 2"
+                                          value={values.Consumable2}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 2"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5875,9 +6386,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable2
                                             ? {
-                                                label: values?.Consumable2,
-                                                value: values?.Consumable2,
-                                              }
+                                              label: values?.Consumable2,
+                                              value: values?.Consumable2,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5886,10 +6397,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -5925,7 +6436,7 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 2 Qty</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Consumable2qty" &&
                                     item.sourceValue
@@ -5945,13 +6456,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable2qty"
+                                          id="Consumable2qty"
+                                          placeholder="Consumable 2 Qty"
+                                          value={values.Consumable2qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 2 Qty"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -5961,9 +6486,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable2qty
                                             ? {
-                                                label: values?.Consumable2qty,
-                                                value: values?.Consumable2qty,
-                                              }
+                                              label: values?.Consumable2qty,
+                                              value: values?.Consumable2qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -5972,10 +6497,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6016,7 +6541,7 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 3</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Consumable3" &&
                                     item.sourceValue
@@ -6036,14 +6561,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
-
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable3"
+                                          id="Consumable3"
+                                          placeholder="Consumable 3"
+                                          value={values.Consumable3}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 3"
+                                        />
+                                      )
+                                    }
                                     return (
                                       <Select
                                         name="Consumable3"
@@ -6052,9 +6590,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable3
                                             ? {
-                                                label: values?.Consumable3,
-                                                value: values?.Consumable3,
-                                              }
+                                              label: values?.Consumable3,
+                                              value: values?.Consumable3,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6063,10 +6601,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6102,7 +6640,7 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 3 Qty</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Consumable3qty" &&
                                     item.sourceValue
@@ -6122,13 +6660,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable3qty"
+                                          id="Consumable3qty"
+                                          placeholder="Consumable 3 Qty"
+                                          value={values.Consumable3qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 3 Qty"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6138,9 +6690,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable3qty
                                             ? {
-                                                label: values?.Consumable3qty,
-                                                value: values?.Consumable3qty,
-                                              }
+                                              label: values?.Consumable3qty,
+                                              value: values?.Consumable3qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6149,10 +6701,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6194,7 +6746,7 @@ export default function PMMRA(props) {
                               {" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 4</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Consumable4" &&
                                     item.sourceValue
@@ -6214,13 +6766,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable4"
+                                          id="Consumable4"
+                                          placeholder="Consumable 4"
+                                          value={values.Consumable4}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 4"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6230,9 +6796,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable4
                                             ? {
-                                                label: values?.Consumable4,
-                                                value: values?.Consumable4,
-                                              }
+                                              label: values?.Consumable4,
+                                              value: values?.Consumable4,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6241,10 +6807,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6280,7 +6846,7 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 4 Qty</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Consumable4qty" &&
                                     item.sourceValue
@@ -6300,13 +6866,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable4qty"
+                                          id="Consumable4qty"
+                                          placeholder="Consumable 4 Qty"
+                                          value={values.Consumable4qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 4 Qty"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6316,9 +6896,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable4qty
                                             ? {
-                                                label: values?.Consumable4qty,
-                                                value: values?.Consumable4qty,
-                                              }
+                                              label: values?.Consumable4qty,
+                                              value: values?.Consumable4qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6327,10 +6907,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6372,7 +6952,7 @@ export default function PMMRA(props) {
                               {" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 5</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Consumable5" &&
                                     item.sourceValue
@@ -6392,13 +6972,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable5"
+                                          id="Consumable5"
+                                          placeholder="Consumable 5"
+                                          value={values.Consumable5}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 5"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6408,9 +7002,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable5
                                             ? {
-                                                label: values?.Consumable5,
-                                                value: values?.Consumable5,
-                                              }
+                                              label: values?.Consumable5,
+                                              value: values?.Consumable5,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6419,10 +7013,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6458,7 +7052,7 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 5 Qty</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "Consumable5qty" &&
                                     item.sourceValue
@@ -6478,13 +7072,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="Consumable5qty"
+                                          id="Consumable5qty"
+                                          placeholder="Consumable 5 Qty"
+                                          value={values.Consumable5qty}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Consumable 5 Qty"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6494,9 +7102,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.Consumable5qty
                                             ? {
-                                                label: values?.Consumable5qty,
-                                                value: values?.Consumable5qty,
-                                              }
+                                              label: values?.Consumable5qty,
+                                              value: values?.Consumable5qty,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6505,10 +7113,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6557,7 +7165,7 @@ export default function PMMRA(props) {
                             <Col md={6} className="mt-4 mb-4">
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 1</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "userfield1" &&
                                     item.sourceValue
@@ -6576,13 +7184,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="userfield1"
+                                          id="userfield1"
+                                          placeholder="User Field 1"
+                                          value={values.userfield1}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="User Field 1"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6592,9 +7214,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.userfield1
                                             ? {
-                                                label: values?.userfield1,
-                                                value: values?.userfield1,
-                                              }
+                                              label: values?.userfield1,
+                                              value: values?.userfield1,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6603,10 +7225,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6640,7 +7262,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 2</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "userfield2" &&
                                     item.sourceValue
@@ -6659,13 +7281,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="userfield2"
+                                          id="userfield2"
+                                          placeholder="User Field 2"
+                                          value={values.userfield2}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="User Field 2"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6675,9 +7311,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.userfield2
                                             ? {
-                                                label: values?.userfield2,
-                                                value: values?.userfield2,
-                                              }
+                                              label: values?.userfield2,
+                                              value: values?.userfield2,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6686,10 +7322,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6723,7 +7359,7 @@ export default function PMMRA(props) {
                               </Form.Group>{" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 3</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "userfield3" &&
                                     item.sourceValue
@@ -6742,13 +7378,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="userfield3"
+                                          id="userfield3"
+                                          placeholder="User Field 3"
+                                          value={values.userfield3}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="User Field 3"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6758,9 +7408,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.userfield3
                                             ? {
-                                                label: values?.userfield3,
-                                                value: values?.userfield3,
-                                              }
+                                              label: values?.userfield3,
+                                              value: values?.userfield3,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6769,10 +7419,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6808,7 +7458,7 @@ export default function PMMRA(props) {
                             <Col md={6} className="mt-4 mb-4">
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 4</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData.some(
                                   (item) =>
                                     item.sourceName === "userfield4" &&
                                     item.sourceValue
@@ -6827,13 +7477,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="userfield4"
+                                          id="userfield4"
+                                          placeholder="User Field 4"
+                                          value={values.userfield4}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="User Field 4"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6843,9 +7507,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.userfield4
                                             ? {
-                                                label: values?.userfield4,
-                                                value: values?.userfield4,
-                                              }
+                                              label: values?.userfield4,
+                                              value: values?.userfield4,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6854,10 +7518,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
@@ -6891,7 +7555,7 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User field 5</Label>
-                                {allSepareteData.some(
+                                {allConnectedData || allSepareteData?.some(
                                   (item) =>
                                     item.sourceName === "userfield5" &&
                                     item.sourceValue
@@ -6910,13 +7574,27 @@ export default function PMMRA(props) {
                                     const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          }))
+                                          value: item?.destinationValue,
+                                          label: item?.destinationValue,
+                                        }))
                                         : seperateFilteredData.map((item) => ({
-                                            value: item?.sourceValue,
-                                            label: item?.sourceValue,
-                                          }));
+                                          value: item.sourceValue || item.destinationValue,
+                                          label: item.sourceValue || item.destinationValue,
+                                        }));
+                                    if (!options || options.length === 0) {
+                                      return (
+                                        <Form.Control
+                                          name="userfield5"
+                                          id="userfield5"
+                                          placeholder="User Field 5"
+                                          value={values.userfield5}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="User Field 5"
+                                        />
+                                      )
+                                    }
 
                                     return (
                                       <Select
@@ -6926,9 +7604,9 @@ export default function PMMRA(props) {
                                         value={
                                           values?.userfield5
                                             ? {
-                                                label: values?.userfield5,
-                                                value: values?.userfield5,
-                                              }
+                                              label: values?.userfield5,
+                                              value: values?.userfield5,
+                                            }
                                             : ""
                                         }
                                         style={{ backgroundColor: "red" }}
@@ -6937,10 +7615,10 @@ export default function PMMRA(props) {
                                         onBlur={handleBlur}
                                         isDisabled={
                                           writePermission === true ||
-                                          writePermission === "undefined" ||
-                                          role === "admin" ||
-                                          (isOwner === true &&
-                                            createdBy === userId)
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true &&
+                                              createdBy === userId)
                                             ? null
                                             : "disabled"
                                         }
