@@ -96,6 +96,7 @@ const MTTRPrediction = (props, active) => {
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [companyId, setCompanyId] = useState();
   const [selectedField, setSelectedField] = useState(null);
+  const[connectedLibraryData,setConnectedLibraryData]=useState([]);
   const [treeTable, setTreeTable] = useState([]);
   const [selectedFunction, setSelectedFunction] = useState();
 
@@ -135,11 +136,13 @@ const MTTRPrediction = (props, active) => {
   //     console.log("merged data", filteredData);
   //   });
   // };
-const getAllConnect = (moduleName) => {
+
+const getAllConnect = (moduleName,sourceValue) => {
   Api.get("api/v1/library/get/all/connect/value", {
     params: {
       projectId: projectId,
       moduleName: moduleName || "",
+        sourceValue: sourceValue,
     },
   })
     .then((res) => {
@@ -763,7 +766,7 @@ editComponent: ({ value, onChange }) => {
         : seperateFilteredData.map((item) => ({
             value: item.sourceValue,
             label: item.sourceValue,
-          }));
+          }))  || connectedLibraryData;
 
     // If dropdown has no options → show normal input
     if (!options || options.length === 0) {
@@ -796,7 +799,7 @@ editComponent: ({ value, onChange }) => {
           onChange={(selected) => {
           onChange(selected?.value || "");               // MUST be simple string
         }}
-        options={options}
+        options={options || connectedLibraryData}
         isClearable
         menuPortalTarget={document.body}       
         styles={{
