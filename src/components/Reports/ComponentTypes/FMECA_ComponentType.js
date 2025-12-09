@@ -40,6 +40,7 @@ function FMECA_ComponentType(props) {
   const token = localStorage.getItem("sessionId");
 
   const [columnVisibility, setColumnVisibility] = useState({
+     Id: true,
     "Product Name": true,
     "Part Number": true,
     Quantity: true,
@@ -94,6 +95,8 @@ function FMECA_ComponentType(props) {
 
   // Mapping of headers to data keys
   const headerKeyMapping = {
+        Id: "indexCount",
+
     "Product Name": "productName",
     "Part Number": "partNumber",
     Quantity: "quantity",
@@ -148,6 +151,7 @@ function FMECA_ComponentType(props) {
   };
 
   const headers = [
+     "Id",
     "Product Name",
     "Part Number",
     "Quantity",
@@ -814,7 +818,7 @@ function FMECA_ComponentType(props) {
                     Excel
                   </Button>
 
-                  <Button
+                  {/* <Button
                     className="report-save-btn"
                     onClick={generatePDFReport}
                     disabled={columnLength}
@@ -822,9 +826,9 @@ function FMECA_ComponentType(props) {
                   >
                     <FaFilePdf style={{ marginRight: "8px" }} />
                     PDF
-                  </Button>
+                  </Button> */}
 
-                  <Button
+                  {/* <Button
                     className="report-save-btn"
                     disabled={columnLength}
                     onClick={() => {
@@ -844,17 +848,17 @@ function FMECA_ComponentType(props) {
                   >
                     <FaFileWord style={{ marginRight: "8px" }} />
                     Word
-                  </Button>
+                  </Button> */}
                 </Col>
               </Row>
 
               {columnLength && (
                 <Row>
                   <Col className="d-flex justify-content-end">
-                    <p style={{ color: "red", textAlign: "right" }}>
+                    {/* <p style={{ color: "red", textAlign: "right" }}>
                       *You cannot download the PDF or Word document when the
                       number of columns exceeds the limit.
-                    </p>
+                    </p> */}
                   </Col>
                 </Row>
               )}

@@ -40,6 +40,7 @@ function PbsComponent(props) {
   const token = localStorage.getItem("sessionId");
 
   const [columnVisibility, setColumnVisibility] = useState({
+     Id: true,
     "Product Name": true,
     "Part Number": true,
     Quantity: true,
@@ -56,6 +57,7 @@ function PbsComponent(props) {
 
   // Mapping of headers to data keys
   const headerKeyMapping = {
+     Id: "indexCount",
     "Product Name": "productName",
     "Part Number": "partNumber",
     Quantity: "quantity",
@@ -71,6 +73,7 @@ function PbsComponent(props) {
   };
 
   const headers = [
+    "Id",
     "Product Name",
     "Part Number",
     "Quantity",
@@ -693,7 +696,7 @@ function PbsComponent(props) {
                   <FaFileExcel style={{ marginRight: "8px" }} />
                   Excel
                 </Button>
-                <Button
+                {/* <Button
                   className="report-save-btn"
                   onClick={generatePDFReport}
                   style={{ marginRight: "8px" }}
@@ -720,7 +723,7 @@ function PbsComponent(props) {
                 >
                   <FaFileWord style={{ marginRight: "8px" }} />
                   Word
-                </Button>
+                </Button> */}
               </Col>
             </Row>
           ) : null}
