@@ -96,6 +96,7 @@ const MTTRPrediction = (props, active) => {
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [companyId, setCompanyId] = useState();
   const [selectedField, setSelectedField] = useState(null);
+  const[connectedLibraryData,setConnectedLibraryData]=useState([]);
   const [treeTable, setTreeTable] = useState([]);
   const [selectedFunction, setSelectedFunction] = useState();
 
@@ -135,11 +136,13 @@ const MTTRPrediction = (props, active) => {
   //     console.log("merged data", filteredData);
   //   });
   // };
-const getAllConnect = (moduleName) => {
+
+const getAllConnect = (moduleName,sourceValue) => {
   Api.get("api/v1/library/get/all/connect/value", {
     params: {
       projectId: projectId,
       moduleName: moduleName || "",
+        sourceValue: sourceValue,
     },
   })
     .then((res) => {
@@ -634,6 +637,7 @@ const exportToExcel = (value, productName) => {
     {
       title: "S.No",
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
+       editable: "never",
     },
 
 {
@@ -642,7 +646,13 @@ const exportToExcel = (value, productName) => {
   type: "string",
   // headerStyle: { textAlign: "center" },
   cellStyle: { minWidth: "150px" },
-
+    validate: (rowData) => {
+      // Required validation
+      if (!rowData.taskType || rowData.taskType.trim() === "") {
+        return "Task Type is required";
+      }
+      return true;
+    },
   // validate: (rowData) => {
   //   if (!rowData?.taskType) return "required";
   //   return true;
@@ -724,6 +734,21 @@ editComponent: ({ value, onChange }) => {
   //   if (!rowData?.time) return "required";
   //   return true;
   // },
+      validate: (rowData) => {
+      // Required validation
+      if (!rowData.time || rowData.time === "") {
+        return "Time is required";
+      }
+      // Number validation
+      if (isNaN(rowData.time)) {
+        return "Must be a number";
+      }
+      // Positive number validation
+      if (parseFloat(rowData.time) <= 0) {
+        return "Must be greater than 0";
+      }
+      return true;
+    },
 
   editComponent: ({ value, onChange }) => {
     const seperateFilteredData =
@@ -741,7 +766,7 @@ editComponent: ({ value, onChange }) => {
         : seperateFilteredData.map((item) => ({
             value: item.sourceValue,
             label: item.sourceValue,
-          }));
+          }))  || connectedLibraryData;
 
     // If dropdown has no options → show normal input
     if (!options || options.length === 0) {
@@ -774,7 +799,7 @@ editComponent: ({ value, onChange }) => {
           onChange={(selected) => {
           onChange(selected?.value || "");               // MUST be simple string
         }}
-        options={options}
+        options={options || connectedLibraryData}
         isClearable
         menuPortalTarget={document.body}       
         styles={{
@@ -798,6 +823,22 @@ editComponent: ({ value, onChange }) => {
   //   if (!rowData?.totalLabour) return "required";
   //   return true;
   // },
+
+      validate: (rowData) => {
+      // Required validation
+      if (!rowData.totalLabour || rowData.totalLabour === "") {
+        return "Labour count is required";
+      }
+      // Number validation
+      if (isNaN(rowData.totalLabour)) {
+        return "Must be a number";
+      }
+      // Positive integer validation
+      if (parseInt(rowData.totalLabour) <= 0) {
+        return "Must be greater than 0";
+      }
+      return true;
+    },
 
   editComponent: ({ value, onChange }) => {
     const seperateFilteredData =
@@ -872,7 +913,13 @@ editComponent: ({ value, onChange }) => {
       //   }
       //   return true;
       // },
-
+  validate: (rowData) => {
+      // Required validation
+      if (!rowData.tools || rowData.tools.trim() === "") {
+        return "Tools is required";
+      }
+      return true;
+    },
 
    editComponent: ({ value, onChange }) => {
   const seperateFilteredData =
@@ -998,7 +1045,13 @@ editComponent: ({ value, onChange }) => {
   field: "partNo",
   type: "string",
   cellStyle: { minWidth: "150px" },
-
+  validate: (rowData) => {
+      // Required validation
+      if (!rowData.partNo || rowData.partNo.trim() === "") {
+        return "Part number is required";
+      }
+      return true;
+    },
   editComponent: ({ value, onChange }) => {
     const seperateFilteredData =
       allSepareteData?.filter((item) => item?.sourceName === "partNo") || [];
@@ -1060,7 +1113,13 @@ editComponent: ({ value, onChange }) => {
   type: "string",
   // headerStyle: { textAlign: "center" },
   cellStyle: { minWidth: "120px" },
-
+validate: (rowData) => {
+      // Required validation
+      if (!rowData.toolType || rowData.toolType.trim() === "") {
+        return "Tool type is required";
+      }
+      return true;
+    },
   editComponent: ({ value, onChange }) => {
     const seperateFilteredData =
       allSepareteData?.filter((item) => item?.sourceName === "toolType") || [];
@@ -1307,7 +1366,7 @@ editComponent: ({ value, onChange }) => {
   const submitForm = (values) => {
      setIsSaving(true);
     checkingMandatoryFields(values);
-        getMttrData();
+        // getMttrData();
   };
 
   const checkingMandatoryFields = (values) => {

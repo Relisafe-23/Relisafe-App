@@ -207,6 +207,44 @@ const validateSameSourceDestination = (values) => {
       else {
         valueEndErrors[index] = "";
         
+        // Ratio fields must be < 1, others must be >= 1
+// Ratio fields must be < 1, others must be >= 1
+const ratioFields = ["endEffectRatioBeta", "failureModeRatioAlpha"];
+
+values.end.forEach((selectedOption, index) => {
+  const val = values.valueEnd[index];
+
+  if (!val || val.trim() === "") {
+    errors.valueEnd = errors.valueEnd || [];
+    errors.valueEnd[index] = "Value is required";
+    return;
+  }
+
+  const numericValue = parseFloat(val);
+
+  // if (isNaN(numericValue)) {
+  //   errors.valueEnd = errors.valueEnd || [];
+  //   errors.valueEnd[index] = "Value must be ah number";
+  //   return;
+  // }
+
+  if (ratioFields.includes(selectedOption.value)) {
+    // Must be < 1
+    if (numericValue >= 1) {
+      errors.valueEnd = errors.valueEnd || [];
+      errors.valueEnd[index] = " Destination value must be less than 1";
+    }
+  } else {
+    // Must be ≥ 1
+    if (numericValue < 1) {
+      errors.valueEnd = errors.valueEnd || [];
+      errors.valueEnd[index] = " Destination value must be less than or equal to 1";
+    }
+  }
+});
+
+
+
         // Check if this destination value already exists for the same field
         const existingDestination = connectData.find(connection => {
           // Check if any destination in this connection matches our field and value
@@ -380,7 +418,7 @@ const validateSameSourceDestination = (values) => {
   //get Api
   const getAllConnect = (values) => {
     // setIsLoading(true);
-    Api.get("api/v1/library/get/all/connect/value", {
+    Api.get("api/v1/library/get/all/connect/library/value", {
       params: {
         projectId: projectId,
         moduleName: values ? values : "",
@@ -645,14 +683,13 @@ const validateSameSourceDestination = (values) => {
                                   name="Field"
                                   styles={customStyles}
                                   options={
-                                    selectModule
+                                    selectModule && moduleData
                                       ? [
                                         {
                                           options: moduleData
                                             ?.filter(
                                               (item) =>
-                                                item.key !== "Failure Mode Ratio Alpha" &&
-                                                item.name !== "failureModeRatioAlpha"
+                                                 item.name !== values.Field?.value
                                             )
                                             .map((list) => ({
                                               value: list.name,
@@ -671,101 +708,105 @@ const validateSameSourceDestination = (values) => {
                                 />
                               </Form.Group>
                             </Col>
-                            {values.Field ? (
-                              <Col className="col-lg-4 mt-2">
-                                <Label>
-                                  Enter custom value for {values.Field.label}
-                                </Label>
-                                <Form.Group>
-                                  {namesToFilter.includes(
-                                    values.Field?.value
-                                  ) ? (
-                                    <Select
-                                      name={values.Field?.value}
-                                      className="mt-1"
-                                      placeholder={`Select value for ${values.Field.label}`}
-                                      value={values?.FieldValueAndValue.value ?
-                                        { label: values.FieldValueAndValue.value, value: values.FieldValueAndValue.value, } : null}
-                                      options={[
-                                        { label: "Yes", value: "Yes" },
-                                        { label: "No", value: "No" },
-                                      ]}
-                                      onBlur={handleBlur}
-                                      onChange={(selectedOption) => {
-                                        setFieldValue("FieldValueAndValue", {
-                                          field: values.Field,
-                                          value: selectedOption?.value || "",
-                                        });
-                                      }}
-                                    />
-                                  ) : separateData?.length > 0 ? (
-                                    <CreatableSelect
-                                      value={
-                                        values.FieldValueAndValue.value !== ""
-                                          ? {
-                                            value:
-                                              values.FieldValueAndValue.value,
-                                            label:
-                                              values.FieldValueAndValue.value,
-                                          }
-                                          : null
-                                      }
-                                      onChange={(
-                                        selectedOption,
-                                        actionMeta
-                                      ) => {
-                                        if (
-                                          actionMeta.action === "create-option"
-                                        ) {
-                                          setFieldValue("FieldValueAndValue", {
-                                            field: values.Field.value,
-                                            value: selectedOption.value,
-                                          });
-                                        } else if (
-                                          actionMeta.action === "select-option"
-                                        ) {
-                                          setFieldValue("FieldValueAndValue", {
-                                            field: values.Field.value,
-                                            value: selectedOption.value,
-                                          });
-                                        }
-                                      }}
-                                      onCreateOption={(inputValue) => {
-                                        setFieldValue("FieldValueAndValue", {
-                                          field: values.Field.value,
-                                          value: inputValue,
-                                        });
-                                      }}
-                                      placeholder="Select or type a new value"
-                                      name="Module"
-                                      options={separateData.map((list) => ({
-                                        value: list.sourceValue,
-                                        label: list.sourceValue,
-                                        id: list,
-                                      }))}
-                                    />
-                                  ) : (
-                                    <Form.Control
-                                      placeholder={`Enter custom value for ${values.Field.label}`}
-                                      value={values.FieldValueAndValue.value}
-                                      onChange={(e) => {
-                                        setFieldValue("FieldValueAndValue", {
-                                          field: values.Field.value,
-                                          value: e.target.value,
-                                        });
-                                      }}
-                                      onBlur={handleBlur}
-                                      name="Value"
-                                    />
-                                  )}
-                                  <ErrorMessage
-                                    component="span"
-                                    name="FieldValueAndValue.value"
-                                    className="error text-danger"
-                                  />
-                                </Form.Group>
-                              </Col>
-                            ) : null}
+                          {values?.Field ? (
+                                                     <Col className="col-lg-4 mt-2">
+                                                       <Label>
+                                                         Enter custom value for {values.Field.label}
+                                                         {(values.Field?.value === 'endEffectRatioBeta' || 
+                                                           values.Field?.value === 'failureModeRatioAlpha') && 
+                                                           " (must be less than 1)"}
+                                                       </Label>
+                                                       <Form.Group>
+                                                         {namesToFilter.includes(values.Field?.value) ? (
+                                                           <Select
+                                                             name="FieldValueAndValue"
+                                                             className="mt-1"
+                                                             placeholder={`Select value for ${values.Field.label}`}
+                                                             value={values.FieldValueAndValue?.value ? 
+                                                               { label: values.FieldValueAndValue.value, value: values.FieldValueAndValue.value } : 
+                                                               null
+                                                             }
+                                                             options={[
+                                                               { label: "Yes", value: "Yes" },
+                                                               { label: "No", value: "No" },
+                                                             ]}
+                                                             onBlur={handleBlur}
+                                                             onChange={(selectedOption) => {
+                                                               setFieldValue("FieldValueAndValue", {
+                                                                 field: values.Field.value,
+                                                                 value: selectedOption?.value || "",
+                                                               });
+                                                             }}
+                                                             styles={customStyles}
+                                                           />
+                                                         ) : (values.Field?.value === 'endEffectRatioBeta' || 
+                                                              values.Field?.value === 'failureModeRatioAlpha') ? (
+                                                           <Form.Control
+                                                             type="number"
+                                                             step="0.01"
+                                                             min="0"
+                                                             max="0.99"
+                                                             placeholder="Enter value between 0 and 1"
+                                                             value={values.FieldValueAndValue.value || ""}
+                                                             onChange={(e) => {
+                                                               const value = e.target?.value;
+                                                               setFieldValue("FieldValueAndValue", {
+                                                                 field: values.Field.value,
+                                                                 value: value,
+                                                               });
+                                                             }}
+                                                             onBlur={handleBlur}
+                                                             isInvalid={errors.FieldValueAndValue?.value}
+                                                           />
+                                                         ) : separateData?.length > 0 ? (
+                                                           <CreatableSelect
+                                                             value={values.FieldValueAndValue?.value ? 
+                                                               { value: values.FieldValueAndValue.value, label: values.FieldValueAndValue.value } : 
+                                                               null
+                                                             }
+                                                             onChange={(selectedOption) => {
+                                                               setFieldValue("FieldValueAndValue", {
+                                                                 field: values.Field.value,
+                                                                 value: selectedOption?.value || "",
+                                                               });
+                                                             }}
+                                                             onCreateOption={(inputValue) => {
+                                                               setFieldValue("FieldValueAndValue", {
+                                                                 field: values.Field.value,
+                                                                 value: inputValue,
+                                                               });
+                                                             }}
+                                                             isClearable
+                                                             placeholder="Select or type a new value"
+                                                             options={separateData.map((list) => ({
+                                                               value: list.sourceValue,
+                                                               label: list.sourceValue,
+                                                               id: list,
+                                                             }))}
+                                                             styles={customStyles}
+                                                           />
+                                                         ) : (
+                                                           <Form.Control
+                                                             placeholder={`Enter custom value for ${values.Field.label}`}
+                                                             value={values.FieldValueAndValue.value || ""}
+                                                             onChange={(e) => {
+                                                               setFieldValue("FieldValueAndValue", {
+                                                                 field: values.Field.value,
+                                                                 value: e.target?.value,
+                                                               });
+                                                             }}
+                                                             onBlur={handleBlur}
+                                                             isInvalid={errors.FieldValueAndValue?.value}
+                                                           />
+                                                         )}
+                                                         {errors.FieldValueAndValue?.value && (
+                                                           <div className="error text-danger mt-1">
+                                                             {errors.FieldValueAndValue.value}
+                                                           </div>
+                                                         )}
+                                                       </Form.Group>
+                                                     </Col>
+                                                   ) : null}
                          
                             <Col className="col-lg-4 mt-2">
                               <Label>Destination Module</Label>
@@ -836,11 +877,10 @@ const validateSameSourceDestination = (values) => {
                                   placeholder="Select Field"
                                   name="end"
                                   options={
-                                    moduleData
-                                      ?.filter(
+                                 moduleData && values.Field
+                                      ?moduleData.filter(
                                         (item) =>
-                                          item.key !== "Failure Mode Ratio Alpha" &&
-                                          item.name !== "failureModeRatioAlpha" &&
+                                       
                                           item.name !== values.Field?.value // Exclude source field from destination options
                                       )
                                       .map((list) => ({
@@ -848,6 +888,7 @@ const validateSameSourceDestination = (values) => {
                                         label: list.key,
                                         id: list,
                                       }))
+                                      : []
                                   }
                                 />
                                 {/* <ErrorMessage
@@ -866,6 +907,9 @@ const validateSameSourceDestination = (values) => {
                                 <Col key={index} className="col-lg-4 mt-2">
                                   <Label>
                                     Custom Value for {selectedOption.label}
+                                       {(selectedOption?.value === 'endEffectRatioBeta' || 
+                                      selectedOption?.value === 'failureModeRatioAlpha') && 
+                                      " (must be less than 1)"}
                                   </Label>
                                   <Form.Group key={index}>
                                     {namesToFilter.includes(
@@ -888,9 +932,21 @@ const validateSameSourceDestination = (values) => {
                                         <option value="Yes">Yes</option>
                                         <option value="No">No</option>
                                       </Form.Select>
-                                    ) : separateDestinationData &&
-                                      separateDestinationData[index]?.length >
-                                      0 ? (
+                                    ) :(selectedOption?.value === 'endEffectRatioBeta' || 
+                                         selectedOption?.value === 'failureModeRatioAlpha') ? (
+                                      <Form.Control
+                                        type="text"
+                                        step="0.01"
+                                        min="0"
+                                        max="0.99"
+                                        name={`valueEnd[${index}]`}
+                                        placeholder={`Enter value between 0 and 1 for ${selectedOption.label}`}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        value={values.valueEnd[index] || ""}
+                                      />
+                                    ): separateDestinationData &&
+                                      separateDestinationData[index]?.length > 0 ? (
                                       <CreatableSelect
                                         onChange={(selectedOption) => {
                                           if (selectedOption.__isNew__) {
@@ -909,7 +965,7 @@ const validateSameSourceDestination = (values) => {
                                             );
                                           }
                                         }}
-                                        placeholder="Select Module"
+                                        placeholder={`Enter value between 0 and 1 for ${selectedOption.label}`}
                                         type="select"
                                         name="Module"
                                         styles={customStyles}
@@ -917,16 +973,16 @@ const validateSameSourceDestination = (values) => {
                                           selectedOption.label
                                         )}
                                       />
-                                    ) : (
-                                      <Form.Control
-                                        type="text"
-                                        name={`valueEnd[${index}]`}
-                                        placeholder={`Enter custom value for ${selectedOption.label}`}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        value={values.valueEnd[index] || ""}
-                                      />
-                                    )}
+                                      ):(    <Form.Control
+                                                                              type="text"
+                                                                              name={`valueEnd[${index}]`}
+                                                                              placeholder={`Enter custom value for ${selectedOption.label}`}
+                                                                              onChange={handleChange}
+                                                                              onBlur={handleBlur}
+                                                                              value={values?.valueEnd?.[index] || ""}
+                                                                              isInvalid={errors.valueEnd && errors.valueEnd[index]}
+                                                                            /> 
+                                                                          ) }
                                     <ErrorMessage
                                       component="span"
                                       name={`valueEnd[${index}]`}

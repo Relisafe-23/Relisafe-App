@@ -752,7 +752,7 @@ function RA_ComponentType(props) {
                     <FaFileExcel style={{ marginRight: "8px" }} />
                     Excel
                   </Button>
-
+{/* 
                   <Button
                     className="report-save-btn"
                     onClick={generatePDFReport}
@@ -783,17 +783,17 @@ function RA_ComponentType(props) {
                   >
                     <FaFileWord style={{ marginRight: "8px" }} />
                     Word
-                  </Button>
+                  </Button> */}
                 </Col>
               </Row>
 
               {columnLength && (
                 <Row>
                   <Col className="d-flex justify-content-end">
-                    <p style={{ color: "red", textAlign: "right" }}>
+                    {/* <p style={{ color: "red", textAlign: "right" }}>
                       *You cannot download the PDF or Word document when the
                       number of columns exceeds the limit.
-                    </p>
+                    </p> */}
                   </Col>
                 </Row>
               )}
