@@ -31,6 +31,7 @@ import { customStyles } from "../core/select";
 import { ButtonBase, createTheme, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, Table, TableBody, TableContainer, TableHead, TableRow, ThemeProvider } from "@mui/material";
 import MaterialTable from "material-table";
 import { connect } from "formik";
+import { TruckOutlined } from "@ant-design/icons";
 
 // hooks/useTableValidation.js
 const useTableValidation = () => {
@@ -428,270 +429,198 @@ const [existingEndBeta, setExistingEndBeta] = useState(1);
       console.error("Error creating FMECA data:", errorMessage);
     })
   };
-  // const convertToJson = (headers, data) => {
-  //   const rows = [];
-
-  //   // if (excelData.length > 1) {
-  //   if (data.length > 0 && data[0].length > 1) {
-  //     data.forEach((row) => {
-  //       let rowData = {};
-  //       row.forEach((element, index) => {
-  //         rowData[headers[index]] = element;
-  //       });
-  //       rows.push(rowData);
-  //       createFMECADataFromExcel(rowData);
-  //     });
-
-  //     return rows;
-  //   } else {
-  //     toast("No Data Found In Excel Sheet", {
-  //       position: "top-right",
-  //       autoClose: 5000,
-  //       hideProgressBar: false,
-  //       closeOnClick: true,
-  //       pauseOnHover: true,
-  //       draggable: true,
-  //       progress: undefined,
-  //       theme: "light",
-  //       type: "error",
-  //     });
-  //   }
-  // };
-
+ 
 
 const importExcel = (e) => {
     const file = e.target.files[0];
 
     // Check if the file is an Excel file by checking the extension
     const fileName = file.name;
-    const validExtensions = ["xlsx", "xls"];
-    const fileExtension = fileName.split(".").pop().toLowerCase();
+    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
+    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
 
     if (!validExtensions.includes(fileExtension)) {
-        toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-            position: toast.POSITION.TOP_RIGHT,
-        });
-        return;
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+      return; // Exit the function if the file is not an Excel file
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
-        // Parse data
-        const bstr = event.target.result;
-        const workBook = XLSX.read(bstr, { type: "binary" });
-        const workSheetName = workBook.SheetNames[0];
-        const workSheet = workBook.Sheets[workSheetName];
-        const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-        const headers = fileData[0];
-        
-        // Check if required columns exist
-        const hasFailureModeRatioAlpha = headers.includes("failureModeRatioAlpha");
-        const hasEndEffectRatioBeta = headers.includes("endEffectRatioBeta");
-        
-        if (!hasFailureModeRatioAlpha || !hasEndEffectRatioBeta) {
-            toast.error("Excel file must contain 'failureModeRatioAlpha' and 'endEffectRatioBeta' columns!", {
-                position: toast.POSITION.TOP_RIGHT,
-            });
-            return;
-        }
-
-        const heads = headers.map((head) => ({ title: head, field: head }));
-        setColDefs(heads);
-        
-        // Remove header row
-        fileData.splice(0, 1);
-        
-        // Validate data before setting
-        const jsonData = convertToJson(headers, fileData);
-        
-        // Validation variables
-        let alphaTotal = 0;
-        let betaTotal = 0;
-        const invalidAlphaRows = []; // For individual values > 1
-        const invalidBetaRows = []; // For individual values > 1
-        const invalidAlphaValues = []; // For non-numeric values
-        const invalidBetaValues = []; // For non-numeric values
-        
-        // Validate each row
-        jsonData.forEach((row, index) => {
-            const rowNumber = index + 2; // +2 for header row and 1-based indexing
-            
-            // Parse values
-            const alphaValue = parseFloat(row.failureModeRatioAlpha);
-            const betaValue = parseFloat(row.endEffectRatioBeta);
-            
-            // Check if values are valid numbers
-            if (isNaN(alphaValue)) {
-                invalidAlphaValues.push(`Row ${rowNumber}: "${row.failureModeRatioAlpha}" (not a number)`);
-            } else {
-                // Check individual value
-                if (alphaValue > 1) {
-                    invalidAlphaRows.push(rowNumber);
-                }
-                // Add to total
-                alphaTotal += alphaValue;
-            }
-            
-            if (isNaN(betaValue)) {
-                invalidBetaValues.push(`Row ${rowNumber}: "${row.endEffectRatioBeta}" (not a number)`);
-            } else {
-                // Check individual value
-                if (betaValue > 1) {
-                    invalidBetaRows.push(rowNumber);
-                }
-                // Add to total
-                betaTotal += betaValue;
-            }
+      //parse data
+      const bstr = event.target.result;
+      const workBook = XLSX.read(bstr, { type: "binary" });
+      // get first sheet
+      const workSheetName = workBook.SheetNames[0];
+      const workSheet = workBook.Sheets[workSheetName];
+      const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
+      const headers = fileData[0];
+      
+      // Check if required columns exist
+      const hasFailureModeRatioAlpha = headers.includes("failureModeRatioAlpha");
+      const hasEndEffectRatioBeta = headers.includes("endEffectRatioBeta");
+      
+      if (!hasFailureModeRatioAlpha || !hasEndEffectRatioBeta) {
+        toast.error("Excel file must contain 'failureModeRatioAlpha' and 'endEffectRatioBeta' columns!", {
+          position: toast.POSITION.TOP_RIGHT,
         });
+        return;
+      }
 
-        // Prepare error messages
-        let errorMessages = [];
-        
-        // Check for non-numeric values
-        if (invalidAlphaValues.length > 0) {
-            errorMessages.push(`Invalid failureModeRatioAlpha values:\n${invalidAlphaValues.join("\n")}`);
-        }
-        
-        if (invalidBetaValues.length > 0) {
-            errorMessages.push(`Invalid endEffectRatioBeta values:\n${invalidBetaValues.join("\n")}`);
-        }
-        
-        // Check for individual values > 1
-        if (invalidAlphaRows.length > 0) {
-            errorMessages.push(`failureModeRatioAlpha > 1 in rows: ${invalidAlphaRows.join(", ")}`);
-        }
-        
-        if (invalidBetaRows.length > 0) {
-            errorMessages.push(`endEffectRatioBeta > 1 in rows: ${invalidBetaRows.join(", ")}`);
-        }
-        
-        // Check column totals > 1
-        if (alphaTotal > 1) {
-            errorMessages.push(`Total failureModeRatioAlpha = ${alphaTotal.toFixed(4)} (exceeds 1)`);
-        }
-        
-        if (betaTotal > 1) {
-            errorMessages.push(`Total endEffectRatioBeta = ${betaTotal.toFixed(4)} (exceeds 1)`);
-        }
-        
-        // Show all validation errors
-        if (errorMessages.length > 0) {
-            toast.error(`Validation failed:\n\n${errorMessages.join("\n\n")}`, {
-                position: toast.POSITION.TOP_RIGHT,
-                autoClose: false,
-                style: { 
-                    whiteSpace: 'pre-line',
-                    maxWidth: '500px'
-                }
-            });
-            return;
-        }
-
-        // Show warnings for edge cases
-        let warningMessages = [];
-        
-        // Check for individual values = 1
-        const hasAlphaEqualsOne = jsonData.some(row => parseFloat(row.failureModeRatioAlpha) === 1);
-        const hasBetaEqualsOne = jsonData.some(row => parseFloat(row.endEffectRatioBeta) === 1);
-        
-        if (hasAlphaEqualsOne) {
-            warningMessages.push("Some failureModeRatioAlpha values equal to 1");
-        }
-        
-        if (hasBetaEqualsOne) {
-            warningMessages.push("Some endEffectRatioBeta values equal to 1");
-        }
-        
-        // Check column totals = 1
-        if (alphaTotal === 1) {
-            warningMessages.push(`Total failureModeRatioAlpha = 1.0000`);
-        }
-        
-        if (betaTotal === 1) {
-            warningMessages.push(`Total endEffectRatioBeta = 1.0000`);
-        }
-        
-        if (warningMessages.length > 0) {
-            toast.warning(`Note:\n\n${warningMessages.join("\n")}`, {
-                position: toast.POSITION.TOP_RIGHT,
-                autoClose: 5000,
-                style: { whiteSpace: 'pre-line' }
-            });
-        }
-
-        // If validation passes, set the data
-        setData(jsonData);
-        
-        // Success message with totals
-        let successMessage = `Successfully imported ${jsonData.length} rows!\n\n`;
-        successMessage += `Column Totals:\n`;
-        successMessage += `- failureModeRatioAlpha: ${alphaTotal.toFixed(4)}\n`;
-        successMessage += `- endEffectRatioBeta: ${betaTotal.toFixed(4)}`;
-        
-        toast.success(successMessage, {
-            position: toast.POSITION.TOP_RIGHT,
-            autoClose: 5000,
-            style: { whiteSpace: 'pre-line' }
-        });
-        
-        // Clear the file input
+      const heads = headers.map((head) => ({ title: head, field: head }));
+      setColDefs(heads);
+      fileData.splice(0, 1); // Remove header row
+      
+      // Validate and convert data
+      const validationResult = convertToJson(headers, fileData);
+      
+      if (validationResult.isValid) {
+        setData(validationResult.rows);
+      } else {
+        // Clear file input if validation failed
         e.target.value = '';
-          createFMECADataFromExcel()
+      }
     };
-    
     reader.readAsBinaryString(file);
-};
+  };
 
-// Helper function
-const convertToJson = (headers, data) => {
-    const result = [];
+  const convertToJson = (headers, data) => {
+    const rows = [];
+    let alphaTotal = 0;
+    let betaTotal = 0;
+    const validationErrors = [];
     
-    data.forEach((row) => {
-        const rowData = {};
-        headers.forEach((header, index) => {
-            rowData[header] = row[index] !== undefined ? row[index] : null;
-        });
-        result.push(rowData);
-         
-        //  createFMECADataFromExcel(rowData);
+    // Check if it's bulk upload (more than 1 row)
+    const isBulkUpload = data.length > 1;
+    
+    if (data.length === 0 || data[0].length === 0) {
+      toast("No Data Found In Excel Sheet", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error",
+      });
+      return { isValid: false, rows: [] };
+    }
+
+    // Process each row
+    data.forEach((row, rowIndex) => {
+      const rowNumber = rowIndex + 2; // +2 for header row and 1-based indexing
+      let rowData = {};
+      
+      row.forEach((element, index) => {
+        rowData[headers[index]] = element;
+      });
+      
+      // Validate specific columns
+      const alphaValue = parseFloat(rowData.failureModeRatioAlpha);
+      const betaValue = parseFloat(rowData.endEffectRatioBeta);
+      
+      // Check individual values
+      if (isNaN(alphaValue)) {
+        validationErrors.push(`Row ${rowNumber}: failureModeRatioAlpha "${rowData.failureModeRatioAlpha}" is not a valid number`);
+      } else if (alphaValue > 1) {
+        validationErrors.push(`Row ${rowNumber}: failureModeRatioAlpha = ${alphaValue.toFixed(4)} (exceeds 1)`);
+      } else if (alphaValue < 0) {
+        validationErrors.push(`Row ${rowNumber}: failureModeRatioAlpha = ${alphaValue.toFixed(4)} (cannot be negative)`);
+      }
+      
+      if (isNaN(betaValue)) {
+        validationErrors.push(`Row ${rowNumber}: endEffectRatioBeta "${rowData.endEffectRatioBeta}" is not a valid number`);
+      } else if (betaValue > 1) {
+        validationErrors.push(`Row ${rowNumber}: endEffectRatioBeta = ${betaValue.toFixed(4)} (exceeds 1)`);
+      } else if (betaValue < 0) {
+        validationErrors.push(`Row ${rowNumber}: endEffectRatioBeta = ${betaValue.toFixed(4)} (cannot be negative)`);
+      }
+      
+      // Add to totals if valid
+      if (!isNaN(alphaValue) && !isNaN(betaValue)) {
+        alphaTotal += alphaValue;
+        betaTotal += betaValue;
+        rows.push(rowData);
+      }
     });
     
-    return result;
-};
-
-  // const importExcel = (e) => {
-  //   const file = e.target.files[0];
-
-  //   // Check if the file is an Excel file by checking the extension
-  //   const fileName = file.name;
-  //   const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
-  //   const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
-
-  //   if (!validExtensions.includes(fileExtension)) {
-  //     // alert('Please upload a valid Excel file (either .xlsx or .xls)');
-  //     toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-  //       position: toast.POSITION.TOP_RIGHT, // Adjust the position as needed
-  //     });
-  //     return; // Exit the function if the file is not an Excel file
-  //   }
-
-  //   const reader = new FileReader();
-  //   reader.onload = (event) => {
-  //     //parse data
-  //     const bstr = event.target.result;
-  //     const workBook = XLSX.read(bstr, { type: "binary" });
-  //     // get first sheet
-  //     const workSheetName = workBook.SheetNames[0];
-  //     const workSheet = workBook.Sheets[workSheetName];
-  //     const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
-  //     const headers = fileData[0];
-  //     const heads = headers.map((head) => ({ title: head, field: head }));
-  //     setColDefs(heads);
-  //     fileData.splice(0, 1);
-  //     setData(convertToJson(headers, fileData));
-  //   };
-  //   reader.readAsBinaryString(file);
-  // };
+    // BULK UPLOAD VALIDATION: Check if sum of values exceeds 1
+    if (isBulkUpload) {
+      if (alphaTotal > 1) {
+        validationErrors.push(`BULK UPLOAD FAILED: Total failureModeRatioAlpha = ${alphaTotal.toFixed(4)} (exceeds 1)`);
+      }
+      
+      if (betaTotal > 1) {
+        validationErrors.push(`BULK UPLOAD FAILED: Total endEffectRatioBeta = ${betaTotal.toFixed(4)} (exceeds 1)`);
+      }
+      
+      // Additional validation for bulk: no single row should have value = 1
+      const hasAlphaEqualsOne = rows.some(row => parseFloat(row.failureModeRatioAlpha) === 1);
+      const hasBetaEqualsOne = rows.some(row => parseFloat(row.endEffectRatioBeta) === 1);
+      
+      if (hasAlphaEqualsOne) {
+        validationErrors.push("BULK DATA ISSUE: A single row has failureModeRatioAlpha = 1 (not allowed in bulk upload)");
+      }
+      
+      if (hasBetaEqualsOne) {
+        validationErrors.push("BULK DATA ISSUE: A single row has endEffectRatioBeta = 1 (not allowed in bulk upload)");
+      }
+    }
+       const successMessage = 
+                         `📊 Import Summary:\n` +
+                         `• Total rows: ${rows.length}\n` +
+                         `• failureModeRatioAlpha total: ${alphaTotal.toFixed(4)}\n` +
+                         `• endEffectRatioBeta total: ${betaTotal.toFixed(4)}`;
+   if(!isBulkUpload) {
+    toast.success(successMessage, {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 5000,
+      style: { 
+        whiteSpace: 'pre-line',
+        maxWidth: '500px',
+        textAlign: 'left'
+      }
+    });
+  }
+    // Show validation errors if any
+    if (validationErrors.length > 0) {
+      let errorMessage = validationErrors.length === 1 
+        ? `❌ Validation Error:\n\n${validationErrors[0]}`
+        : `❌ Validation Errors:\n\n• ${validationErrors.join("\n• ")}`;
+      
+      // Add totals information for bulk upload errors
+      if (isBulkUpload && (alphaTotal > 1 || betaTotal > 1)) {
+        // errorMessage += `\n\n📊 Totals Summary:\n`;
+        // errorMessage += `• failureModeRatioAlpha total: ${alphaTotal.toFixed(4)}\n`;
+        // errorMessage += `• endEffectRatioBeta total: ${betaTotal.toFixed(4)}`;
+      }
+      
+      toast.error(errorMessage, {
+        position: toast.POSITION.TOP_RIGHT,
+        autoClose: true,
+        style: { 
+          whiteSpace: 'pre-line',
+          maxWidth: '500px',
+          textAlign: 'left'
+        }
+      });
+      
+      return { isValid: false, rows: [] };
+    }
+    
+    // If validation passes, show success message
+ 
+    
+    // Call API for each valid row
+    rows.forEach(rowData => {
+      createFMECADataFromExcel(rowData);
+    });
+    
+    return { isValid: true, rows: rows };
+  };
 
   useEffect(() => {
     getTreeData();
