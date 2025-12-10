@@ -436,7 +436,7 @@ const importExcel = (e) => {
   //   });
   // }; 
   const getAllConnect = () => {
-  setIsLoading(true);
+  // setIsLoading(true);
   Api.get("api/v1/library/get/all/connect/value", {
     params: {
       projectId: projectId,
@@ -487,9 +487,9 @@ const flattened = filteredData
 };
 
 
-  useEffect(() => {
-    getAllConnect();
-  }, []);
+  // useEffect(() => {
+  //   getAllConnect();
+  // }, []);
 
   const [connectData, setConnectData] = useState([]);
   const [selectedFunction, setSelectedFunction] = useState();
@@ -619,11 +619,18 @@ const flattened = filteredData
       return (
         <CreatableSelect
           value={options.find((option) => option.value === value)}
-          onChange={(selectedOption) => {
-            onChange(selectedOption.value);
-            setSelectedField(fieldName);
-            setSelectedFunction(selectedOption);
-          }}
+          // onChange={(selectedOption) => {
+          //   onChange(selectedOption.value);
+          //   setSelectedField(fieldName);
+          //   setSelectedFunction(selectedOption);
+          // }}
+           onChange={(selected) => {
+    const newValue = selected?.value || "";
+    onChange(newValue);
+    if (newValue) {
+      getAllConnect();
+    }
+  }}
           options={options}
         />
       );
@@ -696,6 +703,7 @@ const flattened = filteredData
               onChange={(selectedItems) => {
                 handleInputChange(selectedItems, "modeOfOperation");
                 getAllConnectedLibrary(selectedItems, "modeOfOperation");
+                getAllConnect();
               }}
               options={options}
             />
@@ -759,6 +767,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "hazardCause");
               getAllConnectedLibrary(selectedItems, "hazardCause");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -821,6 +830,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "effectOfHazard");
               getAllConnectedLibrary(selectedItems, "effectOfHazard");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -884,6 +894,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "hazardClasification");
               getAllConnectedLibrary(selectedItems, "hazardClasification");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -938,6 +949,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "designAssuranceLevel");
               getAllConnectedLibrary(selectedItems, "designAssuranceLevel");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1001,6 +1013,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "meansOfDetection");
               getAllConnectedLibrary(selectedItems, "meansOfDetection");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1063,6 +1076,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "crewResponse");
               getAllConnectedLibrary(selectedItems, "crewResponse");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1124,6 +1138,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "uniqueHazardIdentifier");
               getAllConnectedLibrary(selectedItems, "uniqueHazardIdentifier");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1180,6 +1195,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "initialSeverity");
               getAllConnectedLibrary(selectedItems, "initialSeverity");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1242,6 +1258,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "initialLikelihood");
               getAllConnectedLibrary(selectedItems, "initialLikelihood");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1298,6 +1315,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "initialRiskLevel");
               getAllConnectedLibrary(selectedItems, "initialRiskLevel");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1360,6 +1378,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "designMitigation");
               getAllConnectedLibrary(selectedItems, "designMitigation");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1416,6 +1435,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "designMitigatonResbiity");
               getAllConnectedLibrary(selectedItems, "designMitigatonResbiity");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1471,6 +1491,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "designMitigtonEvidence");
               getAllConnectedLibrary(selectedItems, "designMitigtonEvidence");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1526,6 +1547,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "opernalMaintanMitigation");
               getAllConnectedLibrary(selectedItems, "opernalMaintanMitigation");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1581,6 +1603,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "opernalMitigatonResbility");
               getAllConnectedLibrary(selectedItems, "opernalMitigatonResbility");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1639,10 +1662,11 @@ const flattened = filteredData
                 selectedItems,
                 "operatnalMitigationEvidence"
               );
-              getAllConnectedLibrary(
-                selectedItems,
-                "operatnalMitigationEvidence"
-              );
+              // getAllConnectedLibrary(
+              //   selectedItems,
+              //   "operatnalMitigationEvidence"
+              // );
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1698,10 +1722,11 @@ const flattened = filteredData
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "residualSeverity");
-              getAllConnectedLibrary(
-                selectedItems,
-                "residualSeverity"
-              );
+              // getAllConnectedLibrary(
+              //   selectedItems,
+              //   "residualSeverity"
+              // );
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1758,6 +1783,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "residualLikelihood");
               getAllConnectedLibrary(selectedItems, "residualLikelihood");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1814,7 +1840,8 @@ const flattened = filteredData
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "residualRiskLevel");
-              getAllConnectedLibrary(selectedItems, "residualRiskLevel");
+              // getAllConnectedLibrary(selectedItems, "residualRiskLevel");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1870,7 +1897,8 @@ const flattened = filteredData
             onChange={(selectedItems) => {
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "hazardStatus");
-              getAllConnectedLibrary(selectedItems, "hazardStatus");
+               getAllConnectedLibrary(selectedItems, "hazardStatus");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1927,6 +1955,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "ftaNameId");
               getAllConnectedLibrary(selectedItems, "ftaNameId");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -1983,6 +2012,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "userField1");
               getAllConnectedLibrary(selectedItems, "userField1");
+                 getAllConnect();
             }}
             options={options}
           />
@@ -2039,6 +2069,7 @@ const flattened = filteredData
               onChange(selectedItems?.value);
               handleInputChange(selectedItems, "userField2");
               getAllConnectedLibrary(selectedItems, "userField2");
+                 getAllConnect();
             }}
             options={options}
           />

@@ -117,61 +117,26 @@ const MTTRPrediction = (props, active) => {
       [name]: selectedItems ? selectedItems.value : "",
     }));
   };
-  // const getAllConnect = (values) => {
-  //   // setIsLoading(true);
-  //   Api.get("api/v1/library/get/all/connect/value", {
-  //     params: {
-  //       projectId: projectId,
-  //       moduleName: values ? values : "",
-  //     },
-  //   }).then((res) => {
-  //      console.log("res data123", res.data.getData);
-  //      const filteredData = res?.data?.getData.filter(
-  //       (item) => item?.moduleName === "MTTR" || item?.destinationName==="MTTR"
-  //     );
-  //     setIsLoading(false);
-  //     setConnectData(filteredData);
-  //        const merged = [...tableData, ...filteredData];
-  //     setMergedData(merged);
-  //     console.log("merged data", filteredData);
-  //   });
-  // };
-
-const getAllConnect = (moduleName,sourceValue) => {
-  Api.get("api/v1/library/get/all/connect/value", {
-    params: {
-      projectId: projectId,
-      moduleName: moduleName || "",
-        sourceValue: sourceValue,
-    },
-  })
-    .then((res) => {
-      // const rawData = res?.data?.getData || [];
-    const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
+  const getAllConnect = (values) => {
+    // setIsLoading(true);
+    Api.get("api/v1/library/get/all/connect/value", {
+      params: {
+        projectId: projectId,
+        moduleName: values ? values : "",
+      },
+    }).then((res) => {
+       console.log("res data123", res.data.getData);
+       const filteredData = res?.data?.getData.filter(
+        (item) => item?.moduleName === "MTTR" || item?.destinationName==="MTTR"
       );
-      console.log("raw connect data", res); 
-      const flattened = filteredData
-  .flatMap((item) =>
-    (item.destinationData || [])
-      .filter(d => d.destinationModuleName === "MTTR") // Filter destinations by module
-      .map((d) => ({
-        sourceName: item.sourceName,
-        sourceValue: item.sourceValue,
-           destinationName: d.destinationName,
-          destinationValue: d.destinationValue,
-          destinationModuleName: d.destinationModuleName,
-      }))
-  );
-
-      console.log("flattened connect data", flattened);
-
-      setConnectData(flattened);
-    })
-    .catch((err) => {
-      console.error("Error fetching connect data:", err);
+      setIsLoading(false);
+      setConnectData(filteredData);
+         const merged = [...tableData, ...filteredData];
+      setMergedData(merged);
+      console.log("merged data", filteredData);
     });
-};
+  };
+
 
 
   const getAllSeprateLibraryData = async () => {
@@ -195,8 +160,8 @@ const getAllConnect = (moduleName,sourceValue) => {
 
   useEffect(() => {
     getAllSeprateLibraryData();
-    getAllConnectedLibrary();
-     getAllConnect();
+    // getAllConnectedLibrary();
+    //  getAllConnect();
   }, []);
 
   const productId = props?.location?.props?.data?.id
@@ -797,7 +762,8 @@ editComponent: ({ value, onChange }) => {
         //   getAllConnectedLibrary(selected, "time");
         // }}
           onChange={(selected) => {
-          onChange(selected?.value || "");               // MUST be simple string
+          onChange(selected?.value || "");     
+          getAllConnect();        
         }}
         options={options || connectedLibraryData}
         isClearable
@@ -888,6 +854,7 @@ editComponent: ({ value, onChange }) => {
         // }}
           onChange={(selected) => {
           onChange(selected?.value || "");               // MUST be simple string
+          getAllConnect();
         }}
         options={options}
         isClearable
@@ -966,7 +933,8 @@ editComponent: ({ value, onChange }) => {
       //   getAllConnectedLibrary(selected, "skill");
       // }}
         onChange={(selected) => {
-          onChange(selected?.value || "");               // MUST be simple string
+          onChange(selected?.value || "");         
+           getAllConnect();
         }}
       options={options}
         isClearable
@@ -1030,6 +998,7 @@ editComponent: ({ value, onChange }) => {
         // }}
           onChange={(selected) => {
           onChange(selected?.value || "");               // MUST be simple string
+          getAllConnect();
         }}
         options={options}
          isClearable
@@ -1093,6 +1062,7 @@ editComponent: ({ value, onChange }) => {
         // }}
           onChange={(selected) => {
           onChange(selected?.value || "");               // MUST be simple string
+          getAllConnect();
         }}
         options={options}
         isClearable                                      // ✔ Show X button
