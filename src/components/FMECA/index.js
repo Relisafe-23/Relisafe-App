@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useRef } from "react";
 import Select from "react-select";
 import { Modal, Button, Row, Col } from "react-bootstrap";
 import "../../css/FMECA.scss";
@@ -140,7 +140,7 @@ function Index(props) {
   const history = useHistory();
   const userId = localStorage.getItem("userId");
   const [existingFailureAlpha, setExistingFailureAlpha] = useState(1);
-const [existingEndBeta, setExistingEndBeta] = useState(1);
+  const [existingEndBeta, setExistingEndBeta] = useState(1);
 
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
@@ -224,6 +224,7 @@ const [existingEndBeta, setExistingEndBeta] = useState(1);
       }
     });
   };
+
   const getAllLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
@@ -285,12 +286,12 @@ const [existingEndBeta, setExistingEndBeta] = useState(1);
   useEffect(() => {
     getAllSeprateLibraryData();
     getAllLibraryData();
-    getAllConnectedLibraryAfterUpdate();
+ 
   }, []);
 
-  useEffect(() => {
-    getAllConnect();
-  }, []);
+  // useEffect(() => {
+  //   // getAllConnect();
+  // }, []);
 
   const DownloadExcel = (values) => {
     const columnsToRemove = ["projectId", "companyId", "productId", "id"];
@@ -759,8 +760,8 @@ const importExcel = (e) => {
   const [selectedField, setSelectedField] = useState(null);
   // const dropdownOptions = {};
     const getAllConnect = () => {
-    setIsLoading(true);
-
+    // setIsLoading(true);
+console.log("getting connect data");
     Api.get("api/v1/library/get/all/connect/value", {
       params: {
         projectId: projectId,
@@ -769,19 +770,19 @@ const importExcel = (e) => {
       console.log("res connect", res.data.getData)
       setIsLoading(false);
       const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "FMECA" || entry?.destinationModuleName === "FMECA"
+        (entry) => entry?.libraryId?.moduleName === "FMECA" || entry?.destinationModuleName === "FMECA" 
       );
       setConnectData(filteredData);
      const flattened = filteredData
   .flatMap((item) =>
     (item.destinationData || [])
-      .filter(d => d.destinationModuleName === "FMECA") 
+      .filter(d => d.destinationModuleName === "FMECA" && d.destinationModuleName === item.libraryId?.moduleName) 
       .map((d) => ({
         fieldName: item.sourceName,         
         fieldValue: item.sourceValue,
         destName: d.destinationName,         
         destValue: d.destinationValue,
-        destModule: d.destinationModuleName // Keep module info for reference
+        destModule: d.destinationModuleName 
       }))
   );
 setFlattenedConnect(flattened);
@@ -851,7 +852,7 @@ fieldNames.forEach((fieldName) => {
   useEffect(() => {
     const filteredValues = connectData?.filter(filterCondition) || [];
     setConnectedValues(filteredValues);
-  }, [connectData, selectedFunction]);
+  }, [connectData,selectedFunction]);
 
   useEffect(() => {
     setSelectedFunction();
@@ -887,6 +888,7 @@ fieldNames.forEach((fieldName) => {
               setSelectedFunction(selectedOption);
             }}
             options={options}
+            // onClick={() =>getAllConnect()}
           />
         );
       };
@@ -1089,7 +1091,7 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
         return [...sourceOption, ...destinationOptions];
       }) || [];
 
- console.log("connectedFilteredData", connectedFilteredData);
+//  console.log("connectedFilteredData", connectedFilteredData);
     const options =
       connectedFilteredData.length > 0
         ? connectedFilteredData
@@ -1149,23 +1151,27 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
  
     return (
       <div style={{ position: "relative" }}>
-        <CreatableSelect
-          name={fieldName}
-          value={selectedOption}
-          onChange={(selected) => {
-            onChange(selected?.value || "");
-          }}
-          options={options}
-          isClearable
-          menuPortalTarget={document.body}
-          styles={{
-            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-            control: (base) => ({
-              ...base,
-              borderColor: hasError ? "#d32f2f" : base.borderColor,
-            }),
-          }}
-        />
+     <CreatableSelect
+  name={fieldName}
+  value={selectedOption}
+ onChange={(selected) => {
+    const newValue = selected?.value || "";
+    onChange(newValue);
+    if (newValue) {
+      getAllConnect();
+    }
+  }}
+  options={options}
+  isClearable
+  menuPortalTarget={document.body}
+  styles={{
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+    control: (base) => ({
+      ...base,
+      borderColor: hasError ? "#d32f2f" : base.borderColor,
+    }),
+  }}
+/>
 
         {hasError && (
           <div
