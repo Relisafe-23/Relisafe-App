@@ -2221,45 +2221,97 @@ const flattened = filteredData
                         />
                       </div>
 
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          alignItems: "center",
-                          marginTop: "8px",
-                          height: "40px",
-                        }}
-                      >
-                        <Tooltip placement="right" title="Import">
-                          <div style={{ marginRight: "8px" }}>
-                            <label
-                              htmlFor="file-input"
-                              className="import-export-btn"
-                            >
-                              <FontAwesomeIcon icon={faFileDownload} />
-                            </label>
-                            <input
-                              type="file"
-                              className="input-fields"
-                              id="file-input"
-                              onChange={importExcel}
-                              style={{ display: "none" }}
-                            />
-                          </div>
-                        </Tooltip>
-                        <Tooltip placement="left" title="Export">
-                          <Button
-                            className="import-export-btn"
-                          style={{ marginLeft: "10px", borderStyle: "none",width:"40px",minWidth:"40px",padding:"0px", }}
-                            onClick={() => DownloadExcel()}
-                          >
-                            <FontAwesomeIcon
-                              icon={faFileUpload}
-                              style={{ width: "15px" }}
-                            />
-                          </Button>
-                        </Tooltip>
-                      </div>
+                     <div
+  style={{
+    display: "flex",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginTop: "8px",
+    height: "40px",
+  }}
+>
+  {/* Both buttons together */}
+  {writePermission === true || 
+   writePermission === "undefined" || 
+   role === "admin" || 
+   (isOwner === true && createdBy === userId) ? (
+    <>
+      {/* IMPORT */}
+      <Tooltip placement="right" title="Import Excel">
+        <div style={{ marginRight: "8px" }}>
+          <label
+            htmlFor="file-input"
+            className="import-export-btn"
+            style={{ cursor: "pointer" }}
+          >
+            <FontAwesomeIcon icon={faFileDownload} />
+          </label>
+          <input
+            type="file"
+            className="input-fields"
+            id="file-input"
+            onChange={importExcel}
+            style={{ display: "none" }}
+          />
+        </div>
+      </Tooltip>
+      
+      {/* EXPORT */}
+      <Tooltip placement="left" title="Export Excel">
+        <Button
+          className="import-export-btn"
+          style={{ 
+            marginLeft: "10px", 
+            borderStyle: "none", 
+            width: "40px", 
+            minWidth: "40px", 
+            padding: "0px",
+            cursor: "pointer"
+          }}
+          onClick={() => DownloadExcel()}
+        >
+          <FontAwesomeIcon
+            icon={faFileUpload}
+            style={{ width: "15px" }}
+          />
+        </Button>
+      </Tooltip>
+    </>
+  ) : (
+    <>
+      {/* Disabled IMPORT */}
+      <Tooltip placement="right" title="Import disabled">
+        <div style={{ marginRight: "8px", opacity: 0.5 }}>
+          <div className="import-export-btn" style={{ cursor: "not-allowed" }}>
+            <FontAwesomeIcon icon={faFileDownload} />
+          </div>
+        </div>
+      </Tooltip>
+      
+      {/* Disabled EXPORT */}
+      <Tooltip placement="left" title="Export disabled">
+        <Button
+          className="import-export-btn"
+          style={{ 
+            marginLeft: "10px", 
+            borderStyle: "none", 
+            width: "40px", 
+            minWidth: "40px", 
+            padding: "0px",
+            cursor: "not-allowed",
+            opacity: 0.5
+          }}
+          disabled
+        >
+          <FontAwesomeIcon
+            icon={faFileUpload}
+            style={{ width: "15px" }}
+          />
+        </Button>
+      </Tooltip>
+    </>
+  )}
+</div>
                     </div>
 
           <div className="mt-5 " style={{ bottom: "35px" }}>

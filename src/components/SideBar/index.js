@@ -1005,7 +1005,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                       {" "}
                       <NavLink
                         to={{
-                          pathname: ``,
+                          pathname: `/safety/${projectId}`,
                           state: {
                             projectId: projectId,
                             productId: productId,

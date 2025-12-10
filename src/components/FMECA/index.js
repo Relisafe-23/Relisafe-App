@@ -136,12 +136,12 @@ function Index(props) {
   const [productModal, setProductModal] = useState(false);
   const handleClose = () => setProductModal(false);
   const handleHide = () => setFailureModeRatioError(false);
-  const [writePermission, setWritePermission] = useState();
+  const [writePermission, setWritePermission] = useState(true);
   const history = useHistory();
   const userId = localStorage.getItem("userId");
   const [existingFailureAlpha, setExistingFailureAlpha] = useState(1);
 const [existingEndBeta, setExistingEndBeta] = useState(1);
-
+const [readPermission, setReadPermission] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
   const [operationPhase, setOperationPhase] = useState();
@@ -197,6 +197,8 @@ const [existingEndBeta, setExistingEndBeta] = useState(1);
     }));
   };
   const [mergedData, setMergedData] = useState([]);
+
+  
 
   const getAllSeprateLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
@@ -569,22 +571,7 @@ const importExcel = (e) => {
         validationErrors.push("BULK DATA ISSUE: A single row has endEffectRatioBeta = 1 (not allowed in bulk upload)");
       }
     }
-       const successMessage = 
-                         `📊 Import Summary:\n` +
-                         `• Total rows: ${rows.length}\n` +
-                         `• failureModeRatioAlpha total: ${alphaTotal.toFixed(4)}\n` +
-                         `• endEffectRatioBeta total: ${betaTotal.toFixed(4)}`;
-   if(!isBulkUpload) {
-    toast.success(successMessage, {
-      position: toast.POSITION.TOP_RIGHT,
-      autoClose: 5000,
-      style: { 
-        whiteSpace: 'pre-line',
-        maxWidth: '500px',
-        textAlign: 'left'
-      }
-    });
-  }
+       
     // Show validation errors if any
     if (validationErrors.length > 0) {
       let errorMessage = validationErrors.length === 1 
@@ -610,6 +597,22 @@ const importExcel = (e) => {
       
       return { isValid: false, rows: [] };
     }
+    const successMessage = 
+                         `📊 Import Summary:\n` +
+                         `• Total rows: ${rows.length}\n` +
+                         `• failureModeRatioAlpha total: ${alphaTotal.toFixed(4)}\n` +
+                         `• endEffectRatioBeta total: ${betaTotal.toFixed(4)}`;
+  //  if(!isBulkUpload) {
+    toast.success(successMessage, {
+      position: toast.POSITION.TOP_RIGHT,
+      autoClose: 5000,
+      style: { 
+        whiteSpace: 'pre-line',
+        maxWidth: '500px',
+        textAlign: 'left'
+      }
+    });
+  // }
     
     // If validation passes, show success message
  
@@ -1275,6 +1278,113 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
 
   // };
   const createFmeca = (values) => {
+      const mandatoryFields = [
+    'operatingPhase',
+    'function',
+    'failureMode',
+    'failureModeRatioAlpha',
+    'subSystemEffect',
+    'systemEffect',
+    'endEffect',
+    'endEffectRatioBeta',
+    'safetyImpact',
+    'realibilityImpact'
+  ];
+  
+  // Check for missing mandatory fields
+  const missingFields = mandatoryFields.filter(field => {
+    const value = values[field];
+    return !value || value.toString().trim() === '';
+  });
+  
+  // If there are missing fields, show error and return
+  if (missingFields.length > 0) {
+    const fieldLabels = {
+      operatingPhase: "Operating Phase",
+      function: "Function",
+      failureMode: "Failure Mode",
+      failureModeRatioAlpha: "Failure Mode Ratio Alpha",
+      subSystemEffect: "Sub System Effect",
+      systemEffect: "System Effect",
+      endEffect: "End Effect",
+      endEffectRatioBeta: "End Effect Ratio Beta",
+      safetyImpact: "Safety Impact",
+      realibilityImpact: "Reliability Impact"
+    };
+    
+    const missingFieldNames = missingFields.map(field => fieldLabels[field]);
+    
+    let errorMessage;
+    if (missingFields.length === 1) {
+      errorMessage = `${fieldLabels[missingFields[0]]} is required!`;
+    } else {
+      errorMessage = `The following fields are required:\n• ${missingFieldNames.join("\n• ")}`;
+    }
+    
+    toast.error(errorMessage, {
+      position: "top-right",
+      autoClose: 5000,
+      style: { 
+        whiteSpace: 'pre-line',
+        maxWidth: '500px',
+        textAlign: 'left'
+      }
+    });
+    return Promise.reject(new Error("Validation failed")); // Reject the promise
+  }
+  
+  // Also validate numeric fields
+  const alphaValue = parseFloat(values.failureModeRatioAlpha);
+  const betaValue = parseFloat(values.endEffectRatioBeta);
+  
+  if (isNaN(alphaValue)) {
+    toast.error("Failure Mode Ratio Alpha must be a valid number", {
+      position: "top-right",
+      autoClose: 5000,
+    });
+    return Promise.reject(new Error("Validation failed"));
+  }
+  
+  if (alphaValue > 1) {
+    toast.error("Failure Mode Ratio Alpha cannot exceed 1", {
+      position: "top-right",
+      autoClose: 5000,
+    });
+    return Promise.reject(new Error("Validation failed"));
+  }
+  
+  if (alphaValue < 0) {
+    toast.error("Failure Mode Ratio Alpha cannot be negative", {
+      position: "top-right",
+      autoClose: 5000,
+    });
+    return Promise.reject(new Error("Validation failed"));
+  }
+  
+  if (isNaN(betaValue)) {
+    toast.error("End Effect Ratio Beta must be a valid number", {
+      position: "top-right",
+      autoClose: 5000,
+    });
+    return Promise.reject(new Error("Validation failed"));
+  }
+  
+  if (betaValue > 1) {
+    toast.error("End Effect Ratio Beta cannot exceed 1", {
+      position: "top-right",
+      autoClose: 5000,
+    });
+    return Promise.reject(new Error("Validation failed"));
+  }
+  
+  if (betaValue < 0) {
+    toast.error("End Effect Ratio Beta cannot be negative", {
+      position: "top-right",
+      autoClose: 5000,
+    });
+    return Promise.reject(new Error("Validation failed"));
+  }
+  
     if (productId) {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
@@ -1359,8 +1469,10 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
         // if (status === 204) {
         //   setFailureModeRatioError(true);
         // }
+        toast.success("FMECA created successfully!");
         getProductData();
         setIsLoading(false);
+         return response; 
       }).catch((error) => {
         setIsLoading(false);
 
@@ -1378,9 +1490,64 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
       )
     } else {
       setProductModal(true);
+        return Promise.reject(new Error("No product selected"));
     }
   };
   const updateFmeca = async (values) => {
+      const mandatoryFields = [
+    'operatingPhase',
+    'function',
+    'failureMode',
+    'failureModeRatioAlpha',
+    'subSystemEffect',
+    'systemEffect',
+    'endEffect',
+    'endEffectRatioBeta',
+    'safetyImpact',
+    'realibilityImpact'
+  ];
+  
+  // Check for missing mandatory fields
+  const missingFields = mandatoryFields.filter(field => {
+    const value = values[field];
+    return !value || value.toString().trim() === '';
+  });
+  
+  // If there are missing fields, show error and return
+  if (missingFields.length > 0) {
+    const fieldLabels = {
+      operatingPhase: "Operating Phase",
+      function: "Function",
+      failureMode: "Failure Mode",
+      failureModeRatioAlpha: "Failure Mode Ratio Alpha",
+      subSystemEffect: "Sub System Effect",
+      systemEffect: "System Effect",
+      endEffect: "End Effect",
+      endEffectRatioBeta: "End Effect Ratio Beta",
+      safetyImpact: "Safety Impact",
+      realibilityImpact: "Reliability Impact"
+    };
+    
+    const missingFieldNames = missingFields.map(field => fieldLabels[field]);
+    
+    let errorMessage;
+    if (missingFields.length === 1) {
+      errorMessage = `${fieldLabels[missingFields[0]]} is required!`;
+    } else {
+      errorMessage = `The following fields are required:\n• ${missingFieldNames.join("\n• ")}`;
+    }
+    
+    toast.error(errorMessage, {
+      position: "top-right",
+      autoClose: 5000,
+      style: { 
+        whiteSpace: 'pre-line',
+        maxWidth: '500px',
+        textAlign: 'left'
+      }
+    });
+    throw new Error("Validation failed"); // Throw error to reject promise
+  }
     const companyId = localStorage.getItem("companyId");
     if (!values.operatingPhase || !values.function || !values.failureMode) {
       toast.error("Operating Phase, Function, and Failure Mode are required.");
@@ -1531,43 +1698,83 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
                 onChange={handleDropdownChange}
               />
             </div>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                marginTop: "8px",
-                height: "40px",
-              }}
-            >
-              <Tooltip placement="right" title="Import" >
-                <div style={{ marginRight: "8px" }}>
-                  <label htmlFor="file-input" className="import-export-btn">
+           <div
+  style={{
+    display: "flex",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginTop: "8px",
+    height: "40px",
+  }}
+>
+  {/* IMPORT BUTTON */}
+  <Tooltip placement="right" title="Import">
+    <div style={{ marginRight: "8px" }}>
+      {(writePermission === true ||
+        writePermission === "undefined" ||
+        role === "admin" ||
+        (isOwner === true && createdBy === userId)) ? (
+        <>
+          <label 
+            htmlFor="file-input" 
+            className="import-export-btn"
+            style={{ cursor: "pointer" }}
+          >
+            <FontAwesomeIcon
+              icon={faFileDownload}
+              style={{ width: "15px" }}
+            />
+          </label>
+          <input
+            type="file"
+            className="input-fields"
+            id="file-input"
+            onChange={importExcel}
+            style={{ display: "none" }}
+          />
+        </>
+      ) : (
+        <div 
+          className="import-export-btn"
+          style={{ cursor: "not-allowed", opacity: 0.5 }}
+        >
+          <FontAwesomeIcon
+            icon={faFileDownload}
+            style={{ width: "15px" }}
+          />
+        </div>
+      )}
+    </div>
+  </Tooltip>
 
-                    <FontAwesomeIcon
-                      icon={faFileDownload}
-                      style={{ width: "15px" }}
-                    />
-                  </label>
-                  <input
-                    type="file"
-                    className="input-fields"
-                    id="file-input"
-                    onChange={importExcel}
-                    style={{ display: "none" }}
-                  />
-                </div>
-              </Tooltip>
-              <Tooltip placement="left" title="Export">
-                <button
-                  className="import-export-btn "
-                  style={{ marginTop: '-2px' }}
-                  onClick={() => DownloadExcel()}
-                >
-                  <FontAwesomeIcon icon={faFileUpload} />
-                </button>
-              </Tooltip>
-            </div>
+  {/* EXPORT BUTTON */}
+  <Tooltip placement="left" title="Export">
+    <button
+      className="import-export-btn"
+      style={{ 
+        marginTop: '-2px',
+        cursor: (writePermission === true ||
+          writePermission === "undefined" ||
+          role === "admin" ||
+          (isOwner === true && createdBy === userId)) ? "pointer" : "not-allowed",
+        opacity: (writePermission === true ||
+          writePermission === "undefined" ||
+          role === "admin" ||
+          (isOwner === true && createdBy === userId)) ? 1 : 0.5
+      }}
+      onClick={(writePermission === true ||
+        writePermission === "undefined" ||
+        role === "admin" ||
+        (isOwner === true && createdBy === userId)) ? () => DownloadExcel() : undefined}
+      disabled={!(writePermission === true ||
+        writePermission === "undefined" ||
+        role === "admin" ||
+        (isOwner === true && createdBy === userId))}
+    >
+      <FontAwesomeIcon icon={faFileUpload} />
+    </button>
+  </Tooltip>
+</div>
           </div>
           <div>
             <div className="mt-5" style={{ bottom: "35px" }}>
@@ -1584,12 +1791,13 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
                         writePermission === "undefined" ||
                         role === "admin" ||
                         (isOwner === true && createdBy === userId)
-                        ?(newRow) =>
-                          new Promise((resolve) => {
-                            createFmeca(newRow);
-                            resolve();
-                          })
-                        : null,
+                          ? (newRow) =>
+      new Promise((resolve, reject) => {
+        createFmeca(newRow)
+          .then(() => resolve())
+          .catch(() => reject()); // This prevents the row from being added to the table
+      })
+    : null,
 
                     onRowUpdate:
                       writePermission === true ||
@@ -1597,11 +1805,12 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
                         role === "admin" ||
                         (isOwner === true && createdBy === userId)
                         ? (newRow, oldData) =>
-                          new Promise((resolve) => {
-                            updateFmeca(newRow);
-                            resolve();
-                          })
-                        : null,
+      new Promise((resolve, reject) => {
+        updateFmeca(newRow)
+          .then(() => resolve())
+          .catch(() => reject()); // This prevents the update in the table
+      })
+    : null,
                   }}
 
                   actions={[
