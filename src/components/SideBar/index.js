@@ -634,7 +634,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                                 className="menu-icon"
                                 title="Seprated Library"
                               />{" "}
-                              <span>Seprated Library</span>
+                              <span>Separated Library</span>
                             </NavLink>
                           </div>
                           <div className="menu-list mt-1">
@@ -1147,7 +1147,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                               className="menu-icon"
                               title="Seprated Library"
                             />{" "}
-                            <span>Seprated Library</span>
+                            <span>Separated Library</span>
                           </NavLink>
                         </div>
                       ) : null}
