@@ -359,53 +359,12 @@ function Index(props) {
   const createFMECADataFromExcel = (values) => {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
-    Api.post("api/v1/FMECA/", {
-      operatingPhase: values.operatingPhase,
-      function: values.function,
-      failureMode: values.failureMode,
-      // searchFM: values.searchFM,
-      cause: values.cause,
-      failureModeRatioAlpha: values?.failureModeRatioAlpha
-        ? values?.failureModeRatioAlpha
-        : 0,
-      detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-      detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-      BuiltInTest: values.BuiltInTest,
-      subSystemEffect: values.subSystemEffect,
-      systemEffect: values.systemEffect,
-      endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta
-        ? values.endEffectRatioBeta
-        : 0,
-      safetyImpact: values.safetyImpact,
-      referenceHazardId: values.referenceHazardId,
-      realibilityImpact: values.realibilityImpact,
-      serviceDisruptionTime: values.serviceDisruptionTime,
-      frequency: values.frequency,
-      severity: values.severity,
-      riskIndex: values.riskIndex,
-      designControl: values.designControl,
-      maintenanceControl: values.maintenanceControl,
-      exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase:
-        values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase:
-        values.immediteActionDuringNonOperationalPhase,
-      userField1: values.userField1,
-      userField2: values.userField2,
-      userField3: values.userField3,
-      userField4: values.userField4,
-      userField5: values.userField5,
-      userField6: values.userField6,
-      userField7: values.userField7,
-      userField8: values.userField8,
-      userField9: values.userField9,
-      userField10: values.userField10,
+    Api.post("api/v1/FMECA/bulk/create", {
+      postData: values,
       projectId: projectId,
       companyId: companyId,
       productId: productId,
       userId: userId,
-      Alldata: tableData,
     }).then((response) => {
       setIsLoading(false);
       const status = response?.status;
@@ -510,9 +469,9 @@ function Index(props) {
       return { isValid: false, rows: [] };
     }
 
-    // Process each row
+
     data.forEach((row, rowIndex) => {
-      const rowNumber = rowIndex + 2; // +2 for header row and 1-based indexing
+      const rowNumber = rowIndex + 2; 
       let rowData = {};
 
       row.forEach((element, index) => {
@@ -646,9 +605,13 @@ function Index(props) {
 
 
     // Call API for each valid row
-    rows.forEach(rowData => {
-      createFMECADataFromExcel(rowData);
-    });
+    // rows.forEach(rowData => {
+    //   createFMECADataFromExcel(rowData);
+    // });
+        
+      createFMECADataFromExcel(rows);
+  
+
 
     return { isValid: true, rows: rows };
   };
@@ -789,46 +752,99 @@ function Index(props) {
 
   const [selectedField, setSelectedField] = useState(null);
   // const dropdownOptions = {};
-  const getAllConnect = () => {
-    // setIsLoading(true);
-    Api.get("api/v1/library/get/all/connect/value", {
-      params: {
-        projectId: projectId,
-      },
-    }).then((res) => {
-      console.log("res connect", res.data.getData)
-      setIsLoading(false);
-      const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "FMECA" || entry?.destinationModuleName === "FMECA"
-      );
-      setConnectData(filteredData);
-      const flattened = filteredData
-        .flatMap((item) =>
-          (item.destinationData || [])
-            .filter(d => {
-              console.log("@@@", d.destinationModuleName)
-              console.log("$$$", item.libraryId.moduleName)
-              return (
-                d.destinationModuleName === "FMECA" && d.destinationModuleName === item.libraryId.moduleName
-              )
-            })
-            .map((d) => ({
-              fieldName: item.sourceName,
-              fieldValue: item.sourceValue,
-              destName: d.destinationName,
-              destValue: d.destinationValue,
-              destModule: d.destinationModuleName
-            }))
+//   const getAllConnect = () => {
+//     // setIsLoading(true);
+//     Api.get("api/v1/library/get/all/connect/value", {
+//       params: {
+//         projectId: projectId,
+//       },
+//     }).then((res) => {
+//       console.log("res connect", res.data.getData)
+//       setIsLoading(false);
+//       const filteredData = res.data.getData.filter(
+//         (entry) => entry?.libraryId?.moduleName === "FMECA" || entry?.destinationModuleName === "FMECA"
+//       );
+//       setConnectData(filteredData);
+//       const flattened = filteredData
+//         .flatMap((item) =>
+//           (item.destinationData || [])
+//             .filter(d => {
+//               console.log("@@@", d.destinationModuleName)
+//               console.log("$$$", item.libraryId.moduleName)
+//               return (
+//                 d.destinationModuleName === "FMECA" && d.destinationModuleName === item.libraryId.moduleName
+//               )
+//             })
+//             .map((d) => ({
+//               fieldName: item.sourceName,
+//               fieldValue: item.sourceValue,
+//               destName: d.destinationName,
+//               destValue: d.destinationValue,
+//               destModule: d.destinationModuleName
+//             }))
 
-        );
+//         );
 
-      setFlattenedConnect(flattened);
-      console.log("filteredData", filteredData);
-      console.log("flattened", flattened);
-      console.log("selectedFunction", selectedFunction)
-    });
+//       setFlattenedConnect(flattened);
+//   // setSelectedFunction(flattened);
+//     const connectedFunction =()=>{
+// setSelectedFunction
+//   (flattened.map((d) => ({
+//         value: d.fieldValue,
+//         label: d.fieldValue 
+//       }))
+//     )
+//     }
+     
+//       console.log("filteredData", filteredData);
+//       console.log("flattened", flattened);
+//       console.log("selectedFunction", selectedFunction)
+//     });
 
-  };
+//   };
+const getAllConnect = () => {
+  Api.get("api/v1/library/get/all/connect/value", {
+    params: { projectId },
+  }).then((res) => {
+    setIsLoading(false);
+
+    const filteredData = res.data.getData.filter(
+      (entry) =>
+        entry?.libraryId?.moduleName === "FMECA" ||
+        entry?.destinationModuleName === "FMECA"
+    );
+
+    const flattened = filteredData.flatMap((item) =>
+      (item.destinationData || [])
+        .filter(
+          (d) =>
+            d.destinationModuleName === "FMECA" &&
+            d.destinationModuleName === item.libraryId.moduleName
+        )
+        .map((d) => ({
+          fieldName: item.sourceName,
+          fieldValue: item.sourceValue,
+          destName: d.destinationName,
+          destValue: d.destinationValue,
+          destModule: d.destinationModuleName,
+        }))
+    );
+
+    setFlattenedConnect(flattened);
+
+  
+    setSelectedFunction(
+      flattened.map((d) => ({
+        value: d.fieldValue,
+        label: d.fieldValue,
+      }))
+    );
+    console.log("SelectedFunction..",   flattened.map((d) => ({
+        value: d.fieldValue,
+        label: d.fieldValue,
+      })))
+  });
+};
 
   // console.log("selectedFunction", selectedFunction)
   // const connectedFunction =()=>{
@@ -837,10 +853,10 @@ function Index(props) {
   //       label: d.fieldValue 
   //     })))
   // }
-  const connectedFunction = flattened.map((d) => ({
-  value: d.fieldValue,
-  label: d.fieldValue,
-}));
+//   const connectedFunction = flattened.map((d) => ({
+//   value: d.fieldValue,
+//   label: d.fieldValue,
+// }));
 
   const handleDropdownChange = (selectedValue) => {
     const selectedItem = treeTableData.find(
@@ -946,6 +962,9 @@ function Index(props) {
   //         />
   //       );
   //     };
+useEffect(() => {
+  console.log("selectedFunction updated:", selectedFunction);
+}, [selectedFunction]);
 
   const handleCustomDelete = (rowData) => {
     setRowToDelete(rowData);
@@ -1151,12 +1170,16 @@ function Index(props) {
         selectedFunction(values)
       }
       const options =
-        selectedFunction.length > 0
-          ? connectedFilteredData
+        connectedFilteredData.length > 0
+          ? connectedFilteredData.map((item)=>({
+            value:item.destinationValue,
+            label:item.destinationValue,
+          }))
           : separateFilteredData.map((item) => ({
             value: item.sourceValue,
             label: item.sourceValue,
           }));
+          console.log("ConnectedFiltered",connectedFilteredData)
       // console.log("@@hv",options)
       // const options = filteredData
       //   .flatMap((item) =>
@@ -1227,25 +1250,21 @@ function Index(props) {
 
       return (
         <div style={{ position: "relative" }}>
-          <CreatableSelect
-            name={fieldName}
-            value={selectedOption}
-            // onChange={(selected) => {
-            //   onChange(selected?.value || "");
-            // }}
-            // onClick ={connectedValue}
-            // options={selectedFunction}
-            options={connectedFunction}
-            isClearable
-            menuPortalTarget={document.body}
-            styles={{
-              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              control: (base) => ({
-                ...base,
-                borderColor: hasError ? "#d32f2f" : base.borderColor,
-              }),
-            }}
-          />
+    <CreatableSelect
+  name={fieldName}
+  value={selectedOption}
+  options={options}
+  isClearable
+  menuPortalTarget={document.body}
+  styles={{
+    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+    control: (base) => ({
+      ...base,
+      borderColor: hasError ? "#d32f2f" : base.borderColor,
+    }),
+  }}
+/>
+
           {/* <CreatableSelect
             //  value={options.find((option) => option.value === value)}
             value={selectedFunction}
@@ -1748,9 +1767,6 @@ function Index(props) {
       setShow(false);
     }, 2000);
   };
-
-  // In your table configuration
-
 
   const role = localStorage.getItem("role");
 
