@@ -701,7 +701,7 @@ const importExcel = (e) => {
     })
       .then((res) => {
         const data = res?.data?.data;
-        setWritePermission(data?.modules[3].write);
+        setWritePermission(data?.modules[4].write);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -1193,6 +1193,7 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
     render: (rowData) => `${rowData?.tableData?.id + 1}`,
     title: "FMECA ID",
   };
+ 
   //  const operatingPhaseColumn = createEditComponent("operatingPhase", "Operating Phase"),
   const columns = [
     fmecaIdColumn,

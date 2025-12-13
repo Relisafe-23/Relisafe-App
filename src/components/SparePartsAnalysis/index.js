@@ -389,7 +389,7 @@ function Index(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-        setWritePermission(data?.modules[7].write);
+        setWritePermission(data?.modules[8].write);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;

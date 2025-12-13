@@ -14,6 +14,7 @@ import * as Yup from "yup";
 import Api from "../../Api";
 import Loader from "../core/Loader";
 import { toast } from "react-toastify";
+import {useHistory } from "react-router-dom";
 
 function SeparateLibrary(props) {
   const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
@@ -34,34 +35,55 @@ function SeparateLibrary(props) {
   const [editData, setEditData] = useState({});
   const [companyId, setCompanyId] = useState();
   const [selectedModule, setSelectedModule] = useState("");
+  const [writePermission, setWritePermission] = useState();
+  const [readPermission, setReadPermission] = useState();
+  const history = useHistory();
+
+  const role = localStorage.getItem("role");  
+  const userId = localStorage.getItem("userId");
+  const [isOwner, setIsOwner] = useState(false);
+  const [createdBy, setCreatedBy] = useState();
+  const token = localStorage.getItem("sessionId");
+  
+  const logout = () => {
+    localStorage.clear(history.push("/login"));
+    window.location.reload();
+  };
+
+  // Check if user has write permission
+  const hasWriteAccess = () => {
+    if (role === "admin" || role === "SuperAdmin") return true;
+    if (isOwner === true && createdBy === userId) return true;
+    return writePermission?.[10]?.write === true;
+  };
+
+  // Check if user has read permission
+  const hasReadAccess = () => {
+    if (role === "admin" || role === "SuperAdmin") return true;
+    if (isOwner === true && createdBy === userId) return true;
+    return readPermission?.[10]?.read === true;
+  };
 
   const handleDropdownChange = (event) => {
     setSelectedValue();
   };
+  
   const handleAlert = () => {
     setEditModalOpen(false);
     alert("Changes saved successfully");
   };
-  // const handleDelete = () => {
-  //   setDeleteModalOpen(false);
-  //   alert("Are you sure want to delete")
-  // };
 
   const validation = Yup.object().shape({
     Module: Yup.object().required("Module is required"),
     Field: Yup.object().required("Field is required"),
     Value: Yup.string().required("Value is required"),
   });
+  
   const editValidation = Yup.object().shape({
     Module: Yup.string().required("Module is required"),
     Field: Yup.string().required("Field is required"),
     Value: Yup.string().required("Value is required"),
   });
-
-  const data = [
-    // { name: "john", age: "28" },
-    // { name: "jahn", age: "30" },
-  ];
 
   const columns = [
     {
@@ -87,6 +109,11 @@ function SeparateLibrary(props) {
     getAllSeprateLibraryData();
   }, []);
 
+  useEffect(() => {
+    getProjectPermission();
+    projectSidebar();
+  }, [projectId]);
+
   const getAllSeprateLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
@@ -100,6 +127,7 @@ function SeparateLibrary(props) {
       setAllSepareteData(res.data.data);
     });
   };
+  
   const getModuleFieldDetails = (value) => {
     Api.post("api/v1/library", {
       moduleName: value,
@@ -108,15 +136,10 @@ function SeparateLibrary(props) {
     }).then((response) => {
       const data = response.data.libraryData.moduleData;
       const namesToFilter = ["Evident1", "Items","condition","failure","redesign",
-      "acceptable","lubrication","task","combination","rcmnotes"
-
-    ];
-
-      // Filter out objects with specified names
+      "acceptable","lubrication","task","combination","rcmnotes"];
+      
       const filteredData = data.filter(item => !namesToFilter.includes(item.name));
-  
       setSelectedModule(value);
-
       setLibraryId(data.id);
       setModuleData(filteredData);
     });
@@ -126,20 +149,12 @@ function SeparateLibrary(props) {
     resetForm();
   };
 
-  // const createSeprateLibrary = (value) => {
-  //   const companyId = localStorage.getItem("companyId");
-  //   const projectId = "64d47dcd5c28962728ddc916";
-  //   console.log("project-id", projectId);
-  //   Api.post("create/separate/value", {
-  //     moduleName: value,
-  //     projectId: projectId,
-  //     companyId: companyId,
-  //   });
-  // };
-  // const createSepLib = (first) => {
-  //   console.log("first", first);
-  // };
   const submitFormValue = (values) => {
+    if (!hasWriteAccess()) {
+      toast.error("You don't have permission to create library values");
+      return;
+    }
+    
     setIsLoading(true);
     Api.post("api/v1/library/create/separate/value", {
       moduleName: values.Module.label,
@@ -156,13 +171,49 @@ function SeparateLibrary(props) {
       } else if (res.status === 208) {
         toast.error(data.message);
       }
-
       getAllSeprateLibraryData();
-    
     });
   };
-  // update Api
+
+  const getProjectPermission = () => {
+    Api.get(`/api/v1/projectPermission/list`, {
+      params: {
+        authorizedPersonnel: userId,
+        projectId: projectId,
+        token: token,
+      },
+    })
+      .then((res) => {
+        const data = res?.data?.data;
+        const modules = data?.modules || [];
+        setWritePermission(modules);
+        setReadPermission(modules);
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        }
+      });
+  };
+
+  const projectSidebar = () => {
+    Api.get(`/api/v1/projectCreation/${projectId}`, {
+      headers: {
+        token: token,
+      },
+    }).then((res) => {
+      setIsOwner(res.data.data.isOwner);
+      setCreatedBy(res.data.data.createdBy);
+    });
+  };
+
   const updateFormValue = (values) => {
+    if (!hasWriteAccess()) {
+      toast.error("You don't have permission to update library values");
+      return;
+    }
+    
     const rowId = editData?.id;
     Api.put(`api/v1/library/separate/value/${rowId}`, {
       moduleName: values.Module.label,
@@ -179,12 +230,17 @@ function SeparateLibrary(props) {
       } else {
         toast.error(res.data.message);
       }
-
       setIsLoading(false);
       getAllSeprateLibraryData();
     });
   };
+  
   const deleteSepLib = () => {
+    if (!hasWriteAccess()) {
+      toast.error("You don't have permission to delete library values");
+      return;
+    }
+    
     setIsLoading(true);
     const rowId = name?.id;
     Api.delete(`api/v1/library/separate/value/${rowId}`).then((res) => {
@@ -194,23 +250,40 @@ function SeparateLibrary(props) {
       getAllSeprateLibraryData();
     });
   };
+  
   const deleteShow = (values) => {
+    if (!hasWriteAccess()) {
+      toast.error("You don't have permission to delete library values");
+      return;
+    }
     setName(values);
     setDeleteModalOpen(true);
   };
+  
   const editShow = (values) => {
+    if (!hasWriteAccess()) {
+      toast.error("You don't have permission to edit library values");
+      return;
+    }
     setEditData(values);
     setLibraryId(values.libraryId);
     setLibraryFieldId(values.sourceId);
     setEditModalOpen(true);
   };
-  // const editSeparateLibrary = (values) => {
-  //   // setIsLoading(true);
-  //   const rowId = values?.id;
-  //   Api.put(`api/v1/update/library/separate/value${rowId}`).then((res) => {
-  //     // setIsLoading(false);
-  //   });
-  // };
+
+  // If no read access, show access denied
+  if (!hasReadAccess() && !hasWriteAccess()) {
+    return (
+      <div className="mt-5">
+        <div className="mttr-sec mt-0">
+          <p className="mb-0 para-tag d-flex justify-content-center">Access Denied</p>
+        </div>
+        <div className="d-flex justify-content-center align-items-center" style={{ height: "50vh" }}>
+          <h4>You don't have permission to access Separate Library</h4>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-5">
@@ -219,126 +292,136 @@ function SeparateLibrary(props) {
       ) : (
         <div className="separate">
           <div className="mttr-sec mt-0">
-            <p className=" mb-0 para-tag d-flex justify-content-center">Separate Library</p>
+            <p className="mb-0 para-tag d-flex justify-content-center">Separate Library</p>
+            {hasReadAccess() && !hasWriteAccess() && (
+              <p className="text-warning text-center mb-0">
+                <small>Read-only access</small>
+              </p>
+            )}
           </div>
-          <Formik
-            initialValues={{
-              Module:"",
-              Field: "",
-              Value: "",
-            }}
-            validationSchema={validation}
-            onSubmit={(values) => submitFormValue(values)}
-          >
-            {(Formik) => {
-              const { handleBlur, handleChange, handleSubmit, setFieldValue, values } = Formik;
-              return (
-                <Form onSubmit={handleSubmit} onReset={handleReset}>
-                  <Card className="mt-4 mttr-card p-4 ">
-                    <Row>
-                      <Col>
-                        <Label notify={true}>Module</Label>
-                        <Form.Group>
-                          <Select
-                            value={values.Module}
-                            onChange={(e) => {
-                              setSelectModule(e.value);
-                              getModuleFieldDetails(e.value);
-                              setFieldValue("Field", "");
-                              setFieldValue("Module", { label: e.value, value: e.value });
-                            }}
-                            placeholder="Select Module"
-                            type="select"
-                            name="Module"
-                            styles={customStyles}
-                            options={[
-                              {
-                                value: "FMECA",
-                                label: "FMECA",
-                              },
-                              {
-                                value: "SAFETY",
-                                label: "SAFETY",
-                              },
-                              {
-                                value: "PMMRA",
-                                label: "PMMRA",
-                              },
-                              {
-                                value: "MTTR",
-                                label: "MTTR",
-                              },
-                            ]}
-                          />
-                          <ErrorMessage component="span" name="Module" className="error text-danger" />
-                        </Form.Group>
-                      </Col>
-                      <Col>
-                        <Label notify={true}>Fields</Label>
-                        <Form.Group>
-                          <Select
-                            value={values.Field}
-                            onChange={(e) => {
-                              setLibraryFieldId(e.id);
-                              setFieldValue("Value", "");
-                              setFieldValue("Field", { label: e.label, value: e.value });
-                              setSelectModuleFieldVlue(e.value);
-                            }}
-                            placeholder="Select Field"
-                            name="Field"
-                            styles={customStyles}
-                            options={[
-                              {
-                                options: moduleData?.map((list) => ({
-                                  value: list.name,
-                                  label: list.key,
-                                  id: list._id,
-                                })),
-                              },
-                            ]}
-                          />
-                          <ErrorMessage component="span" name="Field" className="error text-danger" />
-                        </Form.Group>
-                      </Col>
-                      {values.Field ? (
+          
+          {/* CREATE FORM - Show for all users with read access, but disable fields if no write access */}
+          {hasReadAccess() && (
+            <Formik
+              initialValues={{
+                Module: "",
+                Field: "",
+                Value: "",
+              }}
+              validationSchema={validation}
+              onSubmit={(values) => submitFormValue(values)}
+            >
+              {(Formik) => {
+                const { handleBlur, handleChange, handleSubmit, setFieldValue, values } = Formik;
+                return (
+                  <Form onSubmit={handleSubmit} onReset={handleReset}>
+                    <Card className="mt-4 mttr-card p-4 ">
+                      <Row>
                         <Col>
-                          <Label notify={true}>Value</Label>
+                          <Label notify={true}>Module</Label>
                           <Form.Group>
-                            <Form.Control
-                              style={{ borderRadius: "3px" }}
-                              placeholder="Enter value"
-                              value={values.Value}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              name="Value"
+                            <Select
+                              value={values.Module}
+                              onChange={(e) => {
+                                if (hasWriteAccess()) {
+                                  setSelectModule(e.value);
+                                  getModuleFieldDetails(e.value);
+                                  setFieldValue("Field", "");
+                                  setFieldValue("Module", { label: e.value, value: e.value });
+                                }
+                              }}
+                              placeholder="Select Module"
+                              type="select"
+                              name="Module"
+                              styles={customStyles}
+                              isDisabled={!hasWriteAccess()} // Disable if read-only
+                              options={[
+                                { value: "FMECA", label: "FMECA" },
+                                { value: "SAFETY", label: "SAFETY" },
+                                { value: "PMMRA", label: "PMMRA" },
+                                { value: "MTTR", label: "MTTR" },
+                              ]}
                             />
-                            <ErrorMessage component="span" name="Value" className="error text-danger" />
+                            <ErrorMessage component="span" name="Module" className="error text-danger" />
                           </Form.Group>
                         </Col>
-                      ) : null}
-                      <div className="d-flex flex-direction-row justify-content-end  mt-4 mb-2">
-                        <Button
-                          className="delete-cancel-btn me-2"
-                          variant="outline-secondary"
-                          onClick={() => {
-                            Formik.resetForm();
-                          }}
-                        >
-                          CANCEL
-                        </Button>
-                        <Button className="save-btn" type="submit">
-                          CREATE
-                        </Button>
-                      </div>
-                    </Row>
-                  </Card>
-                </Form>
-              );
-            }}
-          </Formik>
-          <div>
+                        <Col>
+                          <Label notify={true}>Fields</Label>
+                          <Form.Group>
+                            <Select
+                              value={values.Field}
+                              onChange={(e) => {
+                                if (hasWriteAccess()) {
+                                  setLibraryFieldId(e.id);
+                                  setFieldValue("Value", "");
+                                  setFieldValue("Field", { label: e.label, value: e.value });
+                                  setSelectModuleFieldVlue(e.value);
+                                }
+                              }}
+                              placeholder="Select Field"
+                              name="Field"
+                              styles={customStyles}
+                              isDisabled={!hasWriteAccess()} // Disable if read-only
+                              options={[
+                                {
+                                  options: moduleData?.map((list) => ({
+                                    value: list.name,
+                                    label: list.key,
+                                    id: list._id,
+                                  })),
+                                },
+                              ]}
+                            />
+                            <ErrorMessage component="span" name="Field" className="error text-danger" />
+                          </Form.Group>
+                        </Col>
+                        {values.Field ? (
+                          <Col>
+                            <Label notify={true}>Value</Label>
+                            <Form.Group>
+                              <Form.Control
+                                style={{ borderRadius: "3px" }}
+                                placeholder="Enter value"
+                                value={values.Value}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                name="Value"
+                                disabled={!hasWriteAccess()} // Disable if read-only
+                              />
+                              <ErrorMessage component="span" name="Value" className="error text-danger" />
+                            </Form.Group>
+                          </Col>
+                        ) : null}
+                        <div className="d-flex flex-direction-row justify-content-end mt-4 mb-2">
+                          <Button
+                            className="delete-cancel-btn me-2"
+                            variant="outline-secondary"
+                            onClick={() => {
+                              Formik.resetForm();
+                            }}
+                            disabled={!hasWriteAccess()} // Disable if read-only
+                          >
+                            CANCEL
+                          </Button>
+                          <Button 
+                            className="save-btn" 
+                            type="submit"
+                            disabled={!hasWriteAccess()} // Disable if read-only
+                          >
+                            CREATE
+                          </Button>
+                        </div>
+                      </Row>
+                    </Card>
+                  </Form>
+                );
+              }}
+            </Formik>
+          )}
+
+          {/* TABLE - Only show if user has read access */}
+          {hasReadAccess() && (
             <div style={{ bottom: "10px" }}>
-              {console.log("allSepareteData.....",allSepareteData[0])}
               <MaterialTable
                 title="Separate Library"
                 className="mb-5"
@@ -346,7 +429,8 @@ function SeparateLibrary(props) {
                 columns={columns}
                 icons={tableIcons}
                 style={{ marginTop: "30px" }}
-                actions={[
+                // Show actions only if user has write permission
+                actions={hasWriteAccess() ? [
                   (rowData) => ({
                     icon: () => (
                       <Row>
@@ -370,20 +454,7 @@ function SeparateLibrary(props) {
                       deleteShow(rowData);
                     },
                   }),
-                ]}
-                // actions={[
-                //     {
-                //       icon: tableIcons.Edit,
-                //       tooltip: "Edit User",
-                //       isFreeAction: true,
-                //       onClick: (event, rowData) => alert("You want to edit a new row"),
-                //     },
-                //   {
-                //     icon: tableIcons.Delete,
-                //     tooltip: "Delete User",
-                //     onClick: (event, rowData) => alert("You want to delete "),
-                //   },
-                // ]}
+                ] : []}
                 options={{
                   cellStyle: { border: "1px solid #eee" },
                   addRowPosition: "first",
@@ -401,195 +472,150 @@ function SeparateLibrary(props) {
                 }}
               />
             </div>
-          </div>
+          )}
         </div>
       )}
-      <div>
-        <Modal show={editModalOpen} onHide={() => setEditModalOpen(false)} className="mb-0">
-          <Modal.Header
-            className="mt-2 display-flex justify-content-center mttr-sec para-tag "
-            style={{ margin: "15px" }}
+
+      {/* EDIT MODAL */}
+      <Modal show={editModalOpen} onHide={() => setEditModalOpen(false)} className="mb-0">
+        <Modal.Header className="mt-2 display-flex justify-content-center mttr-sec para-tag" style={{ margin: "15px" }}>
+          <Modal.Title>Edit Separate Library</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ marginTop: "-22px", marginBottom: "-18px" }}>
+          <Formik
+            initialValues={{
+              Module: editData.moduleName,
+              Field: editData.sourceName,
+              Value: editData.sourceValue,
+            }}
+            validationSchema={editValidation}
+            onSubmit={(values) => updateFormValue(values)}
           >
-            <Modal.Title>Edit Separate Library</Modal.Title>
-          </Modal.Header>
-          <Modal.Body style={{ marginTop: "-22px", marginBottom: "-18px" }}>
-            <Formik
-              initialValues={{
-                Module: editData.moduleName,
-                Field: editData.sourceName,
-                Value: editData.sourceValue,
-              }}
-              validationSchema={editValidation}
-              onSubmit={(values) => updateFormValue(values)}
-            >
-              {(Formik) => {
-                const { handleBlur, handleChange, handleSubmit, setFieldValue, values } = Formik;
-                return (
-                  <Form onSubmit={handleSubmit} onReset={handleReset}>
-                    <Card className="mt-0 mttr-card p-4 ">
-                      <Row>
-                        <Col className="col-lg-12 mb-3">
-                          <Label className="college">Module</Label>
-                          <Form.Group>
-                            <Form.Control
-                              style={{ backgroundColor: "#dddddd" }}
-                              // onChange={(e) => {
-                              //   setSelectModule(e.value);
-                              //   setFieldValue("Module", e.value);
-                              //   getModuleFieldDetails(e.value);
-                              //   setFieldValue("Field", "");
-                              // }}
-                              type="text"
-                              value={editData.moduleName}
-                              readOnly
-                              name="Module"
-                              styles={customStyles}
-                              // options={[
-                              //   {
-                              //     value: "FMECA",
-                              //     label: "FMECA",
-                              //   },
-                              //   {
-                              //     value: "SAFETY",
-                              //     label: "SAFETY",
-                              //   },
-                              //   {
-                              //     value: "PMMRA",
-                              //     label: "PMMRA",
-                              //   },
-                              //   {
-                              //     value: "MTTR",
-                              //     label: "MTTR",
-                              //   },
-                              // ]}
-                            />
-                            <ErrorMessage component="span" name="Module" className="error text-danger" />
-                          </Form.Group>
-                        </Col>
-                        <Col className="col-lg-12 mb-3">
-                          <Label className="college">Field</Label>
-                          <Form.Group>
-                            <Form.Control
-                              style={{ backgroundColor: "#dddddd" }}
-                              // onChange={(e) => {
-                              //   setFieldValue("Field", e.value);
-                              //   setLibraryFieldId(e.id);
-                              //   setFieldValue("Value", "");
-                              // }}
-                              type="text"
-                              value={editData.sourceName}
-                              readOnly
-                              name="field"
-                              styles={customStyles}
-                              // options={[
-                              //   {
-                              //     options: moduleData?.map((list) => ({
-                              //       value: list.name,
-                              //       label: list.key,
-                              //       id: list._id,
-                              //     })),
-                              //   },
-                              // ]}
-                            />
-                            <ErrorMessage component="span" name="Field" className="error text-danger" />
-                          </Form.Group>
-                        </Col>
-                        {values.Field ? (
-                          <Col className="col-lg-12">
-                            <Label className="college">Value</Label>
-                            <Form.Group>
-                              <Form.Control
-                                style={{ borderRadius: "7px" }}
-                                placeholder="Enter value"
-                                value={values.Value}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                name="Value"
-                              />
-                              <ErrorMessage component="span" name="Value" className="error text-danger" />
-                            </Form.Group>
-                          </Col>
-                        ) : null}
-                      </Row>
-                      <div className="d-flex flex-direction-row justify-content-end  mt-4 ">
-                        <Button
-                          className="me-2 canceled"
-                          variant="outline-secondary"
-                          onClick={() => setEditModalOpen(false)}
-                        >
-                          Cancel
-                        </Button>
+            {(Formik) => {
+              const { handleBlur, handleChange, handleSubmit, values } = Formik;
+              return (
+                <Form onSubmit={handleSubmit}>
+                  <Card className="mt-0 mttr-card p-4 ">
+                    <Row>
+                      <Col className="col-lg-12 mb-3">
+                        <Label className="college">Module</Label>
+                        <Form.Group>
+                          <Form.Control
+                            style={{ backgroundColor: "#dddddd" }}
+                            type="text"
+                            value={editData.moduleName}
+                            readOnly
+                            name="Module"
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col className="col-lg-12 mb-3">
+                        <Label className="college">Field</Label>
+                        <Form.Group>
+                          <Form.Control
+                            style={{ backgroundColor: "#dddddd" }}
+                            type="text"
+                            value={editData.sourceName}
+                            readOnly
+                            name="field"
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col className="col-lg-12">
+                        <Label className="college">Value</Label>
+                        <Form.Group>
+                          <Form.Control
+                            style={{ borderRadius: "7px" }}
+                            placeholder="Enter value"
+                            value={values.Value}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            name="Value"
+                            disabled={!hasWriteAccess()} // Disable if read-only
+                          />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <div className="d-flex flex-direction-row justify-content-end mt-4 ">
+                      <Button
+                        className="me-2 canceled"
+                        variant="outline-secondary"
+                        onClick={() => setEditModalOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      {hasWriteAccess() && (
                         <Button type="submit" className="save-btn-btn">
                           Save Changes
                         </Button>
-                      </div>
-                    </Card>
-                  </Form>
-                );
-              }}
-            </Formik>
-          </Modal.Body>
-        </Modal>
-        <Modal show={deleteModalOpen} onHide={() => setDeleteModalOpen(false)}>
-          <Modal.Header
-            className="justify-content-center  mttr-sec para-tag"
-            style={{ margin: "15px", marginTop: "5px" }}
-          >
-            <Modal.Title>Delete separate library</Modal.Title>
-          </Modal.Header>
-          <Modal.Body style={{ marginTop: "-20px" }}>
-            <div>
-              <h5 className="d-flex justify-content-center mb-4 coloring">Are you sure want to delete? </h5>
+                      )}
+                    </div>
+                  </Card>
+                </Form>
+              );
+            }}
+          </Formik>
+        </Modal.Body>
+      </Modal>
 
-              <Card className="mttr-card p-4 " style={{ marginTop: "-10px" }}>
-                <Row>
-                  <Col className="col-lg-12 mt-0">
-                    <Label>Module</Label>
-                    <Form.Group>
-                      <Form.Control
-                        style={{ backgroundColor: "#dddddd" }}
-                        value={name?.moduleName}
-                        name="module"
-                        readOnly
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col className="col-lg-12 mt-3">
-                    <Label>Field</Label>
-                    <Form.Group>
-                      <Form.Control
-                        style={{ backgroundColor: "#dddddd" }}
-                        value={name?.sourceName}
-                        name="field"
-                        readOnly
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col className="col-lg-12 mt-3">
-                    <Label>Value</Label>
-                    <Form.Group>
-                      <Form.Control
-                        style={{ backgroundColor: "#dddddd" }}
-                        value={name?.sourceValue}
-                        name="value"
-                        readOnly
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
-              </Card>
-            </div>
-          </Modal.Body>
-          <div className="d-flex flex-direction-row justify-content-end mb-2" style={{ marginTop: "-15px" }}>
-            <Button className="canceled me-2" variant="outline-secondary" onClick={() => setDeleteModalOpen(false)}>
-              No
-            </Button>
+      {/* DELETE MODAL */}
+      <Modal show={deleteModalOpen} onHide={() => setDeleteModalOpen(false)}>
+        <Modal.Header className="justify-content-center mttr-sec para-tag" style={{ margin: "15px", marginTop: "5px" }}>
+          <Modal.Title>Delete separate library</Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ marginTop: "-20px" }}>
+          <div>
+            <h5 className="d-flex justify-content-center mb-4 coloring">Are you sure want to delete? </h5>
+            <Card className="mttr-card p-4 " style={{ marginTop: "-10px" }}>
+              <Row>
+                <Col className="col-lg-12 mt-0">
+                  <Label>Module</Label>
+                  <Form.Group>
+                    <Form.Control
+                      style={{ backgroundColor: "#dddddd" }}
+                      value={name?.moduleName}
+                      name="module"
+                      readOnly
+                    />
+                  </Form.Group>
+                </Col>
+                <Col className="col-lg-12 mt-3">
+                  <Label>Field</Label>
+                  <Form.Group>
+                    <Form.Control
+                      style={{ backgroundColor: "#dddddd" }}
+                      value={name?.sourceName}
+                      name="field"
+                      readOnly
+                    />
+                  </Form.Group>
+                </Col>
+                <Col className="col-lg-12 mt-3">
+                  <Label>Value</Label>
+                  <Form.Group>
+                    <Form.Control
+                      style={{ backgroundColor: "#dddddd" }}
+                      value={name?.sourceValue}
+                      name="value"
+                      readOnly
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Card>
+          </div>
+        </Modal.Body>
+        <div className="d-flex flex-direction-row justify-content-end mb-2" style={{ marginTop: "-15px" }}>
+          <Button className="canceled me-2" variant="outline-secondary" onClick={() => setDeleteModalOpen(false)}>
+            No
+          </Button>
+          {hasWriteAccess() && (
             <Button className="save-btn-btn me-3" onClick={() => deleteSepLib()}>
               Yes
             </Button>
-          </div>
-        </Modal>
-      </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

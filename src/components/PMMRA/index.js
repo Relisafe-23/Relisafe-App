@@ -1019,7 +1019,7 @@ export default function PMMRA(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-        setWritePermission(data?.modules[6].write);
+        setWritePermission(data?.modules[7].write);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
