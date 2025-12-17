@@ -692,6 +692,9 @@ function Index(props) {
     setSelectedProductName(selectedItem?.treeStructure?.productName || "");
   };
 
+  const getConnectedSourceField =()=>{
+
+  }
   // Function to get connected values for a field based on selected source
   const getConnectedValuesForField = (fieldName, rowId) => {
     const rowSourceValues = selectedSourceValues[rowId] || {};
@@ -752,13 +755,14 @@ function Index(props) {
       params: { projectId },
     }).then((res) => {
       setIsLoading(false);
-
+   
       const filteredData = res.data.getData.filter(
         (entry) =>
           entry?.libraryId?.moduleName === "FMECA" ||
           entry?.destinationModuleName === "FMECA"
       );
-
+  const sourceDest = filteredData?.sourceName
+console.log("Filered",sourceDest)
       const flattened = filteredData.flatMap((item) =>
         (item.destinationData || [])
           .filter(
@@ -989,7 +993,14 @@ function Index(props) {
           });
         }
       });
-      
+       
+          if (connectedValues.length > 0) {
+        options = connectedValues.map(item => ({
+          value: item.fieldValue,
+          label: item.fieldValue,
+          isConnected: true
+        }));
+      }
       // If no options from library, add current value if exists
       // if (options.length === 0 && value) {
       //   options.push({
