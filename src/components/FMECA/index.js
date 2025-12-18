@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import { Modal, Button, Row, Col } from "react-bootstrap";
@@ -138,10 +137,11 @@ function Index(props) {
   const handleHide = () => setFailureModeRatioError(false);
   const [writePermission, setWritePermission] = useState(true);
   const history = useHistory();
+
   const userId = localStorage.getItem("userId");
   const [existingFailureAlpha, setExistingFailureAlpha] = useState(1);
-const [existingEndBeta, setExistingEndBeta] = useState(1);
-const [readPermission, setReadPermission] = useState(true);
+  const [existingEndBeta, setExistingEndBeta] = useState(1);
+  const [readPermission, setReadPermission] = useState(true);
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
   const [operationPhase, setOperationPhase] = useState();
@@ -152,11 +152,16 @@ const [readPermission, setReadPermission] = useState(true);
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [perviousColumnValues, setPerviousColumnValues] = useState([]);
+  
+  // New state for tracking connections
+  const [selectedSourceValues, setSelectedSourceValues] = useState({});
+  const [rowConnections, setRowConnections] = useState({});
+  const [selectedSourceField, setSelectedSourceField] = useState(null);
+
   const [data, setData] = useState({
     operatingPhase: "",
     function: "",
     failureMode: "",
-    // searchFM: "",
     failureModeRatioAlpha: "",
     cause: "",
     subSystemEffect: "",
@@ -198,8 +203,6 @@ const [readPermission, setReadPermission] = useState(true);
   };
   const [mergedData, setMergedData] = useState([]);
 
-  
-
   const getAllSeprateLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
@@ -208,7 +211,6 @@ const [readPermission, setReadPermission] = useState(true);
         projectId: projectId,
       },
     }).then((res) => {
-      console.log("res separate", res)
       let filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "FMECA"
       );
@@ -226,6 +228,7 @@ const [readPermission, setReadPermission] = useState(true);
       }
     });
   };
+  
   const getAllLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
@@ -253,7 +256,6 @@ const [readPermission, setReadPermission] = useState(true);
   };
 
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
-
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
@@ -265,19 +267,16 @@ const [readPermission, setReadPermission] = useState(true);
       const data = res?.data?.libraryData;
       setAllConnectedData(data ? data : perviousColumnValues);
       setPerviousColumnValues(data);
-
     });
   };
 
   const getAllConnectedLibraryAfterUpdate = async () => {
-
     Api.get("api/v1/library/get/all/source/value", {
       params: {
         projectId: projectId,
         moduleName: "FMECA",
       },
     }).then((res) => {
-      console.log("res connected after update", res)
       const data = res?.data?.libraryData;
       setAllConnectedData(data ? data : perviousColumnValues);
       setPerviousColumnValues(data);
@@ -288,10 +287,6 @@ const [readPermission, setReadPermission] = useState(true);
     getAllSeprateLibraryData();
     getAllLibraryData();
     getAllConnectedLibraryAfterUpdate();
-  }, []);
-
-  useEffect(() => {
-    getAllConnect();
   }, []);
 
   const DownloadExcel = (values) => {
@@ -308,6 +303,7 @@ const [readPermission, setReadPermission] = useState(true);
         ProjectName,
         productName
       };
+
       columnsToRemove.forEach((columnName) => {
         delete newRow[columnName];
       });
@@ -326,7 +322,6 @@ const [readPermission, setReadPermission] = useState(true);
       const workBook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workBook, workSheet, "FMECA Data");
 
-
       const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
 
       // Create a Blob object and initiate a download
@@ -338,7 +333,6 @@ const [readPermission, setReadPermission] = useState(true);
       link.href = url;
       link.download = "FMECA_Data.xlsx";
       link.click();
-
       // Clean up
       URL.revokeObjectURL(url);
     } else {
@@ -356,113 +350,58 @@ const [readPermission, setReadPermission] = useState(true);
     }
   };
 
-
   const createFMECADataFromExcel = (values) => {
     const companyId = localStorage.getItem("companyId");
     setIsLoading(true);
-    Api.post("api/v1/FMECA/", {
-      operatingPhase: values.operatingPhase,
-      function: values.function,
-      failureMode: values.failureMode,
-      // searchFM: values.searchFM,
-      cause: values.cause,
-      failureModeRatioAlpha: values?.failureModeRatioAlpha
-        ? values?.failureModeRatioAlpha
-        : 0,
-      detectableMeansDuringOperation: values.detectableMeansDuringOperation,
-      detectableMeansToMaintainer: values.detectableMeansToMaintainer,
-      BuiltInTest: values.BuiltInTest,
-      subSystemEffect: values.subSystemEffect,
-      systemEffect: values.systemEffect,
-      endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta
-        ? values.endEffectRatioBeta
-        : 1,
-      safetyImpact: values.safetyImpact,
-      referenceHazardId: values.referenceHazardId,
-      realibilityImpact: values.realibilityImpact,
-      serviceDisruptionTime: values.serviceDisruptionTime,
-      frequency: values.frequency,
-      severity: values.severity,
-      riskIndex: values.riskIndex,
-      designControl: values.designControl,
-      maintenanceControl: values.maintenanceControl,
-      exportConstraints: values.exportConstraints,
-      immediteActionDuringOperationalPhase:
-        values.immediteActionDuringOperationalPhase,
-      immediteActionDuringNonOperationalPhase:
-        values.immediteActionDuringNonOperationalPhase,
-      userField1: values.userField1,
-      userField2: values.userField2,
-      userField3: values.userField3,
-      userField4: values.userField4,
-      userField5: values.userField5,
-      userField6: values.userField6,
-      userField7: values.userField7,
-      userField8: values.userField8,
-      userField9: values.userField9,
-      userField10: values.userField10,
+    Api.post("api/v1/FMECA/bulk/create", {
+      postData: values,
       projectId: projectId,
       companyId: companyId,
       productId: productId,
       userId: userId,
-      Alldata: tableData,
     }).then((response) => {
       setIsLoading(false);
       const status = response?.status;
-      // if (status === 204) {
-      //   setFailureModeRatioError(true);
-      // }
-
       getProductData();
       setIsLoading(false);
     }).catch((error) => {
       setIsLoading(false);
-
-      // Backend error message available?
       const errorMessage =
         error?.response?.data?.message ||
         error?.response?.data?.error ||
         "Something went wrong";
-
-      // Show toast
       toast.error(errorMessage);
-
       console.error("Error creating FMECA data:", errorMessage);
     })
   };
- 
 
-const importExcel = (e) => {
+  const importExcel = (e) => {
     const file = e.target.files[0];
 
     // Check if the file is an Excel file by checking the extension
     const fileName = file.name;
-    const validExtensions = ["xlsx", "xls"]; // Allowed file extensions
-    const fileExtension = fileName.split(".").pop().toLowerCase(); // Get file extension
+    const validExtensions = ["xlsx", "xls"];
+    const fileExtension = fileName.split(".").pop().toLowerCase();
 
     if (!validExtensions.includes(fileExtension)) {
       toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
         position: toast.POSITION.TOP_RIGHT,
       });
-      return; // Exit the function if the file is not an Excel file
+      return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      //parse data
       const bstr = event.target.result;
       const workBook = XLSX.read(bstr, { type: "binary" });
-      // get first sheet
       const workSheetName = workBook.SheetNames[0];
       const workSheet = workBook.Sheets[workSheetName];
       const fileData = XLSX.utils.sheet_to_json(workSheet, { header: 1 });
       const headers = fileData[0];
-      
-      // Check if required columns exist
+
       const hasFailureModeRatioAlpha = headers.includes("failureModeRatioAlpha");
       const hasEndEffectRatioBeta = headers.includes("endEffectRatioBeta");
-      
+
       if (!hasFailureModeRatioAlpha || !hasEndEffectRatioBeta) {
         toast.error("Excel file must contain 'failureModeRatioAlpha' and 'endEffectRatioBeta' columns!", {
           position: toast.POSITION.TOP_RIGHT,
@@ -472,15 +411,13 @@ const importExcel = (e) => {
 
       const heads = headers.map((head) => ({ title: head, field: head }));
       setColDefs(heads);
-      fileData.splice(0, 1); // Remove header row
-      
-      // Validate and convert data
+      fileData.splice(0, 1);
+
       const validationResult = convertToJson(headers, fileData);
-      
+
       if (validationResult.isValid) {
         setData(validationResult.rows);
       } else {
-        // Clear file input if validation failed
         e.target.value = '';
       }
     };
@@ -492,10 +429,9 @@ const importExcel = (e) => {
     let alphaTotal = 0;
     let betaTotal = 0;
     const validationErrors = [];
-    
-    // Check if it's bulk upload (more than 1 row)
+
     const isBulkUpload = data.length > 1;
-    
+
     if (data.length === 0 || data[0].length === 0) {
       toast("No Data Found In Excel Sheet", {
         position: "top-right",
@@ -511,20 +447,17 @@ const importExcel = (e) => {
       return { isValid: false, rows: [] };
     }
 
-    // Process each row
     data.forEach((row, rowIndex) => {
-      const rowNumber = rowIndex + 2; // +2 for header row and 1-based indexing
+      const rowNumber = rowIndex + 2; 
       let rowData = {};
-      
+
       row.forEach((element, index) => {
         rowData[headers[index]] = element;
       });
-      
-      // Validate specific columns
+
       const alphaValue = parseFloat(rowData.failureModeRatioAlpha);
       const betaValue = parseFloat(rowData.endEffectRatioBeta);
-      
-      // Check individual values
+
       if (isNaN(alphaValue)) {
         validationErrors.push(`Row ${rowNumber}: failureModeRatioAlpha "${rowData.failureModeRatioAlpha}" is not a valid number`);
       } else if (alphaValue > 1) {
@@ -532,7 +465,7 @@ const importExcel = (e) => {
       } else if (alphaValue < 0) {
         validationErrors.push(`Row ${rowNumber}: failureModeRatioAlpha = ${alphaValue.toFixed(4)} (cannot be negative)`);
       }
-      
+
       if (isNaN(betaValue)) {
         validationErrors.push(`Row ${rowNumber}: endEffectRatioBeta "${rowData.endEffectRatioBeta}" is not a valid number`);
       } else if (betaValue > 1) {
@@ -540,88 +473,90 @@ const importExcel = (e) => {
       } else if (betaValue < 0) {
         validationErrors.push(`Row ${rowNumber}: endEffectRatioBeta = ${betaValue.toFixed(4)} (cannot be negative)`);
       }
-      
-      // Add to totals if valid
+
       if (!isNaN(alphaValue) && !isNaN(betaValue)) {
         alphaTotal += alphaValue;
         betaTotal += betaValue;
         rows.push(rowData);
       }
     });
-    
-    // BULK UPLOAD VALIDATION: Check if sum of values exceeds 1
+
     if (isBulkUpload) {
       if (alphaTotal > 1) {
         validationErrors.push(`BULK UPLOAD FAILED: Total failureModeRatioAlpha = ${alphaTotal.toFixed(4)} (exceeds 1)`);
       }
-      
+
       if (betaTotal > 1) {
         validationErrors.push(`BULK UPLOAD FAILED: Total endEffectRatioBeta = ${betaTotal.toFixed(4)} (exceeds 1)`);
       }
-      
-      // Additional validation for bulk: no single row should have value = 1
-      const hasAlphaEqualsOne = rows.some(row => parseFloat(row.failureModeRatioAlpha) === 1);
-      const hasBetaEqualsOne = rows.some(row => parseFloat(row.endEffectRatioBeta) === 1);
-      
+
+      const alphaOnes = rows.filter(row =>
+        parseFloat(row.failureModeRatioAlpha) === 1
+      ).length;
+
+      const betaOnes = rows.filter(row =>
+        parseFloat(row.endEffectRatioBeta) === 1
+      ).length;
+
+      if (alphaOnes > 1) {
+        validationErrors.push(
+          `BULK DATA ISSUE: ${alphaOnes} rows have failureModeRatioAlpha = 1 (only one row can have value 1)`
+        );
+      }
+
+      if (betaOnes > 1) {
+        validationErrors.push(
+          `BULK DATA ISSUE: ${betaOnes} rows have endEffectRatioBeta = 1 (only one row can have value 1)`
+        );
+      }
+
+      const hasAlphaEqualsOne = rows.some(row => parseFloat(row.failureModeRatioAlpha) > 1);
+      const hasBetaEqualsOne = rows.some(row => parseFloat(row.endEffectRatioBeta) > 1);
+
       if (hasAlphaEqualsOne) {
         validationErrors.push("BULK DATA ISSUE: A single row has failureModeRatioAlpha = 1 (not allowed in bulk upload)");
       }
-      
+
       if (hasBetaEqualsOne) {
         validationErrors.push("BULK DATA ISSUE: A single row has endEffectRatioBeta = 1 (not allowed in bulk upload)");
       }
     }
-       
-    // Show validation errors if any
+
     if (validationErrors.length > 0) {
-      let errorMessage = validationErrors.length === 1 
+      let errorMessage = validationErrors.length === 1
         ? `❌ Validation Error:\n\n${validationErrors[0]}`
         : `❌ Validation Errors:\n\n• ${validationErrors.join("\n• ")}`;
-      
-      // Add totals information for bulk upload errors
-      if (isBulkUpload && (alphaTotal > 1 || betaTotal > 1)) {
-        // errorMessage += `\n\n📊 Totals Summary:\n`;
-        // errorMessage += `• failureModeRatioAlpha total: ${alphaTotal.toFixed(4)}\n`;
-        // errorMessage += `• endEffectRatioBeta total: ${betaTotal.toFixed(4)}`;
-      }
-      
+
       toast.error(errorMessage, {
         position: toast.POSITION.TOP_RIGHT,
         autoClose: true,
-        style: { 
+        style: {
           whiteSpace: 'pre-line',
           maxWidth: '500px',
           textAlign: 'left'
         }
       });
-      
+
       return { isValid: false, rows: [] };
     }
-    const successMessage = 
-                         `📊 Import Summary:\n` +
-                         `• Total rows: ${rows.length}\n` +
-                         `• failureModeRatioAlpha total: ${alphaTotal.toFixed(4)}\n` +
-                         `• endEffectRatioBeta total: ${betaTotal.toFixed(4)}`;
-  //  if(!isBulkUpload) {
+    const successMessage =
+      `📊 Import Summary:\n` +
+      `• Total rows: ${rows.length}\n` +
+      `• failureModeRatioAlpha total: ${alphaTotal.toFixed(4)}\n` +
+      `• endEffectRatioBeta total: ${betaTotal.toFixed(4)}`;
+    
     toast.success(successMessage, {
       position: toast.POSITION.TOP_RIGHT,
       autoClose: 5000,
-      style: { 
+      style: {
         whiteSpace: 'pre-line',
         maxWidth: '500px',
         textAlign: 'left'
       }
     });
-  // }
-    
-    // If validation passes, show success message
- 
-    
-    // Call API for each valid row
-    rows.forEach(rowData => {
-      createFMECADataFromExcel(rowData);
-    });
-    
+
+    createFMECADataFromExcel(rows);
+
     return { isValid: true, rows: rows };
   };
 
@@ -630,7 +565,6 @@ const importExcel = (e) => {
     getProductData();
   }, [productId]);
 
-  // Log out
   const logout = () => {
     localStorage.clear(history.push("/login"));
     window.location.reload();
@@ -646,6 +580,7 @@ const importExcel = (e) => {
       setCreatedBy(res.data.data.createdBy);
     });
   };
+  
   const getProductData = () => {
     Api.get("/api/v1/fmeca/product/list", {
       params: {
@@ -665,8 +600,6 @@ const importExcel = (e) => {
         }
       });
   };
-
-
 
   const getTreeData = () => {
     Api.get(`/api/v1/productTreeStructure/list`, {
@@ -729,7 +662,7 @@ const importExcel = (e) => {
       },
     },
   });
-  //Project detail API
+
   const getProjectDetails = () => {
     Api.get(`/api/v1/projectCreation/${projectId}`, {
       headers: { userId: userId },
@@ -745,53 +678,12 @@ const importExcel = (e) => {
       });
   };
 
-
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [rowToDelete, setRowToDelete] = useState(null);
   const [showModal, setShowModal] = useState(false);
-    const [flattenedConnect, setFlattenedConnect] = useState([]); 
-  const [dropdownOptions, setDropdownOptions] = useState({});
+  const [flattenedConnect, setFlattenedConnect] = useState([]);
   const [modalInfo, setModalInfo] = useState({ title: "", message: "" });
   const [connectData, setConnectData] = useState([]);
-  const [selectedFunction, setSelectedFunction] = useState();
-  const filterCondition = (item) => {
-    return item.sourceValue === selectedFunction?.value;
-  };
-  const [connectedValues, setConnectedValues] = useState([]);
-
-  const [selectedField, setSelectedField] = useState(null);
-  // const dropdownOptions = {};
-    const getAllConnect = () => {
-    setIsLoading(true);
-
-    Api.get("api/v1/library/get/all/connect/value", {
-      params: {
-        projectId: projectId,
-      },
-    }).then((res) => {
-      console.log("res connect", res.data.getData)
-      setIsLoading(false);
-      const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "FMECA" || entry?.destinationModuleName === "FMECA"
-      );
-      setConnectData(filteredData);
-     const flattened = filteredData
-  .flatMap((item) =>
-    (item.destinationData || [])
-      .filter(d => d.destinationModuleName === "FMECA") 
-      .map((d) => ({
-        fieldName: item.sourceName,         
-        fieldValue: item.sourceValue,
-        destName: d.destinationName,         
-        destValue: d.destinationValue,
-        destModule: d.destinationModuleName // Keep module info for reference
-      }))
-  );
-setFlattenedConnect(flattened);
-  console.log("filteredData", filteredData);
-    });
-
-  };
 
   const handleDropdownChange = (selectedValue) => {
     const selectedItem = treeTableData.find(
@@ -800,99 +692,97 @@ setFlattenedConnect(flattened);
     setSelectedProductName(selectedItem?.treeStructure?.productName || "");
   };
 
-  const fieldNames = [
-    "operatingPhase",
-    "function",
-    "failureMode",
-    // "searchFM",
-    "failureModeRatioAlpha",
-    "cause",
-    "subSystemEffect",
-    "systemEffect",
-    "endEffect",
-    "endEffectRatioBeta",
-    "safetyImpact",
-    "referenceHazardId",
-    "realibilityImpact",
-    "serviceDisruptionTime",
-    "frequency",
-    "severity",
-    "riskIndex",
-    "detectableMeansDuringOperation",
-    "detectableMeansToMaintainer",
-    "BuiltInTest",
-    "designControl",
-    "maintenanceControl",
-    "exportConstraints",
-    "immediteActionDuringOperationalPhase",
-    "immediteActionDuringNonOperationalPhase",
-    "userField1",
-    "userField2",
-    "userField3",
-    "userField4",
-    "userField6",
-    "userField7",
-    "userField8",
-    "userField9",
-    "userField10",
-  ];
+  // Function to get connected values for a field based on selected source
+  const getConnectedValuesForField = (fieldName, rowId) => {
+    const rowSourceValues = selectedSourceValues[rowId] || {};
+    
+    // Check all possible source fields for connections to this field
+    let connectedValues = [];
+    
+    Object.keys(rowSourceValues).forEach(sourceField => {
+      const sourceValue = rowSourceValues[sourceField];
+      if (sourceValue) {
+        const connections = flattenedConnect?.filter(
+          item => 
+            item.fieldName === sourceField &&
+            item.fieldValue === sourceValue &&
+            item.destName === fieldName
+        ) || [];
+        
+        connectedValues = [...connectedValues, ...connections];
+      }
+    });
+    
+    return connectedValues;
+  };
 
-fieldNames.forEach((fieldName) => {
-  const matches = flattenedConnect?.filter(
-    (row) =>
-      row.fieldName === fieldName ||
-      row.destName === fieldName
-  ) || [];
+  // Function to handle source selection and update connections
+  const handleSourceSelection = (fieldName, value, rowData) => {
+    const rowId = rowData?.tableData?.id;
+    
+    // Update selected source values for this row
+    setSelectedSourceValues(prev => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        [fieldName]: value
+      }
+    }));
+    
+    // Set the selected source field for tracking
+    setSelectedSourceField(fieldName);
+    
+    // Find all connections originating from this source
+    const connections = flattenedConnect?.filter(
+      item => item.fieldName === fieldName && item.fieldValue === value
+    ) || [];
+    
+    // Store connections for this row
+    setRowConnections(prev => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        [fieldName]: connections
+      }
+    }));
+  };
 
-  dropdownOptions[fieldName] = matches.map((row) => ({
-    value: row.destValue || row.fieldValue,
-    label: row.destValue || row.fieldValue,
-  }));
-});
+  const getAllConnect = () => {
+    Api.get("api/v1/library/get/all/connect/value", {
+      params: { projectId },
+    }).then((res) => {
+      setIsLoading(false);
 
+      const filteredData = res.data.getData.filter(
+        (entry) =>
+          entry?.libraryId?.moduleName === "FMECA" ||
+          entry?.destinationModuleName === "FMECA"
+      );
+
+      const flattened = filteredData.flatMap((item) =>
+        (item.destinationData || [])
+          .filter(
+            (d) =>
+              d.destinationModuleName === "FMECA" &&
+              d.destinationModuleName === item.libraryId.moduleName
+          )
+          .map((d) => ({
+            fieldName: item.sourceName,
+            fieldValue: item.sourceValue,
+            destName: d.destinationName,
+            destValue: d.destinationValue,
+            destModule: d.destinationModuleName,
+          }))
+      );
+
+      setFlattenedConnect(flattened);
+      setConnectData(filteredData);
+    });
+  };
 
   useEffect(() => {
-    const filteredValues = connectData?.filter(filterCondition) || [];
-    setConnectedValues(filteredValues);
-  }, [connectData, selectedFunction]);
-
-  useEffect(() => {
-    setSelectedFunction();
-    setConnectedValues([]);
+    getAllConnect();
   }, []);
-
-  const createDropdownEditComponent =
-    (fieldName) =>
-      ({ value, onChange }) => {
-        const options = dropdownOptions[fieldName] || [];
-        const connectedValue = connectedValues[0]?.destinationData?.find(
-          (item) => item?.destinationName === fieldName
-        )?.destinationValue;
-
-        const isAnyDropdownSelected = selectedField !== null;
-
-        if (isAnyDropdownSelected || options.length === 0) {
-          return (
-            <TextField
-              onChange={(e) => onChange(connectedValue || e.target.value)}
-              value={connectedValue || value}
-              multiline
-            />
-          );
-        }
-
-        return (
-          <CreatableSelect
-            value={options.find((option) => option.value === value)}
-            onChange={(selectedOption) => {
-              onChange(selectedOption.value);
-              setSelectedField(fieldName);
-              setSelectedFunction(selectedOption);
-            }}
-            options={options}
-          />
-        );
-      };
 
   const handleCustomDelete = (rowData) => {
     setRowToDelete(rowData);
@@ -931,10 +821,6 @@ fieldNames.forEach((fieldName) => {
     setRowToDelete(null);
   };
 
-  const handleDropdownSelection = (fieldName) => {
-    setSelectedField(fieldName);
-    setSelectedFunction(null);
-  };
   // Validation utility
   const validateField = (fieldName, value, isRequired) => {
     if (isRequired && (!value || value.toString().trim() === '')) {
@@ -986,7 +872,7 @@ fieldNames.forEach((fieldName) => {
               cursor: 'pointer'
             }}
           >
-            OK
+            OK 
           </button>
         </div>
       </div>
@@ -994,7 +880,6 @@ fieldNames.forEach((fieldName) => {
   };
 
   const createEditComponent = (fieldName, title, isRequired = false) => {
-
     return {
       title: isRequired ? `${title} *` : title,
       field: fieldName,
@@ -1005,10 +890,6 @@ fieldNames.forEach((fieldName) => {
       editComponent: ({ value, onChange, rowData }) => {
         const handleChange = (newValue) => {
           onChange(newValue);
-
-          // Validate on change and store validation state
-          const error = validateField(title, newValue, isRequired);
-          // You can store this error in a state management system
         };
 
         return (
@@ -1018,19 +899,15 @@ fieldNames.forEach((fieldName) => {
               value={value || ''}
               onChange={(e) => {
                 const newValue = e.target.value;
-
-                // Restrict specific fields to only allow 1
                 if (
                   (fieldName === 'failureModeRatioAlpha' || fieldName === 'endEffectRatioBeta') &&
                   newValue !== '' &&
                   parseFloat(newValue) > 1
                 ) {
-                  return; // ignore if greater than 1
+                  return;
                 }
-
                 handleChange(newValue);
               }}
-
               placeholder={isRequired ? `${title} *` : title}
               style={{
                 height: "40px",
@@ -1058,78 +935,150 @@ fieldNames.forEach((fieldName) => {
               </div>
             )}
           </div>
-
         );
       }
     };
   };
 
-const createSmartSelectField = (fieldName, label, required = false) => ({
-  ...createEditComponent(fieldName, label, required),
+  // Function to check if a field is a source field (has connections from it)
+  const isSourceField = (fieldName) => {
+    return flattenedConnect?.some(item => item.fieldName === fieldName);
+  };
 
-  editComponent: ({ value, onChange }) => {
+  // Function to get destination fields for a source
+  const getDestinationFieldsForSource = (sourceField, sourceValue) => {
+    return flattenedConnect
+      ?.filter(item => item.fieldName === sourceField && item.fieldValue === sourceValue)
+      .map(item => ({
+        field: item.destName,
+        value: item.destValue
+      })) || [];
+  };
 
-    const separateFilteredData =
-      allSepareteData?.filter((item) => item?.sourceName === fieldName) || [];
-
-   
-    const connectedFilteredData =
-      connectData?.flatMap((item) => {
-        const isSourceMatch = item?.sourceName === fieldName;
-
-        const sourceOption = isSourceMatch
-          ? [{ value: item.sourceValue, label: item.sourceValue }]
-          : [];
-// console.log("connectedFilteredData item", isSourceMatch);
-        const matchedDestinations =
-          item?.destinationData?.filter((d) => d?.destinationName === fieldName) || [];
-
-        const destinationOptions = matchedDestinations.map((d) => ({
-          value: d.destinationValue,
-          label: d.destinationValue,
-        }));
+  const createSmartSelectField = (fieldName, label, required = false, isSourceFieldCheck = false) => ({
+    ...createEditComponent(fieldName, label, required),
+    editComponent: ({ value, onChange, rowData }) => {
+      const rowId = rowData?.tableData?.id;
       
-        return [...sourceOption, ...destinationOptions];
-      }) || [];
-
- console.log("connectedFilteredData", connectedFilteredData);
-    const options =
-      connectedFilteredData.length > 0
-        ? connectedFilteredData
-        : separateFilteredData.map((item) => ({
+      // Get connected values for this field based on selected sources in this row
+      const connectedValues = getConnectedValuesForField(fieldName, rowId);
+      
+      // Get separate library data
+      const separateFilteredData = 
+        allSepareteData?.filter((item) => item?.sourceName === fieldName) || [];
+      
+      // Combine options: connected values first, then separate values
+      let options = [];
+      
+      // Add connected values
+      if (connectedValues.length > 0) {
+        options = connectedValues.map(item => ({
+          value: item.destValue,
+          label: item.destValue,
+          isConnected: true
+        }));
+      }
+      
+      // Add separate library values (avoid duplicates)
+      separateFilteredData.forEach(item => {
+        if (!options.some(opt => opt.value === item.sourceValue)) {
+          options.push({
             value: item.sourceValue,
             label: item.sourceValue,
-          }));
+            isConnected: false
+          });
+        }
+      });
+      
+      // If no options from library, add current value if exists
+      // if (options.length === 0 && value) {
+      //   options.push({
+      //     value: value,
+      //     label: value,
+      //     isConnected: false
+      //   });
+      // }
+      
+      const selectedOption = 
+        options.find((opt) => opt.value === value) ||
+        (value ? { label: value, value } : null);
+      
+      const hasError = required && (!value || value?.trim() === "");
 
-  
-    const selectedOption =
-      options.find((opt) => opt.value === value) ||
-      (value ? { label: value, value } : null);
-
-
-    // const hasError = required && (!value || value?.trim() === "");
-    const hasError = required && (
-  value === undefined ||
-  value === null ||
-  (typeof value === "string" && value.trim() === "") ||
-  (typeof value !== "string" && !value) 
-);
-
-
-
-    if (!options || options.length === 0) {
+        if (!options || options.length === 0) {
+        return (
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              value={value || ""}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={label + (required ? " *" : "")}
+              style={{
+                height: "40px",
+                borderRadius: "4px",
+                width: "100%",
+                borderColor: hasError ? "#d32f2f" : "#ccc",
+              }}
+            />
+            {hasError && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  color: "#d32f2f",
+                  fontSize: "12px",
+                }}
+              >
+                {label} is required
+              </div>
+            )}
+          </div>
+        );
+      }
       return (
         <div style={{ position: "relative" }}>
-          <input
-            type="text"
-            value={value || ""}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={label + (required ? " *" : "")}
-            style={{
-              height: "40px",
-              borderRadius: "4px",
-              width: "100%",
-              borderColor: hasError ? "#d32f2f" : "#ccc",
+        
+          <CreatableSelect
+            name={fieldName}
+            value={selectedOption}
+            options={options}
+            isClearable
+            onChange={(option) => {
+              const newValue = option?.value || "";
+              onChange(newValue);
+          
+              if (isSourceField(fieldName) && newValue) {
+                handleSourceSelection(fieldName, newValue, rowData);
+             
+                const destinations = getDestinationFieldsForSource(fieldName, newValue);
+                if (destinations.length === 1) {
+              
+                }
+              }
+            }}
+            // onCreateOption={(inputValue) => {
+            //   // // Allow creating new options
+            //   const newOption = { value: inputValue, label: inputValue };
+            //   onChange(inputValue);
+              
+          
+            //   if (isSourceField(fieldName) && inputValue) {
+            //     handleSourceSelection(fieldName, inputValue, rowData);
+            //   }
+            // }}
+            menuPortalTarget={document.body}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              control: (base) => ({
+                ...base,
+                borderColor: hasError ? "#d32f2f" : base.borderColor,
+              }),
+              option: (base, state) => ({
+                ...base,
+                backgroundColor: state.data?.isConnected ? '#e8f4fd' : base.backgroundColor,
+                fontWeight: state.data?.isConnected ? 'bold' : base.fontWeight,
+              }),
             }}
           />
           {hasError && (
@@ -1145,76 +1094,50 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
               {label} is required
             </div>
           )}
+          {connectedValues.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                top: "-18px",
+                right: "5px",
+                fontSize: "10px",
+                color: "#1976d2",
+                background: "#e8f4fd",
+                padding: "2px 5px",
+                borderRadius: "3px",
+              }}
+            >
+              Connected
+            </div>
+          )}
         </div>
       );
-    }
+    },
+  });
 
- 
-    return (
-      <div style={{ position: "relative" }}>
-        <CreatableSelect
-          name={fieldName}
-          value={selectedOption}
-          onChange={(selected) => {
-            onChange(selected?.value || "");
-          }}
-          options={options}
-          isClearable
-          menuPortalTarget={document.body}
-          styles={{
-            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-            control: (base) => ({
-              ...base,
-              borderColor: hasError ? "#d32f2f" : base.borderColor,
-            }),
-          }}
-        />
-
-        {hasError && (
-          <div
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              color: "#d32f2f",
-              fontSize: "12px",
-            }}
-          >
-            {label} is required
-          </div>
-        )}
-      </div>
-    );
-  },
-});
-
-  // Special case for FMECA ID (not an editable field)
+  // Special case for FMECA ID
   const fmecaIdColumn = {
     render: (rowData) => `${rowData?.tableData?.id + 1}`,
     title: "FMECA ID",
   };
-  //  const operatingPhaseColumn = createEditComponent("operatingPhase", "Operating Phase"),
+
+  // Define which fields are source fields (fields that have connections to other fields)
+  const sourceFields = ['function', 'operatingPhase', 'failureMode'];
+
   const columns = [
     fmecaIdColumn,
-    // operatingPhase,
-
-   createSmartSelectField("operatingPhase", "Operating Phases", true),
-    createSmartSelectField("function", "Function", true),
-    createSmartSelectField("failureMode", "Failure Mode", true),
-   createSmartSelectField("failureModeRatioAlpha", "Failure Mode Ratio Alpha (must be equal to 1)", true),
+    createSmartSelectField("operatingPhase", "Operating Phases", true, sourceFields.includes('operatingPhase')),
+    createSmartSelectField("function", "Function", true, sourceFields.includes('function')),
+    createSmartSelectField("failureMode", "Failure Mode", true, sourceFields.includes('failureMode')),
+    createSmartSelectField("failureModeRatioAlpha", "Failure Mode Ratio Alpha (must be equal to 1)", true),
     createSmartSelectField("cause", "Cause"),
     createSmartSelectField("subSystemEffect", "Sub System effect", true),
     createSmartSelectField("systemEffect", "System Effect", true),
     createSmartSelectField("endEffect", "End Effect", true),
     createSmartSelectField("endEffectRatioBeta", "End Effect ratio Beta (must be equal to 1)", true),
-   createSmartSelectField("safetyImpact", "Safety Impact", true),
+    createSmartSelectField("safetyImpact", "Safety Impact", true),
     createSmartSelectField("referenceHazardId", "Reference Hazard ID"),
     createSmartSelectField("realibilityImpact", "Reliability Impact", true),
-
-    createSmartSelectField("serviceDisruptionTime", "Service Disruption Time (minutes)"),
-    createSmartSelectField("frequency", "Frequency"),
-    createSmartSelectField("severity", "Severity"),
-    createSmartSelectField("riskIndex", "Risk Index"),
     createSmartSelectField("serviceDisruptionTime", "Service Disruption Time (minutes)"),
     createSmartSelectField("frequency", "Frequency"),
     createSmartSelectField("severity", "Severity"),
@@ -1237,154 +1160,113 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
     createSmartSelectField("userField8", "User field 8"),
     createSmartSelectField("userField9", "User field 9"),
     createSmartSelectField("userField10", "User field 10"),
-
-    // {
-    //   // field: "actions",
-    //   render: (rowData) => (
-    //     <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-    //       {/* Custom Delete Button with FontAwesome icon */}
-    //       <button
-    //         onClick={() => handleCustomDelete(rowData)}
-    //         style={{
-
-    //           color: '#ff4444',
-    //           border: 'none',
-    //           padding: '8px 12px',
-    //            borderRadius: '4px',
-    //           cursor: 'pointer',
-    //           marginLeft: '5px',
-    //           display: 'flex',
-    //           alignItems: 'center',
-    //           justifyContent: 'center'
-    //         }}
-    //         disabled={!(
-    //           writePermission === true ||
-    //           writePermission === "undefined" ||
-    //           role === "admin" ||
-    //           (isOwner === true && createdBy === userId)
-    //         )}
-    //         title="Delete Row"
-    //       >
-    //         <FontAwesomeIcon icon={faTrash} style={{ fontSize: '14px' }} />
-    //       </button>
-    //     </div>
-    //   ),
-    //   sorting: false,
-    //   filtering: false,
-    //   editable: 'never'
-    // }
   ];
 
-
-  // };
   const createFmeca = (values) => {
-      const mandatoryFields = [
-    'operatingPhase',
-    'function',
-    'failureMode',
-    'failureModeRatioAlpha',
-    'subSystemEffect',
-    'systemEffect',
-    'endEffect',
-    'endEffectRatioBeta',
-    'safetyImpact',
-    'realibilityImpact'
-  ];
-  
-  // Check for missing mandatory fields
-  const missingFields = mandatoryFields.filter(field => {
-    const value = values[field];
-    return !value || value.toString().trim() === '';
-  });
-  
-  // If there are missing fields, show error and return
-  if (missingFields.length > 0) {
-    const fieldLabels = {
-      operatingPhase: "Operating Phase",
-      function: "Function",
-      failureMode: "Failure Mode",
-      failureModeRatioAlpha: "Failure Mode Ratio Alpha",
-      subSystemEffect: "Sub System Effect",
-      systemEffect: "System Effect",
-      endEffect: "End Effect",
-      endEffectRatioBeta: "End Effect Ratio Beta",
-      safetyImpact: "Safety Impact",
-      realibilityImpact: "Reliability Impact"
-    };
-    
-    const missingFieldNames = missingFields.map(field => fieldLabels[field]);
-    
-    let errorMessage;
-    if (missingFields.length === 1) {
-      errorMessage = `${fieldLabels[missingFields[0]]} is required!`;
-    } else {
-      errorMessage = `The following fields are required:\n• ${missingFieldNames.join("\n• ")}`;
-    }
-    
-    toast.error(errorMessage, {
-      position: "top-right",
-      autoClose: 5000,
-      style: { 
-        whiteSpace: 'pre-line',
-        maxWidth: '500px',
-        textAlign: 'left'
+    const mandatoryFields = [
+      'operatingPhase',
+      'function',
+      'failureMode',
+      'failureModeRatioAlpha',
+      'subSystemEffect',
+      'systemEffect',
+      'endEffect',
+      'endEffectRatioBeta',
+      'safetyImpact',
+      'realibilityImpact'
+    ];
+
+    const missingFields = mandatoryFields.filter(field => {
+      const value = values[field];
+      return !value || value.toString().trim() === '';
+    });
+
+    if (missingFields.length > 0) {
+      const fieldLabels = {
+        operatingPhase: "Operating Phase",
+        function: "Function",
+        failureMode: "Failure Mode",
+        failureModeRatioAlpha: "Failure Mode Ratio Alpha",
+        subSystemEffect: "Sub System Effect",
+        systemEffect: "System Effect",
+        endEffect: "End Effect",
+        endEffectRatioBeta: "End Effect Ratio Beta",
+        safetyImpact: "Safety Impact",
+        realibilityImpact: "Reliability Impact"
+      };
+
+      const missingFieldNames = missingFields.map(field => fieldLabels[field]);
+
+      let errorMessage;
+      if (missingFields.length === 1) {
+        errorMessage = `${fieldLabels[missingFields[0]]} is required!`;
+      } else {
+        errorMessage = `The following fields are required:\n• ${missingFieldNames.join("\n• ")}`;
       }
-    });
-    return Promise.reject(new Error("Validation failed")); // Reject the promise
-  }
-  
-  // Also validate numeric fields
-  const alphaValue = parseFloat(values.failureModeRatioAlpha);
-  const betaValue = parseFloat(values.endEffectRatioBeta);
-  
-  if (isNaN(alphaValue)) {
-    toast.error("Failure Mode Ratio Alpha must be a valid number", {
-      position: "top-right",
-      autoClose: 5000,
-    });
-    return Promise.reject(new Error("Validation failed"));
-  }
-  
-  if (alphaValue > 1) {
-    toast.error("Failure Mode Ratio Alpha cannot exceed 1", {
-      position: "top-right",
-      autoClose: 5000,
-    });
-    return Promise.reject(new Error("Validation failed"));
-  }
-  
-  if (alphaValue < 0) {
-    toast.error("Failure Mode Ratio Alpha cannot be negative", {
-      position: "top-right",
-      autoClose: 5000,
-    });
-    return Promise.reject(new Error("Validation failed"));
-  }
-  
-  if (isNaN(betaValue)) {
-    toast.error("End Effect Ratio Beta must be a valid number", {
-      position: "top-right",
-      autoClose: 5000,
-    });
-    return Promise.reject(new Error("Validation failed"));
-  }
-  
-  if (betaValue > 1) {
-    toast.error("End Effect Ratio Beta cannot exceed 1", {
-      position: "top-right",
-      autoClose: 5000,
-    });
-    return Promise.reject(new Error("Validation failed"));
-  }
-  
-  if (betaValue < 0) {
-    toast.error("End Effect Ratio Beta cannot be negative", {
-      position: "top-right",
-      autoClose: 5000,
-    });
-    return Promise.reject(new Error("Validation failed"));
-  }
-  
+
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        style: {
+          whiteSpace: 'pre-line',
+          maxWidth: '500px',
+          textAlign: 'left'
+        }
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    const alphaValue = parseFloat(values.failureModeRatioAlpha);
+    const betaValue = parseFloat(values.endEffectRatioBeta);
+
+    if (isNaN(alphaValue)) {
+      toast.error("Failure Mode Ratio Alpha must be a valid number", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    if (alphaValue > 1) {
+      toast.error("Failure Mode Ratio Alpha cannot exceed 1", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    if (alphaValue < 0) {
+      toast.error("Failure Mode Ratio Alpha cannot be negative", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    if (isNaN(betaValue)) {
+      toast.error("End Effect Ratio Beta must be a valid number", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    if (betaValue > 1) {
+      toast.error("End Effect Ratio Beta cannot exceed 1", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    if (betaValue < 0) {
+      toast.error("End Effect Ratio Beta cannot be negative", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
     if (productId) {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
@@ -1394,7 +1276,6 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
           : data.operatingPhase,
         function: values.function ? values.function : data.function,
         failureMode: values.failureMode ? values.failureMode : data.failureMode,
-        // searchFM: values.searchFM ? values.searchFM : data.searchFM,
         cause: values.cause ? values.cause : data.cause,
         failureModeRatioAlpha: values?.failureModeRatioAlpha
           ? values?.failureModeRatioAlpha
@@ -1464,96 +1345,86 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
         userId: userId,
         Alldata: tableData,
       }).then((response) => {
-
-        const status = response?.status;
-        // if (status === 204) {
-        //   setFailureModeRatioError(true);
-        // }
         toast.success("FMECA created successfully!");
         getProductData();
         setIsLoading(false);
-         return response; 
+        return response;
       }).catch((error) => {
         setIsLoading(false);
-
-        // Backend error message available?
         const errorMessage =
           error?.response?.data?.message ||
           error?.response?.data?.error ||
           "Something went wrong";
-
-        // Show toast
         toast.error(errorMessage);
-
         console.error("Error creating FMECA data:", errorMessage);
       }
       )
     } else {
       setProductModal(true);
-        return Promise.reject(new Error("No product selected"));
+      return Promise.reject(new Error("No product selected"));
     }
   };
+
   const updateFmeca = async (values) => {
-      const mandatoryFields = [
-    'operatingPhase',
-    'function',
-    'failureMode',
-    'failureModeRatioAlpha',
-    'subSystemEffect',
-    'systemEffect',
-    'endEffect',
-    'endEffectRatioBeta',
-    'safetyImpact',
-    'realibilityImpact'
-  ];
-  
-  // Check for missing mandatory fields
-  const missingFields = mandatoryFields.filter(field => {
-    const value = values[field];
-    return !value || value.toString().trim() === '';
-  });
-  
-  // If there are missing fields, show error and return
-  if (missingFields.length > 0) {
-    const fieldLabels = {
-      operatingPhase: "Operating Phase",
-      function: "Function",
-      failureMode: "Failure Mode",
-      failureModeRatioAlpha: "Failure Mode Ratio Alpha",
-      subSystemEffect: "Sub System Effect",
-      systemEffect: "System Effect",
-      endEffect: "End Effect",
-      endEffectRatioBeta: "End Effect Ratio Beta",
-      safetyImpact: "Safety Impact",
-      realibilityImpact: "Reliability Impact"
-    };
-    
-    const missingFieldNames = missingFields.map(field => fieldLabels[field]);
-    
-    let errorMessage;
-    if (missingFields.length === 1) {
-      errorMessage = `${fieldLabels[missingFields[0]]} is required!`;
-    } else {
-      errorMessage = `The following fields are required:\n• ${missingFieldNames.join("\n• ")}`;
+    const mandatoryFields = [
+      'operatingPhase',
+      'function',
+      'failureMode',
+      'failureModeRatioAlpha',
+      'subSystemEffect',
+      'systemEffect',
+      'endEffect',
+      'endEffectRatioBeta',
+      'safetyImpact',
+      'realibilityImpact'
+    ];
+
+    const missingFields = mandatoryFields.filter(field => {
+      const value = values[field];
+      return !value || value.toString().trim() === '';
+    });
+
+    if (missingFields.length > 0) {
+      const fieldLabels = {
+        operatingPhase: "Operating Phase",
+        function: "Function",
+        failureMode: "Failure Mode",
+        failureModeRatioAlpha: "Failure Mode Ratio Alpha",
+        subSystemEffect: "Sub System Effect",
+        systemEffect: "System Effect",
+        endEffect: "End Effect",
+        endEffectRatioBeta: "End Effect Ratio Beta",
+        safetyImpact: "Safety Impact",
+        realibilityImpact: "Reliability Impact"
+      };
+
+      const missingFieldNames = missingFields.map(field => fieldLabels[field]);
+
+      let errorMessage;
+      if (missingFields.length === 1) {
+        errorMessage = `${fieldLabels[missingFields[0]]} is required!`;
+      } else {
+        errorMessage = `The following fields are required:\n• ${missingFieldNames.join("\n• ")}`;
+      }
+
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        style: {
+          whiteSpace: 'pre-line',
+          maxWidth: '500px',
+          textAlign: 'left'
+        }
+      });
+      throw new Error("Validation failed");
     }
     
-    toast.error(errorMessage, {
-      position: "top-right",
-      autoClose: 5000,
-      style: { 
-        whiteSpace: 'pre-line',
-        maxWidth: '500px',
-        textAlign: 'left'
-      }
-    });
-    throw new Error("Validation failed"); // Throw error to reject promise
-  }
     const companyId = localStorage.getItem("companyId");
     if (!values.operatingPhase || !values.function || !values.failureMode) {
       toast.error("Operating Phase, Function, and Failure Mode are required.");
       return;
     }
-    // setIsLoading(true);
+    
     const payload = {
       operatingPhase: values.operatingPhase,
       function: values.function,
@@ -1566,7 +1437,7 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
       subSystemEffect: values.subSystemEffect,
       systemEffect: values.systemEffect,
       endEffect: values.endEffect,
-      endEffectRatioBeta: values.endEffectRatioBeta || 1,
+      endEffectRatioBeta: values?.endEffectRatioBeta || 0,
       safetyImpact: values.safetyImpact,
       referenceHazardId: values.referenceHazardId,
       realibilityImpact: values.realibilityImpact,
@@ -1604,9 +1475,7 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
         toast.success("FMECA updated successfully!");
         getProductData();
         getAllConnectedLibraryAfterUpdate();
-
       }
-
       else if (response?.status === 204) {
         toast.error("Failure Mode Radio Alpha Must be Equal to One !");
       }
@@ -1621,7 +1490,6 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
         logout();
       } else {
         toast.error(errorStatus?.response?.status === 422 ? "Failed to update FMECA. Please try again." : "Failure Mode Ratio Alpha must sum to exactly 1");
-        // errorStatus?.message 
         console.error("Update Error:", errorStatus?.response?.status === 422);
       }
     } finally {
@@ -1630,21 +1498,14 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
   };
 
   const deleteFmecaData = (value) => {
-    console.log("@@uhg")
     setIsLoading(true);
-    console.log("@@uhg")
     const rowId = value?.id;
 
     Api.delete(`api/v1/FMECA/${rowId}`, { headers: { userId: userId } })
       .then((res) => {
-        console.log("res delete", res);
-        // getTableData();
-        // setShow(!show);
         getProductData();
         setIsLoading(false);
         Modalopen();
-
-
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -1652,7 +1513,6 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
           logout();
         }
       });
-
   };
 
   const Modalopen = () => {
@@ -1661,9 +1521,6 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
       setShow(false);
     }, 2000);
   };
-
-  // In your table configuration
-
 
   const role = localStorage.getItem("role");
 
@@ -1690,7 +1547,7 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
               <Projectname projectId={projectId} />
             </div>
 
-            <div style={{ width: "100%", marginRight: "20px",position:"relative", zIndex:999 }}>
+            <div style={{ width: "100%", marginRight: "20px", position: "relative", zIndex: 999 }}>
               <Dropdown
                 value={projectId}
                 productId={productId}
@@ -1698,83 +1555,81 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
                 onChange={handleDropdownChange}
               />
             </div>
-           <div
-  style={{
-    display: "flex",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    marginTop: "8px",
-    height: "40px",
-  }}
->
-  {/* IMPORT BUTTON */}
-  <Tooltip placement="right" title="Import">
-    <div style={{ marginRight: "8px" }}>
-      {(writePermission === true ||
-        writePermission === "undefined" ||
-        role === "admin" ||
-        (isOwner === true && createdBy === userId)) ? (
-        <>
-          <label 
-            htmlFor="file-input" 
-            className="import-export-btn"
-            style={{ cursor: "pointer" }}
-          >
-            <FontAwesomeIcon
-              icon={faFileDownload}
-              style={{ width: "15px" }}
-            />
-          </label>
-          <input
-            type="file"
-            className="input-fields"
-            id="file-input"
-            onChange={importExcel}
-            style={{ display: "none" }}
-          />
-        </>
-      ) : (
-        <div 
-          className="import-export-btn"
-          style={{ cursor: "not-allowed", opacity: 0.5 }}
-        >
-          <FontAwesomeIcon
-            icon={faFileDownload}
-            style={{ width: "15px" }}
-          />
-        </div>
-      )}
-    </div>
-  </Tooltip>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+                marginTop: "8px",
+                height: "40px",
+              }}
+            >
+              <Tooltip placement="right" title="Import">
+                <div style={{ marginRight: "8px" }}>
+                  {(writePermission === true ||
+                    writePermission === "undefined" ||
+                    role === "admin" ||
+                    (isOwner === true && createdBy === userId)) ? (
+                    <>
+                      <label
+                        htmlFor="file-input"
+                        className="import-export-btn"
+                        style={{ cursor: "pointer" }}
+                      >
+                        <FontAwesomeIcon
+                          icon={faFileDownload}
+                          style={{ width: "15px" }}
+                        />
+                      </label>
+                      <input
+                        type="file"
+                        className="input-fields"
+                        id="file-input"
+                        onChange={importExcel}
+                        style={{ display: "none" }}
+                      />
+                    </>
+                  ) : (
+                    <div
+                      className="import-export-btn"
+                      style={{ cursor: "not-allowed", opacity: 0.5 }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faFileDownload}
+                        style={{ width: "15px" }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </Tooltip>
 
-  {/* EXPORT BUTTON */}
-  <Tooltip placement="left" title="Export">
-    <button
-      className="import-export-btn"
-      style={{ 
-        marginTop: '-2px',
-        cursor: (writePermission === true ||
-          writePermission === "undefined" ||
-          role === "admin" ||
-          (isOwner === true && createdBy === userId)) ? "pointer" : "not-allowed",
-        opacity: (writePermission === true ||
-          writePermission === "undefined" ||
-          role === "admin" ||
-          (isOwner === true && createdBy === userId)) ? 1 : 0.5
-      }}
-      onClick={(writePermission === true ||
-        writePermission === "undefined" ||
-        role === "admin" ||
-        (isOwner === true && createdBy === userId)) ? () => DownloadExcel() : undefined}
-      disabled={!(writePermission === true ||
-        writePermission === "undefined" ||
-        role === "admin" ||
-        (isOwner === true && createdBy === userId))}
-    >
-      <FontAwesomeIcon icon={faFileUpload} />
-    </button>
-  </Tooltip>
-</div>
+              <Tooltip placement="left" title="Export">
+                <button
+                  className="import-export-btn"
+                  style={{
+                    marginTop: '-2px',
+                    cursor: (writePermission === true ||
+                      writePermission === "undefined" ||
+                      role === "admin" ||
+                      (isOwner === true && createdBy === userId)) ? "pointer" : "not-allowed",
+                    opacity: (writePermission === true ||
+                      writePermission === "undefined" ||
+                      role === "admin" ||
+                      (isOwner === true && createdBy === userId)) ? 1 : 0.5
+                  }}
+                  onClick={(writePermission === true ||
+                    writePermission === "undefined" ||
+                    role === "admin" ||
+                    (isOwner === true && createdBy === userId)) ? () => DownloadExcel() : undefined}
+                  disabled={!(writePermission === true ||
+                    writePermission === "undefined" ||
+                    role === "admin" ||
+                    (isOwner === true && createdBy === userId))}
+                >
+                  <FontAwesomeIcon icon={faFileUpload} />
+                </button>
+              </Tooltip>
+            </div>
           </div>
           <div>
             <div className="mt-5" style={{ bottom: "35px" }}>
@@ -1784,20 +1639,19 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
                   icons={tableIcons}
                   data={tableData}
                   columns={columns}
-
                   editable={{
                     onRowAdd:
-                       writePermission === true ||
+                      writePermission === true ||
                         writePermission === "undefined" ||
                         role === "admin" ||
                         (isOwner === true && createdBy === userId)
-                          ? (newRow) =>
-      new Promise((resolve, reject) => {
-        createFmeca(newRow)
-          .then(() => resolve())
-          .catch(() => reject()); // This prevents the row from being added to the table
-      })
-    : null,
+                        ? (newRow) =>
+                          new Promise((resolve, reject) => {
+                            createFmeca(newRow)
+                              .then(() => resolve())
+                              .catch(() => reject());
+                          })
+                        : null,
 
                     onRowUpdate:
                       writePermission === true ||
@@ -1805,14 +1659,13 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
                         role === "admin" ||
                         (isOwner === true && createdBy === userId)
                         ? (newRow, oldData) =>
-      new Promise((resolve, reject) => {
-        updateFmeca(newRow)
-          .then(() => resolve())
-          .catch(() => reject()); // This prevents the update in the table
-      })
-    : null,
+                          new Promise((resolve, reject) => {
+                            updateFmeca(newRow)
+                              .then(() => resolve())
+                              .catch(() => reject());
+                          })
+                        : null,
                   }}
-
                   actions={[
                     {
                       icon: () => (
@@ -1832,7 +1685,6 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
                       position: "row"
                     }
                   ]}
-
                   options={{
                     cellStyle: {
                       border: "1px solid #eee",
@@ -1843,9 +1695,9 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
                       textAlign: "center",
                     },
                     addRowPosition: "first",
-                    actionsColumnIndex: -1,   // Put actions at the end
-                    showEditIcon: false,      // Hide default edit icon
-                    showDeleteIcon: false,    // Hide default delete icon
+                    actionsColumnIndex: -1,
+                    showEditIcon: false,
+                    showDeleteIcon: false,
                     pageSize: 5,
                     pageSizeOptions: [5, 10, 20, 50],
                     headerStyle: {
@@ -1857,7 +1709,6 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
                       textAlign: "center",
                     },
                   }}
-
                   localization={{
                     toolbar: { function: "Placeholder" },
                     body: {
@@ -1865,14 +1716,12 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
                     },
                   }}
                 />
-
               </ThemeProvider>
               <ValidationModal
                 isOpen={showValidationModal}
                 errors={validationErrors}
                 onClose={closeValidationModal}
               />
-
             </div>
           </div>
 
@@ -1952,6 +1801,5 @@ const createSmartSelectField = (fieldName, label, required = false) => ({
     </div>
   );
 }
+
 export default Index;
-
-
