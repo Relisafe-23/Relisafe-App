@@ -316,65 +316,21 @@ function FMECAreport(props) {
 //     pmmraData: item?.pmmraData || {},
 //   }));
 
-//   console.log("fmecaData", fmecaData);
-// console.log("pmmraTreeData", pmmraTreeData);
-// const fmecaData = React.useMemo(() => {
-//   if (!data || data.length === 0) return [];
-  
-//   const transformedData = [];
-  
-//   data?.forEach(item => {
-//     const productId = item?.productId || {};
-    
-//     if (Array.isArray(item?.fmecaData)) {
-//       item.fmecaData.forEach(fmecaItem => {
-//         transformedData.push({
-//           productId: productId,
-//           fmecaData: fmecaItem,
-//           pmmraData: {}, 
-//         });
-//       });
-//     } 
-//     else if (Array.isArray(item?.pmmraData)) {
-//       item.pmmraData.forEach(pmmraItem => {
-//         transformedData.push({
-//           productId: productId,
-//           fmecaData: {}, 
-//           pmmraData: pmmraItem,
-//         });
-//       });
-//     }
-//     else {
-//       transformedData.push({
-//         productId: productId,
-//         fmecaData: item?.fmecaData || {},
-//         pmmraData: item?.pmmraData || {},
-//       });
-//     }
-//   });
-  
-//   return transformedData;
-// }, [data]);
 
 const fmecaData = React.useMemo(() => {
   if (!data || data.length === 0) return [];
   
   const allRows = [];
   
-  // Process main data (which should have both FMECA and PMMRA)
   data.forEach(item => {
     const productId = item?.productId || {};
     
-    // Get FMECA data (could be array or single)
     const fmecaItems = Array.isArray(item?.fmecaData) ? item.fmecaData : 
                       (item?.fmecaData ? [item.fmecaData] : [{}]);
     
-    // Get PMMRA data (could be array or single)
     const pmmraItems = Array.isArray(item?.pmmraData) ? item.pmmraData : 
                       (item?.pmmraData ? [item.pmmraData] : [{}]);
     
-    // Create combined rows
-    // If we have matching counts, pair them
     const maxCount = Math.max(fmecaItems.length, pmmraItems.length);
     
     for (let i = 0; i < maxCount; i++) {
@@ -386,7 +342,6 @@ const fmecaData = React.useMemo(() => {
     }
   });
   
-  // Add any standalone PMMRA data
   if (pmmraTreeData && Array.isArray(pmmraTreeData)) {
     pmmraTreeData.forEach(pmmraItem => {
       const productId = pmmraItem?.productId || {};
@@ -394,14 +349,12 @@ const fmecaData = React.useMemo(() => {
                         (pmmraItem?.pmmraData ? [pmmraItem.pmmraData] : []);
       
       pmmraItems.forEach(pmmraDetail => {
-        // Check if this PMMRA already exists in a row
         const existingRow = allRows.find(row => 
           row.productId.partNumber === productId.partNumber && 
           row.pmmraData.pmTaskId === pmmraDetail.pmTaskId
         );
         
         if (!existingRow) {
-          // Check if we can add to an existing FMECA row without PMMRA
           const rowWithoutPmmra = allRows.find(row => 
             row.productId.partNumber === productId.partNumber && 
             Object.keys(row.pmmraData).length === 0
@@ -410,7 +363,6 @@ const fmecaData = React.useMemo(() => {
           if (rowWithoutPmmra) {
             rowWithoutPmmra.pmmraData = pmmraDetail;
           } else {
-            // Add as new row
             allRows.push({
               productId: productId,
               fmecaData: {},
