@@ -229,7 +229,7 @@ function SafetyReport(props) {
         item.safetyData.forEach(safetyItem => {
           transformedData.push({
             productId: productId,
-            safetyData: safetyItem  || {}                         ,
+            safetyData: safetyItem  || {},
           });
         });
       } 
