@@ -634,7 +634,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                                 className="menu-icon"
                                 title="Seprated Library"
                               />{" "}
-                              <span>Seprated Library</span>
+                              <span>Separated Library</span>
                             </NavLink>
                           </div>
                           <div className="menu-list mt-1">
@@ -764,7 +764,8 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                           pathname: `/pbs/${projectId}`,
                           state: {
                             projectId: projectId,
-                            pbsWrite: readPermission?.[0].write,
+                             pbsRead: readPermission?.[1]?.read,  // Pass read permission
+                             pbsWrite: readPermission?.[1]?.write,
                           },
                         }}
                         activeClassName="main-nav-active"
@@ -793,7 +794,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                           pathname: `/failure-rate-prediction/${projectId}`,
                           state: {
                             projectId: projectId,
-                            frpWrite: readPermission?.[1].write,
+                            frpWrite: readPermission?.[2].write,
                           },
                         }}
                         activeClassName="main-nav-active"
@@ -825,7 +826,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                           state: {
                             projectId: projectId,
                             productId: productId,
-                            mttrWrite: readPermission?.[2].write,
+                            mttrWrite: readPermission?.[3].write,
                           },
                         }}
                         activeClassName="main-nav-active"
@@ -856,7 +857,8 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                           state: {
                             projectId: projectId,
                             productId: productId,
-                            fmecaWrite: readPermission?.[3].write,
+                            fmecaWrite: readPermission?.[4].write,
+                            
                           },
                         }}
                         activeClassName="main-nav-active"
@@ -948,7 +950,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                           state: {
                             projectId: projectId,
                             productId: productId,
-                            pmmraWrite: readPermission?.[6].write,
+                            pmmraWrite: readPermission?.[7].write,
                           },
                         }}
                         activeClassName="main-nav-active"
@@ -978,7 +980,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                           state: {
                             projectId: projectId,
                             productId: productId,
-                            spaWrite: readPermission?.[7].write,
+                            spaWrite: readPermission?.[8].write,
                           },
                         }}
                         activeClassName="main-nav-active"
@@ -1114,7 +1116,8 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                         </Accordion.Body>
                       </Accordion.Item>
                     </Accordion>
-                  ) : readPermission?.[10]?.read === true ||
+                  ) 
+                  : readPermission?.[10]?.read === true ||
                     readPermission?.[11]?.read === true ? (
                     <div>
                       {readPermission?.[11]?.read === true ? (
@@ -1144,7 +1147,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                               className="menu-icon"
                               title="Seprated Library"
                             />{" "}
-                            <span>Seprated Library</span>
+                            <span>Separated Library</span>
                           </NavLink>
                         </div>
                       ) : null}
@@ -1183,7 +1186,7 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                       ) : null}
                     </div>
                   ) : null}
-                  {readPermission?.[13]?.read === true ? (
+                  {readPermission?.[12]?.read === true ? (
                     <div className="menu-list mt-1">
                       <NavLink
                         to={{
@@ -1191,8 +1194,8 @@ else if (pathname.includes('/company')) setSelectedModule('company');
                           state: {
                             projectId: projectId,
                             productId: productId,
-                            spaWrite: readPermission?.[12].write,
-                          },
+  reportsWrite: readPermission?.[12]?.write,
+          reportsRead: readPermission?.[12]?.read,                          },
                         }}
                         activeClassName="main-nav-active"
                         style={{

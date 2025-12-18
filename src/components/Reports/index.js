@@ -61,7 +61,7 @@ function Reports(props) {
   // Report type options for different modules
   const getReportTypeOptions = (module) => {
     const baseOptions = [
-      { value: "0", label: "Relisafe Standard" },
+      { value: "0", label: "Rams360 Standard" },
       { value: "1", label: "Hierarchy levels" },
       { value: "2", label: "Assembly" },
       { value: "3", label: "Electronics" },
