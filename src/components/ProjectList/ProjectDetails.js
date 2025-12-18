@@ -115,19 +115,20 @@ export default function ProjectDetails(props) {
   
     
     
-  frtarget: Yup.string()
-    .nullable()   // allows null
-    .test(
-      "valid-frtarget",
-      "Value must be a number with up to 20 decimal places",
-      (value) => {
-        if (!value || value.trim() === "") return true; // optional field → skip if empty
-  
-        // Check valid numeric format with up to 20 decimals
-        return /^(\d+(\.\d{1,20})?)$/.test(value);
-      }
-    ),
-    
+ frtarget: Yup.string()
+  .nullable()
+  .test(
+    "valid-frtarget",
+    "Value must be a number with up to 20 digits before and after the decimal",
+    (value) => {
+      if (!value || value.trim() === "") return true; // optional field
+
+      // Max 20 digits before decimal
+      // Optional decimal with max 20 digits after
+      return /^\d{1,20}(\.\d{1,20})?$/.test(value);
+    }
+  ),
+
     
     
     

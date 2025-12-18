@@ -132,6 +132,7 @@ function SafetyReport(props) {
     "Part Type": "100px",
     FR: "60px",
   };
+  
 
   // Log out
   const logout = () => {
@@ -208,11 +209,41 @@ function SafetyReport(props) {
         }
       });
   };
+// console.log("Safety Report Data:", data);
+//   const safetyData = data?.map((item) => ({
+//     productId: item?.productId || {},
+//     safetyData: item?.safetyData || {},
+//   }));
 
-  const safetyData = data?.map((item) => ({
-    productId: item?.productId || {},
-    safetyData: item?.safetyData || {},
-  }));
+
+
+  const safetyData = React.useMemo(() => {
+    if (!data || data.length === 0) return [];
+    
+    const transformedData = [];
+    
+    data?.forEach(item => {
+      const productId = item?.productId || {};
+      
+      if (Array.isArray(item?.safetyData)) {
+        item.safetyData.forEach(safetyItem => {
+          transformedData.push({
+            productId: productId,
+            safetyData: safetyItem  || {}                         ,
+          });
+        });
+      } 
+      else {
+        transformedData.push({
+          productId: productId,
+          safetyData: item?.safetyData || {},
+        });
+      }
+    });
+    
+    return transformedData;
+  }, [data]);
+  
   useEffect(() => {
     getProjectDetails();
     getProjectPermission();
