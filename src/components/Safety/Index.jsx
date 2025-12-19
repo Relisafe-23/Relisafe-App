@@ -10,17 +10,14 @@ import Dropdown from "../Company/Dropdown";
 import CreatableSelect from "react-select/creatable";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
-import SafetyEdit from "../Safety/SafetyEdit.js"; 
 import { FaExclamationCircle } from "react-icons/fa";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useHistory } from "react-router-dom";
-import { Input, TextField } from "@material-ui/core";
+import { TextField } from "@material-ui/core";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
-
-import Select from "react-select";
-import { Tooltip, TableCell } from "@material-ui/core";
+import { Tooltip } from "@material-ui/core";
 import {
   faFileDownload,
   faFileUpload,
@@ -39,10 +36,8 @@ function Index(props) {
   const [show, setShow] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tableData, setTableData] = useState();
-  const [colDefs, setColDefs] = useState();
   const [treeData, setTreeData] = useState([]);
   const [productModal, setProductModal] = useState(false);
-  const handleClose = () => setProductModal(true);
   const [writePermission, setWritePermission] = useState();
   const [treeTableData, setTreeTabledata] = useState([]);
   const userId = localStorage.getItem("userId");
@@ -50,16 +45,9 @@ function Index(props) {
   const [modeOfOperation, setModeOfOperation] = useState();
   const [isOwner, setIsOwner] = useState(false);
   const [createdBy, setCreatedBy] = useState();
-  const [companyId, setCompanyId] = useState();
   const [allSepareteData, setAllSepareteData] = useState([]);
-  const [mergedData, setMergedData] = useState([]);
   const role = localStorage.getItem("role");
-  const handleHide = () => setFailureModeRatioError(false);
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
-
-  // NEW: State to track selected source values per row
-  const [selectedSourceValues, setSelectedSourceValues] = useState({});
-  const [flattenedConnect, setFlattenedConnect] = useState([]);
 
   const DownloadExcel = () => {
     if (!tableData || tableData.length === 0) {
@@ -113,7 +101,6 @@ function Index(props) {
         autoClose: 5000,
         hideProgressBar: false,
         closeOnClick: true,
-        pauseOnHover: true,
         draggable: true,
         progress: undefined,
         theme: "light",
@@ -130,18 +117,14 @@ function Index(props) {
       hazardCause: values.hazardCause,
       effectOfHazard: values.effectOfHazard,
       hazardClasification: values.hazardClasification,
-      designAssuranceLevel: values.designAssuranceLevel
-        ? values.designAssuranceLevel
-        : 0,
+      designAssuranceLevel: values.designAssuranceLevel ? values.designAssuranceLevel : 0,
       meansOfDetection: values.meansOfDetection,
       crewResponse: values.crewResponse,
       uniqueHazardIdentifier: values.uniqueHazardIdentifier,
       initialSeverity: values.initialSeverity,
       initialLikelihood: values.initialLikelihood,
       initialRiskLevel: values.initialRiskLevel,
-      designMitigation: values.designMitigation
-        ? values.designMitigation
-        : 1,
+      designMitigation: values.designMitigation ? values.designMitigation : 1,
       designMitigatonResbiity: values.designMitigatonResbiity,
       designMitigtonEvidence: values.designMitigtonEvidence,
       opernalMaintanMitigation: values.opernalMaintanMitigation,
@@ -218,44 +201,64 @@ function Index(props) {
     reader.readAsArrayBuffer(file);
   };
 
-  const [allConnectedData, setAllConnectedData] = useState([]);
-  const [data, setData] = useState({
-    modeOfOperation: "",
-    hazardCause: "",
-    effectOfHazard: "",
-    designAssuranceLevel: "",
-    hazardClasification: "",
-    initialSeverity: "",
-    initialLikelihood: "",
-    initialRiskLevel: "",
-    designMitigation: "",
-    designMitigatonResbiity: "",
-    designMitigtonEvidence: "",
-    opernalMaintanMitigation: "",
-    opernalMitigatonResbility: "",
-    operatnalMitigationEvidence: "",
-    residualSeverity: "",
-    residualLikelihood: "",
-    meansOfDetection: "",
-    crewResponse: "",
-    uniqueHazardIdentifier: "",
-    residualRiskLevel: "",
-    hazardStatus: "",
-    ftaNameId: "",
-    userField1: "",
-    userField2: "",
-  });
+  const [connectData, setConnectData] = useState([]);
+  const [selectedFunction, setSelectedFunction] = useState();
+  const [connectedValues, setConnectedValues] = useState([]);
+  const [selectedField, setSelectedField] = useState(null);
 
-  const handleInputChange = (selectedItems, name) => {
-    setData((prevData) => ({
-      ...prevData,
-      [name]: selectedItems ? selectedItems.value : "",
-    }));
+  // Helper function to get options for a field
+  const getOptionsForField = (fieldName) => {
+    // Get separate library data
+    const seperateFilteredData = allSepareteData?.filter(
+      (item) => item?.sourceName === fieldName
+    ) || [];
+    
+    // Get connected data - check BOTH sourceName AND destinationName
+    const connectedFilteredData = connectData?.filter(
+      (item) => {
+        return (
+          (item?.sourceName === fieldName) || 
+          (item?.destinationName === fieldName)
+        );
+      }
+    ) || [];
+
+    let options = [];
+    
+    // Add options from connected data
+    if (connectedFilteredData.length > 0) {
+      connectedFilteredData.forEach((item) => {
+        if (item.sourceName === fieldName && item.sourceValue) {
+          options.push({
+            value: item.sourceValue,
+            label: item.sourceValue,
+          });
+        }
+        if (item.destinationName === fieldName && item.destinationValue) {
+          options.push({
+            value: item.destinationValue,
+            label: item.destinationValue,
+          });
+        }
+      });
+    }
+    
+    // If no connected options, use separate data
+    if (options.length === 0 && seperateFilteredData.length > 0) {
+      options = seperateFilteredData.map((item) => ({
+        value: item.sourceValue,
+        label: item.sourceValue,
+      }));
+    }
+    
+    // Remove duplicates
+    return Array.from(
+      new Map(options.map(item => [item.value, item])).values()
+    );
   };
 
   const getAllSeprateLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
-    setCompanyId(companyId);
     Api.get("api/v1/library/get/all/separate/value", {
       params: {
         projectId: projectId,
@@ -264,15 +267,12 @@ function Index(props) {
       let filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "SAFETY"
       );
-
       if (filteredData.length === 0) {
         filteredData = res?.data?.data.filter(
           (item) => item?.moduleName === "SAFETY"
         );
       }
-      setAllSepareteData(filteredData);      
-      const merged = [...(tableData || []), ...filteredData];
-      setMergedData(merged);
+      setAllSepareteData(filteredData);
     });
   };
 
@@ -406,7 +406,6 @@ function Index(props) {
       });
   };
 
-  // Get all connections
   const getAllConnect = () => {
     setIsLoading(true);
     Api.get("api/v1/library/get/all/connect/value", {
@@ -416,122 +415,111 @@ function Index(props) {
     }).then((res) => {
       setIsLoading(false);
       const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "SAFETY" || 
-                  entry?.destinationModuleName === "SAFETY"
+        (entry) => entry?.libraryId?.moduleName === "SAFETY" || entry?.destinationModuleName === "SAFETY"
       );
       
-      // Flatten the connection data for easier querying
-      const flattened = filteredData.flatMap((item) =>
-        (item.destinationData || [])
-          .filter(d => d.destinationModuleName === "SAFETY")
-          .map((d) => ({
-            sourceName: item.sourceName,         
-            sourceValue: item.sourceValue,
-            destinationName: d.destinationName,
-            destinationValue: d.destinationValue,
-            destinationModule: d.destinationModuleName 
-          }))
-      );
+      // Flatten the data for easier filtering
+      const flattened = filteredData
+        .flatMap((item) =>
+          (item.destinationData || [])
+            .filter(d => d.destinationModuleName === "SAFETY")
+            .map((d) => ({
+              sourceName: item.sourceName,         
+              sourceValue: item.sourceValue,
+              destinationName: d.destinationName,
+              destinationValue: d.destinationValue,
+              destinationModule: d.destinationModuleName 
+            }))
+        );
       
-      setFlattenedConnect(flattened);
+      setConnectData(flattened);
+    }).catch((error) => {
+      console.error("Error fetching connect data:", error);
+      setIsLoading(false);
     });
   };
-// Add this useEffect to log when tableData changes
-useEffect(() => {
-  console.log("Table data updated:", tableData?.length, "rows");
-}, [tableData]);
 
-// Add this to debug edit operations
-const handleRowUpdate = (newData, oldData) => {
-  return new Promise((resolve, reject) => {
-    console.log("Updating row:", oldData?.id, "to:", newData);
-    updateSafety(newData);
-    resolve();
-  });
-};
   useEffect(() => {
     getAllConnect();
   }, []);
 
-  // Function to get destination values for a field based on selected sources
-  const getDestinationValuesForField = (fieldName, rowId) => {
-    const rowSourceValues = selectedSourceValues[rowId] || {};
-    let destinationValues = [];
-    console.log("rowSourceValues",rowSourceValues)
-    // Check all source fields that might have connections to this field
-    Object.keys(rowSourceValues).forEach(sourceField => {
-      const sourceValue = rowSourceValues[sourceField];
-      if (sourceValue) {
-        const connections = flattenedConnect.filter(
-          item => 
-            item.sourceName === sourceField &&
-            item.sourceValue === sourceValue &&
-            item.destinationName === fieldName
-        );
-        
-        destinationValues = [...destinationValues, ...connections.map(item => item.destinationValue)];
+  const getAllConnectedLibrary = async (fieldValue, fieldName) => {
+    Api.get("api/v1/library/get/all/source/value", {
+      params: {
+        projectId: projectId,
+        moduleName: "FMECA",
+        destinationModule: "SAFETY",
+        sourceName: fieldName,
+        sourceValue: fieldValue.value,
+      },
+    }).then((res) => {
+      const data = res?.data?.libraryData;
+      if (data.length > 0) {
+        // Handle connected data if needed
       }
     });
-    
-    return [...new Set(destinationValues)]; // Remove duplicates
   };
 
-  // Function to handle source selection
-  const handleSourceSelection = (fieldName, value, rowId) => {
-    setSelectedSourceValues(prev => ({
-      ...prev,
-      [rowId]: {
-        ...prev[rowId],
-        [fieldName]: value
-      }
-    }));
+  const handleDropdownSelection = (fieldName) => {
+    setSelectedField(fieldName);
+    setSelectedFunction(null);
   };
 
-  // Check if field is a source field (has outgoing connections)
-  const isSourceField = (fieldName) => {
-    return flattenedConnect.some(item => item.sourceName === fieldName);
-  };
-
-  // Check if field is a destination field (has incoming connections)
-  const isDestinationField = (fieldName) => {
-    return flattenedConnect.some(item => item.destinationName === fieldName);
-  };
-
-const createEditComponent = (fieldName, label, required = false) => {
-  return {
+  // Helper component for dropdown columns
+  const createDropdownColumn = (fieldName, title, required = false, type = "string") => ({
     field: fieldName,
-    title: required ? `${label} *` : label,
-    type: "string",
+    title: required ? `${title}*` : title,
+    type: type,
     cellStyle: { minWidth: "200px", textAlign: "center" },
     headerStyle: { minWidth: "200px", textAlign: "center" },
-    validate: (rowData) => {
-      if (required && (!rowData[fieldName] || rowData[fieldName].trim() === "")) {
-        return { isValid: false, helperText: `${label} is required` };
+    validate: required ? (rowData) => {
+      if (!rowData[fieldName] || rowData[fieldName].toString().trim() === "") {
+        return { isValid: false, helperText: `${title} is required` };
       }
       return true;
+    } : undefined,
+    onCellClick: () => handleDropdownSelection(fieldName),
+    editComponent: ({ value, onChange }) => {
+      const options = getOptionsForField(fieldName);
+      
+      if (options.length === 0) {
+        return (
+          <input
+            type={type === "numeric" ? "number" : "text"}
+            value={value || ""}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={`Enter ${title}`}
+            style={{ height: "40px", borderRadius: "4px", width: "100%", padding: "8px" }}
+          />
+        );
+      }
+      
+      return (
+        <CreatableSelect
+          value={value ? { label: value, value: value } : null}
+          onChange={(selectedItems) => {
+            onChange(selectedItems?.value || "");
+            if (selectedItems) {
+              getAllConnectedLibrary(selectedItems, fieldName);
+            }
+          }}
+          onCreateOption={(inputValue) => {
+            onChange(inputValue);
+          }}
+          options={options}
+          isClearable
+          styles={{
+            control: (base) => ({
+              ...base,
+              minHeight: '40px',
+              borderRadius: '4px',
+            }),
+          }}
+        />
+      );
     },
-    editComponent: (props) => (
-      <SafetyEdit
-        {...props}
-        fieldName={fieldName}
-        label={label}
-        required={required}
-        allSepareteData={allSepareteData}
-        flattenedConnect={flattenedConnect}
-        selectedSourceValues={selectedSourceValues}
-        handleSourceSelection={handleSourceSelection}
-        isSourceField={isSourceField}
-        isDestinationField={isDestinationField}
-        getDestinationValuesForField={getDestinationValuesForField}
-      />
-    ),
-  };
-};
-  // Define source fields (fields that can have outgoing connections)
-  // You need to define which fields in SAFETY can be sources
-  const sourceFields = ['modeOfOperation', 'hazardCause', 'effectOfHazard']; // Add more as needed
+  });
 
-  // Create columns using the new edit component
   const columns = [
     {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
@@ -539,30 +527,30 @@ const createEditComponent = (fieldName, label, required = false) => {
       cellStyle: { minWidth: "140px", textAlign: "center" },
       headerStyle: { minWidth: "140px", textAlign: "center" },
     },
-    createEditComponent("modeOfOperation", "Mode of Operation", true),
-    createEditComponent("hazardCause", "Hazard Cause", true),
-    createEditComponent("effectOfHazard", "Effect of the Hazard", true),
-    createEditComponent("hazardClasification", "Hazard Classification", true),
-    createEditComponent("designAssuranceLevel", "Design Assurance Level (DAL) associated with the hazard"),
-    createEditComponent("meansOfDetection", "Means of detection", true),
-    createEditComponent("crewResponse", "Crew response", true),
-    createEditComponent("uniqueHazardIdentifier", "Unique Hazard Identifiers", true),
-    createEditComponent("initialSeverity", "Initial Severity ((impact))"),
-    createEditComponent("initialLikelihood", "Initial likelihood (probability)"),
-    createEditComponent("initialRiskLevel", "Initial Risk level"),
-    createEditComponent("designMitigation", "Design Mitigation"),
-    createEditComponent("designMitigatonResbiity", "Design Mitigation Responsibility"),
-    createEditComponent("designMitigtonEvidence", "Design Mitigation Evidence"),
-    createEditComponent("opernalMaintanMitigation", "Operational/Maintenance mitigation"),
-    createEditComponent("opernalMitigatonResbility", "Opernational Mitigation Responsibility"),
-    createEditComponent("operatnalMitigationEvidence", "Operational Mitigation Evidence"),
-    createEditComponent("residualSeverity", "Residual Severity ((impact))"),
-    createEditComponent("residualLikelihood", "Residual likelihood (probability)"),
-    createEditComponent("residualRiskLevel", "Residual Risk Level"),
-    createEditComponent("hazardStatus", "Hazard Status"),
-    createEditComponent("ftaNameId", "FTA Name/ID"),
-    createEditComponent("userField1", "User field 1"),
-    createEditComponent("userField2", "User field 2"),
+    createDropdownColumn("modeOfOperation", "Mode of Operation", true),
+    createDropdownColumn("hazardCause", "Hazard Cause", true),
+    createDropdownColumn("effectOfHazard", "Effect of the Hazard", true),
+    createDropdownColumn("hazardClasification", "Hazard Classification", true),
+    createDropdownColumn("designAssuranceLevel", "Design Assurance Level (DAL) associated with the hazard"),
+    createDropdownColumn("meansOfDetection", "Means of detection", true),
+    createDropdownColumn("crewResponse", "Crew response", true),
+    createDropdownColumn("uniqueHazardIdentifier", "Unique Hazard Identifiers", true),
+    createDropdownColumn("initialSeverity", "Initial Severity (impact)"),
+    createDropdownColumn("initialLikelihood", "Initial likelihood (probability)"),
+    createDropdownColumn("initialRiskLevel", "Initial Risk level"),
+    createDropdownColumn("designMitigation", "Design Mitigation"),
+    createDropdownColumn("designMitigatonResbiity", "Design Mitigation Responsibility"),
+    createDropdownColumn("designMitigtonEvidence", "Design Mitigation Evidence"),
+    createDropdownColumn("opernalMaintanMitigation", "Operational/Maintenance mitigation"),
+    createDropdownColumn("opernalMitigatonResbility", "Operational Mitigation Responsibility"),
+    createDropdownColumn("operatnalMitigationEvidence", "Operational Mitigation Evidence"),
+    createDropdownColumn("residualSeverity", "Residual Severity (impact)"),
+    createDropdownColumn("residualLikelihood", "Residual likelihood (probability)"),
+    createDropdownColumn("residualRiskLevel", "Residual Risk Level"),
+    createDropdownColumn("hazardStatus", "Hazard Status"),
+    createDropdownColumn("ftaNameId", "FTA Name/ID"),
+    createDropdownColumn("userField1", "User field 1"),
+    createDropdownColumn("userField2", "User field 2"),
   ];
 
   const submit = (values) => {
@@ -570,45 +558,46 @@ const createEditComponent = (fieldName, label, required = false) => {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
       Api.post("api/v1/safety/", {
-        modeOfOperation: values.modeOfOperation || data.modeOfOperation,
-        hazardCause: values.hazardCause || data.hazardCause,
-        effectOfHazard: values.effectOfHazard || data.effectOfHazard,
-        hazardClasification: values.hazardClasification || data.hazardClasification,
-        designAssuranceLevel: values.designAssuranceLevel,
-        meansOfDetection: values.meansOfDetection || data.meansOfDetection,
-        crewResponse: values.crewResponse || data.crewResponse,
-        uniqueHazardIdentifier: values.uniqueHazardIdentifier || data.uniqueHazardIdentifier,
-        initialSeverity: values.initialSeverity || data.initialSeverity,
-        initialLikelihood: values.initialLikelihood || data.initialLikelihood,
-        initialRiskLevel: values.initialRiskLevel || data.initialRiskLevel,
+        modeOfOperation: values.modeOfOperation || "",
+        hazardCause: values.hazardCause || "",
+        effectOfHazard: values.effectOfHazard || "",
+        hazardClasification: values.hazardClasification || "",
+        designAssuranceLevel: values.designAssuranceLevel || "",
+        meansOfDetection: values.meansOfDetection || "",
+        crewResponse: values.crewResponse || "",
+        uniqueHazardIdentifier: values.uniqueHazardIdentifier || "",
+        initialSeverity: values.initialSeverity || "",
+        initialLikelihood: values.initialLikelihood || "",
+        initialRiskLevel: values.initialRiskLevel || "",
         designMitigation: values.designMitigation || 1,
-        designMitigatonResbiity: values.designMitigatonResbiity || data.designMitigatonResbiity,
-        designMitigtonEvidence: values.designMitigtonEvidence || data.designMitigtonEvidence,
-        opernalMaintanMitigation: values.opernalMaintanMitigation || data.opernalMaintanMitigation,
-        opernalMitigatonResbility: values.opernalMitigatonResbility || data.opernalMitigatonResbility,
-        operatnalMitigationEvidence: values.operatnalMitigationEvidence || data.operatnalMitigationEvidence,
-        residualSeverity: values.residualSeverity || data.residualSeverity,
-        residualLikelihood: values.residualLikelihood || data.residualLikelihood,
-        residualRiskLevel: values.residualRiskLevel || data.residualRiskLevel,
-        hazardStatus: values.hazardStatus || data.hazardStatus,
-        ftaNameId: values.ftaNameId || data.ftaNameId,
-        userField1: values.userField1 || data.userField1,
-        userField2: values.userField2 || data.userField2,
+        designMitigatonResbiity: values.designMitigatonResbiity || "",
+        designMitigtonEvidence: values.designMitigtonEvidence || "",
+        opernalMaintanMitigation: values.opernalMaintanMitigation || "",
+        opernalMitigatonResbility: values.opernalMitigatonResbility || "",
+        operatnalMitigationEvidence: values.operatnalMitigationEvidence || "",
+        residualSeverity: values.residualSeverity || "",
+        residualLikelihood: values.residualLikelihood || "",
+        residualRiskLevel: values.residualRiskLevel || "",
+        hazardStatus: values.hazardStatus || "",
+        ftaNameId: values.ftaNameId || "",
+        userField1: values.userField1 || "",
+        userField2: values.userField2 || "",
         projectId: projectId,
         companyId: companyId,
         productId: productId,
         userId: userId,
       })
-        .then((response) => {
-          getProductData();
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          const errorStatus = error?.response?.status;
-          if (errorStatus === 401) {
-            logout();
-          }
-        });
+      .then((response) => {
+        getProductData();
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        }
+        setIsLoading(false);
+      });
     } else {
       setProductModal(true);
     }
@@ -645,7 +634,7 @@ const createEditComponent = (fieldName, label, required = false) => {
       projectId: projectId,
       companyId: companyId,
       productId: productId,
-      safetyId: values?.id,
+      safetyId: values.id,
       userId: userId,
     })
       .then((response) => {
@@ -689,7 +678,6 @@ const createEditComponent = (fieldName, label, required = false) => {
             <div style={{ width: "30%", marginRight: "20px" }}>
               <Projectname projectId={projectId} />
             </div>
-
             <div style={{ width: "100%", marginRight: "20px" }}>
               <Dropdown
                 value={projectId}
@@ -697,7 +685,6 @@ const createEditComponent = (fieldName, label, required = false) => {
                 data={treeTableData}
               />
             </div>
-
             <div style={{
               display: "flex",
               justifyContent: "flex-end",
@@ -728,7 +715,6 @@ const createEditComponent = (fieldName, label, required = false) => {
                       />
                     </div>
                   </Tooltip>
-                  
                   <Tooltip placement="left" title="Export Excel">
                     <Button
                       className="import-export-btn"
@@ -742,7 +728,10 @@ const createEditComponent = (fieldName, label, required = false) => {
                       }}
                       onClick={() => DownloadExcel()}
                     >
-                      <FontAwesomeIcon icon={faFileUpload} style={{ width: "15px" }} />
+                      <FontAwesomeIcon
+                        icon={faFileUpload}
+                        style={{ width: "15px" }}
+                      />
                     </Button>
                   </Tooltip>
                 </>
@@ -755,7 +744,6 @@ const createEditComponent = (fieldName, label, required = false) => {
                       </div>
                     </div>
                   </Tooltip>
-                  
                   <Tooltip placement="left" title="Export disabled">
                     <Button
                       className="import-export-btn"
@@ -770,7 +758,10 @@ const createEditComponent = (fieldName, label, required = false) => {
                       }}
                       disabled
                     >
-                      <FontAwesomeIcon icon={faFileUpload} style={{ width: "15px" }} />
+                      <FontAwesomeIcon
+                        icon={faFileUpload}
+                        style={{ width: "15px" }}
+                      />
                     </Button>
                   </Tooltip>
                 </>
@@ -778,7 +769,7 @@ const createEditComponent = (fieldName, label, required = false) => {
             </div>
           </div>
 
-          <div className="mt-5 " style={{ bottom: "35px" }}>
+          <div className="mt-5" style={{ bottom: "35px" }}>
             <ThemeProvider theme={tableTheme}>
               <MaterialTable
                 editable={{
@@ -836,7 +827,7 @@ const createEditComponent = (fieldName, label, required = false) => {
               />
             </ThemeProvider>
           </div>
-  
+
           <Modal show={show} centered>
             <div className="d-flex justify-content-center mt-5">
               <FontAwesomeIcon
@@ -845,18 +836,18 @@ const createEditComponent = (fieldName, label, required = false) => {
                 color="#1D5460"
               />
             </div>
-            <Modal.Footer className=" d-flex justify-content-center success-message mt-3 mb-4">
+            <Modal.Footer className="d-flex justify-content-center success-message mt-3 mb-4">
               <div>
                 <h4 className="text-center">Row Deleted Successfully</h4>
               </div>
             </Modal.Footer>
           </Modal>
 
-          <Modal show={productModal} centered onHide={handleClose}>
+          <Modal show={productModal} centered onHide={() => setProductModal(false)}>
             <div className="d-flex justify-content-center mt-5">
               <FaExclamationCircle size={45} color="#de2222b0" />
             </div>
-            <Modal.Footer className=" d-flex justify-content-center success-message mb-4">
+            <Modal.Footer className="d-flex justify-content-center success-message mb-4">
               {writePermission === true || writePermission === undefined ? (
                 <div>
                   <h5 className="text-center">
