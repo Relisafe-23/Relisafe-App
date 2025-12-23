@@ -152,7 +152,7 @@ function Index(props) {
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [perviousColumnValues, setPerviousColumnValues] = useState([]);
-  
+
   // New state for tracking connections
   const [selectedSourceValues, setSelectedSourceValues] = useState({});
   const [rowConnections, setRowConnections] = useState({});
@@ -228,7 +228,7 @@ function Index(props) {
       }
     });
   };
-  
+
   const getAllLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
@@ -448,7 +448,7 @@ function Index(props) {
     }
 
     data.forEach((row, rowIndex) => {
-      const rowNumber = rowIndex + 2; 
+      const rowNumber = rowIndex + 2;
       let rowData = {};
 
       row.forEach((element, index) => {
@@ -544,7 +544,7 @@ function Index(props) {
       `• Total rows: ${rows.length}\n` +
       `• failureModeRatioAlpha total: ${alphaTotal.toFixed(4)}\n` +
       `• endEffectRatioBeta total: ${betaTotal.toFixed(4)}`;
-    
+
     toast.success(successMessage, {
       position: toast.POSITION.TOP_RIGHT,
       autoClose: 5000,
@@ -580,7 +580,7 @@ function Index(props) {
       setCreatedBy(res.data.data.createdBy);
     });
   };
-  
+
   const getProductData = () => {
     Api.get("/api/v1/fmeca/product/list", {
       params: {
@@ -591,6 +591,7 @@ function Index(props) {
     })
       .then((res) => {
         setTableData(res?.data?.data);
+        console.log("FMECA Product Data:", res?.data?.data);
         getProjectDetails();
       })
       .catch((error) => {
@@ -695,31 +696,44 @@ function Index(props) {
   // Function to get connected values for a field based on selected source
   const getConnectedValuesForField = (fieldName, rowId) => {
     const rowSourceValues = selectedSourceValues[rowId] || {};
-    
+
     // Check all possible source fields for connections to this field
     let connectedValues = [];
-    
+
     Object.keys(rowSourceValues).forEach(sourceField => {
       const sourceValue = rowSourceValues[sourceField];
       if (sourceValue) {
         const connections = flattenedConnect?.filter(
-          item => 
+          item =>
             item.fieldName === sourceField &&
             item.fieldValue === sourceValue &&
             item.destName === fieldName
         ) || [];
-        
+
         connectedValues = [...connectedValues, ...connections];
       }
     });
-    
+
     return connectedValues;
   };
+  const getConnectedSourceDestinations = (sourceField, sourceValue) => {  
+    return flattenedConnect
 
+      ?.filter(
+        (item) => item.fieldName === sourceField && item.fieldValue === sourceValue
+      )
+      .map((item) => ({
+        field: item.destName,
+        value: item.destValue,
+     
+      })) || [];
+       
+  };
+    
   // Function to handle source selection and update connections
   const handleSourceSelection = (fieldName, value, rowData) => {
     const rowId = rowData?.tableData?.id;
-    
+
     // Update selected source values for this row
     setSelectedSourceValues(prev => ({
       ...prev,
@@ -728,15 +742,15 @@ function Index(props) {
         [fieldName]: value
       }
     }));
-    
+
     // Set the selected source field for tracking
     setSelectedSourceField(fieldName);
-    
+
     // Find all connections originating from this source
     const connections = flattenedConnect?.filter(
       item => item.fieldName === fieldName && item.fieldValue === value
     ) || [];
-    
+
     // Store connections for this row
     setRowConnections(prev => ({
       ...prev,
@@ -752,13 +766,23 @@ function Index(props) {
       params: { projectId },
     }).then((res) => {
       setIsLoading(false);
-
+      console.log("flattenedConnect item:",res.data.getData);
       const filteredData = res.data.getData.filter(
         (entry) =>
           entry?.libraryId?.moduleName === "FMECA" ||
           entry?.destinationModuleName === "FMECA"
       );
+      console.log("Filtered Connect Data:", filteredData);
+     const SourceDestination = filteredData.flatMap((item)=>(
+        (item.destinationData || [])
+         .filter(
+            (d) =>
+              d.destinationModuleName === "FMECA"
+               
 
+     ))); 
+
+     console.log("SourceDestination item:", SourceDestination);
       const flattened = filteredData.flatMap((item) =>
         (item.destinationData || [])
           .filter(
@@ -823,7 +847,7 @@ function Index(props) {
 
   // Validation utility
   const validateField = (fieldName, value, isRequired) => {
-    if (isRequired && (!value || value.toString().trim() === '')) {
+    if (isRequired && (!value || value?.toString()?.trim() === '')) {
       return `${fieldName} is required`;
     }
     return null;
@@ -872,7 +896,7 @@ function Index(props) {
               cursor: 'pointer'
             }}
           >
-            OK 
+            OK
           </button>
         </div>
       </div>
@@ -914,13 +938,13 @@ function Index(props) {
                 borderRadius: "4px",
                 width: "100%",
                 borderColor:
-                  isRequired && (!value || value.toString().trim() === '')
+                  isRequired && (!value || value?.toString()?.trim() === '')
                     ? '#d32f2f'
                     : '#ccc',
               }}
               title={title}
             />
-            {isRequired && (!value || value.toString().trim() === '') && (
+            {isRequired && (!value || value?.toString()?.trim() === '') && (
               <div
                 style={{
                   position: 'absolute',
@@ -959,26 +983,27 @@ function Index(props) {
     ...createEditComponent(fieldName, label, required),
     editComponent: ({ value, onChange, rowData }) => {
       const rowId = rowData?.tableData?.id;
-      
+
       // Get connected values for this field based on selected sources in this row
       const connectedValues = getConnectedValuesForField(fieldName, rowId);
-      
+
       // Get separate library data
-      const separateFilteredData = 
+      const separateFilteredData =
         allSepareteData?.filter((item) => item?.sourceName === fieldName) || [];
-      
+      console.log("Separate Filtered Data:", separateFilteredData);
       // Combine options: connected values first, then separate values
       let options = [];
-      
+
       // Add connected values
       if (connectedValues.length > 0) {
+        console.log("connectedValues",connectedValues)
         options = connectedValues.map(item => ({
           value: item.destValue,
           label: item.destValue,
           isConnected: true
         }));
       }
-      
+       console.log("Options after connected values:", options);
       // Add separate library values (avoid duplicates)
       separateFilteredData.forEach(item => {
         if (!options.some(opt => opt.value === item.sourceValue)) {
@@ -989,7 +1014,7 @@ function Index(props) {
           });
         }
       });
-      
+
       // If no options from library, add current value if exists
       // if (options.length === 0 && value) {
       //   options.push({
@@ -998,14 +1023,15 @@ function Index(props) {
       //     isConnected: false
       //   });
       // }
-      
-      const selectedOption = 
+
+      const selectedOption =
         options.find((opt) => opt.value === value) ||
         (value ? { label: value, value } : null);
-      
-      const hasError = required && (!value || value?.trim() === "");
 
-        if (!options || options.length === 0) {
+      const hasError = required && (!value || (typeof value === 'string' && value?.trim() === ""));
+      // const hasError = required && (!value || value?.trim() === "");
+
+      if (!options || options.length === 0) {
         return (
           <div style={{ position: "relative" }}>
             <input
@@ -1038,7 +1064,7 @@ function Index(props) {
       }
       return (
         <div style={{ position: "relative" }}>
-        
+
           <CreatableSelect
             name={fieldName}
             value={selectedOption}
@@ -1047,13 +1073,10 @@ function Index(props) {
             onChange={(option) => {
               const newValue = option?.value || "";
               onChange(newValue);
-          
               if (isSourceField(fieldName) && newValue) {
                 handleSourceSelection(fieldName, newValue, rowData);
-             
                 const destinations = getDestinationFieldsForSource(fieldName, newValue);
                 if (destinations.length === 1) {
-              
                 }
               }
             }}
@@ -1061,8 +1084,6 @@ function Index(props) {
             //   // // Allow creating new options
             //   const newOption = { value: inputValue, label: inputValue };
             //   onChange(inputValue);
-              
-          
             //   if (isSourceField(fieldName) && inputValue) {
             //     handleSourceSelection(fieldName, inputValue, rowData);
             //   }
@@ -1178,7 +1199,7 @@ function Index(props) {
 
     const missingFields = mandatoryFields.filter(field => {
       const value = values[field];
-      return !value || value.toString().trim() === '';
+      return !value || value?.toString()?.trim() === '';
     });
 
     if (missingFields.length > 0) {
@@ -1364,8 +1385,7 @@ function Index(props) {
       return Promise.reject(new Error("No product selected"));
     }
   };
-
-  const updateFmeca = async (values) => {
+  const updateFmeca = (values) => {
     const mandatoryFields = [
       'operatingPhase',
       'function',
@@ -1381,7 +1401,7 @@ function Index(props) {
 
     const missingFields = mandatoryFields.filter(field => {
       const value = values[field];
-      return !value || value.toString().trim() === '';
+      return !value || value?.toString()?.trim() === '';
     });
 
     if (missingFields.length > 0) {
@@ -1416,15 +1436,68 @@ function Index(props) {
           textAlign: 'left'
         }
       });
-      throw new Error("Validation failed");
+      return Promise.reject(new Error("Validation failed"));
     }
-    
-    const companyId = localStorage.getItem("companyId");
+
+    const alphaValue = parseFloat(values.failureModeRatioAlpha);
+    const betaValue = parseFloat(values.endEffectRatioBeta);
+
+    if (isNaN(alphaValue)) {
+      toast.error("Failure Mode Ratio Alpha must be a valid number", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    if (alphaValue > 1) {
+      toast.error("Failure Mode Ratio Alpha cannot exceed 1", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    if (alphaValue < 0) {
+      toast.error("Failure Mode Ratio Alpha cannot be negative", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    if (isNaN(betaValue)) {
+      toast.error("End Effect Ratio Beta must be a valid number", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    if (betaValue > 1) {
+      toast.error("End Effect Ratio Beta cannot exceed 1", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
+    if (betaValue < 0) {
+      toast.error("End Effect Ratio Beta cannot be negative", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+      return Promise.reject(new Error("Validation failed"));
+    }
+
     if (!values.operatingPhase || !values.function || !values.failureMode) {
       toast.error("Operating Phase, Function, and Failure Mode are required.");
-      return;
+      return Promise.reject(new Error("Validation failed"));
     }
-    
+
+    const companyId = localStorage.getItem("companyId");
+    setIsLoading(true);
+
     const payload = {
       operatingPhase: values.operatingPhase,
       function: values.function,
@@ -1469,33 +1542,172 @@ function Index(props) {
       Alldata: tableData,
     };
 
-    try {
-      const response = await Api.patch("api/v1/FMECA/update", payload);
-      if (response?.status === 200) {
-        toast.success("FMECA updated successfully!");
-        getProductData();
-        getAllConnectedLibraryAfterUpdate();
-      }
-      else if (response?.status === 204) {
-        toast.error("Failure Mode Radio Alpha Must be Equal to One !");
-      }
-      else {
-        toast.warning("Update request completed, but status not ideal.");
-        getProductData();
-        getAllConnectedLibraryAfterUpdate();
-      }
-    } catch (error) {
-      const errorStatus = error?.response?.status;
-      if (errorStatus === 401) {
-        logout();
-      } else {
-        toast.error(errorStatus?.response?.status === 422 ? "Failed to update FMECA. Please try again." : "Failure Mode Ratio Alpha must sum to exactly 1");
-        console.error("Update Error:", errorStatus?.response?.status === 422);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    return Api.patch("api/v1/FMECA/update", payload)
+      .then((response) => {
+        if (response?.status === 200) {
+          toast.success("FMECA updated successfully!");
+          getProductData();
+          getAllConnectedLibraryAfterUpdate();
+          return response;
+        } else if (response?.status === 204) {
+          toast.error("Failure Mode Ratio Alpha Must be Equal to One !");
+          return Promise.reject(new Error("Failure Mode Ratio Alpha validation failed"));
+        } else {
+          toast.warning("Update request completed, but status not ideal.");
+          getProductData();
+          getAllConnectedLibraryAfterUpdate();
+          return response;
+        }
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+          return Promise.reject(new Error("Unauthorized"));
+        } else {
+          const errorMessage = errorStatus === 422
+            ? "Failed to update FMECA. Please try again."
+            : "Failure Mode Ratio Alpha must sum to exactly 1";
+          toast.error(errorMessage);
+          console.error("Update Error:", error);
+          return Promise.reject(new Error(errorMessage));
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
+  // const updateFmeca = async (values) => {
+  //   const mandatoryFields = [
+  //     'operatingPhase',
+  //     'function',
+  //     'failureMode',
+  //     'failureModeRatioAlpha',
+  //     'subSystemEffect',
+  //     'systemEffect',
+  //     'endEffect',
+  //     'endEffectRatioBeta',
+  //     'safetyImpact',
+  //     'realibilityImpact'
+  //   ];
+
+  //   const missingFields = mandatoryFields.filter(field => {
+  //     const value = values[field];
+  //     return !value || value?.toString()?.trim() === '';
+  //   });
+
+  //   if (missingFields.length > 0) {
+  //     const fieldLabels = {
+  //       operatingPhase: "Operating Phase",
+  //       function: "Function",
+  //       failureMode: "Failure Mode",
+  //       failureModeRatioAlpha: "Failure Mode Ratio Alpha",
+  //       subSystemEffect: "Sub System Effect",
+  //       systemEffect: "System Effect",
+  //       endEffect: "End Effect",
+  //       endEffectRatioBeta: "End Effect Ratio Beta",
+  //       safetyImpact: "Safety Impact",
+  //       realibilityImpact: "Reliability Impact"
+  //     };
+
+  //     const missingFieldNames = missingFields.map(field => fieldLabels[field]);
+
+  //     let errorMessage;
+  //     if (missingFields.length === 1) {
+  //       errorMessage = `${fieldLabels[missingFields[0]]} is required!`;
+  //     } else {
+  //       errorMessage = `The following fields are required:\n• ${missingFieldNames.join("\n• ")}`;
+  //     }
+
+  //     toast.error(errorMessage, {
+  //       position: "top-right",
+  //       autoClose: 5000,
+  //       style: {
+  //         whiteSpace: 'pre-line',
+  //         maxWidth: '500px',
+  //         textAlign: 'left'
+  //       }
+  //     });
+  //     throw new Error("Validation failed");
+  //   }
+
+  //   const companyId = localStorage.getItem("companyId");
+  //   if (!values.operatingPhase || !values.function || !values.failureMode) {
+  //     toast.error("Operating Phase, Function, and Failure Mode are required.");
+  //     return;
+  //   }
+
+  //   const payload = {
+  //     operatingPhase: values.operatingPhase,
+  //     function: values.function,
+  //     failureMode: values.failureMode,
+  //     failureModeRatioAlpha: values?.failureModeRatioAlpha || 0,
+  //     cause: values.cause,
+  //     detectableMeansDuringOperation: values.detectableMeansDuringOperation,
+  //     detectableMeansToMaintainer: values.detectableMeansToMaintainer,
+  //     BuiltInTest: values.BuiltInTest,
+  //     subSystemEffect: values.subSystemEffect,
+  //     systemEffect: values.systemEffect,
+  //     endEffect: values.endEffect,
+  //     endEffectRatioBeta: values?.endEffectRatioBeta || 0,
+  //     safetyImpact: values.safetyImpact,
+  //     referenceHazardId: values.referenceHazardId,
+  //     realibilityImpact: values.realibilityImpact,
+  //     serviceDisruptionTime: values.serviceDisruptionTime,
+  //     frequency: values.frequency,
+  //     severity: values.severity,
+  //     riskIndex: values.riskIndex,
+  //     designControl: values.designControl,
+  //     maintenanceControl: values.maintenanceControl,
+  //     exportConstraints: values.exportConstraints,
+  //     immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase,
+  //     immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase,
+  //     userField1: values.userField1,
+  //     userField2: values.userField2,
+  //     userField3: values.userField3,
+  //     userField4: values.userField4,
+  //     userField5: values.userField5,
+  //     userField6: values.userField6,
+  //     userField7: values.userField7,
+  //     userField8: values.userField8,
+  //     userField9: values.userField9,
+  //     userField10: values.userField10,
+  //     treeStructureId: treeStructure,
+  //     projectId: projectId,
+  //     companyId: companyId,
+  //     productId: productId,
+  //     fmecaId: values.id,
+  //     userId: userId,
+  //     Alldata: tableData,
+  //   };
+
+  //   try {
+  //     const response = await Api.patch("api/v1/FMECA/update", payload);
+  //     if (response?.status === 200) {
+  //       toast.success("FMECA updated successfully!");
+  //       getProductData();
+  //       getAllConnectedLibraryAfterUpdate();
+  //     }
+  //     else if (response?.status === 204) {
+  //       toast.error("Failure Mode Radio Alpha Must be Equal to One !");
+  //     }
+  //     else {
+  //       toast.warning("Update request completed, but status not ideal.");
+  //       getProductData();
+  //       getAllConnectedLibraryAfterUpdate();
+  //     }
+  //   } catch (error) {
+  //     const errorStatus = error?.response?.status;
+  //     if (errorStatus === 401) {
+  //       logout();
+  //     } else {
+  //       toast.error(errorStatus?.response?.status === 422 ? "Failed to update FMECA. Please try again." : "Failure Mode Ratio Alpha must sum to exactly 1");
+  //       console.error("Update Error:", errorStatus?.response?.status === 422);
+  //     }
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const deleteFmecaData = (value) => {
     setIsLoading(true);
