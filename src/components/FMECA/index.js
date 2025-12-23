@@ -773,14 +773,45 @@ function Index(props) {
           entry?.destinationModuleName === "FMECA"
       );
       console.log("Filtered Connect Data:", filteredData);
-     const SourceDestination = filteredData.flatMap((item)=>(
-        (item.destinationData || [])
-         .filter(
-            (d) =>
-              d.destinationModuleName === "FMECA"
-               
+  const ALLOWED_MODULES = ["PMMRA", "SAFETY", "MTTR"];
 
-     ))); 
+const SourceDestination = filteredData.flatMap((item) =>
+  (item.destinationData || [])
+    .filter((d) => {
+      const sourceModule = item.libraryId?.moduleName;
+      const destinationModule = d.destinationModuleName;
+
+      // Case 1: PMMRA / SAFETY / MTTR  → FMECA
+      const isOtherToFMECA =
+        ALLOWED_MODULES.includes(sourceModule) &&
+        destinationModule === "FMECA";
+
+      // Case 2: FMECA → PMMRA / SAFETY / MTTR
+      const isFMECAToOther =
+        sourceModule === "FMECA" &&
+        ALLOWED_MODULES.includes(destinationModule);
+
+      return isOtherToFMECA || isFMECAToOther;
+    })
+    .map((d) => ({
+      sourceModule: item.libraryId?.moduleName,
+      destinationModule: d.destinationModuleName,
+
+      // Show correct value in correct field
+      fieldName:
+        item.libraryId?.moduleName === "FMECA"
+          ? d.destinationName
+          : item.destinationeName,
+
+      fieldValue:
+        item.libraryId?.moduleName === "FMECA"
+          ? d.destinationValue // FMECA → other module
+          : d.destinationValue, // other module → FMECA
+    }))
+);
+setConnectData(SourceDestination);
+console.log("SourceDestination:", SourceDestination);
+
 
      console.log("SourceDestination item:", SourceDestination);
       const flattened = filteredData.flatMap((item) =>
@@ -1003,6 +1034,9 @@ function Index(props) {
           isConnected: true
         }));
       }
+
+
+    
        console.log("Options after connected values:", options);
       // Add separate library values (avoid duplicates)
       separateFilteredData.forEach(item => {
