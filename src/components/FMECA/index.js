@@ -716,6 +716,8 @@ function Index(props) {
 
     return connectedValues;
   };
+ 
+
   const getConnectedSourceDestinations = (sourceField, sourceValue) => {  
     return flattenedConnect
 
@@ -783,7 +785,7 @@ const SourceDestination = filteredData.flatMap((item) =>
 
       // Case 1: PMMRA / SAFETY / MTTR  → FMECA
       const isOtherToFMECA =
-        ALLOWED_MODULES.includes(sourceModule) &&
+        ALLOWED_MODULES.includes(sourceModule) ||
         destinationModule === "FMECA";
 
       // Case 2: FMECA → PMMRA / SAFETY / MTTR
@@ -799,9 +801,9 @@ const SourceDestination = filteredData.flatMap((item) =>
 
       // Show correct value in correct field
       fieldName:
-        item.libraryId?.moduleName === "FMECA"
+        item.libraryId?.moduleName === "PMMRA" || item.libraryId?.moduleName === "SAFETY" || item.libraryId?.moduleName === "MTTR" ||item.libraryId?.moduleName === "FMECA"
           ? d.destinationName
-          : item.destinationeName,
+          : item.SourceName,
 
       fieldValue:
         item.libraryId?.moduleName === "FMECA"
@@ -810,7 +812,9 @@ const SourceDestination = filteredData.flatMap((item) =>
     }))
 );
 setConnectData(SourceDestination);
+  setFlattenedConnect(SourceDestination);
 console.log("SourceDestination:", SourceDestination);
+
 
 
      console.log("SourceDestination item:", SourceDestination);
@@ -995,12 +999,11 @@ console.log("SourceDestination:", SourceDestination);
     };
   };
 
-  // Function to check if a field is a source field (has connections from it)
+
   const isSourceField = (fieldName) => {
     return flattenedConnect?.some(item => item.fieldName === fieldName);
   };
-
-  // Function to get destination fields for a source
+    
   const getDestinationFieldsForSource = (sourceField, sourceValue) => {
     return flattenedConnect
       ?.filter(item => item.fieldName === sourceField && item.fieldValue === sourceValue)
@@ -1021,8 +1024,7 @@ console.log("SourceDestination:", SourceDestination);
       // Get separate library data
       const separateFilteredData =
         allSepareteData?.filter((item) => item?.sourceName === fieldName) || [];
-      console.log("Separate Filtered Data:", separateFilteredData);
-      // Combine options: connected values first, then separate values
+
       let options = [];
 
       // Add connected values
@@ -1035,10 +1037,7 @@ console.log("SourceDestination:", SourceDestination);
         }));
       }
 
-
-    
-       console.log("Options after connected values:", options);
-      // Add separate library values (avoid duplicates)
+ 
       separateFilteredData.forEach(item => {
         if (!options.some(opt => opt.value === item.sourceValue)) {
           options.push({
@@ -1060,8 +1059,8 @@ console.log("SourceDestination:", SourceDestination);
 
       const selectedOption =
         options.find((opt) => opt.value === value) ||
-        (value ? { label: value, value } : null);
-
+        (value ? { label: value, value } :null);
+        
       const hasError = required && (!value || (typeof value === 'string' && value?.trim() === ""));
       // const hasError = required && (!value || value?.trim() === "");
 
@@ -1107,12 +1106,15 @@ console.log("SourceDestination:", SourceDestination);
             onChange={(option) => {
               const newValue = option?.value || "";
               onChange(newValue);
-              if (isSourceField(fieldName) && newValue) {
+              console.log("Selected Option:", newValue);
+              if (isSourceField(fieldName) || newValue) {
                 handleSourceSelection(fieldName, newValue, rowData);
                 const destinations = getDestinationFieldsForSource(fieldName, newValue);
+                console.log("Destinations for selected source:", destinations);
                 if (destinations.length === 1) {
                 }
               }
+            
             }}
             // onCreateOption={(inputValue) => {
             //   // // Allow creating new options
@@ -1176,7 +1178,7 @@ console.log("SourceDestination:", SourceDestination);
     title: "FMECA ID",
   };
 
-  // Define which fields are source fields (fields that have connections to other fields)
+
   const sourceFields = ['function', 'operatingPhase', 'failureMode'];
 
   const columns = [
@@ -1607,9 +1609,9 @@ console.log("SourceDestination:", SourceDestination);
           return Promise.reject(new Error(errorMessage));
         }
       })
-      .finally(() => {
-        setIsLoading(false);
-      });
+      // .finally(() => {
+      //   setIsLoading(false);
+      // });
   };
   // const updateFmeca = async (values) => {
   //   const mandatoryFields = [
@@ -1937,7 +1939,7 @@ console.log("SourceDestination:", SourceDestination);
                       whiteSpace: "normal",
                       wordBreak: "break-word",
                       minWidth: 300,
-                      maxWidth: 400,
+                      maxWidth: 500,
                       textAlign: "center",
                     },
                     addRowPosition: "first",
