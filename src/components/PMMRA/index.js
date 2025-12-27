@@ -1733,6 +1733,7 @@ export default function PMMRA(props) {
                 value={projectId}
                 productId={productId}
                 data={treeTableData}
+                  writePermission={writePermission}
               />
             </div>
 
@@ -1747,7 +1748,13 @@ export default function PMMRA(props) {
             >
               <Tooltip placement="right" title="Import">
                 <div style={{ marginRight: "8px" }}>
-                  <label htmlFor="file-input" className="import-export-btn">
+                  <label htmlFor="file-input" className="import-export-btn"
+                      style={{
+          cursor: writePermission === false ? "not-allowed" : "pointer",
+          opacity: writePermission === false ? 0.5 : 1
+        }}
+      
+                 >
                     <FontAwesomeIcon
                       icon={faFileDownload}
                       style={{ width: "15px" }}
@@ -1759,9 +1766,11 @@ export default function PMMRA(props) {
                     id="file-input"
                     onChange={importExcel}
                     style={{ display: "none" }}
+                     disabled={writePermission === false}
                   />
                 </div>
               </Tooltip>
+              
               <Tooltip placement="left" title="Export">
                 <Button
                   className="import-export-btn"
@@ -1771,10 +1780,15 @@ export default function PMMRA(props) {
                     width: "40px",
                     minWidth: "40px",
                     padding: "0px",
+                         cursor: writePermission === false ? "not-allowed" : "pointer",
+        opacity: writePermission === false ? 0.5 : 1
                   }}
                   onClick={() => {
-                    exportToExcel(InitialValues);
+                           if (writePermission !== false) {
+          exportToExcel(InitialValues);
+        }
                   }}
+                     disabled={writePermission === false}
                 >
                   <FontAwesomeIcon
                     icon={faFileUpload}
