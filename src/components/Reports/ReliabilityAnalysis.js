@@ -105,7 +105,7 @@ function ReliabilityAnalysis(props) {
     "Part Name",
     "Part Number",
     "Quantity",
-    "Reference",
+    "Reference",  
     "Category",
     "Part Type",
     "Environment",

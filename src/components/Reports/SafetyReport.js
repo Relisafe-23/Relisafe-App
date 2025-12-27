@@ -42,42 +42,38 @@ function SafetyReport(props) {
 
   const headerKeyMapping = {
     Id: "indexCount",
-    "Product Name": "productName", // Mapped to productId
-    "Part Number": "partNumber", // Mapped to productId
-    Quantity: "quantity", // Mapped to productId
-    Reference: "reference", // Mapped to productId
-    Category: "category", // Mapped to productId
-    "Part Type": "partType", // Mapped to productId
-    FR: "fr", // Mapped to productId
-    // "Function associated with the hazard": "function", // Mapped to safetyData
-    Hazard: "failureMode", // Mapped to safetyData
-    "Mode of Operation": "modeOfOperation", // Mapped to safetyData
-    "Hazard Cause": "hazardCause", // Mapped to safetyData
-    "Effect of the Hazard": "effectOfHazard", // Mapped to safetyData
-    "Hazard Classification": "hazardClasification", // Mapped to safetyData
-    "Design Assurance Level (DAL) associated with the hazard":
-      "designAssuranceLevel", // No mapping provided
-    "Means of Detection": "meansOfDetection", // Mapped to safetyData
-    "Crew Response": "crewResponse", // Mapped to safetyData
-    "Unique Hazard Identifiers": "uniqueHazardIdentifier", // Mapped to safetyData
-    "Initial Severity ((impact))": "initialSeverity", // Mapped to safetyData
-    "Initial likelihood (probability)": "initialLikelihood", // Mapped to safetyData
-    "Initial Risk Level": "initialRiskLevel", // Mapped to safetyData
-    "Design Mitigation": "designMitigation", // Mapped to safetyData
-    "Mitigation Responsibility": "designMitigatonResbiity", // No mapping provided
-    "Mitigation Evidence": "designMitigtonEvidence", // No mapping provided
-
-    "Opernal Maintan Mitigation": "opernalMaintanMitigation", // Mapped to safetyData
-    "Opernal Mitigaton Resbility": "opernalMitigatonResbility", // No mapping provided
-    "Operatnal Mitigation Evidence": "operatnalMitigationEvidence", // No mapping provided
-
-    "Residual Severity ((impact))": "residualSeverity", // No mapping in your data, update if needed
-    "Residual Likelihood (probability)": "residualLikelihood", // No mapping in your data, update if needed
-    "Residual Risk Level": "residualRiskLevel", // No mapping in your data, update if needed
-    "FTA Name/ID": "ftaNameId", // No mapping in your data, update if needed
+    "Product Name": "productName",
+    "Part Number": "partNumber",
+    Quantity: "quantity",
+    Reference: "reference",
+    Category: "category",
+    "Part Type": "partType",
+    FR: "fr",
+    Hazard: "failureMode",
+    "Mode of Operation": "modeOfOperation",
+    "Hazard Cause": "hazardCause",
+    "Effect of the Hazard": "effectOfHazard",
+    "Hazard Classification": "hazardClasification",
+    "Design Assurance Level (DAL) associated with the hazard": "designAssuranceLevel",
+    "Means of Detection": "meansOfDetection",
+    "Crew Response": "crewResponse",
+    "Unique Hazard Identifiers": "uniqueHazardIdentifier",
+    "Initial Severity ((impact))": "initialSeverity",
+    "Initial likelihood (probability)": "initialLikelihood",
+    "Initial Risk Level": "initialRiskLevel",
+    "Design Mitigation": "designMitigation",
+    "Mitigation Responsibility": "designMitigatonResbiity",
+    "Mitigation Evidence": "designMitigtonEvidence",
+    "Opernal Maintan Mitigation": "opernalMaintanMitigation",
+    "Opernal Mitigaton Resbility": "opernalMitigatonResbility",
+    "Operatnal Mitigation Evidence": "operatnalMitigationEvidence",
+    "Residual Severity ((impact))": "residualSeverity",
+    "Residual Likelihood (probability)": "residualLikelihood",
+    "Residual Risk Level": "residualRiskLevel",
+    "FTA Name/ID": "ftaNameId",
     "Hazard Status": "hazardStatus",
-    "User Field 1": "userField1", // Mapped to safetyData
-    "User Field 2": "userField2", // Mapped to safetyData
+    "User Field 1": "userField1",
+    "User Field 2": "userField2",
   };
 
   const token = localStorage.getItem("sessionId");
@@ -94,7 +90,6 @@ function SafetyReport(props) {
     "Category",
     "Part Type",
     "FR",
-    // "Function associated with the hazard",
     "Hazard",
     "Mode of Operation",
     "Hazard Cause",
@@ -116,13 +111,10 @@ function SafetyReport(props) {
     "Residual Risk Level",
     "Hazard Status",
     "FTA Name/ID",
-    // "Other Relevant Information",
     "User Field 1",
     "User Field 2",
-    // "User Field 3",
-    // "User Field 4",
-    // "User Field 5",
   ];
+
   const columnWidths = {
     "Product Name": "130px",
     "Part Number": "120px",
@@ -132,7 +124,6 @@ function SafetyReport(props) {
     "Part Type": "100px",
     FR: "60px",
   };
-  
 
   // Log out
   const logout = () => {
@@ -153,7 +144,7 @@ function SafetyReport(props) {
         console.error("Error fetching project details:", error);
       })
       .finally(() => {
-        setIsLoading(false); // Update loading state
+        setIsLoading(false);
       });
   };
 
@@ -209,39 +200,40 @@ function SafetyReport(props) {
         }
       });
   };
-// console.log("Safety Report Data:", data);
-//   const safetyData = data?.map((item) => ({
-//     productId: item?.productId || {},
-//     safetyData: item?.safetyData || {},
-//   }));
 
-
-
+  // Always include products, even if no safety data
   const safetyData = React.useMemo(() => {
     if (!data || data.length === 0) return [];
     
-    const transformedData = [];
+    const allRows = [];
     
     data?.forEach(item => {
       const productId = item?.productId || {};
       
-      if (Array.isArray(item?.safetyData)) {
-        item.safetyData.forEach(safetyItem => {
-          transformedData.push({
-            productId: productId,
-            safetyData: safetyItem  || {},
-          });
-        });
-      } 
-      else {
-        transformedData.push({
+      // Always include the product
+      const safetyItems = Array.isArray(item?.safetyData) ? item.safetyData : 
+                         (item?.safetyData ? [item.safetyData] : [{}]);
+      
+      // If there are no safety records, still create one row for the product
+      if (safetyItems.length === 0) {
+        allRows.push({
           productId: productId,
-          safetyData: item?.safetyData || {},
+          safetyData: {},
+          hasSafetyData: false
+        });
+      } else {
+        // Create one row per safety record
+        safetyItems.forEach(safetyItem => {
+          allRows.push({
+            productId: productId,
+            safetyData: safetyItem || {},
+            hasSafetyData: true
+          });
         });
       }
     });
     
-    return transformedData;
+    return allRows;
   }, [data]);
   
   useEffect(() => {
@@ -266,7 +258,15 @@ function SafetyReport(props) {
     }));
   };
 
-  // Log sorted data to debug
+  // Get visible headers based on columnVisibility
+  const getVisibleHeaders = () => {
+    return headers.filter((header) => {
+      if (header === "FR" || header === "Reference" || header === "Id") {
+        return columnVisibility[header];
+      }
+      return true;
+    });
+  };
 
   const exportToExcel = () => {
     if (!projectData) {
@@ -274,6 +274,8 @@ function SafetyReport(props) {
       return;
     }
 
+    const visibleHeaders = getVisibleHeaders();
+    
     // First Page Worksheet
     const firstPageData = [
       [],
@@ -304,15 +306,7 @@ function SafetyReport(props) {
 
     const firstPageWorksheet = XLSX.utils.aoa_to_sheet(firstPageData);
 
-    // Applying styles to the first project name cell
-    firstPageWorksheet["C3"] = {
-      font: {
-        bold: true,
-      },
-    };
-
     // Main Content Worksheet
-    const headers = Object.keys(headerKeyMapping); // Assuming you have defined this
     const mainContentData = [
       [],
       [],
@@ -322,21 +316,36 @@ function SafetyReport(props) {
       ["Project Number", projectData?.projectNumber || ""],
       ["Project Description", projectData?.projectDesc || ""],
       [],
-      headers, // Header row
-      ...safetyData.map((row) =>
-        headers.map((header) => {
+      visibleHeaders,
+      ...safetyData.map((row, rowIndex) =>
+        visibleHeaders.map((header) => {
+          if (header === "S.No") return rowIndex + 1;
+          
+          if (header === "Hazard") {
+            // Show hazard index only if there's actual hazard data
+            const hasHazardData = row.hasSafetyData && 
+              (row?.safetyData?.failureMode || 
+               row?.safetyData?.modeOfOperation || 
+               row?.safetyData?.hazardCause);
+            return hasHazardData ? rowIndex + 1 : "";
+          }
+
           const key = headerKeyMapping[header];
-          return (
-            row?.productId?.[key] ??
-            row?.fmecaData?.[key] ??
-            row?.pmmraData?.[key] ??
-            "-"
-          );
+          let value = key
+            ? row?.productId?.[key] ??
+              row?.safetyData?.[key] ??
+              "-"
+            : "-";
+
+          if (header === "FR" && typeof value === "number") {
+            value = value.toFixed(6);
+          }
+
+          return value;
         })
       ),
     ];
 
-    // Convert the main content data to an Excel worksheet
     const mainContentWorksheet = XLSX.utils.aoa_to_sheet(mainContentData);
 
     // Last Page Worksheet
@@ -371,17 +380,11 @@ function SafetyReport(props) {
 
     const lastPageWorksheet = XLSX.utils.aoa_to_sheet(lastPageData);
 
-    // Create a new workbook and append the worksheets
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, firstPageWorksheet, "First Page");
-    XLSX.utils.book_append_sheet(
-      workbook,
-      mainContentWorksheet,
-      "Main Content"
-    );
+    XLSX.utils.book_append_sheet(workbook, mainContentWorksheet, "Main Content");
     XLSX.utils.book_append_sheet(workbook, lastPageWorksheet, "Last Page");
 
-    // Write the workbook to a file
     XLSX.writeFile(workbook, "safety_report.xlsx");
   };
 
@@ -403,8 +406,8 @@ function SafetyReport(props) {
 
     const addContentToPDF = (element, pageNumber) => {
       return html2canvas(element, {
-        scale: 2, // Increase the scale for better quality
-        useCORS: true, // Ensure that CORS is handled
+        scale: 2,
+        useCORS: true,
       }).then((canvas) => {
         const imgData = canvas.toDataURL("image/png");
         pdf.addImage(imgData, "PNG", 0, 0, width, height);
@@ -430,45 +433,58 @@ function SafetyReport(props) {
       });
   };
 
-  // Function to generate Word document
-
   const generateWordDocument = () => {
     if (!projectData) {
       console.error("Project data is not available.");
       return;
     }
 
-    // Table header row
+    const visibleHeaders = getVisibleHeaders();
+    
     const tableRows = [
       new TableRow({
-        children: headers
-          .filter((header) => columnVisibility[header] !== false)
-          .map(
-            (header) =>
-              new TableCell({
-                children: [new Paragraph({ text: header, bold: true })],
-                width: { size: 100, type: WidthType.PERCENTAGE },
-              })
-          ),
+        children: visibleHeaders.map(
+          (header) =>
+            new TableCell({
+              children: [new Paragraph({ text: header, bold: true })],
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            })
+        ),
       }),
     ];
 
-    // Table data rows
-    safetyData.forEach((row) => {
+    safetyData.forEach((row, rowIndex) => {
       const tableRow = new TableRow({
-        children: headers
-          .filter((header) => columnVisibility[header] !== false)
-          .map(
-            (header) =>
-              new TableCell({
-                children: [
-                  new Paragraph({
-                    text: row[headerKeyMapping[header]] || "-",
-                  }),
-                ],
-                width: { size: 100, type: WidthType.PERCENTAGE },
-              })
-          ),
+        children: visibleHeaders.map((header) => {
+          let text = "";
+          
+          if (header === "S.No") {
+            text = (rowIndex + 1).toString();
+          } else if (header === "Hazard") {
+            const hasHazardData = row.hasSafetyData && 
+              (row?.safetyData?.failureMode || 
+               row?.safetyData?.modeOfOperation || 
+               row?.safetyData?.hazardCause);
+            text = hasHazardData ? (rowIndex + 1).toString() : "";
+          } else {
+            const key = headerKeyMapping[header];
+            let value = key
+              ? row?.productId?.[key] ??
+                row?.safetyData?.[key] ??
+                "-"
+              : "-";
+
+            if (header === "FR" && typeof value === "number") {
+              value = value.toFixed(6);
+            }
+            text = value;
+          }
+
+          return new TableCell({
+            children: [new Paragraph({ text })],
+            width: { size: 100, type: WidthType.PERCENTAGE },
+          });
+        }),
       });
       tableRows.push(tableRow);
     });
@@ -482,12 +498,12 @@ function SafetyReport(props) {
                 new TextRun({
                   text: "Project Report",
                   bold: true,
-                  size: 32, // 16pt font size
+                  size: 32,
                 }),
               ],
               alignment: "center",
             }),
-            new Paragraph({ children: [new TextRun({ text: "" })] }), // Empty paragraph for spacing
+            new Paragraph({ children: [new TextRun({ text: "" })] }),
             new Paragraph({
               children: [
                 new TextRun({
@@ -505,12 +521,11 @@ function SafetyReport(props) {
             new Paragraph({
               children: [
                 new TextRun({
-                  text: `Project Description: ${projectData.projectDesc || "-"
-                    }`,
+                  text: `Project Description: ${projectData.projectDesc || "-"}`,
                 }),
               ],
             }),
-            new Paragraph({ children: [new TextRun({ text: "" })] }), // Empty paragraph for spacing
+            new Paragraph({ children: [new TextRun({ text: "" })] }),
             new Table({
               rows: tableRows,
             }),
@@ -527,6 +542,7 @@ function SafetyReport(props) {
         console.error("Error generating Word document:", error);
       });
   };
+
   return (
     <div>
       {isLoading ? (
@@ -534,9 +550,10 @@ function SafetyReport(props) {
       ) : (
         <div>
           <div className="mt-3"></div>
+          
+          {/* Always show export buttons when there are products */}
           {safetyData?.length > 0 ? (
             <>
-
               <Row className="d-flex align-items-center justify-content-end">
                 <Col className="d-flex justify-content-end">
                   <Button
@@ -547,53 +564,21 @@ function SafetyReport(props) {
                     <FaFileExcel style={{ marginRight: "8px" }} />
                     Excel
                   </Button>
-{/* 
-                  <Button
-                    className="report-save-btn"
-                    onClick={generatePDFReport}
-                    disabled={columnLength}
-                    style={{ marginRight: "8px" }}
-                  >
-                    <FaFilePdf style={{ marginRight: "8px" }} />
-                    PDF
-                  </Button>
-
-                  <Button
-                    className="report-save-btn"
-                    disabled={columnLength}
-                    onClick={() => {
-                      generateWordDocument(
-                        {
-                          projectName: projectData.projectName,
-                          projectNumber: projectData?.projectNumber,
-                          projectDesc: projectData.projectDesc,
-                          projectId: "1",
-                        },
-                        ["Header1", "Header2"],
-                        { Header1: true, Header2: true },
-                        [{ Header1: "Data1", Header2: "Data2" }],
-                        { Header1: "Header1", Header2: "Header2" }
-                      );
-                    }}
-                  >
-                    <FaFileWord style={{ marginRight: "8px" }} />
-                    Word
-                  </Button> */}
+                  {/* PDF and Word buttons can be uncommented as needed */}
                 </Col>
               </Row>
 
               {columnLength && (
                 <Row>
                   <Col className="d-flex justify-content-end">
-                    {/* <p style={{ color: "red", textAlign: "right" }}>
-                      *You cannot download the PDF or Word document when the
-                      number of columns exceeds the limit.
-                    </p> */}
+                    {/* Column limit message */}
                   </Col>
                 </Row>
               )}
             </>
           ) : null}
+          
+          {/* Always show the report when there are products */}
           {safetyData?.length > 0 ? (
             <div id="pdf-report-content">
               <div id="first-page-report">
@@ -638,11 +623,19 @@ function SafetyReport(props) {
                         <Col className="d-flex flex-row custom-checkbox-group">
                           <Form.Check
                             type="checkbox"
+                            name="Id"
+                            label="Id"
+                            checked={columnVisibility.Id}
+                            onChange={handleColumnVisibilityChange}
+                            className="custom-checkbox ml-3"
+                          />
+                          <Form.Check
+                            type="checkbox"
                             name="Reference"
                             label="Reference"
                             checked={columnVisibility.Reference}
                             onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
+                            className="custom-checkbox ml-3"
                           />
                           <Form.Check
                             type="checkbox"
@@ -650,108 +643,77 @@ function SafetyReport(props) {
                             label="FR"
                             checked={columnVisibility.FR}
                             onChange={handleColumnVisibilityChange}
-                            className="custom-checkbox ml-5"
+                            className="custom-checkbox ml-3"
                           />
                         </Col>
                       </Row>
                     ) : null}
                   </div>
 
-                  <div style={{ overflowX: "auto" }} >
+                  <div style={{ overflowX: "auto" }}>
                     <table className="report-table">
                       <thead>
                         <tr>
-                          {headers
-                            .filter((header) =>
-                              header === "FR" || header === "Reference"
-                                ? columnVisibility[header]
-                                : true
-                            )
-                            .map((header) => (
-                              <th
-                                key={header}
-                                style={{
-                                  width: columnWidths[header],
-                                  textAlign: "center",
-                                }}
-                              >
-                                {header}
-                              </th>
-                            ))}
+                          {getVisibleHeaders().map((header) => (
+                            <th
+                              key={header}
+                              style={{
+                                width: columnWidths[header],
+                                textAlign: "center",
+                              }}
+                            >
+                              {header}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
-<tbody>
-  {(() => {
-    // Group hazards by product name to create separate numbering for each product
-    const productHazardMap = {};
-    let hazardCounter = 1;
-    
-    return safetyData?.map((row, rowIndex) => {
-      const productName = row?.productId?.productName || "Unknown";
-      
-      // Check if this row has any hazard-related data
-      const hasHazardData = Object.keys(headerKeyMapping).some(header => {
-        if (header === "Hazard" || header === "Mode of Operation" || header === "Hazard Cause" || 
-            header === "Effect of the Hazard" || header === "Hazard Classification") {
-          const key = headerKeyMapping[header];
-          const value = key ? row?.productId?.[key] ?? row?.safetyData?.[key] : null;
-          return value && value !== "-" && value !== "" && value !== null;
-        }
-        return false;
-      });
+                      <tbody>
+                        {safetyData?.map((row, rowIndex) => (
+                          <tr key={rowIndex}>
+                            {getVisibleHeaders().map((header) => {
+                              // If header is S.No → show rowIndex + 1
+                              if (header === "S.No") {
+                                return (
+                                  <td key={header} style={{ textAlign: "center" }}>
+                                    {rowIndex + 1}
+                                  </td>
+                                );
+                              }
+                              
+                              // If header is Hazard → show hazard index only if row has hazard data
+                              if (header === "Hazard") {
+                                const hasHazardData = row.hasSafetyData && 
+                                  (row?.safetyData?.failureMode || 
+                                   row?.safetyData?.modeOfOperation || 
+                                   row?.safetyData?.hazardCause);
+                                return (
+                                  <td key={header} style={{ textAlign: "center" }}>
+                                    {hasHazardData ? rowIndex + 1 : ""}
+                                  </td>
+                                );
+                              }
 
-      // Initialize product in map if not exists
-      if (!productHazardMap[productName]) {
-        productHazardMap[productName] = 1;
-      }
+                              const key = headerKeyMapping[header];
+                              let value = key
+                                ? row?.productId?.[key] ??
+                                  row?.safetyData?.[key] ??
+                                  "-"
+                                : "-";
 
-      // Get hazard index for this product
-      const hazardIndex = hasHazardData ? productHazardMap[productName]++ : "";
+                              // Format FR to 6 decimal places if it's a number
+                              if (header === "FR" && typeof value === "number") {
+                                value = value.toFixed(6);
+                              }
 
-      return (
-        <tr key={rowIndex}>
-          {headers.map((header) => {
-            // If header is S.No → show rowIndex + 1
-            if (header === "S.No") {
-              return (
-                <td key={header} style={{ textAlign: "center" }}>
-                  {rowIndex + 1}
-                </td>
-              );
-            }
-            
-            // If header is Hazard → show hazard index only if row has hazard data
-            if (header === "Hazard") {
-              return (
-                <td key={header} style={{ textAlign: "center" }}>
-                  {hazardIndex}
-                </td>
-              );
-            }
-
-            const key = headerKeyMapping[header];
-            let value = key
-              ? row?.productId?.[key] ??
-              row?.safetyData?.[key] ??
-              "-"
-              : "-";
-
-            // Format FR to 6 decimal places if it's a number
-            if (header === "FR" && typeof value === "number") {
-              value = value.toFixed(6);
-            }
-
-            return (
-              <td key={header} style={{ textAlign: "center" }}>
-                {value}
-              </td>
-            );
-          })}
-        </tr>
-      );
-    });
-  })()}
-</tbody>
+                              return (
+                                <td key={header} style={{ textAlign: "center" }}>
+                                  {value}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
                     </table>
                   </div>
                 </div>
@@ -760,16 +722,17 @@ function SafetyReport(props) {
                 <LastPageReport projectId={projectId} moduleType={moduleType} />
               </div>
             </div>
-          ) : <div
-            style={{
-              display: "flex",
-              width: "100%",
-              justifyContent: "center",
-            }}
-          >
-            <h3>No Records to Display</h3>
-          </div>
-          }
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                width: "100%",
+                justifyContent: "center",
+              }}
+            >
+              <h3>No Products Found</h3>
+            </div>
+          )}
         </div>
       )}
     </div>
