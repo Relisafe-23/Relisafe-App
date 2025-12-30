@@ -735,6 +735,7 @@ function Index(props) {
                           value={projectId}
                           productId={productId}
                           data={treeTableData}
+                          
                         />
                       </div>
 
@@ -752,6 +753,10 @@ function Index(props) {
                             <label
                               htmlFor="file-input"
                               className="import-export-btn"
+                                           style={{
+          cursor: writePermission === false ? "not-allowed" : "pointer",
+          opacity: writePermission === false ? 0.5 : 1
+        }}
                             >
                               <FontAwesomeIcon icon={faFileDownload} />
                             </label>
@@ -761,13 +766,22 @@ function Index(props) {
                               id="file-input"
                               onChange={importExcel}
                               style={{ display: "none" }}
+                                disabled={writePermission === false}
                             />
                           </div>
                         </Tooltip>
                         <Tooltip placement="left" title="Export">
                           <label
                             className="import-export-btn"
-                            onClick={() => exportToExcel(values)}
+                            style={{
+          cursor: writePermission === false ? "not-allowed" : "pointer",
+          opacity: writePermission === false ? 0.5 : 1
+        }}
+                            onClick={() =>{
+                                if (writePermission !== false) {
+                              exportToExcel(values)}
+                                }}
+                                 disabled={writePermission === false}
                           >
                             <FontAwesomeIcon
                               icon={faFileUpload}
