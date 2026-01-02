@@ -4,7 +4,7 @@ import axios from "axios";
 //   baseURL: "https://relisafe-api.herokuapp.com//",
 // });
 const Api = axios.create({
-  baseURL: "https://rams360server-86d8d55cead8.herokuapp.com/",
+  baseURL: "https://relisafe-api-e067e0a7c5f8.herokuapp.com/",
 });
 
 
