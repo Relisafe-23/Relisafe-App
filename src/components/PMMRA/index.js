@@ -48,6 +48,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Tooltip, TableCell } from "@material-ui/core";
 
+
 const string255 = Yup.string()
   .required("This field is required")
   .max(255, "Must be at most 255 characters");
@@ -541,8 +542,8 @@ export default function PMMRA(props) {
       pmTaskType: values.PMtasktype,
       taskIntrvlFreq: values.taskintervalFrequency,
       LatitudeFreqTolrnc: values.latitudeFrequency,
-      scheduleMaintenceTsk: values.scheduledMaintenanceTask,
       tskInteralDetermination: values.taskInterval,
+      scheduleMaintenceTsk: values.scheduledMaintenanceTask,
       taskDesc: values.taskDescription,
       tskTimeML1: values.tasktimeML1,
       tskTimeML2: values.tasktimeML2,
@@ -626,13 +627,22 @@ export default function PMMRA(props) {
       restoreDiscardTsk: value.task,
       combinationofTsk: value.combination,
       rcmnotes: value.rcmnotes,
+
       pmTaskId: value.pmtaskid,
       pmTaskType: value.PMtasktype,
       taskIntrvlFreq: value.taskintervalFrequency,
-      LatitudeFreqTolrnc: value.latitudeFrequency,
+      // taskintervalunit
+      // taskIntervaal
+      taskIntervalunit: value.taskIntervalunit,
+      taskInterval: value.taskInterval,
+
+      // LatitudeFreqTolrnc: value.latitudeFrequency,
+
       scheduleMaintenceTsk: value.scheduledMaintenanceTask,
-      tskInteralDetermination: value.taskInterval,
+      // tskInteralDetermination: value.taskInterval,
       taskDesc: value.taskDescription,
+
+
       tskTimeML1: value.tasktimeML1,
       tskTimeML2: value.tasktimeML2,
       tskTimeML3: value.tasktimeML3,
@@ -1210,15 +1220,15 @@ export default function PMMRA(props) {
         values?.latitudeFrequency && values?.latitudeFrequency?.value
           ? values?.latitudeFrequency?.value
           : values?.latitudeFrequency,
+      tskInteralDetermination:
+        values?.taskInterval && values?.taskInterval?.value
+          ? values?.taskInterval?.value
+          : values?.taskInterval,
       scheduleMaintenceTsk:
         values?.scheduledMaintenanceTask &&
           values?.scheduledMaintenanceTask?.value
           ? values?.scheduledMaintenanceTask?.value
           : values?.scheduledMaintenanceTask,
-      tskInteralDetermination:
-        values?.taskInterval && values?.taskInterval?.value
-          ? values?.taskInterval?.value
-          : values?.taskInterval,
       taskDesc:
         values?.taskDescription && values?.taskDescription?.value
           ? values?.taskDescription?.value
@@ -2049,7 +2059,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Evident1"
                                         className="mt-1"
                                         placeholder="Evident1"
@@ -2085,7 +2095,7 @@ export default function PMMRA(props) {
                                     );
                                   })()
                                 ) : (
-                                  <Select
+                                  <CreatableSelect
                                     name="Evident1"
                                     className="mt-1"
                                     placeholder="Evident1"
@@ -2157,7 +2167,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Items"
                                         className="mt-1"
                                         placeholder="Items"
@@ -2193,7 +2203,7 @@ export default function PMMRA(props) {
                                     );
                                   })()
                                 ) : (
-                                  <Select
+                                  <CreatableSelect
                                     name="Items"
                                     className="mt-1"
                                     placeholder="Items"
@@ -2264,7 +2274,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="condition"
                                         className="mt-1"
                                         placeholder="Condition"
@@ -2300,7 +2310,7 @@ export default function PMMRA(props) {
                                     );
                                   })()
                                 ) : (
-                                  <Select
+                                  <CreatableSelect
                                     name="condition"
                                     className="mt-1"
                                     placeholder="condition"
@@ -2373,7 +2383,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="failure"
                                         className="mt-1"
                                         placeholder="Failure"
@@ -2409,7 +2419,7 @@ export default function PMMRA(props) {
                                     );
                                   })()
                                 ) : (
-                                  <Select
+                                  <CreatableSelect
                                     name="failure"
                                     className="mt-1"
                                     placeholder="failure"
@@ -2481,7 +2491,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="redesign"
                                         className="mt-1"
                                         placeholder="Redesign"
@@ -2517,7 +2527,7 @@ export default function PMMRA(props) {
                                     );
                                   })()
                                 ) : (
-                                  <Select
+                                  <CreatableSelect
                                     name="redesign"
                                     className="mt-1"
                                     placeholder="redesign"
@@ -2593,7 +2603,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="acceptable"
                                         className="mt-1"
                                         placeholder="Acceptable"
@@ -2629,7 +2639,7 @@ export default function PMMRA(props) {
                                     );
                                   })()
                                 ) : (
-                                  <Select
+                                  <CreatableSelect
                                     name="acceptable"
                                     className="mt-1"
                                     placeholder="acceptable"
@@ -2704,7 +2714,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="lubrication"
                                         className="mt-1"
                                         placeholder="Lubrication"
@@ -2740,7 +2750,7 @@ export default function PMMRA(props) {
                                     );
                                   })()
                                 ) : (
-                                  <Select
+                                  <CreatableSelect
                                     name="lubrication"
                                     className="mt-1"
                                     placeholder="lubrication"
@@ -2813,7 +2823,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="task"
                                         className="mt-1"
                                         placeholder="Task"
@@ -2849,7 +2859,7 @@ export default function PMMRA(props) {
                                     );
                                   })()
                                 ) : (
-                                  <Select
+                                  <CreatableSelect
                                     name="task"
                                     className="mt-1"
                                     placeholder="task"
@@ -2921,7 +2931,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="combination"
                                         className="mt-1"
                                         placeholder="Combination"
@@ -2957,7 +2967,7 @@ export default function PMMRA(props) {
                                     );
                                   })()
                                 ) : (
-                                  <Select
+                                  <CreatableSelect
                                     name="combination"
                                     className="mt-1"
                                     placeholder="combination"
@@ -3030,7 +3040,7 @@ export default function PMMRA(props) {
                              
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="rcmnotes"
                                         className="mt-1"
                                         placeholder="Rcm Notes"
@@ -3066,7 +3076,7 @@ export default function PMMRA(props) {
                                     );
                                   })()
                                 ) : (
-                                  <Select
+                                  <CreatableSelect
                                     name="rcmnotes"
                                     className="mt-1"
                                     placeholder="rcmnotes"

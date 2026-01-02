@@ -132,12 +132,12 @@ function Index(props) {
       setSelectedCheckboxes(
         selectedCheckboxes.filter((item) => item !== rowData)
       );
-      
-    setSelectedNprdFR(null); 
+
+      setSelectedNprdFR(null);
     } else {
-         setSelectedCheckboxes([rowData]);
-    setSelectedNprdFR(rowData);
-          
+      setSelectedCheckboxes([rowData]);
+      setSelectedNprdFR(rowData);
+
     }
   };
   const nprdPartType = nprdPartTypes;
@@ -230,7 +230,7 @@ function Index(props) {
     : props?.location?.state?.productId
       ? props?.location?.state?.productId
       : initialProductID;
-      console.log("initialTreeStructure.....",initialProductID);
+  console.log("initialTreeStructure.....", initialProductID);
 
   const treeStructure = props?.location?.state?.parentId
     ? props?.location?.state?.parentId
@@ -239,7 +239,7 @@ function Index(props) {
 
   const [dutyCycle, setDutyCycle] = useState('');
   const [frDistribution, setFrDistribution] = useState();
-  const [allocated, setAllocated] = useState(''); 
+  const [allocated, setAllocated] = useState('');
   const [otherFr, setOtherFr] = useState('');
   const [frRemarks, setFrRemarks] = useState('');
 
@@ -281,7 +281,7 @@ function Index(props) {
         <Checkbox
           checked={selectedCheckboxes.includes(rowData)}
           onChange={() => handleChange(rowData)}
-          // isDisabled={rowClicked}
+        // isDisabled={rowClicked}
         />
       ),
     },
@@ -411,21 +411,21 @@ function Index(props) {
         authorizedPersonnel: userId,
         projectId: projectId,
         userId: userId,
-        
+
       },
     })
       .then((res) => {
         const data = res?.data?.data;
         setWritePermission(data?.modules[1].write);
         setPermission(data?.modules[1]);
-         setPermissionsChecked(true); 
+        setPermissionsChecked(true);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
         }
-          setPermissionsChecked(true);
+        setPermissionsChecked(true);
       });
   };
 
@@ -697,13 +697,13 @@ function Index(props) {
         if (errorStatus === 401) {
           logout();
         }
-        setIsSaving(false); 
+        setIsSaving(false);
       });
   };
   const submitForm = (values) => {
 
     console.log(values, "values from submit form")
-setIsSaving(true);
+    setIsSaving(true);
     const companyId = localStorage.getItem("companyId");
     const standard = values?.standard?.value;
     Api.post("/api/v1/failureRatePrediction/", {
@@ -741,7 +741,7 @@ setIsSaving(true);
         if (errorStatus === 401) {
           logout();
         }
-         setIsSaving(false); 
+        setIsSaving(false);
       });
   };
 
@@ -765,7 +765,7 @@ setIsSaving(true);
             enableReinitialize={true}
             initialValues={{
               name: name,
-              reference: reference, 
+              reference: reference,
               partNumber: partNumber,
               category: category,
               quantity: quantity,
@@ -801,6 +801,24 @@ setIsSaving(true);
               } = formik;
               return (
                 <div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div style={{ width: "30%", marginRight: "20px" }}>
+                      <Projectname projectId={projectId} />
+                    </div>
+                    <div style={{ width: "100%", marginRight: "20px" }}>
+                      <Dropdown
+                        value={projectId}
+                        productId={productId}
+                        data={treeTableData}
+                      />
+                    </div>
+                  </div>
+                  
                   <Form onSubmit={handleSubmit}>
                     <fieldset
                       disabled={
@@ -812,23 +830,7 @@ setIsSaving(true);
                           : "disabled"
                       }
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div style={{ width: "30%", marginRight: "20px" }}>
-                          <Projectname projectId={projectId} />
-                        </div>
-                        <div style={{ width: "100%", marginRight: "20px" }}>
-                          <Dropdown
-                            value={projectId}
-                            productId={productId}
-                            data={treeTableData}
-                          />
-                        </div>
-                      </div>
+
 
                       <Row className="d-flex  mt-4">
                         <Col>
@@ -1419,7 +1421,7 @@ setIsSaving(true);
                                       {values.frRemarks.length > 200 && (
                                         <span className="text-danger">Maximum 200 characters allowed</span>
                                       )}
-                                      <ErrorMessage className="error text-danger" component="span" name="frRemarks"/>
+                                      <ErrorMessage className="error text-danger" component="span" name="frRemarks" />
                                     </Form.Group>
 
                                   </Col>
@@ -1627,24 +1629,24 @@ setIsSaving(true);
                                 >
                                   CANCEL
                                 </Button>
-                              <Button
-  className="save-btn "
-  type="submit"
-  disabled={!productId || isSaving}
->
-  {isSaving ? (
-    <>
-      <Spinner
-        animation="border"
-        size="sm"
-        className="me-2"
-      />
-      UPDATING...
-    </>
-  ) : (
-    "SAVE CHANGES"
-  )}
-</Button>
+                                <Button
+                                  className="save-btn "
+                                  type="submit"
+                                  disabled={!productId || isSaving}
+                                >
+                                  {isSaving ? (
+                                    <>
+                                      <Spinner
+                                        animation="border"
+                                        size="sm"
+                                        className="me-2"
+                                      />
+                                      UPDATING...
+                                    </>
+                                  ) : (
+                                    "SAVE CHANGES"
+                                  )}
+                                </Button>
                                 <div>
                                   <Modal
                                     show={nprdModel}
@@ -2001,31 +2003,31 @@ setIsSaving(true);
                                                 )}
                                               </Card>
                                               <div className="d-flex flex-direction-row justify-content-end m-2">
-                                 <Button
-  className="delete-cancel-btn me-2"
-  variant="outline-secondary"
-  type="button"
-  onClick={(e) => {
-    // Manually clear modal state without affecting main form
-    setPartTypeNprd();
-    setPartTypeDescr();
-    setPartTypeQuality();
-    setFR();
-    setRowClicked(false);
-    setData([]);
-    setSelectedCheckboxes([]);
-    setSelectedNprdFR(null);
-    
-    // Manually reset modal form fields
-    setFieldValue("partTypeNprd", "");
-    setFieldValue("quality", "");
-    setFieldValue("partTypeDescr", "");
-    setFieldValue("FR", "");
-     setPredicted("");
-  }}
->
-  CANCEL
-</Button>
+                                                <Button
+                                                  className="delete-cancel-btn me-2"
+                                                  variant="outline-secondary"
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    // Manually clear modal state without affecting main form
+                                                    setPartTypeNprd();
+                                                    setPartTypeDescr();
+                                                    setPartTypeQuality();
+                                                    setFR();
+                                                    setRowClicked(false);
+                                                    setData([]);
+                                                    setSelectedCheckboxes([]);
+                                                    setSelectedNprdFR(null);
+
+                                                    // Manually reset modal form fields
+                                                    setFieldValue("partTypeNprd", "");
+                                                    setFieldValue("quality", "");
+                                                    setFieldValue("partTypeDescr", "");
+                                                    setFieldValue("FR", "");
+                                                    setPredicted("");
+                                                  }}
+                                                >
+                                                  CANCEL
+                                                </Button>
                                                 {/* <Button
                                                   className="save-btn"
                                                   type="submit"
@@ -2062,7 +2064,7 @@ setIsSaving(true);
                                                   className="save-btn"
                                                   type="submit"   // only submit
                                                   disabled={!isValid || selectedCheckboxes.length === 0 || isSubmitting}  // Formik gives these
-                                                  // disabled={}  // disable if row clicked
+                                                // disabled={}  // disable if row clicked
                                                 >
                                                   CALCULATE FR
                                                 </Button>
@@ -2481,35 +2483,35 @@ setIsSaving(true);
                                                 )}
                                               </Card>
                                               <div className="d-flex flex-direction-row justify-content-end m-2">
-                                             <Button
-  className="delete-cancel-btn me-2"
-  variant="outline-secondary"
-  type="button"
-  onClick={(e) => {
-    // Manually clear modal state without affecting main form
-    setPartType2016Nprd();
-    setPartType2016Descr();
-    setPartType2016Quality();
-    setFR();
-    setRowClicked(false);
-    setData([]);
-    setSelectedCheckboxes([]);
-    setSelectedNprdFR(null);
-    
-    // Manually reset modal form fields
-    setFieldValue("partTypeNprd", "");
-    setFieldValue("quality2016", "");
-    setFieldValue("partTypeDescr", "");
-    setFieldValue("FR", "");
-     setPredicted("");
-  }}
->
-  CANCEL
-</Button>
+                                                <Button
+                                                  className="delete-cancel-btn me-2"
+                                                  variant="outline-secondary"
+                                                  type="button"
+                                                  onClick={(e) => {
+                                                    // Manually clear modal state without affecting main form
+                                                    setPartType2016Nprd();
+                                                    setPartType2016Descr();
+                                                    setPartType2016Quality();
+                                                    setFR();
+                                                    setRowClicked(false);
+                                                    setData([]);
+                                                    setSelectedCheckboxes([]);
+                                                    setSelectedNprdFR(null);
+
+                                                    // Manually reset modal form fields
+                                                    setFieldValue("partTypeNprd", "");
+                                                    setFieldValue("quality2016", "");
+                                                    setFieldValue("partTypeDescr", "");
+                                                    setFieldValue("FR", "");
+                                                    setPredicted("");
+                                                  }}
+                                                >
+                                                  CANCEL
+                                                </Button>
                                                 <Button
                                                   className="save-btn"
                                                   type="submit"
-                                                  disabled={!isValid ||  selectedCheckboxes.length === 0}
+                                                  disabled={!isValid || selectedCheckboxes.length === 0}
                                                 >
                                                   CALCULATE FR
                                                 </Button>
