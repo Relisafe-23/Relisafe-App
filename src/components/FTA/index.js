@@ -71,7 +71,7 @@ export default function FTA(props) {
   const [nodeLength, setNodeLength] = useState([]);
   const [calcTypes, setCalcTypes] = useState();
   const [productData, setProductData] = useState([]);
-  
+  const [currentReportType, setCurrentReportType] = useState('all');
   // Report related states
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [eventsData, setEventsData] = useState([]);
@@ -94,7 +94,7 @@ export default function FTA(props) {
     stopTriggerReload,
   } = useModal();
 
- const generateReport = (type = 'all') => {
+const generateReport = (type = 'all') => {
   if (!chartData) {
     toast.warning('No fault tree data available');
     return;
@@ -152,9 +152,10 @@ export default function FTA(props) {
   
   setEventsData(events);
   setGatesData(gates);
+  setCurrentReportType(type); // Set the current report type
   setIsReportModalOpen(true);
   
-  toast.success('Report generated successfully');
+  toast.success(`${type === 'events' ? 'Events' : type === 'gates' ? 'Gates' : 'Report'} generated successfully`);
 };
 
   const handleWheelScroll = (event) => {
@@ -423,12 +424,13 @@ export default function FTA(props) {
           </div>
         </div>
       )}
-       <EventsReportModal
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-        eventsData={eventsData}
-        gatesData={gatesData}
-      />
+   <EventsReportModal
+  isOpen={isReportModalOpen}
+  onClose={() => setIsReportModalOpen(false)}
+  eventsData={eventsData}
+  gatesData={gatesData}
+  reportType={currentReportType} // Pass the current report type
+/>
       
       
 

@@ -201,33 +201,37 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData, onGenerateRepor
                       </Navbar.Collapse>
                     </Navbar>
 
-                    <Navbar variant="dark" expand="lg">
+      <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
-                        <Nav>
-                          <NavDropdown
-                            title={
-                              <span className="dropdown-title">
-                                Report <span className="dropdown-arrow">&#9662;</span>
-                              </span>
-                            }
-                            id="basic-nav-dropdown"
-                          >
-                            <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('all')}>
-                              <FontAwesomeIcon icon={faFileAlt} style={{ paddingRight: "10px" }} />
-                              All Nodes Report
-                            </NavDropdown.Item>
-                            <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('events')}>
-                              <FontAwesomeIcon icon={faFileCsv} style={{ paddingRight: "10px" }} />
-                              List of Events
-                            </NavDropdown.Item>
-                            <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('gates')}>
-                              <FontAwesomeIcon icon={faFilePdf} style={{ paddingRight: "10px" }} />
-                              List of Gates
-                            </NavDropdown.Item>
-                          </NavDropdown>
-                        </Nav>
-                      </Navbar.Collapse>
-                    </Navbar>
+                        <Nav>            
+
+<NavDropdown
+  title={
+    <span className="dropdown-title">
+      Report <span className="dropdown-arrow">&#9662;</span>
+    </span>
+  }
+  id="basic-nav-dropdown"
+>
+  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('all')}>
+    <FontAwesomeIcon icon={faFileAlt} style={{ paddingRight: "10px" }} />
+    All Nodes Report
+  </NavDropdown.Item>
+  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('events')}>
+    <FontAwesomeIcon icon={faFileCsv} style={{ paddingRight: "10px" }} />
+    List of Events
+  </NavDropdown.Item>
+  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('gates')}>
+    <FontAwesomeIcon icon={faFilePdf} style={{ paddingRight: "10px" }} />
+    List of Gates
+  </NavDropdown.Item>
+</NavDropdown>
+</Nav>  
+</Navbar.Collapse>
+</Navbar>
+
+
+
                   </div>
                 ) : null}
 
