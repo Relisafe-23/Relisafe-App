@@ -823,7 +823,7 @@ function Index(props) {
 
   // Validation utility
   const validateField = (fieldName, value, isRequired) => {
-    if (isRequired && (!value || value.toString().trim() === '')) {
+    if (isRequired && (!value || value?.toString()?.trim() === '')) {
       return `${fieldName} is required`;
     }
     return null;
@@ -914,13 +914,13 @@ function Index(props) {
                 borderRadius: "4px",
                 width: "100%",
                 borderColor:
-                  isRequired && (!value || value.toString().trim() === '')
+                  isRequired && (!value || value?.toString().trim() === '')
                     ? '#d32f2f'
                     : '#ccc',
               }}
               title={title}
             />
-            {isRequired && (!value || value.toString().trim() === '') && (
+            {isRequired && (!value || value?.toString()?.trim() === '') && (
               <div
                 style={{
                   position: 'absolute',
@@ -1003,7 +1003,10 @@ function Index(props) {
         options.find((opt) => opt.value === value) ||
         (value ? { label: value, value } : null);
       
-      const hasError = required && (!value || value?.trim() === "");
+    const hasError =
+  required &&
+  (!value || String(value)?.trim() === "");
+
 
         if (!options || options.length === 0) {
         return (
@@ -1178,7 +1181,7 @@ function Index(props) {
 
     const missingFields = mandatoryFields.filter(field => {
       const value = values[field];
-      return !value || value.toString().trim() === '';
+      return !value || value?.toString()?.trim() === '';
     });
 
     if (missingFields.length > 0) {
@@ -1381,7 +1384,7 @@ function Index(props) {
 
     const missingFields = mandatoryFields.filter(field => {
       const value = values[field];
-      return !value || value.toString().trim() === '';
+      return !value || value?.toString()?.trim() === '';
     });
 
     if (missingFields.length > 0) {
