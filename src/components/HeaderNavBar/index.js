@@ -1,3 +1,4 @@
+// Make sure you have this import
 import React, { useState, useEffect, useRef } from "react";
 import { Nav, UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
 import { Avatar } from "@material-ui/core";
@@ -7,7 +8,18 @@ import Relisafe from "../core/Images/Relisafe.png";
 import { useHistory, Link } from "react-router-dom";
 import { useModal } from "../ModalContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFileLines, faPenToSquare, faFileAlt } from "@fortawesome/free-regular-svg-icons";
+import { 
+  faFileLines, 
+  faPenToSquare, 
+  faFileAlt,
+  faSearchPlus,
+  faSearchMinus,
+  faExpand,
+  faCompress,
+  faTh,
+  faArrowsAlt,
+  faRedo
+} from "@fortawesome/free-solid-svg-icons";
 import Api from "../../Api.js";
 import "../../css/HeaderNavBar.scss";
 import { NavDropdown, Navbar } from "react-bootstrap";
@@ -15,8 +27,16 @@ import { faDownload, faUpload, faFileCsv, faFilePdf } from "@fortawesome/free-so
 import { toast } from "react-toastify";
 import Projectname from "../Company/projectname";
 
-const HeaderNavBar = ({ active, selectedComponent, onReloadData, onGenerateReport }) => {  const [userData, setUserData] = useState();
-  const sessionId = localStorage.getItem("sessionId");
+const HeaderNavBar = ({ 
+  active, 
+  selectedComponent, 
+  onReloadData, 
+  onGenerateReport,
+  onZoomToFit,
+  onZoomOriginal,
+  onToggleGrid,
+  onOriginalLayout 
+}) => { const sessionId = localStorage.getItem("sessionId");
   const [file, setFile] = useState(null);
   const {
     openFTAModal,
@@ -28,7 +48,8 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData, onGenerateRepor
     handleDownloadFTA,
     triggerReload,
   } = useModal();
-
+  const [userData, setUserData] = useState();
+  const [showGrid, setShowGrid] = useState(false); // Add this line
   const handleCreateNew = () => {
     openFTAModal();
   };
@@ -53,6 +74,30 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData, onGenerateRepor
     openDeleteNode();
   };
 
+   const handleZoomToFit = () => {
+    if (onZoomToFit) {
+      onZoomToFit();
+    }
+  };
+
+  const handleZoomOriginal = () => {
+    if (onZoomOriginal) {
+      onZoomOriginal();
+    }
+  };
+
+  const handleToggleGrid = () => {
+    setShowGrid(!showGrid);
+    if (onToggleGrid) {
+      onToggleGrid(!showGrid);
+    }
+  };
+
+  const handleOriginalLayout = () => {
+    if (onOriginalLayout) {
+      onOriginalLayout();
+    }
+  };
   const history = useHistory();
 
   useEffect(() => {
@@ -228,6 +273,38 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData, onGenerateRepor
 </NavDropdown>
 </Nav>  
 </Navbar.Collapse>
+</Navbar>
+
+<Navbar variant="dark" expand="lg">
+  <Navbar.Collapse id="navbar-dark-example">
+    <Nav>
+      <NavDropdown
+        title={
+          <span className="dropdown-title">
+            View <span className="dropdown-arrow">&#9662;</span>
+          </span>
+        }
+        id="basic-nav-dropdown"
+      >
+        <NavDropdown.Item onClick={() => onZoomToFit && onZoomToFit()}>
+          <FontAwesomeIcon icon={faExpand} style={{ paddingRight: "10px" }} />
+          Zoom - To Fit Screen
+        </NavDropdown.Item>
+        <NavDropdown.Item onClick={() => onZoomOriginal && onZoomOriginal()}>
+          <FontAwesomeIcon icon={faCompress} style={{ paddingRight: "10px" }} />
+          Zoom - Original Size
+        </NavDropdown.Item>
+        <NavDropdown.Item onClick={() => onToggleGrid && onToggleGrid()}>
+          <FontAwesomeIcon icon={faTh} style={{ paddingRight: "10px" }} />
+          Toggle Grid
+        </NavDropdown.Item>
+        <NavDropdown.Item onClick={() => onOriginalLayout && onOriginalLayout()}>
+          <FontAwesomeIcon icon={faRedo} style={{ paddingRight: "10px" }} />
+          Original Layout
+        </NavDropdown.Item>
+      </NavDropdown>
+    </Nav>
+  </Navbar.Collapse>
 </Navbar>
 
 

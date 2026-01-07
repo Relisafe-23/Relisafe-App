@@ -61,6 +61,8 @@ const initialData = {
 };
 
 export default function FTA(props) {
+  const [showGrid, setShowGrid] = useState(false);
+
  const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
   const [chartData, setChartData] = useState([]);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -93,6 +95,35 @@ export default function FTA(props) {
     reloadData,
     stopTriggerReload,
   } = useModal();
+
+  const handleZoomToFit = () => {
+  // Calculate zoom level to fit the tree in the viewport
+  // You might need to adjust this based on your tree size
+  setZoomLevel(0.8); // Example value, adjust as needed
+  setPanOffset({ x: 0, y: 0 }); // Reset pan offset
+  toast.success("Zoomed to fit screen");
+};
+
+const handleZoomOriginal = () => {
+  setZoomLevel(1); // Reset to original zoom
+  setPanOffset({ x: 0, y: 0 }); // Reset pan offset
+  toast.success("Reset to original size");
+};
+
+const handleToggleGrid = () => {
+  const newShowGrid = !showGrid;
+  setShowGrid(newShowGrid);
+  toast.success(newShowGrid ? "Grid shown" : "Grid hidden");
+};
+
+const handleOriginalLayout = () => {
+  // Reset to original layout - reset zoom and pan
+  setZoomLevel(1);
+  setPanOffset({ x: 0, y: 0 });
+  setPanning(false);
+  setPanStart({ x: 0, y: 0 });
+  toast.success("Original layout restored");
+};
 
 const generateReport = (type = 'all') => {
   if (!chartData) {
@@ -374,10 +405,14 @@ const generateReport = (type = 'all') => {
 
   return (
     <div>
-          <HeaderNavBar 
-      selectedComponent="FTA"
-      onGenerateReport={generateReport}
-    />
+   <HeaderNavBar 
+  selectedComponent="FTA"
+  onGenerateReport={generateReport}
+  onZoomToFit={handleZoomToFit}
+  onZoomOriginal={handleZoomOriginal}
+  onToggleGrid={handleToggleGrid}
+  onOriginalLayout={handleOriginalLayout}
+/>
       {nodeLength.length > 0 ? (
         <div
           className="org-chart-container"

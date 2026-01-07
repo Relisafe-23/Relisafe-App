@@ -1,7 +1,25 @@
 // src/components/FTA/EventsReportModal.js
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Modal } from 'antd';
 import { Button } from 'react-bootstrap';
+import MaterialTable from 'material-table';
+
+// Import Material-UI icons
+import AddBox from '@material-ui/icons/AddBox';
+import ArrowDownward from '@material-ui/icons/ArrowDownward';
+import Check from '@material-ui/icons/Check';
+import ChevronLeft from '@material-ui/icons/ChevronLeft';
+import ChevronRight from '@material-ui/icons/ChevronRight';
+import Clear from '@material-ui/icons/Clear';
+import DeleteOutline from '@material-ui/icons/DeleteOutline';
+import Edit from '@material-ui/icons/Edit';
+import FilterList from '@material-ui/icons/FilterList';
+import FirstPage from '@material-ui/icons/FirstPage';
+import LastPage from '@material-ui/icons/LastPage';
+import Remove from '@material-ui/icons/Remove';
+import SaveAlt from '@material-ui/icons/SaveAlt';
+import Search from '@material-ui/icons/Search';
+import ViewColumn from '@material-ui/icons/ViewColumn';
 
 const EventsReportModal = ({ 
   isOpen, 
@@ -11,6 +29,27 @@ const EventsReportModal = ({
   reportType: initialReportType = 'all' 
 }) => {
   const [reportType, setReportType] = useState(initialReportType);
+  
+  // Table icons configuration
+  const tableIcons = {
+    Add: AddBox,
+    Check: Check,
+    Clear: Clear,
+    Delete: DeleteOutline,
+    DetailPanel: ChevronRight,
+    Edit: Edit,
+    Export: SaveAlt,
+    Filter: FilterList,
+    FirstPage: FirstPage,
+    LastPage: LastPage,
+    NextPage: ChevronRight,
+    PreviousPage: ChevronLeft,
+    ResetSearch: Clear,
+    Search: Search,
+    SortArrow: ArrowDownward,
+    ThirdStateCheck: Remove,
+    ViewColumn: ViewColumn
+  };
   
   // Function to download report as CSV
   const downloadReport = () => {
@@ -83,12 +122,51 @@ const EventsReportModal = ({
   // Only show buttons when report type is 'all'
   const showButtons = initialReportType === 'all';
 
+  // Prepare table data and columns based on report type
+  const { tableData, columns } = useMemo(() => {
+    let data = [];
+    let cols = [];
+
+    if (reportType === 'events' || (initialReportType === 'events' && reportType !== 'gates')) {
+      data = eventsData;
+      cols = [
+        { title: 'Event Name', field: 'code', width: '20%' },
+        { title: 'Description', field: 'description', width: '30%' },
+        { title: 'Failure Rate', field: 'failureRate', width: '15%' },
+        { title: 'Calc Type', field: 'calcType', width: '35%' }
+      ];
+    } else if (reportType === 'gates' || (initialReportType === 'gates' && reportType !== 'events')) {
+      data = gatesData;
+      cols = [
+        { title: 'Gate Name', field: 'code', width: '20%' },
+        { title: 'Description', field: 'description', width: '25%' },
+        { title: 'Gate Type', field: 'gateType', width: '15%' },
+        { title: 'Gate ID', field: 'gateId', width: '15%' },
+        { title: 'Child Count', field: 'childCount', width: '10%' }
+      ];
+    } else if (reportType === 'all' && initialReportType === 'all') {
+      data = [...eventsData, ...gatesData];
+      cols = [
+        { title: 'Name', field: 'code', width: '15%' },
+        { title: 'Description', field: 'description', width: '25%' },
+        { title: 'Type', field: 'type', width: '10%' },
+        { title: 'Gate Type', field: 'gateType', width: '15%' },
+        { title: 'Failure Rate', field: 'failureRate', width: '15%' },
+        { title: 'Calc Type', field: 'calcType', width: '20%' }
+      ];
+    }
+
+    return { tableData: data, columns: cols };
+  }, [reportType, initialReportType, eventsData, gatesData]);
+
   return (
     <Modal
       title="Fault Tree Analysis Report"
       open={isOpen}
       onCancel={onClose}
-      width={900}
+      width={1200}
+      style={{ maxWidth: '95vw' }}
+      bodyStyle={{ padding: '20px' }}
       footer={[
         <Button key="download" onClick={downloadReport} style={{ marginRight: '10px' }}>
           Download
@@ -132,101 +210,86 @@ const EventsReportModal = ({
         </div>
       )}
       
-      <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-        {/* Events Table - show if reportType is 'events' or if initialReportType is 'events' */}
-        {(reportType === 'events' || (initialReportType === 'events' && reportType !== 'gates')) && (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f0f0f0' }}>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Event Name</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Description</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Failure Rate</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Calc Type</th>
-              </tr>
-            </thead>
-            <tbody>
-              {eventsData.map((item, index) => (
-                <tr key={index}>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.code || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.description || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.failureRate || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.calcType || 'N/A'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        
-        {/* Gates Table - show if reportType is 'gates' or if initialReportType is 'gates' */}
-        {(reportType === 'gates' || (initialReportType === 'gates' && reportType !== 'events')) && (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f0f0f0' }}>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Gate Name</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Description</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Gate Type</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Gate ID</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Child Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {gatesData.map((item, index) => (
-                <tr key={index}>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.code || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.description || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.gateType || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.gateId || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.childCount || '0'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        
-        {/* All Nodes Table - show if reportType is 'all' or if initialReportType is 'all' and reportType is 'all' */}
-        {reportType === 'all' && initialReportType === 'all' && (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f0f0f0' }}>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Name</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Description</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Type</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Gate Type</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Failure Rate</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Calc Type</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...eventsData, ...gatesData].map((item, index) => (
-                <tr key={index}>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.code || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.description || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.type || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.gateType || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.failureRate || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.calcType || 'N/A'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-        
-        {/* No data messages */}
-        {reportType === 'events' && eventsData.length === 0 && (
+      <div style={{ 
+        maxHeight: '500px',
+        overflow: 'auto',
+        width: '100%'
+      }}>
+        {/* Check if we should show a table */}
+        {((reportType === 'events' && eventsData.length > 0) ||
+          (reportType === 'gates' && gatesData.length > 0) ||
+          (reportType === 'all' && (eventsData.length > 0 || gatesData.length > 0))) ? (
+          <MaterialTable
+            icons={tableIcons}
+            title=""
+            columns={columns}
+            data={tableData}
+            options={{
+              search: true,
+              paging: true,
+              pageSize: 10,
+              pageSizeOptions: [5, 10, 20, 50],
+              sorting: true,
+              showTitle: false,
+              toolbar: true,
+              headerStyle: {
+                backgroundColor: '#51afeeff',
+                fontWeight: 'bold',
+                padding: '12px 15px',
+                fontSize: '14px',
+                whiteSpace: 'nowrap',
+                position: 'sticky',
+                top: 0,
+                zIndex: 1
+              },
+              cellStyle: {
+                padding: '10px 15px',
+                fontSize: '14px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis'
+              },
+              rowStyle: {
+                padding: '8px 0'
+              },
+              maxBodyHeight: '400px',
+              minBodyHeight: '200px',
+              exportButton: false,
+              exportAllData: false,
+              actionsColumnIndex: -1,
+              emptyRowsWhenPaging: false,
+              tableLayout: 'auto',
+              fixedColumns: {
+                left: 0,
+                right: 0
+              }
+            }}
+            style={{
+              width: '100%',
+              minWidth: '900px',
+              tableLayout: 'auto'
+            }}
+            localization={{
+              body: {
+                emptyDataSourceMessage: 'No data to display'
+              },
+              toolbar: {
+                searchPlaceholder: 'Search...'
+              },
+              pagination: {
+                labelDisplayedRows: '{from}-{to} of {count}',
+                labelRowsSelect: 'rows'
+              }
+            }}
+            components={{
+              Container: props => <div {...props} style={{ width: '100%', overflowX: 'auto' }} />
+            }}
+          />
+        ) : (
           <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-            No events data available
-          </div>
-        )}
-        
-        {reportType === 'gates' && gatesData.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-            No gates data available
-          </div>
-        )}
-        
-        {reportType === 'all' && eventsData.length === 0 && gatesData.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
-            No data available
+            {reportType === 'events' && 'No events data available'}
+            {reportType === 'gates' && 'No gates data available'}
+            {reportType === 'all' && 'No data available'}
           </div>
         )}
       </div>
