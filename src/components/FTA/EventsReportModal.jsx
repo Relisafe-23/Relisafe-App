@@ -47,13 +47,13 @@ const EventsReportModal = ({ isOpen, onClose, eventsData = [], gatesData = [] })
       const sampleItem = dataToDownload[0];
       
       if (sampleItem.type === 'Event' || reportType === 'events') {
-        headers = ['Event Code', 'Description', 'Failure Rate', 'Calc Type', 'Product'];
+        headers = ['Event Code', 'Description', 'Failure Rate', 'Calc Type', /* 'Product' */];
         rows = dataToDownload.map(item => [
           `"${item.code || ''}"`,
           `"${item.description || ''}"`,
           `"${item.failureRate || 'N/A'}"`,
           `"${item.calcType || 'N/A'}"`,
-          `"${item.product || 'N/A'}"`
+          // `"${item.product || 'N/A'}"`
         ]);
       } else if (sampleItem.type === 'Gate' || reportType === 'gates') {
         headers = ['Gate Code', 'Description', 'Gate Type', 'Gate ID', 'Child Count'];
@@ -153,7 +153,7 @@ const EventsReportModal = ({ isOpen, onClose, eventsData = [], gatesData = [] })
                 <th style={{ padding: '8px', border: '1px solid #ddd' }}>Description</th>
                 <th style={{ padding: '8px', border: '1px solid #ddd' }}>Failure Rate</th>
                 <th style={{ padding: '8px', border: '1px solid #ddd' }}>Calc Type</th>
-                <th style={{ padding: '8px', border: '1px solid #ddd' }}>Product</th>
+                {/* <th style={{ padding: '8px', border: '1px solid #ddd' }}>Product</th> */}
               </tr>
             </thead>
             <tbody>
@@ -163,7 +163,7 @@ const EventsReportModal = ({ isOpen, onClose, eventsData = [], gatesData = [] })
                   <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.description || 'N/A'}</td>
                   <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.failureRate || 'N/A'}</td>
                   <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.calcType || 'N/A'}</td>
-                  <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.product || 'N/A'}</td>
+                  {/* <td style={{ padding: '8px', border: '1px solid #ddd' }}>{item.product || 'N/A'}</td> */}
                 </tr>
               ))}
             </tbody>
@@ -232,11 +232,7 @@ const EventsReportModal = ({ isOpen, onClose, eventsData = [], gatesData = [] })
         )}
       </div>
       
-      <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f5f5f5' }}>
-        <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>
-          This software is law protected by ALD
-        </p>
-      </div>
+ 
     </Modal>
   );
 };

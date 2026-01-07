@@ -118,7 +118,7 @@ export default function FTA(props) {
         code: node.code || node.name || `Gate ${node.gateId}`,
         description: node.description || 'No description',
         type: isEvent ? 'Event' : (isGate ? 'Gate' : 'Unknown'),
-        fr: failureRate, // Use the extracted failure rate
+        failureRate: isEvent ? failureRate : 'N/A',
         calcType: node.calcTypes || 'N/A',
         gateType: node.gateType || 'N/A',
         gateId: node.gateId || 'N/A',
