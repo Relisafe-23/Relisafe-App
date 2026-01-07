@@ -152,7 +152,7 @@ function Index(props) {
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [perviousColumnValues, setPerviousColumnValues] = useState([]);
-  
+
   // New state for tracking connections
   const [selectedSourceValues, setSelectedSourceValues] = useState({});
   const [rowConnections, setRowConnections] = useState({});
@@ -228,7 +228,7 @@ function Index(props) {
       }
     });
   };
-  
+
   const getAllLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
@@ -448,7 +448,7 @@ function Index(props) {
     }
 
     data.forEach((row, rowIndex) => {
-      const rowNumber = rowIndex + 2; 
+      const rowNumber = rowIndex + 2;
       let rowData = {};
 
       row.forEach((element, index) => {
@@ -544,7 +544,7 @@ function Index(props) {
       `• Total rows: ${rows.length}\n` +
       `• failureModeRatioAlpha total: ${alphaTotal.toFixed(4)}\n` +
       `• endEffectRatioBeta total: ${betaTotal.toFixed(4)}`;
-    
+
     toast.success(successMessage, {
       position: toast.POSITION.TOP_RIGHT,
       autoClose: 5000,
@@ -580,7 +580,7 @@ function Index(props) {
       setCreatedBy(res.data.data.createdBy);
     });
   };
-  
+
   const getProductData = () => {
     Api.get("/api/v1/fmeca/product/list", {
       params: {
@@ -693,59 +693,58 @@ function Index(props) {
   };
 
   // Function to get connected values for a field based on selected source
-  const getConnectedValuesForField = (fieldName, rowId) => {
-    const rowSourceValues = selectedSourceValues[rowId] || {};
-    
-    // Check all possible source fields for connections to this field
+  const getConnectedValuesForField = (fieldName, rowData) => {
     let connectedValues = [];
-    
-    Object.keys(rowSourceValues).forEach(sourceField => {
-      const sourceValue = rowSourceValues[sourceField];
-      if (sourceValue) {
-        const connections = flattenedConnect?.filter(
-          item => 
+
+    Object.keys(rowData || {}).forEach(sourceField => {
+      const sourceValue = rowData[sourceField];
+      if (!sourceValue) return;
+
+      const connections =
+        flattenedConnect?.filter(
+          item =>
             item.fieldName === sourceField &&
-            item.fieldValue === sourceValue &&
+            String(item.fieldValue) === String(sourceValue) &&
             item.destName === fieldName
         ) || [];
-        
-        connectedValues = [...connectedValues, ...connections];
-      }
+
+      connectedValues.push(...connections);
     });
-    
+
     return connectedValues;
   };
 
+
+
   // Function to handle source selection and update connections
   const handleSourceSelection = (fieldName, value, rowData) => {
-    const rowId = rowData?.tableData?.id;
-    
-    // Update selected source values for this row
+    const rowId = rowData.fmecaId;
+    console.log("rowId", rowId);
+    if (!rowId) return;
+
+    const normalizedValue = String(value);
+    console.log("normalizedValue.....", normalizedValue)
+
     setSelectedSourceValues(prev => ({
       ...prev,
       [rowId]: {
         ...prev[rowId],
-        [fieldName]: value
+        [fieldName]: normalizedValue
       }
     }));
-    
-    // Set the selected source field for tracking
-    setSelectedSourceField(fieldName);
-    
-    // Find all connections originating from this source
-    const connections = flattenedConnect?.filter(
-      item => item.fieldName === fieldName && item.fieldValue === value
-    ) || [];
-    
-    // Store connections for this row
-    setRowConnections(prev => ({
-      ...prev,
-      [rowId]: {
-        ...prev[rowId],
-        [fieldName]: connections
-      }
-    }));
+
+
+    // const connections =
+    //   flattenedConnect?.filter(
+    //     item =>
+    //       item.fieldName === fieldName &&
+    //       String(item.fieldValue) === normalizedValue
+    //   ) || [];
+
+
   };
+
+
 
   const getAllConnect = () => {
     Api.get("api/v1/library/get/all/connect/value", {
@@ -872,7 +871,7 @@ function Index(props) {
               cursor: 'pointer'
             }}
           >
-            OK 
+            OK
           </button>
         </div>
       </div>
@@ -959,37 +958,40 @@ function Index(props) {
     ...createEditComponent(fieldName, label, required),
     editComponent: ({ value, onChange, rowData }) => {
       const rowId = rowData?.tableData?.id;
-      
+
       // Get connected values for this field based on selected sources in this row
-      const connectedValues = getConnectedValuesForField(fieldName, rowId);
-      
+      const connectedValues = getConnectedValuesForField(fieldName, rowData);
+
+
       // Get separate library data
-      const separateFilteredData = 
+      const separateFilteredData =
         allSepareteData?.filter((item) => item?.sourceName === fieldName) || [];
-      
+
       // Combine options: connected values first, then separate values
       let options = [];
-      
+
       // Add connected values
       if (connectedValues.length > 0) {
         options = connectedValues.map(item => ({
-          value: item.destValue,
-          label: item.destValue,
+          value: String(item.destValue),
+          label: String(item.destValue),
           isConnected: true
         }));
+
       }
-      
+
       // Add separate library values (avoid duplicates)
       separateFilteredData.forEach(item => {
         if (!options.some(opt => opt.value === item.sourceValue)) {
           options.push({
-            value: item.sourceValue,
-            label: item.sourceValue,
+            value: String(item.sourceValue),
+            label: String(item.sourceValue),
             isConnected: false
           });
+
         }
       });
-      
+
       // If no options from library, add current value if exists
       // if (options.length === 0 && value) {
       //   options.push({
@@ -998,17 +1000,18 @@ function Index(props) {
       //     isConnected: false
       //   });
       // }
-      
-      const selectedOption = 
-        options.find((opt) => opt.value === value) ||
-        (value ? { label: value, value } : null);
-      
-    const hasError =
-  required &&
-  (!value || String(value)?.trim() === "");
+
+      const selectedOption =
+        options.find(opt => opt.value === String(value)) ||
+        (value ? { label: String(value), value: String(value) } : null);
 
 
-        if (!options || options.length === 0) {
+      const hasError =
+        required &&
+        (!value || String(value)?.trim() === "");
+
+
+      if (!options || options.length === 0) {
         return (
           <div style={{ position: "relative" }}>
             <input
@@ -1041,22 +1044,22 @@ function Index(props) {
       }
       return (
         <div style={{ position: "relative" }}>
-        
+
           <CreatableSelect
             name={fieldName}
             value={selectedOption}
             options={options}
             isClearable
             onChange={(option) => {
-              const newValue = option?.value || "";
+              const newValue = option?.value != null ? String(option.value) : "";
               onChange(newValue);
-          
+
               if (isSourceField(fieldName) && newValue) {
-                handleSourceSelection(fieldName, newValue, rowData);
-             
+
+
                 const destinations = getDestinationFieldsForSource(fieldName, newValue);
                 if (destinations.length === 1) {
-              
+
                 }
               }
             }}
@@ -1064,8 +1067,8 @@ function Index(props) {
             //   // // Allow creating new options
             //   const newOption = { value: inputValue, label: inputValue };
             //   onChange(inputValue);
-              
-          
+
+
             //   if (isSourceField(fieldName) && inputValue) {
             //     handleSourceSelection(fieldName, inputValue, rowData);
             //   }
@@ -1110,7 +1113,7 @@ function Index(props) {
                 borderRadius: "3px",
               }}
             >
-              Connected
+              Connected1
             </div>
           )}
         </div>
@@ -1421,13 +1424,13 @@ function Index(props) {
       });
       throw new Error("Validation failed");
     }
-    
+
     const companyId = localStorage.getItem("companyId");
     if (!values.operatingPhase || !values.function || !values.failureMode) {
       toast.error("Operating Phase, Function, and Failure Mode are required.");
       return;
     }
-    
+
     const payload = {
       operatingPhase: values.operatingPhase,
       function: values.function,
