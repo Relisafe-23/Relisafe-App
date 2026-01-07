@@ -15,7 +15,8 @@ import { customStyles } from "../../components/core/select";
 import { toast } from "react-toastify";
 import { useModal } from "../ModalContext";
 import { useHistory } from "react-router-dom";
-
+import HeaderNavBar from "../HeaderNavBar";
+import EventsReportModal from "./EventsReportModal";
 const initialData = {
   id: 1,
   code: "jack_hill",
@@ -60,7 +61,7 @@ const initialData = {
 };
 
 export default function FTA(props) {
-  const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
+ const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
   const [chartData, setChartData] = useState([]);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panning, setPanning] = useState(false);
@@ -70,6 +71,12 @@ export default function FTA(props) {
   const [nodeLength, setNodeLength] = useState([]);
   const [calcTypes, setCalcTypes] = useState();
   const [productData, setProductData] = useState([]);
+  
+  // Report related states
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [eventsData, setEventsData] = useState([]);
+  const [gatesData, setGatesData] = useState([]);
+
 
   const history = useHistory();
 
@@ -86,6 +93,69 @@ export default function FTA(props) {
     reloadData,
     stopTriggerReload,
   } = useModal();
+
+ const generateReport = (type = 'all') => {
+  if (!chartData) {
+    toast.warning('No fault tree data available');
+    return;
+  }
+
+  // Extract all nodes from the tree
+  const extractAllNodes = (node) => {
+    const nodes = [];
+    
+    if (node) {
+      // Check if it's an event - look for failure rate or event-related properties
+      const hasFailureRate = node.fr || node.failureRate || node.frValue || node.failureRateValue;
+      const isEvent = hasFailureRate || node.calcTypes || node.isEvent === true;
+      const isGate = node.gateType || (node.children && node.children.length > 0);
+      
+      // Get failure rate from various possible property names
+      const failureRate = node.fr || node.failureRate || node.frValue || node.failureRateValue || 'N/A';
+      
+      const nodeData = {
+        id: node.id,
+        code: node.code || node.name || `Gate ${node.gateId}`,
+        description: node.description || 'No description',
+        type: isEvent ? 'Event' : (isGate ? 'Gate' : 'Unknown'),
+        fr: failureRate, // Use the extracted failure rate
+        calcType: node.calcTypes || 'N/A',
+        gateType: node.gateType || 'N/A',
+        gateId: node.gateId || 'N/A',
+        children: node.children || [],
+        // Add other possible properties
+        product: node.product || 'N/A',
+        childCount: node.children ? node.children.length : 0,
+      };
+      
+      console.log("Node Data:", nodeData);
+      nodes.push(nodeData);
+      
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(child => {
+          nodes.push(...extractAllNodes(child));
+        });
+      }
+    }
+    
+    return nodes;
+  };
+
+  const allNodes = extractAllNodes(chartData);
+  
+  // Separate events and gates
+  const events = allNodes.filter(node => node.type === 'Event');
+  const gates = allNodes.filter(node => node.type === 'Gate');
+  
+  console.log("Events found:", events);
+  console.log("Gates found:", gates);
+  
+  setEventsData(events);
+  setGatesData(gates);
+  setIsReportModalOpen(true);
+  
+  toast.success('Report generated successfully');
+};
 
   const handleWheelScroll = (event) => {
     // event.preventDefault(); // Prevent default scroll behavior
@@ -303,6 +373,10 @@ export default function FTA(props) {
 
   return (
     <div>
+          <HeaderNavBar 
+      selectedComponent="FTA"
+      onGenerateReport={generateReport}
+    />
       {nodeLength.length > 0 ? (
         <div
           className="org-chart-container"
@@ -349,6 +423,15 @@ export default function FTA(props) {
           </div>
         </div>
       )}
+       <EventsReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        eventsData={eventsData}
+        gatesData={gatesData}
+      />
+      
+      
+
       <Modal
         title={<p style={{ margin: "0px", color: "#00a9c9" ,width:'500px' }}>Fault Tree Properties</p>}
         open={
