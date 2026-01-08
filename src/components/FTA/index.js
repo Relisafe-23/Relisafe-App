@@ -324,8 +324,8 @@ export default function FTA(props) {
               projectId={projectId}
               getFTAData={getFTAData}
               productData={productData}
-              selectedNodeId={selectedNodeId} // Pass selectedNodeId to RenderTree
-              setSelectedNodeId={setSelectedNodeId} // Pass setSelectedNodeId function to RenderTree
+              selectedNodeId={selectedNodeId} 
+              setSelectedNodeId={setSelectedNodeId} 
             />
           </Tree>
         </div>

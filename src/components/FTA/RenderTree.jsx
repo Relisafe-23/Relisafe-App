@@ -24,8 +24,8 @@ const RenderTree = ({
           projectId={projectId}
           getFTAData={getFTAData}
           productData={productData}
-          selectedNodeId={selectedNodeId} // Pass selectedNodeId to RenderNode
-          setSelectedNodeId={setSelectedNodeId} // Pass setSelectedNodeId function to RenderNode
+          selectedNodeId={selectedNodeId} 
+          setSelectedNodeId={setSelectedNodeId} 
         />
       }
     >
@@ -39,8 +39,8 @@ const RenderTree = ({
           projectId={projectId}
           getFTAData={getFTAData}
           productData={productData}
-          selectedNodeId={selectedNodeId} // Pass selectedNodeId to RenderTree (important)
-          setSelectedNodeId={setSelectedNodeId} // Pass setSelectedNodeId function to RenderTree (important)
+          selectedNodeId={selectedNodeId} 
+          setSelectedNodeId={setSelectedNodeId} 
         />
       ))}
     </TreeNode>
