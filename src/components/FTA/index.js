@@ -74,7 +74,7 @@ export default function FTA(props) {
   const [calcTypes, setCalcTypes] = useState();
   const [productData, setProductData] = useState([]);
   const [currentReportType, setCurrentReportType] = useState('all');
-  // Report related states
+ 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [eventsData, setEventsData] = useState([]);
   const [gatesData, setGatesData] = useState([]);
@@ -97,16 +97,14 @@ export default function FTA(props) {
   } = useModal();
 
   const handleZoomToFit = () => {
-  // Calculate zoom level to fit the tree in the viewport
-  // You might need to adjust this based on your tree size
-  setZoomLevel(0.8); // Example value, adjust as needed
-  setPanOffset({ x: 0, y: 0 }); // Reset pan offset
+
+  setPanOffset({ x: 0, y: 0 }); 
   toast.success("Zoomed to fit screen");
 };
 
 const handleZoomOriginal = () => {
-  setZoomLevel(1); // Reset to original zoom
-  setPanOffset({ x: 0, y: 0 }); // Reset pan offset
+  setZoomLevel(1); 
+  setPanOffset({ x: 0, y: 0 }); 
   toast.success("Reset to original size");
 };
 
@@ -117,7 +115,6 @@ const handleToggleGrid = () => {
 };
 
 const handleOriginalLayout = () => {
-  // Reset to original layout - reset zoom and pan
   setZoomLevel(1);
   setPanOffset({ x: 0, y: 0 });
   setPanning(false);
@@ -131,17 +128,14 @@ const generateReport = (type = 'all') => {
     return;
   }
 
-  // Extract all nodes from the tree
   const extractAllNodes = (node) => {
     const nodes = [];
     
     if (node) {
-      // Check if it's an event - look for failure rate or event-related properties
       const hasFailureRate = node.fr || node.failureRate || node.frValue || node.failureRateValue;
       const isEvent = hasFailureRate || node.calcTypes || node.isEvent === true;
       const isGate = node.gateType || (node.children && node.children.length > 0);
       
-      // Get failure rate from various possible property names
       const failureRate = node.fr || node.failureRate || node.frValue || node.failureRateValue || 'N/A';
       
       const nodeData = {
@@ -154,7 +148,6 @@ const generateReport = (type = 'all') => {
         gateType: node.gateType || 'N/A',
         gateId: node.gateId || 'N/A',
         children: node.children || [],
-        // Add other possible properties
         product: node.product || 'N/A',
         childCount: node.children ? node.children.length : 0,
       };
@@ -174,7 +167,6 @@ const generateReport = (type = 'all') => {
 
   const allNodes = extractAllNodes(chartData);
   
-  // Separate events and gates
   const events = allNodes.filter(node => node.type === 'Event');
   const gates = allNodes.filter(node => node.type === 'Gate');
   
@@ -183,20 +175,18 @@ const generateReport = (type = 'all') => {
   
   setEventsData(events);
   setGatesData(gates);
-  setCurrentReportType(type); // Set the current report type
+  setCurrentReportType(type); 
   setIsReportModalOpen(true);
   
   toast.success(`${type === 'events' ? 'Events' : type === 'gates' ? 'Gates' : 'Report'} generated successfully`);
 };
 
   const handleWheelScroll = (event) => {
-    // event.preventDefault(); // Prevent default scroll behavior
-    const newZoom = zoomLevel + event.deltaY * -0.001; // Adjust the scaling factor as needed
-    setZoomLevel(Math.min(Math.max(0.1, newZoom), 2)); // Limit zoom level between 0.5 and 2
+    const newZoom = zoomLevel + event.deltaY * -0.001; 
+    setZoomLevel(Math.min(Math.max(0.1, newZoom), 2));
   };
   const handleMouseDown = (event) => {
     if (event.button === 0) {
-      // event.preventDefault(); // Prevent default mouse behavior
       setPanning(true);
       setPanStart({ x: event.clientX, y: event.clientY });
     }
@@ -204,7 +194,6 @@ const generateReport = (type = 'all') => {
 
   const handleMouseMove = (event) => {
     if (panning) {
-      // event.preventDefault(); // Prevent default mouse behavior
       const offsetX = event.clientX - panStart.x;
       const offsetY = event.clientY - panStart.y;
       setPanOffset({ x: offsetX, y: offsetY });
@@ -213,7 +202,6 @@ const generateReport = (type = 'all') => {
 
   const handleMouseUp = (event) => {
     if (panning) {
-      // event.preventDefault(); // Prevent default mouse behavior
       setPanning(false);
       setPanStart({ x: 0, y: 0 });
     }
