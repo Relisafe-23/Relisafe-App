@@ -18,11 +18,20 @@ export const ModalProvider = ({ children }) => {
   const [data, setData] = useState();
   const [FTAdata, setFTAdata] = useState([]);
   const [reloadData, setReloadData] = useState(false);
+  const [isProbOpen, setIsProbOpen] = useState(false);
 
   // FTA Create New Parent Modal
   const openFTAModal = () => {
     setIsFTAModalOpen(true);
   };
+
+  const openProbabilityCalculations = ()=>{
+    setIsProbOpen(true)
+  }
+
+  const closeProbabilityCalculations = ()=>{
+    setIsProbOpen(false)
+  }
 
   const closeFTAModal = () => {
     setIsFTAModalOpen(false);
@@ -210,6 +219,9 @@ export const ModalProvider = ({ children }) => {
         reloadData,
         triggerReload,
         stopTriggerReload,
+        openProbabilityCalculations,
+        closeProbabilityCalculations,
+        isProbOpen,
       }}
     >
       {children}
