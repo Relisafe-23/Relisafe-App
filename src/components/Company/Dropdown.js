@@ -47,13 +47,10 @@ const options = productData.map((list) => ({
   label: list.indexCount + "." + list.productName,
 }));
 
-// This ensures the selected value always matches an option
+
 const selectedOption = options.find((opt) => opt.value === productId) || null;
 
 
-  // -------------------------------
-  // FETCH MAIN PRODUCT LIST
-  // -------------------------------
   const getTreeProduct = () => {
     Api.get(`/api/v1/productTreeStructure/product/list`, {
       params: { projectId },
@@ -72,9 +69,6 @@ const selectedOption = options.find((opt) => opt.value === productId) || null;
     });
   };
 
-  // -------------------------------
-  // FETCH SELECTED PRODUCT DETAILS
-  // -------------------------------
   const productTreeData = (id) => {
     if (!id) return;
     Api.get("/api/v1/productTreeStructure/get/tree/product/list", {
@@ -112,9 +106,7 @@ const selectedOption = options.find((opt) => opt.value === productId) || null;
     history.push({ state: { productId: selected.value } });
   };
 
-  // -----------------------------------------------------
-  // NEXT / PREVIOUS LOGIC — FULLY CORRECTED
-  // -----------------------------------------------------
+
   const getNextProduct = () => {
     if (productData.length === 0) return;
 
@@ -197,7 +189,7 @@ const selectedOption = options.find((opt) => opt.value === productId) || null;
 
         </Col>
 
-        {/* NEXT BUTTON */}
+    
         <Col sm={12} md={4} className="d-flex justify-content-end mt-1">
           <div style={{ marginLeft: "100px" }}>
             <Button className="FRP-button" onClick={getNextProduct}>

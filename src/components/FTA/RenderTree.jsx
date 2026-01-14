@@ -4,6 +4,7 @@ import { useState } from "react";
 
 const RenderTree = ({
   data,
+  parNod,
   handleRemove,
   handleAdd,
   handleEdit,
@@ -18,17 +19,19 @@ const RenderTree = ({
       label={
         <RenderNode
           node={data}
+          parNod={parNod}
           handleRemove={handleRemove}
           handleAdd={handleAdd}
           handleEdit={handleEdit}
           projectId={projectId}
           getFTAData={getFTAData}
           productData={productData}
-          selectedNodeId={selectedNodeId} // Pass selectedNodeId to RenderNode
-          setSelectedNodeId={setSelectedNodeId} // Pass setSelectedNodeId function to RenderNode
+          selectedNodeId={selectedNodeId} 
+          setSelectedNodeId={setSelectedNodeId} 
         />
       }
     >
+
       {data?.children?.map((child, index) => (
         <RenderTree
           key={index}
@@ -39,8 +42,8 @@ const RenderTree = ({
           projectId={projectId}
           getFTAData={getFTAData}
           productData={productData}
-          selectedNodeId={selectedNodeId} // Pass selectedNodeId to RenderTree (important)
-          setSelectedNodeId={setSelectedNodeId} // Pass setSelectedNodeId function to RenderTree (important)
+          selectedNodeId={selectedNodeId} 
+          setSelectedNodeId={setSelectedNodeId} 
         />
       ))}
     </TreeNode>
