@@ -1,11 +1,11 @@
-import React, { Component } from 'react'
+// import React, { Component } from 'react'
 
-export default class RBD extends Component {
-    render() {
-        return (
-            <div>
-                RBD
-            </div>
-        )
-    }
-}
+// export default class RBD extends Component {
+//     render() {
+//         return (
+//             <div>
+//                 RBD
+//             </div>
+//         )
+//     }
+// }

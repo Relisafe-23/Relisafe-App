@@ -939,11 +939,14 @@ function Index(props) {
     };
   };
 
-  // Function to check if a field is a source field (has connections from it)
   const isSourceField = (fieldName) => {
-    return flattenedConnect?.some(item => item.fieldName === fieldName);
+    return flattenedConnect.some(item => item.sourceName === fieldName);
   };
 
+  // Check if field is a destination field (has incoming connections)
+  const isDestinationField = (fieldName) => {
+    return flattenedConnect.some(item => item.destinationName === fieldName);
+  };
   // Function to get destination fields for a source
   const getDestinationFieldsForSource = (sourceField, sourceValue) => {
     return flattenedConnect
@@ -1113,7 +1116,7 @@ function Index(props) {
                 borderRadius: "3px",
               }}
             >
-              Connected1
+              Connected 
             </div>
           )}
         </div>

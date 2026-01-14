@@ -55,9 +55,10 @@ function Index(props) {
   const handleHide = () => setFailureModeRatioError(false);
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
 
-  // NEW: State to track selected source values per row
-  const [selectedSourceValues, setSelectedSourceValues] = useState({});
+  // State for connections - similar to FMECA
   const [flattenedConnect, setFlattenedConnect] = useState([]);
+  const [rowConnections, setRowConnections] = useState({});
+  const [selectedSourceValues, setSelectedSourceValues] = useState({});
 
   const DownloadExcel = () => {
     if (!tableData || tableData.length === 0) {
@@ -251,6 +252,42 @@ function Index(props) {
     }));
   };
 
+  // Get connected values for a field based on selected sources in the row
+  const getConnectedValuesForField = (fieldName, rowData) => {
+    let connectedValues = [];
+
+    // Check all fields in the row for connections to this field
+    Object.keys(rowData || {}).forEach(sourceField => {
+      const sourceValue = rowData[sourceField];
+      if (!sourceValue) return;
+
+      // Find connections where this source field/value connects to our target field
+      const connections = flattenedConnect.filter(
+        item => 
+          item.sourceName === sourceField && 
+          String(item.sourceValue) === String(sourceValue) &&
+          item.destinationName === fieldName
+      );
+
+      connectedValues.push(...connections);
+    });
+
+    return connectedValues;
+  };
+
+  // Get all destination fields for a specific source value
+  const getDestinationFieldsForSource = (sourceField, sourceValue) => {
+    return flattenedConnect
+      .filter(item => 
+        item.sourceName === sourceField && 
+        String(item.sourceValue) === String(sourceValue)
+      )
+      .map(item => ({
+        field: item.destinationName,
+        value: item.destinationValue
+      })) || [];
+  };
+
   const getAllSeprateLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
@@ -404,7 +441,7 @@ function Index(props) {
       });
   };
 
-  // Get all connections
+  // Get all connections - Updated to match FMECA structure
   const getAllConnect = () => {
     setIsLoading(true);
     Api.get("api/v1/library/get/all/connect/value", {
@@ -413,24 +450,28 @@ function Index(props) {
       },
     }).then((res) => {
       setIsLoading(false);
-      const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "SAFETY" || 
-                  entry?.destinationModuleName === "SAFETY"
-      );
       
+      // Filter for SAFETY module connections
+      const filteredData = res.data.getData.filter(
+        (entry) => 
+          entry?.libraryId?.moduleName === "SAFETY" || 
+          entry?.destinationModuleName === "SAFETY"
+      );
+
       // Flatten the connection data for easier querying
       const flattened = filteredData.flatMap((item) =>
         (item.destinationData || [])
           .filter(d => d.destinationModuleName === "SAFETY")
           .map((d) => ({
-            sourceName: item.sourceName,         
-            sourceValue: item.sourceValue,
+            sourceName: item.sourceName,
+            sourceValue: String(item.sourceValue),
             destinationName: d.destinationName,
-            destinationValue: d.destinationValue,
-            destinationModule: d.destinationModuleName 
+            destinationValue: String(d.destinationValue),
+            destinationModule: d.destinationModuleName
           }))
       );
       
+      console.log("Flattened connections:", flattened);
       setFlattenedConnect(flattened);
     });
   };
@@ -439,189 +480,332 @@ function Index(props) {
     getAllConnect();
   }, []);
 
-  // Function to get destination values for a field based on selected sources
-  const getDestinationValuesForField = (fieldName, rowId) => {
-    const rowSourceValues = selectedSourceValues[rowId] || {};
-    let destinationValues = [];
-    
-    // Check all source fields that might have connections to this field
-    Object.keys(rowSourceValues).forEach(sourceField => {
-      const sourceValue = rowSourceValues[sourceField];
-      if (sourceValue) {
-        const connections = flattenedConnect.filter(
-          item => 
-            item.sourceName === sourceField &&
-            item.sourceValue === sourceValue &&
-            item.destinationName === fieldName
-        );
-        
-        destinationValues = [...destinationValues, ...connections.map(item => item.destinationValue)];
-      }
-    });
-    
-    return [...new Set(destinationValues)]; // Remove duplicates
+  const validateField = (fieldName, value, isRequired) => {
+    if (isRequired && (!value || value?.toString()?.trim() === '')) {
+      return `${fieldName} is required`;
+    }
+    return null;
+  };
+    const ValidationModal = ({ isOpen, errors, onClose }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }}>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          minWidth: '400px',
+          maxWidth: '500px'
+        }}>
+          <h3 style={{ color: '#d32f2f', marginBottom: '15px' }}>Validation Errors</h3>
+          <ul style={{ marginBottom: '20px' }}>
+            {errors.map((error, index) => (
+              <li key={index} style={{ color: '#d32f2f', marginBottom: '5px' }}>
+                {error}
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={onClose}
+            style={{
+              backgroundColor: '#1976d2',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    );
   };
 
-  // Function to handle source selection
-  const handleSourceSelection = (fieldName, value, rowId) => {
-    setSelectedSourceValues(prev => ({
-      ...prev,
-      [rowId]: {
-        ...prev[rowId],
-        [fieldName]: value
-      }
-    }));
-  };
-
-  // Check if field is a source field (has outgoing connections)
   const isSourceField = (fieldName) => {
     return flattenedConnect.some(item => item.sourceName === fieldName);
   };
 
-  // Check if field is a destination field (has incoming connections)
+  // Check if a field is a destination field (has incoming connections)
   const isDestinationField = (fieldName) => {
     return flattenedConnect.some(item => item.destinationName === fieldName);
   };
 
-  // Create edit component for a field
-  const createEditComponent = (fieldName, label, required = false) => {
+  const createEditComponent = (fieldName, title, isRequired = false) => {
     return {
+      title: isRequired ? `${title} *` : title,
       field: fieldName,
-      title: required ? `${label} *` : label,
-      type: "string",
-      cellStyle: { minWidth: "200px", textAlign: "center" },
-      headerStyle: { minWidth: "200px", textAlign: "center" },
       validate: (rowData) => {
-        if (required && (!rowData[fieldName] || rowData[fieldName].trim() === "")) {
-          return { isValid: false, helperText: `${label} is required` };
-        }
-        return true;
+        const error = validateField(title, rowData[fieldName], isRequired);
+        return error ? { isValid: false, helperText: error } : true;
       },
       editComponent: ({ value, onChange, rowData }) => {
-        const rowId = rowData?.tableData?.id;
-        
-        // Check if this field is a destination field
-        const isDestination = isDestinationField(fieldName);
-        
-        // Get destination values if this is a destination field
-        let destinationOptions = [];
-        if (isDestination) {
-          destinationOptions = getDestinationValuesForField(fieldName, rowId);
-        }
-        
-        // Get separate library values
-        const separateOptions = allSepareteData
-          ?.filter(item => item.sourceName === fieldName)
-          .map(item => item.sourceValue) || [];
-        
-        // Combine all options (destination values first, then separate values)
-        const allOptions = [...new Set([...destinationOptions, ...separateOptions])];
-        
-        const hasError = required && (!value || value.trim() === "");
-        
-        // LOGIC: Only show dropdown if:
-        // 1. This is a destination field AND we have destination values from selected sources
-        // OR
-        // 2. We have separate library values
-        if (allOptions.length > 0) {
-          const options = allOptions.map(opt => ({
-            value: opt,
-            label: opt,
-            isDestination: destinationOptions.includes(opt)
-          }));
-          
-          const selectedOption = options.find(opt => opt.value === value) || 
-                                (value ? { value, label: value } : null);
-          
-          return (
-            <div style={{ position: "relative" }}>
-              <CreatableSelect
-                value={selectedOption}
-                options={options}
-                onChange={(option) => {
-                  const newValue = option?.value || "";
-                  onChange(newValue);
-                  
-                  // If this is a source field, update the selected source value
-                  if (isSourceField(fieldName)) {
-                    handleSourceSelection(fieldName, newValue, rowId);
-                  }
-                }}
-                isClearable
-                styles={{
-                  control: (base) => ({
-                    ...base,
-                    borderColor: hasError ? "#d32f2f" : base.borderColor,
-                  }),
-                  option: (base, state) => ({
-                    ...base,
-                    backgroundColor: state.data?.isDestination ? '#e8f4fd' : base.backgroundColor,
-                    fontWeight: state.data?.isDestination ? 'bold' : base.fontWeight,
-                  }),
-                }}
-              />
-              {hasError && (
-                <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                  {label} is required
-                </div>
-              )}
-              {destinationOptions.length > 0 && (
-                <div style={{
-                  position: "absolute",
-                  top: "-18px",
-                  right: "5px",
-                  fontSize: "10px",
-                  color: "#1976d2",
-                  background: "#e8f4fd",
-                  padding: "2px 5px",
-                  borderRadius: "3px",
-                }}>
-                  Connected
-                </div>
-              )}
-            </div>
-          );
-        } else {
-          // Show regular input field
-          return (
-            <div style={{ position: "relative" }}>
-              <input
-                type="text"
-                value={value || ""}
-                onChange={(e) => {
-                  const newValue = e.target.value;
-                  onChange(newValue);
-                  
-                  // If this is a source field, update the selected source value
-                  if (isSourceField(fieldName)) {
-                    handleSourceSelection(fieldName, newValue, rowId);
-                  }
-                }}
-                placeholder={required ? `${label} *` : label}
+        const handleChange = (newValue) => {
+          onChange(newValue);
+        };
+
+        return (
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              value={value || ''}
+              onChange={(e) => {
+                const newValue = e.target.value;
+            
+                handleChange(newValue);
+              }}
+
+                 onKeyDown={(e) => {
+          // Prevent Enter key from submitting the form
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+        }}
+              placeholder={isRequired ? `${title} *` : title}
+              style={{
+                height: "40px",
+                borderRadius: "4px",
+                width: "100%",
+                borderColor:
+                  isRequired && (!value || value?.toString().trim() === '')
+                    ? '#d32f2f'
+                    : '#ccc',
+              }}
+              title={title}
+            />
+            {isRequired && (!value || value?.toString()?.trim() === '') && (
+              <div
                 style={{
-                  height: "40px",
-                  borderRadius: "4px",
-                  width: "100%",
-                  borderColor: hasError ? "#d32f2f" : "#ccc",
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  color: '#d32f2f',
+                  fontSize: '12px',
+                  marginTop: '2px',
                 }}
-              />
-              {hasError && (
-                <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                  {label} is required
-                </div>
-              )}
-            </div>
-          );
-        }
-      },
+              >
+                {title} is required!
+              </div>
+            )}
+          </div>
+        );
+      }
     };
   };
+ 
+const createSmartSelectField = (fieldName, label, required = false, isSourceFieldCheck = false) => ({
+  ...createEditComponent(fieldName, label, required),
+  editComponent: ({ value, onChange, rowData }) => {
+    const rowId = rowData?.tableData?.id;
+    
+    // Get connected values for this field based on selected sources in this row
+    const connectedValues = getConnectedValuesForField(fieldName, rowData);
+    
+    // Get separate library data for this field
+    const separateFilteredData = allSepareteData?.filter(
+      (item) => item?.sourceName === fieldName
+    ) || [];
 
-  // Define source fields (fields that can have outgoing connections)
-  // You need to define which fields in SAFETY can be sources
-  const sourceFields = ['modeOfOperation', 'hazardCause', 'effectOfHazard']; // Add more as needed
+    // Combine options: connected values first, then separate values
+    let options = [];
 
-  // Create columns using the new edit component
+    if (connectedValues.length > 0) {
+      options = connectedValues.map(item => ({
+        value: String(item.destinationValue),
+        label: String(item.destinationValue),
+        isConnected: true
+      }));
+    }
+
+    // Add separate library values (avoid duplicates)
+    separateFilteredData.forEach(item => {
+      if (!options.some(opt => opt.value === item.sourceValue)) {
+        options.push({
+          value: String(item.sourceValue),
+          label: String(item.sourceValue),
+          isConnected: false
+        });
+      }
+    });
+
+    // Add current value if it doesn't exist in options
+    if (value && !options.some(opt => opt.value === String(value))) {
+      options.unshift({
+        value: String(value),
+        label: String(value),
+        isConnected: false,
+        isAutoFill: false
+      });
+    }
+
+    const selectedOption =
+      options.find(opt => opt.value === String(value)) ||
+      (value ? { label: String(value), value: String(value) } : null);
+
+    const hasError =
+      required &&
+      (!value || String(value)?.trim() === "");
+    
+    const isSource = isSourceField(fieldName);
+
+    // Handle change with auto-fill for destinations
+    const handleChange = (selectedOption) => {
+      const newValue = selectedOption?.value != null ? String(selectedOption.value) : "";
+      onChange(newValue);
+
+      // If this is a source field, find and auto-fill connected destination fields
+      if (isSource && newValue) {
+        const destinations = getDestinationFieldsForSource(fieldName, newValue);
+        
+        // Update row connections state
+   
+
+        // Auto-fill single destination if there's only one
+        if (destinations.length === 1) {
+          const dest = destinations[0];
+          // auto-fill logic here
+        }
+      }
+    };
+
+   
+
+      if (!options || options.length === 0) {
+
+      return (
+        <div style={{ position: "relative" }}>
+          <input
+            type="text"
+            value={value || ""}
+            onChange={(e) => onChange(e.target.value)}
+                onKeyDown={(e) => {
+    if (e.key === 'Enter') {
+      e.stopPropagation();
+    }
+  }}
+            placeholder={label + (required ? " *" : "")}
+            style={{
+              height: "40px",
+              borderRadius: "4px",
+              width: "100%",
+              border: `1px solid ${hasError ? "#d32f2f" : "#ccc"}`,
+              padding: "8px 12px",
+              boxSizing: "border-box"
+            }}
+          />
+
+          {hasError && (
+            <div style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              color: "#d32f2f",
+              fontSize: "12px",
+              marginTop: "2px"
+            }}>
+              {label} is required
+            </div>
+          )}
+        </div>
+      );
+    } else {
+      // Render CreatableSelect when options exist
+      return (
+        <div style={{ position: "relative" }}>
+          <CreatableSelect
+            name={fieldName}
+            value={selectedOption}
+            options={options}
+            isClearable
+            onChange={(option) => {
+              const newValue = option?.value ? String(option.value) : "";
+              onChange(newValue);
+
+              if (isSourceField(fieldName) && newValue) {
+                const destinations = getDestinationFieldsForSource(fieldName, newValue);
+                if (destinations.length === 1) {
+                  // auto connect logic
+                }
+              }
+            }}
+            onKeyDown={(e) => {
+  if (e.key === 'Enter' && !e.target.value) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}}
+        
+            menuPortalTarget={document.body}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              control: (base) => ({
+                ...base,
+                borderColor: hasError ? "#d32f2f" : base.borderColor,
+                minHeight: "40px",
+                "&:hover": {
+                  borderColor: hasError ? "#d32f2f" : base.borderColor
+                }
+              }),
+              option: (base, state) => ({
+                ...base,
+                backgroundColor: state.data?.isConnected ? '#e8f4fd' : base.backgroundColor,
+                fontWeight: state.data?.isConnected ? 'bold' : base.fontWeight,
+              }),
+            }}
+          />
+
+          {hasError && (
+            <div style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              color: "#d32f2f",
+              fontSize: "12px",
+              marginTop: "2px"
+            }}>
+              {label} is required
+            </div>
+          )}
+
+          {connectedValues.length > 0 && (
+            <div style={{
+              position: "absolute",
+              top: "-18px",
+              right: "5px",
+              fontSize: "10px",
+              color: "#1976d2",
+              background: "#e8f4fd",
+              padding: "2px 5px",
+              borderRadius: "3px",
+            }}>
+              Connected
+            </div>
+          )}
+        </div>
+      );
+    }
+  }
+});
+  
+
+
+  const safetySourceFields = ['modeOfOperation', 'hazardCause', 'effectOfHazard'];
+
+
+  
   const columns = [
     {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
@@ -629,31 +813,32 @@ function Index(props) {
       cellStyle: { minWidth: "140px", textAlign: "center" },
       headerStyle: { minWidth: "140px", textAlign: "center" },
     },
-    createEditComponent("modeOfOperation", "Mode of Operation", true),
-    createEditComponent("hazardCause", "Hazard Cause", true),
-    createEditComponent("effectOfHazard", "Effect of the Hazard", true),
-    createEditComponent("hazardClasification", "Hazard Classification", true),
-    createEditComponent("designAssuranceLevel", "Design Assurance Level (DAL) associated with the hazard"),
-    createEditComponent("meansOfDetection", "Means of detection", true),
-    createEditComponent("crewResponse", "Crew response", true),
-    createEditComponent("uniqueHazardIdentifier", "Unique Hazard Identifiers", true),
-    createEditComponent("initialSeverity", "Initial Severity ((impact))"),
-    createEditComponent("initialLikelihood", "Initial likelihood (probability)"),
-    createEditComponent("initialRiskLevel", "Initial Risk level"),
-    createEditComponent("designMitigation", "Design Mitigation"),
-    createEditComponent("designMitigatonResbiity", "Design Mitigation Responsibility"),
-    createEditComponent("designMitigtonEvidence", "Design Mitigation Evidence"),
-    createEditComponent("opernalMaintanMitigation", "Operational/Maintenance mitigation"),
-    createEditComponent("opernalMitigatonResbility", "Opernational Mitigation Responsibility"),
-    createEditComponent("operatnalMitigationEvidence", "Operational Mitigation Evidence"),
-    createEditComponent("residualSeverity", "Residual Severity ((impact))"),
-    createEditComponent("residualLikelihood", "Residual likelihood (probability)"),
-    createEditComponent("residualRiskLevel", "Residual Risk Level"),
-    createEditComponent("hazardStatus", "Hazard Status"),
-    createEditComponent("ftaNameId", "FTA Name/ID"),
-    createEditComponent("userField1", "User field 1"),
-    createEditComponent("userField2", "User field 2"),
+    createSmartSelectField("modeOfOperation", "Mode of Operation", true, safetySourceFields.includes('modeOfOperation')),
+    createSmartSelectField("hazardCause", "Hazard Cause", true, safetySourceFields.includes('hazardCause')),
+    createSmartSelectField("effectOfHazard", "Effect of the Hazard", true, safetySourceFields.includes('effectOfHazard')),
+    createSmartSelectField("hazardClasification", "Hazard Classification", true),
+    createSmartSelectField("designAssuranceLevel", "Design Assurance Level (DAL) associated with the hazard"),
+    createSmartSelectField("meansOfDetection", "Means of detection", true),
+    createSmartSelectField("crewResponse", "Crew response", true),
+    createSmartSelectField("uniqueHazardIdentifier", "Unique Hazard Identifiers", true),
+    createSmartSelectField("initialSeverity", "Initial Severity ((impact))"),
+    createSmartSelectField("initialLikelihood", "Initial likelihood (probability)"),
+    createSmartSelectField("initialRiskLevel", "Initial Risk level"),
+    createSmartSelectField("designMitigation", "Design Mitigation"),
+    createSmartSelectField("designMitigatonResbiity", "Design Mitigation Responsibility"),
+    createSmartSelectField("designMitigtonEvidence", "Design Mitigation Evidence"),
+    createSmartSelectField("opernalMaintanMitigation", "Operational/Maintenance mitigation"),
+    createSmartSelectField("opernalMitigatonResbility", "Opernational Mitigation Responsibility"),
+    createSmartSelectField("operatnalMitigationEvidence", "Operational Mitigation Evidence"),
+    createSmartSelectField("residualSeverity", "Residual Severity ((impact))"),
+    createSmartSelectField("residualLikelihood", "Residual likelihood (probability)"),
+    createSmartSelectField("residualRiskLevel", "Residual Risk Level"),
+    createSmartSelectField("hazardStatus", "Hazard Status"),
+    createSmartSelectField("ftaNameId", "FTA Name/ID"),
+    createSmartSelectField("userField1", "User field 1"),
+    createSmartSelectField("userField2", "User field 2"),
   ];
+  console.log("Columns:", columns);
 
   const submit = (values) => {
     if (productId) {
@@ -910,14 +1095,30 @@ function Index(props) {
                 icons={tableIcons}
                 columns={columns}
                 data={tableData}
-                options={{
-                  addRowPosition: "first",
-                  actionsColumnIndex: -1,
-                  headerStyle: {
-                    backgroundColor: "#CCE6FF",
-                    zIndex: 0,
-                  },
-                }}
+                 options={{
+                    cellStyle: {
+                      border: "1px solid #eee",
+                      whiteSpace: "normal",
+                      wordBreak: "break-word",
+                      minWidth: 300,
+                      maxWidth: 400,
+                      textAlign: "center",
+                    },
+                    addRowPosition: "first",
+                    actionsColumnIndex: -1,
+                    showEditIcon: false,
+                    showDeleteIcon: false,
+                    pageSize: 5,
+                    pageSizeOptions: [5, 10, 20, 50],
+                    headerStyle: {
+                      backgroundColor: "#CCE6FF",
+                      fontWeight: "bold",
+                      whiteSpace: "nowrap",
+                      minWidth: 200,
+                      maxWidth: 500,
+                      textAlign: "center",
+                    },
+                  }}
                 localization={{
                   body: {
                     addTooltip: "Add Safety",

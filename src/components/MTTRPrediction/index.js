@@ -64,6 +64,7 @@ const MTTRPrediction = (props, active) => {
   const [levelOfRepair, setLevelOfRepair] = useState("");
   const [spare, setSpare] = useState("");
   const [show, setShow] = useState(false);
+    const [rowConnections, setRowConnections] = useState({});
   const [partType, setPartType] = useState("");
   const [name, setName] = useState([]);
   const [reference, setReference] = useState([]);
@@ -108,7 +109,7 @@ const MTTRPrediction = (props, active) => {
     skill: "",
     tools: "",
     partNo: "",
-    TaskType: "",
+    taskType: "",
   });
 
   const handleInputChange = (selectedItems, name) => {
@@ -117,42 +118,6 @@ const MTTRPrediction = (props, active) => {
       [name]: selectedItems ? selectedItems.value : "",
     }));
   };
-
-// const getAllConnect = (moduleName,sourceValue) => {
-//   Api.get("api/v1/library/get/all/connect/value", {
-//     params: {
-//       projectId: projectId,
-//       moduleName: moduleName || "",
-//         sourceValue: sourceValue,
-//     },
-//   })
-//     .then((res) => {
-//       // const rawData = res?.data?.getData || [];
-//     const filteredData = res.data.getData.filter(
-//         (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
-//       );
-//       console.log("raw connect data", res); 
-//       const flattened = filteredData
-//   .flatMap((item) =>
-//     (item.destinationData || [])
-//       .filter(d => d.destinationModuleName === "MTTR") // Filter destinations by module
-//       .map((d) => ({
-//         sourceName: item.sourceName,
-//         sourceValue: item.sourceValue,
-//            destinationName: d.destinationName,
-//           destinationValue: d.destinationValue,
-//           destinationModuleName: d.destinationModuleName,
-//       }))
-//   );
-
-//       console.log("flattened connect data", flattened);
-
-//       setConnectData(flattened);
-//     })
-//     .catch((err) => {
-//       console.error("Error fetching connect data:", err);
-//     });
-// };
 
 
   const getAllSeprateLibraryData = async () => {
@@ -208,7 +173,7 @@ const MTTRPrediction = (props, active) => {
       'tools': 'tools',
       'partNo': 'partNo',
       'toolType': 'toolType',
-      'taskType': 'TaskType'
+      'taskType': 'taskType'
     };
 
     // Update formik values
@@ -265,7 +230,7 @@ const createMTTRDataFromExcel = async (values) => {
       productId: productId,
       companyId: companyId,
       remarks: values?.remarks,
-      TaskType: values?.TaskType,
+      taskType: values?.taskType,
       time: values.time,
       totalLabour: values.totalLabour,
       skill: values.skill,
@@ -328,7 +293,7 @@ const importExcel = (e) => {
         time: row.time || "",
         skill: row.skill || "",
         tools: row.tools || "",
-        TaskType: row.TaskType || "",
+        taskType: row.taskType || "",
         totalLabour: row.totalLabour || "",
         partNo: row.partNo || "",
         toolType: row.toolType || "",
@@ -407,7 +372,7 @@ const exportToExcel = (value, productName) => {
     ProjectName: treeTableData[0]?.projectId?.projectName,
     ProductName: value.name,
     remarks: value?.remarks || lastRow?.remarks || "-",
-    taskType: value?.TaskType || lastRow.TaskType || "-",
+    taskType: value?.taskType || lastRow?.taskType || "-",
     time: value.time || lastRow.time || "-",
     totalLabour: value.totalLabour || lastRow.totalLabour || "-",
     skill: value.skill || lastRow.skill || "-",
@@ -685,11 +650,43 @@ const getDestinationValuesForField = (fieldName, rowId) => {
   
   return [...new Set(destinationValues)]; // Remove duplicates
 };
+  // Get connected values for a field based on selected sources in the row
+  const getConnectedValuesForField = (fieldName, rowData) => {
+    let connectedValues = [];
 
+    // Check all fields in the row for connections to this field
+    Object.keys(rowData || {}).forEach(sourceField => {
+      const sourceValue = rowData[sourceField];
+      if (!sourceValue) return;
+
+      // Find connections where this source field/value connects to our target field
+      const connections = flattenedConnect.filter(
+        item => 
+          item.sourceName === sourceField && 
+          String(item.sourceValue) === String(sourceValue) &&
+          item.destinationName === fieldName
+      );
+
+      connectedValues.push(...connections);
+    });
+
+    return connectedValues;
+  };
 // Check if a field is a source field (has outgoing connections)
 const isSourceField = (fieldName) => {
   return flattenedConnect.some(item => item.sourceName === fieldName);
 };
+  const getDestinationFieldsForSource = (sourceField, sourceValue) => {
+    return flattenedConnect
+      .filter(item => 
+        item.sourceName === sourceField && 
+        String(item.sourceValue) === String(sourceValue)
+      )
+      .map(item => ({
+        field: item.destinationName,
+        value: item.destinationValue
+      })) || [];
+  };
 
 // Check if a field is a destination field (has incoming connections)
 const isDestinationField = (fieldName) => {
@@ -719,143 +716,203 @@ const createEditComponent = (fieldName, label, required = false, validationRules
       
       return true;
     },
-    editComponent: ({ value, onChange, rowData }) => {
-      const rowId = rowData?.tableData?.id;
-      
-      // Check if this field is a destination field
-      const isDestination = isDestinationField(fieldName);
-      
-      // Get destination values if this is a destination field
-      let destinationOptions = [];
-      if (isDestination) {
-        destinationOptions = getDestinationValuesForField(fieldName, rowId);
-      }
-      
-      // Get separate library values
-      const separateOptions = allSepareteData
-        ?.filter(item => item.sourceName === fieldName)
-        .map(item => item.sourceValue) || [];
-      
-      // LOGIC: Only show destination values if they exist from selected sources
-      // If this is a destination field AND we have destination values, show only those
-      // Otherwise, show separate library values
-      const allOptions = isDestination && destinationOptions.length > 0 
-        ? destinationOptions  // Only show destination values when source is selected
-        : separateOptions;    // Otherwise show separate library values
-      
-      const hasError = required && (!value || value.toString().trim() === "");
-      
-      // Only show dropdown if we have options
-      if (allOptions.length > 0) {
-        const options = allOptions.map(opt => ({
-          value: opt,
-          label: opt,
-          isDestination: destinationOptions.includes(opt)
-        }));
-        
-        const selectedOption = options.find(opt => opt.value === value) || 
-                              (value ? { value, label: value } : null);
-        
-        return (
-          <div style={{ position: "relative" }}>
-            <CreatableSelect
-              name={fieldName}
-              value={selectedOption}
-              options={options}
-              onChange={(option) => {
-                const newValue = option?.value || "";
+       editComponent: ({ value, onChange, rowData }) => {
+          const rowId = rowData?.tableData?.id;
+          
+          // Get connected values for this field based on selected sources in this row
+          const connectedValues = getConnectedValuesForField(fieldName, rowData);
+          
+          // Get separate library data for this field
+          const separateFilteredData = allSepareteData?.filter(
+            (item) => item?.sourceName === fieldName
+          ) || [];
+  
+          // Combine options: connected values first, then separate values
+          let options = [];
+  
+         if (connectedValues.length > 0) {
+          options = connectedValues.map(item => ({
+            value: String(item.destinationValue),
+            label: String(item.destinationValue),
+            isConnected: true
+          }));
+  
+        }
+  
+        // Add separate library values (avoid duplicates)
+        separateFilteredData.forEach(item => {
+          if (!options.some(opt => opt.value === item.sourceValue)) {
+            options.push({
+              value: String(item.sourceValue),
+              label: String(item.sourceValue),
+              isConnected: false
+            });
+  
+          }
+        });
+  
+          // Add current value if it doesn't exist in options
+          if (value && !options.some(opt => opt.value === String(value))) {
+            options.unshift({
+              value: String(value),
+              label: String(value),
+              isConnected: false,
+              isAutoFill: false
+            });
+          }
+  
+          const selectedOption = options.find(opt => opt.value === String(value)) || null;
+          const hasError = required && (!value || String(value).trim() === "");
+          const isSource = isSourceField(fieldName);
+     
+  
+          // Handle change with auto-fill for destinations
+          const handleChange = (selectedOption) => {
+            const newValue = selectedOption?.value != null ? String(selectedOption.value) : "";
                 onChange(newValue);
-                
-                // If this is a source field, update the selected source value
-                if (isSourceField(fieldName)) {
-                  handleSourceSelection(fieldName, newValue, rowId);
+  
+            // If this is a source field, find and auto-fill connected destination fields
+            if (isSource && newValue) {
+              const destinations = getDestinationFieldsForSource(fieldName, newValue);
+              
+              // Update row connections state
+              setRowConnections(prev => ({
+                ...prev,
+                [rowId]: {
+                  ...prev[rowId],
+                  [fieldName]: {
+                    value: newValue,
+                    destinations: destinations
+                  }
+                }
+              }));
+  
+              // Auto-fill single destination if there's only one
+              if (destinations.length === 1) {
+                const dest = destinations[0];
+                // We would need to update the row data for the destination field
+                // This would require a more complex implementation with row update
+              }
+            }
+          };
+  
+          if (options.length === 0) {
+            return (
+              <div style={{ position: "relative" }}>
+                <input
+                  type="text"
+                  value={value || ""}
+                  onChange={(e) => onChange(e.target.value)}
+                  placeholder={label + (required ? " *" : "")}
+                  style={{
+                    height: "40px",
+                    borderRadius: "4px",
+                    width: "100%",
+                    borderColor: hasError ? "#d32f2f" : "#ccc",
+                  }}
+                />
+                {hasError && (
+                  <div style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    color: "#d32f2f",
+                    fontSize: "12px",
+                  }}>
+                    {label} is required
+                  </div>
+                )}
+              </div>
+            );
+          }
+  
+          return (
+            <div style={{ position: "relative" }}>
+              <CreatableSelect
+                name={fieldName}
+                value={selectedOption}
+                options={options}
+                isClearable
+                onChange={(option) => {
+                const newValue = option?.value != null ? String(option.value) : "";
+                onChange(newValue);
+  
+                if (isSourceField(fieldName) && newValue) {
+  
+  
+                  const destinations = getDestinationFieldsForSource(fieldName, newValue);
+                  if (destinations.length === 1) {
+  
+                  }
                 }
               }}
-              isClearable
-              menuPortalTarget={document.body}
-              styles={{
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                control: (base) => ({
-                  ...base,
-                  borderColor: hasError ? "#d32f2f" : base.borderColor,
-                }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.data?.isDestination ? '#e8f4fd' : base.backgroundColor,
-                  fontWeight: state.data?.isDestination ? 'bold' : base.fontWeight,
-                }),
-              }}
-            />
-            {hasError && (
-              <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                {label} is required
-              </div>
-            )}
-            {destinationOptions.length > 0 && (
-              <div style={{
-                position: "absolute",
-                top: "-18px",
-                right: "5px",
-                fontSize: "10px",
-                color: "#1976d2",
-                background: "#e8f4fd",
-                padding: "2px 5px",
-                borderRadius: "3px",
-              }}>
-                Connected
-              </div>
-            )}
-          </div>
-        );
-      } else {
-        // Show regular input field
-        return (
-          <div style={{ position: "relative" }}>
-            <input
-              type="text"
-              name={fieldName}
-              value={value || ""}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                onChange(newValue);
-                
-                // If this is a source field, update the selected source value
-                if (isSourceField(fieldName)) {
-                  handleSourceSelection(fieldName, newValue, rowId);
-                }
-              }}
-              placeholder={required ? `${label} *` : label}
-              style={{
-                height: "40px",
-                borderRadius: "4px",
-                width: "100%",
-                borderColor: hasError ? "#d32f2f" : "#ccc",
-              }}
-            />
-            {hasError && (
-              <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                {label} is required
-              </div>
-            )}
-          </div>
-        );
-      }
-    },
+                onCreateOption={(inputValue) => {
+                  onChange(inputValue);
+                }}
+                menuPortalTarget={document.body}
+                styles={{
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  control: (base) => ({
+                    ...base,
+                    borderColor: hasError ? "#d32f2f" : base.borderColor,
+                    minHeight: "40px",
+                  }),
+                  option: (base, { data }) => ({
+                    ...base,
+                    backgroundColor: data.isConnected ? '#e8f4fd' : base.backgroundColor,
+                    color: data.isConnected ? '#1976d2' : base.color,
+                    fontWeight: data.isConnected ? 'bold' : base.fontWeight,
+                    position: 'relative',
+                  }),
+                  singleValue: (base, { data }) => ({
+                    ...base,
+                    color: data.isConnected ? '#1976d2' : base.color,
+                    fontWeight: data.isConnected ? 'bold' : base.fontWeight,
+                  })
+                }}
+         
+              />
+          
+              {hasError && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  color: "#d32f2f",
+                  fontSize: "12px",
+                }}>
+                  {label} is required
+                </div>
+              )}
+  
+              {connectedValues.length > 0 && (
+                <div style={{
+                  position: "absolute",
+                  top: "-18px",
+                  right: "5px",
+                  fontSize: "10px",
+                  color: "#1976d2",
+                  background: "#e8f4fd",
+                  padding: "2px 5px",
+                  borderRadius: "3px",
+                }}>
+                   Connected
+        
+                </div>
+              )}
+            </div>
+          );
+        }
   };
 };
 
-// Define which fields are sources and destinations
-// You need to define this based on your data structure
-// Example: 'taskType' might be a source field, 'tools' might be a destination
-
-// Updated columns using the helper function
 const columns = [
   {
     title: "S.No",
     render: (rowData) => `${rowData?.tableData?.id + 1}`,
     editable: "never",
   },
-  createEditComponent("TaskType", "Task Type", true),
+  createEditComponent("taskType", "Task Type", true),
   createEditComponent("time", "Average Task Time(Hours)", true, { 
     isNumber: true 
   }),
@@ -867,543 +924,6 @@ const columns = [
   createEditComponent("partNo", "Part no", true),
   createEditComponent("toolType", "Tool Type", true),
 ];
-//   const columns = [
-//     {
-//       title: "S.No",
-//       render: (rowData) => `${rowData?.tableData?.id + 1}`,
-//        editable: "never",
-//     },
-
-// {
-//   title: "Task Type",
-//   field: "taskType",
-//   type: "string",
-//   // headerStyle: { textAlign: "center" },
-//   cellStyle: { minWidth: "150px" },
-//     validate: (rowData) => {
-//       // Required validation
-//       if (!rowData.taskType || rowData.taskType.trim() === "") {
-//         return "Task Type is required";
-//       }
-//       return true;
-//     },
-//   // validate: (rowData) => {
-//   //   if (!rowData?.taskType) return "required";
-//   //   return true;
-//   // },
-// editComponent: ({ value, onChange }) => {
-//   const seperateFilteredData = 
-//   allSepareteData?.filter((item) => item?.sourceName === "TaskType") || [];
-//     const connectedFilteredData =
-//       connectData?.filter((item) => item?.destinationName === "TaskType") || [];
-//   // For connected data, show both source values AND destination values that match "TaskType"
-//    const options =
-//       connectedFilteredData.length > 0
-//         ? connectedFilteredData.map((item) => ({
-//             value: item.destinationValue,
-//             label: item.destinationValue,
-//           }))
-//         : seperateFilteredData.map((item) => ({
-//             value: item.sourceValue,
-//             label: item.sourceValue,
-//           }));
-
-      
-   
-
- 
-
-//   const selectedOption =
-//     options.find((opt) => opt.value === value) ||
-//     (value ? { label: value, value } : null);
-
-//   if (!options || options.length === 0) {
-//     return (
-//       <div style={{ position: "relative" }}>
-//         <input
-//           type="text"
-//           name="taskType"
-//           value={value || ""}
-//           onChange={(e) => onChange(e.target.value)}
-//           style={{
-//             height: "40px",
-//             borderRadius: "4px",
-//             width: "100%",
-//           }}
-//         />
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div style={{ position: "relative" }}>
-//       <CreatableSelect
-//         name="taskType"
-//         value={selectedOption}
-//         onChange={(selected) => {
-//           onChange(selected?.value || "");
-//         }}
-//         options={options}
-//         isClearable
-//         menuPortalTarget={document.body}
-//         styles={{
-//           menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-//         }}
-//       />
-//     </div>
-//   );
-// }
-
-// }
-// ,
-
-//    {
-//   title: "Average Task Time(Hours)",
-//   field: "time",
-//   type: "string",
-//   // headerStyle: { textAlign: "center" },
-//   cellStyle: { minWidth: "150px" },
-
-//   // validate: (rowData) => {
-//   //   if (!rowData?.time) return "required";
-//   //   return true;
-//   // },
-//       validate: (rowData) => {
-//       // Required validation
-//       if (!rowData.time || rowData.time === "") {
-//         return "Time is required";
-//       }
-//       // Number validation
-//       if (isNaN(rowData.time)) {
-//         return "Must be a number";
-//       }
-//       // Positive number validation
-//       if (parseFloat(rowData.time) <= 0) {
-//         return "Must be greater than 0";
-//       }
-//       return true;
-//     },
-
-//   editComponent: ({ value, onChange }) => {
-//     const seperateFilteredData =
-//       allSepareteData?.filter((item) => item?.sourceName === "time") || [];
-
-//     const connectedFilteredData =
-//       connectData?.filter((item) => item?.destinationName === "time") || [];
-
-//     const options =
-//       connectedFilteredData.length > 0
-//         ? connectedFilteredData.map((item) => ({
-//             value: item.destinationValue,
-//             label: item.destinationValue,
-//           }))
-//         : seperateFilteredData.map((item) => ({
-//             value: item.sourceValue,
-//             label: item.sourceValue,
-//           }))  || connectedLibraryData;
-
-//     // If dropdown has no options → show normal input
-//     if (!options || options.length === 0) {
-//       return (
-//         <input
-//           type="text"
-//           name="time"
-//           value={value || ""}
-//           onChange={(e) => onChange(e.target.value)}
-//           placeholder="Average Task Time"
-//           style={{ height: "40px", borderRadius: "4px", width: "140px" }}
-//           title="Enter Average Task Time"
-//         />
-//       );
-//     }
-
-//     // Dropdown mode
-//     const selectedOption = value ? { label: value, value } : null;
-
-//     return (
-//       <CreatableSelect
-//         name="time"
-//         value={selectedOption}
-//         // onChange={(selected) => {
-//         //   const newValue = selected?.value || "";
-//         //   onChange(newValue);
-//         //   handleInputChange(selected, "time");
-//         //   getAllConnectedLibrary(selected, "time");
-//         // }}
-//           onChange={(selected) => {
-//           onChange(selected?.value || "");               // MUST be simple string
-//         }}
-//         options={options || connectedLibraryData}
-//         isClearable
-//         menuPortalTarget={document.body}       
-//         styles={{
-//           ...customStyles,
-//           menuPortal: (base) => ({ ...base, zIndex: 9999 }),  
-//           container: (base) => ({ ...base, width: "150px" }), // match field size
-//         }}
-//       />
-//     );
-//   },
-// }
-// , 
-//   {
-//   title: "No of Labours",
-//   field: "totalLabour",
-//   type: "string",
-//   // headerStyle: { textAlign: "center" },
-//   cellStyle: { minWidth: "150px" },
-
-//   // validate: (rowData) => {
-//   //   if (!rowData?.totalLabour) return "required";
-//   //   return true;
-//   // },
-
-//       validate: (rowData) => {
-//       // Required validation
-//       if (!rowData.totalLabour || rowData.totalLabour === "") {
-//         return "Labour count is required";
-//       }
-//       // Number validation
-//       if (isNaN(rowData.totalLabour)) {
-//         return "Must be a number";
-//       }
-//       // Positive integer validation
-//       if (parseInt(rowData.totalLabour) <= 0) {
-//         return "Must be greater than 0";
-//       }
-//       return true;
-//     },
-
-//   editComponent: ({ value, onChange }) => {
-//     const seperateFilteredData =
-//       allSepareteData?.filter((item) => item?.sourceName === "totalLabour") || [];
-
-//     const connectedFilteredData =
-//        connectData?.filter((item) => item?.destinationName === "totalLabour") || [];
-
-//     const options =
-//       connectedFilteredData.length > 0
-//         ? connectedFilteredData.map((item) => ({
-//             value: item.destinationValue,
-//             label: item.destinationValue,
-//           }))
-//         : seperateFilteredData.map((item) => ({
-//             value: item.sourceValue,
-//             label: item.sourceValue,
-//           }));
-
-//     // If NO options → use normal input box
-//     if (!options || options.length === 0) {
-//       return (
-//         <input
-//           type="text"
-//           name="totalLabour"
-//           value={value || ""}
-//           onChange={(e) => onChange(e.target.value)}
-//           placeholder="No of Labours"
-//           style={{ height: "40px", borderRadius: "4px", width: "100px" }}
-//           title="Enter Labour Count"
-//         />
-//       );
-//     }
-
-//     // Dropdown mode
-//     const selectedOption = value ? { label: value, value } : null;
-
-//     return (
-//       <CreatableSelect
-//         name="totalLabour"
-//         value={selectedOption}
-//         // onChange={(selected) => {
-//         //   const newValue = selected?.value || "";
-//         //   onChange(newValue);
-//         //   handleInputChange(selected, "totalLabour");
-//         //   getAllConnectedLibrary(selected, "totalLabour");
-//         // }}
-//           onChange={(selected) => {
-//           onChange(selected?.value || "");               // MUST be simple string
-//         }}
-//         options={options}
-//         isClearable
-//         menuPortalTarget={document.body}   // ⭐ Fix click/visibility issue
-//         styles={{
-//           menuPortal: (base) => ({ ...base, zIndex: 9999 }),  // ⭐ Required for MaterialTable
-//           container: (base) => ({ ...base, width: "140px" }),
-//         }}
-//       />
-//     );
-//   },
-// }
-// ,
-//     {
-//       title: "Skills",
-//       field: "skill",
-//       type: "string",
-//       // headerStyle: { textAlign: "center" },
-//       cellStyle: { minWidth: "150px" },
-//       // validate: (rowData) => {
-//       //   if (rowData?.skill === undefined || rowData?.skill === "") {
-//       //     return "required";
-//       //   }
-//       //   return true;
-//       // },
-//   validate: (rowData) => {
-//       // Required validation
-//       if (!rowData.tools || rowData.tools.trim() === "") {
-//         return "Tools is required";
-//       }
-//       return true;
-//     },
-
-//    editComponent: ({ value, onChange }) => {
-//   const seperateFilteredData =
-//     allSepareteData?.filter((item) => item?.sourceName === "skill") || [];
-
-//   const conncetedFilteredData =
-//    connectData?.filter(
-//       (item) => item?.destinationName === "skill"
-//     ) || [];
-
-//   const options =
-//     conncetedFilteredData.length > 0
-//       ? conncetedFilteredData?.map((item) => ({
-//           value: item?.destinationValue,
-//           label: item?.destinationValue,
-//         }))
-//       : seperateFilteredData?.map((item) => ({
-//           value: item?.sourceValue,
-//           label: item?.sourceValue,
-//         }));
-
-//   // If no options → regular textbox
-//   if (!options || options.length === 0) {
-//     return (
-//       <input
-//         type="text"
-//         name="skill"
-//         value={value || ""}
-//         onChange={(e) => onChange(e.target.value)}
-//         placeholder="Skill"
-//         style={{ height: "40px", borderRadius: "4px", width: "100px" }}
-//         title="Enter Skill"
-//       />
-//     );
-//   }
-
-//   return (
-//     <CreatableSelect
-//       name="skill"
-//       value={value ? { label: value, value } : null}   // FIXED
-//       // onChange={(selected) => {
-//       //   onChange(selected?.value || "");                    // FIXED
-//       //   handleInputChange(selected, "skill");
-//       //   getAllConnectedLibrary(selected, "skill");
-//       // }}
-//         onChange={(selected) => {
-//           onChange(selected?.value || "");               // MUST be simple string
-//         }}
-//       options={options}
-//         isClearable
-//       menuPortalTarget={document.body}                // PREVENT CONTENT CLIPPING
-//       styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-//     />
-//   );
-// }
-
-//     },
-//    {
-//   title: "Tools",
-//   field: "tools",
-//   type: "string",
-//   // headerStyle: { textAlign: "center" },
-//   cellStyle: { minWidth: "150px" },
-
-//   editComponent: ({ value, onChange }) => {
-//     const seperateFilteredData =
-//       allSepareteData?.filter((item) => item?.sourceName === "tools") || [];
-
-//     const conncetedFilteredData =
-//       connectData?.filter(
-//         (item) => item?.destinationName === "tools"
-//       ) || [];
-
-//     const options =
-//       conncetedFilteredData.length > 0
-//         ? conncetedFilteredData?.map((item) => ({
-//             value: item?.destinationValue,
-//             label: item?.destinationValue,
-//           }))
-//         : seperateFilteredData?.map((item) => ({
-//             value: item?.sourceValue,
-//             label: item?.sourceValue,
-//           }));
-
-//     // If no options - normal text input
-//     if (!options || options.length === 0) {
-//       return (
-//         <input
-//           type="text"
-//           name="tools"
-//           value={value || ""}
-//           onChange={(e) => onChange(e.target.value)}
-//           placeholder="Tools"
-//           style={{ height: "40px", borderRadius: "4px", width: "100px" }}
-//           title="Enter Tools"
-//         />
-//       );
-//     }
-
-//     return (
-//       <CreatableSelect
-//         name="tools"
-//         value={value ? { label: value, value } : null}   // ✅ FIXED
-//         // onChange={(selected) => {
-//         //   onChange(selected?.value);                    // ✅ FIXED
-//         //   handleInputChange(selected, "tools");
-//         //   getAllConnectedLibrary(selected, "tools");
-//         // }}
-//           onChange={(selected) => {
-//           onChange(selected?.value || "");               // MUST be simple string
-//         }}
-//         options={options}
-//          isClearable
-//         menuPortalTarget={document.body}               // ✅ Prevent dropdown clipping
-//         styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
-//       />
-//     );
-//   },
-// },
-
-// {
-//   title: "Part no",
-//   field: "partNo",
-//   type: "string",
-//   cellStyle: { minWidth: "150px" },
-//   validate: (rowData) => {
-//       // Required validation
-//       if (!rowData.partNo || rowData.partNo.trim() === "") {
-//         return "Part number is required";
-//       }
-//       return true;
-//     },
-//   editComponent: ({ value, onChange }) => {
-//     const seperateFilteredData =
-//       allSepareteData?.filter((item) => item?.sourceName === "partNo") || [];
-
-//     const conncetedFilteredData =
-//       connectData?.filter(
-//         (item) => item?.destinationName === "partNo"
-//       ) || [];
-
-//     const options =
-//       conncetedFilteredData.length > 0
-//         ? conncetedFilteredData?.map((item) => ({
-//             value: item?.destinationValue,
-//             label: item?.destinationValue,
-//           }))
-//         : seperateFilteredData?.map((item) => ({
-//             value: item?.sourceValue,
-//             label: item?.sourceValue,
-//           }));
-
-//     // If no dropdown data → show text box
-//     if (!options || options.length === 0) {
-//       return (
-//         <input
-//           type="text"
-//           value={value || ""}
-//           onChange={(e) => onChange(e.target.value)}
-//         />
-//       );
-//     }
-
-//     return (
-//       <CreatableSelect
-//         value={value ? { label: value, value } : null}     // ✔ Like Tool Type
-//         // onChange={(selected) => {
-//         //   onChange(selected?.value || "");                 // ✔ Must return string
-//         //   handleInputChange(selected, "partNo");
-//         //   getAllConnectedLibrary(selected, "partNo");
-//         // }}
-//           onChange={(selected) => {
-//           onChange(selected?.value || "");               // MUST be simple string
-//         }}
-//         options={options}
-//         isClearable                                      // ✔ Show X button
-//         menuPortalTarget={document.body}                 // ✔ Fix dropdown clip
-//         styles={{
-//           menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-//           container: (base) => ({ ...base, width: "150px" }),
-//         }}
-//       />
-//     );
-//   },
-// },
-
-
-//   {
-//   title: "Tool Type",
-//   field: "toolType",
-//   type: "string",
-//   // headerStyle: { textAlign: "center" },
-//   cellStyle: { minWidth: "120px" },
-// validate: (rowData) => {
-//       // Required validation
-//       if (!rowData.toolType || rowData.toolType.trim() === "") {
-//         return "Tool type is required";
-//       }
-//       return true;
-//     },
-//   editComponent: ({ value, onChange }) => {
-//     const seperateFilteredData =
-//       allSepareteData?.filter((item) => item?.sourceName === "toolType") || [];
-
-//     const conncetedFilteredData =
-//        connectData?.filter(
-//         (item) => item?.destinationName === "toolType"
-//       ) || [];
-
-//     const options =
-//       conncetedFilteredData.length > 0
-//         ? conncetedFilteredData?.map((item) => ({
-//             value: item?.destinationValue,
-//             label: item?.destinationValue,
-//           }))
-//         : seperateFilteredData?.map((item) => ({
-//             value: item?.sourceValue,
-//             label: item?.sourceValue,
-//           }));
-
-//     if (!options || options.length === 0) {
-//       return (
-//         <input
-//           type="text"
-//           value={value || ""}
-//           onChange={(e) => onChange(e.target.value)}
-//         />
-//       );
-//     }
-
-//     return (
-//       <CreatableSelect
-//         value={value ? { label: value, value } : null}   // ✅ FIXED
-//         onChange={(selected) => {
-//           onChange(selected?.value || "");               // MUST be simple string
-//         }}
-//         options={options}
-//         isClearable
-
-//         menuPortalTarget={document.body}                // 🔥 Fix dropdown issue
-//         styles={{
-//           menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-//           container: (base) => ({ ...base, width: "150px" }),
-//         }}
-//       />
-//     );
-//   },
-// }
-
-//   ];
 
   const submitSchema = Yup.object().shape({
     repairable: Yup.object().required("Repairable is required"),
@@ -1439,7 +959,7 @@ const columns = [
       tools: value.tools,
       partNo: value.partNo,
       toolType: value.toolType,
-      TaskType: value.TaskType,
+      taskType: value.taskType,
       projectId: projectId,
       productId: productId,
       companyId: companyId,
@@ -1449,7 +969,7 @@ const columns = [
       userId: userId,
     })
       .then((response) => {
-     
+     console.log("Create Response:", response);
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
@@ -1463,38 +983,6 @@ const columns = [
       });
   };
 
-  // const updateProcedureData = (value) => {
-  //   const companyId = localStorage.getItem("companyId");
-  //   const rowId = value?.id;
-
-  //   const userId = localStorage.getItem("userId");
-
-  //   Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, {
-  //     time: value.time,
-  //     totalLabour: value.totalLabour,
-  //     skill: value.skill,
-  //     tools: value.tools,
-  //     partNo: value.partNo,
-  //     toolType: value.toolType,
-  //     taskType: value.taskType,
-  //     projectId: projectId,
-  //     productId: productId,
-  //     companyId: companyId,
-  //     treeStructureId: treeStructure,
-  //     token: token,
-  //     userId: userId,
-  //   })
-  //     .then((response) => {
-  //       getProcedureData();
-  //       toast.success("Procedure Updated Successfully");
-  //     })
-  //     .catch((error) => {
-  //       const errorStatus = error?.response?.status;
-  //       if (errorStatus === 401) {
-  //         logout();
-  //       }
-  //     });
-  // };
 
 
   const updateProcedureData = (value) => {
@@ -1511,7 +999,7 @@ const columns = [
       tools: value.tools || "",
       partNo: value.partNo || "",
       toolType: value.toolType || "",
-      TaskType: value.TaskType || "",
+      taskType: value.taskType || "",
       projectId: projectId,
       productId: productId,
       companyId: companyId,
@@ -1777,7 +1265,7 @@ const columns = [
             mttr: importExcelData?.mttr || mttrCalculatedValue || "",
             remarks: importExcelData?.remarks ?? mttrData?.remarks ?? "",
             mmax: importExcelData?.mMax || mttrData?.mMax || "",
-            taskType: importExcelData?.TaskType || "",
+            taskType: importExcelData?.taskType || "",
             time: importExcelData?.time || "",
            totalLabour: importExcelData?.totalLabour || "",
             skill: importExcelData?.skill || "",
@@ -2677,7 +2165,7 @@ onRowUpdate: (newRow, oldData) =>
   new Promise((resolve, reject) => {
     // Check if any data has actually changed
     const hasChanges = 
-      newRow.TaskType !== oldData.TaskType ||
+      newRow.taskType !== oldData.taskType ||
       newRow.time !== oldData.time ||
       newRow.totalLabour !== oldData.totalLabour ||
       newRow.skill !== oldData.skill ||
