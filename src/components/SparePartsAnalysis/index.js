@@ -709,6 +709,64 @@ function Index(props) {
             } = formik;
             return (
               <div>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <div style={{ width: "30%", marginRight: "20px" }}>
+                    <Projectname projectId={projectId} />
+                  </div>
+
+                  <div style={{ width: "100%", marginRight: "20px" }}>
+                    <Dropdown
+                      value={projectId}
+                      productId={productId}
+                      data={treeTableData}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      marginTop: "8px",
+                      height: "40px",
+                    }}
+                  >
+                    <Tooltip placement="right" title={`${!writePermission ? "Import Denied (You're not authorized)" : "Import"}`}>
+                      <div style={{ marginRight: "8px" }}>
+                        <label
+                          htmlFor="file-input"
+                          className="import-export-btn"
+                        >
+                          <FontAwesomeIcon icon={faFileDownload} />
+                        </label>
+                        <input
+                          type="file"
+                          className="input-fields"
+                          id="file-input"
+                          disabled={!writePermission}
+                          onChange={importExcel}
+                          style={{ display: "none" }}
+                        />
+                      </div>
+                    </Tooltip>
+                    <Tooltip placement="left" title="Export">
+                      <label
+                        className="import-export-btn"
+                        onClick={() => exportToExcel(values)}
+                      >
+                        <FontAwesomeIcon
+                          icon={faFileUpload}
+                          style={{ width: "15px" }}
+                        />
+                      </label>
+                    </Tooltip>
+                  </div>
+                </div>
                 <Form onSubmit={handleSubmit}>
                   <fieldset
                     disabled={

@@ -48,6 +48,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Tooltip, TableCell } from "@material-ui/core";
 
+
 const string255 = Yup.string()
   .required("This field is required")
   .max(255, "Must be at most 255 characters");
@@ -769,7 +770,96 @@ export default function PMMRA(props) {
     reader.readAsBinaryString(file);
   };
 
-  // Export to Excel function
+  const convertToJson = (headers, originalData) => {
+    const rows = [];
+    originalData.forEach((row) => {
+      let rowData = {};
+      row.forEach((element, index) => {
+        rowData[headers[index]] = element;
+      });
+      rows.push(rowData);
+    });
+  };
+
+  const createsafetPMMRAFromExcel = (values) => {
+    const companyId = localStorage.getItem("companyId");
+
+    setIsLoading(true);
+
+    Api.post("/api/v1/pmMra/", {
+      endEffect: values.endeffect,
+      safetyImpact: values.safetyimpact,
+      reliabilityImpact: values.reliability,
+      frequency: values.frequency,
+      rcmnotes: values.rcmnotes,
+      pmTaskId: values.pmtaskid,
+      pmTaskType: values.PMtasktype,
+      taskIntrvlFreq: values.taskintervalFrequency,
+      LatitudeFreqTolrnc: values.latitudeFrequency,
+      tskInteralDetermination: values.taskInterval,
+      scheduleMaintenceTsk: values.scheduledMaintenanceTask,
+      taskDesc: values.taskDescription,
+      tskTimeML1: values.tasktimeML1,
+      tskTimeML2: values.tasktimeML2,
+      tskTimeML3: values.tasktimeML3,
+      tskTimeML4: values.tasktimeML4,
+      tskTimeML5: values.tasktimeML5,
+      tskTimeML6: values.tasktimeML6,
+      tskTimeML7: values.tasktimeML7,
+      skill1: values.skill1,
+      skillOneNos: values.skill1nos,
+      skillOneContribution: values.skill1contribution,
+      skill2: values.skill2,
+      skillTwoNos: values.skill2nos,
+      skillTwoContribution: values.skill2contribution,
+      skill3: values.skill3,
+      skillThreeNos: values.skill3nos,
+      skillThreeContribution: values.skill3contribution,
+      addiReplaceSpare1: values.addReplacespare1,
+      addiReplaceSpare1Qty: values.addReplacespare1qty,
+      addiReplaceSpare2: values.addReplacespare2,
+      addiReplaceSpare2Qty: values.addReplacespare2qty,
+      addiReplaceSpare3: values.addReplacespare3,
+      addiReplaceSpare3Qty: values.addReplacespare3qty,
+      consumable1: values.Consumable1,
+      consumable1Qty: values.consumable1Qty,
+      consumable2: values.Consumable2,
+      consumable2Qty: values.Consumable2qty,
+      consumable3: values.Consumable3,
+      consumable3Qty: values.Consumable3qty,
+      consumable4: values.Consumable4,
+      consumable4Qty: values.Consumable4qty,
+      consumable5: values.Consumable5,
+      consumable5Qty: values.Consumable5qty,
+      userField1: values.userfield1,
+      userField2: values.userfield2,
+      userField3: values.userfield3,
+      userField4: values.userfield4,
+      userField5: values.userfield5,
+    })
+      .then((res) => {
+        const pmmraData = res?.data?.data?.createData;
+        const pmmraId = res?.data?.data?.createData?.id;
+        setpmmraId(pmmraId);
+        setpmmraData(pmmraData);
+
+        const status = res.status;
+        if (status === 201) {
+          setShowValue(res.data.message);
+          NextPage();
+        } else {
+          setShowValue(res.data.message);
+          setValue(true);
+        }
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        }
+      });
+  };
+
   const exportToExcel = (value) => {
     const originalData = {
       CompanyName: treeTableData[0]?.companyId?.companyName,
@@ -791,13 +881,22 @@ export default function PMMRA(props) {
       restoreDiscardTsk: value.task,
       combinationofTsk: value.combination,
       rcmnotes: value.rcmnotes,
+
       pmTaskId: value.pmtaskid,
       pmTaskType: value.PMtasktype,
       taskIntrvlFreq: value.taskintervalFrequency,
-      LatitudeFreqTolrnc: value.latitudeFrequency,
+      // taskintervalunit
+      // taskIntervaal
+      taskIntervalunit: value.taskIntervalunit,
+      taskInterval: value.taskInterval,
+
+      // LatitudeFreqTolrnc: value.latitudeFrequency,
+
       scheduleMaintenceTsk: value.scheduledMaintenanceTask,
-      tskInteralDetermination: value.taskInterval,
+      // tskInteralDetermination: value.taskInterval,
       taskDesc: value.taskDescription,
+
+
       tskTimeML1: value.tasktimeML1,
       tskTimeML2: value.tasktimeML2,
       tskTimeML3: value.tasktimeML3,
@@ -1187,15 +1286,15 @@ export default function PMMRA(props) {
         values?.latitudeFrequency && values?.latitudeFrequency?.value
           ? values?.latitudeFrequency?.value
           : values?.latitudeFrequency,
+      tskInteralDetermination:
+        values?.taskInterval && values?.taskInterval?.value
+          ? values?.taskInterval?.value
+          : values?.taskInterval,
       scheduleMaintenceTsk:
         values?.scheduledMaintenanceTask &&
           values?.scheduledMaintenanceTask?.value
           ? values?.scheduledMaintenanceTask?.value
           : values?.scheduledMaintenanceTask,
-      tskInteralDetermination:
-        values?.taskInterval && values?.taskInterval?.value
-          ? values?.taskInterval?.value
-          : values?.taskInterval,
       taskDesc:
         values?.taskDescription && values?.taskDescription?.value
           ? values?.taskDescription?.value
