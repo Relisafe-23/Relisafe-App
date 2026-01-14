@@ -4,6 +4,7 @@ import { useState } from "react";
 
 const RenderTree = ({
   data,
+  parNod,
   handleRemove,
   handleAdd,
   handleEdit,
@@ -18,6 +19,7 @@ const RenderTree = ({
       label={
         <RenderNode
           node={data}
+          parNod={parNod}
           handleRemove={handleRemove}
           handleAdd={handleAdd}
           handleEdit={handleEdit}
@@ -29,6 +31,7 @@ const RenderTree = ({
         />
       }
     >
+
       {data?.children?.map((child, index) => (
         <RenderTree
           key={index}
