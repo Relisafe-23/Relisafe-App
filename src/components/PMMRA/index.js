@@ -53,8 +53,6 @@ const string255 = Yup.string()
   .required("This field is required")
   .max(255, "Must be at most 255 characters");
 
-
-
 const Validation = Yup.object().shape({
   category: Yup.object().required("Category is required"),
   parttype: Yup.object().required("Part type is required"),
@@ -91,7 +89,6 @@ const Validation = Yup.object().shape({
   taskDescription: Yup.string()
     .required(" Task Description is required")
     .max(255),
-
   tasktimeML1: Yup.string()
     .required("Task time ML1 is required")
     .matches(/^[0-9]+$/, "Only numeric values are allowed")
@@ -120,7 +117,6 @@ const Validation = Yup.object().shape({
     .required("Task time ML7 is required")
     .matches(/^[0-9]+$/, "Only numeric values are allowed")
     .max(255),
-
   skill1: Yup.string().required(" Skill 1 is required").max(255),
   skill1nos: Yup.string()
     .required(" Skill 1 nos is required")
@@ -145,7 +141,6 @@ const Validation = Yup.object().shape({
   skill3contribution: Yup.string()
     .required(" Skill 3 contribution is required")
     .max(255),
-
   addReplacespare1: Yup.string()
     .required(" Add Replacespare 1 is required")
     .max(255),
@@ -167,7 +162,6 @@ const Validation = Yup.object().shape({
     .required(" Add Replacespare 3 qty is required")
     .matches(/^[0-9]+$/, "Only numeric values are allowed")
     .max(255),
-
   Consumable1: Yup.string().required(" Consumable 1 is required").max(255),
   consumable1Qty: Yup.string()
     .required(" Consumable 1 qty is required")
@@ -193,7 +187,6 @@ const Validation = Yup.object().shape({
     .required("Consumable 5 qty is required")
     .matches(/^[0-9]+$/, "Only numeric values are allowed")
     .max(255),
-
   userfield1: Yup.string().required("User field 1 is required").max(255),
   userfield2: Yup.string().required("User field 2 is required").max(255),
   userfield3: Yup.string().required("User field 3 is required").max(255),
@@ -201,11 +194,163 @@ const Validation = Yup.object().shape({
   userfield5: Yup.string().required("User field 5 is required").max(255),
 });
 
+// Custom hook for connection management
+const useConnectionManagement = (projectId) => {
+  const [allSepareteData, setAllSepareteData] = useState([]);
+  const [flattenedConnect, setFlattenedConnect] = useState([]);
+  const [selectedSourceValues, setSelectedSourceValues] = useState({});
+  const [rowConnections, setRowConnections] = useState({});
+
+  // Get all separate library data
+  const getAllSeprateLibraryData = async () => {
+    const companyId = localStorage.getItem("companyId");
+    Api.get("api/v1/library/get/all/separate/value", {
+      params: {
+        projectId: projectId,
+      },
+    }).then((res) => {
+      console.log(res,"res seperate value")
+      const filteredData = res?.data?.data.filter(
+        (item) => item?.moduleName === "PMMRA"
+      );
+      setAllSepareteData(filteredData || []);
+    });
+  };
+
+  // Get all connection data
+  const getAllConnect = () => {
+    Api.get("api/v1/library/get/all/connect/value", {
+      params: { projectId },
+    }).then((res) => {
+      console.log(res,"res connect value")
+      const filteredData = res.data.getData.filter(
+        (entry) =>
+          entry?.libraryId?.moduleName === "PMMRA" ||
+          entry?.destinationModuleName === "PMMRA"
+      );
+
+      const flattened = filteredData.flatMap((item) =>
+        (item.destinationData || [])
+          .filter(
+            (d) =>
+              d.destinationModuleName === "PMMRA" &&
+              d.destinationModuleName === item.libraryId.moduleName
+          )
+          .map((d) => ({
+            fieldName: item.sourceName,
+            fieldValue: item.sourceValue,
+            destName: d.destinationName,
+            destValue: d.destinationValue,
+            destModule: d.destinationModuleName,
+          }))
+      );
+
+      setFlattenedConnect(flattened);
+    });
+  };
+
+  // Check if a field is a source field (has connections from it)
+  const isSourceField = (fieldName) => {
+    return flattenedConnect?.some(item => item.fieldName === fieldName);
+  };
+
+  // Get destination fields for a source
+  const getDestinationFieldsForSource = (sourceField, sourceValue) => {
+    return flattenedConnect
+      ?.filter(item => item.fieldName === sourceField && item.fieldValue === sourceValue)
+      .map(item => ({
+        field: item.destName,
+        value: item.destValue
+      })) || [];
+  };
+
+  // Get connected values for a field based on selected source
+  const getConnectedValuesForField = (fieldName, rowId) => {
+    const rowSourceValues = selectedSourceValues[rowId] || {};
+
+    let connectedValues = [];
+
+    Object.keys(rowSourceValues).forEach(sourceField => {
+      const sourceValue = rowSourceValues[sourceField];
+      if (sourceValue) {
+        const connections = flattenedConnect?.filter(
+          item =>
+            item.fieldName === sourceField &&
+            item.fieldValue === sourceValue &&
+            item.destName === fieldName
+        ) || [];
+
+        connectedValues = [...connectedValues, ...connections];
+      }
+    });
+
+    return connectedValues;
+  };
+
+  // Handle source selection and update connections
+  const handleSourceSelection = (fieldName, value, rowId) => {
+    // Update selected source values for this row
+    setSelectedSourceValues(prev => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        [fieldName]: value
+      }
+    }));
+
+    // Find all connections originating from this source
+    const connections = flattenedConnect?.filter(
+      item => item.fieldName === fieldName && item.fieldValue === value
+    ) || [];
+
+    // Store connections for this row
+    setRowConnections(prev => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        [fieldName]: connections
+      }
+    }));
+  };
+
+  // Initialize connection data
+  const initializeConnections = () => {
+    getAllSeprateLibraryData();
+    getAllConnect();
+  };
+
+  return {
+    allSepareteData,
+    flattenedConnect,
+    selectedSourceValues,
+    rowConnections,
+    isSourceField,
+    getDestinationFieldsForSource,
+    getConnectedValuesForField,
+    handleSourceSelection,
+    initializeConnections
+  };
+};
+
 export default function PMMRA(props) {
-  // const pmmraPermission = props?.location?.state?.pmmraWrite;
   const projectId = props?.location?.state?.projectId
     ? props?.location?.state?.projectId
     : props?.match?.params?.id;
+
+  // Use the custom connection management hook
+  const {
+    allSepareteData,
+    flattenedConnect,
+    selectedSourceValues,
+    rowConnections,
+    isSourceField,
+    getDestinationFieldsForSource,
+    getConnectedValuesForField,
+    handleSourceSelection,
+    initializeConnections
+  } = useConnectionManagement(projectId);
+
+  // Existing state variables
   const [partType, setPartType] = useState();
   const [companyName, setCompanyName] = useState();
   const [category, setCategory] = useState();
@@ -235,7 +380,6 @@ export default function PMMRA(props) {
   const [partNumber, setPartNumber] = useState();
   const [quantity, setQuantity] = useState();
   const [isSpinning, setIsSpinning] = useState(true);
-  const [allConnectedData, setAllConnectedData] = useState([]);
   const [initialProductId, setInitialProductId] = useState();
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
@@ -257,18 +401,130 @@ export default function PMMRA(props) {
   const [mttrLevelOfRepair, setMttrLevelOfRepair] = useState();
   const [mttrLevelOfReplace, setMttrLevelOfReplace] = useState();
   const [mttrSpare, setMttrSpare] = useState();
-  const [colDefs, setColDefs] = useState();
-  const [connectData, setConnectData] = useState([]);
-  const [flattenedConnect, setFlattenedConnect] = useState([]);
-
   const [importExcelData, setImportExcelData] = useState({});
   const [shouldReload, setShouldReload] = useState(false);
   const [open, setOpen] = useState(false);
+  const [companyId, setCompanyId] = useState();
+  const [fmecaId, setFmecaId] = useState();
+  const [fmecaFillterData, setFmecaFillterData] = useState();
+
+  // Initialize connections on component mount
   const [failureMode, setFailureMode] = useState();
   useEffect(() => {
-    getAllConnectedLibrary();
+    initializeConnections();
   }, []);
 
+  // Function to create a smart select field with connections
+  const createSmartSelectField = (fieldName, label, values, setFieldValue, formId = "main") => {
+    const rowId = formId; // For PMMRA form, we use "main" as the row ID
+
+    // Get connected values for this field
+    const connectedValues = getConnectedValuesForField(fieldName, rowId);
+
+    // Get separate library data for this field
+    const separateFilteredData = allSepareteData?.filter(
+      (item) => item?.sourceName === fieldName
+    ) || [];
+
+    // Combine options: connected values first, then separate values
+    let options = [];
+
+    // Add connected values
+    if (connectedValues.length > 0) {
+      const connectedOptions = connectedValues.map(item => ({
+        value: item.destValue,
+        label: item.destValue,
+        isConnected: true
+      }));
+      options = [...options, ...connectedOptions];
+    }
+
+    // Add separate library values (avoid duplicates)
+    separateFilteredData.forEach(item => {
+      if (!options.some(opt => opt.value === item.sourceValue)) {
+        options.push({
+          value: item.sourceValue,
+          label: item.sourceValue,
+          isConnected: false
+        });
+      }
+    });
+
+    // Get current value
+    const currentValue = values[fieldName];
+    const selectedOption = options.find(opt => opt.value === currentValue) ||
+      (currentValue ? { label: currentValue, value: currentValue } : null);
+
+    return (
+      <div style={{ position: "relative" }}>
+        <CreatableSelect
+          name={fieldName}
+          value={selectedOption}
+          options={options}
+          isClearable
+          onChange={(option) => {
+            const newValue = option?.value || "";
+            setFieldValue(fieldName, newValue);
+
+            // If this is a source field, handle connections
+            if (isSourceField(fieldName) && newValue) {
+              handleSourceSelection(fieldName, newValue, rowId);
+
+              // Get destinations for this source
+              const destinations = getDestinationFieldsForSource(fieldName, newValue);
+
+              // Auto-fill destination fields if there's only one destination
+              if (destinations.length === 1) {
+                const dest = destinations[0];
+                setFieldValue(dest.field, dest.value);
+              }
+            }
+          }}
+          onCreateOption={(inputValue) => {
+            // Allow creating new options
+            const newOption = { value: inputValue, label: inputValue };
+            setFieldValue(fieldName, inputValue);
+
+            if (isSourceField(fieldName) && inputValue) {
+              handleSourceSelection(fieldName, inputValue, rowId);
+            }
+          }}
+          menuPortalTarget={document.body}
+          styles={{
+            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            control: (base) => ({
+              ...base,
+              borderColor: "#ccc",
+            }),
+            option: (base, state) => ({
+              ...base,
+              backgroundColor: state.data?.isConnected ? '#e8f4fd' : base.backgroundColor,
+              fontWeight: state.data?.isConnected ? 'bold' : base.fontWeight,
+            }),
+          }}
+          placeholder={label}
+        />
+        {connectedValues.length > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              top: "-18px",
+              right: "5px",
+              fontSize: "10px",
+              color: "#1976d2",
+              background: "#e8f4fd",
+              padding: "2px 5px",
+              borderRadius: "3px",
+            }}
+          >
+            Connected
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Import Excel function
   const importExcel = (e) => {
     const file = e.target.files[0];
     const fileName = file.name;
@@ -312,7 +568,6 @@ export default function PMMRA(props) {
               case "endEffect":
                 mappedData.endeffect = value;
                 break;
-              // Add these case statements to your importExcel function's switch statement
               case "Evident1":
                 mappedData.Evident1 = value;
                 break;
@@ -496,9 +751,7 @@ export default function PMMRA(props) {
               case "userField5":
                 mappedData.userfield5 = value;
                 break;
-
               default:
-                // For any unmapped fields, use the original key
                 mappedData[key] = value;
             }
           });
@@ -682,13 +935,11 @@ export default function PMMRA(props) {
       userField4: value.userfield4,
       userField5: value.userfield5,
     };
-    // if (originalData.length > 0) {
 
     const hasData = Object.values(originalData).some((value) => !!value);
 
     if (hasData) {
       const dataArray = [];
-
       dataArray.push(originalData);
       const ws = XLSX?.utils?.json_to_sheet(dataArray);
       const wb = XLSX.utils?.book_new();
@@ -705,134 +956,32 @@ export default function PMMRA(props) {
         draggable: true,
         progress: undefined,
         theme: "light",
-        type: "error", // Change this to "error" to display an error message
+        type: "error",
       });
     }
   };
 
+  // Cancel click handler
   const handleCancelClick = () => {
-    // Perform any necessary checks to determine if a reload is required
-    const shouldReloadPage = true; // Change this condition as needed
-
+    const shouldReloadPage = true;
     if (shouldReloadPage) {
       setShouldReload(true);
     } else {
-      //  formik.resetForm();
       setOpen(false);
     }
   };
+
   if (shouldReload) {
-    // Reload the page
     window.location.reload();
   }
-  const [companyId, setCompanyId] = useState();
-  const [allSepareteData, setAllSepareteData] = useState([]);
-  const [mergedData, setMergedData] = useState([]);
-  const [tableData, setTableData] = useState();
-  const [fmecaId, setFmecaId] = useState();
-  const [fmecaFillterData, setFmecaFillterData] = useState();
-  const [data, setData] = useState({
-    projectName: "",
-    endEffect: "",
-    safetyImpact: "",
-    reliability: "",
-    frequency: "",
-    severity: "",
-    riskIndex: "",
-    Evident1: "",
-    Items: "",
-    condition: "",
-    failure: "",
-    redesign: "",
-    acceptable: "",
-    Lubrication: "",
-    task: "",
-    combination: "",
-    rcmnotes: "",
-    pmtaskid: "",
-    PMtasktype: "",
-    taskintervalFrequency: "",
-    taskIntervalunit: "",
-    scheduledMaintenanceTask: "",
-    taskInterval: "",
-    taskDescription: "",
-    tasktimeML1: "",
-    tasktimeML2: "",
-    tasktimeML3: "",
-    tasktimeML4: "",
-    tasktimeML5: "",
-    tasktimeML6: "",
-    tasktimeML7: "",
-    skill1: "",
-    skill1nos: "",
-    skill1contribution: "",
-    skill2: "",
-    skill2nos: "",
-    skill2contribution: "",
-    skill3: "",
-    skill3nos: "",
-    skill3contribution: "",
-    addReplacespare1: "",
-    addReplacespare1qty: "",
-    addReplacespare2: "",
-    addReplacespare2qty: "",
-    addReplacespare3: "",
-    addReplacespare3qty: "",
-    Consumable1: "",
-    consumable1Qty: "",
-    Consumable2: "",
-    Consumable2qty: "",
-    Consumable3: "",
-    Consumable3qty: "",
-    Consumable4: "",
-    Consumable4qty: "",
-    Consumable5: "",
-    Consumable5qty: "",
-    userfield1: "",
-    userfield2: "",
-    userfield3: "",
-    userfield4: "",
-    userfield5: "",
-  });
 
-  // const handleInputChange = (selectedItems, name) => {
-  //   setData((prevData) => ({
-  //     ...prevData,
-  //     [name]: selectedItems ? selectedItems.value : "", // Assuming you want to store the selected value
-  //   }));
-  // };
-
-  const getAllSeprateLibraryData = async () => {
-    const companyId = localStorage.getItem("companyId");
-    setCompanyId(companyId);
-    Api.get("api/v1/library/get/all/separate/value", {
-      params: {
-        projectId: projectId,
-      },
-    }).then((res, response) => {
-      setCompanyName(response?.data?.data?.companyId?.companyName);
-      setProjectName(response?.data?.data?.projectName);
-      const filteredData = res?.data?.data.filter(
-        (item) => item?.moduleName === "PMMRA"
-      );
-
-      setAllSepareteData(filteredData);
-
-      const merged = [...(tableData || []), ...filteredData];
-      setMergedData(merged);
-    });
-  };
-  useEffect(() => {
-    // getAllConnectedLibrary(); 
-    getAllSeprateLibraryData();
-    getFMECAData();
-  }, [productId]);
-
-  // Log out
+  // Logout function
   const logout = () => {
     localStorage.clear(history.push("/login"));
     window.location.reload();
   };
+
+  // Get FMECA data
   const getFMECAData = () => {
     Api.get("/api/v1/FMECA/product/list", {
       params: {
@@ -852,7 +1001,6 @@ export default function PMMRA(props) {
       },
     }).then((res) => {
       const data = res?.data?.data;
-
       setFmecaData(data);
       const filteredData = data.filter((item) => item.failureMode === failureMode);
 
@@ -860,96 +1008,7 @@ export default function PMMRA(props) {
     });
   };
 
-  //  const getAllConnectedLibrary = async () => {
-  //   try {
-  //     setIsLoading(true);
-
-  //     const res = await Api.get("api/v1/library/get/all/connect/value", {
-  //       params: {
-  //         projectId: projectId,
-  //       },
-  //     });
-
-  //     console.log("res connect123",res.data.getData);
-
-  //     const filteredData = res.data.getData?.filter(
-  //       (entry) =>
-  //         entry?.libraryId?.moduleName === "PMMR" ||
-  //         entry?.destinationModuleName === "PMMR"
-  //     );
-
-  //     setConnectData(filteredData);
-  //  console.log("res connect", filteredData);
-  //     const flattened = filteredData.flatMap((item) =>
-  //       (item?.destinationData || [])
-  //         .filter((d) => d?.destinationModuleName === "PMMR")
-  //         .map((d) => ({
-  //           fieldName: item?.sourceName,
-  //           fieldValue: item?.sourceValue,
-  //           destName: d?.destinationName,
-  //           destValue: d?.destinationValue,
-  //           destModule: d?.destinationModuleName,
-  //         }))
-  //     );
-
-  //      setAllConnectedData(flattened);
-
-  //     console.log("filteredData",flattened );
-  //   } catch (error) {
-  //     console.error("Error fetching connect data:", error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-
-  const getAllConnectedLibrary = async (fieldValue, fieldName) => {
-    Api.get("api/v1/library/get/all/connect/value", {
-      params: {
-        projectId: projectId,
-
-      },
-    }).then((res) => {
-      console.log("res1", res.data.getData);
-      const filteredData = res.data.getData?.filter(
-        (entry) =>
-          entry?.libraryId?.moduleName === "PMMRA" ||
-          entry?.destinationModuleName === "PMMRA"
-      );
-      console.log("filteredData", filteredData)
-      const flattened = filteredData.flatMap((item) =>
-        (item?.destinationData || [])
-          .filter((d) => d?.destinationModuleName === "PMMRA")
-          .map((d) => ({
-            fieldName: item?.sourceName,
-            fieldValue: item?.sourceValue,
-            destinationName: d?.destinationName,
-            destinationValue: d?.destinationValue,
-            destinationModule: d?.destinationModuleName,
-          }))
-      );
-      console.log("flattened", flattened)
-      setAllConnectedData(flattened);
-
-    });
-  };
-  // const getAllConnectedLibrary = async (fieldValue, fieldName) => {
-  //   Api.get("api/v1/library/get/all/source/value", {
-  //     params: {
-  //       projectId: projectId,
-  //       moduleName: "PMMRA",
-  //       sourceName: fieldName,
-  //       sourceValue: fieldValue.value,
-  //       destinationName:fieldName,
-  //       destinationValue:fieldValue.value,
-  //     },
-  //   }).then((res) => {
-  //     console.log("res1", res);
-  //     const data = res?.data?.libraryData;
-  //     setAllConnectedData(data);
-  //   });
-  // };
-  //project owner
+  // Project sidebar
   const projectSidebar = () => {
     Api.get(`/api/v1/projectCreation/${projectId}`, {
       headers: {
@@ -960,6 +1019,8 @@ export default function PMMRA(props) {
       setCreatedBy(res.data.data.createdBy);
     });
   };
+
+  // Get tree data
   const getTreedata = () => {
     Api.get(`/api/v1/productTreeStructure/list`, {
       params: {
@@ -981,6 +1042,7 @@ export default function PMMRA(props) {
       });
   };
 
+  // Get MTTR data
   const getMttrData = () => {
     const companyId = localStorage.getItem("companyId");
     Api.get("/api/v1/mttrPrediction/details", {
@@ -1020,6 +1082,7 @@ export default function PMMRA(props) {
       });
   };
 
+  // Get project permission
   const getProjectPermission = () => {
     Api.get(`/api/v1/projectPermission/list`, {
       params: {
@@ -1050,8 +1113,10 @@ export default function PMMRA(props) {
     propstoGetTreeData();
     getpmmraDetails();
     getMttrData();
+    getFMECAData();
   }, [productId]);
 
+  // Get PMMRA details
   const getpmmraDetails = () => {
     const companyId = localStorage.getItem("companyId");
     Api.get("/api/v1/pmMra/details", {
@@ -1096,6 +1161,7 @@ export default function PMMRA(props) {
       });
   };
 
+  // Get tree data for props
   const propstoGetTreeData = () => {
     const companyId = localStorage.getItem("companyId");
     setIsSpinning(true);
@@ -1107,9 +1173,7 @@ export default function PMMRA(props) {
         userId: userId,
       },
     })
-
       .then((res) => {
-        console.log("res", res);
         const data = res?.data?.data;
         setProductName(data.productName);
         setIsLoading(false);
@@ -1133,6 +1197,7 @@ export default function PMMRA(props) {
       });
   };
 
+  // Submit function
   const submit = (values) => {
     const companyId = localStorage.getItem("companyId");
 
@@ -1411,6 +1476,7 @@ export default function PMMRA(props) {
       });
   };
 
+  // Update PMMRA details
   const UpdatepmmraDetails = (values) => {
     const companyId = localStorage.getItem("companyId");
     Api.patch("/api/v1/pmMra/update", {
@@ -1512,6 +1578,7 @@ export default function PMMRA(props) {
       });
   };
 
+  // Next page function
   const NextPage = () => {
     setShow(true);
     setTimeout(() => {
@@ -1519,19 +1586,20 @@ export default function PMMRA(props) {
     }, 2000);
   };
 
+  // Get FMECA filter data
   const getFmecaFilterData = (value) => {
     const filteredData = fmecaData.filter((item) => item.failureMode === value);
 
     setFmecaFillterData(filteredData[0]);
   };
 
+  // FMECA options
   const fmecaOptions = fmecaData.map((item) => ({
     value: item?.failureMode,
     label: item?.failureMode,
   }));
 
-
-
+  // Initial values for form
   const InitialValues = {
     projectname: projectname,
     companyId: companyId,
@@ -1557,8 +1625,6 @@ export default function PMMRA(props) {
       importExcelData?.safetyimpact || fmecaFillterData?.safetyImpact || "",
     frequency: importExcelData?.frequency || fmecaFillterData?.frequency || "",
     riskindex: importExcelData?.riskindex || fmecaFillterData?.riskIndex || "",
-
-    // Map all other fields from imported Excel data
     rcmnotes: importExcelData?.rcmnotes || pmmraData?.rcmNotes || "",
     pmtaskid: importExcelData?.pmtaskid || pmmraData?.pmTaskId || "",
     PMtasktype: importExcelData?.PMtasktype || pmmraData?.pmTaskType || "",
@@ -1637,8 +1703,6 @@ export default function PMMRA(props) {
     userfield3: importExcelData?.userfield3 || pmmraData?.userField3 || "",
     userfield4: importExcelData?.userfield4 || pmmraData?.userField4 || "",
     userfield5: importExcelData?.userfield5 || pmmraData?.userField5 || "",
-
-    // Select fields (these need special handling with {label, value} objects)
     Evident1: importExcelData?.Evident1 || pmmraData?.LossOfEvident || "",
     Items: importExcelData?.significantItem || pmmraData?.significantItem || "",
     condition:
@@ -1658,77 +1722,14 @@ export default function PMMRA(props) {
       importExcelData?.combinationofTsk || pmmraData?.combinationOfTsk || "",
     taskIntervalunit:
       importExcelData?.taskInterval || pmmraData?.taskIntrvlUnit || "",
-    // Evident1: pmmraData?.LossOfEvident || { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } || "",
-    // Items: pmmraData?.significantItem || { label: pmmraData?.significantItem, value: pmmraData?.significantItem } || "",
-    // condition: pmmraData?.conditionMonitrTsk || { label: pmmraData?.conditionMonitrTsk, value: pmmraData?.conditionMonitrTsk } || "",
-    // failure: pmmraData?.failureFindTsk || { label: pmmraData?.failureFindTsk, value: pmmraData?.failureFindTsk } || "",
-    // redesign: pmmraData?.reDesign || { label: pmmraData?.reDesign, value: pmmraData?.reDesign } || "",
-    // acceptable: pmmraData?.criticalityAccept || { label: pmmraData?.criticalityAccept, value: pmmraData?.criticalityAccept } || "",
-    // lubrication: pmmraData?.LubricationservceTsk || { label: pmmraData?.LubricationservceTsk, value: pmmraData?.LubricationservceTsk } || "",
-    // task: pmmraData?.restoreDiscrdTsk || { label: pmmraData?.restoreDiscrdTsk, value: pmmraData?.restoreDiscrdTsk } || "",
-    // combination: pmmraData?.combinationOfTsk || { label: pmmraData?.combinationOfTsk, value: pmmraData?.combinationOfTsk } || "",
-    // taskIntervalunit: pmmraData?.taskIntrvlUnit || { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit } || "",
   };
+
   return (
     <div style={{ marginTop: "90px" }} className="mx-4">
       {isLoading ? (
         <Loader />
       ) : (
         <div>
-          {/* <Row>
-            <Col>
-              <label for="file-input" class="file-label file-inputs">
-                Import
-              </label>
-              <input type="file" className="input-fields" id="file-input" onChange={importExcel} />
-            </Col>
-            <Col>
-              <Button
-                className="btn-aligne export-btns-FailureRate"
-                onClick={() => {
-                  exportToExcel(InitialValues);
-                }}
-              >
-                Export
-              </Button>
-            </Col>
-          </Row> */}
-          {/* <div
-            style={{
-              display: "flex",
-              marginTop: "8px",
-              height: "40px",
-            }}
-          >
-            <Tooltip placement="left-end" title="Import">
-              <Col>
-                <label htmlFor="file-input" className="import-export-btn">
-                  <FontAwesomeIcon icon={faFileDownload} />
-                </label>
-                <input
-                  type="file"
-                  className="input-fields"
-                  id="file-input"
-                  onChange={importExcel}
-                />
-              </Col>
-            </Tooltip>
-            <Tooltip placement="left" title="Export">
-              <Button
-                className="import-export-btn"
-                onClick={() => {
-                  exportToExcel(InitialValues);
-                }}
-              >
-                <FontAwesomeIcon icon={faFileUpload} style={{ width: "15" }} />
-              </Button>
-            </Tooltip>
-          </div>
-          <Row>
-            <Col xs={12} sm={9} className="projectName">
-              <Dropdown value={projectId} productId={productId} />
-            </Col>
-          </Row> */}
           <div
             style={{
               display: "flex",
@@ -1850,29 +1851,6 @@ export default function PMMRA(props) {
                           <Col>
                             <Form.Group>
                               <Label notify={true}>FMECA Mode</Label>
-                              {/* <Select
-                                name="FmecaId"
-                                className="mt-1"
-                                placeholder="Select Fmeca Mode"
-                                value={fmecaOptions?.label}       
-                                style={{ backgroundColor: "red" }}
-                                options={fmecaOptions}
-                                styles={customStyles}
-                                onBlur={handleBlur}
-                                isDisabled={
-                                  writePermission === true ||
-                                    writePermission === "undefined" ||
-                                    role === "admin" ||
-                                    (isOwner === true && createdBy === userId)
-                                    ? null
-                                    : "disabled"
-                                }
-                                onChange={(e) => {
-                                  setFieldValue("FmecaId", e.value);
-                                  getFmecaFilterData(e.value);
-                                  setFmecaId(e.value);
-                                }}
-                              /> */}
                               <Select
                                 name="FailureMode"
                                 className="mt-1"
@@ -1909,16 +1887,12 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group>
                                   <Label notify={true}>End Effect</Label>
-                                  <Form.Control
-                                    name="endeffect"
-                                    id="endeffect"
-                                    placeholder="End Effect"
-                                    value={values.endeffect}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Enter EndEffect"
-                                  />
+                                  {createSmartSelectField(
+                                    "endeffect",
+                                    "End Effect",
+                                    values,
+                                    setFieldValue
+                                  )}
                                   <ErrorMessage
                                     className="error text-danger"
                                     component="span"
@@ -1929,16 +1903,12 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group>
                                   <Label notify={true}>Safety impact</Label>
-                                  <Form.Control
-                                    name="safetyimpact"
-                                    id="safetyimpact"
-                                    placeholder="Safety Impact"
-                                    value={values.safetyimpact}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Enter Safety Impact"
-                                  />
+                                  {createSmartSelectField(
+                                    "safetyimpact",
+                                    "Safety Impact",
+                                    values,
+                                    setFieldValue
+                                  )}
                                   <ErrorMessage
                                     className="error text-danger"
                                     component="span"
@@ -1946,23 +1916,19 @@ export default function PMMRA(props) {
                                   />
                                 </Form.Group>
                               </Col>
-                            </Row>{" "}
+                            </Row>
                             <Row>
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>
                                     Reliability Impact
                                   </Label>
-                                  <Form.Control
-                                    name="reliability"
-                                    id="reliability"
-                                    placeholder="Reliability"
-                                    value={values.reliability}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Enter Reliability"
-                                  />
+                                  {createSmartSelectField(
+                                    "reliability",
+                                    "Reliability Impact",
+                                    values,
+                                    setFieldValue
+                                  )}
                                   <ErrorMessage
                                     className="error text-danger"
                                     component="span"
@@ -1973,16 +1939,12 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>Frequency</Label>
-                                  <Form.Control
-                                    name="frequency"
-                                    id="frequency"
-                                    placeholder="Frequency"
-                                    value={values.frequency}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Enter Frequency"
-                                  />
+                                  {createSmartSelectField(
+                                    "frequency",
+                                    "Frequency",
+                                    values,
+                                    setFieldValue
+                                  )}
                                   <ErrorMessage
                                     className="error text-danger"
                                     component="span"
@@ -1990,21 +1952,17 @@ export default function PMMRA(props) {
                                   />
                                 </Form.Group>
                               </Col>
-                            </Row>{" "}
+                            </Row>
                             <Row>
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>Severity</Label>
-                                  <Form.Control
-                                    name="severity"
-                                    id="severity"
-                                    placeholder="Severity"
-                                    value={values.severity}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Enter Severity"
-                                  />
+                                  {createSmartSelectField(
+                                    "severity",
+                                    "Severity",
+                                    values,
+                                    setFieldValue
+                                  )}
                                   <ErrorMessage
                                     className="error text-danger"
                                     component="span"
@@ -2015,16 +1973,12 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>Risk Index</Label>
-                                  <Form.Control
-                                    name="riskindex"
-                                    id="riskindex"
-                                    placeholder="Risk Index"
-                                    value={values.riskindex}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Enter Risk Index"
-                                  />
+                                  {createSmartSelectField(
+                                    "riskindex",
+                                    "Risk Index",
+                                    values,
+                                    setFieldValue
+                                  )}
                                   <ErrorMessage
                                     className="error text-danger"
                                     component="span"
@@ -2035,6 +1989,8 @@ export default function PMMRA(props) {
                             </Row>
                           </div>
                         </Card>
+
+                        {/* MRA/RCM Section */}
                         <div className="mttr-sec mb-2 mt-4">
                           <p className=" mb-0 para-tag">MRA/RCM</p>
                         </div>
@@ -2045,211 +2001,26 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Loss of Function Evident?
                                 </Label>
-                                {allConnectedData || allConnectedData.some(
-                                  (item) =>
-                                    item.sourceName === "Evident1" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                     const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) => item?.sourceName === "Evident1"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "Evident1"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData?.length > 0
-                                        ? connectedFilteredData?.map(
-                                          (item) => ({
-                                            value: item?.destinationValue,
-                                            label: item?.destinationValue,
-                                          })
-                                        )
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    return (
-                                      <CreatableSelect
-                                        name="Evident1"
-                                        className="mt-1"
-                                        placeholder="Evident1"
-                                        value={
-                                          values?.Evident1
-                                            ? {
-                                              label: values?.Evident1,
-                                              value: values?.Evident1,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("Evident1", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Evident1"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <CreatableSelect
-                                    name="Evident1"
-                                    className="mt-1"
-                                    placeholder="Evident1"
-                                    value={
-                                      values?.Evident1
-                                        ? {
-                                          label: values?.Evident1,
-                                          value: values?.Evident1,
-                                        }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("Evident1", e.value);
-                                      getAllConnectedLibrary(
-                                        e.value,
-                                        "Evident1"
-                                      );
-                                    }}
-                                  />
+                                {createSmartSelectField(
+                                  "Evident1",
+                                  "Loss of Function Evident?",
+                                  values,
+                                  setFieldValue
                                 )}
-
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
                                   name="Evident1"
                                 />
                               </Form.Group>
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Significant Item ?</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Items" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) => item?.sourceName === "Items"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "Items"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                                                                                                      value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    return (
-                                      <CreatableSelect
-                                        name="Items"
-                                        className="mt-1"
-                                        placeholder="Items"
-                                        value={
-                                          values?.Items
-                                            ? {
-                                              label: values?.Items,
-                                              value: values?.Items,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("Items", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Items"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <CreatableSelect
-                                    name="Items"
-                                    className="mt-1"
-                                    placeholder="Items"
-                                    value={
-                                      values?.Items
-                                        ? {
-                                          label: values?.Items,
-                                          value: values?.Items,
-                                        }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("Items", e.value);
-                                      getAllConnectedLibrary(e.value, "Items");
-                                    }}
-                                  />
+                                {createSmartSelectField(
+                                  "Items",
+                                  "Significant Item",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -2257,109 +2028,16 @@ export default function PMMRA(props) {
                                   name="Items"
                                 />
                               </Form.Group>
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
                                   Condition Monitoring Task
                                 </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "condition" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "condition"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "condition"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                                                                                                      value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    return (
-                                      <CreatableSelect
-                                        name="condition"
-                                        className="mt-1"
-                                        placeholder="Condition"
-                                        value={
-                                          values?.condition
-                                            ? {
-                                              label: values?.condition,
-                                              value: values?.condition,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("condition", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "condition"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <CreatableSelect
-                                    name="condition"
-                                    className="mt-1"
-                                    placeholder="condition"
-                                    value={
-                                      values?.condition
-                                        ? {
-                                          label: values?.condition,
-                                          value: values?.condition,
-                                        }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("condition", e.value);
-                                      getAllConnectedLibrary(
-                                        e.value,
-                                        "condition"
-                                      );
-                                    }}
-                                  />
+                                {createSmartSelectField(
+                                  "condition",
+                                  "Condition Monitoring Task",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -2367,108 +2045,16 @@ export default function PMMRA(props) {
                                   name="condition"
                                 />
                               </Form.Group>
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
                                   Failure Finding Task
                                 </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "failure" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) => item?.sourceName === "failure"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "failure"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                                                                                                  value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    return (
-                                      <CreatableSelect
-                                        name="failure"
-                                        className="mt-1"
-                                        placeholder="Failure"
-                                        value={
-                                          values?.failure
-                                            ? {
-                                              label: values?.failure,
-                                              value: values?.failure,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("failure", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "failure"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <CreatableSelect
-                                    name="failure"
-                                    className="mt-1"
-                                    placeholder="failure"
-                                    value={
-                                      values?.failure
-                                        ? {
-                                          label: values?.failure,
-                                          value: values?.failure,
-                                        }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("failure", e.value);
-                                      getAllConnectedLibrary(
-                                        e.value,
-                                        "failure"
-                                      );
-                                    }}
-                                  />
+                                {createSmartSelectField(
+                                  "failure",
+                                  "Failure Finding Task",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -2476,107 +2062,14 @@ export default function PMMRA(props) {
                                   name="failure"
                                 />
                               </Form.Group>
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Redesign?</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "redesign" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "redesign"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "redesign"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    return (
-                                      <CreatableSelect
-                                        name="redesign"
-                                        className="mt-1"
-                                        placeholder="Redesign"
-                                        value={
-                                          values?.redesign
-                                            ? {
-                                              label: values?.redesign,
-                                              value: values?.redesign,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("redesign", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "redesign"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <CreatableSelect
-                                    name="redesign"
-                                    className="mt-1"
-                                    placeholder="redesign"
-                                    value={
-                                      values?.redesign
-                                        ? {
-                                          label: values?.redesign,
-                                          value: values?.redesign,
-                                        }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("redesign", e.value);
-                                      getAllConnectedLibrary(
-                                        e.value,
-                                        "redesign"
-                                      );
-                                    }}
-                                  />
+                                {createSmartSelectField(
+                                  "redesign",
+                                  "Redesign",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -2585,110 +2078,17 @@ export default function PMMRA(props) {
                                 />
                               </Form.Group>
                             </Col>
+
                             <Col md={6}>
                               <Form.Group>
                                 <Label notify={true}>
                                   Criticality Acceptable ?
                                 </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "acceptable" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "acceptable"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "acceptable"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                                                                                                  value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    return (
-                                      <CreatableSelect
-                                        name="acceptable"
-                                        className="mt-1"
-                                        placeholder="Acceptable"
-                                        value={
-                                          values?.acceptable
-                                            ? {
-                                              label: values?.acceptable,
-                                              value: values?.acceptable,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("acceptable", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "acceptable"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <CreatableSelect
-                                    name="acceptable"
-                                    className="mt-1"
-                                    placeholder="acceptable"
-                                    value={
-                                      values?.acceptable
-                                        ? {
-                                          label: values?.acceptable,
-                                          value: values?.acceptable,
-                                        }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("acceptable", e.value);
-                                      getAllConnectedLibrary(
-                                        e.value,
-                                        "acceptable"
-                                      );
-                                    }}
-                                  />
+                                {createSmartSelectField(
+                                  "acceptable",
+                                  "Criticality Acceptable",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -2696,110 +2096,16 @@ export default function PMMRA(props) {
                                   name="acceptable"
                                 />
                               </Form.Group>
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
                                   Lubrication / Service Task
                                 </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "lubrication" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "lubrication"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "lubrication"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                                                                                                   value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    return (
-                                      <CreatableSelect
-                                        name="lubrication"
-                                        className="mt-1"
-                                        placeholder="Lubrication"
-                                        value={
-                                          values?.lubrication
-                                            ? {
-                                              label: values?.lubrication,
-                                              value: values?.lubrication,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("lubrication", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "lubrication"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <CreatableSelect
-                                    name="lubrication"
-                                    className="mt-1"
-                                    placeholder="lubrication"
-                                    value={
-                                      values?.lubrication
-                                        ? {
-                                          label: values?.lubrication,
-                                          value: values?.lubrication,
-                                        }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("lubrication", e.value);
-                                      getAllConnectedLibrary(
-                                        e.value,
-                                        "lubrication"
-                                      );
-                                    }}
-                                  />
+                                {createSmartSelectField(
+                                  "lubrication",
+                                  "Lubrication / Service Task",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -2807,105 +2113,16 @@ export default function PMMRA(props) {
                                   name="lubrication"
                                 />
                               </Form.Group>
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
                                   Restore or Discard Task
                                 </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "task" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) => item?.sourceName === "task"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "task"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                                                                                                   value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    return (
-                                      <CreatableSelect
-                                        name="task"
-                                        className="mt-1"
-                                        placeholder="Task"
-                                        value={
-                                          values?.task
-                                            ? {
-                                              label: values?.task,
-                                              value: values?.task,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("task", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "task"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <CreatableSelect
-                                    name="task"
-                                    className="mt-1"
-                                    placeholder="task"
-                                    value={
-                                      values?.task
-                                        ? {
-                                          label: values?.task,
-                                          value: values?.task,
-                                        }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("task", e.value);
-                                      getAllConnectedLibrary(e.value, "task");
-                                    }}
-                                  />
+                                {createSmartSelectField(
+                                  "task",
+                                  "Restore or Discard Task",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -2913,110 +2130,16 @@ export default function PMMRA(props) {
                                   name="task"
                                 />
                               </Form.Group>
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
                                   Combination of Tasks
                                 </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "combination" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "combination"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "combination"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    return (
-                                      <CreatableSelect
-                                        name="combination"
-                                        className="mt-1"
-                                        placeholder="Combination"
-                                        value={
-                                          values?.combination
-                                            ? {
-                                              label: values?.combination,
-                                              value: values?.combination,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("combination", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "combination"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <CreatableSelect
-                                    name="combination"
-                                    className="mt-1"
-                                    placeholder="combination"
-                                    value={
-                                      values?.combination
-                                        ? {
-                                          label: values?.combination,
-                                          value: values?.combination,
-                                        }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("combination", e.value);
-                                      getAllConnectedLibrary(
-                                        e.value,
-                                        "combination"
-                                      );
-                                    }}
-                                  />
+                                {createSmartSelectField(
+                                  "combination",
+                                  "Combination of Tasks",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -3024,108 +2147,14 @@ export default function PMMRA(props) {
                                   name="combination"
                                 />
                               </Form.Group>
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>RCM Notes</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "rcmnotes" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "rcmnotes"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "rcmnotes"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                             
-
-                                    return (
-                                      <CreatableSelect
-                                        name="rcmnotes"
-                                        className="mt-1"
-                                        placeholder="Rcm Notes"
-                                        value={
-                                          values?.rcmnotes
-                                            ? {
-                                              label: values?.rcmnotes,
-                                              value: values?.rcmnotes,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("rcmnotes", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "rcmnotes"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <CreatableSelect
-                                    name="rcmnotes"
-                                    className="mt-1"
-                                    placeholder="rcmnotes"
-                                    value={
-                                      values?.rcmnotes
-                                        ? {
-                                          label: values?.rcmnotes,
-                                          value: values?.rcmnotes,
-                                        }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("rcmnotes", e.value);
-                                      getAllConnectedLibrary(
-                                        e.value,
-                                        "rcmnotes"
-                                      );
-                                    }}
-                                  />
+                                {createSmartSelectField(
+                                  "rcmnotes",
+                                  "RCM Notes",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -3136,6 +2165,8 @@ export default function PMMRA(props) {
                             </Col>
                           </Row>
                         </Card>
+
+                        {/* PM Section - You can continue this pattern for other sections */}
                         <div className="mttr-sec mb-2 mt-4">
                           <p className=" mb-0 para-tag">PM</p>
                         </div>
@@ -3145,97 +2176,11 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>PM Task ID</Label>
-                                  {allConnectedData || allSepareteData?.some(
-                                    (item) =>
-                                      item.sourceName === "pmtaskid" &&
-                                      item.sourceValue
-                                  ) ? (
-                                    (() => {
-                                      const seperateFilteredData =
-                                        allSepareteData?.filter(
-                                          (item) =>
-                                            item?.sourceName === "pmtaskid"
-                                        ) || [];
-                                      const connectedFilteredData =
-                                        allConnectedData?.filter(
-                                          (item) =>
-                                            item?.destinationName === "pmtaskid"
-                                        ) || [];
-                                      const options =
-                                        connectedFilteredData.length > 0
-                                          ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
-                                          : seperateFilteredData.map(
-                                            (item) => ({
-                                                                                                                                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                 <Form.Control
-                                      name="pmtaskid"
-                                      id="pmtaskid"
-                                      placeholder="Pm Task ID"
-                                      value={values.pmtaskid}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Enter Pm Task ID"
-                                    />
-                            )}
-
-                                      return (
-                                        <Select
-                                          name="pmtaskid"
-                                          className="mt-1"
-                                          placeholder="Pm Task ID"
-                                          value={
-                                            values?.pmtaskid
-                                              ? {
-                                                label: values?.pmtaskid,
-                                                value: values?.pmtaskid,
-                                              }
-                                              : ""
-                                          }
-                                          style={{ backgroundColor: "red" }}
-                                          options={options}
-                                          styles={customStyles}
-                                          onBlur={handleBlur}
-                                          isDisabled={
-                                            writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
-                                              ? null
-                                              : "disabled"
-                                          }
-                                          onChange={(e) => {
-                                            setFieldValue("pmtaskid", e.value);
-                                            getAllConnectedLibrary(
-                                              e.value,
-                                              "pmtaskid"
-                                            );
-                                          }}
-                                        />
-                                      );
-                                    })()
-                                  ) : (
-                                    <Form.Control
-                                      name="pmtaskid"
-                                      id="pmtaskid"
-                                      placeholder="Pm Task ID"
-                                      value={values.pmtaskid}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Enter Pm Task ID"
-                                    />
+                                  {createSmartSelectField(
+                                    "pmtaskid",
+                                    "PM Task ID",
+                                    values,
+                                    setFieldValue
                                   )}
                                   <ErrorMessage
                                     className="error text-danger"
@@ -3243,105 +2188,15 @@ export default function PMMRA(props) {
                                     name="pmtaskid"
                                   />
                                 </Form.Group>
-                              </Col>{" "}
+                              </Col>
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>PM Task type</Label>
-                                  {allConnectedData|| allSepareteData?.some(
-                                    (item) =>
-                                      item.sourceName === "PMtasktype" &&
-                                      item.sourceValue
-                                  ) ? (
-                                    (() => {
-                                      const seperateFilteredData =
-                                        allSepareteData?.filter(
-                                          (item) =>
-                                            item?.sourceName === "PMtasktype"
-                                        ) || [];
-                                      const connectedFilteredData =
-                                        allConnectedData?.filter(
-                                          (item) =>
-                                            item?.destinationName ===
-                                            "PMtasktype"
-                                        ) || [];
-                                      const options =
-                                        connectedFilteredData.length > 0
-                                          ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
-                                          : seperateFilteredData.map(
-                                            (item) => ({
-                                                                                                                                                  value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                    <Form.Control
-                                      name="PMtasktype"
-                                      id="PMtasktype"
-                                      placeholder="PM Task Type"
-                                      value={values.PMtasktype}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="PM Task Type"
-                                    />
-                            )}
-
-                                      return (
-                                        <Select
-                                          name="PMtasktype"
-                                          className="mt-1"
-                                          placeholder="PM Task Type"
-                                          value={
-                                            values?.PMtasktype
-                                              ? {
-                                                label: values?.PMtasktype,
-                                                value: values?.PMtasktype,
-                                              }
-                                              : ""
-                                          }
-                                          style={{ backgroundColor: "red" }}
-                                          options={options}
-                                          styles={customStyles}
-                                          onBlur={handleBlur}
-                                          isDisabled={
-                                            writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
-                                              ? null
-                                              : "disabled"
-                                          }
-                                          onChange={(e) => {
-                                            setFieldValue(
-                                              "PMtasktype",
-                                              e.value
-                                            );
-                                            getAllConnectedLibrary(
-                                              e.value,
-                                              "PMtasktype"
-                                            );
-                                          }}
-                                        />
-                                      );
-                                    })()
-                                  ) : (
-                                    <Form.Control
-                                      name="PMtasktype"
-                                      id="PMtasktype"
-                                      placeholder="PM Task Type"
-                                      value={values.PMtasktype}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="PM Task Type"
-                                    />
+                                  {createSmartSelectField(
+                                    "PMtasktype",
+                                    "PM Task Type",
+                                    values,
+                                    setFieldValue
                                   )}
                                   <ErrorMessage
                                     className="error text-danger"
@@ -3354,110 +2209,12 @@ export default function PMMRA(props) {
                             <Row>
                               <Col md={6}>
                                 <Form.Group className="mt-3">
-                                  <Label notify={true}>
-                                    Task Interval Frequency
-                                  </Label>
-                                  {allConnectedData || allSepareteData?.some(
-                                    (item) =>
-                                      item.sourceName ===
-                                      "taskintervalFrequency" &&
-                                      item.sourceValue
-                                  ) ? (
-                                    (() => {
-                                      const seperateFilteredData =
-                                        allSepareteData?.filter(
-                                          (item) =>
-                                            item?.sourceName ===
-                                            "taskintervalFrequency"
-                                        ) || [];
-                                      const connectedFilteredData =
-                                        allConnectedData?.filter(
-                                          (item) =>
-                                            item?.destinationName ===
-                                            "taskintervalFrequency"
-                                        ) || [];
-                                      const options =
-                                        connectedFilteredData.length > 0
-                                          ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
-                                          : seperateFilteredData.map(
-                                            (item) => ({
-                                                                                                                                           value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                  <Form.Control
-                                      name="taskintervalFrequency"
-                                      id="taskintervalFrequency"
-                                      type="number"
-                                      placeholder="Task Interval Frequency"
-                                      value={values.taskintervalFrequency}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Interval Frequency"
-                                    />
-                            )}
-
-                                      return (
-                                        <Select
-                                          name="taskintervalFrequency"
-                                          className="mt-1"
-                                          placeholder="Task Interval Frequency"
-                                          value={
-                                            values?.taskintervalFrequency
-                                              ? {
-                                                label:
-                                                  values?.taskintervalFrequency,
-                                                value:
-                                                  values?.taskintervalFrequency,
-                                              }
-                                              : ""
-                                          }
-                                          style={{ backgroundColor: "red" }}
-                                          options={options}
-                                          styles={customStyles}
-                                          onBlur={handleBlur}
-                                          isDisabled={
-                                            writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
-                                              ? null
-                                              : "disabled"
-                                          }
-                                          onChange={(e) => {
-                                            setFieldValue(
-                                              "taskintervalFrequency",
-                                              e.value
-                                            );
-                                            getAllConnectedLibrary(
-                                              e.value,
-                                              "taskintervalFrequency"
-                                            );
-                                          }}
-                                        />
-                                      );
-                                    })()
-                                  ) : (
-                                    <Form.Control
-                                      name="taskintervalFrequency"
-                                      id="taskintervalFrequency"
-                                      type="number"
-                                      placeholder="Task Interval Frequency"
-                                      value={values.taskintervalFrequency}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Interval Frequency"
-                                    />
+                                  <Label notify={true}>Task Interval Frequency</Label>
+                                  {createSmartSelectField(
+                                    "taskintervalFrequency",
+                                    "Task Interval Frequency",
+                                    values,
+                                    setFieldValue
                                   )}
                                   <ErrorMessage
                                     className="error text-danger"
@@ -3468,107 +2225,12 @@ export default function PMMRA(props) {
                               </Col>
                               <Col md={6}>
                                 <Form.Group className="mt-3">
-                                  <Label notify={true}>
-                                    Task Interval Unit
-                                  </Label>
-                                  {allConnectedData || allSepareteData?.some(
-                                    (item) =>
-                                      item.sourceName === "taskIntervalunit" &&
-                                      item.sourceValue
-                                  ) ? (
-                                    (() => {
-                                      const seperateFilteredData =
-                                        allSepareteData?.filter(
-                                          (item) =>
-                                            item?.sourceName ===
-                                            "taskIntervalunit"
-                                        ) || [];
-                                      const connectedFilteredData =
-                                        allConnectedData?.filter(
-                                          (item) =>
-                                            item?.destinationName ===
-                                            "taskIntervalunit"
-                                        ) || [];
-                                      const options =
-                                        connectedFilteredData.length > 0
-                                          ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
-                                          : seperateFilteredData.map(
-                                            (item) => ({
-                                                                                                                                 value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                      <Form.Control
-                                      name="taskIntervalunit"
-                                      id="taskIntervalunit"
-                                      placeholder="Task Interval Unit"
-                                      value={values.taskIntervalunit}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Interval Unit"
-                                    />
-                            )}
-
-                                      return (
-                                        <Select
-                                          name="taskIntervalunit"
-                                          className="mt-1"
-                                          placeholder="Task Interval Unit"
-                                          value={
-                                            values?.taskIntervalunit
-                                              ? {
-                                                label:
-                                                  values?.taskIntervalunit,
-                                                value:
-                                                  values?.taskIntervalunit,
-                                              }
-                                              : ""
-                                          }
-                                          style={{ backgroundColor: "red" }}
-                                          options={options}
-                                          styles={customStyles}
-                                          onBlur={handleBlur}
-                                          isDisabled={
-                                            writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
-                                              ? null
-                                              : "disabled"
-                                          }
-                                          onChange={(e) => {
-                                            setFieldValue(
-                                              "taskIntervalunit",
-                                              e.value
-                                            );
-                                            getAllConnectedLibrary(
-                                              e.value,
-                                              "taskIntervalunit"
-                                            );
-                                          }}
-                                        />
-                                      );
-                                    })()
-                                  ) : (
-                                    <Form.Control
-                                      name="taskIntervalunit"
-                                      id="taskIntervalunit"
-                                      placeholder="Task Interval Unit"
-                                      value={values.taskIntervalunit}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Interval Unit"
-                                    />
+                                  <Label notify={true}>Task Interval Unit</Label>
+                                  {createSmartSelectField(
+                                    "taskIntervalunit",
+                                    "Task Interval Unit",
+                                    values,
+                                    setFieldValue
                                   )}
                                   <ErrorMessage
                                     className="error text-danger"
@@ -3582,106 +2244,12 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>Task Interval</Label>
-                                  {allConnectedData || allSepareteData?.some(
-                                    (item) =>
-                                      item.sourceName === "taskInterval" &&
-                                      item.sourceValue
-                                  ) ? (
-                                    (() => {
-                                      const seperateFilteredData =
-                                        allSepareteData?.filter(
-                                          (item) =>
-                                            item?.sourceName === "taskInterval"
-                                        ) || [];
-                                      const connectedFilteredData =
-                                        allConnectedData?.filter(
-                                          (item) =>
-                                            item?.destinationName ===
-                                            "taskInterval"
-                                        ) || [];
-                                      const options =
-                                        connectedFilteredData.length > 0
-                                          ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
-                                          : seperateFilteredData.map(
-                                            (item) => ({
-                                                                                                                      value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                  <Form.Control
-                                      name="taskInterval"
-                                      id="taskInterval"
-                                      type="number"
-                                      placeholder="Task Interval"
-                                      value={values.taskInterval}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Interval"
-                                    />
-
-                            )}
-
-                                      return (
-                                        <Select
-                                          name="taskInterval"
-                                          className="mt-1"
-                                          placeholder="Task Interval"
-                                          value={
-                                            values?.taskInterval
-                                              ? {
-                                                label: values?.taskInterval,
-                                                value: values?.taskInterval,
-                                              }
-                                              : ""
-                                          }
-                                          style={{ backgroundColor: "red" }}
-                                          options={options}
-                                          styles={customStyles}
-                                          onBlur={handleBlur}
-                                          isDisabled={
-                                            writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
-                                              ? null
-                                              : "disabled"
-                                          }
-                                          onChange={(e) => {
-                                            setFieldValue(
-                                              "taskInterval",
-                                              e.value
-                                            );
-                                            getAllConnectedLibrary(
-                                              e.value,
-                                              "taskInterval"
-                                            );
-                                          }}
-                                        />
-                                      );
-                                    })()
-                                  ) : (
-                                    <Form.Control
-                                      name="taskInterval"
-                                      id="taskInterval"
-                                      type="number"
-                                      placeholder="Task Interval"
-                                      value={values.taskInterval}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Interval"
-                                    />
+                                  {createSmartSelectField(
+                                    "taskInterval",
+                                    "Task Interval",
+                                    values,
+                                    setFieldValue
                                   )}
-
                                   <ErrorMessage
                                     className="error text-danger"
                                     component="span"
@@ -3691,108 +2259,12 @@ export default function PMMRA(props) {
                               </Col>
                               <Col md={6}>
                                 <Form.Group className="mt-3">
-                                  <Label notify={true}>
-                                    Scheduled Maintenance Task
-                                  </Label>
-                                  {allConnectedData || allSepareteData?.some(
-                                    (item) =>
-                                      item.sourceName ===
-                                      "scheduledMaintenanceTask" &&
-                                      item.sourceValue
-                                  ) ? (
-                                    (() => {
-                                      const seperateFilteredData =
-                                        allSepareteData?.filter(
-                                          (item) =>
-                                            item?.sourceName ===
-                                            "scheduledMaintenanceTask"
-                                        ) || [];
-                                      const connectedFilteredData =
-                                        allConnectedData?.filter(
-                                          (item) =>
-                                            item?.destinationName ===
-                                            "scheduledMaintenanceTask"
-                                        ) || [];
-                                      const options =
-                                        connectedFilteredData.length > 0
-                                          ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
-                                          : seperateFilteredData.map(
-                                            (item) => ({
-                                                                                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                   <Form.Control
-                                      name="scheduledMaintenanceTask"
-                                      id="scheduledMaintenanceTask"
-                                      placeholder="Scheduled Maintenance Task"
-                                      value={values.scheduledMaintenanceTask}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Scheduled Maintenance Task"
-                                    />
-                            )}
-
-                                      return (
-                                        <Select
-                                          name="scheduledMaintenanceTask"
-                                          className="mt-1"
-                                          placeholder="Scheduled Maintenance Task"
-                                          value={
-                                            values?.scheduledMaintenanceTask
-                                              ? {
-                                                label:
-                                                  values?.scheduledMaintenanceTask,
-                                                value:
-                                                  values?.scheduledMaintenanceTask,
-                                              }
-                                              : ""
-                                          }
-                                          style={{ backgroundColor: "red" }}
-                                          options={options}
-                                          styles={customStyles}
-                                          onBlur={handleBlur}
-                                          isDisabled={
-                                            writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
-                                              ? null
-                                              : "disabled"
-                                          }
-                                          onChange={(e) => {
-                                            setFieldValue(
-                                              "scheduledMaintenanceTask",
-                                              e.value
-                                            );
-                                            getAllConnectedLibrary(
-                                              e.value,
-                                              "scheduledMaintenanceTask"
-                                            );
-                                          }}
-                                        />
-                                      );
-                                    })()
-                                  ) : (
-                                    <Form.Control
-                                      name="scheduledMaintenanceTask"
-                                      id="scheduledMaintenanceTask"
-                                      placeholder="Scheduled Maintenance Task"
-                                      value={values.scheduledMaintenanceTask}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Scheduled Maintenance Task"
-                                    />
+                                  <Label notify={true}>Scheduled Maintenance Task</Label>
+                                  {createSmartSelectField(
+                                    "scheduledMaintenanceTask",
+                                    "Scheduled Maintenance Task",
+                                    values,
+                                    setFieldValue
                                   )}
                                   <ErrorMessage
                                     className="error text-danger"
@@ -3806,104 +2278,11 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>Task Description</Label>
-                                  {allConnectedData || allSepareteData?.some(
-                                    (item) =>
-                                      item.sourceName === "taskDescription" &&
-                                      item.sourceValue
-                                  ) ? (
-                                    (() => {
-                                      const seperateFilteredData =
-                                        allSepareteData?.filter(
-                                          (item) =>
-                                            item?.sourceName ===
-                                            "taskDescription"
-                                        ) || [];
-                                      const connectedFilteredData =
-                                        allConnectedData?.filter(
-                                          (item) =>
-                                            item?.destinationName ===
-                                            "taskDescription"
-                                        ) || [];
-                                      const options =
-                                        connectedFilteredData.length > 0
-                                          ? connectedFilteredData.map(
-                                            (item) => ({
-                                              value: item?.destinationValue,
-                                              label: item?.destinationValue,
-                                            })
-                                          )
-                                          : seperateFilteredData.map(
-                                            (item) => ({
-                                                                                               value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                   <Form.Control
-                                      name="taskDescription"
-                                      id="taskDescription"
-                                      placeholder="Task Description"
-                                      value={values.taskDescription}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Description"
-                                    />
-                            )}
-
-                                      return (
-                                        <Select
-                                          name="taskDescription"
-                                          className="mt-1"
-                                          placeholder="Task Description"
-                                          value={
-                                            values?.taskDescription
-                                              ? {
-                                                label:
-                                                  values?.taskDescription,
-                                                value:
-                                                  values?.taskDescription,
-                                              }
-                                              : ""
-                                          }
-                                          style={{ backgroundColor: "red" }}
-                                          options={options}
-                                          styles={customStyles}
-                                          onBlur={handleBlur}
-                                          isDisabled={
-                                            writePermission === true ||
-                                              writePermission === "undefined" ||
-                                              role === "admin" ||
-                                              (isOwner === true &&
-                                                createdBy === userId)
-                                              ? null
-                                              : "disabled"
-                                          }
-                                          onChange={(e) => {
-                                            setFieldValue(
-                                              "taskDescription",
-                                              e.value
-                                            );
-                                            getAllConnectedLibrary(
-                                              e.value,
-                                              "taskDescription"
-                                            );
-                                          }}
-                                        />
-                                      );
-                                    })()
-                                  ) : (
-                                    <Form.Control
-                                      name="taskDescription"
-                                      id="taskDescription"
-                                      placeholder="Task Description"
-                                      value={values.taskDescription}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Description"
-                                    />
+                                  {createSmartSelectField(
+                                    "taskDescription",
+                                    "Task Description",
+                                    values,
+                                    setFieldValue
                                   )}
                                   <ErrorMessage
                                     className="error text-danger"
@@ -3913,105 +2292,24 @@ export default function PMMRA(props) {
                                 </Form.Group>
                               </Col>
                             </Row>
+                            {/* Continue with other fields using the same pattern */}
                           </div>
                         </Card>
+
                         <div className="mttr-sec mb-2 mt-4">
                           <p className=" mb-0 para-tag">Task Time</p>
                         </div>
+
                         <Card style={{ backgroundColor: "#F2F1F2" }}>
                           <Row className="px-3 pb-3">
-                            <Col md={6} className="mt-4 mb-4">
+                            <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML1</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "tasktimeML1" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "tasktimeML1"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "tasktimeML1"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                     value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                <Form.Control
-                                    name="tasktimeML1"
-                                    id="tasktimeML1"
-                                    placeholder="Task Time ML1"
-                                    value={values.tasktimeML1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML1"
-                                  />
-                            )}
-
-                                    return (
-                                      <Select
-                                        name="tasktimeML1"
-                                        className="mt-1"
-                                        placeholder="Task Time ML1"
-                                        value={
-                                          values?.tasktimeML1
-                                            ? {
-                                              label: values?.tasktimeML1,
-                                              value: values?.tasktimeML1,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("tasktimeML1", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "tasktimeML1"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="tasktimeML1"
-                                    id="tasktimeML1"
-                                    placeholder="Task Time ML1"
-                                    value={values.tasktimeML1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML1"
-                                  />
+                                {createSmartSelectField(
+                                  "tasktimeML1",
+                                  "Task Time ML1",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -4019,96 +2317,15 @@ export default function PMMRA(props) {
                                   name="tasktimeML1"
                                 />
                               </Form.Group>
+                            </Col>
+                            <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML2</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "tasktimeML2" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "tasktimeML2"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "tasktimeML2"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                           value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                   <Form.Control
-                                    name="tasktimeML2"
-                                    id="tasktimeML2"
-                                    placeholder="Task Time ML2"
-                                    value={values.tasktimeML2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML2"
-                                  />
-                            )}
-                                    return (
-                                      <Select
-                                        name="tasktimeML2"
-                                        className="mt-1"
-                                        placeholder="Task Time ML2"
-                                        value={
-                                          values?.tasktimeML2
-                                            ? {
-                                              label: values?.tasktimeML2,
-                                              value: values?.tasktimeML2,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("tasktimeML2", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "tasktimeML2"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="tasktimeML2"
-                                    id="tasktimeML2"
-                                    placeholder="Task Time ML2"
-                                    value={values.tasktimeML2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML2"
-                                  />
+                                {createSmartSelectField(
+                                  "tasktimeML2",
+                                  "Task Time ML2",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -4116,97 +2333,15 @@ export default function PMMRA(props) {
                                   name="tasktimeML2"
                                 />
                               </Form.Group>
+                            </Col>
+                            <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML3</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "tasktimeML3" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "tasktimeML3"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "tasktimeML3"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                    value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                   <Form.Control
-                                    name="tasktimeML3"
-                                    id="tasktimeML3"
-                                    placeholder="Task Time ML3"
-                                    value={values.tasktimeML3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML3"
-                                  />
-                            )}
-
-                                    return (
-                                      <Select
-                                        name="tasktimeML3"
-                                        className="mt-1"
-                                        placeholder="Task Time ML3"
-                                        value={
-                                          values?.tasktimeML3
-                                            ? {
-                                              label: values?.tasktimeML3,
-                                              value: values?.tasktimeML3,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("tasktimeML3", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "tasktimeML3"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="tasktimeML3"
-                                    id="tasktimeML3"
-                                    placeholder="Task Time ML3"
-                                    value={values.tasktimeML3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML3"
-                                  />
+                                {createSmartSelectField(
+                                  "tasktimeML3",
+                                  "Task Time ML3",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -4214,97 +2349,15 @@ export default function PMMRA(props) {
                                   name="tasktimeML3"
                                 />
                               </Form.Group>
+                            </Col>
+                            <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML4</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "tasktimeML4" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "tasktimeML4"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "tasktimeML4"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                            value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                  <Form.Control
-                                    name="tasktimeML4"
-                                    id="tasktimeML4"
-                                    placeholder="Task Time ML4"
-                                    value={values.tasktimeML4}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML4"
-                                  />
-                            )}
-
-                                    return (
-                                      <Select
-                                        name="tasktimeML4"
-                                        className="mt-1"
-                                        placeholder="Task Time ML4"
-                                        value={
-                                          values?.tasktimeML4
-                                            ? {
-                                              label: values?.tasktimeML4,
-                                              value: values?.tasktimeML4,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("tasktimeML4", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "tasktimeML4"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="tasktimeML4"
-                                    id="tasktimeML4"
-                                    placeholder="Task Time ML4"
-                                    value={values.tasktimeML4}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML4"
-                                  />
+                                {createSmartSelectField(
+                                  "tasktimeML4",
+                                  "Task Time ML4",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -4313,98 +2366,14 @@ export default function PMMRA(props) {
                                 />
                               </Form.Group>
                             </Col>
-                            <Col md={6} className="mt-4 mb-4">
+                            <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML5</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "tasktimeML5" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "tasktimeML5"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "tasktimeML5"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                  value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                 <Form.Control
-                                    name="tasktimeML5"
-                                    id="tasktimeML5"
-                                    placeholder="Task Time ML5"
-                                    value={values.tasktimeML5}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML5"
-                                  />
-                            )}
-
-                                    return (
-                                      <Select
-                                        name="tasktimeML5"
-                                        className="mt-1"
-                                        placeholder="Task Time ML5"
-                                        value={
-                                          values?.tasktimeML5
-                                            ? {
-                                              label: values?.tasktimeML5,
-                                              value: values?.tasktimeML5,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("tasktimeML5", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "tasktimeML5"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="tasktimeML5"
-                                    id="tasktimeML5"
-                                    placeholder="Task Time ML5"
-                                    value={values.tasktimeML5}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML5"
-                                  />
+                                {createSmartSelectField(
+                                  "tasktimeML5",
+                                  "Task Time ML5",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -4412,96 +2381,15 @@ export default function PMMRA(props) {
                                   name="tasktimeML5"
                                 />
                               </Form.Group>
+                            </Col>
+                            <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML6</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "tasktimeML6" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "tasktimeML6"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "tasktimeML6"
-                                      ) || [];
-                                     const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item.destinationValue,
-                                          label: item.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                     <Form.Control
-                                    name="tasktimeML6"
-                                    id="tasktimeML6"
-                                    placeholder="Task Time ML6"
-                                    value={values.tasktimeML6}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML6"
-                                  />
-                            )}
-                                    return (
-                                      <Select
-                                        name="tasktimeML6"
-                                        className="mt-1"
-                                        placeholder="Task Time ML6"
-                                        value={
-                                          values?.tasktimeML6
-                                            ? {
-                                              label: values?.tasktimeML6,
-                                              value: values?.tasktimeML6,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("tasktimeML6", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "tasktimeML6"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="tasktimeML6"
-                                    id="tasktimeML6"
-                                    placeholder="Task Time ML6"
-                                    value={values.tasktimeML6}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML6"
-                                  />
+                                {createSmartSelectField(
+                                  "tasktimeML6",
+                                  "Task Time ML6",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -4509,83 +2397,15 @@ export default function PMMRA(props) {
                                   name="tasktimeML6"
                                 />
                               </Form.Group>
+                            </Col>
+                            <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Task Time ML7</Label>
-                                {allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "tasktimeML7" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "tasktimeML7"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "tasktimeML7"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
-
-                                    return (
-                                      <Select
-                                        name="tasktimeML7"
-                                        className="mt-1"
-                                        placeholder="Task Time ML7"
-                                        value={
-                                          values?.tasktimeML7
-                                            ? {
-                                              label: values?.tasktimeML7,
-                                              value: values?.tasktimeML7,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("tasktimeML7", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "tasktimeML7"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="tasktimeML7"
-                                    id="tasktimeML7"
-                                    placeholder="Task Time ML7"
-                                    value={values.tasktimeML7}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML7"
-                                  />
+                                {createSmartSelectField(
+                                  "tasktimeML7",
+                                  "Task Time ML7",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -4596,313 +2416,49 @@ export default function PMMRA(props) {
                             </Col>
                           </Row>
                         </Card>
+
                         <div className="mttr-sec mb-2 mt-4">
                           <p className=" mb-0 para-tag">Man Power</p>
                         </div>
+
                         <Card className="mt-2 p-4 mttr-card">
                           <Row>
                             <Col md={6}>
-                              <Form.Group>
+                              <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 1</Label>
-
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    (item.sourceName === "skill1" && item.sourceValue) ||
-                                    (item.destinationName === "skill1" && item.destinationValue)
-                                ) ? (
-                                  (() => {
-                                    // Filter source OR destination
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item.sourceName === "skill1" ||
-                                          item.destinationName === "skill1"
-                                      ) || [];
-
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) => item.destinationName === "skill1"
-                                      ) || [];
-
-                                    // Build options (Estimated values must list)
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item.destinationValue,
-                                          label: item.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    console.log("options", options);
-
-                                    // If no options - show empty dropdown
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="skill1"
-                                          id="skill1"
-                                          placeholder="Skill 1"
-                                          value={values.skill1}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                        />
-                                      )
-
-                                    }
-
-                                    return (
-                                      <CreatableSelect
-                                        name="skill1"
-                                        className="mt-1"
-                                        placeholder="Skill 1"
-                                        value={
-                                          values?.skill1
-                                            ? { label: values?.skill1, value: values?.skill1 }
-                                            : ""
-                                        }
-                                        options={options}
-                                        styles={customStyles}
-
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true && createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("skill1", e.value);
-                                          getAllConnectedLibrary(e.value, "skill1");
-                                        }}
-                                        isClearable
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="skill1"
-                                    id="skill1"
-                                    placeholder="Skill 1"
-                                    value={values.skill1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                  />
+                                {createSmartSelectField(
+                                  "skill1",
+                                  "Skill 1",
+                                  values,
+                                  setFieldValue
                                 )}
-
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
                                   name="skill1"
                                 />
-
-                              </Form.Group>{" "}
+                              </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 1 Nos</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "skill1nos" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item.sourceName === "skill1nos"
-                                      ) || [];
-
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) => item.destinationName === "skill1nos"
-                                      ) || [];
-
-                                    // Build options (Estimated values must list)
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item.destinationValue,
-                                          label: item.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="skill1nos"
-                                          id="skill1nos"
-                                          placeholder="Skill 1nos"
-                                          value={values.skill1nos}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Skill 1nos"
-                                        />
-                                      );
-                                    }
-                                    return (
-                                      <CreatableSelect
-                                        name="skill1nos"
-                                        className="mt-1"
-                                        placeholder="Skill 1nos"
-                                        value={
-                                          values?.skill1nos
-                                            ? {
-                                              label: values?.skill1nos,
-                                              value: values?.skill1nos,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("skill1nos", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "skill1nos"
-                                          );
-                                        }}
-                                      />
-                                    )
-
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="skill1nos"
-                                    id="skill1nos"
-                                    placeholder="Skill 1nos"
-                                    value={values.skill1nos}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 1nos"
-                                  />
+                                {createSmartSelectField(
+                                  "skill1nos",
+                                  "Skill 1 Nos",
+                                  values,
+                                  setFieldValue
                                 )}
-
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
                                   name="skill1nos"
                                 />
-                              </Form.Group>{" "}
+                              </Form.Group>
                               <Form.Group className="mt-3">
-                                <Label notify={true}>
-                                  Skill 1 Contribution
-                                </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "skill1contribution" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName ===
-                                          "skill1contribution"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "skill1contribution"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="skill1contribution"
-                                          id="skill1contribution"
-                                          placeholder="Skill 1 Contribution"
-                                          value={values.skill1contribution}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Skill 1 Contribution"
-                                        />
-                                      );
-                                    }
-                                    return (
-                                      <Select
-                                        name="skill1contribution"
-                                        className="mt-1"
-                                        placeholder="Skill 1 Contribution"
-                                        value={
-                                          values?.skill1contribution
-                                            ? {
-                                              label:
-                                                values?.skill1contribution,
-                                              value:
-                                                values?.skill1contribution,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "skill1contribution",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "skill1contribution"
-                                          );
-                                        }}
-                                      />
-                                    );
-
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="skill1contribution"
-                                    id="skill1contribution"
-                                    placeholder="Skill 1 Contribution"
-                                    value={values.skill1contribution}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 1 Contribution"
-                                  />
+                                <Label notify={true}>Skill 1 Contribution</Label>
+                                {createSmartSelectField(
+                                  "skill1contribution",
+                                  "Skill 1 Contribution",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -4912,295 +2468,41 @@ export default function PMMRA(props) {
                               </Form.Group>
                             </Col>
                             <Col md={6}>
-                              <Form.Group>
+                              <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 2</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "skill2" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) => item?.sourceName === "skill2"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "skill2"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="skill2"
-                                          id="skill2"
-                                          placeholder="Skill 2"
-                                          value={values.skill2}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Skill 2"
-                                        />
-                                      )
-                                    }
-                                    return (
-                                      <Select
-                                        name="skill2"
-                                        className="mt-1"
-                                        placeholder="Skill 2"
-                                        value={
-                                          values?.skill2
-                                            ? {
-                                              label: values?.skill2,
-                                              value: values?.skill2,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("skill2", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "skill2"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="skill2"
-                                    id="skill2"
-                                    placeholder="Skill 2"
-                                    value={values.skill2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 2"
-                                  />
+                                {createSmartSelectField(
+                                  "skill2",
+                                  "Skill 2",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
                                   name="skill2"
                                 />
-                              </Form.Group>{" "}
+                              </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 2 Nos</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "skill2nos" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "skill2nos"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "skill2nos"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="skill2nos"
-                                          id="skill2nos"
-                                          placeholder="Skill 2nos"
-                                          value={values.skill2nos}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Skill 2nos"
-                                        />
-                                      )
-                                    }
-                                    return (
-                                      <Select
-                                        name="skill2nos"
-                                        className="mt-1"
-                                        placeholder="Skill 2nos"
-                                        value={
-                                          values?.skill2nos
-                                            ? {
-                                              label: values?.skill2nos,
-                                              value: values?.skill2nos,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("skill2nos", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "skill2nos"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="skill2nos"
-                                    id="skill2nos"
-                                    placeholder="Skill 2nos"
-                                    value={values.skill2nos}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 2nos"
-                                  />
+                                {createSmartSelectField(
+                                  "skill2nos",
+                                  "Skill 2 Nos",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
                                   name="skill2nos"
                                 />
-                              </Form.Group>{" "}
+                              </Form.Group>
                               <Form.Group className="mt-3">
-                                <Label notify={true}>
-                                  Skill 2 Contribution
-                                </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "skill2contribution" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName ===
-                                          "skill2contribution"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "skill2contribution"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="skill2contribution"
-                                          id="skill2contribution"
-                                          placeholder="Skill 2 Contribution"
-                                          value={values.skill2contribution}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Skill 2 Contribution"
-                                        />
-                                      )
-                                    }
-                                    return (
-                                      <Select
-                                        name="skill2contribution"
-                                        className="mt-1"
-                                        placeholder="Skill 2 Contribution"
-                                        value={
-                                          values?.skill2contribution
-                                            ? {
-                                              label:
-                                                values?.skill2contribution,
-                                              value:
-                                                values?.skill2contribution,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "skill2contribution",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "skill2contribution"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="skill2contribution"
-                                    id="skill2contribution"
-                                    placeholder="Skill 2 Contribution"
-                                    value={values.skill2contribution}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 2 Contribution"
-                                  />
+                                <Label notify={true}>Skill 2 Contribution</Label>
+                                {createSmartSelectField(
+                                  "skill2contribution",
+                                  "Skill 2 Contribution",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -5212,298 +2514,41 @@ export default function PMMRA(props) {
                           </Row>
                           <Row className="mt-3">
                             <Col md={6}>
-                              <Form.Group>
+                              <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 3</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "skill3" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) => item?.sourceName === "skill3"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "skill3"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="skill3"
-                                          id="skill3"
-                                          placeholder="Skill 3"
-                                          value={values.skill3}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Skill 3"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="skill3"
-                                        className="mt-1"
-                                        placeholder="Skill 3"
-                                        value={
-                                          values?.skill3
-                                            ? {
-                                              label: values?.skill3,
-                                              value: values?.skill3,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("skill3", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "skill3"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="skill3"
-                                    id="skill3"
-                                    placeholder="Skill 3"
-                                    value={values.skill3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 3"
-                                  />
+                                {createSmartSelectField(
+                                  "skill3",
+                                  "Skill 3",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
                                   name="skill3"
                                 />
-                              </Form.Group>{" "}
+                              </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Skill 3 Nos</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "skill3nos" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "skill3nos"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "skill3nos"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="skill3nos"
-                                          id="skill3nos"
-                                          placeholder="Skill 3nos"
-                                          value={values.skill3nos}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Skill 3nos"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="skill3nos"
-                                        className="mt-1"
-                                        placeholder="Skill 3nos"
-                                        value={
-                                          values?.skill3nos
-                                            ? {
-                                              label: values?.skill3nos,
-                                              value: values?.skill3nos,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("skill3nos", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "skill3nos"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="skill3nos"
-                                    id="skill3nos"
-                                    placeholder="Skill 3nos"
-                                    value={values.skill3nos}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 3nos"
-                                  />
+                                {createSmartSelectField(
+                                  "skill3nos",
+                                  "Skill 3 Nos",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
                                   name="skill3nos"
                                 />
-                              </Form.Group>{" "}
+                              </Form.Group>
                               <Form.Group className="mt-3">
-                                <Label notify={true}>
-                                  Skill 3 Contribution
-                                </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "skill3contribution" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName ===
-                                          "skill3contribution"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "skill3contribution"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="skill3contribution"
-                                          id="skill3contribution"
-                                          placeholder="Skill 3 Contribution"
-                                          value={values.skill3contribution}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Skill 3 Contribution"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="skill3contribution"
-                                        className="mt-1"
-                                        placeholder="Skill 3 Contribution"
-                                        value={
-                                          values?.skill3contribution
-                                            ? {
-                                              label:
-                                                values?.skill3contribution,
-                                              value:
-                                                values?.skill3contribution,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "skill3contribution",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "skill3contribution"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="skill3contribution"
-                                    id="skill3contribution"
-                                    placeholder="Skill 3 Contribution"
-                                    value={values.skill3contribution}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Skill 3 Contribution"
-                                  />
+                                <Label notify={true}>Skill 3 Contribution</Label>
+                                {createSmartSelectField(
+                                  "skill3contribution",
+                                  "Skill 3 Contribution",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -5514,110 +2559,21 @@ export default function PMMRA(props) {
                             </Col>
                           </Row>
                         </Card>
+
                         <div className="mttr-sec mb-2 mt-4">
                           <p className=" mb-0 para-tag">Replacement qty</p>
                         </div>
+
                         <Card style={{ backgroundColor: "#F2F1F2" }}>
                           <Row className="px-3 pb-3">
                             <Col md={6}>
-                              {" "}
                               <Form.Group className="mt-3">
-                                <Label notify={true}>
-                                  Additional Replacement Spare1
-                                </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "addReplacespare1" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName ===
-                                          "addReplacespare1"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "addReplacespare1"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="addReplacespare1"
-                                          id="addReplacespare1"
-                                          placeholder="Additional Replacement Spare1"
-                                          value={values.addReplacespare1}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Additional Replacement Spare1"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="addReplacespare1"
-                                        className="mt-1"
-                                        placeholder="Additional Replacement Spare1"
-                                        value={
-                                          values?.addReplacespare1
-                                            ? {
-                                              label: values?.addReplacespare1,
-                                              value: values?.addReplacespare1,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "addReplacespare1",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "addReplacespare1"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="addReplacespare1"
-                                    id="addReplacespare1"
-                                    placeholder="Additional Replacement Spare1"
-                                    value={values.addReplacespare1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare1"
-                                  />
+                                <Label notify={true}>Additional Replacement Spare1</Label>
+                                {createSmartSelectField(
+                                  "addReplacespare1",
+                                  "Additional Replacement Spare1",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -5627,105 +2583,13 @@ export default function PMMRA(props) {
                               </Form.Group>
                             </Col>
                             <Col md={6}>
-                              {" "}
                               <Form.Group className="mt-3">
-                                <Label notify={true}>
-                                  Additional Replacement Spare1 Qty
-                                </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "addReplacespare1qty" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName ===
-                                          "addReplacespare1qty"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "addReplacespare1qty"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="addReplacespare1qty"
-                                          id="addReplacespare1qty"
-                                          placeholder="Additional Replacement Spare1 Qty"
-                                          value={values.addReplacespare1qty}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Additional Replacement Spare1 Qty"
-                                        />
-                                      )
-                                    }
-                                    return (
-                                      <Select
-                                        name="addReplacespare1qty"
-                                        className="mt-1"
-                                        placeholder="Additional Replacement Spare1 Qty"
-                                        value={
-                                          values?.addReplacespare1qty
-                                            ? {
-                                              label:
-                                                values?.addReplacespare1qty,
-                                              value:
-                                                values?.addReplacespare1qty,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "addReplacespare1qty",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "addReplacespare1qty"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="addReplacespare1qty"
-                                    id="addReplacespare1qty"
-                                    placeholder="Additional Replacement Spare1 Qty"
-                                    value={values.addReplacespare1qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare1 Qty"
-                                  />
+                                <Label notify={true}>Additional Replacement Spare1 Qty</Label>
+                                {createSmartSelectField(
+                                  "addReplacespare1qty",
+                                  "Additional Replacement Spare1 Qty",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -5734,105 +2598,16 @@ export default function PMMRA(props) {
                                 />
                               </Form.Group>
                             </Col>
-                          </Row>{" "}
+                          </Row>
                           <Row className="px-3 pb-3">
                             <Col md={6}>
                               <Form.Group className="mt-3">
-                                <Label notify={true}>
-                                  Additional replacement spare2
-                                </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "addReplacespare2" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName ===
-                                          "addReplacespare2"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "addReplacespare2"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="addReplacespare2"
-                                          id="addReplacespare2"
-                                          placeholder="Additional Replacement Spare2"
-                                          value={values.addReplacespare2}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Additional Replacement Spare2"
-                                        />
-                                      )
-                                    }
-                                    return (
-                                      <Select
-                                        name="addReplacespare2"
-                                        className="mt-1"
-                                        placeholder="Additional Replacement Spare2"
-                                        value={
-                                          values?.addReplacespare2
-                                            ? {
-                                              label: values?.addReplacespare2,
-                                              value: values?.addReplacespare2,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "addReplacespare2",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "addReplacespare2"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="addReplacespare2"
-                                    id="addReplacespare2"
-                                    placeholder="Additional Replacement Spare2"
-                                    value={values.addReplacespare2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare2"
-                                  />
+                                <Label notify={true}>Additional replacement spare2</Label>
+                                {createSmartSelectField(
+                                  "addReplacespare2",
+                                  "Additional replacement spare2",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -5843,103 +2618,12 @@ export default function PMMRA(props) {
                             </Col>
                             <Col md={6}>
                               <Form.Group className="mt-3">
-                                <Label notify={true}>
-                                  Additional Replacement Spare2 Qty
-                                </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "addReplacespare2qty" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName ===
-                                          "addReplacespare2qty"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "addReplacespare2qty"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="addReplacespare2qty"
-                                          id="addReplacespare2qty"
-                                          placeholder="Additional Replacement Spare2 Qty"
-                                          value={values.addReplacespare2qty}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Additional Replacement Spare2 Qty"
-                                        />
-                                      )
-                                    }
-                                    return (
-                                      <Select
-                                        name="addReplacespare2qty"
-                                        className="mt-1"
-                                        placeholder="Additional Replacement Spare2 Qty"
-                                        value={
-                                          values?.addReplacespare2qty
-                                            ? {
-                                              label:
-                                                values?.addReplacespare2qty,
-                                              value:
-                                                values?.addReplacespare2qty,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "addReplacespare2qty",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "addReplacespare2qty"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="addReplacespare2qty"
-                                    id="addReplacespare2qty"
-                                    placeholder="Additional Replacement Spare2 Qty"
-                                    value={values.addReplacespare2qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare2 Qty"
-                                  />
+                                <Label notify={true}>Additional Replacement Spare2 Qty</Label>
+                                {createSmartSelectField(
+                                  "addReplacespare2qty",
+                                  "Additional Replacement Spare2 Qty",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -5948,106 +2632,16 @@ export default function PMMRA(props) {
                                 />
                               </Form.Group>
                             </Col>
-                          </Row>{" "}
+                          </Row>
                           <Row className="px-3 pb-3">
                             <Col md={6}>
                               <Form.Group className="mt-3">
-                                <Label notify={true}>
-                                  Additional replacement spare3
-                                </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "addReplacespare3" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName ===
-                                          "addReplacespare3"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "addReplacespare3"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="addReplacespare3"
-                                          id="addReplacespare3"
-                                          placeholder="Additional Replacement Spare3"
-                                          value={values.addReplacespare3}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Additional Replacement Spare3"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="addReplacespare3"
-                                        className="mt-1"
-                                        placeholder="Additional Replacement Spare3"
-                                        value={
-                                          values?.addReplacespare3
-                                            ? {
-                                              label: values?.addReplacespare3,
-                                              value: values?.addReplacespare3,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "addReplacespare3",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "addReplacespare3"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="addReplacespare3"
-                                    id="addReplacespare3"
-                                    placeholder="Additional Replacement Spare3"
-                                    value={values.addReplacespare3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare3"
-                                  />
+                                <Label notify={true}>Additional replacement spare3</Label>
+                                {createSmartSelectField(
+                                  "addReplacespare3",
+                                  "Additional replacement spare3",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -6057,105 +2651,13 @@ export default function PMMRA(props) {
                               </Form.Group>
                             </Col>
                             <Col md={6}>
-                              {" "}
                               <Form.Group className="mt-3">
-                                <Label notify={true}>
-                                  Additional Replacement Spare3 Qty
-                                </Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "addReplacespare3qty" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName ===
-                                          "addReplacespare3qty"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "addReplacespare3qty"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="addReplacespare3qty"
-                                          id="addReplacespare3qty"
-                                          placeholder="Additional Replacement Spare3 Qty"
-                                          value={values.addReplacespare3qty}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Additional Replacement Spare3 Qty"
-                                        />
-                                      )
-                                    }
-                                    return (
-                                      <Select
-                                        name="addReplacespare3qty"
-                                        className="mt-1"
-                                        placeholder="Additional Replacement Spare3 Qty"
-                                        value={
-                                          values?.addReplacespare3qty
-                                            ? {
-                                              label:
-                                                values?.addReplacespare3qty,
-                                              value:
-                                                values?.addReplacespare3qty,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "addReplacespare3qty",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "addReplacespare3qty"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="addReplacespare3qty"
-                                    id="addReplacespare3qty"
-                                    placeholder="Additional Replacement Spare3 Qty"
-                                    value={values.addReplacespare3qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Additional Replacement Spare3 Qty"
-                                  />
+                                <Label notify={true}>Additional Replacement Spare3 Qty</Label>
+                                {createSmartSelectField(
+                                  "addReplacespare3qty",
+                                  "Additional Replacement Spare3 Qty",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -6164,100 +2666,16 @@ export default function PMMRA(props) {
                                 />
                               </Form.Group>
                             </Col>
-                          </Row>{" "}
+                          </Row>
                           <Row className="px-3 pb-3">
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 1</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Consumable1" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "Consumable1"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "Consumable1"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="Consumable1"
-                                          id="Consumable1"
-                                          placeholder="Consumable 1"
-                                          value={values.Consumable1}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Consumable 1"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="Consumable1"
-                                        className="mt-1"
-                                        placeholder="Consumable 1"
-                                        value={
-                                          values?.Consumable1
-                                            ? {
-                                              label: values?.Consumable1,
-                                              value: values?.Consumable1,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("Consumable1", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Consumable1"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="Consumable1"
-                                    id="Consumable1"
-                                    placeholder="Consumable 1"
-                                    value={values.Consumable1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 1"
-                                  />
+                                {createSmartSelectField(
+                                  "Consumable1",
+                                  "Consumable 1",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -6269,84 +2687,11 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 1 Qty</Label>
-                                {allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "consumable1Qty" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "consumable1Qty"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "consumable1Qty"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item?.sourceValue,
-                                          label: item?.sourceValue,
-                                        }));
-
-                                    return (
-                                      <Select
-                                        name="consumable1Qty"
-                                        className="mt-1"
-                                        placeholder="Consumable 1 Qty"
-                                        value={
-                                          values?.consumable1Qty
-                                            ? {
-                                              label: values?.consumable1Qty,
-                                              value: values?.consumable1Qty,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "consumable1Qty",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "consumable1Qty"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="consumable1Qty"
-                                    id="consumable1Qty"
-                                    placeholder="Consumable 1 Qty"
-                                    value={values.consumable1Qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 1 Qty"
-                                  />
+                                {createSmartSelectField(
+                                  "consumable1Qty",
+                                  "Consumable 1 Qty",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -6355,101 +2700,16 @@ export default function PMMRA(props) {
                                 />
                               </Form.Group>
                             </Col>
-                          </Row>{" "}
+                          </Row>
                           <Row className="px-3 pb-3">
                             <Col md={6}>
-                              {" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 2</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Consumable2" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "Consumable2"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "Consumable2"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="Consumable2"
-                                          id="Consumable2"
-                                          placeholder="Consumable 2"
-                                          value={values.Consumable2}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Consumable 2"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="Consumable2"
-                                        className="mt-1"
-                                        placeholder="Consumable 2"
-                                        value={
-                                          values?.Consumable2
-                                            ? {
-                                              label: values?.Consumable2,
-                                              value: values?.Consumable2,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("Consumable2", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Consumable2"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="Consumable2"
-                                    id="Consumable2"
-                                    placeholder="Consumable 2"
-                                    value={values.Consumable2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 2"
-                                  />
+                                {createSmartSelectField(
+                                  "Consumable2",
+                                  "Consumable 2",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -6461,98 +2721,11 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 2 Qty</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Consumable2qty" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "Consumable2qty"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "Consumable2qty"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="Consumable2qty"
-                                          id="Consumable2qty"
-                                          placeholder="Consumable 2 Qty"
-                                          value={values.Consumable2qty}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Consumable 2 Qty"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="Consumable2qty"
-                                        className="mt-1"
-                                        placeholder="Consumable 2 Qty"
-                                        value={
-                                          values?.Consumable2qty
-                                            ? {
-                                              label: values?.Consumable2qty,
-                                              value: values?.Consumable2qty,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "Consumable2qty",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Consumable2qty"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="Consumable2qty"
-                                    id="Consumable2qty"
-                                    placeholder="Consumable 2 Qty"
-                                    value={values.Consumable2qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 2 Qty"
-                                  />
+                                {createSmartSelectField(
+                                  "Consumable2qty",
+                                  "Consumable 2 Qty",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -6561,99 +2734,16 @@ export default function PMMRA(props) {
                                 />
                               </Form.Group>
                             </Col>
-                          </Row>{" "}
+                          </Row>
                           <Row className="px-3 pb-3">
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 3</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Consumable3" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "Consumable3"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "Consumable3"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="Consumable3"
-                                          id="Consumable3"
-                                          placeholder="Consumable 3"
-                                          value={values.Consumable3}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Consumable 3"
-                                        />
-                                      )
-                                    }
-                                    return (
-                                      <Select
-                                        name="Consumable3"
-                                        className="mt-1"
-                                        placeholder="Consumable 3"
-                                        value={
-                                          values?.Consumable3
-                                            ? {
-                                              label: values?.Consumable3,
-                                              value: values?.Consumable3,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("Consumable3", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Consumable3"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="Consumable3"
-                                    id="Consumable3"
-                                    placeholder="Consumable 3"
-                                    value={values.Consumable3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 3"
-                                  />
+                                {createSmartSelectField(
+                                  "Consumable3",
+                                  "Consumable 3",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -6665,98 +2755,11 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 3 Qty</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Consumable3qty" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "Consumable3qty"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "Consumable3qty"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="Consumable3qty"
-                                          id="Consumable3qty"
-                                          placeholder="Consumable 3 Qty"
-                                          value={values.Consumable3qty}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Consumable 3 Qty"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="Consumable3qty"
-                                        className="mt-1"
-                                        placeholder="Consumable 3 Qty"
-                                        value={
-                                          values?.Consumable3qty
-                                            ? {
-                                              label: values?.Consumable3qty,
-                                              value: values?.Consumable3qty,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "Consumable3qty",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Consumable3qty"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="Consumable3qty"
-                                    id="Consumable3qty"
-                                    placeholder="Consumable 3 Qty"
-                                    value={values.Consumable3qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 3 Qty"
-                                  />
+                                {createSmartSelectField(
+                                  "Consumable3qty",
+                                  "Consumable 3 Qty",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -6765,101 +2768,16 @@ export default function PMMRA(props) {
                                 />
                               </Form.Group>
                             </Col>
-                          </Row>{" "}
+                          </Row>
                           <Row className="px-3 pb-3">
                             <Col md={6}>
-                              {" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 4</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Consumable4" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "Consumable4"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "Consumable4"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="Consumable4"
-                                          id="Consumable4"
-                                          placeholder="Consumable 4"
-                                          value={values.Consumable4}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Consumable 4"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="Consumable4"
-                                        className="mt-1"
-                                        placeholder="Consumable 4"
-                                        value={
-                                          values?.Consumable4
-                                            ? {
-                                              label: values?.Consumable4,
-                                              value: values?.Consumable4,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("Consumable4", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Consumable4"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="Consumable4"
-                                    id="Consumable4"
-                                    placeholder="Consumable 4"
-                                    value={values.Consumable4}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 4"
-                                  />
+                                {createSmartSelectField(
+                                  "Consumable4",
+                                  "Consumable 4",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -6871,98 +2789,11 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 4 Qty</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Consumable4qty" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "Consumable4qty"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "Consumable4qty"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="Consumable4qty"
-                                          id="Consumable4qty"
-                                          placeholder="Consumable 4 Qty"
-                                          value={values.Consumable4qty}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Consumable 4 Qty"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="Consumable4qty"
-                                        className="mt-1"
-                                        placeholder="Consumable 4 Qty"
-                                        value={
-                                          values?.Consumable4qty
-                                            ? {
-                                              label: values?.Consumable4qty,
-                                              value: values?.Consumable4qty,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "Consumable4qty",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Consumable4qty"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="Consumable4qty"
-                                    id="Consumable4qty"
-                                    placeholder="Consumable 4 Qty"
-                                    value={values.Consumable4qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 4 Qty"
-                                  />
+                                {createSmartSelectField(
+                                  "Consumable4qty",
+                                  "Consumable 4 Qty",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -6974,98 +2805,13 @@ export default function PMMRA(props) {
                           </Row>
                           <Row className="px-3 pb-3">
                             <Col md={6}>
-                              {" "}
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 5</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Consumable5" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "Consumable5"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "Consumable5"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="Consumable5"
-                                          id="Consumable5"
-                                          placeholder="Consumable 5"
-                                          value={values.Consumable5}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Consumable 5"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="Consumable5"
-                                        className="mt-1"
-                                        placeholder="Consumable 5"
-                                        value={
-                                          values?.Consumable5
-                                            ? {
-                                              label: values?.Consumable5,
-                                              value: values?.Consumable5,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("Consumable5", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Consumable5"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="Consumable5"
-                                    id="Consumable5"
-                                    placeholder="Consumable 5"
-                                    value={values.Consumable5}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 5"
-                                  />
+                                {createSmartSelectField(
+                                  "Consumable5",
+                                  "Consumable 5",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -7077,98 +2823,11 @@ export default function PMMRA(props) {
                             <Col md={6}>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Consumable 5 Qty</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Consumable5qty" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "Consumable5qty"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName ===
-                                          "Consumable5qty"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="Consumable5qty"
-                                          id="Consumable5qty"
-                                          placeholder="Consumable 5 Qty"
-                                          value={values.Consumable5qty}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="Consumable 5 Qty"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="Consumable5qty"
-                                        className="mt-1"
-                                        placeholder="Consumable 5 Qty"
-                                        value={
-                                          values?.Consumable5qty
-                                            ? {
-                                              label: values?.Consumable5qty,
-                                              value: values?.Consumable5qty,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue(
-                                            "Consumable5qty",
-                                            e.value
-                                          );
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Consumable5qty"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="Consumable5qty"
-                                    id="Consumable5qty"
-                                    placeholder="Consumable 5 Qty"
-                                    value={values.Consumable5qty}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Consumable 5 Qty"
-                                  />
+                                {createSmartSelectField(
+                                  "Consumable5qty",
+                                  "Consumable 5 Qty",
+                                  values,
+                                  setFieldValue
                                 )}
                                 <ErrorMessage
                                   className="error text-danger"
@@ -7179,527 +2838,91 @@ export default function PMMRA(props) {
                             </Col>
                           </Row>
                         </Card>
+
                         <div className="mttr-sec mb-2 mt-4">
                           <p className=" mb-0 para-tag">Remarks</p>
                         </div>
-                        <Card
-                          className="mb-3"
-                          style={{ backgroundColor: "#F2F1F2" }}
-                        >
+
+                        <Card className="mb-3" style={{ backgroundColor: "#F2F1F2" }}>
                           <Row className="px-3 pb-3">
                             <Col md={6} className="mt-4 mb-4">
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 1</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "userfield1" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "userfield1"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "userfield1"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="userfield1"
-                                          id="userfield1"
-                                          placeholder="User Field 1"
-                                          value={values.userfield1}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="User Field 1"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="userfield1"
-                                        className="mt-1"
-                                        placeholder="User Field 1"
-                                        value={
-                                          values?.userfield1
-                                            ? {
-                                              label: values?.userfield1,
-                                              value: values?.userfield1,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("userfield1", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "userfield1"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="userfield1"
-                                    id="userfield1"
-                                    placeholder="User Field 1"
-                                    value={values.userfield1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="User Field 1"
-                                  />
+                                {createSmartSelectField(
+                                  "userfield1",
+                                  "User Field 1",
+                                  values,
+                                  setFieldValue
                                 )}
-                                <ErrorMessage
-                                  className="error text-danger"
-                                  component="span"
-                                  name="userfield1"
-                                />
+                                <ErrorMessage className="error text-danger" component="span" name="userfield1" />
                               </Form.Group>
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 2</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "userfield2" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "userfield2"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "userfield2"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="userfield2"
-                                          id="userfield2"
-                                          placeholder="User Field 2"
-                                          value={values.userfield2}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="User Field 2"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="userfield2"
-                                        className="mt-1"
-                                        placeholder="User Field 2"
-                                        value={
-                                          values?.userfield2
-                                            ? {
-                                              label: values?.userfield2,
-                                              value: values?.userfield2,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("userfield2", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "userfield2"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="userfield2"
-                                    id="userfield2"
-                                    placeholder="User Field 2"
-                                    value={values.userfield2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="User Field 2"
-                                  />
+                                {createSmartSelectField(
+                                  "userfield2",
+                                  "User Field 2",
+                                  values,
+                                  setFieldValue
                                 )}
-                                <ErrorMessage
-                                  className="error text-danger"
-                                  component="span"
-                                  name="userfield2"
-                                />
-                              </Form.Group>{" "}
+                                <ErrorMessage className="error text-danger" component="span" name="userfield2" />
+                              </Form.Group>
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 3</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "userfield3" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "userfield3"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "userfield3"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="userfield3"
-                                          id="userfield3"
-                                          placeholder="User Field 3"
-                                          value={values.userfield3}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="User Field 3"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="userfield3"
-                                        className="mt-1"
-                                        placeholder="User Field 3"
-                                        value={
-                                          values?.userfield3
-                                            ? {
-                                              label: values?.userfield3,
-                                              value: values?.userfield3,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("userfield3", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "userfield3"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="userfield3"
-                                    id="userfield3"
-                                    placeholder="User Field 3"
-                                    value={values.userfield3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="User Field 3"
-                                  />
+                                {createSmartSelectField(
+                                  "userfield3",
+                                  "User Field 3",
+                                  values,
+                                  setFieldValue
                                 )}
-                                <ErrorMessage
-                                  className="error text-danger"
-                                  component="span"
-                                  name="userfield3"
-                                />
+                                <ErrorMessage className="error text-danger" component="span" name="userfield3" />
                               </Form.Group>
+
                             </Col>
+
                             <Col md={6} className="mt-4 mb-4">
+
                               <Form.Group className="mt-3">
                                 <Label notify={true}>User Field 4</Label>
-                                {allConnectedData || allSepareteData.some(
-                                  (item) =>
-                                    item.sourceName === "userfield4" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "userfield4"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "userfield4"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="userfield4"
-                                          id="userfield4"
-                                          placeholder="User Field 4"
-                                          value={values.userfield4}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="User Field 4"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="userfield4"
-                                        className="mt-1"
-                                        placeholder="User Field 4"
-                                        value={
-                                          values?.userfield4
-                                            ? {
-                                              label: values?.userfield4,
-                                              value: values?.userfield4,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("userfield4", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "userfield4"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="userfield4"
-                                    id="userfield4"
-                                    placeholder="User Field 4"
-                                    value={values.userfield4}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="User Field 4"
-                                  />
+                                {createSmartSelectField(
+                                  "userfield4",
+                                  "User Field 4",
+                                  values,
+                                  setFieldValue
                                 )}
-                                <ErrorMessage
-                                  className="error text-danger"
-                                  component="span"
-                                  name="userfield4"
-                                />
+                                <ErrorMessage className="error text-danger" component="span" name="userfield4" />
                               </Form.Group>
+
                               <Form.Group className="mt-3">
-                                <Label notify={true}>User field 5</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "userfield5" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) =>
-                                          item?.sourceName === "userfield5"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
-                                        (item) =>
-                                          item?.destinationName === "userfield5"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                    if (!options || options.length === 0) {
-                                      return (
-                                        <Form.Control
-                                          name="userfield5"
-                                          id="userfield5"
-                                          placeholder="User Field 5"
-                                          value={values.userfield5}
-                                          onChange={handleChange}
-                                          onBlur={handleBlur}
-                                          className="mt-1"
-                                          title="User Field 5"
-                                        />
-                                      )
-                                    }
-
-                                    return (
-                                      <Select
-                                        name="userfield5"
-                                        className="mt-1"
-                                        placeholder="User Field 5"
-                                        value={
-                                          values?.userfield5
-                                            ? {
-                                              label: values?.userfield5,
-                                              value: values?.userfield5,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
-                                        styles={customStyles}
-                                        onBlur={handleBlur}
-                                        isDisabled={
-                                          writePermission === true ||
-                                            writePermission === "undefined" ||
-                                            role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
-                                        }
-                                        onChange={(e) => {
-                                          setFieldValue("userfield5", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "userfield5"
-                                          );
-                                        }}
-                                      />
-                                    );
-                                  })()
-                                ) : (
-                                  <Form.Control
-                                    name="userfield5"
-                                    id="userfield5"
-                                    placeholder="User Field 5"
-                                    value={values.userfield5}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="User Field 5"
-                                  />
+                                <Label notify={true}>User Field 5</Label>
+                                {createSmartSelectField(
+                                  "userfield5",
+                                  "User Field 5",
+                                  values,
+                                  setFieldValue
                                 )}
-                                <ErrorMessage
-                                  className="error text-danger"
-                                  component="span"
-                                  name="userfield5"
-                                />
+                                <ErrorMessage className="error text-danger" component="span" name="userfield5" />
                               </Form.Group>
-                              {/* <Form.Group className="mt-3">
-                          <Label>User field 6</Label>
-                          <Form.Control
-                            name="userfield6"
-                            id="userfield6"
-                            value={values.userfield6}
-                            onChange={handleChange}
-                            onBlur={handleBlur}
-                            className="mt-1"
-                          />
-                        </Form.Group> */}
-                            </Col>{" "}
+
+                            </Col>
                           </Row>
                         </Card>
-                        <div className="d-flex flex-direction-row justify-content-end  mt-4 mb-5">
+
+
+                        {/* Continue with other sections following the same pattern */}
+
+                        <div className="d-flex flex-direction-row justify-content-end mt-4 mb-5">
                           <Button
-                            className="  delete-cancel-btn me-2 "
+                            className="delete-cancel-btn me-2"
                             variant="outline-secondary"
-                            //  onClick={() => history.goBack()}
                             onClick={handleCancelClick}
                           >
                             CANCEL
                           </Button>
                           <Button
-                            className=" save-btn"
+                            className="save-btn"
                             type="submit"
                             disabled={!productId}
                           >
@@ -7716,6 +2939,7 @@ export default function PMMRA(props) {
         </div>
       )}
 
+      {/* Success Modal */}
       <Modal show={show} centered onHide={() => setShow(false)}>
         <div className="d-flex justify-content-center mt-5">
           <FontAwesomeIcon
@@ -7724,28 +2948,23 @@ export default function PMMRA(props) {
             color="#1D5460"
           />
         </div>
-        <Modal.Footer className=" d-flex justify-content-center mt-3 mb-5 success-message">
+        <Modal.Footer className="d-flex justify-content-center mt-3 mb-5 success-message">
           <div className="success-message">
             <h5> {showValue} </h5>
           </div>
         </Modal.Footer>
       </Modal>
+
+      {/* Error Modal */}
       <div>
         <Modal show={value} centered onHide={() => setValue(false)}>
-          {/* <div style={{ color: "red" }}>
-              <h5 className="d-flex justify-content-center mt-5"> {showValue} </h5>
-            </div> */}
           <div className="d-flex justify-content-center mt-5">
             <FaExclamationCircle size={45} color="#de2222b0" />
           </div>
-          <Modal.Footer
-            className=" d-flex justify-content-center"
-            style={{ borderTop: 0 }}
-          >
+          <Modal.Footer className="d-flex justify-content-center" style={{ borderTop: 0 }}>
             <div>
               <h5 className="d-flex justify-content-center mt-3 mb-5">
-                {" "}
-                {showValue}{" "}
+                {showValue}
               </h5>
             </div>
           </Modal.Footer>
