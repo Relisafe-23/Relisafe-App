@@ -7,20 +7,18 @@ import Api from "../../Api";
 export default function Dropdown(props) {
   const projectId = props?.value;
   const history = useHistory();
+
   const [productId, setProductId] = useState(props?.productId ?? null);
   const [productData, setProductData] = useState([]);
   const [prefillData, setPrefillData] = useState(null);
-  
-  // Get read-only status from props
-  const isReadOnly = props?.isReadOnly ?? false;
 
   const customStyles = {
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? "#007BFF" : "white",
+      backgroundColor: state.isSelected ? "#007bff" : "white",
       color: state.isSelected ? "white" : "black",
       "&:hover": {
-        backgroundColor: state.isSelected ? "#007BFF" : "#F8F9FA",
+        backgroundColor: state.isSelected ? "#007bff" : "#f8f9fa",
         color: state.isSelected ? "white" : "black",
       },
     }),
@@ -28,8 +26,8 @@ export default function Dropdown(props) {
       ...provided,
       border:
         state.isFocused || state.hasValue
-          ? "2px solid #007BFF"
-          : "1px solid #CED4DA",
+          ? "2px solid #007bff"
+          : "1px solid #ced4da",
       borderRadius: "0.375rem",
       boxShadow:
         state.isFocused || state.hasValue
@@ -38,29 +36,28 @@ export default function Dropdown(props) {
       "&:hover": {
         border:
           state.isFocused || state.hasValue
-            ? "2px solid #007BFF"
-            : "1px solid #007BFF",
+            ? "2px solid #007bff"
+            : "1px solid #007bff",
       },
     }),
   };
 
-  const options = productData.map((list) => ({
-    value: list.id,
-    label: list.indexCount + "." + list.productName,
-  }));
-  
-  // This ensures the selected value always matches an option
-  const selectedOption = options.find((opt) => opt.value === productId) || null;
+const options = productData.map((list) => ({
+  value: list.id,
+  label: list.indexCount + "." + list.productName,
+}));
 
-  // -------------------------------
-  // FETCH MAIN PRODUCT LIST
-  // -------------------------------
+
+const selectedOption = options.find((opt) => opt.value === productId) || null;
+
+
   const getTreeProduct = () => {
     Api.get(`/api/v1/productTreeStructure/product/list`, {
       params: { projectId },
     }).then((res) => {
       const treeData = res?.data?.data || [];
       setProductData(treeData);
+
       if (treeData.length > 0 && !productId) {
         const first = treeData[0];
         setProductId(first.id);
@@ -72,15 +69,13 @@ export default function Dropdown(props) {
     });
   };
 
-  // -------------------------------
-  // FETCH SELECTED PRODUCT DETAILS
-  // -------------------------------
   const productTreeData = (id) => {
     if (!id) return;
     Api.get("/api/v1/productTreeStructure/get/tree/product/list", {
       params: { projectId, treeStructureId: id },
     }).then((res) => {
       const data = res?.data?.data;
+
       if (data?.productName) {
         setPrefillData({
           value: data.productId,
@@ -103,69 +98,52 @@ export default function Dropdown(props) {
   }, [productId]);
 
   // -------------------------------
-  // NEXT / PREVIOUS LOGIC
+  // HANDLE SELECT CHANGE
   // -------------------------------
+  const handleChange = (selected) => {
+    setPrefillData(selected);
+    setProductId(selected.value);
+    history.push({ state: { productId: selected.value } });
+  };
+
+
   const getNextProduct = () => {
-    console.log("Next button clicked - Product ID:", productId); // Debug
-    if (productData.length === 0) {
-      console.log("No product data available");
-      return;
-    }
-    
+    if (productData.length === 0) return;
+
     const currentIndex = productData.findIndex((p) => p.id === productId);
-    console.log("Current index:", currentIndex);
-    
     const nextIndex =
       currentIndex + 1 < productData.length ? currentIndex + 1 : 0;
+
     const nextProduct = productData[nextIndex];
     
     console.log("Next product:", nextProduct);
     setProductId(nextProduct.id);
-    history.push({ 
-      state: { 
-        productId: nextProduct.id,
-        projectId: projectId // Ensure projectId is preserved
-      } 
-    });
-    
-    // Force refresh if needed
-    if (props.onProductChange) {
-      props.onProductChange(nextProduct.id);
-    }
+    setProductId(nextProduct.id);
+
+    // setPrefillData({
+    //   value: nextProduct.id,
+    //   label: nextProduct.indexCount + "." + nextProduct.productName,
+    // });
+
+    history.push({ state: { productId: nextProduct.id } });
   };
 
   const getPreviousProduct = () => {
-    console.log("Previous button clicked - Product ID:", productId); // Debug
-    if (productData.length === 0) {
-      console.log("No product data available");
-      return;
-    }
-    
+    if (productData.length === 0) return;
+
     const currentIndex = productData.findIndex((p) => p.id === productId);
-    console.log("Current index:", currentIndex);
-    
     const prevIndex =
       currentIndex - 1 >= 0 ? currentIndex - 1 : productData.length - 1;
+
     const prevProduct = productData[prevIndex];
-    
-    console.log("Previous product:", prevProduct);
+
     setProductId(prevProduct.id);
     setPrefillData({
       value: prevProduct.id,
       label: prevProduct.indexCount + "." + prevProduct.productName,
     });
-    
-    history.push({ 
-      state: { 
-        productId: prevProduct.id,
-        projectId: projectId // Ensure projectId is preserved
-      } 
-    });
-    
-    // Force refresh if needed
-    if (props.onProductChange) {
-      props.onProductChange(prevProduct.id);
-    }
+
+    history.push({ state: { productId: prevProduct.id } });
   };
 
   return (
@@ -176,69 +154,45 @@ export default function Dropdown(props) {
       display: 'block'
     }}>
       <Row>
-        {/* PREVIOUS BUTTON - Always enabled */}
+        {/* PREVIOUS BUTTON */}
         <Col sm={12} md={4} className="d-flex justify-content-start mt-1">
           <div style={{ marginLeft: "100px" }}>
-            <Button 
-              className="FRP-button" 
-              onClick={getPreviousProduct}
-              style={{ 
-                pointerEvents: 'auto',
-                opacity: 1,
-                cursor: 'pointer'
-              }}
-            >
+            <Button className="FRP-button" onClick={getPreviousProduct}>
               {"<< PREV"}
             </Button>
           </div>
         </Col>
-        
-        {/* DROPDOWN - Conditionally disabled based on read-only */}
+
+        {/* DROPDOWN */}
         <Col sm={12} md={4} className="mt-1 dropdown-Alignments">
-          <Select
-            styles={{
-              ...customStyles,
-              control: (provided, state) => ({
-                ...customStyles.control(provided, state),
-                opacity: isReadOnly ? 0.5 : 1,
-                backgroundColor: isReadOnly ? '#e9ecef' : 'white',
-                cursor: isReadOnly ? 'not-allowed' : 'pointer'
-              })
-            }}
+          {/* <Select
             placeholder="Select Product"
-            value={selectedOption}
-            options={options}
-            onChange={(selected) => {
-              if (!isReadOnly) {
-                setProductId(selected.value);
-                history.push({ 
-                  state: { 
-                    productId: selected.value,
-                    projectId: projectId
-                  } 
-                });
-                
-                if (props.onProductChange) {
-                  props.onProductChange(selected.value);
-                }
-              }
-            }}
-            isDisabled={isReadOnly}
-          />
+            styles={customStyles}
+            value={prefillData}
+            
+            // options={productData.map((list) => ({
+            //   value: list.id,
+            //   label: list.indexCount + "." + list.productName,
+            // }))}
+            onChange={handleChange}
+          /> */}
+          <Select
+  styles={customStyles}
+  placeholder="Select Product"
+  value={selectedOption}    
+  options={options}
+  onChange={(selected) => {
+    setProductId(selected.value);
+    history.push({ state: { productId: selected.value } });
+  }}
+/>
+
         </Col>
-        
-        {/* NEXT BUTTON - Always enabled */}
+
+    
         <Col sm={12} md={4} className="d-flex justify-content-end mt-1">
           <div style={{ marginLeft: "100px" }}>
-            <Button 
-              className="FRP-button" 
-              onClick={getNextProduct}
-              style={{ 
-                pointerEvents: 'auto',
-                opacity: 1,
-                cursor: 'pointer'
-              }}
-            >
+            <Button className="FRP-button" onClick={getNextProduct}>
               {"NEXT >>"}
             </Button>
           </div>
