@@ -148,7 +148,7 @@ function Index(props) {
   const [colDefs, setColDefs] = useState();
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
   const [companyId, setCompanyId] = useState();
-  const [selectedProductName, setSelectedProductName] = useState("");
+  const [selectedProductName, setSelectedProductName] = useState("");    
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [perviousColumnValues, setPerviousColumnValues] = useState([]);
@@ -286,7 +286,7 @@ function Index(props) {
   useEffect(() => {
     getAllSeprateLibraryData();
     getAllLibraryData();
-    getAllConnectedLibraryAfterUpdate();
+ 
   }, []);
 
   const DownloadExcel = (values) => {
@@ -634,7 +634,7 @@ function Index(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-        setWritePermission(data?.modules[3].write);
+        setWritePermission(data?.modules[4].write);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;

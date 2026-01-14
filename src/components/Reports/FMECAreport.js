@@ -293,9 +293,12 @@ function FMECAreport(props) {
       },
     })
       .then((res) => {
+        console.log("response", res);
         const treeData = res?.data?.data;
         setData(treeData);
         setIsLoading(false);
+        console.log("FMECA Report Data:", treeData);
+        
       })
       .catch((error) => {
         setIsLoading(false);
@@ -306,11 +309,73 @@ function FMECAreport(props) {
       });
   };
 
-  const fmecaData = data?.map((item) => ({
-    productId: item?.productId || {},
-    fmecaData: item?.fmecaData || {},
-    pmmraData: item?.pmmraData || {},
-  }));
+// console.log("data@@@@@", data);
+//   const fmecaData = data?.map((item) => ({
+//     productId: item?.productId || {},
+//     fmecaData: item?.fmecaData || {},
+//     pmmraData: item?.pmmraData || {},
+//   }));
+
+
+const fmecaData = React.useMemo(() => {
+  if (!data || data.length === 0) return [];
+  
+  const allRows = [];
+  
+  data.forEach(item => {
+    const productId = item?.productId || {};
+    
+    const fmecaItems = Array.isArray(item?.fmecaData) ? item.fmecaData : 
+                      (item?.fmecaData ? [item.fmecaData] : [{}]);
+    
+    const pmmraItems = Array.isArray(item?.pmmraData) ? item.pmmraData : 
+                      (item?.pmmraData ? [item.pmmraData] : [{}]);
+    
+    const maxCount = Math.max(fmecaItems.length, pmmraItems.length);
+    
+    for (let i = 0; i < maxCount; i++) {
+      allRows.push({
+        productId: productId,
+        fmecaData: fmecaItems[i] || {},
+        pmmraData: pmmraItems[i] || {}
+      });
+    }
+  });
+  
+  if (pmmraTreeData && Array.isArray(pmmraTreeData)) {
+    pmmraTreeData.forEach(pmmraItem => {
+      const productId = pmmraItem?.productId || {};
+      const pmmraItems = Array.isArray(pmmraItem?.pmmraData) ? pmmraItem.pmmraData : 
+                        (pmmraItem?.pmmraData ? [pmmraItem.pmmraData] : []);
+      
+      pmmraItems.forEach(pmmraDetail => {
+        const existingRow = allRows.find(row => 
+          row.productId.partNumber === productId.partNumber && 
+          row.pmmraData.pmTaskId === pmmraDetail.pmTaskId
+        );
+        
+        if (!existingRow) {
+          const rowWithoutPmmra = allRows.find(row => 
+            row.productId.partNumber === productId.partNumber && 
+            Object.keys(row.pmmraData).length === 0
+          );
+          
+          if (rowWithoutPmmra) {
+            rowWithoutPmmra.pmmraData = pmmraDetail;
+          } else {
+            allRows.push({
+              productId: productId,
+              fmecaData: {},
+              pmmraData: pmmraDetail
+            });
+          }
+        }
+      });
+    });
+  }
+  
+  return allRows;
+}, [data, pmmraTreeData]);
 
   useEffect(() => {
     getProjectDetails();
@@ -365,6 +430,7 @@ function FMECAreport(props) {
       },
     })
       .then((res) => {
+        console.log("PMMRA Response:", res);
         const pmmraData = res?.data?.data;
         setPmmraTreeData(pmmraData);
         setIsLoading(false);

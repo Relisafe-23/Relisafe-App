@@ -476,9 +476,9 @@ function Index(props) {
     });
   };
 
-  useEffect(() => {
-    getAllConnect();
-  }, []);
+  // useEffect(() => {
+  //   getAllConnect();
+  // }, []);
 
   const validateField = (fieldName, value, isRequired) => {
     if (isRequired && (!value || value?.toString()?.trim() === '')) {

@@ -77,7 +77,6 @@ const selectedOption = options.find((opt) => opt.value === productId) || null;
   // -------------------------------
   const productTreeData = (id) => {
     if (!id) return;
-
     Api.get("/api/v1/productTreeStructure/get/tree/product/list", {
       params: { projectId, treeStructureId: id },
     }).then((res) => {
@@ -124,7 +123,8 @@ const selectedOption = options.find((opt) => opt.value === productId) || null;
       currentIndex + 1 < productData.length ? currentIndex + 1 : 0;
 
     const nextProduct = productData[nextIndex];
-
+    
+    console.log("Next product:", nextProduct);
     setProductId(nextProduct.id);
     setProductId(nextProduct.id);
 
@@ -155,7 +155,12 @@ const selectedOption = options.find((opt) => opt.value === productId) || null;
   };
 
   return (
-    <div>
+    <div style={{ 
+      // Reset inherited disabled state from fieldset
+      pointerEvents: 'auto',
+      opacity: 1,
+      display: 'block'
+    }}>
       <Row>
         {/* PREVIOUS BUTTON */}
         <Col sm={12} md={4} className="d-flex justify-content-start mt-1">
