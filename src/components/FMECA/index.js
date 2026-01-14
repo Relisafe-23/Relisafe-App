@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import {
   faFileDownload,
   faTrash,
+  faPen,
   faEdit,
   faFileUpload,
 } from "@fortawesome/free-solid-svg-icons";
@@ -1047,7 +1048,6 @@ function Index(props) {
       }
       return (
         <div style={{ position: "relative" }}>
-
           <CreatableSelect
             name={fieldName}
             value={selectedOption}
@@ -1065,6 +1065,7 @@ function Index(props) {
 
                 }
               }
+
             }}
             // onCreateOption={(inputValue) => {
             //   // // Allow creating new options
@@ -1640,6 +1641,7 @@ function Index(props) {
               </Tooltip>
             </div>
           </div>
+
           <div>
             <div className="mt-5" style={{ bottom: "35px" }}>
               <ThemeProvider theme={tableTheme}>

@@ -42,13 +42,13 @@ export default function Dropdown(props) {
     }),
   };
 
-const options = productData.map((list) => ({
-  value: list.id,
-  label: list.indexCount + "." + list.productName,
-}));
+  const options = productData.map((list) => ({
+    value: list.id,
+    label: list.indexCount + "." + list.productName,
+  }));
 
-
-const selectedOption = options.find((opt) => opt.value === productId) || null;
+  // This ensures the selected value always matches an option
+  const selectedOption = options.find((opt) => opt.value === productId) || null;
 
 
   const getTreeProduct = () => {
@@ -177,15 +177,15 @@ const selectedOption = options.find((opt) => opt.value === productId) || null;
             onChange={handleChange}
           /> */}
           <Select
-  styles={customStyles}
-  placeholder="Select Product"
-  value={selectedOption}    
-  options={options}
-  onChange={(selected) => {
-    setProductId(selected.value);
-    history.push({ state: { productId: selected.value } });
-  }}
-/>
+            styles={customStyles}
+            placeholder="Select Product"
+            value={selectedOption}
+            options={options}
+            onChange={(selected) => {
+              setProductId(selected.value);
+              history.push({ state: { productId: selected.value } });
+            }}
+          />
 
         </Col>
 
