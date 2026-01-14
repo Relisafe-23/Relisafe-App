@@ -640,7 +640,7 @@ function Index(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-        setWritePermission(data?.modules[3].write);
+        setWritePermission(data?.modules[4].write);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -1197,7 +1197,6 @@ function Index(props) {
     render: (rowData) => `${rowData?.tableData?.id + 1}`,
     title: "FMECA ID",
   };
-
   const columns = [
     fmecaIdColumn,
     createSmartSelectField("operatingPhase", "Operating Phases", true),

@@ -6,7 +6,7 @@ import {
   BlockContextMenu,
   ElementParametersModal,
   SwitchConfigurationModal,
-  // SplitKOutOfNModal
+  SplitKOutOfNModal
 } from './index';
 
 export const SplitKofN = ({ isOpen, onClose, onSubmit, currentData }) => {
