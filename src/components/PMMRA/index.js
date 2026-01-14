@@ -408,6 +408,7 @@ export default function PMMRA(props) {
   const [fmecaFillterData, setFmecaFillterData] = useState();
 
   // Initialize connections on component mount
+  const [failureMode, setFailureMode] = useState();
   useEffect(() => {
     initializeConnections();
   }, []);
@@ -893,8 +894,7 @@ export default function PMMRA(props) {
       setFmecaData(data);
     });
   };
-
-  const getFMECADataAfterChange = (fmecaId) => {
+  const getFMECADataAfterChange = (failureMode) => {
     Api.get("/api/v1/FMECA/product/list", {
       params: {
         projectId: projectId,
@@ -903,7 +903,8 @@ export default function PMMRA(props) {
     }).then((res) => {
       const data = res?.data?.data;
       setFmecaData(data);
-      const filteredData = data.filter((item) => item.fmecaId === fmecaId);
+      const filteredData = data.filter((item) => item.failureMode === failureMode);
+
       setFmecaFillterData(filteredData[0]);
     });
   };
@@ -993,7 +994,7 @@ export default function PMMRA(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-        setWritePermission(data?.modules[6].write);
+        setWritePermission(data?.modules[7].write);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -1050,8 +1051,8 @@ export default function PMMRA(props) {
         setpmmraId(pmmraId);
 
         setpmmraData(pmmraData);
-        setFmecaId(pmmraData?.fmecaId);
-        getFMECADataAfterChange(pmmraData?.fmecaId);
+        setFailureMode(pmmraData?.failureMode);
+        getFMECADataAfterChange(pmmraData?.failureMode);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -1113,7 +1114,7 @@ export default function PMMRA(props) {
         partType && values?.partType?.value
           ? values?.partType?.value
           : values?.partType,
-      fmecaId: fmecaFillterData?.fmecaId,
+      failureMode: fmecaFillterData?.failureMode,
       repairable: repairable,
       levelOfRepair: levelofRepair,
       levelOfReplace: levelofreplace,
@@ -1356,7 +1357,7 @@ export default function PMMRA(props) {
         const pmmraData = res?.data?.data?.createData;
         const pmmraId = res?.data?.data?.createData?.id;
         setpmmraId(pmmraId);
-        setFmecaId(pmmraData?.fmecaId);
+        setFailureMode(pmmraData?.failureMode);
         setpmmraData(pmmraData);
 
         const status = res.status;
@@ -1388,7 +1389,7 @@ export default function PMMRA(props) {
       repairable: repairable,
       levelOfRepair: levelofRepair,
       levelOfReplace: levelofreplace,
-      fmecaId: fmecaFillterData?.fmecaId,
+      failureMode: fmecaFillterData?.failureMode,
       spare: spare,
       endEffect: values.endeffect,
       safetyImpact: values.safetyimpact,
@@ -1488,14 +1489,15 @@ export default function PMMRA(props) {
 
   // Get FMECA filter data
   const getFmecaFilterData = (value) => {
-    const filteredData = fmecaData.filter((item) => item.fmecaId === value);
+    const filteredData = fmecaData.filter((item) => item.failureMode === value);
+
     setFmecaFillterData(filteredData[0]);
   };
 
   // FMECA options
   const fmecaOptions = fmecaData.map((item) => ({
-    value: item?.fmecaId,
-    label: item?.fmecaId,
+    value: item?.failureMode,
+    label: item?.failureMode,
   }));
 
   // Initial values for form
@@ -1514,7 +1516,8 @@ export default function PMMRA(props) {
     category: category,
     parttype: partType,
     quantity: quantity,
-    fmecaId: fmecaFillterData?.fmecaModelId || "",
+    failureMode: fmecaFillterData?.failureMode || "",
+    // Use imported Excel data for all fields, fall back to FMECA data or empty
     endeffect: importExcelData?.endeffect || fmecaFillterData?.endEffect || "",
     reliability:
       importExcelData?.reliability || fmecaFillterData?.realibilityImpact || "",
@@ -1643,6 +1646,7 @@ export default function PMMRA(props) {
                 value={projectId}
                 productId={productId}
                 data={treeTableData}
+                  writePermission={writePermission}
               />
             </div>
 
@@ -1657,7 +1661,13 @@ export default function PMMRA(props) {
             >
               <Tooltip placement="right" title="Import">
                 <div style={{ marginRight: "8px" }}>
-                  <label htmlFor="file-input" className="import-export-btn">
+                  <label htmlFor="file-input" className="import-export-btn"
+                      style={{
+          cursor: writePermission === false ? "not-allowed" : "pointer",
+          opacity: writePermission === false ? 0.5 : 1
+        }}
+      
+                 >
                     <FontAwesomeIcon
                       icon={faFileDownload}
                       style={{ width: "15px" }}
@@ -1669,9 +1679,11 @@ export default function PMMRA(props) {
                     id="file-input"
                     onChange={importExcel}
                     style={{ display: "none" }}
+                     disabled={writePermission === false}
                   />
                 </div>
               </Tooltip>
+              
               <Tooltip placement="left" title="Export">
                 <Button
                   className="import-export-btn"
@@ -1681,10 +1693,15 @@ export default function PMMRA(props) {
                     width: "40px",
                     minWidth: "40px",
                     padding: "0px",
+                         cursor: writePermission === false ? "not-allowed" : "pointer",
+        opacity: writePermission === false ? 0.5 : 1
                   }}
                   onClick={() => {
-                    exportToExcel(InitialValues);
+                           if (writePermission !== false) {
+          exportToExcel(InitialValues);
+        }
                   }}
+                     disabled={writePermission === false}
                 >
                   <FontAwesomeIcon
                     icon={faFileUpload}
@@ -1700,7 +1717,7 @@ export default function PMMRA(props) {
               initialValues={InitialValues}
               validationSchema={Validation}
               onSubmit={(values, { resetForm }) =>
-                pmmraId && fmecaId
+                pmmraId && failureMode
                   ? UpdatepmmraDetails(values)
                   : submit(values, { resetForm })
               }
@@ -1736,12 +1753,12 @@ export default function PMMRA(props) {
                             <Form.Group>
                               <Label notify={true}>FMECA Mode</Label>
                               <Select
-                                name="FmecaId"
+                                name="FailureMode"
                                 className="mt-1"
-                                placeholder="Select Fmeca Mode"
+                                placeholder="Select Failure Mode"
                                 value={
                                   fmecaOptions.find(
-                                    (option) => option.value === fmecaId
+                                    (option) => option.value === failureMode
                                   ) || null
                                 }
                                 options={fmecaOptions}
@@ -1756,9 +1773,9 @@ export default function PMMRA(props) {
                                     : "disabled"
                                 }
                                 onChange={(e) => {
-                                  setFieldValue("FmecaId", e.value);
+                                  setFieldValue("FailureMode", e.value);
                                   getFmecaFilterData(e.value);
-                                  setFmecaId(e.value);
+                                  setFailureMode(e.value);
                                 }}
                               />
                             </Form.Group>

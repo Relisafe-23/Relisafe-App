@@ -113,6 +113,7 @@ export default function ProjectList(props, list) {
       });
   };
 
+  
   // Log out
   const logout = () => {
     localStorage.clear(history.push("/login"));
