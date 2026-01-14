@@ -64,6 +64,7 @@ const MTTRPrediction = (props, active) => {
   const [levelOfRepair, setLevelOfRepair] = useState("");
   const [spare, setSpare] = useState("");
   const [show, setShow] = useState(false);
+    const [rowConnections, setRowConnections] = useState({});
   const [partType, setPartType] = useState("");
   const [name, setName] = useState([]);
   const [reference, setReference] = useState([]);
@@ -108,7 +109,7 @@ const MTTRPrediction = (props, active) => {
     skill: "",
     tools: "",
     partNo: "",
-    TaskType: "",
+    taskType: "",
   });
 
   const handleInputChange = (selectedItems, name) => {
@@ -172,7 +173,7 @@ const MTTRPrediction = (props, active) => {
       'tools': 'tools',
       'partNo': 'partNo',
       'toolType': 'toolType',
-      'taskType': 'TaskType'
+      'taskType': 'taskType'
     };
 
     // Update formik values
@@ -229,7 +230,7 @@ const createMTTRDataFromExcel = async (values) => {
       productId: productId,
       companyId: companyId,
       remarks: values?.remarks,
-      TaskType: values?.TaskType,
+      taskType: values?.taskType,
       time: values.time,
       totalLabour: values.totalLabour,
       skill: values.skill,
@@ -292,7 +293,7 @@ const importExcel = (e) => {
         time: row.time || "",
         skill: row.skill || "",
         tools: row.tools || "",
-        TaskType: row.TaskType || "",
+        taskType: row.taskType || "",
         totalLabour: row.totalLabour || "",
         partNo: row.partNo || "",
         toolType: row.toolType || "",
@@ -371,7 +372,7 @@ const exportToExcel = (value, productName) => {
     ProjectName: treeTableData[0]?.projectId?.projectName,
     ProductName: value.name,
     remarks: value?.remarks || lastRow?.remarks || "-",
-    taskType: value?.TaskType || lastRow.TaskType || "-",
+    taskType: value?.taskType || lastRow?.taskType || "-",
     time: value.time || lastRow.time || "-",
     totalLabour: value.totalLabour || lastRow.totalLabour || "-",
     skill: value.skill || lastRow.skill || "-",
@@ -649,11 +650,43 @@ const getDestinationValuesForField = (fieldName, rowId) => {
   
   return [...new Set(destinationValues)]; // Remove duplicates
 };
+  // Get connected values for a field based on selected sources in the row
+  const getConnectedValuesForField = (fieldName, rowData) => {
+    let connectedValues = [];
 
+    // Check all fields in the row for connections to this field
+    Object.keys(rowData || {}).forEach(sourceField => {
+      const sourceValue = rowData[sourceField];
+      if (!sourceValue) return;
+
+      // Find connections where this source field/value connects to our target field
+      const connections = flattenedConnect.filter(
+        item => 
+          item.sourceName === sourceField && 
+          String(item.sourceValue) === String(sourceValue) &&
+          item.destinationName === fieldName
+      );
+
+      connectedValues.push(...connections);
+    });
+
+    return connectedValues;
+  };
 // Check if a field is a source field (has outgoing connections)
 const isSourceField = (fieldName) => {
   return flattenedConnect.some(item => item.sourceName === fieldName);
 };
+  const getDestinationFieldsForSource = (sourceField, sourceValue) => {
+    return flattenedConnect
+      .filter(item => 
+        item.sourceName === sourceField && 
+        String(item.sourceValue) === String(sourceValue)
+      )
+      .map(item => ({
+        field: item.destinationName,
+        value: item.destinationValue
+      })) || [];
+  };
 
 // Check if a field is a destination field (has incoming connections)
 const isDestinationField = (fieldName) => {
@@ -683,143 +716,203 @@ const createEditComponent = (fieldName, label, required = false, validationRules
       
       return true;
     },
-    editComponent: ({ value, onChange, rowData }) => {
-      const rowId = rowData?.tableData?.id;
-      
-      // Check if this field is a destination field
-      const isDestination = isDestinationField(fieldName);
-      
-      // Get destination values if this is a destination field
-      let destinationOptions = [];
-      if (isDestination) {
-        destinationOptions = getDestinationValuesForField(fieldName, rowId);
-      }
-      
-      // Get separate library values
-      const separateOptions = allSepareteData
-        ?.filter(item => item.sourceName === fieldName)
-        .map(item => item.sourceValue) || [];
-      
-      // LOGIC: Only show destination values if they exist from selected sources
-      // If this is a destination field AND we have destination values, show only those
-      // Otherwise, show separate library values
-      const allOptions = isDestination && destinationOptions.length > 0 
-        ? destinationOptions  // Only show destination values when source is selected
-        : separateOptions;    // Otherwise show separate library values
-      
-      const hasError = required && (!value || value.toString().trim() === "");
-      
-      // Only show dropdown if we have options
-      if (allOptions.length > 0) {
-        const options = allOptions.map(opt => ({
-          value: opt,
-          label: opt,
-          isDestination: destinationOptions.includes(opt)
-        }));
-        
-        const selectedOption = options.find(opt => opt.value === value) || 
-                              (value ? { value, label: value } : null);
-        
-        return (
-          <div style={{ position: "relative" }}>
-            <CreatableSelect
-              name={fieldName}
-              value={selectedOption}
-              options={options}
-              onChange={(option) => {
-                const newValue = option?.value || "";
+       editComponent: ({ value, onChange, rowData }) => {
+          const rowId = rowData?.tableData?.id;
+          
+          // Get connected values for this field based on selected sources in this row
+          const connectedValues = getConnectedValuesForField(fieldName, rowData);
+          
+          // Get separate library data for this field
+          const separateFilteredData = allSepareteData?.filter(
+            (item) => item?.sourceName === fieldName
+          ) || [];
+  
+          // Combine options: connected values first, then separate values
+          let options = [];
+  
+         if (connectedValues.length > 0) {
+          options = connectedValues.map(item => ({
+            value: String(item.destinationValue),
+            label: String(item.destinationValue),
+            isConnected: true
+          }));
+  
+        }
+  
+        // Add separate library values (avoid duplicates)
+        separateFilteredData.forEach(item => {
+          if (!options.some(opt => opt.value === item.sourceValue)) {
+            options.push({
+              value: String(item.sourceValue),
+              label: String(item.sourceValue),
+              isConnected: false
+            });
+  
+          }
+        });
+  
+          // Add current value if it doesn't exist in options
+          if (value && !options.some(opt => opt.value === String(value))) {
+            options.unshift({
+              value: String(value),
+              label: String(value),
+              isConnected: false,
+              isAutoFill: false
+            });
+          }
+  
+          const selectedOption = options.find(opt => opt.value === String(value)) || null;
+          const hasError = required && (!value || String(value).trim() === "");
+          const isSource = isSourceField(fieldName);
+     
+  
+          // Handle change with auto-fill for destinations
+          const handleChange = (selectedOption) => {
+            const newValue = selectedOption?.value != null ? String(selectedOption.value) : "";
                 onChange(newValue);
-                
-                // If this is a source field, update the selected source value
-                if (isSourceField(fieldName)) {
-                  handleSourceSelection(fieldName, newValue, rowId);
+  
+            // If this is a source field, find and auto-fill connected destination fields
+            if (isSource && newValue) {
+              const destinations = getDestinationFieldsForSource(fieldName, newValue);
+              
+              // Update row connections state
+              setRowConnections(prev => ({
+                ...prev,
+                [rowId]: {
+                  ...prev[rowId],
+                  [fieldName]: {
+                    value: newValue,
+                    destinations: destinations
+                  }
+                }
+              }));
+  
+              // Auto-fill single destination if there's only one
+              if (destinations.length === 1) {
+                const dest = destinations[0];
+                // We would need to update the row data for the destination field
+                // This would require a more complex implementation with row update
+              }
+            }
+          };
+  
+          if (options.length === 0) {
+            return (
+              <div style={{ position: "relative" }}>
+                <input
+                  type="text"
+                  value={value || ""}
+                  onChange={(e) => onChange(e.target.value)}
+                  placeholder={label + (required ? " *" : "")}
+                  style={{
+                    height: "40px",
+                    borderRadius: "4px",
+                    width: "100%",
+                    borderColor: hasError ? "#d32f2f" : "#ccc",
+                  }}
+                />
+                {hasError && (
+                  <div style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    color: "#d32f2f",
+                    fontSize: "12px",
+                  }}>
+                    {label} is required
+                  </div>
+                )}
+              </div>
+            );
+          }
+  
+          return (
+            <div style={{ position: "relative" }}>
+              <CreatableSelect
+                name={fieldName}
+                value={selectedOption}
+                options={options}
+                isClearable
+                onChange={(option) => {
+                const newValue = option?.value != null ? String(option.value) : "";
+                onChange(newValue);
+  
+                if (isSourceField(fieldName) && newValue) {
+  
+  
+                  const destinations = getDestinationFieldsForSource(fieldName, newValue);
+                  if (destinations.length === 1) {
+  
+                  }
                 }
               }}
-              isClearable
-              menuPortalTarget={document.body}
-              styles={{
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                control: (base) => ({
-                  ...base,
-                  borderColor: hasError ? "#d32f2f" : base.borderColor,
-                }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.data?.isDestination ? '#e8f4fd' : base.backgroundColor,
-                  fontWeight: state.data?.isDestination ? 'bold' : base.fontWeight,
-                }),
-              }}
-            />
-            {hasError && (
-              <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                {label} is required
-              </div>
-            )}
-            {destinationOptions.length > 0 && (
-              <div style={{
-                position: "absolute",
-                top: "-18px",
-                right: "5px",
-                fontSize: "10px",
-                color: "#1976d2",
-                background: "#e8f4fd",
-                padding: "2px 5px",
-                borderRadius: "3px",
-              }}>
-                Connected
-              </div>
-            )}
-          </div>
-        );
-      } else {
-        // Show regular input field
-        return (
-          <div style={{ position: "relative" }}>
-            <input
-              type="text"
-              name={fieldName}
-              value={value || ""}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                onChange(newValue);
-                
-                // If this is a source field, update the selected source value
-                if (isSourceField(fieldName)) {
-                  handleSourceSelection(fieldName, newValue, rowId);
-                }
-              }}
-              placeholder={required ? `${label} *` : label}
-              style={{
-                height: "40px",
-                borderRadius: "4px",
-                width: "100%",
-                borderColor: hasError ? "#d32f2f" : "#ccc",
-              }}
-            />
-            {hasError && (
-              <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                {label} is required
-              </div>
-            )}
-          </div>
-        );
-      }
-    },
+                onCreateOption={(inputValue) => {
+                  onChange(inputValue);
+                }}
+                menuPortalTarget={document.body}
+                styles={{
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  control: (base) => ({
+                    ...base,
+                    borderColor: hasError ? "#d32f2f" : base.borderColor,
+                    minHeight: "40px",
+                  }),
+                  option: (base, { data }) => ({
+                    ...base,
+                    backgroundColor: data.isConnected ? '#e8f4fd' : base.backgroundColor,
+                    color: data.isConnected ? '#1976d2' : base.color,
+                    fontWeight: data.isConnected ? 'bold' : base.fontWeight,
+                    position: 'relative',
+                  }),
+                  singleValue: (base, { data }) => ({
+                    ...base,
+                    color: data.isConnected ? '#1976d2' : base.color,
+                    fontWeight: data.isConnected ? 'bold' : base.fontWeight,
+                  })
+                }}
+         
+              />
+          
+              {hasError && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  color: "#d32f2f",
+                  fontSize: "12px",
+                }}>
+                  {label} is required
+                </div>
+              )}
+  
+              {connectedValues.length > 0 && (
+                <div style={{
+                  position: "absolute",
+                  top: "-18px",
+                  right: "5px",
+                  fontSize: "10px",
+                  color: "#1976d2",
+                  background: "#e8f4fd",
+                  padding: "2px 5px",
+                  borderRadius: "3px",
+                }}>
+                   Connected
+        
+                </div>
+              )}
+            </div>
+          );
+        }
   };
 };
 
-// Define which fields are sources and destinations
-// You need to define this based on your data structure
-// Example: 'taskType' might be a source field, 'tools' might be a destination
-
-// Updated columns using the helper function
 const columns = [
   {
     title: "S.No",
     render: (rowData) => `${rowData?.tableData?.id + 1}`,
     editable: "never",
   },
-  createEditComponent("TaskType", "Task Type", true),
+  createEditComponent("taskType", "Task Type", true),
   createEditComponent("time", "Average Task Time(Hours)", true, { 
     isNumber: true 
   }),
@@ -866,7 +959,7 @@ const columns = [
       tools: value.tools,
       partNo: value.partNo,
       toolType: value.toolType,
-      TaskType: value.TaskType,
+      taskType: value.taskType,
       projectId: projectId,
       productId: productId,
       companyId: companyId,
@@ -876,7 +969,7 @@ const columns = [
       userId: userId,
     })
       .then((response) => {
-     
+     console.log("Create Response:", response);
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
@@ -890,7 +983,6 @@ const columns = [
       });
   };
 
- 
 
 
   const updateProcedureData = (value) => {
@@ -907,7 +999,7 @@ const columns = [
       tools: value.tools || "",
       partNo: value.partNo || "",
       toolType: value.toolType || "",
-      TaskType: value.TaskType || "",
+      taskType: value.taskType || "",
       projectId: projectId,
       productId: productId,
       companyId: companyId,
@@ -1173,7 +1265,7 @@ const columns = [
             mttr: importExcelData?.mttr || mttrCalculatedValue || "",
             remarks: importExcelData?.remarks ?? mttrData?.remarks ?? "",
             mmax: importExcelData?.mMax || mttrData?.mMax || "",
-            taskType: importExcelData?.TaskType || "",
+            taskType: importExcelData?.taskType || "",
             time: importExcelData?.time || "",
            totalLabour: importExcelData?.totalLabour || "",
             skill: importExcelData?.skill || "",
@@ -2073,7 +2165,7 @@ onRowUpdate: (newRow, oldData) =>
   new Promise((resolve, reject) => {
     // Check if any data has actually changed
     const hasChanges = 
-      newRow.TaskType !== oldData.TaskType ||
+      newRow.taskType !== oldData.taskType ||
       newRow.time !== oldData.time ||
       newRow.totalLabour !== oldData.totalLabour ||
       newRow.skill !== oldData.skill ||

@@ -104,6 +104,7 @@ const useTableValidation = () => {
     closeValidationModal
   };
 };
+
 function Index(props) {
   const {
     validationErrors,
@@ -138,7 +139,6 @@ function Index(props) {
   const history = useHistory();
 
   const userId = localStorage.getItem("userId");
-  const role = localStorage.getItem("role");
   const [existingFailureAlpha, setExistingFailureAlpha] = useState(1);
   const [existingEndBeta, setExistingEndBeta] = useState(1);
   const [readPermission, setReadPermission] = useState(true);
@@ -157,8 +157,6 @@ function Index(props) {
   const [selectedSourceValues, setSelectedSourceValues] = useState({});
   const [rowConnections, setRowConnections] = useState({});
   const [selectedSourceField, setSelectedSourceField] = useState(null);
-  const [flattenedConnect, setFlattenedConnect] = useState([]);
-  const [connectData, setConnectData] = useState([]);
 
   const [data, setData] = useState({
     operatingPhase: "",
@@ -196,9 +194,7 @@ function Index(props) {
     userField9: "",
     userField10: "",
   });
-  useEffect(() => {
-    console.log("Flattened connect updated:", flattenedConnect);
-  }, [flattenedConnect]);
+
   const handleInputChange = (selectedItems, name) => {
     setData((prevData) => ({
       ...prevData,
@@ -290,8 +286,7 @@ function Index(props) {
   useEffect(() => {
     getAllSeprateLibraryData();
     getAllLibraryData();
-    getAllConnectedLibraryAfterUpdate();
-    getAllConnect();
+ 
   }, []);
 
   const DownloadExcel = (values) => {
@@ -596,7 +591,6 @@ function Index(props) {
     })
       .then((res) => {
         setTableData(res?.data?.data);
-        console.log("FMECA Product Data:", res?.data?.data);
         getProjectDetails();
       })
       .catch((error) => {
@@ -687,7 +681,9 @@ function Index(props) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [rowToDelete, setRowToDelete] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [flattenedConnect, setFlattenedConnect] = useState([]);
   const [modalInfo, setModalInfo] = useState({ title: "", message: "" });
+  const [connectData, setConnectData] = useState([]);
 
   const handleDropdownChange = (selectedValue) => {
     const selectedItem = treeTableData.find(
@@ -696,27 +692,80 @@ function Index(props) {
     setSelectedProductName(selectedItem?.treeStructure?.productName || "");
   };
 
-  const getAllConnect = async () => {
-    try {
-      setIsLoading(true);
-      const res = await Api.get("api/v1/library/get/all/connect/value", {
-        params: { projectId },
-      });
+  // Function to get connected values for a field based on selected source
+  const getConnectedValuesForField = (fieldName, rowData) => {
+    let connectedValues = [];
 
-      console.log("Connect API response:", res.data);
+    Object.keys(rowData || {}).forEach(sourceField => {
+      const sourceValue = rowData[sourceField];
+      if (!sourceValue) return;
 
-      const filteredData = res.data.getData?.filter(entry =>
-        entry?.libraryId?.moduleName === "FMECA" ||
-        entry?.destinationModuleName === "FMECA"
-      ) || [];
+      const connections =
+        flattenedConnect?.filter(
+          item =>
+            item.fieldName === sourceField &&
+            String(item.fieldValue) === String(sourceValue) &&
+            item.destName === fieldName
+        ) || [];
 
-      console.log("Filtered connect data:", filteredData);
+      connectedValues.push(...connections);
+    });
 
-      // Create flattened connections array
-      const flattened = filteredData.flatMap(item =>
+    return connectedValues;
+  };
+
+
+
+  // Function to handle source selection and update connections
+  const handleSourceSelection = (fieldName, value, rowData) => {
+    const rowId = rowData.fmecaId;
+    console.log("rowId", rowId);
+    if (!rowId) return;
+
+    const normalizedValue = String(value);
+    console.log("normalizedValue.....", normalizedValue)
+
+    setSelectedSourceValues(prev => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        [fieldName]: normalizedValue
+      }
+    }));
+
+
+    // const connections =
+    //   flattenedConnect?.filter(
+    //     item =>
+    //       item.fieldName === fieldName &&
+    //       String(item.fieldValue) === normalizedValue
+    //   ) || [];
+
+
+  };
+
+
+
+  const getAllConnect = () => {
+    Api.get("api/v1/library/get/all/connect/value", {
+      params: { projectId },
+    }).then((res) => {
+      setIsLoading(false);
+
+      const filteredData = res.data.getData.filter(
+        (entry) =>
+          entry?.libraryId?.moduleName === "FMECA" ||
+          entry?.destinationModuleName === "FMECA"
+      );
+
+      const flattened = filteredData.flatMap((item) =>
         (item.destinationData || [])
-          .filter(d => d.destinationModuleName === "FMECA")
-          .map(d => ({
+          .filter(
+            (d) =>
+              d.destinationModuleName === "FMECA" &&
+              d.destinationModuleName === item.libraryId.moduleName
+          )
+          .map((d) => ({
             fieldName: item.sourceName,
             fieldValue: item.sourceValue,
             destName: d.destinationName,
@@ -725,168 +774,15 @@ function Index(props) {
           }))
       );
 
-      console.log("Flattened connections:", flattened);
       setFlattenedConnect(flattened);
       setConnectData(filteredData);
-    } catch (error) {
-      console.error("Error fetching connections:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getDestinationFieldsForSource = (sourceField, sourceValue) => {
-    if (!sourceValue || !sourceField || !flattenedConnect) {
-      return [];
-    }
-
-    try {
-      console.log(`Looking for connections: ${sourceField} = ${sourceValue}`);
-      console.log('Flattened connect data:', flattenedConnect);
-
-      const connections = flattenedConnect.filter(item => {
-        const match = item?.fieldName === sourceField && item?.fieldValue === sourceValue;
-        if (match) {
-          console.log(`Found connection:`, item);
-        }
-        return match;
-      });
-
-      console.log(`Found ${connections.length} connections`);
-
-      return connections.map(item => ({
-        field: item.destName,
-        value: item.destValue
-      }));
-    } catch (error) {
-      console.error('Error in getDestinationFieldsForSource:', error);
-      return [];
-    }
-  };
-
-  // Check if a field is a source field
-  const isSourceField = (fieldName) => {
-    return flattenedConnect?.some(item => item.fieldName === fieldName);
-  };
-
-  // Check if a field is a destination field
-  const isDestinationField = (fieldName) => {
-    return flattenedConnect?.some(item => item.destName === fieldName);
-  };
-
-  // Get all possible source values for a field from library
-  const getSourceFieldOptions = (fieldName) => {
-    try {
-      console.log(`Getting source options for field: ${fieldName}`);
-      console.log('All separate data:', allSepareteData);
-
-      // Ensure allSepareteData is an array
-      const separateData = Array.isArray(allSepareteData)
-        ? allSepareteData.filter((item) => item?.sourceName === fieldName)
-        : [];
-
-      console.log(`Filtered data for ${fieldName}:`, separateData);
-
-      // Get unique values
-      const uniqueValues = [];
-      const valueSet = new Set();
-
-      if (Array.isArray(separateData)) {
-        separateData.forEach(item => {
-          if (item?.sourceValue && !valueSet.has(item.sourceValue)) {
-            valueSet.add(item.sourceValue);
-            uniqueValues.push({
-              value: item.sourceValue,
-              label: item.sourceValue,
-              isFromLibrary: true
-            });
-          }
-        });
-      }
-
-      console.log(`Unique values for ${fieldName}:`, uniqueValues);
-      return uniqueValues;
-    } catch (error) {
-      console.error(`Error in getSourceFieldOptions for ${fieldName}:`, error);
-      return [];
-    }
-  };
-  // Get connected values for a field based on selected sources in the row
-  const getConnectedValuesForField = (fieldName, rowId) => {
-    const rowSourceValues = selectedSourceValues[rowId] || {};
-    let connectedValues = [];
-
-    Object.keys(rowSourceValues).forEach(sourceField => {
-      const sourceValue = rowSourceValues[sourceField];
-      if (sourceValue) {
-        const connections = flattenedConnect?.filter(
-          item =>
-            item.fieldName === sourceField &&
-            item.fieldValue === sourceValue &&
-            item.destName === fieldName
-        ) || [];
-        connectedValues = [...connectedValues, ...connections];
-      }
     });
-
-    return connectedValues;
   };
 
-  const handleSourceSelection = (fieldName, value, rowData) => {
-    const rowId = rowData?.tableData?.id;
-    console.log(`handleSourceSelection: ${fieldName} = ${value} for row ${rowId}`);
+  useEffect(() => {
+    getAllConnect();
+  }, []);
 
-    // Update selected source values for this row
-    setSelectedSourceValues(prev => ({
-      ...prev,
-      [rowId]: {
-        ...prev[rowId],
-        [fieldName]: value
-      }
-    }));
-
-    // Get destination fields for this source value
-    const destinations = getDestinationFieldsForSource(fieldName, value);
-    console.log(`Destinations found:`, destinations);
-
-    if (destinations.length > 0) {
-      // Find the row index in tableData
-      const rowIndex = tableData.findIndex(row => {
-        // Try multiple ways to match the row
-        if (row.id === rowData.id) return true;
-        if (row.tableData && row.tableData.id === rowData.tableData?.id) return true;
-        return false;
-      });
-
-      if (rowIndex !== -1) {
-        // Create a new array with updated values
-        const updatedTableData = tableData.map((row, index) => {
-          if (index === rowIndex) {
-            const updatedRow = { ...row };
-            destinations.forEach(dest => {
-              updatedRow[dest.field] = dest.value;
-            });
-            return updatedRow;
-          }
-          return row;
-        });
-
-        console.log(`Updating table data for row ${rowIndex}:`, updatedTableData[rowIndex]);
-        setTableData(updatedTableData);
-
-        // Also update rowConnections state
-        setRowConnections(prev => ({
-          ...prev,
-          [rowId]: {
-            ...prev[rowId],
-            [fieldName]: destinations
-          }
-        }));
-      }
-    }
-
-    return destinations;
-  };
   const handleCustomDelete = (rowData) => {
     setRowToDelete(rowData);
     setDeleteModalOpen(true);
@@ -902,7 +798,7 @@ function Index(props) {
       .then((response) => {
         console.log("Delete successful");
         getProductData();
-        modalOpen();
+        Modalopen();
         setIsLoading(false);
         setDeleteModalOpen(false);
         setRowToDelete(null);
@@ -911,7 +807,7 @@ function Index(props) {
         console.error("Delete failed:", error);
         if (error?.response?.status === 204) {
           getProductData();
-          modalOpen();
+          Modalopen();
         }
         setIsLoading(false);
         setDeleteModalOpen(false);
@@ -922,14 +818,6 @@ function Index(props) {
   const cancelDelete = () => {
     setDeleteModalOpen(false);
     setRowToDelete(null);
-  };
-
-  // Modal open function
-  const modalOpen = () => {
-    setShow(true);
-    setTimeout(() => {
-      setShow(false);
-    }, 2000);
   };
 
   // Validation utility
@@ -1025,7 +913,7 @@ function Index(props) {
                 borderRadius: "4px",
                 width: "100%",
                 borderColor:
-                  isRequired && (!value || value?.toString()?.trim() === '')
+                  isRequired && (!value || value?.toString().trim() === '')
                     ? '#d32f2f'
                     : '#ccc',
               }}
@@ -1051,157 +939,205 @@ function Index(props) {
     };
   };
 
-  const createSmartSelectField = (fieldName, label, required = false) => {
-    const EditComponent = React.memo(({ value, onChange, rowData }) => {
-      const rowId = rowData?.tableData?.id;
-      const [localValue, setLocalValue] = useState(value || '');
+  const isSourceField = (fieldName) => {
+    return flattenedConnect.some(item => item.sourceName === fieldName);
+  };
 
-      // Sync local value with prop value
-      useEffect(() => {
-        setLocalValue(value || '');
-      }, [value]);
+  // Check if field is a destination field (has incoming connections)
+  const isDestinationField = (fieldName) => {
+    return flattenedConnect.some(item => item.destinationName === fieldName);
+  };
+  // Function to get destination fields for a source
+  const getDestinationFieldsForSource = (sourceField, sourceValue) => {
+    return flattenedConnect
+      ?.filter(item => item.fieldName === sourceField && item.fieldValue === sourceValue)
+      .map(item => ({
+        field: item.destName,
+        value: item.destValue
+      })) || [];
+  };
+
+  const createSmartSelectField = (fieldName, label, required = false, isSourceFieldCheck = false) => ({
+    ...createEditComponent(fieldName, label, required),
+    editComponent: ({ value, onChange, rowData }) => {
+      const rowId = rowData?.tableData?.id;
 
       // Get connected values for this field based on selected sources in this row
-      const connectedValues = getConnectedValuesForField(fieldName, rowId);
+      const connectedValues = getConnectedValuesForField(fieldName, rowData);
 
-      // Check if this field is a source field
-      const isSource = isSourceField(fieldName);
-      const isDestination = isDestinationField(fieldName);
-      const isConnected = connectedValues.length > 0;
 
-      // Get options for the dropdown
+      // Get separate library data
+      const separateFilteredData =
+        allSepareteData?.filter((item) => item?.sourceName === fieldName) || [];
+
+      // Combine options: connected values first, then separate values
       let options = [];
 
-      // For source fields, get values from library
-      if (isSource) {
-        const sourceOptions = getSourceFieldOptions(fieldName);
-        options = Array.isArray(sourceOptions) ? [...sourceOptions] : [];
-      }
-
-      // For destination fields, show connected values if any
-      if (isDestination && isConnected) {
-        const connectedOptions = connectedValues.map(item => ({
-          value: item.value,
-          label: item.value,
+      // Add connected values
+      if (connectedValues.length > 0) {
+        options = connectedValues.map(item => ({
+          value: String(item.destValue),
+          label: String(item.destValue),
           isConnected: true
         }));
-        options = [...connectedOptions, ...options.filter(opt => !connectedOptions.some(co => co.value === opt.value))];
+
       }
 
-      // Always include current value if it exists and not already in options
-      if (localValue && !options.some(opt => opt.value === localValue)) {
-        options.unshift({
-          value: localValue,
-          label: localValue,
-          isCurrent: true
-        });
+      // Add separate library values (avoid duplicates)
+      separateFilteredData.forEach(item => {
+        if (!options.some(opt => opt.value === item.sourceValue)) {
+          options.push({
+            value: String(item.sourceValue),
+            label: String(item.sourceValue),
+            isConnected: false
+          });
+
+        }
+      });
+
+      // If no options from library, add current value if exists
+      // if (options.length === 0 && value) {
+      //   options.push({
+      //     value: value,
+      //     label: value,
+      //     isConnected: false
+      //   });
+      // }
+
+      const selectedOption =
+        options.find(opt => opt.value === String(value)) ||
+        (value ? { label: String(value), value: String(value) } : null);
+
+
+      const hasError =
+        required &&
+        (!value || String(value)?.trim() === "");
+
+
+      if (!options || options.length === 0) {
+        return (
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              value={value || ""}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={label + (required ? " *" : "")}
+              style={{
+                height: "40px",
+                borderRadius: "4px",
+                width: "100%",
+                borderColor: hasError ? "#d32f2f" : "#ccc",
+              }}
+            />
+            {hasError && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  color: "#d32f2f",
+                  fontSize: "12px",
+                }}
+              >
+                {label} is required
+              </div>
+            )}
+          </div>
+        );
       }
-
-      const selectedOption = options.find(opt => opt.value === localValue) || null;
-
-      const handleChange = (selectedOption) => {
-        console.log(`handleChange called for ${fieldName}:`, selectedOption);
-
-        const newValue = selectedOption?.value || "";
-        console.log(`New value for ${fieldName}: ${newValue}`);
-
-        // Update local state immediately for responsive UI
-        setLocalValue(newValue);
-
-        // Call parent onChange to update table data
-        onChange(newValue);
-
-        // If this is a source field, handle connections
-        if (isSource && newValue) {
-          console.log(`Source field ${fieldName} selected: ${newValue}`);
-          setTimeout(() => {
-            handleSourceSelection(fieldName, newValue, rowData);
-          }, 0);
-        }
-      };
-
-      const handleCreate = (inputValue) => {
-        console.log(`Creating option for ${fieldName}: ${inputValue}`);
-        const newValue = inputValue;
-        setLocalValue(newValue);
-        onChange(newValue);
-
-        if (isSource && newValue) {
-          setTimeout(() => {
-            handleSourceSelection(fieldName, newValue, rowData);
-          }, 0);
-        }
-      };
-
       return (
-        <div style={{ position: "relative", minWidth: "150px" }}>
+        <div style={{ position: "relative" }}>
+
           <CreatableSelect
             name={fieldName}
             value={selectedOption}
             options={options}
             isClearable
-            onChange={handleChange}
-            onCreateOption={handleCreate}
+            onChange={(option) => {
+              const newValue = option?.value != null ? String(option.value) : "";
+              onChange(newValue);
+
+              if (isSourceField(fieldName) && newValue) {
+
+
+                const destinations = getDestinationFieldsForSource(fieldName, newValue);
+                if (destinations.length === 1) {
+
+                }
+              }
+            }}
+            // onCreateOption={(inputValue) => {
+            //   // // Allow creating new options
+            //   const newOption = { value: inputValue, label: inputValue };
+            //   onChange(inputValue);
+
+
+            //   if (isSourceField(fieldName) && inputValue) {
+            //     handleSourceSelection(fieldName, inputValue, rowData);
+            //   }
+            // }}
             menuPortalTarget={document.body}
-            // Use local value in key to force re-render
-            key={`${fieldName}-${rowId}-${localValue || 'empty'}`}
             styles={{
               menuPortal: (base) => ({ ...base, zIndex: 9999 }),
               control: (base) => ({
                 ...base,
-                borderColor: required && !localValue ? "#d32f2f" : "#ccc",
-                backgroundColor: isConnected ? "#f0f9ff" : "white",
-                minHeight: "40px",
-                minWidth: "150px",
+                borderColor: hasError ? "#d32f2f" : base.borderColor,
               }),
               option: (base, state) => ({
                 ...base,
-                backgroundColor: state.data?.isConnected ? '#e8f4fd' :
-                  state.isSelected ? '#2684FF' :
-                    state.isFocused ? '#DEEBFF' : base.backgroundColor,
-                color: state.data?.isConnected ? '#1976d2' :
-                  state.isSelected ? 'white' : base.color,
-              }),
-              singleValue: (base, state) => ({
-                ...base,
-                color: state.data?.isConnected ? '#1976d2' : base.color,
-                fontWeight: state.data?.isConnected ? 'bold' : 'normal',
+                backgroundColor: state.data?.isConnected ? '#e8f4fd' : base.backgroundColor,
+                fontWeight: state.data?.isConnected ? 'bold' : base.fontWeight,
               }),
             }}
-            placeholder={`Select ${label}`}
-            noOptionsMessage={() => "No options available"}
           />
+          {hasError && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                color: "#d32f2f",
+                fontSize: "12px",
+              }}
+            >
+              {label} is required
+            </div>
+          )}
+          {connectedValues.length > 0 && (
+            <div
+              style={{
+                position: "absolute",
+                top: "-18px",
+                right: "5px",
+                fontSize: "10px",
+                color: "#1976d2",
+                background: "#e8f4fd",
+                padding: "2px 5px",
+                borderRadius: "3px",
+              }}
+            >
+              Connected 
+            </div>
+          )}
         </div>
       );
-    });
+    },
+  });
 
-    EditComponent.displayName = `EditComponent_${fieldName}`;
-
-    return {
-      title: required ? `${label} *` : label,
-      field: fieldName,
-      validate: (rowData) => {
-        const value = rowData[fieldName];
-        if (required && (!value || value.toString().trim() === '')) {
-          return { isValid: false, helperText: `${label} is required` };
-        }
-        return true;
-      },
-      editComponent: EditComponent,
-      // This ensures the field value is properly saved
-      render: (rowData) => rowData[fieldName] || '',
-    };
-  };
   // Special case for FMECA ID
   const fmecaIdColumn = {
     render: (rowData) => `${rowData?.tableData?.id + 1}`,
     title: "FMECA ID",
   };
+
+  // Define which fields are source fields (fields that have connections to other fields)
+  const sourceFields = ['function', 'operatingPhase', 'failureMode'];
+
   const columns = [
     fmecaIdColumn,
-    createSmartSelectField("operatingPhase", "Operating Phases", true),
-    createSmartSelectField("function", "Function", true),
-    createSmartSelectField("failureMode", "Failure Mode", true),
+    createSmartSelectField("operatingPhase", "Operating Phases", true, sourceFields.includes('operatingPhase')),
+    createSmartSelectField("function", "Function", true, sourceFields.includes('function')),
+    createSmartSelectField("failureMode", "Failure Mode", true, sourceFields.includes('failureMode')),
     createSmartSelectField("failureModeRatioAlpha", "Failure Mode Ratio Alpha (must be equal to 1)", true),
     createSmartSelectField("cause", "Cause"),
     createSmartSelectField("subSystemEffect", "Sub System effect", true),
@@ -1437,14 +1373,8 @@ function Index(props) {
       return Promise.reject(new Error("No product selected"));
     }
   };
-  // Add this useEffect to debug state changes
-  useEffect(() => {
-    console.log('Table data updated:', tableData);
-    console.log('Selected source values:', selectedSourceValues);
-    console.log('Row connections:', rowConnections);
-    console.log('Flattened connect:', flattenedConnect);
-  }, [tableData, selectedSourceValues, rowConnections, flattenedConnect])
-  const updateFmeca = (values) => {
+
+  const updateFmeca = async (values) => {
     const mandatoryFields = [
       'operatingPhase',
       'function',
@@ -1495,67 +1425,14 @@ function Index(props) {
           textAlign: 'left'
         }
       });
-      return Promise.reject(new Error("Validation failed"));
-    }
-
-    const alphaValue = parseFloat(values.failureModeRatioAlpha);
-    const betaValue = parseFloat(values.endEffectRatioBeta);
-
-    if (isNaN(alphaValue)) {
-      toast.error("Failure Mode Ratio Alpha must be a valid number", {
-        position: "top-right",
-        autoClose: 5000,
-      });
-      return Promise.reject(new Error("Validation failed"));
-    }
-
-    if (alphaValue > 1) {
-      toast.error("Failure Mode Ratio Alpha cannot exceed 1", {
-        position: "top-right",
-        autoClose: 5000,
-      });
-      return Promise.reject(new Error("Validation failed"));
-    }
-
-    if (alphaValue < 0) {
-      toast.error("Failure Mode Ratio Alpha cannot be negative", {
-        position: "top-right",
-        autoClose: 5000,
-      });
-      return Promise.reject(new Error("Validation failed"));
-    }
-
-    if (isNaN(betaValue)) {
-      toast.error("End Effect Ratio Beta must be a valid number", {
-        position: "top-right",
-        autoClose: 5000,
-      });
-      return Promise.reject(new Error("Validation failed"));
-    }
-
-    if (betaValue > 1) {
-      toast.error("End Effect Ratio Beta cannot exceed 1", {
-        position: "top-right",
-        autoClose: 5000,
-      });
-      return Promise.reject(new Error("Validation failed"));
-    }
-
-    if (betaValue < 0) {
-      toast.error("End Effect Ratio Beta cannot be negative", {
-        position: "top-right",
-        autoClose: 5000,
-      });
-      return Promise.reject(new Error("Validation failed"));
-    }
-
-    if (!values.operatingPhase || !values.function || !values.failureMode) {
-      toast.error("Operating Phase, Function, and Failure Mode are required.");
-      return Promise.reject(new Error("Validation failed"));
+      throw new Error("Validation failed");
     }
 
     const companyId = localStorage.getItem("companyId");
-    setIsLoading(true);
+    if (!values.operatingPhase || !values.function || !values.failureMode) {
+      toast.error("Operating Phase, Function, and Failure Mode are required.");
+      return;
+    }
 
     const payload = {
       operatingPhase: values.operatingPhase,
@@ -1601,37 +1478,66 @@ function Index(props) {
       Alldata: tableData,
     };
 
-    return Api.patch("api/v1/FMECA/update", payload)
-      .then((response) => {
-        if (response?.status === 200) {
-          toast.success("FMECA updated successfully!");
-          getProductData();
-          getAllConnectedLibraryAfterUpdate();
-          return response;
-        } else if (response?.status === 204) {
-          toast.error("Failure Mode Ratio Alpha Must be Equal to One !");
-          return Promise.reject(new Error("Failure Mode Ratio Alpha validation failed"));
-        } else {
-          toast.warning("Update request completed, but status not ideal.");
-          getProductData();
-          getAllConnectedLibraryAfterUpdate();
-          return response;
-        }
+    try {
+      const response = await Api.patch("api/v1/FMECA/update", payload);
+      if (response?.status === 200) {
+        toast.success("FMECA updated successfully!");
+        getProductData();
+        getAllConnectedLibraryAfterUpdate();
+      }
+      else if (response?.status === 204) {
+        toast.error("Failure Mode Radio Alpha Must be Equal to One !");
+      }
+      else {
+        toast.warning("Update request completed, but status not ideal.");
+        getProductData();
+        getAllConnectedLibraryAfterUpdate();
+      }
+    } catch (error) {
+      const errorStatus = error?.response?.status;
+      if (errorStatus === 401) {
+        logout();
+      } else {
+        toast.error(errorStatus?.response?.status === 422 ? "Failed to update FMECA. Please try again." : "Failure Mode Ratio Alpha must sum to exactly 1");
+        console.error("Update Error:", errorStatus?.response?.status === 422);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const deleteFmecaData = (value) => {
+    setIsLoading(true);
+    const rowId = value?.id;
+
+    Api.delete(`api/v1/FMECA/${rowId}`, { headers: { userId: userId } })
+      .then((res) => {
+        getProductData();
+        setIsLoading(false);
+        Modalopen();
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
-          return Promise.reject(new Error("Unauthorized"));
-        } else {
-          const errorMessage = errorStatus === 422
-            ? "Failed to update FMECA. Please try again."
-            : "Failure Mode Ratio Alpha must sum to exactly 1";
-          toast.error(errorMessage);
-          console.error("Update Error:", error);
-          return Promise.reject(new Error(errorMessage));
         }
       });
+  };
+
+  const Modalopen = () => {
+    setShow(true);
+    setTimeout(() => {
+      setShow(false);
+    }, 2000);
+  };
+
+  const role = localStorage.getItem("role");
+
+  const handleDelete = (index) => {
+    const row = tableData[index];
+    const newData = tableData.filter((_, i) => i !== index);
+    setTableData(newData);
+    deleteFmecaData(row);
   };
 
   return (
@@ -1788,14 +1694,13 @@ function Index(props) {
                       position: "row"
                     }
                   ]}
-
                   options={{
                     cellStyle: {
                       border: "1px solid #eee",
                       whiteSpace: "normal",
                       wordBreak: "break-word",
-                      minWidth: 150,
-                      maxWidth: 300,
+                      minWidth: 300,
+                      maxWidth: 400,
                       textAlign: "center",
                     },
                     addRowPosition: "first",
@@ -1808,14 +1713,10 @@ function Index(props) {
                       backgroundColor: "#CCE6FF",
                       fontWeight: "bold",
                       whiteSpace: "nowrap",
-                      minWidth: 150,
-                      maxWidth: 300,
+                      minWidth: 200,
+                      maxWidth: 500,
                       textAlign: "center",
                     },
-                    // Add these for better editing experience
-                    editCellStyle: { padding: '2px' },
-                    search: false,
-                    filtering: false,
                   }}
                   localization={{
                     toolbar: { function: "Placeholder" },
