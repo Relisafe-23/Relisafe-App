@@ -51,9 +51,6 @@ export default function Dropdown(props) {
   const selectedOption = options.find((opt) => opt.value === productId) || null;
 
 
-  // -------------------------------
-  // FETCH MAIN PRODUCT LIST
-  // -------------------------------
   const getTreeProduct = () => {
     Api.get(`/api/v1/productTreeStructure/product/list`, {
       params: { projectId },
@@ -72,12 +69,8 @@ export default function Dropdown(props) {
     });
   };
 
-  // -------------------------------
-  // FETCH SELECTED PRODUCT DETAILS
-  // -------------------------------
   const productTreeData = (id) => {
     if (!id) return;
-
     Api.get("/api/v1/productTreeStructure/get/tree/product/list", {
       params: { projectId, treeStructureId: id },
     }).then((res) => {
@@ -113,9 +106,7 @@ export default function Dropdown(props) {
     history.push({ state: { productId: selected.value } });
   };
 
-  // -----------------------------------------------------
-  // NEXT / PREVIOUS LOGIC — FULLY CORRECTED
-  // -----------------------------------------------------
+
   const getNextProduct = () => {
     if (productData.length === 0) return;
 
@@ -124,7 +115,8 @@ export default function Dropdown(props) {
       currentIndex + 1 < productData.length ? currentIndex + 1 : 0;
 
     const nextProduct = productData[nextIndex];
-
+    
+    console.log("Next product:", nextProduct);
     setProductId(nextProduct.id);
     setProductId(nextProduct.id);
 
@@ -155,7 +147,12 @@ export default function Dropdown(props) {
   };
 
   return (
-    <div>
+    <div style={{ 
+      // Reset inherited disabled state from fieldset
+      pointerEvents: 'auto',
+      opacity: 1,
+      display: 'block'
+    }}>
       <Row>
         {/* PREVIOUS BUTTON */}
         <Col sm={12} md={4} className="d-flex justify-content-start mt-1">
@@ -192,7 +189,7 @@ export default function Dropdown(props) {
 
         </Col>
 
-        {/* NEXT BUTTON */}
+    
         <Col sm={12} md={4} className="d-flex justify-content-end mt-1">
           <div style={{ marginLeft: "100px" }}>
             <Button className="FRP-button" onClick={getNextProduct}>

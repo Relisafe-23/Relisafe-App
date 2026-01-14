@@ -389,7 +389,7 @@ function Index(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-        setWritePermission(data?.modules[7].write);
+        setWritePermission(data?.modules[8].write);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -778,6 +778,77 @@ function Index(props) {
                         : "disabled"
                     }
                   >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <div style={{ width: "30%", marginRight: "20px" }}>
+                        <Projectname projectId={projectId} />
+                      </div>
+
+                      <div style={{ width: "100%", marginRight: "20px" }}>
+                        <Dropdown
+                          value={projectId}
+                          productId={productId}
+                          data={treeTableData}
+                          
+                        />
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          alignItems: "center",
+                          marginTop: "8px",
+                          height: "40px",
+                        }}
+                      >
+                        <Tooltip placement="right" title="Import">
+                          <div style={{ marginRight: "8px" }}>
+                            <label
+                              htmlFor="file-input"
+                              className="import-export-btn"
+                                           style={{
+          cursor: writePermission === false ? "not-allowed" : "pointer",
+          opacity: writePermission === false ? 0.5 : 1
+        }}
+                            >
+                              <FontAwesomeIcon icon={faFileDownload} />
+                            </label>
+                            <input
+                              type="file"
+                              className="input-fields"
+                              id="file-input"
+                              onChange={importExcel}
+                              style={{ display: "none" }}
+                                disabled={writePermission === false}
+                            />
+                          </div>
+                        </Tooltip>
+                        <Tooltip placement="left" title="Export">
+                          <label
+                            className="import-export-btn"
+                            style={{
+          cursor: writePermission === false ? "not-allowed" : "pointer",
+          opacity: writePermission === false ? 0.5 : 1
+        }}
+                            onClick={() =>{
+                                if (writePermission !== false) {
+                              exportToExcel(values)}
+                                }}
+                                 disabled={writePermission === false}
+                          >
+                            <FontAwesomeIcon
+                              icon={faFileUpload}
+                              style={{ width: "15px" }}
+                            />
+                          </label>
+                        </Tooltip>
+                      </div>
+                    </div>
 
                     <Row className="d-flex mt-2">
 

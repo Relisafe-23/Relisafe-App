@@ -508,7 +508,7 @@ values.end.forEach((selectedOption, index) => {
                       value: selectModule,
                     }
                     : "",
-                destinationModule: editRowData
+                   destinationModule: editRowData
                   ? {
                     label: editRowData?.destinationModuleName,
                     value: editRowData?.destinationModuleName,

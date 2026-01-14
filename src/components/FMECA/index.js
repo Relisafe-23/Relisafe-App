@@ -149,7 +149,7 @@ function Index(props) {
   const [colDefs, setColDefs] = useState();
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
   const [companyId, setCompanyId] = useState();
-  const [selectedProductName, setSelectedProductName] = useState("");
+  const [selectedProductName, setSelectedProductName] = useState("");    
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [perviousColumnValues, setPerviousColumnValues] = useState([]);
@@ -287,7 +287,7 @@ function Index(props) {
   useEffect(() => {
     getAllSeprateLibraryData();
     getAllLibraryData();
-    getAllConnectedLibraryAfterUpdate();
+ 
   }, []);
 
   const DownloadExcel = (values) => {
@@ -635,7 +635,7 @@ function Index(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-        setWritePermission(data?.modules[3].write);
+        setWritePermission(data?.modules[4].write);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -694,67 +694,58 @@ function Index(props) {
   };
 
   // Function to get connected values for a field based on selected source
-  const getConnectedValuesForField = (fieldName, rowId) => {
-    const rowSourceValues = selectedSourceValues[rowId] || {};
-
-    // Check all possible source fields for connections to this field
+  const getConnectedValuesForField = (fieldName, rowData) => {
     let connectedValues = [];
 
-    Object.keys(rowSourceValues).forEach(sourceField => {
-      const sourceValue = rowSourceValues[sourceField];
-      if (sourceValue) {
-        const connections = flattenedConnect?.filter(
+    Object.keys(rowData || {}).forEach(sourceField => {
+      const sourceValue = rowData[sourceField];
+      if (!sourceValue) return;
+
+      const connections =
+        flattenedConnect?.filter(
           item =>
             item.fieldName === sourceField &&
-            item.fieldValue === sourceValue &&
+            String(item.fieldValue) === String(sourceValue) &&
             item.destName === fieldName
         ) || [];
 
-        connectedValues = [...connectedValues, ...connections];
-      }
+      connectedValues.push(...connections);
     });
+
     return connectedValues;
   };
 
-    // Function to handle source selection and update connections
-    // Function to handle source selection and update connections
-const handleSourceSelection = (fieldName, value, rowData, onChange) => {
-  const rowId = rowData?.tableData?.id;
-  
-  // First, update the value in the table data via onChange immediately
-  if (onChange) {
-    onChange(value); // This updates Material Table's internal data
-  }
-  
-  // Use setTimeout to delay state updates to prevent re-render conflicts
-  setTimeout(() => {
-    // Update selected source values for this row
+
+
+  // Function to handle source selection and update connections
+  const handleSourceSelection = (fieldName, value, rowData) => {
+    const rowId = rowData.fmecaId;
+    console.log("rowId", rowId);
+    if (!rowId) return;
+
+    const normalizedValue = String(value);
+    console.log("normalizedValue.....", normalizedValue)
+
     setSelectedSourceValues(prev => ({
       ...prev,
       [rowId]: {
         ...prev[rowId],
-        [fieldName]: value
+        [fieldName]: normalizedValue
       }
     }));
-    
-    // Set the selected source field for tracking
-    setSelectedSourceField(fieldName);
-    
-    // Find all connections originating from this source
-    const connections = flattenedConnect?.filter(
-      item => item.fieldName === fieldName && item.fieldValue === value
-    ) || [];
-    
-    // Store connections for this row
-    setRowConnections(prev => ({
-      ...prev,
-      [rowId]: {
-        ...prev[rowId],
-        [fieldName]: connections
-      }
-    }));
-  }, 20000); // 100ms delay - adjust as needed
-};
+
+
+    // const connections =
+    //   flattenedConnect?.filter(
+    //     item =>
+    //       item.fieldName === fieldName &&
+    //       String(item.fieldValue) === normalizedValue
+    //   ) || [];
+
+
+  };
+
+
 
   const getAllConnect = () => {
     Api.get("api/v1/library/get/all/connect/value", {
@@ -832,7 +823,7 @@ const handleSourceSelection = (fieldName, value, rowData, onChange) => {
 
   // Validation utility
   const validateField = (fieldName, value, isRequired) => {
-    if (isRequired && (!value || value.toString().trim() === '')) {
+    if (isRequired && (!value || value?.toString()?.trim() === '')) {
       return `${fieldName} is required`;
     }
     return null;
@@ -923,13 +914,13 @@ const handleSourceSelection = (fieldName, value, rowData, onChange) => {
                 borderRadius: "4px",
                 width: "100%",
                 borderColor:
-                  isRequired && (!value || value.toString().trim() === '')
+                  isRequired && (!value || value?.toString().trim() === '')
                     ? '#d32f2f'
                     : '#ccc',
               }}
               title={title}
             />
-            {isRequired && (!value || value.toString().trim() === '') && (
+            {isRequired && (!value || value?.toString()?.trim() === '') && (
               <div
                 style={{
                   position: 'absolute',
@@ -949,11 +940,14 @@ const handleSourceSelection = (fieldName, value, rowData, onChange) => {
     };
   };
 
-  // Function to check if a field is a source field (has connections from it)
   const isSourceField = (fieldName) => {
-    return flattenedConnect?.some(item => item.fieldName === fieldName);
+    return flattenedConnect.some(item => item.sourceName === fieldName);
   };
 
+  // Check if field is a destination field (has incoming connections)
+  const isDestinationField = (fieldName) => {
+    return flattenedConnect.some(item => item.destinationName === fieldName);
+  };
   // Function to get destination fields for a source
   const getDestinationFieldsForSource = (sourceField, sourceValue) => {
     return flattenedConnect
@@ -970,7 +964,8 @@ const handleSourceSelection = (fieldName, value, rowData, onChange) => {
       const rowId = rowData?.tableData?.id;
 
       // Get connected values for this field based on selected sources in this row
-      const connectedValues = getConnectedValuesForField(fieldName, rowId);
+      const connectedValues = getConnectedValuesForField(fieldName, rowData);
+
 
       // Get separate library data
       const separateFilteredData =
@@ -982,20 +977,22 @@ const handleSourceSelection = (fieldName, value, rowData, onChange) => {
       // Add connected values
       if (connectedValues.length > 0) {
         options = connectedValues.map(item => ({
-          value: item.destValue,
-          label: item.destValue,
+          value: String(item.destValue),
+          label: String(item.destValue),
           isConnected: true
         }));
+
       }
 
       // Add separate library values (avoid duplicates)
       separateFilteredData.forEach(item => {
         if (!options.some(opt => opt.value === item.sourceValue)) {
           options.push({
-            value: item.sourceValue,
-            label: item.sourceValue,
+            value: String(item.sourceValue),
+            label: String(item.sourceValue),
             isConnected: false
           });
+
         }
       });
 
@@ -1009,10 +1006,14 @@ const handleSourceSelection = (fieldName, value, rowData, onChange) => {
       // }
 
       const selectedOption =
-        options.find((opt) => opt.value === value) ||
-        (value ? { label: value, value } : null);
+        options.find(opt => opt.value === String(value)) ||
+        (value ? { label: String(value), value: String(value) } : null);
 
-      const hasError = required && (!value || value === "".trim());
+
+      const hasError =
+        required &&
+        (!value || String(value)?.trim() === "");
+
 
       if (!options || options.length === 0) {
         return (
@@ -1053,11 +1054,12 @@ const handleSourceSelection = (fieldName, value, rowData, onChange) => {
             options={options}
             isClearable
             onChange={(option) => {
-              const newValue = option?.value || "";
-
+              const newValue = option?.value != null ? String(option.value) : "";
               onChange(newValue);
+
               if (isSourceField(fieldName) && newValue) {
-                handleSourceSelection(fieldName, newValue, rowData);
+
+
                 const destinations = getDestinationFieldsForSource(fieldName, newValue);
                 if (destinations.length === 1) {
 
@@ -1115,7 +1117,7 @@ const handleSourceSelection = (fieldName, value, rowData, onChange) => {
                 borderRadius: "3px",
               }}
             >
-              Connected
+              Connected 
             </div>
           )}
         </div>
@@ -1186,7 +1188,7 @@ const handleSourceSelection = (fieldName, value, rowData, onChange) => {
 
     const missingFields = mandatoryFields.filter(field => {
       const value = values[field];
-      return !value || value.toString().trim() === '';
+      return !value || value?.toString()?.trim() === '';
     });
 
     if (missingFields.length > 0) {
@@ -1389,7 +1391,7 @@ const handleSourceSelection = (fieldName, value, rowData, onChange) => {
 
     const missingFields = mandatoryFields.filter(field => {
       const value = values[field];
-      return !value || value.toString().trim() === '';
+      return !value || value?.toString()?.trim() === '';
     });
 
     if (missingFields.length > 0) {

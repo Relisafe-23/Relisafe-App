@@ -64,6 +64,7 @@ const MTTRPrediction = (props, active) => {
   const [levelOfRepair, setLevelOfRepair] = useState("");
   const [spare, setSpare] = useState("");
   const [show, setShow] = useState(false);
+    const [rowConnections, setRowConnections] = useState({});
   const [partType, setPartType] = useState("");
   const [name, setName] = useState([]);
   const [reference, setReference] = useState([]);
@@ -108,7 +109,7 @@ const MTTRPrediction = (props, active) => {
     skill: "",
     tools: "",
     partNo: "",
-    TaskType: "",
+    taskType: "",
   });
 
   const handleInputChange = (selectedItems, name) => {
@@ -208,7 +209,7 @@ const MTTRPrediction = (props, active) => {
       'tools': 'tools',
       'partNo': 'partNo',
       'toolType': 'toolType',
-      'taskType': 'TaskType'
+      'taskType': 'taskType'
     };
 
     // Update formik values
@@ -523,8 +524,7 @@ const MTTRPrediction = (props, active) => {
     })
       .then((res) => {
         const data = res?.data?.data;
-        console.log(data, "data permisison")
-        setWritePermission(data?.modules[2].write);
+        setWritePermission(data?.modules[3].write);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -1440,7 +1440,7 @@ const MTTRPrediction = (props, active) => {
       tools: value.tools,
       partNo: value.partNo,
       toolType: value.toolType,
-      TaskType: value.TaskType,
+      taskType: value.taskType,
       projectId: projectId,
       productId: productId,
       companyId: companyId,
@@ -1450,7 +1450,6 @@ const MTTRPrediction = (props, active) => {
       userId: userId,
     })
       .then((response) => {
-
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
@@ -1464,38 +1463,6 @@ const MTTRPrediction = (props, active) => {
       });
   };
 
-  // const updateProcedureData = (value) => {
-  //   const companyId = localStorage.getItem("companyId");
-  //   const rowId = value?.id;
-
-  //   const userId = localStorage.getItem("userId");
-
-  //   Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, {
-  //     time: value.time,
-  //     totalLabour: value.totalLabour,
-  //     skill: value.skill,
-  //     tools: value.tools,
-  //     partNo: value.partNo,
-  //     toolType: value.toolType,
-  //     taskType: value.taskType,
-  //     projectId: projectId,
-  //     productId: productId,
-  //     companyId: companyId,
-  //     treeStructureId: treeStructure,
-  //     token: token,
-  //     userId: userId,
-  //   })
-  //     .then((response) => {
-  //       getProcedureData();
-  //       toast.success("Procedure Updated Successfully");
-  //     })
-  //     .catch((error) => {
-  //       const errorStatus = error?.response?.status;
-  //       if (errorStatus === 401) {
-  //         logout();
-  //       }
-  //     });
-  // };
 
 
   const updateProcedureData = (value) => {
@@ -1512,7 +1479,7 @@ const MTTRPrediction = (props, active) => {
       tools: value.tools || "",
       partNo: value.partNo || "",
       toolType: value.toolType || "",
-      TaskType: value.TaskType || "",
+      taskType: value.taskType || "",
       projectId: projectId,
       productId: productId,
       companyId: companyId,
@@ -1778,7 +1745,7 @@ const MTTRPrediction = (props, active) => {
             mttr: importExcelData?.mttr || mttrCalculatedValue || "",
             remarks: importExcelData?.remarks ?? mttrData?.remarks ?? "",
             mmax: importExcelData?.mMax || mttrData?.mMax || "",
-            taskType: importExcelData?.TaskType || "",
+            taskType: importExcelData?.taskType || "",
             time: importExcelData?.time || "",
             totalLabour: importExcelData?.totalLabour || "",
             skill: importExcelData?.skill || "",
