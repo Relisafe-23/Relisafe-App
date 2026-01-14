@@ -32,8 +32,8 @@ function Index(props) {
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-    ? props?.location?.state?.productId
-    : initialProductID;
+      ? props?.location?.state?.productId
+      : initialProductID;
   const [show, setShow] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tableData, setTableData] = useState();
@@ -80,13 +80,14 @@ function Index(props) {
     const companyName = firstRow?.companyId?.companyName || "Unknown Company";
     const projectName = firstRow?.projectId?.projectName || "Unknown Project";
     const data = tableData[0];
-    const productName = data?.productId?.productName || "Unknown Product"; 
+    const productName = data?.productId?.productName || "Unknown Product";
+    console.log("ProductName", productName)
     const columnsToRemove = [
       "projectId", "companyId", "productId", "id", "tableData",
     ];
 
     const modifiedTableData = tableData.map((row) => {
-      const newRow = { 
+      const newRow = {
         Company: companyName,
         Project: projectName,
         Product: productName
@@ -263,8 +264,8 @@ function Index(props) {
 
       // Find connections where this source field/value connects to our target field
       const connections = flattenedConnect.filter(
-        item => 
-          item.sourceName === sourceField && 
+        item =>
+          item.sourceName === sourceField &&
           String(item.sourceValue) === String(sourceValue) &&
           item.destinationName === fieldName
       );
@@ -278,8 +279,8 @@ function Index(props) {
   // Get all destination fields for a specific source value
   const getDestinationFieldsForSource = (sourceField, sourceValue) => {
     return flattenedConnect
-      .filter(item => 
-        item.sourceName === sourceField && 
+      .filter(item =>
+        item.sourceName === sourceField &&
         String(item.sourceValue) === String(sourceValue)
       )
       .map(item => ({
@@ -305,7 +306,7 @@ function Index(props) {
           (item) => item?.moduleName === "SAFETY"
         );
       }
-      setAllSepareteData(filteredData);      
+      setAllSepareteData(filteredData);
       const merged = [...(tableData || []), ...filteredData];
       setMergedData(merged);
     });
@@ -450,11 +451,11 @@ function Index(props) {
       },
     }).then((res) => {
       setIsLoading(false);
-      
+
       // Filter for SAFETY module connections
       const filteredData = res.data.getData.filter(
-        (entry) => 
-          entry?.libraryId?.moduleName === "SAFETY" || 
+        (entry) =>
+          entry?.libraryId?.moduleName === "SAFETY" ||
           entry?.destinationModuleName === "SAFETY"
       );
 
@@ -470,7 +471,7 @@ function Index(props) {
             destinationModule: d.destinationModuleName
           }))
       );
-      
+
       console.log("Flattened connections:", flattened);
       setFlattenedConnect(flattened);
     });
@@ -486,7 +487,7 @@ function Index(props) {
     }
     return null;
   };
-    const ValidationModal = ({ isOpen, errors, onClose }) => {
+  const ValidationModal = ({ isOpen, errors, onClose }) => {
     if (!isOpen) return null;
 
     return (
@@ -564,16 +565,16 @@ function Index(props) {
               value={value || ''}
               onChange={(e) => {
                 const newValue = e.target.value;
-            
+
                 handleChange(newValue);
               }}
 
-                 onKeyDown={(e) => {
-          // Prevent Enter key from submitting the form
-          if (e.key === 'Enter') {
-            e.stopPropagation();
-          }
-        }}
+              onKeyDown={(e) => {
+                // Prevent Enter key from submitting the form
+                if (e.key === 'Enter') {
+                  e.stopPropagation();
+                }
+              }}
               placeholder={isRequired ? `${title} *` : title}
               style={{
                 height: "40px",
@@ -605,21 +606,21 @@ function Index(props) {
       }
     };
   };
- 
+
 const createSmartSelectField = (fieldName, label, required = false, isSourceFieldCheck = false) => ({
   ...createEditComponent(fieldName, label, required),
   editComponent: ({ value, onChange, rowData }) => {
     const rowId = rowData?.tableData?.id;
-    
-    // Get connected values for this field based on selected sources in this row
+
+  
     const connectedValues = getConnectedValuesForField(fieldName, rowData);
+
     
-    // Get separate library data for this field
     const separateFilteredData = allSepareteData?.filter(
       (item) => item?.sourceName === fieldName
     ) || [];
 
-    // Combine options: connected values first, then separate values
+
     let options = [];
 
     if (connectedValues.length > 0) {
@@ -630,7 +631,7 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
       }));
     }
 
-    // Add separate library values (avoid duplicates)
+
     separateFilteredData.forEach(item => {
       if (!options.some(opt => opt.value === item.sourceValue)) {
         options.push({
@@ -641,15 +642,6 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
       }
     });
 
-    // Add current value if it doesn't exist in options
-    if (value && !options.some(opt => opt.value === String(value))) {
-      options.unshift({
-        value: String(value),
-        label: String(value),
-        isConnected: false,
-        isAutoFill: false
-      });
-    }
 
     const selectedOption =
       options.find(opt => opt.value === String(value)) ||
@@ -658,44 +650,20 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
     const hasError =
       required &&
       (!value || String(value)?.trim() === "");
-    
-    const isSource = isSourceField(fieldName);
 
-    // Handle change with auto-fill for destinations
-    const handleChange = (selectedOption) => {
-      const newValue = selectedOption?.value != null ? String(selectedOption.value) : "";
-      onChange(newValue);
-
-      // If this is a source field, find and auto-fill connected destination fields
-      if (isSource && newValue) {
-        const destinations = getDestinationFieldsForSource(fieldName, newValue);
-        
-        // Update row connections state
-   
-
-        // Auto-fill single destination if there's only one
-        if (destinations.length === 1) {
-          const dest = destinations[0];
-          // auto-fill logic here
-        }
-      }
-    };
-
-   
-
-      if (!options || options.length === 0) {
-
+    // Return plain input when there are no options
+    if (options.length === 0) {
       return (
         <div style={{ position: "relative" }}>
           <input
             type="text"
             value={value || ""}
             onChange={(e) => onChange(e.target.value)}
-                onKeyDown={(e) => {
-    if (e.key === 'Enter') {
-      e.stopPropagation();
-    }
-  }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.stopPropagation();
+              }
+            }}
             placeholder={label + (required ? " *" : "")}
             style={{
               height: "40px",
@@ -722,7 +690,7 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
         </div>
       );
     } else {
-      // Render CreatableSelect when options exist
+      // Return CreatableSelect with proper configuration
       return (
         <div style={{ position: "relative" }}>
           <CreatableSelect
@@ -737,17 +705,20 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
               if (isSourceField(fieldName) && newValue) {
                 const destinations = getDestinationFieldsForSource(fieldName, newValue);
                 if (destinations.length === 1) {
-                  // auto connect logic
+                  // auto connect logic if needed
                 }
               }
             }}
+            onCreateOption={(inputValue) => {
+              // This allows creating completely new values
+              onChange(inputValue);
+            }}
             onKeyDown={(e) => {
-  if (e.key === 'Enter' && !e.target.value) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-}}
-        
+              if (e.key === 'Enter' && !e.target.value) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
             menuPortalTarget={document.body}
             styles={{
               menuPortal: (base) => ({ ...base, zIndex: 9999 }),
@@ -799,13 +770,13 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
     }
   }
 });
-  
+
 
 
   const safetySourceFields = ['modeOfOperation', 'hazardCause', 'effectOfHazard'];
 
 
-  
+
   const columns = [
     {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
@@ -965,7 +936,7 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
               <Projectname projectId={projectId} />
             </div>
 
-            <div style={{ width: "100%", marginRight: "20px" }}>
+            <div style={{ width: "100%", marginRight: "20px", position: "relative", zIndex: 999 }}>
               <Dropdown
                 value={projectId}
                 productId={productId}
@@ -980,10 +951,10 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
               marginTop: "8px",
               height: "40px",
             }}>
-              {writePermission === true || 
-               writePermission === "undefined" || 
-               role === "admin" || 
-               (isOwner === true && createdBy === userId) ? (
+              {writePermission === true ||
+                writePermission === "undefined" ||
+                role === "admin" ||
+                (isOwner === true && createdBy === userId) ? (
                 <>
                   <Tooltip placement="right" title="Import Excel">
                     <div style={{ marginRight: "8px" }}>
@@ -1003,21 +974,21 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
                       />
                     </div>
                   </Tooltip>
-                  
+
                   <Tooltip placement="left" title="Export Excel">
                     <Button
                       className="import-export-btn"
-                      style={{ 
-                        marginLeft: "10px", 
-                        borderStyle: "none", 
-                        width: "40px", 
-                        minWidth: "40px", 
+                      style={{
+                        marginLeft: "10px",
+                        borderStyle: "none",
+                        width: "40px",
+                        minWidth: "40px",
                         padding: "0px",
                         cursor: "pointer"
                       }}
                       onClick={() => DownloadExcel()}
                     >
-                      <FontAwesomeIcon icon={faFileUpload} style={{ width: "15px" }} />
+                      <FontAwesomeIcon icon={faFileUpload} style={{ width: "12px" }} />
                     </Button>
                   </Tooltip>
                 </>
@@ -1030,15 +1001,15 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
                       </div>
                     </div>
                   </Tooltip>
-                  
+
                   <Tooltip placement="left" title="Export disabled">
                     <Button
                       className="import-export-btn"
-                      style={{ 
-                        marginLeft: "10px", 
-                        borderStyle: "none", 
-                        width: "40px", 
-                        minWidth: "40px", 
+                      style={{
+                        marginLeft: "10px",
+                        borderStyle: "none",
+                        width: "40px",
+                        minWidth: "40px",
                         padding: "0px",
                         cursor: "not-allowed",
                         opacity: 0.5
@@ -1059,66 +1030,66 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
                 editable={{
                   onRowAdd:
                     writePermission === true ||
-                    writePermission === "undefined" ||
-                    role === "admin" ||
-                    (isOwner === true && createdBy === userId)
+                      writePermission === "undefined" ||
+                      role === "admin" ||
+                      (isOwner === true && createdBy === userId)
                       ? (newRow) =>
-                          new Promise((resolve, reject) => {
-                            submit(newRow);
-                            resolve();
-                          })
+                        new Promise((resolve, reject) => {
+                          submit(newRow);
+                          resolve();
+                        })
                       : null,
                   onRowUpdate:
                     writePermission === true ||
-                    writePermission === "undefined" ||
-                    role === "admin" ||
-                    (isOwner === true && createdBy === userId)
+                      writePermission === "undefined" ||
+                      role === "admin" ||
+                      (isOwner === true && createdBy === userId)
                       ? (newRow, oldData) =>
-                          new Promise((resolve, reject) => {
-                            updateSafety(newRow);
-                            resolve();
-                          })
+                        new Promise((resolve, reject) => {
+                          updateSafety(newRow);
+                          resolve();
+                        })
                       : null,
                   onRowDelete:
                     writePermission === true ||
-                    writePermission === "undefined" ||
-                    role === "admin" ||
-                    (isOwner === true && createdBy === userId)
+                      writePermission === "undefined" ||
+                      role === "admin" ||
+                      (isOwner === true && createdBy === userId)
                       ? (selectedRow) =>
-                          new Promise((resolve, reject) => {
-                            deleteSafetyData(selectedRow);
-                            resolve();
-                          })
+                        new Promise((resolve, reject) => {
+                          deleteSafetyData(selectedRow);
+                          resolve();
+                        })
                       : null,
                 }}
                 title="Safety"
                 icons={tableIcons}
                 columns={columns}
                 data={tableData}
-                 options={{
-                    cellStyle: {
-                      border: "1px solid #eee",
-                      whiteSpace: "normal",
-                      wordBreak: "break-word",
-                      minWidth: 300,
-                      maxWidth: 400,
-                      textAlign: "center",
-                    },
-                    addRowPosition: "first",
-                    actionsColumnIndex: -1,
-                    showEditIcon: false,
-                    showDeleteIcon: false,
-                    pageSize: 5,
-                    pageSizeOptions: [5, 10, 20, 50],
-                    headerStyle: {
-                      backgroundColor: "#CCE6FF",
-                      fontWeight: "bold",
-                      whiteSpace: "nowrap",
-                      minWidth: 200,
-                      maxWidth: 500,
-                      textAlign: "center",
-                    },
-                  }}
+                options={{
+                  cellStyle: {
+                    border: "1px solid #eee",
+                    whiteSpace: "normal",
+                    wordBreak: "break-word",
+                    minWidth: 300,
+                    maxWidth: 400,
+                    textAlign: "center",
+                  },
+                  addRowPosition: "first",
+                  actionsColumnIndex: -1,
+                  showEditIcon: false,
+                  showDeleteIcon: false,
+                  pageSize: 5,
+                  pageSizeOptions: [5, 10, 20, 50],
+                  headerStyle: {
+                    backgroundColor: "#CCE6FF",
+                    fontWeight: "bold",
+                    whiteSpace: "nowrap",
+                    minWidth: 200,
+                    maxWidth: 500,
+                    textAlign: "center",
+                  },
+                }}
                 localization={{
                   body: {
                     addTooltip: "Add Safety",
@@ -1127,7 +1098,7 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
               />
             </ThemeProvider>
           </div>
-  
+
           <Modal show={show} centered>
             <div className="d-flex justify-content-center mt-5">
               <FontAwesomeIcon

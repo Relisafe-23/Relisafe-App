@@ -693,7 +693,6 @@ const isDestinationField = (fieldName) => {
   return flattenedConnect.some(item => item.destinationName === fieldName);
 };
 
-// Helper function to create edit components with source-destination logic
 const createEditComponent = (fieldName, label, required = false, validationRules = {}) => {
   return {
     title: required ? `${label} *` : label,
@@ -716,193 +715,151 @@ const createEditComponent = (fieldName, label, required = false, validationRules
       
       return true;
     },
-       editComponent: ({ value, onChange, rowData }) => {
-          const rowId = rowData?.tableData?.id;
-          
-          // Get connected values for this field based on selected sources in this row
-          const connectedValues = getConnectedValuesForField(fieldName, rowData);
-          
-          // Get separate library data for this field
-          const separateFilteredData = allSepareteData?.filter(
-            (item) => item?.sourceName === fieldName
-          ) || [];
-  
-          // Combine options: connected values first, then separate values
-          let options = [];
-  
-         if (connectedValues.length > 0) {
-          options = connectedValues.map(item => ({
-            value: String(item.destinationValue),
-            label: String(item.destinationValue),
-            isConnected: true
-          }));
-  
+    editComponent: ({ value, onChange, rowData }) => {
+      const rowId = rowData?.tableData?.id;
+      
+      // Get connected values for this field based on selected sources in this row
+      const connectedValues = getConnectedValuesForField(fieldName, rowData);
+      
+      // Get separate library data for this field
+      const separateFilteredData = allSepareteData?.filter(
+        (item) => item?.sourceName === fieldName
+      ) || [];
+
+      // Combine options: connected values first, then separate values
+      let options = [];
+
+      if (connectedValues.length > 0) {
+        options = connectedValues.map(item => ({
+          value: String(item.destinationValue),
+          label: String(item.destinationValue),
+          isConnected: true
+        }));
+      }
+
+      // Add separate library values (avoid duplicates)
+      separateFilteredData.forEach(item => {
+        if (!options.some(opt => opt.value === item.sourceValue)) {
+          options.push({
+            value: String(item.sourceValue),
+            label: String(item.sourceValue),
+            isConnected: false
+          });
         }
-  
-        // Add separate library values (avoid duplicates)
-        separateFilteredData.forEach(item => {
-          if (!options.some(opt => opt.value === item.sourceValue)) {
-            options.push({
-              value: String(item.sourceValue),
-              label: String(item.sourceValue),
-              isConnected: false
-            });
-  
-          }
-        });
-  
-          // Add current value if it doesn't exist in options
-          if (value && !options.some(opt => opt.value === String(value))) {
-            options.unshift({
-              value: String(value),
-              label: String(value),
-              isConnected: false,
-              isAutoFill: false
-            });
-          }
-  
-          const selectedOption = options.find(opt => opt.value === String(value)) || null;
-          const hasError = required && (!value || String(value).trim() === "");
-          const isSource = isSourceField(fieldName);
-     
-  
-          // Handle change with auto-fill for destinations
-          const handleChange = (selectedOption) => {
-            const newValue = selectedOption?.value != null ? String(selectedOption.value) : "";
-                onChange(newValue);
-  
-            // If this is a source field, find and auto-fill connected destination fields
-            if (isSource && newValue) {
-              const destinations = getDestinationFieldsForSource(fieldName, newValue);
-              
-              // Update row connections state
-              setRowConnections(prev => ({
-                ...prev,
-                [rowId]: {
-                  ...prev[rowId],
-                  [fieldName]: {
-                    value: newValue,
-                    destinations: destinations
-                  }
-                }
-              }));
-  
-              // Auto-fill single destination if there's only one
-              if (destinations.length === 1) {
-                const dest = destinations[0];
-                // We would need to update the row data for the destination field
-                // This would require a more complex implementation with row update
-              }
-            }
-          };
-  
-          if (options.length === 0) {
-            return (
-              <div style={{ position: "relative" }}>
-                <input
-                  type="text"
-                  value={value || ""}
-                  onChange={(e) => onChange(e.target.value)}
-                  placeholder={label + (required ? " *" : "")}
-                  style={{
-                    height: "40px",
-                    borderRadius: "4px",
-                    width: "100%",
-                    borderColor: hasError ? "#d32f2f" : "#ccc",
-                  }}
-                />
-                {hasError && (
-                  <div style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0,
-                    color: "#d32f2f",
-                    fontSize: "12px",
-                  }}>
-                    {label} is required
-                  </div>
-                )}
-              </div>
-            );
-          }
-  
-          return (
-            <div style={{ position: "relative" }}>
-              <CreatableSelect
-                name={fieldName}
-                value={selectedOption}
-                options={options}
-                isClearable
-                onChange={(option) => {
-                const newValue = option?.value != null ? String(option.value) : "";
-                onChange(newValue);
-  
-                if (isSourceField(fieldName) && newValue) {
-  
-  
-                  const destinations = getDestinationFieldsForSource(fieldName, newValue);
-                  if (destinations.length === 1) {
-  
-                  }
-                }
+      });
+
+      // Get current value without forcing it into options
+      const selectedOption = options.find(opt => opt.value === String(value)) ||
+        (value ? { label: String(value), value: String(value) } : null);
+
+      const hasError = required && (!value || String(value).trim() === "");
+      const isSource = isSourceField(fieldName);
+
+      // Show plain input when no options are available
+      if (options.length === 0) {
+        return (
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              value={value || ""}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={label + (required ? " *" : "")}
+              style={{
+                height: "40px",
+                borderRadius: "4px",
+                width: "100%",
+                borderColor: hasError ? "#d32f2f" : "#ccc",
               }}
-                onCreateOption={(inputValue) => {
-                  onChange(inputValue);
-                }}
-                menuPortalTarget={document.body}
-                styles={{
-                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  control: (base) => ({
-                    ...base,
-                    borderColor: hasError ? "#d32f2f" : base.borderColor,
-                    minHeight: "40px",
-                  }),
-                  option: (base, { data }) => ({
-                    ...base,
-                    backgroundColor: data.isConnected ? '#e8f4fd' : base.backgroundColor,
-                    color: data.isConnected ? '#1976d2' : base.color,
-                    fontWeight: data.isConnected ? 'bold' : base.fontWeight,
-                    position: 'relative',
-                  }),
-                  singleValue: (base, { data }) => ({
-                    ...base,
-                    color: data.isConnected ? '#1976d2' : base.color,
-                    fontWeight: data.isConnected ? 'bold' : base.fontWeight,
-                  })
-                }}
-         
-              />
+            />
+            {hasError && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                color: "#d32f2f",
+                fontSize: "12px",
+              }}>
+                {label} is required
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // Show CreatableSelect when options are available
+      return (
+        <div style={{ position: "relative" }}>
+          <CreatableSelect
+            name={fieldName}
+            value={selectedOption}
+            options={options}
+            isClearable
+            onChange={(option) => {
+              const newValue = option?.value != null ? String(option.value) : "";
+              onChange(newValue);
+
+              if (isSourceField(fieldName) && newValue) {
+                const destinations = getDestinationFieldsForSource(fieldName, newValue);
+                if (destinations.length === 1) {
+                  // auto-fill logic here if needed
+                }
+              }
+            }}
+            onCreateOption={(inputValue) => {
+              // Allow creating new options
+              onChange(inputValue);
+            }}
+            menuPortalTarget={document.body}
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              control: (base) => ({
+                ...base,
+                borderColor: hasError ? "#d32f2f" : base.borderColor,
+                minHeight: "40px",
+              }),
+              option: (base, { data }) => ({
+                ...base,
+                backgroundColor: data.isConnected ? '#e8f4fd' : base.backgroundColor,
+                color: data.isConnected ? '#1976d2' : base.color,
+                fontWeight: data.isConnected ? 'bold' : base.fontWeight,
+              }),
+              singleValue: (base, { data }) => ({
+                ...base,
+                color: data?.isConnected ? '#1976d2' : base.color,
+                fontWeight: data?.isConnected ? 'bold' : base.fontWeight,
+              })
+            }}
+          />
           
-              {hasError && (
-                <div style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  color: "#d32f2f",
-                  fontSize: "12px",
-                }}>
-                  {label} is required
-                </div>
-              )}
-  
-              {connectedValues.length > 0 && (
-                <div style={{
-                  position: "absolute",
-                  top: "-18px",
-                  right: "5px",
-                  fontSize: "10px",
-                  color: "#1976d2",
-                  background: "#e8f4fd",
-                  padding: "2px 5px",
-                  borderRadius: "3px",
-                }}>
-                   Connected
-        
-                </div>
-              )}
+          {hasError && (
+            <div style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              color: "#d32f2f",
+              fontSize: "12px",
+            }}>
+              {label} is required
             </div>
-          );
-        }
+          )}
+
+          {connectedValues.length > 0 && (
+            <div style={{
+              position: "absolute",
+              top: "-18px",
+              right: "5px",
+              fontSize: "10px",
+              color: "#1976d2",
+              background: "#e8f4fd",
+              padding: "2px 5px",
+              borderRadius: "3px",
+            }}>
+              Connected
+            </div>
+          )}
+        </div>
+      );
+    }
   };
 };
 
