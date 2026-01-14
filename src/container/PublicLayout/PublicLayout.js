@@ -13,10 +13,9 @@ const USER_ROLES = {
 };
 
 // Protected Route Component
-const ProtectedRoute = ({ component: Component, roles = [], ...rest }) => {
+const ProtectedRoute = ({ component: Component, roles = [], selectedComponent, name, ...rest }) => {
   const sessionId = localStorage.getItem("sessionId");
   const userRole = localStorage.getItem("role");
-  const history = useHistory();
 
   // Check if user is authenticated
   const isAuthenticated = () => {
@@ -37,13 +36,13 @@ const ProtectedRoute = ({ component: Component, roles = [], ...rest }) => {
   return (
     <Route
       {...rest}
-      render={(props) => {
+      render={(routeProps) => {
         if (!isAuthenticated()) {
           return (
             <Redirect
               to={{
                 pathname: "/login",
-                state: { from: props.location }
+                state: { from: routeProps.location }
               }}
             />
           );
@@ -64,7 +63,15 @@ const ProtectedRoute = ({ component: Component, roles = [], ...rest }) => {
           );
         }
         
-        return <DefaultLayoutWrapper component={Component} {...props} />;
+        return (
+          <DefaultLayoutWrapper 
+            component={Component} 
+            selectedComponent={selectedComponent}
+            name={name}
+            {...routeProps}
+            {...rest} // Pass all route props
+          />
+        );
       }}
     />
   );
@@ -88,19 +95,17 @@ const PublicRoute = ({ component: Component, restricted = false, ...rest }) => {
   );
 };
 
-// DefaultLayout Wrapper Component
-const DefaultLayoutWrapper = ({ component: Component, ...props }) => {
+// SIMPLIFIED DefaultLayout Wrapper Component
+const DefaultLayoutWrapper = ({ component: Component, selectedComponent, name, ...props }) => {
   const openSideBar = props?.location?.state?.state;
   const productId = props?.location?.state?.productId || props?.location?.props?.data?.id;
   const projectId = props?.location?.state?.projectId || props?.computedMatch?.params?.id;
   const userRole = localStorage.getItem("userRole");
 
-  const [active, setActive] = useState(false);
-
-  useEffect(() => {
+  const [active, setActive] = useState(() => {
     const savedSideBarValue = localStorage.getItem("sideBarValue");
-    setActive(savedSideBarValue === "true");
-  }, []); 
+    return savedSideBarValue === "true";
+  });
 
   const toggleActive = () => {
     const updatedValue = !active;
@@ -108,72 +113,54 @@ const DefaultLayoutWrapper = ({ component: Component, ...props }) => {
     localStorage.setItem("sideBarValue", updatedValue.toString());
   };
 
-  console.log(active,"active")
+  console.log("=== LAYOUT DEBUG ===");
+  console.log("Active state:", active);
+  console.log("Selected component:", selectedComponent);
+  console.log("Route name:", name);
+  console.log("Component to render:", Component?.name);
+  console.log("Project ID:", projectId);
+  console.log("====================");
+
+  // Don't render the component if it's login page
+  if (props.location.pathname === "/login") {
+    return <Component {...props} />;
+  }
 
   return (
     <div className="app">
       <div className="app-body" style={{ minHeight: "calc(100vh - 123px)" }}>
         <div>
-          {localStorage.getItem("sessionId") ? (
-            <SideBar
-              onClick={toggleActive}
-              value={projectId}
-              active={active}
-              props={productId}
-              openSideBar={openSideBar}
-              selectedComponent={props?.selectedComponent}
-              userRole={userRole} // Pass user role to SideBar for menu filtering
-            />
-          ) : null}
+          {/* Sidebar */}
+          <SideBar
+            onClick={toggleActive}
+            value={projectId}
+            active={active}
+            props={productId}
+            openSideBar={openSideBar}
+            selectedComponent={selectedComponent}
+            userRole={userRole}
+          />
 
+          {/* Header */}
           <HeaderNavBar
             active={active}
-            selectedComponent={props?.selectedComponent === "FTA" ? "FTA" : null}
+            selectedComponent={selectedComponent === "FTA" ? "FTA" : null}
           />
-          {console.log("Selected uiiooooComponent in Layout:", props.name)}
-          <RbdIndex  
-          active ={active}
-          selectedComponent={props?.name === "RBD" ? "RBD" : null}/>
-          {console.log("Selected Component in Layout:", props?.selectedComponent)}
+          
+          {/* RBD Index - Only for RBD routes */}
+          {name === "RBD" && (
+            <RbdIndex  
+              active={active}
+              selectedComponent={name === "RBD" ? "RBD" : null}
+            />
+          )}
 
-          <div>
-            {localStorage.getItem("sessionId") ? (
-              <div className={`${active ? "site-maincontent home-content" : "site-maincontent active home-content"}`}>
-                <Suspense>
-                  <Switch>
-                    {routes.map((route, idx) => {
-                      return route.component ? (
-                        <Route
-                          key={idx}
-                          path={route.path}
-                          exact={route.exact}
-                          name={route.name}
-                          render={(props) => <route.component {...props} />}
-                        />
-                      ) : null;
-                    })}
-                  </Switch>
-                </Suspense>
-              </div>
-            ) : (
-              <div className={`${active ? "home-content-login" : "active home-content-login"}`}>
-                <Suspense>
-                  <Switch>
-                    {routes.map((route, idx) => {
-                      return route.component ? (
-                        <Route
-                          key={idx}
-                          path={route.path}
-                          exact={route.exact}
-                          name={route.name}
-                          render={(props) => <route.component {...props} />}
-                        />
-                      ) : null;
-                    })}
-                  </Switch>
-                </Suspense>
-              </div>
-            )}
+          {/* Main Content */}
+          <div className={`${active ? "site-maincontent home-content" : "site-maincontent active home-content"}`}>
+            <Suspense fallback={<div>Loading...</div>}>
+              {/* DIRECTLY RENDER THE COMPONENT PASSED FROM PROTECTEDROUTE */}
+              <Component {...props} />
+            </Suspense>
           </div>
         </div>
       </div>
@@ -181,7 +168,7 @@ const DefaultLayoutWrapper = ({ component: Component, ...props }) => {
   );
 };
 
-// Main DefaultLayout Component
+// Main DefaultLayout Component (for backward compatibility)
 const DefaultLayout = (props) => {
   const sessionId = localStorage.getItem("sessionId");
   
@@ -191,6 +178,22 @@ const DefaultLayout = (props) => {
   }
 
   return <DefaultLayoutWrapper {...props} />;
+};
+
+// Also export a simple LayoutRoute for direct usage
+export const LayoutRoute = ({ component: Component, ...rest }) => {
+  return (
+    <Route
+      {...rest}
+      render={(props) => (
+        <DefaultLayoutWrapper 
+          component={Component}
+          {...props}
+          {...rest}
+        />
+      )}
+    />
+  );
 };
 
 export default DefaultLayout;
