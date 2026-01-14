@@ -63,6 +63,7 @@ function App() {
             {/* SUPER ADMIN ONLY ROUTES */}
             <ProtectedRoute
               exact
+              name="Company"
               path="/company"
               component={Company}
               roles={[USER_ROLES.SUPER_ADMIN]}
@@ -70,6 +71,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="CompanyAdmin"
               path="/company/admin"
               component={CompanyAdmin}
               roles={[USER_ROLES.SUPER_ADMIN]}
@@ -78,12 +80,14 @@ function App() {
             {/* ADMIN ONLY ROUTES (All other routes for admin role) */}
             <ProtectedRoute
               exact
+              name="Dashboard"
               path="/dashboard"
               component={Dashboard}
             />
             
             <ProtectedRoute
               exact
+              name="User"
               path="/user"
               component={User}
               roles={[USER_ROLES.ADMIN]}
@@ -91,6 +95,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="ProjectList"
               path="/project/list"
               component={ProjectList}
               roles={[USER_ROLES.ADMIN]}
@@ -98,6 +103,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="PBS"
               path="/pbs/:id"
               component={PBS}
               roles={[USER_ROLES.ADMIN]}
@@ -105,6 +111,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="FailureRatePrediction"
               path="/failure-rate-prediction/:id"
               component={FailureRatePrediction}
               roles={[USER_ROLES.ADMIN]}
@@ -112,6 +119,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="MTTRPrediction"
               path="/mttr/prediction/:id"
               component={MTTRPrediction}
               roles={[USER_ROLES.ADMIN]}
@@ -119,6 +127,8 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="FMECA"
+              selectedComponent="FMECA"
               path="/fmeca/:id"
               component={FMECA}
               roles={[USER_ROLES.ADMIN]}
@@ -126,6 +136,8 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="RBD"
+              selectedComponent="RBD"
               path="/rbd/:id"
               component={RBD}
               roles={[USER_ROLES.ADMIN]}
@@ -133,6 +145,8 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="FTA"
+              selectedComponent="FTA"
               path="/fta/:id"
               component={FTA}
               roles={[USER_ROLES.ADMIN]}
@@ -140,6 +154,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="PMMRA"
               path="/pmmra/:id"
               component={PMMRA}
               roles={[USER_ROLES.ADMIN]}
@@ -147,6 +162,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="SparePartsAnalysis"
               path="/spare-parts-analysis/:id"
               component={SparePartsAnalysis}
               roles={[USER_ROLES.ADMIN]}
@@ -154,6 +170,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="Safety"
               path="/safety/:id"
               component={Safety}
               roles={[USER_ROLES.ADMIN]}
@@ -161,6 +178,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="ProjectDetails"
               path="/project/details/:id"
               component={ProjectDetails}
               roles={[USER_ROLES.ADMIN]}
@@ -168,6 +186,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="Projectpermission"
               path="/permissions/:name"
               component={Projectpermission}
               roles={[USER_ROLES.ADMIN]}
@@ -175,6 +194,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="EditprojectDetails"
               path="/project/details/edit/:name"
               component={EditprojectDetails}
               roles={[USER_ROLES.ADMIN]}
@@ -182,6 +202,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="SeparateLibrary"
               path="/separate/library/:id"
               component={SeparateLibrary}
               roles={[USER_ROLES.ADMIN]}
@@ -189,6 +210,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="ConnectedLibrary"
               path="/connected/library/:id"
               component={ConnectedLibrary}
               roles={[USER_ROLES.ADMIN]}
@@ -196,6 +218,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="Theme"
               path="/theme"
               component={Theme}
               roles={[USER_ROLES.ADMIN]}
@@ -203,6 +226,7 @@ function App() {
             
             <ProtectedRoute
               exact
+              name="Reports"
               path="/reports/:id"
               component={Reports}
               roles={[USER_ROLES.ADMIN]}
