@@ -40,7 +40,7 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
   } = useModal();
 
   const handleCreateNew = () => {
-    openFTAModal(); // Open the FTA modal
+    openFTAModal(); 
   };
 
   const handleOpenPropertyModal = () => {

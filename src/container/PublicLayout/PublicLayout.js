@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { Switch, Route, Redirect, useHistory } from "react-router-dom";
 import SideBar from "../../components/SideBar";
 import HeaderNavBar from "../../components/HeaderNavBar";
+import RbdIndex from "../../components/HeaderNavBar/RbdIndex";
 import routes from "../../routes";
 import "../../css/SideBar.scss";
 
@@ -129,6 +130,12 @@ const DefaultLayoutWrapper = ({ component: Component, ...props }) => {
             active={active}
             selectedComponent={props?.selectedComponent === "FTA" ? "FTA" : null}
           />
+          {console.log("Selected uiiooooComponent in Layout:", props.name)}
+          <RbdIndex  
+          active ={active}
+          selectedComponent={props?.name === "RBD" ? "RBD" : null}/>
+          {console.log("Selected Component in Layout:", props?.selectedComponent)}
+
           <div>
             {localStorage.getItem("sessionId") ? (
               <div className={`${active ? "site-maincontent home-content" : "site-maincontent active home-content"}`}>
