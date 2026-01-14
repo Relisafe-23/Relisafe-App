@@ -66,9 +66,9 @@ export default function PBS(props) {
   const [count, setCount] = useState();
   const [treeTableData, setTreeTableData] = useState([])
   const [parentId, setParentId] = useState("");
-
+ const [employeePermissions, setEmployeePermissions] = useState(null);
   const [isLoading, setISLoading] = useState(true);
-  const [permissionsChecked, setPermissionsChecked] = useState(false);
+  const [permissionsChecked, setPermissionsChecked] = useState(null);
   const [productMessage, setProductMessage] = useState("");
   const [errorCode, setErrorCode] = useState(0);
   const [newProId, setNewProId] = useState();
@@ -366,14 +366,44 @@ const sendCompleteExcelData = (allRowsData) => {
     })
       .then((res) => {
         const data = res?.data?.data;
-        setPermission(data?.modules[0]);
-           setPermissionsChecked(true); 
+        
+        if (role === "Employee") {
+          // For Employee, get the PBS permission from modules array
+          const pbsModule = data?.modules?.find(module => 
+            module.name === "PBS" || module.moduleName === "PBS"
+          );
+          
+          if (pbsModule) {
+            setPermission({
+              read: pbsModule.read,
+              write: pbsModule.write
+            });
+            setEmployeePermissions(pbsModule); // Store full permission object
+          } else {
+            // If no specific PBS module found, check if it's the first module
+            const firstModule = data?.modules?.[0];
+            if (firstModule) {
+              setPermission({
+                read: firstModule.read,
+                write: firstModule.write
+              });
+              setEmployeePermissions(firstModule);
+            }
+          }
+        } else if (role === "admin" || role === "SuperAdmin") {
+          // For admin roles, set full permissions
+          setPermission({ read: true, write: true });
+        }
+        
+        setPermissionsChecked(true);
       })
       .catch((error) => {
+        console.error("Permission error:", error);
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
         }
+        setPermissionsChecked(true);
       });
   };
 
@@ -390,6 +420,18 @@ const sendCompleteExcelData = (allRowsData) => {
       setCreatedBy(res?.data?.data?.createdBy);
     });
   };
+    const hasReadAccess = () => {
+    if (role === "admin" || role === "SuperAdmin") return true;
+    if (isOwner === true && createdBy === userId) return true;
+    return permission?.read === true;
+  };
+
+  const hasWriteAccess = () => {
+    if (role === "admin" || role === "SuperAdmin") return true;
+    if (isOwner === true && createdBy === userId) return true;
+    return permission?.write === true;
+  };
+
 
   useEffect(() => {
     getProjectPermission();

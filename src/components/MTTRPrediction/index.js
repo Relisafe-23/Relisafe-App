@@ -507,7 +507,7 @@ const exportToExcel = (value, productName) => {
     })
       .then((res) => {
         const data = res?.data?.data;
-        setWritePermission(data?.modules[2].write);
+        setWritePermission(data?.modules[3].write);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;

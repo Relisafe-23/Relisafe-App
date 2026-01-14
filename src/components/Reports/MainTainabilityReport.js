@@ -238,7 +238,7 @@ function MaintainabilityReport(props) {
     "User Field 3",
     "User Field 4",
     "User Field 5",
-    "User Field 6",
+    // "User Field 6",
   ];
 
   const combinedHeaders = header1.concat(header2);
