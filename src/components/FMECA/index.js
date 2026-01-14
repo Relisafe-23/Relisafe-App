@@ -148,7 +148,7 @@ function Index(props) {
   const [colDefs, setColDefs] = useState();
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
   const [companyId, setCompanyId] = useState();
-  const [selectedProductName, setSelectedProductName] = useState("");
+  const [selectedProductName, setSelectedProductName] = useState("");    
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [perviousColumnValues, setPerviousColumnValues] = useState([]);
