@@ -80,7 +80,7 @@ function Index(props) {
     const companyName = firstRow?.companyId?.companyName || "Unknown Company";
     const projectName = firstRow?.projectId?.projectName || "Unknown Project";
     const data = tableData[0];
-    // const productName = data?.productId?.productName || "Unknown Product"; 
+    const productName = data?.productId?.productName || "Unknown Product"; 
     const columnsToRemove = [
       "projectId", "companyId", "productId", "id", "tableData",
     ];

@@ -6,7 +6,7 @@ import {
   BlockContextMenu,
   ElementParametersModal,
   SwitchConfigurationModal,
-  SplitKOutOfNModal
+  // SplitKOutOfNModa
 } from './index';
 
 export const SplitKofN = ({ isOpen, onClose, onSubmit, currentData }) => {
@@ -667,12 +667,12 @@ export default function RBDButton() {
         currentSwitchData={switchModal.initialData}
       />
 
-      <SplitKOutOfNModal
+      {/* <SplitKOutOfNModal
         isOpen={splitModal.open}
         onClose={() => setSplitModal({ open: false, blockId: null, initialData: null })}
         onSubmit={handleSplitSubmit}
         currentData={splitModal.initialData}
-      />
+      /> */}
     </div>
   );
 }
