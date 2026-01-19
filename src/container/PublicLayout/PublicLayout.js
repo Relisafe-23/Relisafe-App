@@ -9,7 +9,8 @@ import "../../css/SideBar.scss";
 // Define role constants
 const USER_ROLES = {
   SUPER_ADMIN: 'SuperAdmin',
-  ADMIN: 'admin'
+  ADMIN: 'admin',
+  EMPLOYEE : 'Employee'
 };
 
 // Protected Route Component
@@ -26,7 +27,7 @@ const ProtectedRoute = ({ component: Component, roles = [], selectedComponent, n
   const hasRequiredRole = () => {
     // If no specific roles required, allow access for both roles
     if (!roles || roles.length === 0) {
-      return [USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN].includes(userRole);
+      return [USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE].includes(userRole);
     }
     
     // Check if user's role is in the allowed roles list
@@ -113,13 +114,13 @@ const DefaultLayoutWrapper = ({ component: Component, selectedComponent, name, .
     localStorage.setItem("sideBarValue", updatedValue.toString());
   };
 
-  console.log("=== LAYOUT DEBUG ===");
-  console.log("Active state:", active);
-  console.log("Selected component:", selectedComponent);
-  console.log("Route name:", name);
-  console.log("Component to render:", Component?.name);
-  console.log("Project ID:", projectId);
-  console.log("====================");
+  // console.log("=== LAYOUT DEBUG ===");
+  // console.log("Active state:", active);
+  // console.log("Selected component:", selectedComponent);
+  // console.log("Route name:", name);
+  // console.log("Component to render:", Component?.name);
+  // console.log("Project ID:", projectId);
+  // console.log("====================");
 
   // Don't render the component if it's login page
   if (props.location.pathname === "/login") {

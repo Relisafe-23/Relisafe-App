@@ -90,7 +90,7 @@ function App() {
               name="User"
               path="/user"
               component={User}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -98,7 +98,7 @@ function App() {
               name="ProjectList"
               path="/project/list"
               component={ProjectList}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -106,7 +106,7 @@ function App() {
               name="PBS"
               path="/pbs/:id"
               component={PBS}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -114,7 +114,7 @@ function App() {
               name="FailureRatePrediction"
               path="/failure-rate-prediction/:id"
               component={FailureRatePrediction}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -122,7 +122,7 @@ function App() {
               name="MTTRPrediction"
               path="/mttr/prediction/:id"
               component={MTTRPrediction}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -131,7 +131,7 @@ function App() {
               selectedComponent="FMECA"
               path="/fmeca/:id"
               component={FMECA}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -140,7 +140,7 @@ function App() {
               selectedComponent="RBD"
               path="/rbd/:id"
               component={RBD}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -149,7 +149,7 @@ function App() {
               selectedComponent="FTA"
               path="/fta/:id"
               component={FTA}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -157,7 +157,7 @@ function App() {
               name="PMMRA"
               path="/pmmra/:id"
               component={PMMRA}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -165,7 +165,7 @@ function App() {
               name="SparePartsAnalysis"
               path="/spare-parts-analysis/:id"
               component={SparePartsAnalysis}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -173,7 +173,7 @@ function App() {
               name="Safety"
               path="/safety/:id"
               component={Safety}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -181,7 +181,7 @@ function App() {
               name="ProjectDetails"
               path="/project/details/:id"
               component={ProjectDetails}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -189,7 +189,7 @@ function App() {
               name="Projectpermission"
               path="/permissions/:name"
               component={Projectpermission}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -197,7 +197,7 @@ function App() {
               name="EditprojectDetails"
               path="/project/details/edit/:name"
               component={EditprojectDetails}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -205,7 +205,7 @@ function App() {
               name="SeparateLibrary"
               path="/separate/library/:id"
               component={SeparateLibrary}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -213,7 +213,7 @@ function App() {
               name="ConnectedLibrary"
               path="/connected/library/:id"
               component={ConnectedLibrary}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -221,7 +221,7 @@ function App() {
               name="Theme"
               path="/theme"
               component={Theme}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
             <ProtectedRoute
@@ -229,7 +229,7 @@ function App() {
               name="Reports"
               path="/reports/:id"
               component={Reports}
-              roles={[USER_ROLES.ADMIN]}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
 
             {/* Fallback route */}
