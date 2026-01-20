@@ -22,7 +22,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Api from "../../Api.js";
 import "../../css/HeaderNavBar.scss";
-import { NavDropdown, Navbar } from "react-bootstrap";
+import { FormControl, FormGroup, NavDropdown, Navbar } from "react-bootstrap";
 import { faDownload, faUpload, faFileCsv, faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import Projectname from "../Company/projectname";
@@ -58,6 +58,7 @@ const HeaderNavBar = ({
   } = useModal();
   const [userData, setUserData] = useState();
   const [showGrid, setShowGrid] = useState(false); // Add this line
+  const [openProbCal, setOpenProbCal] = useState();
   const handleCreateNew = () => {
     openFTAModal();
   };

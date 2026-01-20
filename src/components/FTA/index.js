@@ -181,31 +181,31 @@ const generateReport = (type = 'all') => {
   toast.success(`${type === 'events' ? 'Events' : type === 'gates' ? 'Gates' : 'Report'} generated successfully`);
 };
 
-  // const handleWheelScroll = (event) => {
-  //   const newZoom = zoomLevel + event.deltaY * -0.001; 
-  //   setZoomLevel(Math.min(Math.max(0.1, newZoom), 2));
-  // };
-  // const handleMouseDown = (event) => {
-  //   if (event.button === 0) {
-  //     setPanning(true);
-  //     setPanStart({ x: event.clientX, y: event.clientY });
-  //   }
-  // };
+  const handleWheelScroll = (event) => {
+    const newZoom = zoomLevel + event.deltaY * -0.001; 
+    setZoomLevel(Math.min(Math.max(0.1, newZoom), 2));
+  };
+  const handleMouseDown = (event) => {
+    if (event.button === 0) {
+      setPanning(true);
+      setPanStart({ x: event.clientX, y: event.clientY });
+    }
+  };
 
-  // const handleMouseMove = (event) => {
-  //   if (panning) {
-  //     const offsetX = event.clientX - panStart.x;
-  //     const offsetY = event.clientY - panStart.y;
-  //     setPanOffset({ x: offsetX, y: offsetY });
-  //   }
-  // };
+  const handleMouseMove = (event) => {
+    if (panning) {
+      const offsetX = event.clientX - panStart.x;
+      const offsetY = event.clientY - panStart.y;
+      setPanOffset({ x: offsetX, y: offsetY });
+    }
+  };
 
-  // const handleMouseUp = (event) => {
-  //   if (panning) {
-  //     setPanning(false);
-  //     setPanStart({ x: 0, y: 0 });
-  //   }
-  // };
+  const handleMouseUp = (event) => {
+    if (panning) {
+      setPanning(false);
+      setPanStart({ x: 0, y: 0 });
+    }
+  };
 
   //   const [selectedNodeId, setSelectedNodeId] = useState(null);
   //   const formikRef = useRef(null);
@@ -276,7 +276,18 @@ const generateReport = (type = 'all') => {
         return addNodeHelper(oldData);
       });
     };
+const getFullFTAdata = (id) => {
+      if (id) {
+        Api.get(`/api/v1/FTA/get/tree/${id}`).then((res) => {
+          const data = res?.data?.nodeData[0];
+          saveFromFile(data);
+        });
+      } else {
+        saveFromFile(null);
+      }
+    };
 
+    
     const editChartNode = (id, newNode) => {
       setChartData((oldData) => {
         const editNodeHelper = (data) => {
@@ -411,6 +422,11 @@ const generateReport = (type = 'all') => {
           }
         });
     };
+    const logout = () => {
+      localStorage.clear(history.push("/login"));
+      window.location.reload();
+    };
+
 
   return (
     <div>
