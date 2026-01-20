@@ -26,6 +26,12 @@ import { NavDropdown, Navbar } from "react-bootstrap";
 import { faDownload, faUpload, faFileCsv, faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import Projectname from "../Company/projectname";
+import { Button, Modal, Select } from "antd";
+import Label from "../../components/LabelComponent";
+import * as Yup from "yup";
+import { ErrorMessage, Form, Formik } from "formik";
+
+import { customStyles } from "../../components/core/select";
 
 const HeaderNavBar = ({ 
   active, 
@@ -46,6 +52,8 @@ const HeaderNavBar = ({
     openChildEvent,
     openDeleteNode,
     handleDownloadFTA,
+    openProbabilityCalculations,
+    isProbOpen,
     triggerReload,
   } = useModal();
   const [userData, setUserData] = useState();
@@ -61,6 +69,10 @@ const HeaderNavBar = ({
   const handleOpenEdit = () => {
     openEditGateModal();
   };
+
+  // const handleOpenProbCalc=()=>{
+  //   openProbabilityCalculations();
+  // }
 
   const handleOpenChildCreate = () => {
     openChildCreateModal();
@@ -354,6 +366,142 @@ const HeaderNavBar = ({
           </div>
         </div>
       )}
+
+
+
+      <Modal
+        title={
+          <p style={{ margin: "0px", color: "#00a9c9", width: '500px' }}>
+            Calculation Parameter
+          </p>
+        }
+        open={openProbCal}
+        footer={null}
+        onCancel={() => setOpenProbCal(false)}
+        maskClosable={false}
+      >
+        <hr />
+        <Formik
+          enableReinitialize={true}
+          initialValues={{
+            name: "",
+            description: "",
+            calcTypes: "",
+            missionTime: "",
+          }}
+          onSubmit={(values) => {
+            console.log("Probability calculation values:", values);
+            // TODO: Implement actual probability calculation API call
+            setOpenProbCal(false);
+          }}
+          validationSchema={Yup.object().shape({
+            name: Yup.string().required("Name is Required"),
+            description: Yup.string().required("Description is Required"),
+            calcTypes: Yup.object().required("Calc.Types is Required"),
+            missionTime: Yup.string().when('calcTypes', {
+              is: (calcTypes) => calcTypes?.value === "Unavailability at time t Q(t)",
+              then: Yup.string().required("Mission time t is required"),
+            }),
+          })}
+        >
+          {({ values, handleChange, handleSubmit, handleBlur, setFieldValue }) => (
+            <Form onSubmit={handleSubmit}>
+              <FormGroup className="mb-2">
+                <Label notify={true}>Name</Label>
+                <FormControl
+                  type="text"
+                  name="name"
+                  placeholder="Name"
+                  value={values.name}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ErrorMessage className="error text-danger" component="span" name="name" />
+              </FormGroup>
+
+              <FormGroup className="mb-2">
+                <Label notify={true}>Description</Label>
+                <FormControl
+                  as="textarea"
+                  rows={3}
+                  type="text"
+                  name="description"
+                  placeholder="Description"
+                  value={values.description}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ErrorMessage className="error text-danger" component="span" name="description" />
+              </FormGroup>
+
+              <FormGroup className="mb-2">
+                <Label notify={true}>Calc.Types</Label>
+                <Select
+                  styles={customStyles}
+                  style={{
+                    border: '1px solid black',
+                    width: '100%',
+                  }}
+                  name="calcTypes"
+                  value={values.calcTypes}
+                  onBlur={handleBlur}
+                  onChange={(selectedOption) => {
+                    setFieldValue("calcTypes", selectedOption);
+                    // Optional: If you need the value in state
+                    // setCalcTypes(selectedOption?.value || "");
+                  }}
+                  options={[
+                    {
+                      value: "Unavailability at time t Q(t)",
+                      label: "Unavailability at time t Q(t)",
+                    },
+                    {
+                      value: "Steady-state mean unavailability Q",
+                      label: "Steady-state mean unavailability Q",
+                    },
+                  ]}
+                />
+                <ErrorMessage className="error text-danger" component="span" name="calcTypes" />
+              </FormGroup>
+
+              {/* Fixed conditional rendering */}
+              {(values.calcTypes?.value === "Unavailability at time t Q(t)" ||
+                (typeof values.calcTypes === 'string' && values.calcTypes === "Unavailability at time t Q(t)")) && (
+                  <FormGroup className="mb-2">
+                    <Label notify={true}>Mission time t</Label>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <FormControl
+                        type="text"
+                        name="missionTime"
+                        placeholder="Mission time t"
+                        value={values.missionTime}
+                        onBlur={handleBlur}
+                        onChange={handleChange}
+                        style={{ width: "80%" }}
+                      />
+                      <p style={{ margin: "0px", fontWeight: "bold", marginLeft: "20px" }}>
+                        (hours)
+                      </p>
+                    </div>
+                    <ErrorMessage className="error text-danger" component="span" name="missionTime" />
+                  </FormGroup>
+                )}
+
+              <div className="d-flex justify-content-end mt-4">
+                <Button
+                  className="me-2"
+                  onClick={() => setOpenProbCal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="primary" htmlType="submit">
+                  Calculation
+                </Button>
+              </div>
+            </Form>
+          )}
+        </Formik>
+      </Modal>
     </div>
   );
 };

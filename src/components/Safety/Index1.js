@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import MaterialTable from "material-table";
 import { Modal, Button, Row, Col } from "react-bootstrap";
@@ -10,6 +11,7 @@ import Dropdown from "../Company/Dropdown";
 import CreatableSelect from "react-select/creatable";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
+import SafetyEdit from "../Safety/SafetyEdit.js"; 
 import { FaExclamationCircle } from "react-icons/fa";
 import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -17,6 +19,7 @@ import { useHistory } from "react-router-dom";
 import { Input, TextField } from "@material-ui/core";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
+
 import Select from "react-select";
 import { Tooltip, TableCell } from "@material-ui/core";
 import {
@@ -32,8 +35,8 @@ function Index(props) {
   const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
-      ? props?.location?.state?.productId
-      : initialProductID;
+    ? props?.location?.state?.productId
+    : initialProductID;
   const [show, setShow] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tableData, setTableData] = useState();
@@ -55,10 +58,9 @@ function Index(props) {
   const handleHide = () => setFailureModeRatioError(false);
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
 
-  // State for connections - similar to FMECA
-  const [flattenedConnect, setFlattenedConnect] = useState([]);
-  const [rowConnections, setRowConnections] = useState({});
+  // NEW: State to track selected source values per row
   const [selectedSourceValues, setSelectedSourceValues] = useState({});
+  const [flattenedConnect, setFlattenedConnect] = useState([]);
 
   const DownloadExcel = () => {
     if (!tableData || tableData.length === 0) {
@@ -80,14 +82,13 @@ function Index(props) {
     const companyName = firstRow?.companyId?.companyName || "Unknown Company";
     const projectName = firstRow?.projectId?.projectName || "Unknown Project";
     const data = tableData[0];
-    const productName = data?.productId?.productName || "Unknown Product";
-    console.log("ProductName", productName)
+    const productName = data?.productId?.productName || "Unknown Product"; 
     const columnsToRemove = [
       "projectId", "companyId", "productId", "id", "tableData",
     ];
 
     const modifiedTableData = tableData.map((row) => {
-      const newRow = {
+      const newRow = { 
         Company: companyName,
         Project: projectName,
         Product: productName
@@ -253,42 +254,6 @@ function Index(props) {
     }));
   };
 
-  // Get connected values for a field based on selected sources in the row
-  const getConnectedValuesForField = (fieldName, rowData) => {
-    let connectedValues = [];
-
-    // Check all fields in the row for connections to this field
-    Object.keys(rowData || {}).forEach(sourceField => {
-      const sourceValue = rowData[sourceField];
-      if (!sourceValue) return;
-
-      // Find connections where this source field/value connects to our target field
-      const connections = flattenedConnect.filter(
-        item =>
-          item.sourceName === sourceField &&
-          String(item.sourceValue) === String(sourceValue) &&
-          item.destinationName === fieldName
-      );
-
-      connectedValues.push(...connections);
-    });
-
-    return connectedValues;
-  };
-
-  // Get all destination fields for a specific source value
-  const getDestinationFieldsForSource = (sourceField, sourceValue) => {
-    return flattenedConnect
-      .filter(item =>
-        item.sourceName === sourceField &&
-        String(item.sourceValue) === String(sourceValue)
-      )
-      .map(item => ({
-        field: item.destinationName,
-        value: item.destinationValue
-      })) || [];
-  };
-
   const getAllSeprateLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
@@ -306,7 +271,7 @@ function Index(props) {
           (item) => item?.moduleName === "SAFETY"
         );
       }
-      setAllSepareteData(filteredData);
+      setAllSepareteData(filteredData);      
       const merged = [...(tableData || []), ...filteredData];
       setMergedData(merged);
     });
@@ -442,7 +407,7 @@ function Index(props) {
       });
   };
 
-  // Get all connections - Updated to match FMECA structure
+  // Get all connections
   const getAllConnect = () => {
     setIsLoading(true);
     Api.get("api/v1/library/get/all/connect/value", {
@@ -451,332 +416,123 @@ function Index(props) {
       },
     }).then((res) => {
       setIsLoading(false);
-
-      // Filter for SAFETY module connections
       const filteredData = res.data.getData.filter(
-        (entry) =>
-          entry?.libraryId?.moduleName === "SAFETY" ||
-          entry?.destinationModuleName === "SAFETY"
+        (entry) => entry?.libraryId?.moduleName === "SAFETY" || 
+                  entry?.destinationModuleName === "SAFETY"
       );
-
+      
       // Flatten the connection data for easier querying
       const flattened = filteredData.flatMap((item) =>
         (item.destinationData || [])
           .filter(d => d.destinationModuleName === "SAFETY")
           .map((d) => ({
-            sourceName: item.sourceName,
-            sourceValue: String(item.sourceValue),
+            sourceName: item.sourceName,         
+            sourceValue: item.sourceValue,
             destinationName: d.destinationName,
-            destinationValue: String(d.destinationValue),
-            destinationModule: d.destinationModuleName
+            destinationValue: d.destinationValue,
+            destinationModule: d.destinationModuleName 
           }))
       );
-
-      console.log("Flattened connections:", flattened);
+      
       setFlattenedConnect(flattened);
     });
   };
+// Add this useEffect to log when tableData changes
+useEffect(() => {
+  console.log("Table data updated:", tableData?.length, "rows");
+}, [tableData]);
 
+// Add this to debug edit operations
+const handleRowUpdate = (newData, oldData) => {
+  return new Promise((resolve, reject) => {
+    console.log("Updating row:", oldData?.id, "to:", newData);
+    updateSafety(newData);
+    resolve();
+  });
+};
   useEffect(() => {
     getAllConnect();
   }, []);
 
-  const validateField = (fieldName, value, isRequired) => {
-    if (isRequired && (!value || value?.toString()?.trim() === '')) {
-      return `${fieldName} is required`;
-    }
-    return null;
-  };
-  const ValidationModal = ({ isOpen, errors, onClose }) => {
-    if (!isOpen) return null;
-
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000
-      }}>
-        <div style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          minWidth: '400px',
-          maxWidth: '500px'
-        }}>
-          <h3 style={{ color: '#d32f2f', marginBottom: '15px' }}>Validation Errors</h3>
-          <ul style={{ marginBottom: '20px' }}>
-            {errors.map((error, index) => (
-              <li key={index} style={{ color: '#d32f2f', marginBottom: '5px' }}>
-                {error}
-              </li>
-            ))}
-          </ul>
-          <button
-            onClick={onClose}
-            style={{
-              backgroundColor: '#1976d2',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            OK
-          </button>
-        </div>
-      </div>
-    );
+  // Function to get destination values for a field based on selected sources
+  const getDestinationValuesForField = (fieldName, rowId) => {
+    const rowSourceValues = selectedSourceValues[rowId] || {};
+    let destinationValues = [];
+    console.log("rowSourceValues",rowSourceValues)
+    // Check all source fields that might have connections to this field
+    Object.keys(rowSourceValues).forEach(sourceField => {
+      const sourceValue = rowSourceValues[sourceField];
+      if (sourceValue) {
+        const connections = flattenedConnect.filter(
+          item => 
+            item.sourceName === sourceField &&
+            item.sourceValue === sourceValue &&
+            item.destinationName === fieldName
+        );
+        
+        destinationValues = [...destinationValues, ...connections.map(item => item.destinationValue)];
+      }
+    });
+    
+    return [...new Set(destinationValues)]; // Remove duplicates
   };
 
+  // Function to handle source selection
+  const handleSourceSelection = (fieldName, value, rowId) => {
+    setSelectedSourceValues(prev => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        [fieldName]: value
+      }
+    }));
+  };
+
+  // Check if field is a source field (has outgoing connections)
   const isSourceField = (fieldName) => {
     return flattenedConnect.some(item => item.sourceName === fieldName);
   };
 
-  // Check if a field is a destination field (has incoming connections)
+  // Check if field is a destination field (has incoming connections)
   const isDestinationField = (fieldName) => {
     return flattenedConnect.some(item => item.destinationName === fieldName);
   };
 
-  const createEditComponent = (fieldName, title, isRequired = false) => {
-    return {
-      title: isRequired ? `${title} *` : title,
-      field: fieldName,
-      validate: (rowData) => {
-        const error = validateField(title, rowData[fieldName], isRequired);
-        return error ? { isValid: false, helperText: error } : true;
-      },
-      editComponent: ({ value, onChange, rowData }) => {
-        const handleChange = (newValue) => {
-          onChange(newValue);
-        };
-
-        return (
-          <div style={{ position: 'relative' }}>
-            <input
-              type="text"
-              value={value || ''}
-              onChange={(e) => {
-                const newValue = e.target.value;
-
-                handleChange(newValue);
-              }}
-
-              onKeyDown={(e) => {
-                // Prevent Enter key from submitting the form
-                if (e.key === 'Enter') {
-                  e.stopPropagation();
-                }
-              }}
-              placeholder={isRequired ? `${title} *` : title}
-              style={{
-                height: "40px",
-                borderRadius: "4px",
-                width: "100%",
-                borderColor:
-                  isRequired && (!value || value?.toString().trim() === '')
-                    ? '#d32f2f'
-                    : '#ccc',
-              }}
-              title={title}
-            />
-            {isRequired && (!value || value?.toString()?.trim() === '') && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  color: '#d32f2f',
-                  fontSize: '12px',
-                  marginTop: '2px',
-                }}
-              >
-                {title} is required!
-              </div>
-            )}
-          </div>
-        );
+const createEditComponent = (fieldName, label, required = false) => {
+  return {
+    field: fieldName,
+    title: required ? `${label} *` : label,
+    type: "string",
+    cellStyle: { minWidth: "200px", textAlign: "center" },
+    headerStyle: { minWidth: "200px", textAlign: "center" },
+    validate: (rowData) => {
+      if (required && (!rowData[fieldName] || rowData[fieldName].trim() === "")) {
+        return { isValid: false, helperText: `${label} is required` };
       }
-    };
+      return true;
+    },
+    editComponent: (props) => (
+      <SafetyEdit
+        {...props}
+        fieldName={fieldName}
+        label={label}
+        required={required}
+        allSepareteData={allSepareteData}
+        flattenedConnect={flattenedConnect}
+        selectedSourceValues={selectedSourceValues}
+        handleSourceSelection={handleSourceSelection}
+        isSourceField={isSourceField}
+        isDestinationField={isDestinationField}
+        getDestinationValuesForField={getDestinationValuesForField}
+      />
+    ),
   };
+};
+  // Define source fields (fields that can have outgoing connections)
+  // You need to define which fields in SAFETY can be sources
+  const sourceFields = ['modeOfOperation', 'hazardCause', 'effectOfHazard']; // Add more as needed
 
-const createSmartSelectField = (fieldName, label, required = false, isSourceFieldCheck = false) => ({
-  ...createEditComponent(fieldName, label, required),
-  editComponent: ({ value, onChange, rowData }) => {
-    const rowId = rowData?.tableData?.id;
-
-  
-    const connectedValues = getConnectedValuesForField(fieldName, rowData);
-
-    
-    const separateFilteredData = allSepareteData?.filter(
-      (item) => item?.sourceName === fieldName
-    ) || [];
-
-
-    let options = [];
-
-    if (connectedValues.length > 0) {
-      options = connectedValues.map(item => ({
-        value: String(item.destinationValue),
-        label: String(item.destinationValue),
-        isConnected: true
-      }));
-    }
-
-
-    separateFilteredData.forEach(item => {
-      if (!options.some(opt => opt.value === item.sourceValue)) {
-        options.push({
-          value: String(item.sourceValue),
-          label: String(item.sourceValue),
-          isConnected: false
-        });
-      }
-    });
-
-
-    const selectedOption =
-      options.find(opt => opt.value === String(value)) ||
-      (value ? { label: String(value), value: String(value) } : null);
-
-    const hasError =
-      required &&
-      (!value || String(value)?.trim() === "");
-
-    // Return plain input when there are no options
-    if (options.length === 0) {
-      return (
-        <div style={{ position: "relative" }}>
-          <input
-            type="text"
-            value={value || ""}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.stopPropagation();
-              }
-            }}
-            placeholder={label + (required ? " *" : "")}
-            style={{
-              height: "40px",
-              borderRadius: "4px",
-              width: "100%",
-              border: `1px solid ${hasError ? "#d32f2f" : "#ccc"}`,
-              padding: "8px 12px",
-              boxSizing: "border-box"
-            }}
-          />
-
-          {hasError && (
-            <div style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              color: "#d32f2f",
-              fontSize: "12px",
-              marginTop: "2px"
-            }}>
-              {label} is required
-            </div>
-          )}
-        </div>
-      );
-    } else {
-      // Return CreatableSelect with proper configuration
-      return (
-        <div style={{ position: "relative" }}>
-          <CreatableSelect
-            name={fieldName}
-            value={selectedOption}
-            options={options}
-            isClearable
-            onChange={(option) => {
-              const newValue = option?.value ? String(option.value) : "";
-              onChange(newValue);
-
-              if (isSourceField(fieldName) && newValue) {
-                const destinations = getDestinationFieldsForSource(fieldName, newValue);
-                if (destinations.length === 1) {
-                  // auto connect logic if needed
-                }
-              }
-            }}
-            onCreateOption={(inputValue) => {
-              // This allows creating completely new values
-              onChange(inputValue);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.target.value) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-            menuPortalTarget={document.body}
-            styles={{
-              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              control: (base) => ({
-                ...base,
-                borderColor: hasError ? "#d32f2f" : base.borderColor,
-                minHeight: "40px",
-                "&:hover": {
-                  borderColor: hasError ? "#d32f2f" : base.borderColor
-                }
-              }),
-              option: (base, state) => ({
-                ...base,
-                backgroundColor: state.data?.isConnected ? '#e8f4fd' : base.backgroundColor,
-                fontWeight: state.data?.isConnected ? 'bold' : base.fontWeight,
-              }),
-            }}
-          />
-
-          {hasError && (
-            <div style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              color: "#d32f2f",
-              fontSize: "12px",
-              marginTop: "2px"
-            }}>
-              {label} is required
-            </div>
-          )}
-
-          {connectedValues.length > 0 && (
-            <div style={{
-              position: "absolute",
-              top: "-18px",
-              right: "5px",
-              fontSize: "10px",
-              color: "#1976d2",
-              background: "#e8f4fd",
-              padding: "2px 5px",
-              borderRadius: "3px",
-            }}>
-              Connected
-            </div>
-          )}
-        </div>
-      );
-    }
-  }
-});
-
-
-
-  const safetySourceFields = ['modeOfOperation', 'hazardCause', 'effectOfHazard'];
-
-
-
+  // Create columns using the new edit component
   const columns = [
     {
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
@@ -784,32 +540,31 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
       cellStyle: { minWidth: "140px", textAlign: "center" },
       headerStyle: { minWidth: "140px", textAlign: "center" },
     },
-    createSmartSelectField("modeOfOperation", "Mode of Operation", true, safetySourceFields.includes('modeOfOperation')),
-    createSmartSelectField("hazardCause", "Hazard Cause", true, safetySourceFields.includes('hazardCause')),
-    createSmartSelectField("effectOfHazard", "Effect of the Hazard", true, safetySourceFields.includes('effectOfHazard')),
-    createSmartSelectField("hazardClasification", "Hazard Classification", true),
-    createSmartSelectField("designAssuranceLevel", "Design Assurance Level (DAL) associated with the hazard"),
-    createSmartSelectField("meansOfDetection", "Means of detection", true),
-    createSmartSelectField("crewResponse", "Crew response", true),
-    createSmartSelectField("uniqueHazardIdentifier", "Unique Hazard Identifiers", true),
-    createSmartSelectField("initialSeverity", "Initial Severity ((impact))"),
-    createSmartSelectField("initialLikelihood", "Initial likelihood (probability)"),
-    createSmartSelectField("initialRiskLevel", "Initial Risk level"),
-    createSmartSelectField("designMitigation", "Design Mitigation"),
-    createSmartSelectField("designMitigatonResbiity", "Design Mitigation Responsibility"),
-    createSmartSelectField("designMitigtonEvidence", "Design Mitigation Evidence"),
-    createSmartSelectField("opernalMaintanMitigation", "Operational/Maintenance mitigation"),
-    createSmartSelectField("opernalMitigatonResbility", "Opernational Mitigation Responsibility"),
-    createSmartSelectField("operatnalMitigationEvidence", "Operational Mitigation Evidence"),
-    createSmartSelectField("residualSeverity", "Residual Severity ((impact))"),
-    createSmartSelectField("residualLikelihood", "Residual likelihood (probability)"),
-    createSmartSelectField("residualRiskLevel", "Residual Risk Level"),
-    createSmartSelectField("hazardStatus", "Hazard Status"),
-    createSmartSelectField("ftaNameId", "FTA Name/ID"),
-    createSmartSelectField("userField1", "User field 1"),
-    createSmartSelectField("userField2", "User field 2"),
+    createEditComponent("modeOfOperation", "Mode of Operation", true),
+    createEditComponent("hazardCause", "Hazard Cause", true),
+    createEditComponent("effectOfHazard", "Effect of the Hazard", true),
+    createEditComponent("hazardClasification", "Hazard Classification", true),
+    createEditComponent("designAssuranceLevel", "Design Assurance Level (DAL) associated with the hazard"),
+    createEditComponent("meansOfDetection", "Means of detection", true),
+    createEditComponent("crewResponse", "Crew response", true),
+    createEditComponent("uniqueHazardIdentifier", "Unique Hazard Identifiers", true),
+    createEditComponent("initialSeverity", "Initial Severity ((impact))"),
+    createEditComponent("initialLikelihood", "Initial likelihood (probability)"),
+    createEditComponent("initialRiskLevel", "Initial Risk level"),
+    createEditComponent("designMitigation", "Design Mitigation"),
+    createEditComponent("designMitigatonResbiity", "Design Mitigation Responsibility"),
+    createEditComponent("designMitigtonEvidence", "Design Mitigation Evidence"),
+    createEditComponent("opernalMaintanMitigation", "Operational/Maintenance mitigation"),
+    createEditComponent("opernalMitigatonResbility", "Opernational Mitigation Responsibility"),
+    createEditComponent("operatnalMitigationEvidence", "Operational Mitigation Evidence"),
+    createEditComponent("residualSeverity", "Residual Severity ((impact))"),
+    createEditComponent("residualLikelihood", "Residual likelihood (probability)"),
+    createEditComponent("residualRiskLevel", "Residual Risk Level"),
+    createEditComponent("hazardStatus", "Hazard Status"),
+    createEditComponent("ftaNameId", "FTA Name/ID"),
+    createEditComponent("userField1", "User field 1"),
+    createEditComponent("userField2", "User field 2"),
   ];
-  console.log("Columns:", columns);
 
   const submit = (values) => {
     if (productId) {
@@ -936,7 +691,7 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
               <Projectname projectId={projectId} />
             </div>
 
-            <div style={{ width: "100%", marginRight: "20px", position: "relative", zIndex: 999 }}>
+            <div style={{ width: "100%", marginRight: "20px" }}>
               <Dropdown
                 value={projectId}
                 productId={productId}
@@ -951,10 +706,10 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
               marginTop: "8px",
               height: "40px",
             }}>
-              {writePermission === true ||
-                writePermission === "undefined" ||
-                role === "admin" ||
-                (isOwner === true && createdBy === userId) ? (
+              {writePermission === true || 
+               writePermission === "undefined" || 
+               role === "admin" || 
+               (isOwner === true && createdBy === userId) ? (
                 <>
                   <Tooltip placement="right" title="Import Excel">
                     <div style={{ marginRight: "8px" }}>
@@ -974,21 +729,21 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
                       />
                     </div>
                   </Tooltip>
-
+                  
                   <Tooltip placement="left" title="Export Excel">
                     <Button
                       className="import-export-btn"
-                      style={{
-                        marginLeft: "10px",
-                        borderStyle: "none",
-                        width: "40px",
-                        minWidth: "40px",
+                      style={{ 
+                        marginLeft: "10px", 
+                        borderStyle: "none", 
+                        width: "40px", 
+                        minWidth: "40px", 
                         padding: "0px",
                         cursor: "pointer"
                       }}
                       onClick={() => DownloadExcel()}
                     >
-                      <FontAwesomeIcon icon={faFileUpload} style={{ width: "12px" }} />
+                      <FontAwesomeIcon icon={faFileUpload} style={{ width: "15px" }} />
                     </Button>
                   </Tooltip>
                 </>
@@ -1001,15 +756,15 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
                       </div>
                     </div>
                   </Tooltip>
-
+                  
                   <Tooltip placement="left" title="Export disabled">
                     <Button
                       className="import-export-btn"
-                      style={{
-                        marginLeft: "10px",
-                        borderStyle: "none",
-                        width: "40px",
-                        minWidth: "40px",
+                      style={{ 
+                        marginLeft: "10px", 
+                        borderStyle: "none", 
+                        width: "40px", 
+                        minWidth: "40px", 
                         padding: "0px",
                         cursor: "not-allowed",
                         opacity: 0.5
@@ -1030,36 +785,36 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
                 editable={{
                   onRowAdd:
                     writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                    writePermission === "undefined" ||
+                    role === "admin" ||
+                    (isOwner === true && createdBy === userId)
                       ? (newRow) =>
-                        new Promise((resolve, reject) => {
-                          submit(newRow);
-                          resolve();
-                        })
+                          new Promise((resolve, reject) => {
+                            submit(newRow);
+                            resolve();
+                          })
                       : null,
                   onRowUpdate:
                     writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                    writePermission === "undefined" ||
+                    role === "admin" ||
+                    (isOwner === true && createdBy === userId)
                       ? (newRow, oldData) =>
-                        new Promise((resolve, reject) => {
-                          updateSafety(newRow);
-                          resolve();
-                        })
+                          new Promise((resolve, reject) => {
+                            updateSafety(newRow);
+                            resolve();
+                          })
                       : null,
                   onRowDelete:
                     writePermission === true ||
-                      writePermission === "undefined" ||
-                      role === "admin" ||
-                      (isOwner === true && createdBy === userId)
+                    writePermission === "undefined" ||
+                    role === "admin" ||
+                    (isOwner === true && createdBy === userId)
                       ? (selectedRow) =>
-                        new Promise((resolve, reject) => {
-                          deleteSafetyData(selectedRow);
-                          resolve();
-                        })
+                          new Promise((resolve, reject) => {
+                            deleteSafetyData(selectedRow);
+                            resolve();
+                          })
                       : null,
                 }}
                 title="Safety"
@@ -1067,27 +822,11 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
                 columns={columns}
                 data={tableData}
                 options={{
-                  cellStyle: {
-                    border: "1px solid #eee",
-                    whiteSpace: "normal",
-                    wordBreak: "break-word",
-                    minWidth: 300,
-                    maxWidth: 400,
-                    textAlign: "center",
-                  },
                   addRowPosition: "first",
                   actionsColumnIndex: -1,
-                  showEditIcon: false,
-                  showDeleteIcon: false,
-                  pageSize: 5,
-                  pageSizeOptions: [5, 10, 20, 50],
                   headerStyle: {
                     backgroundColor: "#CCE6FF",
-                    fontWeight: "bold",
-                    whiteSpace: "nowrap",
-                    minWidth: 200,
-                    maxWidth: 500,
-                    textAlign: "center",
+                    zIndex: 0,
                   },
                 }}
                 localization={{
@@ -1098,7 +837,7 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
               />
             </ThemeProvider>
           </div>
-
+  
           <Modal show={show} centered>
             <div className="d-flex justify-content-center mt-5">
               <FontAwesomeIcon
