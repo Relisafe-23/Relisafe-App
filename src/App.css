@@ -316,3 +316,32 @@ input[type="number"] {
   width: 30%;
   height: 30px;
 }
+
+
+/* Hide ALL connector lines in organizational chart */
+.react-organizational-chart svg {
+  display: none !important;
+}
+
+/* Hide ALL SVG connectors */
+.org-chart-container svg {
+  display: none !important;
+}
+
+/* Hide line elements specifically */
+.react-organizational-chart line,
+.react-organizational-chart path {
+  display: none !important;
+  stroke: transparent !important;
+  stroke-width: 0 !important;
+}
+
+/* Hide the connector lines between nodes */
+.react-organizational-chart .oc-line {
+  display: none !important;
+}
+
+/* Hide connector elements */
+[class*="react-organizational-chart"] [class*="line"] {
+  display: none !important;
+}

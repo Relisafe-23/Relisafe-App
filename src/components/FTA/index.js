@@ -1,122 +1,255 @@
-  import { Tree } from "react-organizational-chart";
-  import React, { useEffect, useState, useRef } from "react";
-  import { removeChartDataHelper } from "../../utils";
-  import RenderTree from "../../components/FTA/RenderTree";
-  import "../../App.css";
-  import Api from "../../Api";
-  import { Button, Form } from "react-bootstrap";
-  import { Modal } from "antd";
-  import { Formik, ErrorMessage } from "formik";
-  import * as Yup from "yup";
-  import "../../css/PBS.scss";
-  import Label from "../../components/LabelComponent";
-  import Select from "react-select";
-  import { customStyles } from "../../components/core/select";
-  import { toast } from "react-toastify";
-  import { useModal } from "../ModalContext";
-  import { useHistory } from "react-router-dom";
+import { Tree } from "react-organizational-chart";
+import React, { useEffect, useState, useRef } from "react";
+import { removeChartDataHelper } from "../../utils";
+import RenderTree from "../../components/FTA/RenderTree";
+import "../../App.css";
+import Api from "../../Api";
+import { Button, Form } from "react-bootstrap";
+import { Modal } from "antd";
+import { Formik, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import "../../css/PBS.scss";
+import Label from "../../components/LabelComponent";
+import Select from "react-select";
+import { customStyles } from "../../components/core/select";
+import { toast } from "react-toastify";
+import { useModal } from "../ModalContext";
+import { useHistory } from "react-router-dom";
+import HeaderNavBar from "../HeaderNavBar";
+import EventsReportModal from "./EventsReportModal";
+const initialData = {
+  id: 1,
+  code: "jack_hill",
+  description: "CEO",
+  gateId: 1,
+  children: [
+    {
+      id: 2,
+      code: "john_doe",
+      description: "CTO",
+      gateId: 2,
+      children: [
+        {
+          id: 3,
+          code: "jane_smith",
+          description: "Lead Engineer",
+          gateId: 3,
+        },
+        {
+          id: 4,
+          code: "alex_green",
+          description: "Product Manager",
+          gateId: 4,
+        },
+      ],
+    },
+    {
+      id: 5,
+      code: "emily_wilson",
+      description: "CFO",
+      gateId: 5,
+      children: [
+        {
+          id: 6,
+          code: "chris_jones",
+          description: "Finance Manager",
+          gateId: 6,
+        },
+      ],
+    },
+  ],
+};
 
-  const initialData = {
-    id: 1,
-    code: "jack_hill",
-    description: "CEO",
-    gateId: 1,
-    children: [
-      {
-        id: 2,
-        code: "john_doe",
-        description: "CTO",
-        gateId: 2,
-        children: [
-          {
-            id: 3,
-            code: "jane_smith",
-            description: "Lead Engineer",
-            gateId: 3,
-          },
-          {
-            id: 4,
-            code: "alex_green",
-            description: "Product Manager",
-            gateId: 4,
-          },
-        ],
-      },
-      {
-        id: 5,
-        code: "emily_wilson",
-        description: "CFO",
-        gateId: 5,
-        children: [
-          {
-            id: 6,
-            code: "chris_jones",
-            description: "Finance Manager",
-            gateId: 6,
-          },
-        ],
-      },
-    ],
+export default function FTA(props) {
+  const [showGrid, setShowGrid] = useState(false);
+
+ const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
+  const [chartData, setChartData] = useState([]);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panning, setPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [nodeLength, setNodeLength] = useState([]);
+  const [calcTypes, setCalcTypes] = useState();
+  const [productData, setProductData] = useState([]);
+  const [currentReportType, setCurrentReportType] = useState('all');
+ 
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [eventsData, setEventsData] = useState([]);
+  const [gatesData, setGatesData] = useState([]);
+
+
+  const history = useHistory();
+
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
+  const formikRef = useRef(null);
+
+  const {
+    isFTAModalOpen,
+    closeFTAModal,
+    isPropertiesModal,
+    closePropertiesModal,
+    isDeleteSucess,
+    saveFromFile,
+    reloadData,
+    stopTriggerReload,
+  } = useModal();
+
+  const handleZoomToFit = () => {
+
+  setPanOffset({ x: 0, y: 0 }); 
+  toast.success("Zoomed to fit screen");
+};
+
+const handleZoomOriginal = () => {
+  setZoomLevel(1); 
+  setPanOffset({ x: 0, y: 0 }); 
+  toast.success("Reset to original size");
+};
+
+const handleToggleGrid = () => {
+  const newShowGrid = !showGrid;
+  setShowGrid(newShowGrid);
+  toast.success(newShowGrid ? "Grid shown" : "Grid hidden");
+};
+
+const handleOriginalLayout = () => {
+  setZoomLevel(1);
+  setPanOffset({ x: 0, y: 0 });
+  setPanning(false);
+  setPanStart({ x: 0, y: 0 });
+  toast.success("Original layout restored");
+};
+
+const generateReport = (type = 'all') => {
+  if (!chartData) {
+    toast.warning('No fault tree data available');
+    return;
+  }
+
+  const extractAllNodes = (node) => {
+    const nodes = [];
+    
+    if (node) {
+      const hasFailureRate = node.fr || node.failureRate || node.frValue || node.failureRateValue;
+      const isEvent = hasFailureRate || node.calcTypes || node.isEvent === true;
+      const isGate = node.gateType || (node.children && node.children.length > 0);
+      
+      const failureRate = node.fr || node.failureRate || node.frValue || node.failureRateValue || 'N/A';
+      
+      const nodeData = {
+        id: node.id,
+        code: node.code || node.name || `Gate ${node.gateId}`,
+        description: node.description || 'No description',
+        type: isEvent ? 'Event' : (isGate ? 'Gate' : 'Unknown'),
+        failureRate: isEvent ? failureRate : 'N/A',
+        calcType: node.calcTypes || 'N/A',
+        gateType: node.gateType || 'N/A',
+        gateId: node.gateId || 'N/A',
+        children: node.children || [],
+        product: node.product || 'N/A',
+        childCount: node.children ? node.children.length : 0,
+      };
+      
+      console.log("Node Data:", nodeData);
+      nodes.push(nodeData);
+      
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(child => {
+          nodes.push(...extractAllNodes(child));
+        });
+      }
+    }
+    
+    return nodes;
   };
 
-  export default function FTA(props) {
-    const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
-    const [chartData, setChartData] = useState([]);
-    const [zoomLevel, setZoomLevel] = useState(1);
-    const [panning, setPanning] = useState(false);
-    const [panStart, setPanStart] = useState({ x: 0, y: 0 });
-    const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [nodeLength, setNodeLength] = useState([]);
-    const [calcTypes, setCalcTypes] = useState();
-    const [productData, setProductData] = useState([]);
-    const [parNod, setParNod] = useState([]);
+  const allNodes = extractAllNodes(chartData);
+  
+  const events = allNodes.filter(node => node.type === 'Event');
+  const gates = allNodes.filter(node => node.type === 'Gate');
+  
+  console.log("Events found:", events);
+  console.log("Gates found:", gates);
+  
+  setEventsData(events);
+  setGatesData(gates);
+  setCurrentReportType(type); 
+  setIsReportModalOpen(true);
+  
+  toast.success(`${type === 'events' ? 'Events' : type === 'gates' ? 'Gates' : 'Report'} generated successfully`);
+};
 
-    const history = useHistory();
+  const handleWheelScroll = (event) => {
+    const newZoom = zoomLevel + event.deltaY * -0.001; 
+    setZoomLevel(Math.min(Math.max(0.1, newZoom), 2));
+  };
+  const handleMouseDown = (event) => {
+    if (event.button === 0) {
+      setPanning(true);
+      setPanStart({ x: event.clientX, y: event.clientY });
+    }
+  };
 
-    const [selectedNodeId, setSelectedNodeId] = useState(null);
-    const formikRef = useRef(null);
+  const handleMouseMove = (event) => {
+    if (panning) {
+      const offsetX = event.clientX - panStart.x;
+      const offsetY = event.clientY - panStart.y;
+      setPanOffset({ x: offsetX, y: offsetY });
+    }
+  };
 
-    const {
-      isFTAModalOpen,
-      closeFTAModal,
-      isPropertiesModal,
-      closePropertiesModal,
-      isDeleteSucess,
-      saveFromFile,
-      reloadData,
-      stopTriggerReload,
-    } = useModal();
+  const handleMouseUp = (event) => {
+    if (panning) {
+      setPanning(false);
+      setPanStart({ x: 0, y: 0 });
+    }
+  };
 
-    const handleWheelScroll = (event) => {
-      // event.preventDefault(); // Prevent default scroll behavior
-      const newZoom = zoomLevel + event.deltaY * -0.001; // Adjust the scaling factor as needed
-      setZoomLevel(Math.min(Math.max(0.1, newZoom), 2)); // Limit zoom level between 0.5 and 2
-    };
-    const handleMouseDown = (event) => {
-      if (event.button === 0) {
-        // event.preventDefault(); // Prevent default mouse behavior
-        setPanning(true);
-        setPanStart({ x: event.clientX, y: event.clientY });
-      }
-    };
+  //   const [selectedNodeId, setSelectedNodeId] = useState(null);
+  //   const formikRef = useRef(null);
 
-    const handleMouseMove = (event) => {
-      if (panning) {
-        // event.preventDefault(); // Prevent default mouse behavior
-        const offsetX = event.clientX - panStart.x;
-        const offsetY = event.clientY - panStart.y;
-        setPanOffset({ x: offsetX, y: offsetY });
-      }
-    };
+  //   const {
+  //     isFTAModalOpen,
+  //     closeFTAModal,
+  //     isPropertiesModal,
+  //     closePropertiesModal,
+  //     isDeleteSucess,
+  //     saveFromFile,
+  //     reloadData,
+  //     stopTriggerReload,
+  //   } = useModal();
 
-    const handleMouseUp = (event) => {
-      if (panning) {
-        // event.preventDefault(); // Prevent default mouse behavior
-        setPanning(false);
-        setPanStart({ x: 0, y: 0 });
-      }
-    };
+  //   const handleWheelScroll = (event) => {
+  //     // event.preventDefault(); // Prevent default scroll behavior
+  //     const newZoom = zoomLevel + event.deltaY * -0.001; // Adjust the scaling factor as needed
+  //     setZoomLevel(Math.min(Math.max(0.1, newZoom), 2)); // Limit zoom level between 0.5 and 2
+  //   };
+  //   const handleMouseDown = (event) => {
+  //     if (event.button === 0) {
+  //       // event.preventDefault(); // Prevent default mouse behavior
+  //       setPanning(true);
+  //       setPanStart({ x: event.clientX, y: event.clientY });
+  //     }
+  //   };
+
+  //   const handleMouseMove = (event) => {
+  //     if (panning) {
+  //       // event.preventDefault(); // Prevent default mouse behavior
+  //       const offsetX = event.clientX - panStart.x;
+  //       const offsetY = event.clientY - panStart.y;
+  //       setPanOffset({ x: offsetX, y: offsetY });
+  //     }
+  //   };
+
+  //   const handleMouseUp = (event) => {
+  //     if (panning) {
+  //       // event.preventDefault(); // Prevent default mouse behavior
+  //       setPanning(false);
+  //       setPanStart({ x: 0, y: 0 });
+  //     }
+  //   };
 
     const removeChartData = (id) => {
       setChartData((oldData) => {
@@ -143,7 +276,18 @@
         return addNodeHelper(oldData);
       });
     };
+const getFullFTAdata = (id) => {
+      if (id) {
+        Api.get(`/api/v1/FTA/get/tree/${id}`).then((res) => {
+          const data = res?.data?.nodeData[0];
+          saveFromFile(data);
+        });
+      } else {
+        saveFromFile(null);
+      }
+    };
 
+    
     const editChartNode = (id, newNode) => {
       setChartData((oldData) => {
         const editNodeHelper = (data) => {
@@ -278,113 +422,107 @@
           }
         });
     };
-
-    //logout
     const logout = () => {
       localStorage.clear(history.push("/login"));
       window.location.reload();
     };
 
-    useEffect(() => {
-      getFTAData();
-      getTreeProduct();
-    }, []);
 
-    useEffect(() => {
-      if (reloadData) {
-        getFTAData();
-      }
-    }, [reloadData]);
-
-    const getFullFTAdata = (id) => {
-      if (id) {
-        Api.get(`/api/v1/FTA/get/tree/${id}`).then((res) => {
-          const data = res?.data?.nodeData[0];
-          saveFromFile(data);
-        });
-      } else {
-        saveFromFile(null);
-      }
-    };
-
-    // console.log(chartData, "chartData")
-    useEffect(() => {
-      setParNod({
-        name: chartData.name,
-        description: chartData.description,
-        missionTime: chartData.missionTime,
-        calcTypes: chartData.calcTypes,
-        gateId: chartData.gateId,
-      })
-    }, [chartData])
-
-    console.log(parNod, "parNod")
-
-    return (
-      <div>
-        {nodeLength.length > 0 ? (
-          <div
-            className="org-chart-container"
-            style={{
-              transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`,
-              paddingTop: "70px",
-            }}
-            onWheel={handleWheelScroll}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-          >
-            {/* {console.log(chartData, "chartData data")} */}
-            <Tree lineWidth={"2px"} lineColor={"green"} lineBorderRadius={"10px"} className="org-chart-container">
-              <RenderTree
-                data={nodeLength.length > 0 ? chartData : 0}
-                handleRemove={removeChartData}
-                handleAdd={addChartNode}
-                handleEdit={editChartNode}
-                projectId={projectId}
-                getFTAData={getFTAData}
-                productData={productData}
-                selectedNodeId={selectedNodeId} // Pass selectedNodeId to RenderTree
-                setSelectedNodeId={setSelectedNodeId} // Pass setSelectedNodeId function to RenderTree
-                parNod={parNod}
-              />
-            </Tree>
-          </div>
-        ) : (
-          <div style={{ height: "100vh", display: "flex", justifyContent: "center" }}>
-            <div style={{ paddingTop: "90px" }}>
-              <Button
-                onClick={() => setIsModalOpen(true)}
-                style={{
-                  backgroundColor: "#00a9c9",
-                  border: "0px",
-                  color: "#fff",
-                  height: "35px",
-                  width: "150px",
-                  borderRadius: "5px",
-                  cursor: "pointer",
-                }}
-              >
-                + Create New
-              </Button>
-            </div>
-          </div>
-        )}
-        <Modal
-          title={<p style={{ margin: "0px", color: "#00a9c9", width: '500px' }}>Fault Tree Properties</p>}
-          open={
-            isModalOpen
-              ? isModalOpen
-              : isFTAModalOpen
-                ? isFTAModalOpen
-                : isPropertiesModal && nodeLength.length > 0
-                  ? isPropertiesModal
-                  : null
-          }
-          footer={null}
-          onCancel={handleCancel}
-          maskClosable={false}
+  return (
+    <div>
+   <HeaderNavBar 
+  selectedComponent="FTA"
+  onGenerateReport={generateReport}
+  onZoomToFit={handleZoomToFit}
+  onZoomOriginal={handleZoomOriginal}
+  onToggleGrid={handleToggleGrid}
+  onOriginalLayout={handleOriginalLayout}
+/>
+      {nodeLength.length > 0 ? (
+        <div
+          className="org-chart-container"
+          style={{
+            transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`,
+            paddingTop: "70px",
+          }}
+          onWheel={handleWheelScroll}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
         >
+          <Tree lineWidth={"2px"} lineColor={"green"} lineBorderRadius={"10px"} className="org-chart-container">
+            <RenderTree
+              data={nodeLength.length > 0 ? chartData : 0}
+              handleRemove={removeChartData}
+              handleAdd={addChartNode}
+              handleEdit={editChartNode}
+              projectId={projectId}
+              getFTAData={getFTAData}
+              productData={productData}
+              selectedNodeId={selectedNodeId} // Pass selectedNodeId to RenderTree
+              setSelectedNodeId={setSelectedNodeId} // Pass setSelectedNodeId function to RenderTree
+            />
+          </Tree>
+        </div>
+      ) : (
+        <div style={{ height: "100vh", display: "flex", justifyContent: "center" }}>
+          <div style={{ paddingTop: "90px" }}>
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              style={{
+                backgroundColor: "#00a9c9",
+                border: "0px",
+                color: "#fff",
+                height: "35px",
+                width: "150px",
+                borderRadius: "5px",
+                cursor: "pointer",
+              }}
+            >
+              + Create New
+            </Button>
+          </div>
+        </div>
+      )}
+   <EventsReportModal
+  isOpen={isReportModalOpen}
+  onClose={() => setIsReportModalOpen(false)}
+  eventsData={eventsData}
+  gatesData={gatesData}
+  reportType={currentReportType} // Pass the current report type
+/>
+      
+      
+
+      <Modal
+        title={<p style={{ margin: "0px", color: "#00a9c9" ,width:'500px' }}>Fault Tree Properties</p>}
+        open={
+          isModalOpen
+            ? isModalOpen
+            : isFTAModalOpen
+            ? isFTAModalOpen
+            : isPropertiesModal && nodeLength.length > 0
+            ? isPropertiesModal
+            : null
+        }
+        footer={null}
+        onCancel={handleCancel}
+        maskClosable={false}
+      >
+        <hr />
+        {/* <Formik
+          enableReinitialize={true}
+          initialValues={{
+            name: isPropertiesModal ? chartData?.name : "",
+            description: isPropertiesModal ? chartData?.description : "",
+            calcTypes: isPropertiesModal ? { label: chartData?.calcTypes, value: chartData?.calcTypes } : "",
+            missionTime: isPropertiesModal ? chartData?.missionTime : "",
+            gateId: 1,
+          }}
+          onSubmit={isPropertiesModal ? updateProperties : parentSubmit}
+          validationSchema={validate}
+          innerRef={formikRef}
+        > */}
           <hr />
           <Formik
             enableReinitialize={true}

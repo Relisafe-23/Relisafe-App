@@ -1,3 +1,4 @@
+// Make sure you have this import
 import React, { useState, useEffect, useRef } from "react";
 import { Nav, UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
 import { Avatar } from "@material-ui/core";
@@ -7,11 +8,22 @@ import Relisafe from "../core/Images/Relisafe.png";
 import { useHistory, Link } from "react-router-dom";
 import { useModal } from "../ModalContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFileLines, faPenToSquare } from "@fortawesome/free-regular-svg-icons";
+import { 
+  faFileLines, 
+  faPenToSquare, 
+  faFileAlt,
+  faSearchPlus,
+  faSearchMinus,
+  faExpand,
+  faCompress,
+  faTh,
+  faArrowsAlt,
+  faRedo
+} from "@fortawesome/free-solid-svg-icons";
 import Api from "../../Api.js";
 import "../../css/HeaderNavBar.scss";
 import { FormControl, FormGroup, NavDropdown, Navbar } from "react-bootstrap";
-import { faDownload, faUpload } from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faUpload, faFileCsv, faFilePdf } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import Projectname from "../Company/projectname";
 import { Button, Modal, Select } from "antd";
@@ -21,10 +33,16 @@ import { ErrorMessage, Form, Formik } from "formik";
 
 import { customStyles } from "../../components/core/select";
 
-const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
-  const [userData, setUserData] = useState();
-  const [openProbCal, setOpenProbCal] = useState();
-  const sessionId = localStorage.getItem("sessionId");
+const HeaderNavBar = ({ 
+  active, 
+  selectedComponent, 
+  onReloadData, 
+  onGenerateReport,
+  onZoomToFit,
+  onZoomOriginal,
+  onToggleGrid,
+  onOriginalLayout 
+}) => { const sessionId = localStorage.getItem("sessionId");
   const [file, setFile] = useState(null);
   const {
     openFTAModal,
@@ -38,9 +56,11 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
     isProbOpen,
     triggerReload,
   } = useModal();
-
+  const [userData, setUserData] = useState();
+  const [showGrid, setShowGrid] = useState(false); // Add this line
+  const [openProbCal, setOpenProbCal] = useState();
   const handleCreateNew = () => {
-    openFTAModal(); 
+    openFTAModal();
   };
 
   const handleOpenPropertyModal = () => {
@@ -67,13 +87,36 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
     openDeleteNode();
   };
 
+   const handleZoomToFit = () => {
+    if (onZoomToFit) {
+      onZoomToFit();
+    }
+  };
+
+  const handleZoomOriginal = () => {
+    if (onZoomOriginal) {
+      onZoomOriginal();
+    }
+  };
+
+  const handleToggleGrid = () => {
+    setShowGrid(!showGrid);
+    if (onToggleGrid) {
+      onToggleGrid(!showGrid);
+    }
+  };
+
+  const handleOriginalLayout = () => {
+    if (onOriginalLayout) {
+      onOriginalLayout();
+    }
+  };
   const history = useHistory();
 
   useEffect(() => {
     getUserDetails();
   }, [sessionId]);
 
-  // Log out
   const logout = () => {
     localStorage.clear(history.push("/login"));
     window.location.reload();
@@ -104,45 +147,39 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
       const formData = new FormData();
       formData.append("jsonFile", event.target.files[0]);
 
-      try {
-        // const response = await fetch("/api/v1/FTAjson/upload", {
-        //   method: "POST",
-        //   body: formData,
-        // });
-        Api.post("/api/v1/FTAjson/upload", formData).then((res) => {
-          if (res.status === 201) {
-            toast("File uploaded successfully!", {
-              position: "top-right",
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "light",
-              type: "success",
-            });
-            triggerReload();
-            if (fileInputRef.current) {
-              fileInputRef.current.value = "";
-            }
-          } else {
-            toast("File not uploaded!", {
-              position: "top-right",
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "light",
-              type: "error",
-            });
+      Api.post("/api/v1/FTAjson/upload", formData).then((res) => {
+        if (res.status === 201) {
+          toast("File uploaded successfully!", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            type: "success",
+          });
+          triggerReload();
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
           }
-        });
-      } catch (error) {
+        } else {
+          toast("File not uploaded!", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            type: "error",
+          });
+        }
+      }).catch((error) => {
         console.error("Error uploading JSON data", error);
-      }
+      });
     }
   };
 
@@ -158,7 +195,6 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
       {sessionId ? (
         <div className={active ? "nav-head-main-action" : "nav-head-main"}>
           <div className={active ? "avatar-div" : "avatar-div-action"}>
-            {/* <DropdownMenu right className="dropdown-content"> */}
             <div className="avatar-div-action mx-5">
               <div style={{ width: "100%", display: "flex" }}>
                 <div style={{ width: "0%" }} />
@@ -192,7 +228,7 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
                             </NavDropdown.Item>
                             <NavDropdown.Item onClick={handleDownloadFTA}>
                               <FontAwesomeIcon icon={faDownload} style={{ paddingRight: "10px" }} />
-                              Save to File New
+                              Save to File
                             </NavDropdown.Item>
                             <NavDropdown.Item onClick={handleUpload}>
                               <FontAwesomeIcon icon={faUpload} style={{ paddingRight: "10px" }} />
@@ -216,14 +252,73 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
                           >
                             <NavDropdown.Item onClick={handleOpenEdit}>Edit Gate</NavDropdown.Item>
                             <NavDropdown.Item onClick={handleOpenChildCreate}>Add New Logical Gate</NavDropdown.Item>
-                            <NavDropdown.Item onClick={handleOpenChildEvent}> Add New Event</NavDropdown.Item>
+                            <NavDropdown.Item onClick={handleOpenChildEvent}>Add New Event</NavDropdown.Item>
                             <NavDropdown.Item onClick={handelDelete}>Delete</NavDropdown.Item>
                           </NavDropdown>
                         </Nav>
                       </Navbar.Collapse>
                     </Navbar>
 
-                    <Navbar variant="dark" expand="lg">
+      <Navbar variant="dark" expand="lg">
+                      <Navbar.Collapse id="navbar-dark-example">
+                        <Nav>            
+
+<NavDropdown
+  title={
+    <span className="dropdown-title">
+      Report <span className="dropdown-arrow">&#9662;</span>
+    </span>
+  }
+  id="basic-nav-dropdown"
+>
+  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('all')}>
+    <FontAwesomeIcon icon={faFileAlt} style={{ paddingRight: "10px" }} />
+    All Nodes Report
+  </NavDropdown.Item>
+  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('events')}>
+    <FontAwesomeIcon icon={faFileCsv} style={{ paddingRight: "10px" }} />
+    List of Events
+  </NavDropdown.Item>
+  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('gates')}>
+    <FontAwesomeIcon icon={faFilePdf} style={{ paddingRight: "10px" }} />
+    List of Gates
+  </NavDropdown.Item>
+</NavDropdown>
+</Nav>  
+</Navbar.Collapse>
+</Navbar>
+
+<Navbar variant="dark" expand="lg">
+  <Navbar.Collapse id="navbar-dark-example">
+    <Nav>
+      <NavDropdown
+        title={
+          <span className="dropdown-title">
+            View <span className="dropdown-arrow">&#9662;</span>
+          </span>
+        }
+        id="basic-nav-dropdown"
+      >
+        <NavDropdown.Item onClick={() => onZoomToFit && onZoomToFit()}>
+          <FontAwesomeIcon icon={faExpand} style={{ paddingRight: "10px" }} />
+          Zoom - To Fit Screen
+        </NavDropdown.Item>
+        <NavDropdown.Item onClick={() => onZoomOriginal && onZoomOriginal()}>
+          <FontAwesomeIcon icon={faCompress} style={{ paddingRight: "10px" }} />
+          Zoom - Original Size
+        </NavDropdown.Item>
+        <NavDropdown.Item onClick={() => onToggleGrid && onToggleGrid()}>
+          <FontAwesomeIcon icon={faTh} style={{ paddingRight: "10px" }} />
+          Toggle Grid
+        </NavDropdown.Item>
+        <NavDropdown.Item onClick={() => onOriginalLayout && onOriginalLayout()}>
+          <FontAwesomeIcon icon={faRedo} style={{ paddingRight: "10px" }} />
+          Original Layout
+        </NavDropdown.Item>
+      </NavDropdown>
+    </Nav>
+  </Navbar.Collapse>
+    <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
                         <Nav>
                           <NavDropdown
@@ -239,11 +334,14 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
                           </NavDropdown>
                         </Nav>
                       </Navbar.Collapse>
-                    </Navbar>
+                    </Navbar>\
+</Navbar>
+
+
+
                   </div>
                 ) : null}
 
-                {/* <Avatar src={noImg} alt="" round={true} size="50px" className="avatar-img" /> */}
                 <div
                   style={{
                     width: selectedComponent === "FTA" ? "10%" : "100%",
@@ -254,7 +352,6 @@ const HeaderNavBar = ({ active, selectedComponent, onReloadData }) => {
                   <Nav>
                     <UncontrolledDropdown nav inNavbar>
                       <DropdownToggle nav>
-                        {/* <Avatar src={noImg} alt="" round={true} size="50px" className="avatar-img" /> */}
                         <div className="d-flex justify-content-start align-items-center">
                           <Tooltip title={userData?.name}>
                             <Avatar round size="50" className="d-flex justify-content-center">
