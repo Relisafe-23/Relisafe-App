@@ -148,7 +148,7 @@ function Index(props) {
   const [colDefs, setColDefs] = useState();
   const [failureModeRatioError, setFailureModeRatioError] = useState(false);
   const [companyId, setCompanyId] = useState();
-  const [selectedProductName, setSelectedProductName] = useState("");    
+  const [selectedProductName, setSelectedProductName] = useState("");
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [perviousColumnValues, setPerviousColumnValues] = useState([]);
@@ -286,7 +286,7 @@ function Index(props) {
   useEffect(() => {
     getAllSeprateLibraryData();
     getAllLibraryData();
- 
+
   }, []);
 
   const DownloadExcel = (values) => {
@@ -1116,7 +1116,7 @@ function Index(props) {
                 borderRadius: "3px",
               }}
             >
-              Connected 
+              Connected
             </div>
           )}
         </div>
@@ -1476,6 +1476,12 @@ function Index(props) {
       fmecaId: values.id,
       userId: userId,
       Alldata: tableData,
+
+      // ADD THIS FLAG TO INDICATE CONNECTED UPDATE
+      isConnectedUpdate: true,
+      updatedField: values.updatedField, // Track which field was updated
+      oldValue: values.oldValue, // Previous value before update
+      newValue: values.newValue, // New value after update
     };
 
     try {
@@ -1484,6 +1490,7 @@ function Index(props) {
         toast.success("FMECA updated successfully!");
         getProductData();
         getAllConnectedLibraryAfterUpdate();
+
       }
       else if (response?.status === 204) {
         toast.error("Failure Mode Radio Alpha Must be Equal to One !");
@@ -1505,6 +1512,7 @@ function Index(props) {
       setIsLoading(false);
     }
   };
+
 
   const deleteFmecaData = (value) => {
     setIsLoading(true);
