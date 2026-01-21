@@ -318,6 +318,23 @@ const HeaderNavBar = ({
       </NavDropdown>
     </Nav>
   </Navbar.Collapse>
+    <Navbar variant="dark" expand="lg">
+                      <Navbar.Collapse id="navbar-dark-example">
+                        <Nav>
+                          <NavDropdown
+                            title={
+                              <span className="dropdown-title">
+                                Analysis <span className="dropdown-arrow">&#9662;</span>
+                              </span>
+                            }
+                            id="basic-nav-dropdown"
+                          >
+                            <NavDropdown.Item onClick={() => setOpenProbCal(true)}>Probability Calculations(MCS)</NavDropdown.Item>
+                            <NavDropdown.Item >Show Repeated Events</NavDropdown.Item>
+                          </NavDropdown>
+                        </Nav>
+                      </Navbar.Collapse>
+                    </Navbar>\
 </Navbar>
 
 
