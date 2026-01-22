@@ -92,7 +92,7 @@ function ConnectedLibrary(props) {
     })
       .then((res) => {
         const data = res?.data?.data;
-      
+
         setWritePermission(data?.modules);
       })
       .catch((error) => {
@@ -109,7 +109,7 @@ function ConnectedLibrary(props) {
         token: token,
       },
     }).then((res) => {
-    
+
       setIsOwner(res.data.data.isOwner);
       setCreatedBy(res.data.data.createdBy);
     });
@@ -122,7 +122,7 @@ function ConnectedLibrary(props) {
       projectId: projectId,
       companyId: companyId,
     }).then((response) => {
-    
+
       const data = response?.data?.libraryData;
       setModuleData(data?.moduleData);
     });
@@ -174,131 +174,131 @@ function ConnectedLibrary(props) {
     },
   ];
 
-const validateSameSourceDestination = (values) => {
-  const errors = {};
+  const validateSameSourceDestination = (values) => {
+    const errors = {};
 
-  // Check if source field is selected in destination
-  if (values.Field && values.end && values.end.length > 0) {
-    const sourceFieldName = values.Field.value;
-    const hasSameField = values.end.some(dest => dest.value === sourceFieldName);
-    
-    if (hasSameField) {
-      toast.error("Source field cannot be selected as destination field");
-      errors.end = "Source field cannot be selected as destination field";
-    }
-  }
+    // Check if source field is selected in destination
+    if (values.Field && values.end && values.end.length > 0) {
+      const sourceFieldName = values.Field.value;
+      const hasSameField = values.end.some(dest => dest.value === sourceFieldName);
 
-  // Validate valueEnd array and check for duplicate destination values
-  if (values.end && values.end.length > 0) {
-    const valueEndErrors = [];
-    let hasEmptyValue = false;
-    let hasDuplicateDestination = false;
-
-    values.end.forEach((selectedOption, index) => {
-      const destinationField = selectedOption.value;
-      const destinationValue = values.valueEnd[index];
-      
-      // Check for empty values
-      if (!destinationValue || destinationValue.trim() === "") {
-        valueEndErrors[index] = "Value is required";
-        hasEmptyValue = true;
-      } 
-      // Check for duplicate destination values
-      else {
-        valueEndErrors[index] = "";
-        
-        // Ratio fields must be < 1, others must be >= 1
-// Ratio fields must be < 1, others must be >= 1
-const ratioFields = ["endEffectRatioBeta", "failureModeRatioAlpha"];
-
-values.end.forEach((selectedOption, index) => {
-  const val = values.valueEnd[index];
-
-  if (!val || val.trim() === "") {
-    errors.valueEnd = errors.valueEnd || [];
-    errors.valueEnd[index] = "Value is required";
-    return;
-  }
-
-  const numericValue = parseFloat(val);
-
-  // if (isNaN(numericValue)) {
-  //   errors.valueEnd = errors.valueEnd || [];
-  //   errors.valueEnd[index] = "Value must be ah number";
-  //   return;
-  // }
-
-  if (ratioFields.includes(selectedOption.value)) {
-    // Must be < 1
-    if (numericValue >= 1) {
-      errors.valueEnd = errors.valueEnd || [];
-      errors.valueEnd[index] = " Destination value must be less than 1";
-    }
-  } else {
-    // Must be ≥ 1
-    if (numericValue < 1) {
-      errors.valueEnd = errors.valueEnd || [];
-      errors.valueEnd[index] = " Destination value must be less than or equal to 1";
-    }
-  }
-});
-
-
-
-        // Check if this destination value already exists for the same field
-        const existingDestination = connectData.find(connection => {
-          // Check if any destination in this connection matches our field and value
-          return connection.destinationData.some(dest => 
-            dest.destinationName === destinationField &&
-            dest.destinationValue === destinationValue &&
-            // If editing, exclude the current row being edited
-            (!editRowData || connection.sourceId !== editRowData.sourceId)
-          );
-        });
-
-        if (existingDestination) {
-          valueEndErrors[index] = `Destination value "${destinationValue}" already exists for ${selectedOption.label}`;
-          hasDuplicateDestination = true;
-        }
+      if (hasSameField) {
+        toast.error("Source field cannot be selected as destination field");
+        errors.end = "Source field cannot be selected as destination field";
       }
-    });
-
-    if (hasEmptyValue) {
-      errors.valueEnd = valueEndErrors;
-      toast.error("Please fill all destination values");
     }
-    
-    if (hasDuplicateDestination) {
-      errors.valueEnd = valueEndErrors;
-      toast.error("Some destination values already exist");
+
+    // Validate valueEnd array and check for duplicate destination values
+    if (values.end && values.end.length > 0) {
+      const valueEndErrors = [];
+      let hasEmptyValue = false;
+      let hasDuplicateDestination = false;
+
+      values.end.forEach((selectedOption, index) => {
+        const destinationField = selectedOption.value;
+        const destinationValue = values.valueEnd[index];
+
+        // Check for empty values
+        if (!destinationValue || destinationValue.trim() === "") {
+          valueEndErrors[index] = "Value is required";
+          hasEmptyValue = true;
+        }
+        // Check for duplicate destination values
+        else {
+          valueEndErrors[index] = "";
+
+          // Ratio fields must be < 1, others must be >= 1
+          // Ratio fields must be < 1, others must be >= 1
+          const ratioFields = ["endEffectRatioBeta", "failureModeRatioAlpha"];
+
+          values.end.forEach((selectedOption, index) => {
+            const val = values.valueEnd[index];
+
+            if (!val || val.trim() === "") {
+              errors.valueEnd = errors.valueEnd || [];
+              errors.valueEnd[index] = "Value is required";
+              return;
+            }
+
+            const numericValue = parseFloat(val);
+
+            // if (isNaN(numericValue)) {
+            //   errors.valueEnd = errors.valueEnd || [];
+            //   errors.valueEnd[index] = "Value must be ah number";
+            //   return;
+            // }
+
+            if (ratioFields.includes(selectedOption.value)) {
+              // Must be < 1
+              if (numericValue >= 1) {
+                errors.valueEnd = errors.valueEnd || [];
+                errors.valueEnd[index] = " Destination value must be less than 1";
+              }
+            } else {
+              // Must be ≥ 1
+              if (numericValue < 1) {
+                errors.valueEnd = errors.valueEnd || [];
+                errors.valueEnd[index] = " Destination value must be less than or equal to 1";
+              }
+            }
+          });
+
+
+
+          // Check if this destination value already exists for the same field
+          const existingDestination = connectData.find(connection => {
+            // Check if any destination in this connection matches our field and value
+            return connection.destinationData.some(dest =>
+              dest.destinationName === destinationField &&
+              dest.destinationValue === destinationValue &&
+              // If editing, exclude the current row being edited
+              (!editRowData || connection.sourceId !== editRowData.sourceId)
+            );
+          });
+
+          if (existingDestination) {
+            valueEndErrors[index] = `Destination value "${destinationValue}" already exists for ${selectedOption.label}`;
+            hasDuplicateDestination = true;
+          }
+        }
+      });
+
+      if (hasEmptyValue) {
+        errors.valueEnd = valueEndErrors;
+        toast.error("Please fill all destination values");
+      }
+
+      if (hasDuplicateDestination) {
+        errors.valueEnd = valueEndErrors;
+        toast.error("Some destination values already exist");
+      }
     }
-  }
 
-  // Check for duplicate source value in existing connections
-  if (values.Module && values.Field && values.FieldValueAndValue.value) {
-    const sourceModule = values.Module.value;
-    const sourceField = values.Field.value;
-    const sourceValue = values.FieldValueAndValue.value;
-    
-    // Check if this source value already exists in connectData
-    const existingConnection = connectData.find(connection => 
-      connection.libraryId?.moduleName === sourceModule &&
-      connection.sourceName === sourceField &&
-      connection.sourceValue === sourceValue &&
-      // If editing, exclude the current row being edited
-      (!editRowData || connection.sourceId !== editRowData.sourceId)
-    );
+    // Check for duplicate source value in existing connections
+    if (values.Module && values.Field && values.FieldValueAndValue.value) {
+      const sourceModule = values.Module.value;
+      const sourceField = values.Field.value;
+      const sourceValue = values.FieldValueAndValue.value;
 
-    if (existingConnection) {
-      toast.error(`Source value "${sourceValue}" already exists for ${sourceField} in ${sourceModule}`);
-      errors.FieldValueAndValue = {
-        value: `This source value already exists for ${sourceField}`
-      };
+      // Check if this source value already exists in connectData
+      const existingConnection = connectData.find(connection =>
+        connection.libraryId?.moduleName === sourceModule &&
+        connection.sourceName === sourceField &&
+        connection.sourceValue === sourceValue &&
+        // If editing, exclude the current row being edited
+        (!editRowData || connection.sourceId !== editRowData.sourceId)
+      );
+
+      if (existingConnection) {
+        toast.error(`Source value "${sourceValue}" already exists for ${sourceField} in ${sourceModule}`);
+        errors.FieldValueAndValue = {
+          value: `This source value already exists for ${sourceField}`
+        };
+      }
     }
-  }
 
-  return errors;
-};
+    return errors;
+  };
 
   const validation = Yup.object().shape({
     Module: Yup.object().required("Module is required"),
@@ -330,7 +330,7 @@ values.end.forEach((selectedOption, index) => {
       destinationData: values,
     })
       .then((res) => {
-       
+
         const data = res.data;
         setIsLoading(false);
         if (res.status === 201) {
@@ -365,7 +365,7 @@ values.end.forEach((selectedOption, index) => {
       destinationData: values,
       destinationModuleName: values.destinationModule.value,
     }).then((res) => {
-   
+
       resetForm({
         Module: "",
         destinationModule: "",
@@ -396,7 +396,7 @@ values.end.forEach((selectedOption, index) => {
 
   //delete-Api
   const deleteConnectLibarary = (values) => {
-   
+
     setIsLoading(true);
     const sourceId = values.sourceId;
     Api.delete("api/v1/library/delete/connect/value", {
@@ -406,13 +406,13 @@ values.end.forEach((selectedOption, index) => {
       },
     }).then((res) => {
       setIsLoading(false);
-        toast.error(`Deleted Successfully`);
+      toast.error(`Deleted Successfully`);
       getAllConnect();
     }).catch((error) => {
-    setIsLoading(false);
-    toast.error("Failed to delete connection. Please try again.");
-    console.error("Delete error:", error);
-  });
+      setIsLoading(false);
+      toast.error("Failed to delete connection. Please try again.");
+      console.error("Delete error:", error);
+    });
   };
 
   //get Api
@@ -438,7 +438,7 @@ values.end.forEach((selectedOption, index) => {
     projectSidebar();
   }, [projectId]);
 
- 
+
   const getCustomValue = (value) => {
 
     Api.get("api/v1/library/get/separate/module/data", {
@@ -464,7 +464,7 @@ values.end.forEach((selectedOption, index) => {
       )
     )
       .then((responses) => {
-       
+
         const destinationData = responses.map(
           (response) => response.data.getData
         );
@@ -508,7 +508,7 @@ values.end.forEach((selectedOption, index) => {
                       value: selectModule,
                     }
                     : "",
-                   destinationModule: editRowData
+                destinationModule: editRowData
                   ? {
                     label: editRowData?.destinationModuleName,
                     value: editRowData?.destinationModuleName,
@@ -547,11 +547,13 @@ values.end.forEach((selectedOption, index) => {
                     id: destination.destinationId,
                   }))
                   : [],
+                // Convert array to object for better state management
                 valueEnd: editRowData
-                  ? editRowData.destinationData.map(
-                    (destination) => destination.destinationValue
-                  )
-                  : [],
+                  ? editRowData.destinationData.reduce((acc, destination, index) => {
+                    acc[destination.destinationName] = destination.destinationValue;
+                    return acc;
+                  }, {})
+                  : {},
                 FieldValueAndValueEnd: {
                   field: "",
                   value: "",
@@ -561,7 +563,7 @@ values.end.forEach((selectedOption, index) => {
               onSubmit={(values, { resetForm }) => {
                 // Run custom validation before submission
                 const customErrors = validateSameSourceDestination(values);
-                
+
                 if (Object.keys(customErrors).length === 0) {
                   // No custom errors, proceed with submission
                   editRowData
@@ -583,7 +585,7 @@ values.end.forEach((selectedOption, index) => {
                   touched,
                   errors,
                 } = Formik;
-                
+
                 const handleFieldChange = (fieldName, fieldValue) => {
                   handleChange(fieldName)(fieldValue);
                   setFieldValue(`errors.${fieldName}`, "");
@@ -689,7 +691,7 @@ values.end.forEach((selectedOption, index) => {
                                           options: moduleData
                                             ?.filter(
                                               (item) =>
-                                                 item.name !== values.Field?.value
+                                                item.name !== values.Field?.value
                                             )
                                             .map((list) => ({
                                               value: list.name,
@@ -708,106 +710,106 @@ values.end.forEach((selectedOption, index) => {
                                 />
                               </Form.Group>
                             </Col>
-                          {values?.Field ? (
-                                                     <Col className="col-lg-4 mt-2">
-                                                       <Label>
-                                                         Enter custom value for {values.Field.label}
-                                                         {(values.Field?.value === 'endEffectRatioBeta' || 
-                                                           values.Field?.value === 'failureModeRatioAlpha') && 
-                                                           " (must be less than 1)"}
-                                                       </Label>
-                                                       <Form.Group>
-                                                         {namesToFilter.includes(values.Field?.value) ? (
-                                                           <Select
-                                                             name="FieldValueAndValue"
-                                                             className="mt-1"
-                                                             placeholder={`Select value for ${values.Field.label}`}
-                                                             value={values.FieldValueAndValue?.value ? 
-                                                               { label: values.FieldValueAndValue.value, value: values.FieldValueAndValue.value } : 
-                                                               null
-                                                             }
-                                                             options={[
-                                                               { label: "Yes", value: "Yes" },
-                                                               { label: "No", value: "No" },
-                                                             ]}
-                                                             onBlur={handleBlur}
-                                                             onChange={(selectedOption) => {
-                                                               setFieldValue("FieldValueAndValue", {
-                                                                 field: values.Field.value,
-                                                                 value: selectedOption?.value || "",
-                                                               });
-                                                             }}
-                                                             styles={customStyles}
-                                                           />
-                                                         ) : (values.Field?.value === 'endEffectRatioBeta' || 
-                                                              values.Field?.value === 'failureModeRatioAlpha') ? (
-                                                           <Form.Control
-                                                             type="number"
-                                                             step="0.01"
-                                                             min="0"
-                                                             max="0.99"
-                                                             placeholder="Enter value between 0 and 1"
-                                                             value={values.FieldValueAndValue.value || ""}
-                                                             onChange={(e) => {
-                                                               const value = e.target?.value;
-                                                               setFieldValue("FieldValueAndValue", {
-                                                                 field: values.Field.value,
-                                                                 value: value,
-                                                               });
-                                                             }}
-                                                             onBlur={handleBlur}
-                                                             isInvalid={errors.FieldValueAndValue?.value}
-                                                           />
-                                                         ) : separateData?.length > 0 ? (
-                                                           <CreatableSelect
-                                                             value={values.FieldValueAndValue?.value ? 
-                                                               { value: values.FieldValueAndValue.value, label: values.FieldValueAndValue.value } : 
-                                                               null
-                                                             }
-                                                             onChange={(selectedOption) => {
-                                                               setFieldValue("FieldValueAndValue", {
-                                                                 field: values.Field.value,
-                                                                 value: selectedOption?.value || "",
-                                                               });
-                                                             }}
-                                                             onCreateOption={(inputValue) => {
-                                                               setFieldValue("FieldValueAndValue", {
-                                                                 field: values.Field.value,
-                                                                 value: inputValue,
-                                                               });
-                                                             }}
-                                                             isClearable
-                                                             placeholder="Select or type a new value"
-                                                             options={separateData.map((list) => ({
-                                                               value: list.sourceValue,
-                                                               label: list.sourceValue,
-                                                               id: list,
-                                                             }))}
-                                                             styles={customStyles}
-                                                           />
-                                                         ) : (
-                                                           <Form.Control
-                                                             placeholder={`Enter custom value for ${values.Field.label}`}
-                                                             value={values.FieldValueAndValue.value || ""}
-                                                             onChange={(e) => {
-                                                               setFieldValue("FieldValueAndValue", {
-                                                                 field: values.Field.value,
-                                                                 value: e.target?.value,
-                                                               });
-                                                             }}
-                                                             onBlur={handleBlur}
-                                                             isInvalid={errors.FieldValueAndValue?.value}
-                                                           />
-                                                         )}
-                                                         {errors.FieldValueAndValue?.value && (
-                                                           <div className="error text-danger mt-1">
-                                                             {errors.FieldValueAndValue.value}
-                                                           </div>
-                                                         )}
-                                                       </Form.Group>
-                                                     </Col>
-                                                   ) : null}
-                         
+                            {values?.Field ? (
+                              <Col className="col-lg-4 mt-2">
+                                <Label>
+                                  Enter custom value for {values.Field.label}
+                                  {(values.Field?.value === 'endEffectRatioBeta' ||
+                                    values.Field?.value === 'failureModeRatioAlpha') &&
+                                    " (must be less than 1)"}
+                                </Label>
+                                <Form.Group>
+                                  {namesToFilter.includes(values.Field?.value) ? (
+                                    <Select
+                                      name="FieldValueAndValue"
+                                      className="mt-1"
+                                      placeholder={`Select value for ${values.Field.label}`}
+                                      value={values.FieldValueAndValue?.value ?
+                                        { label: values.FieldValueAndValue.value, value: values.FieldValueAndValue.value } :
+                                        null
+                                      }
+                                      options={[
+                                        { label: "Yes", value: "Yes" },
+                                        { label: "No", value: "No" },
+                                      ]}
+                                      onBlur={handleBlur}
+                                      onChange={(selectedOption) => {
+                                        setFieldValue("FieldValueAndValue", {
+                                          field: values.Field.value,
+                                          value: selectedOption?.value || "",
+                                        });
+                                      }}
+                                      styles={customStyles}
+                                    />
+                                  ) : (values.Field?.value === 'endEffectRatioBeta' ||
+                                    values.Field?.value === 'failureModeRatioAlpha') ? (
+                                    <Form.Control
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      max="0.99"
+                                      placeholder="Enter value between 0 and 1"
+                                      value={values.FieldValueAndValue.value || ""}
+                                      onChange={(e) => {
+                                        const value = e.target?.value;
+                                        setFieldValue("FieldValueAndValue", {
+                                          field: values.Field.value,
+                                          value: value,
+                                        });
+                                      }}
+                                      onBlur={handleBlur}
+                                      isInvalid={errors.FieldValueAndValue?.value}
+                                    />
+                                  ) : separateData?.length > 0 ? (
+                                    <CreatableSelect
+                                      value={values.FieldValueAndValue?.value ?
+                                        { value: values.FieldValueAndValue.value, label: values.FieldValueAndValue.value } :
+                                        null
+                                      }
+                                      onChange={(selectedOption) => {
+                                        setFieldValue("FieldValueAndValue", {
+                                          field: values.Field.value,
+                                          value: selectedOption?.value || "",
+                                        });
+                                      }}
+                                      onCreateOption={(inputValue) => {
+                                        setFieldValue("FieldValueAndValue", {
+                                          field: values.Field.value,
+                                          value: inputValue,
+                                        });
+                                      }}
+                                      isClearable
+                                      placeholder="Select or type a new value"
+                                      options={separateData.map((list) => ({
+                                        value: list.sourceValue,
+                                        label: list.sourceValue,
+                                        id: list,
+                                      }))}
+                                      styles={customStyles}
+                                    />
+                                  ) : (
+                                    <Form.Control
+                                      placeholder={`Enter custom value for ${values.Field.label}`}
+                                      value={values.FieldValueAndValue.value || ""}
+                                      onChange={(e) => {
+                                        setFieldValue("FieldValueAndValue", {
+                                          field: values.Field.value,
+                                          value: e.target?.value,
+                                        });
+                                      }}
+                                      onBlur={handleBlur}
+                                      isInvalid={errors.FieldValueAndValue?.value}
+                                    />
+                                  )}
+                                  {errors.FieldValueAndValue?.value && (
+                                    <div className="error text-danger mt-1">
+                                      {errors.FieldValueAndValue.value}
+                                    </div>
+                                  )}
+                                </Form.Group>
+                              </Col>
+                            ) : null}
+
                             <Col className="col-lg-4 mt-2">
                               <Label>Destination Module</Label>
                               <Form.Group>
@@ -864,6 +866,8 @@ values.end.forEach((selectedOption, index) => {
                                 )}
                               </Form.Group>
                             </Col>
+
+
                             <Col className="col-lg-4 mt-2">
                               <Label>Destination</Label>
                               <Form.Group>
@@ -871,126 +875,129 @@ values.end.forEach((selectedOption, index) => {
                                   isMulti
                                   value={values.end}
                                   onChange={(selectedOptions) => {
+                                    const prevEnd = values.end || [];
                                     setFieldValue("end", selectedOptions);
+
+                                    // Preserve existing values when modifying end array
+                                    const newValueEnd = { ...(values.valueEnd || {}) };
+
+                                    // Remove values for fields that are no longer selected
+                                    Object.keys(newValueEnd).forEach(key => {
+                                      if (!selectedOptions.find(opt => opt.value === key)) {
+                                        delete newValueEnd[key];
+                                      }
+                                    });
+
+                                    setFieldValue("valueEnd", newValueEnd);
                                     getDestinationValue(selectedOptions);
                                   }}
                                   placeholder="Select Field"
                                   name="end"
                                   options={
-                                 moduleData && values.Field
-                                      ?moduleData.filter(
-                                        (item) =>
-                                       
-                                          item.name !== values.Field?.value // Exclude source field from destination options
+                                    moduleData && values.Field
+                                      ? moduleData.filter(
+                                        (item) => item.name !== values.Field?.value // Exclude source field from destination options
                                       )
-                                      .map((list) => ({
-                                        value: list.name,
-                                        label: list.key,
-                                        id: list,
-                                      }))
+                                        .map((list) => ({
+                                          value: list.name,
+                                          label: list.key,
+                                          id: list,
+                                        }))
                                       : []
                                   }
                                 />
-                                {/* <ErrorMessage
-                                  component="span"
-                                  name="end"
-                                  className="error text-danger"
-                                /> */}
                                 {errors.end && typeof errors.end === 'string' && (
                                   <div className="error text-danger">{errors.end}</div>
                                 )}
                               </Form.Group>
                             </Col>
+
                             {values.end &&
                               values.end.length > 0 &&
                               values.end.map((selectedOption, index) => (
-                                <Col key={index} className="col-lg-4 mt-2">
+                                <Col key={selectedOption.value} className="col-lg-4 mt-2">
                                   <Label>
                                     Custom Value for {selectedOption.label}
-                                       {(selectedOption?.value === 'endEffectRatioBeta' || 
-                                      selectedOption?.value === 'failureModeRatioAlpha') && 
+                                    {(selectedOption?.value === 'endEffectRatioBeta' ||
+                                      selectedOption?.value === 'failureModeRatioAlpha') &&
                                       " (must be less than 1)"}
                                   </Label>
-                                  <Form.Group key={index}>
-                                    {namesToFilter.includes(
-                                      selectedOption.value
-                                    ) ? (
+                                  <Form.Group>
+                                    {namesToFilter.includes(selectedOption.value) ? (
                                       <Form.Select
                                         className="mt-1"
                                         styles={customStyles}
-                                        name={`valueEnd[${index}]`}
+                                        name={`valueEnd.${selectedOption.value}`} // Changed to object notation
                                         type="select"
-                                        aria-label={`Select value for ${selectedOption
-                                          ? selectedOption.label
-                                          : ""
-                                          }`}
+                                        aria-label={`Select value for ${selectedOption ? selectedOption.label : ""}`}
                                         onChange={handleChange}
                                         onBlur={handleBlur}
-                                        value={values.valueEnd[index] || ""}
+                                        value={values.valueEnd?.[selectedOption.value] || ""}
                                       >
                                         <option value="">Select</option>
                                         <option value="Yes">Yes</option>
                                         <option value="No">No</option>
                                       </Form.Select>
-                                    ) :(selectedOption?.value === 'endEffectRatioBeta' || 
-                                         selectedOption?.value === 'failureModeRatioAlpha') ? (
+                                    ) : (selectedOption?.value === 'endEffectRatioBeta' ||
+                                      selectedOption?.value === 'failureModeRatioAlpha') ? (
                                       <Form.Control
                                         type="text"
                                         step="0.01"
                                         min="0"
                                         max="0.99"
-                                        name={`valueEnd[${index}]`}
+                                        name={`valueEnd.${selectedOption.value}`} // Changed to object notation
                                         placeholder={`Enter value between 0 and 1 for ${selectedOption.label}`}
                                         onChange={handleChange}
                                         onBlur={handleBlur}
-                                        value={values.valueEnd[index] || ""}
+                                        value={values.valueEnd?.[selectedOption.value] || ""}
                                       />
-                                    ): separateDestinationData &&
+                                    ) : separateDestinationData &&
                                       separateDestinationData[index]?.length > 0 ? (
                                       <CreatableSelect
-                                        onChange={(selectedOption) => {
-                                          if (selectedOption.__isNew__) {
-                                            const newOptionValue =
-                                              selectedOption.value;
+                                        onChange={(newSelectedOption) => {
+                                          if (newSelectedOption.__isNew__) {
                                             setFieldValue(
-                                              `valueEnd[${index}]`,
-                                              newOptionValue
+                                              `valueEnd.${selectedOption.value}`, // Changed to object notation
+                                              newSelectedOption.value
                                             );
                                           } else {
-                                            const existingOptionValue =
-                                              selectedOption.value;
                                             setFieldValue(
-                                              `valueEnd[${index}]`,
-                                              existingOptionValue
+                                              `valueEnd.${selectedOption.value}`, // Changed to object notation
+                                              newSelectedOption.value
                                             );
                                           }
                                         }}
-                                        placeholder={`Enter value between 0 and 1 for ${selectedOption.label}`}
+                                        placeholder={`Enter value for ${selectedOption.label}`}
                                         type="select"
                                         name="Module"
                                         styles={customStyles}
-                                        options={filterDestinationOptions(
-                                          selectedOption.label
-                                        )}
+                                        options={filterDestinationOptions(selectedOption.label)}
+                                        value={values.valueEnd?.[selectedOption.value] ?
+                                          { value: values.valueEnd[selectedOption.value], label: values.valueEnd[selectedOption.value] } :
+                                          null
+                                        }
                                       />
-                                      ):(    <Form.Control
-                                                                              type="text"
-                                                                              name={`valueEnd[${index}]`}
-                                                                              placeholder={`Enter custom value for ${selectedOption.label}`}
-                                                                              onChange={handleChange}
-                                                                              onBlur={handleBlur}
-                                                                              value={values?.valueEnd?.[index] || ""}
-                                                                              isInvalid={errors.valueEnd && errors.valueEnd[index]}
-                                                                            /> 
-                                                                          ) }
+                                    ) : (
+                                      <Form.Control
+                                        type="text"
+                                        name={`valueEnd.${selectedOption.value}`} // Changed to object notation
+                                        placeholder={`Enter custom value for ${selectedOption.label}`}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        value={values.valueEnd?.[selectedOption.value] || ""}
+                                        isInvalid={errors.valueEnd && errors.valueEnd[selectedOption.value]}
+                                      />
+                                    )}
                                     <ErrorMessage
                                       component="span"
-                                      name={`valueEnd[${index}]`}
+                                      name={`valueEnd.${selectedOption.value}`} // Changed to object notation
                                       className="error text-danger"
                                     />
                                   </Form.Group>
                                 </Col>
                               ))}
+
+
 
                             <div className="d-flex flex-direction-row justify-content-end  mt-4 mb-2">
                               <Button

@@ -613,7 +613,7 @@ export default function PMMRA(props) {
   };
 
   const exportToExcel = (value) => {
-    console.log(value,"value from export to excel")
+    console.log(value, "value from export to excel")
     const originalData = {
       CompanyName: treeTableData[0]?.companyId?.companyName,
       ProjectName: treeTableData[0]?.projectId?.projectName,
@@ -637,8 +637,8 @@ export default function PMMRA(props) {
       pmTaskId: value.pmtaskid,
       pmTaskType: value.PMtasktype,
       taskIntrvlFreq: value.taskintervalFrequency,
-      taskIntrvlUnit : value.taskIntervalunit,
-      taskIntrvl : value.taskInterval,
+      taskIntrvlUnit: value.taskIntervalunit,
+      taskIntrvl: value.taskInterval,
       // LatitudeFreqTolrnc: value.latitudeFrequency,
       scheduleMaintenceTsk: value.scheduledMaintenanceTask,
       tskInteralDetermination: value.taskInterval,
@@ -1531,8 +1531,8 @@ export default function PMMRA(props) {
   }));
 
 
-  console.log(importExcelData,"....importExcelData....")
-  console.log(pmmraData,"....pmmraData....")
+  console.log(importExcelData, "....importExcelData....")
+  console.log(pmmraData, "....pmmraData....")
 
 
   const InitialValues = {
@@ -1568,7 +1568,7 @@ export default function PMMRA(props) {
     taskintervalFrequency:
       importExcelData?.taskintervalFrequency || pmmraData?.taskIntrvlFreq || "",
     taskIntervalunit: importExcelData?.taskIntrvlUnit || pmmraData?.taskIntrvlUnit || "",
-    taskIntrvl : importExcelData?.taskInterval || pmmraData?.taskInterval || "", 
+    taskIntrvl: importExcelData?.taskInterval || pmmraData?.taskInterval || "",
     latitudeFrequency:
       importExcelData?.latitudeFrequency || pmmraData?.LatitudeFreqTolrnc || "",
     scheduledMaintenanceTask:
@@ -1674,6 +1674,8 @@ export default function PMMRA(props) {
     // combination: pmmraData?.combinationOfTsk || { label: pmmraData?.combinationOfTsk, value: pmmraData?.combinationOfTsk } || "",
     // taskIntervalunit: pmmraData?.taskIntrvlUnit || { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit } || "",
   };
+
+
   return (
     <div style={{ marginTop: "90px" }} className="mx-4">
       {isLoading ? (
@@ -3165,9 +3167,7 @@ export default function PMMRA(props) {
                           <Row>
                             <Col md={6}>
                               <Form.Group>
-                                <Label notify={true}>
-                                  Loss of Function Evident?
-                                </Label>
+                                <Label notify={true}>Loss of Function Evident?</Label>
                                 {(() => {
                                   // Check if we should show connected/separate data or default options
                                   const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
@@ -3213,15 +3213,15 @@ export default function PMMRA(props) {
                                       index === self.findIndex((t) => t.value === option.value)
                                     );
 
+                                    // Find the current value in options to display properly
+                                    const selectedOption = options.find(option => option.value === values.Evident1) || null;
+
                                     return (
                                       <Select
                                         name="Evident1"
                                         className="mt-1"
                                         placeholder="Evident1"
-                                        value={values?.Evident1 ? {
-                                          label: values?.Evident1,
-                                          value: values?.Evident1,
-                                        } : null}
+                                        value={selectedOption}
                                         options={options.length > 0 ? options : [
                                           { label: "Yes", value: "Yes" },
                                           { label: "No", value: "No" },
@@ -3235,26 +3235,26 @@ export default function PMMRA(props) {
                                             (isOwner === true && createdBy === userId))
                                         }
                                         onChange={(e) => {
-                                          setFieldValue("Evident1", e.value);
-                                          getAllConnectedLibrary(e.value, "Evident1");
+                                          setFieldValue("Evident1", e ? e.value : "");
+                                          getAllConnectedLibrary(e ? e.value : "", "Evident1");
                                         }}
                                       />
                                     );
                                   } else {
                                     // Default options
+                                    const defaultOptions = [
+                                      { label: "Yes", value: "Yes" },
+                                      { label: "No", value: "No" },
+                                    ];
+                                    const selectedOption = defaultOptions.find(option => option.value === values.Evident1) || null;
+
                                     return (
                                       <Select
                                         name="Evident1"
                                         className="mt-1"
                                         placeholder="Evident1"
-                                        value={values?.Evident1 ? {
-                                          label: values?.Evident1,
-                                          value: values?.Evident1,
-                                        } : null}
-                                        options={[
-                                          { label: "Yes", value: "Yes" },
-                                          { label: "No", value: "No" },
-                                        ]}
+                                        value={selectedOption}
+                                        options={defaultOptions}
                                         styles={customStyles}
                                         onBlur={handleBlur}
                                         isDisabled={
@@ -3264,8 +3264,8 @@ export default function PMMRA(props) {
                                             (isOwner === true && createdBy === userId))
                                         }
                                         onChange={(e) => {
-                                          setFieldValue("Evident1", e.value);
-                                          getAllConnectedLibrary(e.value, "Evident1");
+                                          setFieldValue("Evident1", e ? e.value : "");
+                                          getAllConnectedLibrary(e ? e.value : "", "Evident1");
                                         }}
                                       />
                                     );
@@ -4610,7 +4610,7 @@ export default function PMMRA(props) {
                                       item.sourceValue
                                   ) ? (
                                     (() => {
-                                      
+
                                       const seperateFilteredData =
                                         allSepareteData?.filter(
                                           (item) =>
