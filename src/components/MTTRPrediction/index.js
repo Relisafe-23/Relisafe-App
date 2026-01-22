@@ -55,7 +55,7 @@ const MTTRPrediction = (props, active) => {
     ? props?.location?.state?.parentId
     : initialTreeStructure;
   const [open, setOpen] = useState(false);
-   const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [category, setCategory] = useState("");
   const [successMessage, setSuccessMessage] = useState();
   const [repairable, setRepairable] = useState("");
@@ -97,7 +97,7 @@ const MTTRPrediction = (props, active) => {
   const [allConnectedData, setAllConnectedData] = useState([]);
   const [companyId, setCompanyId] = useState();
   const [selectedField, setSelectedField] = useState(null);
-  const[connectedLibraryData,setConnectedLibraryData]=useState([]);
+  const [connectedLibraryData, setConnectedLibraryData] = useState([]);
   const [treeTable, setTreeTable] = useState([]);
   const [selectedFunction, setSelectedFunction] = useState();
 
@@ -119,7 +119,6 @@ const MTTRPrediction = (props, active) => {
     }));
   };
 
-
   const getAllSeprateLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
     setCompanyId(companyId);
@@ -128,7 +127,7 @@ const MTTRPrediction = (props, active) => {
         projectId: projectId,
       },
     }).then((res) => {
-       console.log("separate library data", res);
+      console.log("separate library data", res);
       const filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "MTTR"
       );
@@ -141,8 +140,8 @@ const MTTRPrediction = (props, active) => {
 
   useEffect(() => {
     getAllSeprateLibraryData();
-    // getAllConnectedLibrary();
-    //  getAllConnect();
+    getAllConnectedLibrary();
+    getAllConnect();
   }, []);
 
   const productId = props?.location?.props?.data?.id
@@ -220,202 +219,202 @@ const MTTRPrediction = (props, active) => {
       createMTTRDataFromExcel(rowData);
     });
   };
-const createMTTRDataFromExcel = async (values) => {
-  try {
-    
-    const companyId = localStorage.getItem("companyId");
-    setCompanyId(companyId);
-    const response = await Api.post("/api/v1/mttrPrediction/create/procedure", {
-      projectId: projectId,
-      productId: productId,
-      companyId: companyId,
-      remarks: values?.remarks,
-      taskType: values?.taskType,
-      time: values.time,
-      totalLabour: values.totalLabour,
-      skill: values.skill,
-      tools: values.tools,
-      partNo: values.partNo,
-      toolType: values.toolType,
-      repairable: values.repairable,
-      levelOfRepair: values.levelOfRepair,
-      levelOfReplace: values.levelOfReplace,
-      spare: values.spare,
-   
-    });
-  
-    
-  
-    const mttrId = response?.data?.data?.id;
-    setSuccessMessage(response?.data?.message);
-    setMttrId(response?.data?.data?.id);
-     setValidateData(response?.data?.data);
-      getProcedureData();
-    
-    return { success: true, data: response.data };
-  } catch (error) {
-    const errorStatus = error?.response?.status;
-    if (errorStatus === 401) {
-      logout();
-    } else {
-      setOpen(true);
-    }
-    return { success: false, error };
-  }
-};
+  const createMTTRDataFromExcel = async (values) => {
+    try {
 
-const importExcel = (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+      const companyId = localStorage.getItem("companyId");
+      setCompanyId(companyId);
+      const response = await Api.post("/api/v1/mttrPrediction/create/procedure", {
+        projectId: projectId,
+        productId: productId,
+        companyId: companyId,
+        remarks: values?.remarks,
+        taskType: values?.taskType,
+        time: values.time,
+        totalLabour: values.totalLabour,
+        skill: values.skill,
+        tools: values.tools,
+        partNo: values.partNo,
+        toolType: values.toolType,
+        repairable: values.repairable,
+        levelOfRepair: values.levelOfRepair,
+        levelOfReplace: values.levelOfReplace,
+        spare: values.spare,
 
-  const fileName = file.name;
-  const validExtensions = ["xlsx", "xls"];
-  const fileExtension = fileName.split(".").pop().toLowerCase();
-
-  if (!validExtensions.includes(fileExtension)) {
-    toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
-      position: "top-right",
-    });
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = async (event) => {
-    const bstr = event.target.result;
-    const workBook = XLSX.read(bstr, { type: "binary" });
-    const workSheetName = workBook.SheetNames[0];
-    const workSheet = workBook.Sheets[workSheetName];
-    const parsedData = XLSX.utils.sheet_to_json(workSheet, { defval: "" });
-
-    if (parsedData.length > 0) {
-      const normalizedData = parsedData.map((row, index) => ({
-        remarks: row.remarks || "",
-        time: row.time || "",
-        skill: row.skill || "",
-        tools: row.tools || "",
-        taskType: row.taskType || "",
-        totalLabour: row.totalLabour || "",
-        partNo: row.partNo || "",
-        toolType: row.toolType || "",
-        repairable: row.repairable || "",
-        levelOfRepair: row.levelOfRepair || "",
-        levelOfReplace: row.levelOfReplace || "",
-        spare: row.spare || "",
-      }));
-
-      setTableData((prevData) => [...prevData, ...normalizedData]);
-        //       setTableData((prevData) => [...prevData, ...normalizedData]);
-       setImportExcelData(normalizedData[normalizedData.length - 1]);
-       applyExcelDataToForm(normalizedData[normalizedData.length - 1]);
-      
-      // Show loading
-      setIsLoading(true);
-      
-      // Process each row with delay to avoid overwhelming the server
-      let successCount = 0;
-      let errorCount = 0;
-      
-      for (let i = 0; i < normalizedData.length; i++) {
-        const rowData = normalizedData[i];
-        const result = await createMTTRDataFromExcel(rowData);
-        
-        if (result.success) {
-          successCount++;
-        } else {
-          errorCount++;
-        }
-        
-        // Optional: Add delay between requests
-        if (i < normalizedData.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-        }
-      }
-      
-      setIsLoading(false);
-      
-      if (errorCount === 0) {
-        toast.success(`All ${successCount} records imported successfully!`, {
-          position: toast.POSITION.TOP_RIGHT,
-        });
-      } else {
-        toast.warning(`${successCount} records saved, ${errorCount} failed.`, {
-          position: toast.POSITION.TOP_RIGHT,
-        });
-      }
-    } else {
-      toast.error("No Data Found In Excel Sheet", {
-        position: "top-right",
-        autoClose: 5000,
-        theme: "light",
       });
+
+
+
+      const mttrId = response?.data?.data?.id;
+      setSuccessMessage(response?.data?.message);
+      setMttrId(response?.data?.data?.id);
+      setValidateData(response?.data?.data);
+      getProcedureData();
+
+      return { success: true, data: response.data };
+    } catch (error) {
+      const errorStatus = error?.response?.status;
+      if (errorStatus === 401) {
+        logout();
+      } else {
+        setOpen(true);
+      }
+      return { success: false, error };
     }
   };
 
-  reader.readAsBinaryString(file);
-};
+  const importExcel = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-const exportToExcel = (value, productName) => {
-  if (!value) {
-    toast.error("Export Failed !! No Data Found", { position: "top-right" });
-    return;
-  }
+    const fileName = file.name;
+    const validExtensions = ["xlsx", "xls"];
+    const fileExtension = fileName.split(".").pop().toLowerCase();
 
-  const fullTableData = tableData || [];
-  
-  // Remove the last row to avoid duplication
-  const dataWithoutLastRow = fullTableData.slice(0, -1);
-  
-  const lastRow = fullTableData.length > 0 ? fullTableData[fullTableData.length - 1] : {};
+    if (!validExtensions.includes(fileExtension)) {
+      toast.error("Please upload a valid Excel file (either .xlsx or .xls)!", {
+        position: "top-right",
+      });
+      return;
+    }
 
-  const originalData = {
-    CompanyName: treeTableData[0]?.companyId?.companyName,
-    ProjectName: treeTableData[0]?.projectId?.projectName,
-    ProductName: value.name,
-    remarks: value?.remarks || lastRow?.remarks || "-",
-    taskType: value?.taskType || lastRow?.taskType || "-",
-    time: value.time || lastRow.time || "-",
-    totalLabour: value.totalLabour || lastRow.totalLabour || "-",
-    skill: value.skill || lastRow.skill || "-",
-    tools: value.tools || lastRow.tools || "-",
-    partNo: value.partNo || lastRow.partNo || "-",
-    toolType: value.toolType || lastRow.toolType || "-",
-    repairable: value.repairable?.value || value.repairable || lastRow.repairable || "-",
-    levelOfRepair: value.levelOfRepair?.value || value.levelOfRepair || lastRow.levelOfRepair || "-",
-    levelOfReplace: value.levelOfReplace?.value || value.levelOfReplace || lastRow.levelOfReplace || "-",
-    spare: value.spare?.value || value.spare || lastRow.spare || "-",
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const bstr = event.target.result;
+      const workBook = XLSX.read(bstr, { type: "binary" });
+      const workSheetName = workBook.SheetNames[0];
+      const workSheet = workBook.Sheets[workSheetName];
+      const parsedData = XLSX.utils.sheet_to_json(workSheet, { defval: "" });
+
+      if (parsedData.length > 0) {
+        const normalizedData = parsedData.map((row, index) => ({
+          remarks: row.remarks || "",
+          time: row.time || "",
+          skill: row.skill || "",
+          tools: row.tools || "",
+           taskType: row.taskType || "",
+          totalLabour: row.totalLabour || "",
+          partNo: row.partNo || "",
+          toolType: row.toolType || "",
+          repairable: row.repairable || "",
+          levelOfRepair: row.levelOfRepair || "",
+          levelOfReplace: row.levelOfReplace || "",
+          spare: row.spare || "",
+        }));
+
+        setTableData((prevData) => [...prevData, ...normalizedData]);
+        //       setTableData((prevData) => [...prevData, ...normalizedData]);
+        setImportExcelData(normalizedData[normalizedData.length - 1]);
+        applyExcelDataToForm(normalizedData[normalizedData.length - 1]);
+
+        // Show loading
+        setIsLoading(true);
+
+        // Process each row with delay to avoid overwhelming the server
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < normalizedData.length; i++) {
+          const rowData = normalizedData[i];
+          const result = await createMTTRDataFromExcel(rowData);
+
+          if (result.success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+
+          // Optional: Add delay between requests
+          if (i < normalizedData.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        }
+
+        setIsLoading(false);
+
+        if (errorCount === 0) {
+          toast.success(`All ${successCount} records imported successfully!`, {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+        } else {
+          toast.warning(`${successCount} records saved, ${errorCount} failed.`, {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+        }
+      } else {
+        toast.error("No Data Found In Excel Sheet", {
+          position: "top-right",
+          autoClose: 5000,
+          theme: "light",
+        });
+      }
+    };
+
+    reader.readAsBinaryString(file);
   };
 
-  const hasData = Object.values(originalData).some(
-    (val) => val && val.toString().trim() !== ""
-  );
+  const exportToExcel = (value, productName) => {
+    if (!value) {
+      toast.error("Export Failed !! No Data Found", { position: "top-right" });
+      return;
+    }
 
-  if (hasData) {
-    // Use dataWithoutLastRow instead of fullTableData
-    const updatedTableData = [...dataWithoutLastRow, originalData];
-    
-    const filteredData = updatedTableData.map(row => {
-      const { productId, projectId, companyId, tableData, id, ...filteredRow } = row;
-      return filteredRow;
-    });
+    const fullTableData = tableData || [];
 
-    const ws = XLSX.utils.json_to_sheet(filteredData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "FormData");
+    // Remove the last row to avoid duplication
+    const dataWithoutLastRow = fullTableData.slice(0, -1);
 
-    const fileName = `${productName || "MTTR"}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    const lastRow = fullTableData.length > 0 ? fullTableData[fullTableData.length - 1] : {};
 
-    toast.success("Export Successful!", { position: "top-right" });
-  } else {
-    toast.error("Export Failed !! No Data Found", { position: "top-right" });
-  }
-};
+    const originalData = {
+      CompanyName: treeTableData[0]?.companyId?.companyName,
+      ProjectName: treeTableData[0]?.projectId?.projectName,
+      ProductName: value.name,
+      remarks: value?.remarks || lastRow?.remarks || "-",
+      taskType: value?.taskType || lastRow?.taskType || "-",
+      time: value.time || lastRow.time || "-",
+      totalLabour: value.totalLabour || lastRow.totalLabour || "-",
+      skill: value.skill || lastRow.skill || "-",
+      tools: value.tools || lastRow.tools || "-",
+      partNo: value.partNo || lastRow.partNo || "-",
+      toolType: value.toolType || lastRow.toolType || "-",
+      repairable: value.repairable?.value || value.repairable || lastRow.repairable || "-",
+      levelOfRepair: value.levelOfRepair?.value || value.levelOfRepair || lastRow.levelOfRepair || "-",
+      levelOfReplace: value.levelOfReplace?.value || value.levelOfReplace || lastRow.levelOfReplace || "-",
+      spare: value.spare?.value || value.spare || lastRow.spare || "-",
+    };
+
+    const hasData = Object.values(originalData).some(
+      (val) => val && val.toString().trim() !== ""
+    );
+
+    if (hasData) {
+      // Use dataWithoutLastRow instead of fullTableData
+      const updatedTableData = [...dataWithoutLastRow, originalData];
+
+      const filteredData = updatedTableData.map(row => {
+        const { productId, projectId, companyId, tableData, id, ...filteredRow } = row;
+        return filteredRow;
+      });
+
+      const ws = XLSX.utils.json_to_sheet(filteredData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "FormData");
+
+      const fileName = `${productName || "MTTR"}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+
+      toast.success("Export Successful!", { position: "top-right" });
+    } else {
+      toast.error("Export Failed !! No Data Found", { position: "top-right" });
+    }
+  };
 
 
   const handleCancelClick = () => {
-      if (isSaving) {
-    setIsSaving(false); // Stop spinner if cancel is clicked during save
-  }
+    if (isSaving) {
+      setIsSaving(false); // Stop spinner if cancel is clicked during save
+    }
     const shouldReloadPage = true;
 
     if (shouldReloadPage) {
@@ -427,7 +426,7 @@ const exportToExcel = (value, productName) => {
   };
 
   if (shouldReload) {
-  
+
     window.location.reload();
   }
 
@@ -441,7 +440,7 @@ const exportToExcel = (value, productName) => {
       },
     })
       .then((res) => {
-       console.log("product tree data", res);
+        console.log("product tree data", res);
         const treeData = res?.data?.data;
         setInitialProductId(res?.data?.data[0]?.treeStructure?.id);
         setInitialTreeStructure(res?.data?.data[0]?.id);
@@ -497,7 +496,7 @@ const exportToExcel = (value, productName) => {
         }
       });
   };
- 
+
   const getAllConnectedLibrary = async (fieldValue, fieldName) => {
     Api.get("api/v1/library/get/all/source/value", {
       params: {
@@ -538,7 +537,7 @@ const exportToExcel = (value, productName) => {
       },
     })
       .then((res) => {
-    //  console.log("propstoGetTreeData response", res);
+        //  console.log("propstoGetTreeData response", res);
         const data = res?.data?.data;
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""
@@ -580,307 +579,255 @@ const exportToExcel = (value, productName) => {
     },
   });
   // Add these states at the top of your component
-const [selectedSourceValues, setSelectedSourceValues] = useState({});
+  const [selectedSourceValues, setSelectedSourceValues] = useState({});
 
-const [flattenedConnect, setFlattenedConnect] = useState([]);
+  const [flattenedConnect, setFlattenedConnect] = useState([]);
 
-// Modify your getAllConnect function
-const getAllConnect = () => {
-  Api.get("api/v1/library/get/all/connect/value", {
-    params: {
-      projectId: projectId,
-    },
-  })
-    .then((res) => {
-      const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
-      );
-      
-      const flattened = filteredData
-        .flatMap((item) =>
-          (item.destinationData || [])
-            .filter(d => d.destinationModuleName === "MTTR")
-            .map((d) => ({
-              sourceName: item.sourceName,
-              sourceValue: item.sourceValue,
-              destinationName: d.destinationName,
-              destinationValue: d.destinationValue,
-              destinationModuleName: d.destinationModuleName,
-            }))
-        );
-       console.log("flattend",flattened)
-      setFlattenedConnect(flattened);
-      setConnectData(flattened);
+  // Modify your getAllConnect function
+  const getAllConnect = () => {
+    Api.get("api/v1/library/get/all/connect/value", {
+      params: {
+        projectId: projectId,
+      },
     })
-    .catch((err) => {
-      console.error("Error fetching connect data:", err);
-    });
-};
-
-// Function to handle source selection
-const handleSourceSelection = (fieldName, value, rowId) => {
-  setSelectedSourceValues(prev => ({
-    ...prev,
-    [rowId]: {
-      ...prev[rowId],
-      [fieldName]: value
-    }
-  }));
-};
-
-// Function to get destination values for a field based on selected sources
-const getDestinationValuesForField = (fieldName, rowId) => {
-  const rowSourceValues = selectedSourceValues[rowId] || {};
-  let destinationValues = [];
-  
-  // Check all source fields that might have connections to this field
-  Object.keys(rowSourceValues).forEach(sourceField => {
-    const sourceValue = rowSourceValues[sourceField];
-    if (sourceValue) {
-      const connections = flattenedConnect.filter(
-        item => 
-          item.sourceName === sourceField &&
-          item.sourceValue === sourceValue &&
-          item.destinationName === fieldName
-      );
-      
-      destinationValues = [...destinationValues, ...connections.map(item => item.destinationValue)];
-    }
-  });
-  
-  return [...new Set(destinationValues)]; // Remove duplicates
-};
-  // Get connected values for a field based on selected sources in the row
-  const getConnectedValuesForField = (fieldName, rowData) => {
-    let connectedValues = [];
-
-    // Check all fields in the row for connections to this field
-    Object.keys(rowData || {}).forEach(sourceField => {
-      const sourceValue = rowData[sourceField];
-      if (!sourceValue) return;
-
-      // Find connections where this source field/value connects to our target field
-      const connections = flattenedConnect.filter(
-        item => 
-          item.sourceName === sourceField && 
-          String(item.sourceValue) === String(sourceValue) &&
-          item.destinationName === fieldName
-      );
-
-      connectedValues.push(...connections);
-    });
-
-    return connectedValues;
-  };
-// Check if a field is a source field (has outgoing connections)
-const isSourceField = (fieldName) => {
-  return flattenedConnect.some(item => item.sourceName === fieldName);
-};
-  const getDestinationFieldsForSource = (sourceField, sourceValue) => {
-    return flattenedConnect
-      .filter(item => 
-        item.sourceName === sourceField && 
-        String(item.sourceValue) === String(sourceValue)
-      )
-      .map(item => ({
-        field: item.destinationName,
-        value: item.destinationValue
-      })) || [];
-  };
-
-// Check if a field is a destination field (has incoming connections)
-const isDestinationField = (fieldName) => {
-  return flattenedConnect.some(item => item.destinationName === fieldName);
-};
-
-const createEditComponent = (fieldName, label, required = false, validationRules = {}) => {
-  return {
-    title: required ? `${label} *` : label,
-    field: fieldName,
-    type: "string",
-    cellStyle: { minWidth: "150px" },
-    validate: (rowData) => {
-      if (required && (!rowData[fieldName] || rowData[fieldName].toString().trim() === "")) {
-        return `${label} is required`;
-      }
-      
-      if (validationRules.isNumber && rowData[fieldName]) {
-        if (isNaN(rowData[fieldName])) {
-          return "Must be a number";
-        }
-        if (parseFloat(rowData[fieldName]) <= 0) {
-          return "Must be greater than 0";
-        }
-      }
-      
-      return true;
-    },
-    editComponent: ({ value, onChange, rowData }) => {
-      const rowId = rowData?.tableData?.id;
-      
-      // Get connected values for this field based on selected sources in this row
-      const connectedValues = getConnectedValuesForField(fieldName, rowData);
-      
-      // Get separate library data for this field
-      const separateFilteredData = allSepareteData?.filter(
-        (item) => item?.sourceName === fieldName
-      ) || [];
-
-      // Combine options: connected values first, then separate values
-      let options = [];
-
-      if (connectedValues.length > 0) {
-        options = connectedValues.map(item => ({
-          value: String(item.destinationValue),
-          label: String(item.destinationValue),
-          isConnected: true
-        }));
-      }
-
-      // Add separate library values (avoid duplicates)
-      separateFilteredData.forEach(item => {
-        if (!options.some(opt => opt.value === item.sourceValue)) {
-          options.push({
-            value: String(item.sourceValue),
-            label: String(item.sourceValue),
-            isConnected: false
-          });
-        }
-      });
-
-      // Get current value without forcing it into options
-      const selectedOption = options.find(opt => opt.value === String(value)) ||
-        (value ? { label: String(value), value: String(value) } : null);
-
-      const hasError = required && (!value || String(value).trim() === "");
-      const isSource = isSourceField(fieldName);
-
-      // Show plain input when no options are available
-      if (options.length === 0) {
-        return (
-          <div style={{ position: "relative" }}>
-            <input
-              type="text"
-              value={value || ""}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder={label + (required ? " *" : "")}
-              style={{
-                height: "40px",
-                borderRadius: "4px",
-                width: "100%",
-                borderColor: hasError ? "#d32f2f" : "#ccc",
-              }}
-            />
-            {hasError && (
-              <div style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                color: "#d32f2f",
-                fontSize: "12px",
-              }}>
-                {label} is required
-              </div>
-            )}
-          </div>
+      .then((res) => {
+        const filteredData = res.data.getData.filter(
+          (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
         );
-      }
-
-      // Show CreatableSelect when options are available
-      return (
-        <div style={{ position: "relative" }}>
-          <CreatableSelect
-            name={fieldName}
-            value={selectedOption}
-            options={options}
-            isClearable
-            onChange={(option) => {
-              const newValue = option?.value != null ? String(option.value) : "";
-              onChange(newValue);
-
-              if (isSourceField(fieldName) && newValue) {
-                const destinations = getDestinationFieldsForSource(fieldName, newValue);
-                if (destinations.length === 1) {
-                  // auto-fill logic here if needed
-                }
-              }
-            }}
-            onCreateOption={(inputValue) => {
-              // Allow creating new options
-              onChange(inputValue);
-            }}
-            menuPortalTarget={document.body}
-            styles={{
-              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              control: (base) => ({
-                ...base,
-                borderColor: hasError ? "#d32f2f" : base.borderColor,
-                minHeight: "40px",
-              }),
-              option: (base, { data }) => ({
-                ...base,
-                backgroundColor: data.isConnected ? '#e8f4fd' : base.backgroundColor,
-                color: data.isConnected ? '#1976d2' : base.color,
-                fontWeight: data.isConnected ? 'bold' : base.fontWeight,
-              }),
-              singleValue: (base, { data }) => ({
-                ...base,
-                color: data?.isConnected ? '#1976d2' : base.color,
-                fontWeight: data?.isConnected ? 'bold' : base.fontWeight,
-              })
-            }}
-          />
-          
-          {hasError && (
-            <div style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              color: "#d32f2f",
-              fontSize: "12px",
-            }}>
-              {label} is required
-            </div>
-          )}
-
-          {connectedValues.length > 0 && (
-            <div style={{
-              position: "absolute",
-              top: "-18px",
-              right: "5px",
-              fontSize: "10px",
-              color: "#1976d2",
-              background: "#e8f4fd",
-              padding: "2px 5px",
-              borderRadius: "3px",
-            }}>
-              Connected
-            </div>
-          )}
-        </div>
-      );
-    }
+console.log("filteredData", filteredData)
+        const flattened = filteredData
+          .flatMap((item) =>
+            (item.destinationData || [])
+              .filter(d => d.destinationModuleName === "MTTR")
+              .map((d) => ({
+                sourceName: item.sourceName,
+                sourceValue: item.sourceValue,
+                destinationName: d.destinationName,
+                destinationValue: d.destinationValue,
+                destinationModuleName: d.destinationModuleName,
+              }))
+          );
+        console.log("flattend", flattened)
+        setFlattenedConnect(flattened);
+        setConnectData(flattened);
+      })
+      .catch((err) => {
+        console.error("Error fetching connect data:", err);
+      });
   };
-};
 
-const columns = [
-  {
-    title: "S.No",
-    render: (rowData) => `${rowData?.tableData?.id + 1}`,
-    editable: "never",
-  },
-  createEditComponent("taskType", "Task Type", true),
-  createEditComponent("time", "Average Task Time(Hours)", true, { 
-    isNumber: true 
-  }),
-  createEditComponent("totalLabour", "No of Labours", true, { 
-    isNumber: true 
-  }),
-  createEditComponent("skill", "Skills", true),
-  createEditComponent("tools", "Tools", true),
-  createEditComponent("partNo", "Part no", true),
-  createEditComponent("toolType", "Tool Type", true),
-];
+  // Function to handle source selection
+  const handleSourceSelection = (fieldName, value, rowId) => {
+    setSelectedSourceValues(prev => ({
+      ...prev,
+      [rowId]: {
+        ...prev[rowId],
+        [fieldName]: value
+      }
+    }));
+  };
+
+  // Function to get destination values for a field based on selected sources
+  const getDestinationValuesForField = (fieldName, rowId) => {
+    const rowSourceValues = selectedSourceValues[rowId] || {};
+    let destinationValues = [];
+
+    // Check all source fields that might have connections to this field
+    Object.keys(rowSourceValues).forEach(sourceField => {
+      const sourceValue = rowSourceValues[sourceField];
+      if (sourceValue) {
+        const connections = flattenedConnect.filter(
+          item =>
+            item.sourceName === sourceField &&
+            item.sourceValue === sourceValue &&
+            item.destinationName === fieldName
+        );
+
+        destinationValues = [...destinationValues, ...connections.map(item => item.destinationValue)];
+      }
+    });
+
+    return [...new Set(destinationValues)]; // Remove duplicates
+  };
+
+  // Check if a field is a source field (has outgoing connections)
+  const isSourceField = (fieldName) => {
+    return flattenedConnect.some(item => item.sourceName === fieldName);
+  };
+
+  // Check if a field is a destination field (has incoming connections)
+  const isDestinationField = (fieldName) => {
+    return flattenedConnect.some(item => item.destinationName === fieldName);
+  };
+
+  // Helper function to create edit components with source-destination logic
+  const createEditComponent = (fieldName, label, required = false, validationRules = {}) => {
+    return {
+      title: required ? `${label} *` : label,
+      field: fieldName,
+      type: "string",
+      cellStyle: { minWidth: "150px" },
+      validate: (rowData) => {
+        if (required && (!rowData[fieldName] || rowData[fieldName].toString().trim() === "")) {
+          return `${label} is required`;
+        }
+
+        if (validationRules.isNumber && rowData[fieldName]) {
+          if (isNaN(rowData[fieldName])) {
+            return "Must be a number";
+          }
+          if (parseFloat(rowData[fieldName]) <= 0) {
+            return "Must be greater than 0";
+          }
+        }
+
+        return true;
+      },
+      editComponent: ({ value, onChange, rowData }) => {
+        const rowId = rowData?.tableData?.id;
+
+        // Check if this field is a destination field
+        const isDestination = isDestinationField(fieldName);
+
+        // Get destination values if this is a destination field
+        let destinationOptions = [];
+        if (isDestination) {
+          destinationOptions = getDestinationValuesForField(fieldName, rowId);
+        }
+
+        // Get separate library values
+        const separateOptions = allSepareteData
+          ?.filter(item => item.sourceName === fieldName)
+          .map(item => item.sourceValue) || [];
+
+        // LOGIC: Only show destination values if they exist from selected sources
+        // If this is a destination field AND we have destination values, show only those
+        // Otherwise, show separate library values
+        const allOptions = isDestination && destinationOptions.length > 0
+          ? destinationOptions  // Only show destination values when source is selected
+          : separateOptions;    // Otherwise show separate library values
+
+        const hasError = required && (!value || value.toString().trim() === "");
+
+        // Only show dropdown if we have options
+        if (allOptions.length > 0) {
+          const options = allOptions.map(opt => ({
+            value: opt,
+            label: opt,
+            isDestination: destinationOptions.includes(opt)
+          }));
+
+          const selectedOption = options.find(opt => opt.value === value) ||
+            (value ? { value, label: value } : null);
+
+          return (
+            <div style={{ position: "relative" }}>
+              <CreatableSelect
+                name={fieldName}
+                value={selectedOption}
+                options={options}
+                onChange={(option) => {
+                  const newValue = option?.value || "";
+                  onChange(newValue);
+
+                  // If this is a source field, update the selected source value
+                  if (isSourceField(fieldName)) {
+                    handleSourceSelection(fieldName, newValue, rowId);
+                  }
+                }}
+                isClearable
+                menuPortalTarget={document.body}
+                styles={{
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  control: (base) => ({
+                    ...base,
+                    borderColor: hasError ? "#d32f2f" : base.borderColor,
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.data?.isDestination ? '#e8f4fd' : base.backgroundColor,
+                    fontWeight: state.data?.isDestination ? 'bold' : base.fontWeight,
+                  }),
+                }}
+              />
+              {hasError && (
+                <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
+                  {label} is required
+                </div>
+              )}
+              {destinationOptions.length > 0 && (
+                <div style={{
+                  position: "absolute",
+                  top: "-18px",
+                  right: "5px",
+                  fontSize: "10px",
+                  color: "#1976d2",
+                  background: "#e8f4fd",
+                  padding: "2px 5px",
+                  borderRadius: "3px",
+                }}>
+                  Connected
+                </div>
+              )}
+            </div>
+          );
+        } else {
+          // Show regular input field
+          return (
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                name={fieldName}
+                value={value || ""}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  onChange(newValue);
+
+                  // If this is a source field, update the selected source value
+                  if (isSourceField(fieldName)) {
+                    handleSourceSelection(fieldName, newValue, rowId);
+                  }
+                }}
+                placeholder={required ? `${label} *` : label}
+                style={{
+                  height: "40px",
+                  borderRadius: "4px",
+                  width: "100%",
+                  borderColor: hasError ? "#d32f2f" : "#ccc",
+                }}
+              />
+              {hasError && (
+                <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
+                  {label} is required
+                </div>
+              )}
+            </div>
+          );
+        }
+      },
+    };
+  };
+
+ 
+  const columns = [
+    {
+      title: "S.No",
+      render: (rowData) => `${rowData?.tableData?.id + 1}`,
+      editable: "never",
+    },
+    createEditComponent("taskType", "Task Type", true),
+    createEditComponent("time", "Average Task Time(Hours)", true, {
+      isNumber: true
+    }),
+    createEditComponent("totalLabour", "No of Labours", true, {
+      isNumber: true
+    }),
+    createEditComponent("skill", "Skills", true),
+    createEditComponent("tools", "Tools", true),
+    createEditComponent("partNo", "Part no", true),
+    createEditComponent("toolType", "Tool Type", true),
+  ];
+
 
   const submitSchema = Yup.object().shape({
     repairable: Yup.object().required("Repairable is required"),
@@ -926,7 +873,6 @@ const columns = [
       userId: userId,
     })
       .then((response) => {
-     console.log("Create Response:", response);
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
@@ -998,7 +944,7 @@ const columns = [
       },
     })
       .then((response) => {
-        
+
         setTableData(response?.data?.procedureData);
         setValidateData(response?.data?.procedureData?.length);
         const mttrResult = response.data.mttrResult;
@@ -1043,9 +989,9 @@ const columns = [
   };
 
   const submitForm = (values) => {
-     setIsSaving(true);
+    setIsSaving(true);
     checkingMandatoryFields(values);
-        // getMttrData();
+    // getMttrData();
   };
 
   const checkingMandatoryFields = (values) => {
@@ -1075,26 +1021,26 @@ const columns = [
           const mttrId = res?.data?.data?.id;
           setSuccessMessage(res?.data?.message);
           setMttrId(res?.data?.data?.id);
-           setIsSaving(false);
+          setIsSaving(false);
           NextPage();
 
         })
         .catch((error) => {
           const errorStatus = error?.response?.status;
-           setIsSaving(false);
+          setIsSaving(false);
           if (errorStatus === 401) {
             logout();
           }
         });
     } else {
       setOpen(true);
-       setIsSaving(false);
+      setIsSaving(false);
     }
   };
 
   const patchMttrData = (values) => {
     if (validateData > 0) {
-      setIsSaving(true); 
+      setIsSaving(true);
       const companyId = localStorage.getItem("companyId");
 
       Api.patch(`/api/v1/mttrPrediction/${mttrId}`, {
@@ -1118,18 +1064,18 @@ const columns = [
         .then((res) => {
           setSuccessMessage(res.data.message);
           NextPage();
-           setIsSaving(false); 
+          setIsSaving(false);
         })
         .catch((error) => {
           const errorStatus = error?.response?.status;
-           setIsSaving(false);
+          setIsSaving(false);
           if (errorStatus === 401) {
             logout();
           }
         });
     } else {
       setOpen(true);
-       setIsSaving(false); 
+      setIsSaving(false);
     }
   };
   const getMttrData = () => {
@@ -1145,7 +1091,7 @@ const columns = [
       },
     })
       .then((res) => {
-       console.log("MTTR Data1", res);
+        console.log("MTTR Data1", res);
         setMttrData(res?.data?.data);
         const data = res?.data?.data;
         setMttrId(res?.data?.data?.id ? res?.data?.data?.id : null);
@@ -1224,7 +1170,7 @@ const columns = [
             mmax: importExcelData?.mMax || mttrData?.mMax || "",
             taskType: importExcelData?.taskType || "",
             time: importExcelData?.time || "",
-           totalLabour: importExcelData?.totalLabour || "",
+            totalLabour: importExcelData?.totalLabour || "",
             skill: importExcelData?.skill || "",
             tools: importExcelData?.tools || "",
             partNo: importExcelData?.partNo || "",
@@ -1232,7 +1178,7 @@ const columns = [
           }}
           validationSchema={submitSchema}
           onSubmit={(values, { resetForm }) => {
-            setIsSaving(true); 
+            setIsSaving(true);
             mttrId ? patchMttrData(values) : submitForm(values);
           }}
         >
@@ -1247,6 +1193,66 @@ const columns = [
             } = formik;
             return (
               <div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <div style={{ width: "30%", marginRight: "20px" }}>
+                    <Projectname projectId={projectId} />
+                  </div>
+
+                  <div style={{ width: "100%", marginRight: "20px" }}>
+                    <Dropdown
+                      value={projectId}
+                      productId={productId}
+                      data={treeTableData}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      marginTop: "1px",
+                      height: "40px",
+                    }}
+                  >
+                    <Tooltip placement="right" title={`${!writePermission ? "Import Denied (You're not authorized)" : "Import"}`}>
+                      <div style={{ marginRight: "8px" }}>
+                        <label
+                          htmlFor="file-input"
+                          className="import-export-btn"
+                        >
+                          <FontAwesomeIcon icon={faFileDownload} />
+                        </label>
+                        <input
+                          type="file"
+                          disabled={!writePermission}
+                          className="input-fields"
+                          id="file-input"
+                          onChange={importExcel}
+                          style={{ display: "none" }}
+                        />
+                      </div>
+                    </Tooltip>
+                    <Tooltip placement="left" title="Export">
+                      <Button
+                        className="import-export-btn"
+                        style={{ marginLeft: "10px", borderStyle: "none", width: "40px", top: "-2px", minWidth: "38px", padding: "0px", }}
+                        onClick={() => exportToExcel(values)}
+                      >
+                        <FontAwesomeIcon
+                          icon={faFileUpload}
+                          style={{ width: "12px" }}
+                        />
+                      </Button>
+                    </Tooltip>
+                  </div>
+                </div>
                 <Form onSubmit={handleSubmit} onReset={handleReset}>
                   <fieldset
                     disabled={
@@ -1258,64 +1264,6 @@ const columns = [
                         : "disabled"
                     }
                   >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div style={{ width: "30%", marginRight: "20px" }}>
-                        <Projectname projectId={projectId} />
-                      </div>
-
-                      <div style={{ width: "100%", marginRight: "20px" }}>
-                        <Dropdown
-                          value={projectId}
-                          productId={productId}
-                          data={treeTableData}
-                        />
-                      </div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "flex-end",
-                          alignItems: "center",
-                          marginTop: "1px",
-                          height: "40px",
-                        }}
-                      >
-                        <Tooltip placement="right" title="Import">
-                          <div style={{ marginRight: "8px" }}>
-                            <label
-                              htmlFor="file-input"
-                              className="import-export-btn"
-                            >
-                              <FontAwesomeIcon icon={faFileDownload} />
-                            </label>
-                            <input
-                              type="file"
-                              className="input-fields"
-                              id="file-input"
-                              onChange={importExcel}
-                              style={{ display: "none" }}
-                            />
-                          </div>
-                        </Tooltip>
-                        <Tooltip placement="left" title="Export">
-                          <Button
-                            className="import-export-btn"
-                            style={{ marginLeft: "10px", borderStyle: "none", width: "40px", top: "-2px", minWidth: "38px", padding: "0px", }}
-                            onClick={() => exportToExcel(values)}
-                          >
-                            <FontAwesomeIcon
-                              icon={faFileUpload}
-                              style={{ width: "12px" }}
-                            />
-                          </Button>
-                        </Tooltip>
-                      </div>
-                    </div>
                     <Row className="d-flex">
                       <div className="mttr-sec mt-3">
                         <p className=" mb-0 para-tag">General Information</p>
@@ -1429,20 +1377,9 @@ const columns = [
                                     name="category"
                                     onBlur={handleBlur}
                                     isDisabled
-                                    // isDisabled={
-                                    //   writePermission === true ||
-                                    //   writePermission === "undefined" ||
-                                    //   role === "admin" ||
-                                    //   (isOwner === true &&
-                                    //     createdBy === userId)
-                                    //     ? null
-                                    //     : "disabled"
-                                    // }
+                               
                                     className="mt-1"
-                                    // onChange={(e) => {
-                                    //   setFieldValue("category", e);
-                                    //   setCategory(e);
-                                    // }}
+                                  
                                     options={[
                                       {
                                         value: "Electronic",
@@ -1479,19 +1416,7 @@ const columns = [
                                         name="partType"
                                         onBlur={handleBlur}
                                         isDisabled
-                                        // isDisabled={
-                                        //   writePermission === true ||
-                                        //   writePermission === "undefined" ||
-                                        //   role === "admin" ||
-                                        //   (isOwner === true &&
-                                        //     createdBy === userId)
-                                        //     ? null
-                                        //     : "disabled"
-                                        // }
-                                        // onChange={(e) => {
-                                        //   setFieldValue("partType", e);
-                                        //   setPartType(e.value);
-                                        // }}
+                                   
                                         options={[
                                           category.value === "Electronic"
                                             ? {
@@ -1558,28 +1483,9 @@ const columns = [
                                   value={values.environment}
                                   name="environment"
                                   isDisabled
-                                  // isDisabled={
-                                  //   writePermission === true ||
-                                  //   writePermission === "undefined" ||
-                                  //   role === "admin" ||
-                                  //   (isOwner === true && createdBy === userId)
-                                  //     ? null
-                                  //     : "disabled"
-                                  // }
-                                  // onChange={(e) => {
-                                  //   setFieldValue("environment", e);
-                                  //   setEnvironment(e);
-                                  // }}
+                              
                                   onBlur={handleBlur}
-                                // options={[
-                                //   { value: null, label: "None" },
-                                //   {
-                                //     options: Environment.map((list) => ({
-                                //       value: list.value,
-                                //       label: list.label,
-                                //     })),
-                                //   },
-                                // ]}
+                            
                                 />
                                 <ErrorMessage
                                   className="error text-danger"
@@ -2008,41 +1914,41 @@ const columns = [
                         </div>{" "}
                       </Card>
 
-<div className="d-flex flex-direction-row justify-content-end mt-4 mb-5">
-  <Button
-    className="delete-cancel-btn me-2"
-    variant="outline-secondary"
-    type="reset"
-    onClick={handleCancelClick}
-    disabled={isSaving} // Disable cancel when saving
-  >
-    CANCEL
-  </Button>
+                      <div className="d-flex flex-direction-row justify-content-end mt-4 mb-5">
+                        <Button
+                          className="delete-cancel-btn me-2"
+                          variant="outline-secondary"
+                          type="reset"
+                          onClick={handleCancelClick}
+                          disabled={isSaving} // Disable cancel when saving
+                        >
+                          CANCEL
+                        </Button>
 
-  <Button
-    className="save-btn position-relative"
-    type="submit"
-    disabled={!productId || isSaving}
-    style={{ minWidth: "140px" }}
-  >
-    {isSaving ? (
-      <>
-        <Spinner
-          as="span"
-          animation="border"
-          size="sm"
-          role="status"
-          aria-hidden="true"
-          className="me-2"
-          style={{ width: "1rem", height: "1rem" }}
-        />
-        SAVING...
-      </>
-    ) : (
-      "SAVE CHANGES"
-    )}
-  </Button>
-</div>
+                        <Button
+                          className="save-btn position-relative"
+                          type="submit"
+                          disabled={!productId || isSaving}
+                          style={{ minWidth: "140px" }}
+                        >
+                          {isSaving ? (
+                            <>
+                              <Spinner
+                                as="span"
+                                animation="border"
+                                size="sm"
+                                role="status"
+                                aria-hidden="true"
+                                className="me-2"
+                                style={{ width: "1rem", height: "1rem" }}
+                              />
+                              SAVING...
+                            </>
+                          ) : (
+                            "SAVE CHANGES"
+                          )}
+                        </Button>
+                      </div>
                       <Modal show={show} centered onHide={() => setShow(!show)}>
                         <div className="d-flex justify-content-center mt-5">
                           <FontAwesomeIcon
@@ -2094,57 +2000,53 @@ const columns = [
                           <ThemeProvider theme={tableTheme}>
                             <MaterialTable
                               editable={{
-                          onRowAdd: productId
-  ? (newRow) =>
-    new Promise((resolve, reject) => {
-      // Check if any required fields are filled
-      const hasData = 
-        newRow.taskType?.trim() || 
-        newRow.time?.trim() || 
-        newRow.totalLabour?.trim() || 
-        newRow.skill?.trim() || 
-        newRow.tools?.trim() || 
-        newRow.partNo?.trim() || 
-        newRow.toolType?.trim();
-      
-      if (!hasData) {
-        toast.error("Please fill at least one field before saving");
-        reject();
-        return;
-      }
-      
-      CreateProcedureData(newRow);
-      resolve();
-    })
-  : null,
+                                onRowAdd: productId
+                                  ? (newRow) =>
+                                    new Promise((resolve, reject) => {
+                                      // Check if any required fields are filled
+                                      const hasData =
+                                        newRow.taskType?.trim() ||
+                                        newRow.time?.trim() ||
+                                        newRow.totalLabour?.trim() ||
+                                        newRow.skill?.trim() ||
+                                        newRow.tools?.trim() ||
+                                        newRow.partNo?.trim() ||
+                                        newRow.toolType?.trim();
 
-onRowUpdate: (newRow, oldData) =>
-  new Promise((resolve, reject) => {
-    // Check if any data has actually changed
-    const hasChanges = 
-      newRow.taskType !== oldData.taskType ||
-      newRow.time !== oldData.time ||
-      newRow.totalLabour !== oldData.totalLabour ||
-      newRow.skill !== oldData.skill ||
-      newRow.tools !== oldData.tools ||
-      newRow.partNo !== oldData.partNo ||
-      newRow.toolType !== oldData.toolType;
-    
-    if (!hasChanges) {
-      toast.error("No changes detected");
-      reject();
-      return;
-    }
-    
-    updateProcedureData(newRow);
-    resolve();
-  }),
-                                // onRowUpdate: (newRow, oldData) =>
-                                //   new Promise((resolve, reject) => {
-                                //     updateProcedureData(newRow);
-                                //     resolve();
-                                //   }),
-                                  onRowDelete: (selectedRow) =>
+                                      if (!hasData) {
+                                        toast.error("Please fill at least one field before saving");
+                                        reject();
+                                        return;
+                                      }
+
+                                      CreateProcedureData(newRow);
+                                      resolve();
+                                    })
+                                  : null,
+
+                                onRowUpdate: (newRow, oldData) =>
+                                  new Promise((resolve, reject) => {
+                                    // Check if any data has actually changed
+                                    const hasChanges =
+                                     newRow.taskType !== oldData.taskType ||
+                                      newRow.time !== oldData.time ||
+                                      newRow.totalLabour !== oldData.totalLabour ||
+                                      newRow.skill !== oldData.skill ||
+                                      newRow.tools !== oldData.tools ||
+                                      newRow.partNo !== oldData.partNo ||
+                                      newRow.toolType !== oldData.toolType;
+
+                                    if (!hasChanges) {
+                                      toast.error("No changes detected");
+                                      reject();
+                                      return;
+                                    }
+
+                                    updateProcedureData(newRow);
+                                    resolve();
+                                  }),
+                             
+                                onRowDelete: (selectedRow) =>
                                   new Promise((resolve, reject) => {
                                     deleteProcedureData(selectedRow);
                                     resolve();
