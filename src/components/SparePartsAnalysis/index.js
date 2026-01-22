@@ -710,16 +710,7 @@ function Index(props) {
             return (
               <div>
                 <Form onSubmit={handleSubmit}>
-                  <fieldset
-                    disabled={
-                      writePermission === true ||
-                        writePermission === "undefined" ||
-                        role === "admin" ||
-                        (isOwner === true && createdBy === userId)
-                        ? null
-                        : "disabled"
-                    }
-                  >
+              
                     <div
                       style={{
                         display: "flex",
@@ -791,7 +782,16 @@ function Index(props) {
                         </Tooltip>
                       </div>
                     </div>
-
+    <fieldset
+                    disabled={
+                      writePermission === true ||
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
+                        ? null
+                        : "disabled"
+                    }
+                  >
                     <Row className="d-flex mt-2">
 
                       <div className="mttr-sec">
