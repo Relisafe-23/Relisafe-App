@@ -369,6 +369,12 @@ export default function PMMRA(props) {
               case "taskIntrvlFreq":
                 mappedData.taskintervalFrequency = value;
                 break;
+              case "taskIntervalunit":
+                mappedData.taskIntervalunit = value;
+                break;
+              case "taskIntrvl":
+                mappedData.taskinterval = value;
+                break;
               case "LatitudeFreqTolrnc":
                 mappedData.latitudeFrequency = value;
                 break;
@@ -607,6 +613,7 @@ export default function PMMRA(props) {
   };
 
   const exportToExcel = (value) => {
+    console.log(value, "value from export to excel")
     const originalData = {
       CompanyName: treeTableData[0]?.companyId?.companyName,
       ProjectName: treeTableData[0]?.projectId?.projectName,
@@ -630,7 +637,9 @@ export default function PMMRA(props) {
       pmTaskId: value.pmtaskid,
       pmTaskType: value.PMtasktype,
       taskIntrvlFreq: value.taskintervalFrequency,
-      LatitudeFreqTolrnc: value.latitudeFrequency,
+      taskIntrvlUnit: value.taskIntervalunit,
+      taskIntrvl: value.taskInterval,
+      // LatitudeFreqTolrnc: value.latitudeFrequency,
       scheduleMaintenceTsk: value.scheduledMaintenanceTask,
       tskInteralDetermination: value.taskInterval,
       taskDesc: value.taskDescription,
@@ -1434,6 +1443,7 @@ export default function PMMRA(props) {
       pmTaskType: values.PMtasktype,
       taskIntrvlFreq: values.taskintervalFrequency,
       taskIntrvlUnit: taskIntervalUnit || values.taskIntervalunit,
+      taskInterval: values.taskInterval,
       LatitudeFreqTolrnc: values.latitudeFrequency,
       scheduleMaintenceTsk: values.scheduledMaintenanceTask,
       tskInteralDetermination: values.taskInterval,
@@ -1521,6 +1531,9 @@ export default function PMMRA(props) {
   }));
 
 
+  console.log(importExcelData, "....importExcelData....")
+  console.log(pmmraData, "....pmmraData....")
+
 
   const InitialValues = {
     projectname: projectname,
@@ -1554,6 +1567,8 @@ export default function PMMRA(props) {
     PMtasktype: importExcelData?.PMtasktype || pmmraData?.pmTaskType || "",
     taskintervalFrequency:
       importExcelData?.taskintervalFrequency || pmmraData?.taskIntrvlFreq || "",
+    taskIntervalunit: importExcelData?.taskIntrvlUnit || pmmraData?.taskIntrvlUnit || "",
+    taskIntrvl: importExcelData?.taskInterval || pmmraData?.taskInterval || "",
     latitudeFrequency:
       importExcelData?.latitudeFrequency || pmmraData?.LatitudeFreqTolrnc || "",
     scheduledMaintenanceTask:
@@ -1646,8 +1661,8 @@ export default function PMMRA(props) {
       importExcelData?.restoreDiscardTsk || pmmraData?.restoreDiscrdTsk || "",
     combination:
       importExcelData?.combinationofTsk || pmmraData?.combinationOfTsk || "",
-    taskIntervalunit:
-      importExcelData?.taskInterval || pmmraData?.taskIntrvlUnit || "",
+    // taskIntervalunit:
+    //   importExcelData?.taskInterval || pmmraData?.taskIntrvlUnit || "",
     // Evident1: pmmraData?.LossOfEvident || { label: pmmraData?.LossOfEvident, value: pmmraData?.LossOfEvident } || "",
     // Items: pmmraData?.significantItem || { label: pmmraData?.significantItem, value: pmmraData?.significantItem } || "",
     // condition: pmmraData?.conditionMonitrTsk || { label: pmmraData?.conditionMonitrTsk, value: pmmraData?.conditionMonitrTsk } || "",
@@ -1659,6 +1674,8 @@ export default function PMMRA(props) {
     // combination: pmmraData?.combinationOfTsk || { label: pmmraData?.combinationOfTsk, value: pmmraData?.combinationOfTsk } || "",
     // taskIntervalunit: pmmraData?.taskIntrvlUnit || { label: pmmraData?.taskIntrvlUnit, value: pmmraData?.taskIntrvlUnit } || "",
   };
+
+
   return (
     <div style={{ marginTop: "90px" }} className="mx-4">
       {isLoading ? (
@@ -1734,7 +1751,7 @@ export default function PMMRA(props) {
                 value={projectId}
                 productId={productId}
                 data={treeTableData}
-                  writePermission={writePermission}
+                writePermission={writePermission}
               />
             </div>
 
@@ -1750,12 +1767,12 @@ export default function PMMRA(props) {
               <Tooltip placement="right" title="Import">
                 <div style={{ marginRight: "8px" }}>
                   <label htmlFor="file-input" className="import-export-btn"
-                      style={{
-          cursor: writePermission === false ? "not-allowed" : "pointer",
-          opacity: writePermission === false ? 0.5 : 1
-        }}
-      
-                 >
+                    style={{
+                      cursor: writePermission === false ? "not-allowed" : "pointer",
+                      opacity: writePermission === false ? 0.5 : 1
+                    }}
+
+                  >
                     <FontAwesomeIcon
                       icon={faFileDownload}
                       style={{ width: "15px" }}
@@ -1767,11 +1784,11 @@ export default function PMMRA(props) {
                     id="file-input"
                     onChange={importExcel}
                     style={{ display: "none" }}
-                     disabled={writePermission === false}
+                    disabled={writePermission === false}
                   />
                 </div>
               </Tooltip>
-              
+
               <Tooltip placement="left" title="Export">
                 <Button
                   className="import-export-btn"
@@ -1781,15 +1798,15 @@ export default function PMMRA(props) {
                     width: "40px",
                     minWidth: "40px",
                     padding: "0px",
-                         cursor: writePermission === false ? "not-allowed" : "pointer",
-        opacity: writePermission === false ? 0.5 : 1
+                    cursor: writePermission === false ? "not-allowed" : "pointer",
+                    opacity: writePermission === false ? 0.5 : 1
                   }}
                   onClick={() => {
-                           if (writePermission !== false) {
-          exportToExcel(InitialValues);
-        }
+                    if (writePermission !== false) {
+                      exportToExcel(InitialValues);
+                    }
                   }}
-                     disabled={writePermission === false}
+                  disabled={writePermission === false}
                 >
                   <FontAwesomeIcon
                     icon={faFileUpload}
@@ -2025,10 +2042,12 @@ export default function PMMRA(props) {
                             </Row>
                           </div>
                         </Card>
-                        <div className="mttr-sec mb-2 mt-4">
+                        {/* <div className="mttr-sec mb-2 mt-4">
                           <p className=" mb-0 para-tag">MRA/RCM</p>
-                        </div>
-                        <Card className="mt-2 p-4 mttr-card">
+                        </div> */}
+
+
+                        {/* <Card className="mt-2 p-4 mttr-card">
                           <Row>
                             <Col md={6}>
                               <Form.Group>
@@ -2041,7 +2060,7 @@ export default function PMMRA(props) {
                                     item.sourceValue
                                 ) ? (
                                   (() => {
-                                     const seperateFilteredData =
+                                    const seperateFilteredData =
                                       allSepareteData?.filter(
                                         (item) => item?.sourceName === "Evident1"
                                       ) || [];
@@ -2145,102 +2164,116 @@ export default function PMMRA(props) {
                               </Form.Group>
                               <Form.Group className="mt-3">
                                 <Label notify={true}>Significant Item ?</Label>
-                                {allConnectedData || allSepareteData?.some(
-                                  (item) =>
-                                    item.sourceName === "Items" &&
-                                    item.sourceValue
-                                ) ? (
-                                  (() => {
-                                    const seperateFilteredData =
-                                      allSepareteData?.filter(
-                                        (item) => item?.sourceName === "Items"
-                                      ) || [];
-                                    const connectedFilteredData =
-                                      allConnectedData?.filter(
+
+                                {(() => {
+                                  // Debug logging
+                                  console.log("allConnectedData:", allConnectedData);
+                                  console.log("allSepareteData:", allSepareteData);
+
+                                  // Check if we should show connected/separate data or default options
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "Items" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    // First try to get from connected data
+                                    if (hasConnectedData) {
+                                      // Check both sourceName and destinationName since your data structure is inconsistent
+                                      const connectedItems = allConnectedData.filter(
                                         (item) =>
-                                          item?.destinationName === "Items"
-                                      ) || [];
-                                    const options =
-                                      connectedFilteredData.length > 0
-                                        ? connectedFilteredData.map((item) => ({
-                                          value: item?.destinationValue,
-                                          label: item?.destinationValue,
-                                        }))
-                                        : seperateFilteredData.map((item) => ({
-                                                                                                                                                                      value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
+                                          (item.sourceName === "Items" || item.destinationName === "Items") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
                                         }));
+                                      }
+                                    }
+
+                                    // If no connected items, try separate data
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "Items" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    // Remove duplicates
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
 
                                     return (
                                       <Select
                                         name="Items"
                                         className="mt-1"
                                         placeholder="Items"
-                                        value={
-                                          values?.Items
-                                            ? {
-                                              label: values?.Items,
-                                              value: values?.Items,
-                                            }
-                                            : ""
-                                        }
-                                        style={{ backgroundColor: "red" }}
-                                        options={options}
+                                        value={values?.Items ? {
+                                          label: values?.Items,
+                                          value: values?.Items,
+                                        } : null}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
                                         styles={customStyles}
                                         onBlur={handleBlur}
                                         isDisabled={
-                                          writePermission === true ||
+                                          !(writePermission === true ||
                                             writePermission === "undefined" ||
                                             role === "admin" ||
-                                            (isOwner === true &&
-                                              createdBy === userId)
-                                            ? null
-                                            : "disabled"
+                                            (isOwner === true && createdBy === userId))
                                         }
                                         onChange={(e) => {
                                           setFieldValue("Items", e.value);
-                                          getAllConnectedLibrary(
-                                            e.value,
-                                            "Items"
-                                          );
+                                          getAllConnectedLibrary(e.value, "Items");
                                         }}
                                       />
                                     );
-                                  })()
-                                ) : (
-                                  <Select
-                                    name="Items"
-                                    className="mt-1"
-                                    placeholder="Items"
-                                    value={
-                                      values?.Items
-                                        ? {
+                                  } else {
+                                    // Default options
+                                    return (
+                                      <Select
+                                        name="Items"
+                                        className="mt-1"
+                                        placeholder="Items"
+                                        value={values?.Items ? {
                                           label: values?.Items,
                                           value: values?.Items,
+                                        } : null}
+                                        options={[
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
                                         }
-                                        : ""
-                                    }
-                                    style={{ backgroundColor: "red" }}
-                                    options={[
-                                      { label: "Yes", value: "Yes" },
-                                      { label: "No", value: "No" },
-                                    ]}
-                                    styles={customStyles}
-                                    onBlur={handleBlur}
-                                    isDisabled={
-                                      writePermission === true ||
-                                        writePermission === "undefined" ||
-                                        role === "admin" ||
-                                        (isOwner === true && createdBy === userId)
-                                        ? null
-                                        : "disabled"
-                                    }
-                                    onChange={(e) => {
-                                      setFieldValue("Items", e.value);
-                                      getAllConnectedLibrary(e.value, "Items");
-                                    }}
-                                  />
-                                )}
+                                        onChange={(e) => {
+                                          setFieldValue("Items", e.value);
+                                          getAllConnectedLibrary(e.value, "Items");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
@@ -2274,7 +2307,7 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                                      value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
 
@@ -2383,7 +2416,7 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                                  value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
 
@@ -2491,7 +2524,7 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
 
@@ -2603,7 +2636,7 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                                  value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
 
@@ -2714,7 +2747,7 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                                   value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
 
@@ -2823,7 +2856,7 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                                   value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
 
@@ -2931,7 +2964,7 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
 
@@ -3039,10 +3072,10 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                                                                                                     value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                             
+
 
                                     return (
                                       <Select
@@ -3125,7 +3158,1114 @@ export default function PMMRA(props) {
                               </Form.Group>
                             </Col>
                           </Row>
+                        </Card> */}
+
+                        <div className="mttr-sec mb-2 mt-4">
+                          <p className=" mb-0 para-tag">MRA/RCM</p>
+                        </div>
+                        <Card className="mt-2 p-4 mttr-card">
+                          <Row>
+                            <Col md={6}>
+                              <Form.Group>
+                                <Label notify={true}>Loss of Function Evident?</Label>
+                                {(() => {
+                                  // Check if we should show connected/separate data or default options
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "Evident1" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    // First try to get from connected data
+                                    if (hasConnectedData) {
+                                      const connectedItems = allConnectedData.filter(
+                                        (item) =>
+                                          (item.sourceName === "Evident1" || item.destinationName === "Evident1") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    // If no connected items, try separate data
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "Evident1" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    // Remove duplicates
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
+
+                                    // Find the current value in options to display properly
+                                    const selectedOption = options.find(option => option.value === values.Evident1) || null;
+
+                                    return (
+                                      <Select
+                                        name="Evident1"
+                                        className="mt-1"
+                                        placeholder="Evident1"
+                                        value={selectedOption}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("Evident1", e ? e.value : "");
+                                          getAllConnectedLibrary(e ? e.value : "", "Evident1");
+                                        }}
+                                      />
+                                    );
+                                  } else {
+                                    // Default options
+                                    const defaultOptions = [
+                                      { label: "Yes", value: "Yes" },
+                                      { label: "No", value: "No" },
+                                    ];
+                                    const selectedOption = defaultOptions.find(option => option.value === values.Evident1) || null;
+
+                                    return (
+                                      <Select
+                                        name="Evident1"
+                                        className="mt-1"
+                                        placeholder="Evident1"
+                                        value={selectedOption}
+                                        options={defaultOptions}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("Evident1", e ? e.value : "");
+                                          getAllConnectedLibrary(e ? e.value : "", "Evident1");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Evident1"
+                                />
+                              </Form.Group>
+
+                              <Form.Group className="mt-3">
+                                <Label notify={true}>Significant Item ?</Label>
+                                {(() => {
+                                  // Check if we should show connected/separate data or default options
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "Items" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    // First try to get from connected data
+                                    if (hasConnectedData) {
+                                      const connectedItems = allConnectedData.filter(
+                                        (item) =>
+                                          (item.sourceName === "Items" || item.destinationName === "Items") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    // If no connected items, try separate data
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "Items" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    // Remove duplicates
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
+
+                                    return (
+                                      <Select
+                                        name="Items"
+                                        className="mt-1"
+                                        placeholder="Items"
+                                        value={values?.Items ? {
+                                          label: values?.Items,
+                                          value: values?.Items,
+                                        } : null}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("Items", e.value);
+                                          getAllConnectedLibrary(e.value, "Items");
+                                        }}
+                                      />
+                                    );
+                                  } else {
+                                    // Default options
+                                    return (
+                                      <Select
+                                        name="Items"
+                                        className="mt-1"
+                                        placeholder="Items"
+                                        value={values?.Items ? {
+                                          label: values?.Items,
+                                          value: values?.Items,
+                                        } : null}
+                                        options={[
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("Items", e.value);
+                                          getAllConnectedLibrary(e.value, "Items");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="Items"
+                                />
+                              </Form.Group>
+
+                              <Form.Group className="mt-3">
+                                <Label notify={true}>
+                                  Condition Monitoring Task
+                                </Label>
+                                {(() => {
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "condition" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    if (hasConnectedData) {
+                                      const connectedItems = allConnectedData.filter(
+                                        (item) =>
+                                          (item.sourceName === "condition" || item.destinationName === "condition") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "condition" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
+
+                                    return (
+                                      <Select
+                                        name="condition"
+                                        className="mt-1"
+                                        placeholder="Condition"
+                                        value={values?.condition ? {
+                                          label: values?.condition,
+                                          value: values?.condition,
+                                        } : null}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("condition", e.value);
+                                          getAllConnectedLibrary(e.value, "condition");
+                                        }}
+                                      />
+                                    );
+                                  } else {
+                                    return (
+                                      <Select
+                                        name="condition"
+                                        className="mt-1"
+                                        placeholder="condition"
+                                        value={values?.condition ? {
+                                          label: values?.condition,
+                                          value: values?.condition,
+                                        } : null}
+                                        options={[
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("condition", e.value);
+                                          getAllConnectedLibrary(e.value, "condition");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="condition"
+                                />
+                              </Form.Group>
+
+                              <Form.Group className="mt-3">
+                                <Label notify={true}>
+                                  Failure Finding Task
+                                </Label>
+                                {(() => {
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "failure" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    if (hasConnectedData) {
+                                      const connectedItems = allConnectedData.filter(
+                                        (item) =>
+                                          (item.sourceName === "failure" || item.destinationName === "failure") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "failure" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
+
+                                    return (
+                                      <Select
+                                        name="failure"
+                                        className="mt-1"
+                                        placeholder="Failure"
+                                        value={values?.failure ? {
+                                          label: values?.failure,
+                                          value: values?.failure,
+                                        } : null}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("failure", e.value);
+                                          getAllConnectedLibrary(e.value, "failure");
+                                        }}
+                                      />
+                                    );
+                                  } else {
+                                    return (
+                                      <Select
+                                        name="failure"
+                                        className="mt-1"
+                                        placeholder="failure"
+                                        value={values?.failure ? {
+                                          label: values?.failure,
+                                          value: values?.failure,
+                                        } : null}
+                                        options={[
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("failure", e.value);
+                                          getAllConnectedLibrary(e.value, "failure");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="failure"
+                                />
+                              </Form.Group>
+
+                              <Form.Group className="mt-3">
+                                <Label notify={true}>Redesign?</Label>
+                                {(() => {
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "redesign" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    if (hasConnectedData) {
+                                      const connectedItems = allConnectedData.filter(
+                                        (item) =>
+                                          (item.sourceName === "redesign" || item.destinationName === "redesign") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "redesign" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
+
+                                    return (
+                                      <Select
+                                        name="redesign"
+                                        className="mt-1"
+                                        placeholder="Redesign"
+                                        value={values?.redesign ? {
+                                          label: values?.redesign,
+                                          value: values?.redesign,
+                                        } : null}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("redesign", e.value);
+                                          getAllConnectedLibrary(e.value, "redesign");
+                                        }}
+                                      />
+                                    );
+                                  } else {
+                                    return (
+                                      <Select
+                                        name="redesign"
+                                        className="mt-1"
+                                        placeholder="redesign"
+                                        value={values?.redesign ? {
+                                          label: values?.redesign,
+                                          value: values?.redesign,
+                                        } : null}
+                                        options={[
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("redesign", e.value);
+                                          getAllConnectedLibrary(e.value, "redesign");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="redesign"
+                                />
+                              </Form.Group>
+                            </Col>
+
+                            <Col md={6}>
+                              <Form.Group>
+                                <Label notify={true}>
+                                  Criticality Acceptable ?
+                                </Label>
+                                {(() => {
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "acceptable" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    if (hasConnectedData) {
+                                      const connectedItems = allConnectedData.filter(
+                                        (item) =>
+                                          (item.sourceName === "acceptable" || item.destinationName === "acceptable") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "acceptable" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
+
+                                    return (
+                                      <Select
+                                        name="acceptable"
+                                        className="mt-1"
+                                        placeholder="Acceptable"
+                                        value={values?.acceptable ? {
+                                          label: values?.acceptable,
+                                          value: values?.acceptable,
+                                        } : null}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("acceptable", e.value);
+                                          getAllConnectedLibrary(e.value, "acceptable");
+                                        }}
+                                      />
+                                    );
+                                  } else {
+                                    return (
+                                      <Select
+                                        name="acceptable"
+                                        className="mt-1"
+                                        placeholder="acceptable"
+                                        value={values?.acceptable ? {
+                                          label: values?.acceptable,
+                                          value: values?.acceptable,
+                                        } : null}
+                                        options={[
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("acceptable", e.value);
+                                          getAllConnectedLibrary(e.value, "acceptable");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="acceptable"
+                                />
+                              </Form.Group>
+
+                              <Form.Group className="mt-3">
+                                <Label notify={true}>
+                                  Lubrication / Service Task
+                                </Label>
+                                {(() => {
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "lubrication" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    if (hasConnectedData) {
+                                      const connectedItems = allConnectedData.filter(
+                                        (item) =>
+                                          (item.sourceName === "lubrication" || item.destinationName === "lubrication") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "lubrication" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
+
+                                    return (
+                                      <Select
+                                        name="lubrication"
+                                        className="mt-1"
+                                        placeholder="Lubrication"
+                                        value={values?.lubrication ? {
+                                          label: values?.lubrication,
+                                          value: values?.lubrication,
+                                        } : null}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("lubrication", e.value);
+                                          getAllConnectedLibrary(e.value, "lubrication");
+                                        }}
+                                      />
+                                    );
+                                  } else {
+                                    return (
+                                      <Select
+                                        name="lubrication"
+                                        className="mt-1"
+                                        placeholder="lubrication"
+                                        value={values?.lubrication ? {
+                                          label: values?.lubrication,
+                                          value: values?.lubrication,
+                                        } : null}
+                                        options={[
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("lubrication", e.value);
+                                          getAllConnectedLibrary(e.value, "lubrication");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="lubrication"
+                                />
+                              </Form.Group>
+
+                              <Form.Group className="mt-3">
+                                <Label notify={true}>
+                                  Restore or Discard Task
+                                </Label>
+                                {(() => {
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "task" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    if (hasConnectedData) {
+                                      const connectedItems = allConnectedData.filter(
+                                        (item) =>
+                                          (item.sourceName === "task" || item.destinationName === "task") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "task" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
+
+                                    return (
+                                      <Select
+                                        name="task"
+                                        className="mt-1"
+                                        placeholder="Task"
+                                        value={values?.task ? {
+                                          label: values?.task,
+                                          value: values?.task,
+                                        } : null}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("task", e.value);
+                                          getAllConnectedLibrary(e.value, "task");
+                                        }}
+                                      />
+                                    );
+                                  } else {
+                                    return (
+                                      <Select
+                                        name="task"
+                                        className="mt-1"
+                                        placeholder="task"
+                                        value={values?.task ? {
+                                          label: values?.task,
+                                          value: values?.task,
+                                        } : null}
+                                        options={[
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("task", e.value);
+                                          getAllConnectedLibrary(e.value, "task");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="task"
+                                />
+                              </Form.Group>
+
+                              <Form.Group className="mt-3">
+                                <Label notify={true}>
+                                  Combination of Tasks
+                                </Label>
+                                {(() => {
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "combination" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    if (hasConnectedData) {
+                                      const connectedItems = allConnectedData.filter(
+                                        (item) =>
+                                          (item.sourceName === "combination" || item.destinationName === "combination") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "combination" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
+
+                                    return (
+                                      <Select
+                                        name="combination"
+                                        className="mt-1"
+                                        placeholder="Combination"
+                                        value={values?.combination ? {
+                                          label: values?.combination,
+                                          value: values?.combination,
+                                        } : null}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("combination", e.value);
+                                          getAllConnectedLibrary(e.value, "combination");
+                                        }}
+                                      />
+                                    );
+                                  } else {
+                                    return (
+                                      <Select
+                                        name="combination"
+                                        className="mt-1"
+                                        placeholder="combination"
+                                        value={values?.combination ? {
+                                          label: values?.combination,
+                                          value: values?.combination,
+                                        } : null}
+                                        options={[
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("combination", e.value);
+                                          getAllConnectedLibrary(e.value, "combination");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="combination"
+                                />
+                              </Form.Group>
+
+                              <Form.Group className="mt-3">
+                                <Label notify={true}>RCM Notes</Label>
+                                {(() => {
+                                  const hasConnectedData = Array.isArray(allConnectedData) && allConnectedData.length > 0;
+                                  const hasSeparateData = Array.isArray(allSepareteData) && allSepareteData.some(
+                                    (item) => item.sourceName === "rcmnotes" && item.sourceValue
+                                  );
+
+                                  if (hasConnectedData || hasSeparateData) {
+                                    let options = [];
+
+                                    if (hasConnectedData) {
+                                      const connectedItems = allConnectedData.filter(
+                                        (item) =>
+                                          (item.sourceName === "rcmnotes" || item.destinationName === "rcmnotes") &&
+                                          (item.sourceValue || item.destinationValue)
+                                      );
+
+                                      if (connectedItems.length > 0) {
+                                        options = connectedItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    if (options.length === 0 && hasSeparateData) {
+                                      const separateItems = allSepareteData.filter(
+                                        (item) => item.sourceName === "rcmnotes" && item.sourceValue
+                                      );
+
+                                      if (separateItems.length > 0) {
+                                        options = separateItems.map((item) => ({
+                                          value: item.sourceValue || item.destinationValue || '',
+                                          label: item.sourceValue || item.destinationValue || '',
+                                        }));
+                                      }
+                                    }
+
+                                    options = options.filter((option, index, self) =>
+                                      index === self.findIndex((t) => t.value === option.value)
+                                    );
+
+                                    return (
+                                      <Select
+                                        name="rcmnotes"
+                                        className="mt-1"
+                                        placeholder="Rcm Notes"
+                                        value={values?.rcmnotes ? {
+                                          label: values?.rcmnotes,
+                                          value: values?.rcmnotes,
+                                        } : null}
+                                        options={options.length > 0 ? options : [
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("rcmnotes", e.value);
+                                          getAllConnectedLibrary(e.value, "rcmnotes");
+                                        }}
+                                      />
+                                    );
+                                  } else {
+                                    return (
+                                      <Select
+                                        name="rcmnotes"
+                                        className="mt-1"
+                                        placeholder="rcmnotes"
+                                        value={values?.rcmnotes ? {
+                                          label: values?.rcmnotes,
+                                          value: values?.rcmnotes,
+                                        } : null}
+                                        options={[
+                                          { label: "Yes", value: "Yes" },
+                                          { label: "No", value: "No" },
+                                        ]}
+                                        styles={customStyles}
+                                        onBlur={handleBlur}
+                                        isDisabled={
+                                          !(writePermission === true ||
+                                            writePermission === "undefined" ||
+                                            role === "admin" ||
+                                            (isOwner === true && createdBy === userId))
+                                        }
+                                        onChange={(e) => {
+                                          setFieldValue("rcmnotes", e.value);
+                                          getAllConnectedLibrary(e.value, "rcmnotes");
+                                        }}
+                                      />
+                                    );
+                                  }
+                                })()}
+                                <ErrorMessage
+                                  className="error text-danger"
+                                  component="span"
+                                  name="rcmnotes"
+                                />
+                              </Form.Group>
+                            </Col>
+                          </Row>
                         </Card>
+
+
+
+
                         <div className="mttr-sec mb-2 mt-4">
                           <p className=" mb-0 para-tag">PM</p>
                         </div>
@@ -3161,26 +4301,27 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                                                                                                                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                 <Form.Control
-                                      name="pmtaskid"
-                                      id="pmtaskid"
-                                      placeholder="Pm Task ID"
-                                      value={values.pmtaskid}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Enter Pm Task ID"
-                                    />
-                            )}
+                                              value: item.sourceValue || item.destinationValue,
+                                              label: item.sourceValue || item.destinationValue,
+                                            }));
+
+                                      if (!options || options.length === 0) {
+                                        return (
+                                          <Form.Control
+                                            name="pmtaskid"
+                                            id="pmtaskid"
+                                            placeholder="Pm Task ID"
+                                            value={values.pmtaskid}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            className="mt-1"
+                                            title="Enter Pm Task ID"
+                                          />
+                                        )
+                                      }
 
                                       return (
-                                        <Select
+                                        <CreatableSelect
                                           name="pmtaskid"
                                           className="mt-1"
                                           placeholder="Pm Task ID"
@@ -3237,7 +4378,7 @@ export default function PMMRA(props) {
                               <Col md={6}>
                                 <Form.Group className="mt-3">
                                   <Label notify={true}>PM Task type</Label>
-                                  {allConnectedData|| allSepareteData?.some(
+                                  {allConnectedData || allSepareteData?.some(
                                     (item) =>
                                       item.sourceName === "PMtasktype" &&
                                       item.sourceValue
@@ -3264,26 +4405,27 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                                                                                                                                  value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                    <Form.Control
-                                      name="PMtasktype"
-                                      id="PMtasktype"
-                                      placeholder="PM Task Type"
-                                      value={values.PMtasktype}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="PM Task Type"
-                                    />
-                            )}
+                                              value: item.sourceValue || item.destinationValue,
+                                              label: item.sourceValue || item.destinationValue,
+                                            }));
+
+                                      if (!options || options.length === 0) {
+                                        return (
+                                          <Form.Control
+                                            name="PMtasktype"
+                                            id="PMtasktype"
+                                            placeholder="PM Task Type"
+                                            value={values.PMtasktype}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            className="mt-1"
+                                            title="PM Task Type"
+                                          />
+                                        )
+                                      }
 
                                       return (
-                                        <Select
+                                        <CreatableSelect
                                           name="PMtasktype"
                                           className="mt-1"
                                           placeholder="PM Task Type"
@@ -3376,27 +4518,28 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                                                                                                                           value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                  <Form.Control
-                                      name="taskintervalFrequency"
-                                      id="taskintervalFrequency"
-                                      type="number"
-                                      placeholder="Task Interval Frequency"
-                                      value={values.taskintervalFrequency}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Interval Frequency"
-                                    />
-                            )}
+                                              value: item.sourceValue || item.destinationValue,
+                                              label: item.sourceValue || item.destinationValue,
+                                            }));
+
+                                      if (!options || options.length === 0) {
+                                        return (
+                                          <Form.Control
+                                            name="taskintervalFrequency"
+                                            id="taskintervalFrequency"
+                                            type="number"
+                                            placeholder="Task Interval Frequency"
+                                            value={values.taskintervalFrequency}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            className="mt-1"
+                                            title="Task Interval Frequency"
+                                          />
+                                        )
+                                      }
 
                                       return (
-                                        <Select
+                                        <CreatableSelect
                                           name="taskintervalFrequency"
                                           className="mt-1"
                                           placeholder="Task Interval Frequency"
@@ -3467,6 +4610,7 @@ export default function PMMRA(props) {
                                       item.sourceValue
                                   ) ? (
                                     (() => {
+
                                       const seperateFilteredData =
                                         allSepareteData?.filter(
                                           (item) =>
@@ -3489,26 +4633,27 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                                                                                                                 value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                      <Form.Control
-                                      name="taskIntervalunit"
-                                      id="taskIntervalunit"
-                                      placeholder="Task Interval Unit"
-                                      value={values.taskIntervalunit}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Interval Unit"
-                                    />
-                            )}
+                                              value: item.sourceValue || item.destinationValue,
+                                              label: item.sourceValue || item.destinationValue,
+                                            }));
+
+                                      if (!options || options.length === 0) {
+                                        return (
+                                          <Form.Control
+                                            name="taskIntervalunit"
+                                            id="taskIntervalunit"
+                                            placeholder="Task Interval Unit"
+                                            value={values.taskIntervalunit}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            className="mt-1"
+                                            title="Task Interval Unit"
+                                          />
+                                        )
+                                      }
 
                                       return (
-                                        <Select
+                                        <CreatableSelect
                                           name="taskIntervalunit"
                                           className="mt-1"
                                           placeholder="Task Interval Unit"
@@ -3599,28 +4744,29 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                                                                                                      value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                  <Form.Control
-                                      name="taskInterval"
-                                      id="taskInterval"
-                                      type="number"
-                                      placeholder="Task Interval"
-                                      value={values.taskInterval}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Interval"
-                                    />
+                                              value: item.sourceValue || item.destinationValue,
+                                              label: item.sourceValue || item.destinationValue,
+                                            }));
 
-                            )}
+                                      if (!options || options.length === 0) {
+                                        return (
+                                          <Form.Control
+                                            name="taskInterval"
+                                            id="taskInterval"
+                                            type="number"
+                                            placeholder="Task Interval"
+                                            value={values.taskInterval}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            className="mt-1"
+                                            title="Task Interval"
+                                          />
+
+                                        )
+                                      }
 
                                       return (
-                                        <Select
+                                        <CreatableSelect
                                           name="taskInterval"
                                           className="mt-1"
                                           placeholder="Task Interval"
@@ -3713,26 +4859,27 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                                                                                          value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                   <Form.Control
-                                      name="scheduledMaintenanceTask"
-                                      id="scheduledMaintenanceTask"
-                                      placeholder="Scheduled Maintenance Task"
-                                      value={values.scheduledMaintenanceTask}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Scheduled Maintenance Task"
-                                    />
-                            )}
+                                              value: item.sourceValue || item.destinationValue,
+                                              label: item.sourceValue || item.destinationValue,
+                                            }));
+
+                                      if (!options || options.length === 0) {
+                                        return (
+                                          <Form.Control
+                                            name="scheduledMaintenanceTask"
+                                            id="scheduledMaintenanceTask"
+                                            placeholder="Scheduled Maintenance Task"
+                                            value={values.scheduledMaintenanceTask}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            className="mt-1"
+                                            title="Scheduled Maintenance Task"
+                                          />
+                                        )
+                                      }
 
                                       return (
-                                        <Select
+                                        <CreatableSelect
                                           name="scheduledMaintenanceTask"
                                           className="mt-1"
                                           placeholder="Scheduled Maintenance Task"
@@ -3824,26 +4971,27 @@ export default function PMMRA(props) {
                                           )
                                           : seperateFilteredData.map(
                                             (item) => ({
-                                                                                               value: item.sourceValue || item.destinationValue,
-                                          label: item.sourceValue || item.destinationValue,
-                                        }));
-                                        
-                                    if (!options || options.length === 0) {
-                            return(
-                                   <Form.Control
-                                      name="taskDescription"
-                                      id="taskDescription"
-                                      placeholder="Task Description"
-                                      value={values.taskDescription}
-                                      onChange={handleChange}
-                                      onBlur={handleBlur}
-                                      className="mt-1"
-                                      title="Task Description"
-                                    />
-                            )}
+                                              value: item.sourceValue || item.destinationValue,
+                                              label: item.sourceValue || item.destinationValue,
+                                            }));
+
+                                      if (!options || options.length === 0) {
+                                        return (
+                                          <Form.Control
+                                            name="taskDescription"
+                                            id="taskDescription"
+                                            placeholder="Task Description"
+                                            value={values.taskDescription}
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            className="mt-1"
+                                            title="Task Description"
+                                          />
+                                        )
+                                      }
 
                                       return (
-                                        <Select
+                                        <CreatableSelect
                                           name="taskDescription"
                                           className="mt-1"
                                           placeholder="Task Description"
@@ -3937,26 +5085,27 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                                     value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                        
+
                                     if (!options || options.length === 0) {
-                            return(
-                                <Form.Control
-                                    name="tasktimeML1"
-                                    id="tasktimeML1"
-                                    placeholder="Task Time ML1"
-                                    value={values.tasktimeML1}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML1"
-                                  />
-                            )}
+                                      return (
+                                        <Form.Control
+                                          name="tasktimeML1"
+                                          id="tasktimeML1"
+                                          placeholder="Task Time ML1"
+                                          value={values.tasktimeML1}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Task Time ML1"
+                                        />
+                                      )
+                                    }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="tasktimeML1"
                                         className="mt-1"
                                         placeholder="Task Time ML1"
@@ -4035,25 +5184,26 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                           value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                        
+
                                     if (!options || options.length === 0) {
-                            return(
-                                   <Form.Control
-                                    name="tasktimeML2"
-                                    id="tasktimeML2"
-                                    placeholder="Task Time ML2"
-                                    value={values.tasktimeML2}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML2"
-                                  />
-                            )}
+                                      return (
+                                        <Form.Control
+                                          name="tasktimeML2"
+                                          id="tasktimeML2"
+                                          placeholder="Task Time ML2"
+                                          value={values.tasktimeML2}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Task Time ML2"
+                                        />
+                                      )
+                                    }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="tasktimeML2"
                                         className="mt-1"
                                         placeholder="Task Time ML2"
@@ -4132,26 +5282,27 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                                    value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                        
+
                                     if (!options || options.length === 0) {
-                            return(
-                                   <Form.Control
-                                    name="tasktimeML3"
-                                    id="tasktimeML3"
-                                    placeholder="Task Time ML3"
-                                    value={values.tasktimeML3}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML3"
-                                  />
-                            )}
+                                      return (
+                                        <Form.Control
+                                          name="tasktimeML3"
+                                          id="tasktimeML3"
+                                          placeholder="Task Time ML3"
+                                          value={values.tasktimeML3}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Task Time ML3"
+                                        />
+                                      )
+                                    }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="tasktimeML3"
                                         className="mt-1"
                                         placeholder="Task Time ML3"
@@ -4230,26 +5381,27 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                            value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                        
+
                                     if (!options || options.length === 0) {
-                            return(
-                                  <Form.Control
-                                    name="tasktimeML4"
-                                    id="tasktimeML4"
-                                    placeholder="Task Time ML4"
-                                    value={values.tasktimeML4}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML4"
-                                  />
-                            )}
+                                      return (
+                                        <Form.Control
+                                          name="tasktimeML4"
+                                          id="tasktimeML4"
+                                          placeholder="Task Time ML4"
+                                          value={values.tasktimeML4}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Task Time ML4"
+                                        />
+                                      )
+                                    }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="tasktimeML4"
                                         className="mt-1"
                                         placeholder="Task Time ML4"
@@ -4330,26 +5482,27 @@ export default function PMMRA(props) {
                                           label: item?.destinationValue,
                                         }))
                                         : seperateFilteredData.map((item) => ({
-                                                  value: item.sourceValue || item.destinationValue,
+                                          value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                        
+
                                     if (!options || options.length === 0) {
-                            return(
-                                 <Form.Control
-                                    name="tasktimeML5"
-                                    id="tasktimeML5"
-                                    placeholder="Task Time ML5"
-                                    value={values.tasktimeML5}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML5"
-                                  />
-                            )}
+                                      return (
+                                        <Form.Control
+                                          name="tasktimeML5"
+                                          id="tasktimeML5"
+                                          placeholder="Task Time ML5"
+                                          value={values.tasktimeML5}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Task Time ML5"
+                                        />
+                                      )
+                                    }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="tasktimeML5"
                                         className="mt-1"
                                         placeholder="Task Time ML5"
@@ -4421,7 +5574,7 @@ export default function PMMRA(props) {
                                           item?.destinationName ===
                                           "tasktimeML6"
                                       ) || [];
-                                     const options =
+                                    const options =
                                       connectedFilteredData.length > 0
                                         ? connectedFilteredData.map((item) => ({
                                           value: item.destinationValue,
@@ -4431,22 +5584,23 @@ export default function PMMRA(props) {
                                           value: item.sourceValue || item.destinationValue,
                                           label: item.sourceValue || item.destinationValue,
                                         }));
-                                        
+
                                     if (!options || options.length === 0) {
-                            return(
-                                     <Form.Control
-                                    name="tasktimeML6"
-                                    id="tasktimeML6"
-                                    placeholder="Task Time ML6"
-                                    value={values.tasktimeML6}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    className="mt-1"
-                                    title="Task Time ML6"
-                                  />
-                            )}
+                                      return (
+                                        <Form.Control
+                                          name="tasktimeML6"
+                                          id="tasktimeML6"
+                                          placeholder="Task Time ML6"
+                                          value={values.tasktimeML6}
+                                          onChange={handleChange}
+                                          onBlur={handleBlur}
+                                          className="mt-1"
+                                          title="Task Time ML6"
+                                        />
+                                      )
+                                    }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="tasktimeML6"
                                         className="mt-1"
                                         placeholder="Task Time ML6"
@@ -4530,7 +5684,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="tasktimeML7"
                                         className="mt-1"
                                         placeholder="Task Time ML7"
@@ -4841,7 +5995,7 @@ export default function PMMRA(props) {
                                       );
                                     }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="skill1contribution"
                                         className="mt-1"
                                         placeholder="Skill 1 Contribution"
@@ -4944,7 +6098,7 @@ export default function PMMRA(props) {
                                       )
                                     }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="skill2"
                                         className="mt-1"
                                         placeholder="Skill 2"
@@ -5040,7 +6194,7 @@ export default function PMMRA(props) {
                                       )
                                     }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="skill2nos"
                                         className="mt-1"
                                         placeholder="Skill 2nos"
@@ -5140,7 +6294,7 @@ export default function PMMRA(props) {
                                       )
                                     }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="skill2contribution"
                                         className="mt-1"
                                         placeholder="Skill 2 Contribution"
@@ -5245,7 +6399,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="skill3"
                                         className="mt-1"
                                         placeholder="Skill 3"
@@ -5342,7 +6496,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="skill3nos"
                                         className="mt-1"
                                         placeholder="Skill 3nos"
@@ -5443,7 +6597,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="skill3contribution"
                                         className="mt-1"
                                         placeholder="Skill 3 Contribution"
@@ -5559,7 +6713,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="addReplacespare1"
                                         className="mt-1"
                                         placeholder="Additional Replacement Spare1"
@@ -5665,7 +6819,7 @@ export default function PMMRA(props) {
                                       )
                                     }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="addReplacespare1qty"
                                         className="mt-1"
                                         placeholder="Additional Replacement Spare1 Qty"
@@ -5774,7 +6928,7 @@ export default function PMMRA(props) {
                                       )
                                     }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="addReplacespare2"
                                         className="mt-1"
                                         placeholder="Additional Replacement Spare2"
@@ -5879,7 +7033,7 @@ export default function PMMRA(props) {
                                       )
                                     }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="addReplacespare2qty"
                                         className="mt-1"
                                         placeholder="Additional Replacement Spare2 Qty"
@@ -5989,7 +7143,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="addReplacespare3"
                                         className="mt-1"
                                         placeholder="Additional Replacement Spare3"
@@ -6095,7 +7249,7 @@ export default function PMMRA(props) {
                                       )
                                     }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="addReplacespare3qty"
                                         className="mt-1"
                                         placeholder="Additional Replacement Spare3 Qty"
@@ -6202,7 +7356,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Consumable1"
                                         className="mt-1"
                                         placeholder="Consumable 1"
@@ -6288,7 +7442,7 @@ export default function PMMRA(props) {
                                         }));
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="consumable1Qty"
                                         className="mt-1"
                                         placeholder="Consumable 1 Qty"
@@ -6394,7 +7548,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Consumable2"
                                         className="mt-1"
                                         placeholder="Consumable 2"
@@ -6494,7 +7648,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Consumable2qty"
                                         className="mt-1"
                                         placeholder="Consumable 2 Qty"
@@ -6598,7 +7752,7 @@ export default function PMMRA(props) {
                                       )
                                     }
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Consumable3"
                                         className="mt-1"
                                         placeholder="Consumable 3"
@@ -6698,7 +7852,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Consumable3qty"
                                         className="mt-1"
                                         placeholder="Consumable 3 Qty"
@@ -6804,7 +7958,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Consumable4"
                                         className="mt-1"
                                         placeholder="Consumable 4"
@@ -6904,7 +8058,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Consumable4qty"
                                         className="mt-1"
                                         placeholder="Consumable 4 Qty"
@@ -7010,7 +8164,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Consumable5"
                                         className="mt-1"
                                         placeholder="Consumable 5"
@@ -7110,7 +8264,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="Consumable5qty"
                                         className="mt-1"
                                         placeholder="Consumable 5 Qty"
@@ -7222,7 +8376,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="userfield1"
                                         className="mt-1"
                                         placeholder="User Field 1"
@@ -7319,7 +8473,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="userfield2"
                                         className="mt-1"
                                         placeholder="User Field 2"
@@ -7416,7 +8570,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="userfield3"
                                         className="mt-1"
                                         placeholder="User Field 3"
@@ -7515,7 +8669,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="userfield4"
                                         className="mt-1"
                                         placeholder="User Field 4"
@@ -7612,7 +8766,7 @@ export default function PMMRA(props) {
                                     }
 
                                     return (
-                                      <Select
+                                      <CreatableSelect
                                         name="userfield5"
                                         className="mt-1"
                                         placeholder="User Field 5"

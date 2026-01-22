@@ -297,6 +297,7 @@ function Index(props) {
         projectId: projectId,
       },
     }).then((res) => {
+      console.log(res, "res")
       let filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "SAFETY"
       );
@@ -372,6 +373,7 @@ function Index(props) {
       },
     })
       .then((res) => {
+        console.log(res, 'res product data')
         const data = res?.data?.data;
         getProjectDetails();
         setIsLoading(false);
@@ -458,7 +460,8 @@ function Index(props) {
           entry?.libraryId?.moduleName === "SAFETY" ||
           entry?.destinationModuleName === "SAFETY"
       );
-
+      console.log("res", res)
+      console.log("res.data.getData", res.data.getData)
       // Flatten the connection data for easier querying
       const flattened = filteredData.flatMap((item) =>
         (item.destinationData || [])
@@ -607,169 +610,169 @@ function Index(props) {
     };
   };
 
-const createSmartSelectField = (fieldName, label, required = false, isSourceFieldCheck = false) => ({
-  ...createEditComponent(fieldName, label, required),
-  editComponent: ({ value, onChange, rowData }) => {
-    const rowId = rowData?.tableData?.id;
-
-  
-    const connectedValues = getConnectedValuesForField(fieldName, rowData);
-
-    
-    const separateFilteredData = allSepareteData?.filter(
-      (item) => item?.sourceName === fieldName
-    ) || [];
+  const createSmartSelectField = (fieldName, label, required = false, isSourceFieldCheck = false) => ({
+    ...createEditComponent(fieldName, label, required),
+    editComponent: ({ value, onChange, rowData }) => {
+      const rowId = rowData?.tableData?.id;
 
 
-    let options = [];
-
-    if (connectedValues.length > 0) {
-      options = connectedValues.map(item => ({
-        value: String(item.destinationValue),
-        label: String(item.destinationValue),
-        isConnected: true
-      }));
-    }
+      const connectedValues = getConnectedValuesForField(fieldName, rowData);
 
 
-    separateFilteredData.forEach(item => {
-      if (!options.some(opt => opt.value === item.sourceValue)) {
-        options.push({
-          value: String(item.sourceValue),
-          label: String(item.sourceValue),
-          isConnected: false
-        });
+      const separateFilteredData = allSepareteData?.filter(
+        (item) => item?.sourceName === fieldName
+      ) || [];
+
+
+      let options = [];
+
+      if (connectedValues.length > 0) {
+        options = connectedValues.map(item => ({
+          value: String(item.destinationValue),
+          label: String(item.destinationValue),
+          isConnected: true
+        }));
       }
-    });
 
 
-    const selectedOption =
-      options.find(opt => opt.value === String(value)) ||
-      (value ? { label: String(value), value: String(value) } : null);
+      separateFilteredData.forEach(item => {
+        if (!options.some(opt => opt.value === item.sourceValue)) {
+          options.push({
+            value: String(item.sourceValue),
+            label: String(item.sourceValue),
+            isConnected: false
+          });
+        }
+      });
 
-    const hasError =
-      required &&
-      (!value || String(value)?.trim() === "");
 
-    // Return plain input when there are no options
-    if (options.length === 0) {
-      return (
-        <div style={{ position: "relative" }}>
-          <input
-            type="text"
-            value={value || ""}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.stopPropagation();
-              }
-            }}
-            placeholder={label + (required ? " *" : "")}
-            style={{
-              height: "40px",
-              borderRadius: "4px",
-              width: "100%",
-              border: `1px solid ${hasError ? "#d32f2f" : "#ccc"}`,
-              padding: "8px 12px",
-              boxSizing: "border-box"
-            }}
-          />
+      const selectedOption =
+        options.find(opt => opt.value === String(value)) ||
+        (value ? { label: String(value), value: String(value) } : null);
 
-          {hasError && (
-            <div style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              color: "#d32f2f",
-              fontSize: "12px",
-              marginTop: "2px"
-            }}>
-              {label} is required
-            </div>
-          )}
-        </div>
-      );
-    } else {
-      // Return CreatableSelect with proper configuration
-      return (
-        <div style={{ position: "relative" }}>
-          <CreatableSelect
-            name={fieldName}
-            value={selectedOption}
-            options={options}
-            isClearable
-            onChange={(option) => {
-              const newValue = option?.value ? String(option.value) : "";
-              onChange(newValue);
+      const hasError =
+        required &&
+        (!value || String(value)?.trim() === "");
 
-              if (isSourceField(fieldName) && newValue) {
-                const destinations = getDestinationFieldsForSource(fieldName, newValue);
-                if (destinations.length === 1) {
-                  // auto connect logic if needed
+      // Return plain input when there are no options
+      if (options.length === 0) {
+        return (
+          <div style={{ position: "relative" }}>
+            <input
+              type="text"
+              value={value || ""}
+              onChange={(e) => onChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.stopPropagation();
                 }
-              }
-            }}
-            onCreateOption={(inputValue) => {
-              // This allows creating completely new values
-              onChange(inputValue);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.target.value) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-            menuPortalTarget={document.body}
-            styles={{
-              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              control: (base) => ({
-                ...base,
-                borderColor: hasError ? "#d32f2f" : base.borderColor,
-                minHeight: "40px",
-                "&:hover": {
-                  borderColor: hasError ? "#d32f2f" : base.borderColor
+              }}
+              placeholder={label + (required ? " *" : "")}
+              style={{
+                height: "40px",
+                borderRadius: "4px",
+                width: "100%",
+                border: `1px solid ${hasError ? "#d32f2f" : "#ccc"}`,
+                padding: "8px 12px",
+                boxSizing: "border-box"
+              }}
+            />
+
+            {hasError && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                color: "#d32f2f",
+                fontSize: "12px",
+                marginTop: "2px"
+              }}>
+                {label} is required
+              </div>
+            )}
+          </div>
+        );
+      } else {
+        // Return CreatableSelect with proper configuration
+        return (
+          <div style={{ position: "relative" }}>
+            <CreatableSelect
+              name={fieldName}
+              value={selectedOption}
+              options={options}
+              isClearable
+              onChange={(option) => {
+                const newValue = option?.value ? String(option.value) : "";
+                onChange(newValue);
+
+                if (isSourceField(fieldName) && newValue) {
+                  const destinations = getDestinationFieldsForSource(fieldName, newValue);
+                  if (destinations.length === 1) {
+                    // auto connect logic if needed
+                  }
                 }
-              }),
-              option: (base, state) => ({
-                ...base,
-                backgroundColor: state.data?.isConnected ? '#e8f4fd' : base.backgroundColor,
-                fontWeight: state.data?.isConnected ? 'bold' : base.fontWeight,
-              }),
-            }}
-          />
+              }}
+              onCreateOption={(inputValue) => {
+                // This allows creating completely new values
+                onChange(inputValue);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.target.value) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
+              menuPortalTarget={document.body}
+              styles={{
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                control: (base) => ({
+                  ...base,
+                  borderColor: hasError ? "#d32f2f" : base.borderColor,
+                  minHeight: "40px",
+                  "&:hover": {
+                    borderColor: hasError ? "#d32f2f" : base.borderColor
+                  }
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.data?.isConnected ? '#e8f4fd' : base.backgroundColor,
+                  fontWeight: state.data?.isConnected ? 'bold' : base.fontWeight,
+                }),
+              }}
+            />
 
-          {hasError && (
-            <div style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              color: "#d32f2f",
-              fontSize: "12px",
-              marginTop: "2px"
-            }}>
-              {label} is required
-            </div>
-          )}
+            {hasError && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                color: "#d32f2f",
+                fontSize: "12px",
+                marginTop: "2px"
+              }}>
+                {label} is required
+              </div>
+            )}
 
-          {connectedValues.length > 0 && (
-            <div style={{
-              position: "absolute",
-              top: "-18px",
-              right: "5px",
-              fontSize: "10px",
-              color: "#1976d2",
-              background: "#e8f4fd",
-              padding: "2px 5px",
-              borderRadius: "3px",
-            }}>
-              Connected
-            </div>
-          )}
-        </div>
-      );
+            {connectedValues.length > 0 && (
+              <div style={{
+                position: "absolute",
+                top: "-18px",
+                right: "5px",
+                fontSize: "10px",
+                color: "#1976d2",
+                background: "#e8f4fd",
+                padding: "2px 5px",
+                borderRadius: "3px",
+              }}>
+                Connected
+              </div>
+            )}
+          </div>
+        );
+      }
     }
-  }
-});
+  });
 
 
 
@@ -809,7 +812,7 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
     createSmartSelectField("userField1", "User field 1"),
     createSmartSelectField("userField2", "User field 2"),
   ];
-  console.log("Columns:", columns);
+  // console.log("Columns:", columns);
 
   const submit = (values) => {
     if (productId) {
@@ -1024,6 +1027,7 @@ const createSmartSelectField = (fieldName, label, required = false, isSourceFiel
             </div>
           </div>
 
+          {/* Material Table */}
           <div className="mt-5 " style={{ bottom: "35px" }}>
             <ThemeProvider theme={tableTheme}>
               <MaterialTable
