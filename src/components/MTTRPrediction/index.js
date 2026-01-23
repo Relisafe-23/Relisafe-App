@@ -700,12 +700,10 @@ console.log("filteredData", filteredData)
           ?.filter(item => item.sourceName === fieldName)
           .map(item => item.sourceValue) || [];
 
-        // LOGIC: Only show destination values if they exist from selected sources
-        // If this is a destination field AND we have destination values, show only those
-        // Otherwise, show separate library values
+
         const allOptions = isDestination && destinationOptions.length > 0
-          ? destinationOptions  // Only show destination values when source is selected
-          : separateOptions;    // Otherwise show separate library values
+          ? destinationOptions 
+          : separateOptions;   
 
         const hasError = required && (!value || value.toString().trim() === "");
 
@@ -732,7 +730,7 @@ console.log("filteredData", filteredData)
 
                
                   if (isSourceField(fieldName)) {
-                    handleSourceSelection(fieldName, newValue, rowId);
+                    // handleSourceSelection(fieldName, newValue, rowId);
                   }
                 }}
                 isClearable
