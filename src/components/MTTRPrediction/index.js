@@ -730,7 +730,7 @@ console.log("filteredData", filteredData)
                   const newValue = option?.value || "";
                   onChange(newValue);
 
-                  // If this is a source field, update the selected source value
+               
                   if (isSourceField(fieldName)) {
                     handleSourceSelection(fieldName, newValue, rowId);
                   }
@@ -785,7 +785,7 @@ console.log("filteredData", filteredData)
 
                   // If this is a source field, update the selected source value
                   if (isSourceField(fieldName)) {
-                    handleSourceSelection(fieldName, newValue, rowId);
+                    // handleSourceSelection(fieldName, newValue, rowId);
                   }
                 }}
                 placeholder={required ? `${label} *` : label}
