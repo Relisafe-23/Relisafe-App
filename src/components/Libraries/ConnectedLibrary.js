@@ -129,6 +129,14 @@ function ConnectedLibrary(props) {
     });
   };
 
+const hasWritePermission = () => {
+  if (role === "admin") return true;
+  
+  if (isOwner || createdBy === userId) return true;
+  
+  return writePermission?.[11]?.write === true;
+};
+
   const columns = [
     {
       title: "S.No",
@@ -624,8 +632,7 @@ function ConnectedLibrary(props) {
                       <div className="mttr-sec mt-4 mb-2">
                         <p className=" mb-0 para-tag">Connected Library</p>
                       </div>
-                      {writePermission?.[11].write === true ||
-                      role === "admin" ? (
+                   {hasWritePermission() ? (
                         <Card className="mt-2 mttr-card p-4 ">
                           <Row>
                             <Col className="col-lg-4 mt-2">
@@ -1153,8 +1160,8 @@ function ConnectedLibrary(props) {
             </Formik>
           </div>
           <div>
-            {writePermission?.[11].write === true || role === "admin" ? (
-              <MaterialTable
+{hasWritePermission() ? (
+                <MaterialTable
                 title="Connected Library"
                 data={connectData}
                 columns={columns}
