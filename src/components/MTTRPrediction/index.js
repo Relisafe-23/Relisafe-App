@@ -730,7 +730,7 @@ console.log("filteredData", filteredData)
 
                
                   if (isSourceField(fieldName)) {
-                    // handleSourceSelection(fieldName, newValue, rowId);
+                  handleSourceSelection(fieldName, newValue, rowId);
                   }
                 }}
                 isClearable
