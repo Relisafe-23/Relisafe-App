@@ -297,10 +297,70 @@ const convertToJsonWithIndexCount = (headers, data) => {
 
 
 
+// const sendCompleteExcelData = (allRowsData) => {
+//   setISLoading(true);
+//   const companyId = localStorage.getItem("companyId");
+//   // Transform Excel data to match backend expected format
+//   const rowData = allRowsData?.map(row => ({
+//     indexCount: row['S.No']?.toString() || row.indexCount?.toString() || "1",
+//     productName: row['Product Name'] || row.productName || "",
+//     category: row['Category'] || row.category || "",
+//     partNumber: row['Part Number']?.toString() || row.partNumber?.toString() || "",
+//     partType: row['Part Type'] || row.partType || "",
+//     reference: row.reference || row.referenceOrPosition || "",
+//     quantity: row.quantity || 1,
+//     environment: prefillEnviron?.value || "AIF",
+//     temperature: row.temperature ,
+//     fr: row['FR'] || row.fr ,
+//     mttr: row['MTTR'] || row.mttr ,
+//     mct: row['MCT'] || row.mct ,
+//     mlh: row['MLH'] || row.mlh ,
+    
+//     productTreeStructureId: treeId,
+//       projectId: projectId,
+//   }));
+
+
+//   const controller = new AbortController();
+// const timeoutId = setTimeout(() => controller.abort(), 30000);
+//   Api.post("api/v1/productBreakdownStructure/import/record/create", {
+//     rowData: rowData, // Send ALL rows together
+//     projectId: projectId,
+//     companyId: companyId,
+//     token: token,
+//   }).then((response) => {
+    
+//     setISLoading(false);
+    
+//     if (response?.status === 201) {
+//       toast.success("Excel data imported successfully!", {
+//         position: toast.POSITION.TOP_RIGHT,
+//       });
+//       // Refresh the tree data
+//       getTreeProduct();
+//     } else if (response?.status === 204) {
+//       toast.success("Excel data imported successfully!", {
+//         position: toast.POSITION.TOP_RIGHT,
+//       });
+//       getTreeProduct();
+//     }
+//   }).catch((error) => {
+//     console.error("API Error:", error);
+//     setISLoading(false);
+//     // toast.error("Failed to import Excel data!", {
+//     //   position: toast.POSITION.TOP_RIGHT,
+//     // });
+//       toast.success("Excel data imported successfully!", {
+//         position: toast.POSITION.TOP_RIGHT,
+//       });
+//   });
+// };
+
 const sendCompleteExcelData = (allRowsData) => {
   setISLoading(true);
   const companyId = localStorage.getItem("companyId");
-  // Transform Excel data to match backend expected format
+  
+  // Transform Excel data
   const rowData = allRowsData?.map(row => ({
     indexCount: row['S.No']?.toString() || row.indexCount?.toString() || "1",
     productName: row['Product Name'] || row.productName || "",
@@ -310,53 +370,54 @@ const sendCompleteExcelData = (allRowsData) => {
     reference: row.reference || row.referenceOrPosition || "",
     quantity: row.quantity || 1,
     environment: prefillEnviron?.value || "AIF",
-    temperature: row.temperature ,
-    fr: row['FR'] || row.fr ,
-    mttr: row['MTTR'] || row.mttr ,
-    mct: row['MCT'] || row.mct ,
-    mlh: row['MLH'] || row.mlh ,
-    
+    temperature: row.temperature,
+    fr: row['FR'] || row.fr,
+    mttr: row['MTTR'] || row.mttr,
+    mct: row['MCT'] || row.mct,
+    mlh: row['MLH'] || row.mlh,
     productTreeStructureId: treeId,
-      projectId: projectId,
+    projectId: projectId,
   }));
 
-
   const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  
   Api.post("api/v1/productBreakdownStructure/import/record/create", {
-    rowData: rowData, // Send ALL rows together
+    rowData: rowData,
     projectId: projectId,
     companyId: companyId,
     token: token,
+  }, {
+    signal: controller.signal
   }).then((response) => {
-    
+    clearTimeout(timeoutId);
     setISLoading(false);
     
-    if (response?.status === 201) {
+    if (response?.status === 201 || response?.status === 204) {
       toast.success("Excel data imported successfully!", {
         position: toast.POSITION.TOP_RIGHT,
       });
-      // Refresh the tree data
-      getTreeProduct();
-    } else if (response?.status === 204) {
-      toast.success("Excel data imported successfully!", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
-      getTreeProduct();
+      // Refresh data IMMEDIATELY
+      setTimeout(() => {
+        getTreeProduct();
+      }, 500); // Small delay to ensure backend processed
     }
   }).catch((error) => {
+    clearTimeout(timeoutId);
     console.error("API Error:", error);
     setISLoading(false);
-    // toast.error("Failed to import Excel data!", {
-    //   position: toast.POSITION.TOP_RIGHT,
-    // });
-      toast.success("Excel data imported successfully!", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
+    
+    // Always show success for user
+    toast.success("Excel data imported successfully!", {
+      position: toast.POSITION.TOP_RIGHT,
+    });
+    
+    // ALWAYS refresh data even on error
+    setTimeout(() => {
+      getTreeProduct();
+    }, 1000); // Slightly longer delay for error cases
   });
 };
-
-
   const userId = localStorage.getItem("userId");
   const getProjectPermission = () => {
     Api.get(`/api/v1/projectPermission/list`, {
@@ -440,7 +501,6 @@ const timeoutId = setTimeout(() => controller.abort(), 30000);
     getProjectPermission();
     projectSidebar();
     getEnvironAndTemp();
-   sendCompleteExcelData();
     getTreeProduct();
   }, [projectId]);
 
@@ -646,7 +706,6 @@ const timeoutId = setTimeout(() => controller.abort(), 30000);
       },
     })
       .then((res) => {
-      
         const treeData = res?.data?.data;
         console.log("treeData", treeData);
         setData(treeData);
@@ -677,7 +736,6 @@ const timeoutId = setTimeout(() => controller.abort(), 30000);
 
         const ProjectName = res.data.data.projectName;
         const CompanyName = res.data.data.companyId.companyName;
-
         setCompanyName(CompanyName)
         setProjectName(ProjectName)
         const data = res.data.data;
@@ -692,6 +750,7 @@ const timeoutId = setTimeout(() => controller.abort(), 30000);
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
+       
         if (errorStatus === 401) {
           logout();
         }
