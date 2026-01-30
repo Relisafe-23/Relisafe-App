@@ -351,6 +351,9 @@ const timeoutId = setTimeout(() => controller.abort(), 30000);
     // toast.error("Failed to import Excel data!", {
     //   position: toast.POSITION.TOP_RIGHT,
     // });
+      toast.success("Excel data imported successfully!", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
   });
 };
 
