@@ -321,6 +321,8 @@ const sendCompleteExcelData = (allRowsData) => {
   }));
 
 
+  const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   Api.post("api/v1/productBreakdownStructure/import/record/create", {
     rowData: rowData, // Send ALL rows together
