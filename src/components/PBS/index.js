@@ -348,9 +348,9 @@ const timeoutId = setTimeout(() => controller.abort(), 30000);
   }).catch((error) => {
     console.error("API Error:", error);
     setISLoading(false);
-    toast.error("Failed to import Excel data!", {
-      position: toast.POSITION.TOP_RIGHT,
-    });
+    // toast.error("Failed to import Excel data!", {
+    //   position: toast.POSITION.TOP_RIGHT,
+    // });
   });
 };
 
