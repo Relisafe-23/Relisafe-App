@@ -301,7 +301,7 @@ const sendCompleteExcelData = (allRowsData) => {
   setISLoading(true);
   const companyId = localStorage.getItem("companyId");
   // Transform Excel data to match backend expected format
-  const rowData = allRowsData.map(row => ({
+  const rowData = allRowsData?.map(row => ({
     indexCount: row['S.No']?.toString() || row.indexCount?.toString() || "1",
     productName: row['Product Name'] || row.productName || "",
     category: row['Category'] || row.category || "",
