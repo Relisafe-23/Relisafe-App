@@ -323,7 +323,7 @@ const sendCompleteExcelData = (allRowsData) => {
 
   const controller = new AbortController();
 const timeoutId = setTimeout(() => controller.abort(), 30000);
-
+ const sendExcelData = () => {
   Api.post("api/v1/productBreakdownStructure/import/record/create", {
     rowData: rowData, // Send ALL rows together
     projectId: projectId,
@@ -356,7 +356,7 @@ const timeoutId = setTimeout(() => controller.abort(), 30000);
       });
   });
 };
-
+}
 
 
   const userId = localStorage.getItem("userId");
@@ -442,6 +442,7 @@ const timeoutId = setTimeout(() => controller.abort(), 30000);
     getProjectPermission();
     projectSidebar();
     getEnvironAndTemp();
+    sendExcelData ();
     getTreeProduct();
   }, [projectId]);
 
