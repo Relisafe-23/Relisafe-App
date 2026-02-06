@@ -334,7 +334,7 @@ const HeaderNavBar = ({
                           </NavDropdown>
                         </Nav>
                       </Navbar.Collapse>
-                    </Navbar>\
+                    </Navbar>
 </Navbar>
 
 
