@@ -41,7 +41,8 @@ const HeaderNavBar = ({
   onZoomToFit,
   onZoomOriginal,
   onToggleGrid,
-  onOriginalLayout 
+  onOriginalLayout,
+  additionalButtons 
 }) => { const sessionId = localStorage.getItem("sessionId");
   const [file, setFile] = useState(null);
   const {
@@ -520,6 +521,11 @@ const HeaderNavBar = ({
           )}
         </Formik>
       </Modal>
+         {additionalButtons && (
+        <div className="additional-buttons">
+          {additionalButtons}
+        </div>
+      )}
     </div>
   );
 };
