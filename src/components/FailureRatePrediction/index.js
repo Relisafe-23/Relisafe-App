@@ -176,27 +176,7 @@ function Index(props) {
 
   const [FR, setFR] = useState();
 
-  // useEffect(() => {
-  //   if (partTypeNprd?.value && partTypeDescr?.value && environment?.label) {
-  //     const filteredData = nprdFRP.filter((item) => {
-  //       return (
-  //         item?.PartTypeId === partTypeNprd?.value &&
-  //         item?.PartDescrId === partTypeDescr?.value &&
-  //         item?.Environment === environment?.label
-  //       );
-  //     });
-
-  //     if (filteredData) {
-  //       setData(filteredData);
-  //     } else {
-  //       setData([]);
-  //     }
-  //   }
-  // }, [partTypeNprd?.value, partTypeDescr?.value]);
-
-  // Inside your component:
   useEffect(() => {
-    // 1. Handle NPRD data filtering (existing logic)
     if (partTypeNprd?.value && partTypeDescr?.value && environment?.label) {
       const filteredData = nprdFRP.filter(
         (item) =>
@@ -221,8 +201,8 @@ function Index(props) {
     partTypeNprd?.value,
     partTypeDescr?.value,
     environment?.label,
-    standard, // Changed from values.standard to standard
-    frUnit, // Changed from values.frUnit to frUnit
+    standard, 
+    frUnit, 
   ]);
 
   const productId = props?.location?.props?.data?.id
@@ -354,6 +334,7 @@ function Index(props) {
       },
     })
       .then((res) => {
+        console.log("treedatares...", res);
         const initialProductID = res?.data?.data[0]?.treeStructure?.id;
         const treeData = res?.data?.data;
         setInitialProductID(initialProductID);
@@ -399,6 +380,7 @@ function Index(props) {
         userId: userId,
       },
     }).then((res) => {
+      console.log("res.data.data", res);
       setIsOwner(res.data.data.isOwner);
       setCreatedBy(res.data.data.createdBy);
     });
@@ -415,6 +397,7 @@ function Index(props) {
       },
     })
       .then((res) => {
+        console.log("permissionres...", res);
         const data = res?.data?.data;
         setWritePermission(data?.modules[2].write);
         setPermission(data?.modules[2]);
@@ -437,6 +420,7 @@ function Index(props) {
   };
   const getNprd2016Datas = () => {
     Api.get("/api/v1/failureRatePrediction/get/nprd/2016").then((res) => {
+      console.log("resnprd2016", res);
       const data = res?.data?.data;
 
       setPartTypeNprd2016Data(data?.getPartTypeData);
@@ -465,6 +449,7 @@ function Index(props) {
       },
     })
       .then((res) => {
+        console.log("productTreeDatares...", res);
         const data = res?.data?.data;
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""
@@ -504,7 +489,9 @@ function Index(props) {
       },
     })
       .then((res) => {
+      
         const data = res?.data?.frpData;
+          console.log("frpres...", data);
         setFrpId(data?.id);
         setField(data?.field ? data.field : "");
         setAllocated(data?.allocated ? data.allocated : "");

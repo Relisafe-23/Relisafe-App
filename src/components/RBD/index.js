@@ -1,7 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SplitKofN from './SplitKofN';
-// Switch Configuration Modal Component
-export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSwitchData }) => {
+import Api from "../../Api";
+import RBDStructure from './RBDStructure';
+import { useParams } from 'react-router-dom';
+import CreatableSelect from "react-select/creatable";
+export const SwitchConfigurationModal = ({ isOpen, props, onClose, onSubmit, currentSwitchData }) => {
+  const { id } = useParams();
+  const [options, setOptions] = useState([]);
+  const projectId = id || props?.match?.params?.id;
+  const userId = localStorage.getItem("userId");
+  const [productIds, setProductIds] = useState([]);
+  const productId = props?.location?.props?.data?.id
+    ? props?.location?.props?.data?.id
+    : props?.location?.state?.productId
+      ? props?.location?.state?.productId
+      : ""
+  console.log("productId45", productIds)
+  //  const projectId = props?.location?.state?.projectId
+  //   ? props?.location?.state?.projectId
+  //   : props?.match?.params?.id;
+
+
+const getProductName = () => {
+  const sessionId = localStorage.getItem("sessionId");
+  const userId = localStorage.getItem("userId");
+
+  Api.get(`/api/v1/productTreeStructure/product/list`, {
+    params: {
+      projectId,
+      userId,
+      token: sessionId,
+    },
+  }).then((res) => {
+
+    const filteredData = res.data.data.filter(
+      item => item?.productName && item?.partNumber && item?.productId
+    );
+
+ 
+    const options = filteredData.map(item => ({
+      label: item.productName,
+      value: item.productName, 
+      partNumber: item.partNumber,
+    }));
+
+    const productIds = filteredData.map(item => item.productId);
+
+    setOptions(options);
+    setProductIds(productIds);
+
+    console.log("options", options);
+    console.log("productIds", productIds);
+  });
+};
+
+ const getProductFRPData = () => {
+  if (!productIds || productIds.length === 0) return;
+
+  const companyId = localStorage.getItem("companyId");
+
+  Api.get(`/api/v1/failureRatePrediction/details`, {
+    params: {
+      projectId,
+      companyId,
+      productIds, 
+      userId,
+    },
+  }).then((res) => {
+    console.log("resFRP", res.data);
+  });
+};
+
+  useEffect(() => {
+    if (!projectId) return;
+    getProductName();
+    getProductFRPData();
+  }, [productId])
+
   const [formData, setFormData] = useState({
     switchExists: currentSwitchData?.switchExists || true,
     switchFRDistribution: currentSwitchData?.switchFRDistribution || false,
@@ -28,370 +103,373 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
   };
 
   return (
- <div style={{
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(0,0,0,0.5)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: 1003
-}}>
-  <div style={{
-    backgroundColor: 'white',
-    padding: '20px',
-    borderRadius: '4px',
-    width: '600px',
-    maxHeight: '90vh',
-    overflowY: 'auto'
-  }}>
-    <h2 style={{ marginBottom: '20px', color: '#333', fontSize: '18px', fontWeight: 'bold' }}>
-      RBD Element K-out-of-N Switch data
-    </h2>
-    
-    <form onSubmit={handleSubmit}>
-      <div style={{ marginBottom: '20px' }}>
-        {/* Switch exists checkbox - left aligned with spacing */}
-        <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
-          <input
-            type="checkbox"
-            id="switchExists"
-            checked={formData.switchExists}
-            onChange={(e) => handleChange('switchExists', e.target.checked)}
-            style={{ 
-              marginRight: '10px',
-              width: '18px',
-              height: '18px',
-              cursor: 'pointer'
-            }}
-          />
-          <label 
-            htmlFor="switchExists" 
-            style={{ 
-              fontSize: '14px', 
-              cursor: 'pointer',
-              userSelect: 'none'
-            }}
-          >
-            Switch exists
-          </label>
-        </div>
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1003
+    }}>
 
-        {formData.switchExists && (
-          <div style={{ 
-            paddingLeft: '30px',
-            borderLeft: '1px solid #eee'
-          }}>
-            {/* Switch FR distribution checkbox */}
-            <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center' }}>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '20px',
+        borderRadius: '4px',
+        width: '600px',
+        maxHeight: '90vh',
+        overflowY: 'auto'
+      }}>
+        <h2 style={{ marginBottom: '20px', color: '#333', fontSize: '18px', fontWeight: 'bold' }}>
+          RBD Element K-out-of-N Switch data
+        </h2>
+
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '20px' }}>
+            {/* Switch exists checkbox - left aligned with spacing */}
+            <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center' }}>
               <input
                 type="checkbox"
-                id="switchFRDistribution"
-                checked={formData.switchFRDistribution}
-                onChange={(e) => handleChange('switchFRDistribution', e.target.checked)}
-                style={{ 
+                id="switchExists"
+                checked={formData.switchExists}
+                onChange={(e) => handleChange('switchExists', e.target.checked)}
+                style={{
                   marginRight: '10px',
                   width: '18px',
                   height: '18px',
                   cursor: 'pointer'
                 }}
               />
-              <label 
-                htmlFor="switchFRDistribution" 
-                style={{ 
-                  fontSize: '14px', 
+              <label
+                htmlFor="switchExists"
+                style={{
+                  fontSize: '14px',
                   cursor: 'pointer',
                   userSelect: 'none'
                 }}
               >
-                Switch FR distribution
+                Switch exists
               </label>
             </div>
 
-            {/* Time independent checkbox */}
-            <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center' }}>
-              <input
-                type="checkbox"
-                id="timeIndependent"
-                checked={formData.timeIndependent}
-                onChange={(e) => handleChange('timeIndependent', e.target.checked)}
-                style={{ 
-                  marginRight: '10px',
-                  width: '18px',
-                  height: '18px',
-                  cursor: 'pointer'
-                }}
-              />
-              <label 
-                htmlFor="timeIndependent" 
-                style={{ 
-                  fontSize: '14px', 
-                  cursor: 'pointer',
-                  userSelect: 'none'
-                }}
-              >
-                Time independent
-              </label>
-            </div>
-
-            {/* FR distribution parameters section - only shows when switchFRDistribution is checked */}
-            {formData.switchFRDistribution && (
-              <div style={{ 
-                marginBottom: '20px',
-                paddingLeft: '20px',
-                borderLeft: '1px solid #f0f0f0'
+            {formData.switchExists && (
+              <div style={{
+                paddingLeft: '30px',
+                borderLeft: '1px solid #eee'
               }}>
-                <div style={{ marginBottom: '10px' }}>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '8px', 
+
+                <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type="checkbox"
+                    id="switchFRDistribution"
+                    checked={formData.switchFRDistribution}
+                    onChange={(e) => handleChange('switchFRDistribution', e.target.checked)}
+                    style={{
+                      marginRight: '10px',
+                      width: '18px',
+                      height: '18px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <label
+                    htmlFor="switchFRDistribution"
+                    style={{
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    Switch FR distribution
+                  </label>
+                </div>
+
+                {/* Time independent checkbox */}
+                <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type="checkbox"
+                    id="timeIndependent"
+                    checked={formData.timeIndependent}
+                    onChange={(e) => handleChange('timeIndependent', e.target.checked)}
+                    style={{
+                      marginRight: '10px',
+                      width: '18px',
+                      height: '18px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <label
+                    htmlFor="timeIndependent"
+                    style={{
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      userSelect: 'none'
+                    }}
+                  >
+                    Time independent
+                  </label>
+                </div>
+
+
+                {formData.switchFRDistribution && (
+                  <div style={{
+                    marginBottom: '20px',
+                    paddingLeft: '20px',
+                    borderLeft: '1px solid #f0f0f0'
+                  }}>
+                    <div style={{ marginBottom: '10px' }}>
+                      <label style={{
+                        display: 'block',
+                        marginBottom: '8px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        color: '#555'
+                      }}>
+                        FR distribution parameters:
+                      </label>
+                      <select
+                        value={formData.frDistributionType}
+                        onChange={(e) => handleChange('frDistributionType', e.target.value)}
+                        style={{
+                          width: '200px',
+                          padding: '8px 12px',
+                          border: '1px solid #ccc',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                          backgroundColor: '#f9f9f9',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="Exponential">Exponential</option>
+                        <option value="Weibull">Weibull</option>
+                        <option value="Normal">Normal</option>
+                        <option value="Lognormal">Lognormal</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Unreliability input field - proper spacing and alignment */}
+                <div style={{
+                  marginBottom: '25px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '15px'
+                }}>
+                  <label style={{
                     fontSize: '14px',
                     fontWeight: 'bold',
-                    color: '#555'
+                    color: '#555',
+                    minWidth: '120px'
                   }}>
-                    FR distribution parameters:
+                    Unreliability:
                   </label>
-                  <select
-                    value={formData.frDistributionType}
-                    onChange={(e) => handleChange('frDistributionType', e.target.value)}
+                  <input
+                    type="text"
+                    value={formData.unreliability}
+                    onChange={(e) => handleChange('unreliability', e.target.value)}
                     style={{
-                      width: '200px',
+                      width: '150px',
                       padding: '8px 12px',
                       border: '1px solid #ccc',
                       borderRadius: '4px',
                       fontSize: '14px',
-                      backgroundColor: '#f9f9f9',
-                      cursor: 'pointer'
+                      backgroundColor: '#fff'
                     }}
-                  >
-                    <option value="Exponential">Exponential</option>
-                    <option value="Weibull">Weibull</option>
-                    <option value="Normal">Normal</option>
-                    <option value="Lognormal">Lognormal</option>
-                  </select>
+                    placeholder="0.001"
+                  />
                 </div>
+
+                {/* Visual representation - N, K, Switch */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '30px 0',
+                  position: 'relative',
+                  gap: '50px'
+                }}>
+                  {/* N box */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
+                  }}>
+                    <div style={{
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      marginBottom: '10px',
+                      color: '#333'
+                    }}>
+                      N
+                    </div>
+                    <div style={{
+                      width: '80px',
+                      height: '40px',
+                      backgroundColor: '#f0f0f0',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      fontWeight: 'bold'
+                    }}>
+                      {formData.n}
+                    </div>
+                  </div>
+
+                  {/* K box */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
+                  }}>
+                    <div style={{
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      marginBottom: '10px',
+                      color: '#333'
+                    }}>
+                      K
+                    </div>
+                    <div style={{
+                      width: '80px',
+                      height: '40px',
+                      backgroundColor: '#f0f0f0',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      fontWeight: 'bold'
+                    }}>
+                      {formData.k}
+                    </div>
+                  </div>
+
+                  {/* Switch box */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center'
+                  }}>
+                    <div style={{
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      marginBottom: '10px',
+                      color: '#007bff'
+                    }}>
+                      Switch
+                    </div>
+                    <div style={{
+                      width: '100px',
+                      height: '40px',
+                      backgroundColor: '#007bff',
+                      borderRadius: '4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      boxShadow: '0 2px 4px rgba(0, 123, 255, 0.3)'
+                    }}>
+                      Switch
+                    </div>
+                  </div>
+                </div>
+
+                {/* Connection lines in visual representation */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '140px',
+                  right: '140px',
+                  height: '1px',
+                  backgroundColor: '#333',
+                  zIndex: -1
+                }} />
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '270px',
+                  right: '270px',
+                  height: '1px',
+                  backgroundColor: '#333',
+                  zIndex: -1
+                }} />
               </div>
             )}
-
-            {/* Unreliability input field - proper spacing and alignment */}
-            <div style={{ 
-              marginBottom: '25px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '15px'
-            }}>
-              <label style={{ 
-                fontSize: '14px',
-                fontWeight: 'bold',
-                color: '#555',
-                minWidth: '120px'
-              }}>
-                Unreliability:
-              </label>
-              <input
-                type="text"
-                value={formData.unreliability}
-                onChange={(e) => handleChange('unreliability', e.target.value)}
-                style={{
-                  width: '150px',
-                  padding: '8px 12px',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                  backgroundColor: '#fff'
-                }}
-                placeholder="0.001"
-              />
-            </div>
-
-            {/* Visual representation - N, K, Switch */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              margin: '30px 0',
-              position: 'relative',
-              gap: '50px'
-            }}>
-              {/* N box */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center'
-              }}>
-                <div style={{
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  marginBottom: '10px',
-                  color: '#333'
-                }}>
-                  N
-                </div>
-                <div style={{
-                  width: '80px',
-                  height: '40px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '16px',
-                  fontWeight: 'bold'
-                }}>
-                  {formData.n}
-                </div>
-              </div>
-
-              {/* K box */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center'
-              }}>
-                <div style={{
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  marginBottom: '10px',
-                  color: '#333'
-                }}>
-                  K
-                </div>
-                <div style={{
-                  width: '80px',
-                  height: '40px',
-                  backgroundColor: '#f0f0f0',
-                  border: '1px solid #ccc',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '16px',
-                  fontWeight: 'bold'
-                }}>
-                  {formData.k}
-                </div>
-              </div>
-
-              {/* Switch box */}
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center'
-              }}>
-                <div style={{
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  marginBottom: '10px',
-                  color: '#007bff'
-                }}>
-                  Switch
-                </div>
-                <div style={{
-                  width: '100px',
-                  height: '40px',
-                  backgroundColor: '#007bff',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  boxShadow: '0 2px 4px rgba(0, 123, 255, 0.3)'
-                }}>
-                  Switch
-                </div>
-              </div>
-            </div>
-
-            {/* Connection lines in visual representation */}
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '140px',
-              right: '140px',
-              height: '1px',
-              backgroundColor: '#333',
-              zIndex: -1
-            }} />
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '270px',
-              right: '270px',
-              height: '1px',
-              backgroundColor: '#333',
-              zIndex: -1
-            }} />
           </div>
-        )}
-      </div>
 
-      {/* Buttons - right aligned */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'flex-end',
-        gap: '15px',
-        paddingTop: '20px',
-        borderTop: '1px solid #eee',
-        marginTop: '20px'
-      }}>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            padding: '10px 24px',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            background: 'linear-gradient(to bottom, #f9f9f9, #e9e9e9)',
-            color: '#333',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            minWidth: '80px',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => e.target.style.background = 'linear-gradient(to bottom, #e9e9e9, #d9d9d9)'}
-          onMouseLeave={(e) => e.target.style.background = 'linear-gradient(to bottom, #f9f9f9, #e9e9e9)'}
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          style={{
-            padding: '10px 24px',
-            border: 'none',
-            borderRadius: '4px',
-            background: 'linear-gradient(to bottom, #007bff, #0056b3)',
-            color: 'white',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            minWidth: '80px',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => e.target.style.background = 'linear-gradient(to bottom, #0056b3, #004085)'}
-          onMouseLeave={(e) => e.target.style.background = 'linear-gradient(to bottom, #007bff, #0056b3)'}
-        >
-          OK
-        </button>
+          {/* Buttons - right aligned */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: '15px',
+            paddingTop: '20px',
+            borderTop: '1px solid #eee',
+            marginTop: '20px'
+          }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                padding: '10px 24px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                background: 'linear-gradient(to bottom, #f9f9f9, #e9e9e9)',
+                color: '#333',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                minWidth: '80px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'linear-gradient(to bottom, #e9e9e9, #d9d9d9)'}
+              onMouseLeave={(e) => e.target.style.background = 'linear-gradient(to bottom, #f9f9f9, #e9e9e9)'}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              style={{
+                padding: '10px 24px',
+                border: 'none',
+                borderRadius: '4px',
+                background: 'linear-gradient(to bottom, #007bff, #0056b3)',
+                color: 'white',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                minWidth: '80px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = 'linear-gradient(to bottom, #0056b3, #004085)'}
+              onMouseLeave={(e) => e.target.style.background = 'linear-gradient(to bottom, #007bff, #0056b3)'}
+            >
+              OK
+            </button>
+          </div>
+        </form>
       </div>
-    </form>
-  </div>
-</div>
+    </div>
   );
 };
 
 // Updated ElementParametersModal with Switch button for K-out-of-N
- export const ElementParametersModal = ({ isOpen, onClose, onSubmit, onOpenSwitchConfig, currentBlock }) => {
+export const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitchConfig, currentBlock }) => {
+
   const [formData, setFormData] = useState({
     relDes: currentBlock?.relDes || '',
     elementType: currentBlock?.elementType || 'REGULAR',
     patNumber: currentBlock?.patNumber || '',
+    fr: currentBlock?.fr || '',
     repair: currentBlock?.repair || 'Full repair',
     inspectionPeriod: currentBlock?.inspectionPeriod || '',
     dutyCycle: currentBlock?.dutyCycle || '100',
@@ -410,7 +488,71 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
     remark: currentBlock?.remark || '',
     fmDescription: currentBlock?.fmDescription || ''
   });
+  const { id } = useParams();
+  const [options, setOptions] = useState([]);
+  const projectId = id || props?.match?.params?.id;
+  const userId = localStorage.getItem("userId");
+  const [productIds, setProductIds] = useState(null); 
+  const productId = props?.location?.props?.data?.id
+    ? props?.location?.props?.data?.id
+    : props?.location?.state?.productId
+      ? props?.location?.state?.productId
+      : ""
 
+  const getProductName = () => {
+    const sessionId = localStorage.getItem("sessionId");
+    const userId = localStorage.getItem("userId");
+    Api.get(`/api/v1/productTreeStructure/product/list`, {
+      params: {
+        projectId: projectId,
+        userId: userId,
+        token: sessionId,
+      },
+    })
+      .then((res) => {
+        console.log("res.data.data", res.data.data)
+        const options = res.data.data
+          .filter(item => item?.productName && item?.partNumber)
+          .map(item => ({
+            label: item.productName,
+            value: item.productName,
+            partNumber: item.partNumber,
+            indexCount: item.indexCount,
+            fr: item.fr,
+            productId: item.productId
+          }));
+        const productIdst = res.data.data.filter(item => item?.productId).map(item => item.productId);
+        setProductIds(productIdst);
+        console.log("productId4597", productIds)
+        console.log("options786", options)
+        setOptions(options);
+      });
+  }
+
+  const getProductFRPData = () => {
+     if (!productId) return; 
+    const companyId = localStorage.getItem("companyId");
+    console.log("productId78765")
+    Api.get(`/api/v1/failureRatePrediction/details`, {
+      params: {
+        projectId,
+        companyId,
+        productId,
+        userId: userId,
+      },
+    }).then((res) => {
+      console.log("jjnjinkobjihjbigw")
+
+
+      console.log("resFRP", res)
+    })
+  }
+
+  useEffect(() => {
+    if (!projectId) return;
+    getProductName();
+    getProductFRPData();
+  }, [productId])
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
@@ -451,37 +593,47 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
         backgroundColor: 'white',
         padding: '20px',
         borderRadius: '4px',
-        width: '800px',
+        width: '1000px',
         maxHeight: '90vh',
         overflowY: 'auto'
       }}>
         <h2 style={{ marginBottom: '20px', color: '#333' }}>Element parameters definition</h2>
-        
+
         <form onSubmit={handleSubmit}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
+            gridTemplateColumns: '1fr 1fr 1fr',  // Changed to 3 columns
             gap: '15px',
             marginBottom: '20px'
           }}>
-            {/* Left Column */}
+            {/* Column 1 */}
             <div>
               <div style={{ marginBottom: '10px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
-                  Rel Des:
+                  Ref Des:
                 </label>
-                <input
-                  type="text"
-                  value={formData.relDes}
-                  onChange={(e) => handleChange('relDes', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '6px',
-                    border: '1px solid #ccc',
-                    borderRadius: '3px',
-                    fontSize: '12px'
-                  }}
+                <CreatableSelect
                   placeholder="Transmitter"
+                  value={
+                    formData?.relDes
+                      ? { label: formData.relDes, value: formData.relDes }
+                      : null
+                  }
+                  options={options}
+                  onChange={(option) => {
+                    if (option) {
+                      handleChange("relDes", option.value);
+                      handleChange("partNumber", option.partNumber);
+                      handleChange("indexCount", option.indexCount);
+                      handleChange("fr", option.fr);
+                    } else {
+                      handleChange("relDes", "");
+                      handleChange("partNumber", "");
+                      handleChange("indexCount", 0);
+                      handleChange("fr", "");
+                    }
+                  }}
+                  isClearable
                 />
               </div>
 
@@ -539,22 +691,43 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
 
               <div style={{ marginBottom: '10px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
-                  Pat Number:
+                  Part Number:
                 </label>
                 <input
                   type="text"
-                  value={formData.patNumber}
-                  onChange={(e) => handleChange('patNumber', e.target.value)}
+                  value={formData?.partNumber || ""}
+                  onChange={(e) => handleChange("partNumber", e.target.value)}
                   style={{
-                    width: '100%',
-                    padding: '6px',
-                    border: '1px solid #ccc',
-                    borderRadius: '3px',
-                    fontSize: '12px'
+                    width: "100%",
+                    padding: "6px",
+                    border: "1px solid #ccc",
+                    borderRadius: "3px",
+                    fontSize: "12px"
                   }}
                 />
               </div>
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                  Machine Time [hours] (t):
+                </label>
+                <input
+                  type="text"
+                  value={formData?.dutyCycle || ""}
+                  onChange={(e) => handleChange("dutyCycle", e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "6px",
+                    border: "1px solid #ccc",
+                    borderRadius: "3px",
+                    fontSize: "12px"
+                  }}
+                />
+              </div>
+            </div>
 
+
+            {/* Column 2 */}
+            <div>
               <div style={{ marginBottom: '10px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
                   Repair:
@@ -641,7 +814,7 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
               </div>
             </div>
 
-            {/* Right Column */}
+            {/* Column 3 */}
             <div>
               <div style={{ marginBottom: '10px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
@@ -669,7 +842,7 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
                     <label htmlFor="frKOutOfN" style={{ marginLeft: '5px', fontSize: '12px' }}>K out of N</label>
                   </div>
                 </div>
-                
+
                 {formData.kOutOfN && (
                   <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                     <div>
@@ -726,6 +899,12 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
                   <option value="Normal">Normal</option>
                   <option value="Weibull">Weibull</option>
                   <option value="Lognormal">Lognormal</option>
+                  <option value="Erlang">Erlang</option>
+                  <option value="Time-dependent">Time-dependent</option>
+                  <option value="Constant">Constant</option>
+                  <option value="Uniform">Uniform</option>
+
+
                 </select>
               </div>
 
@@ -738,8 +917,8 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
                     <label style={{ fontSize: '11px', marginRight: '5px' }}>MTBF [hours]:</label>
                     <input
                       type="text"
-                      value={formData.mtbf}
-                      onChange={(e) => handleChange('mtbf', e.target.value)}
+                      value={formData?.fr ? (1 / formData.fr) : ""}
+                      onChange={(e) => handleChange('fr', e.target.value)}
                       style={{
                         width: '100px',
                         padding: '4px',
@@ -790,106 +969,124 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
                   />
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div style={{ marginBottom: '10px' }}>
-                <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#666' }}>
-                  Connection with Product Tree / FMECA
-                </h4>
-                <div style={{ marginBottom: '8px' }}>
-                  <label style={{ fontSize: '11px', display: 'block', marginBottom: '3px' }}>
-                    Product Tree Item ID:
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.productTreeItemID}
-                    onChange={(e) => handleChange('productTreeItemID', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '4px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '11px'
-                    }}
-                  />
-                </div>
-                <div style={{ marginBottom: '8px' }}>
-                  <label style={{ fontSize: '11px', display: 'block', marginBottom: '3px' }}>
-                    Select FM number:
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.fmNumber}
-                    onChange={(e) => handleChange('fmNumber', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '4px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '11px'
-                    }}
-                  />
-                </div>
-                <div style={{ marginBottom: '8px' }}>
-                  <label style={{ fontSize: '11px', display: 'block', marginBottom: '3px' }}>
-                    FM description:
-                  </label>
-                  <textarea
-                    value={formData.fmDescription}
-                    onChange={(e) => handleChange('fmDescription', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '4px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '11px',
-                      minHeight: '60px',
-                      resize: 'vertical'
-                    }}
-                  />
-                </div>
+          {/* Connection with Product Tree / FMECA - Now moved below as a full width section */}
+          <div style={{
+            marginBottom: '20px',
+            padding: '15px',
+            border: '1px solid #e0e0e0',
+            borderRadius: '4px',
+            backgroundColor: '#f9f9f9'
+          }}>
+            <h4 style={{ fontSize: '12px', marginBottom: '15px', color: '#666', fontWeight: 'bold' }}>
+              Connection with Product Tree / FMECA
+            </h4>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr',
+              gap: '15px'
+            }}>
+              <div>
+                <label style={{ fontSize: '11px', display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Product Tree Item ID:
+                </label>
+                <input
+                  type="text"
+                  value={formData.indexCount}
+                  onChange={(e) => handleChange('indexCount', e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '6px',
+                    border: '1px solid #ccc',
+                    borderRadius: '3px',
+                    fontSize: '11px'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Select FM number:
+                </label>
+                <input
+                  type="text"
+                  value={formData.fmNumber}
+                  onChange={(e) => handleChange('fmNumber', e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '6px',
+                    border: '1px solid #ccc',
+                    borderRadius: '3px',
+                    fontSize: '11px'
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '11px', display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  FM description:
+                </label>
+                <textarea
+                  value={formData.fmDescription}
+                  onChange={(e) => handleChange('fmDescription', e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '6px',
+                    border: '1px solid #ccc',
+                    borderRadius: '3px',
+                    fontSize: '11px',
+                    minHeight: '50px',
+                    resize: 'vertical'
+                  }}
+                />
               </div>
             </div>
           </div>
 
-          {/* Description and Remark */}
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
-                Description:
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => handleChange('description', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '6px',
-                  border: '1px solid #ccc',
-                  borderRadius: '3px',
-                  fontSize: '12px',
-                  minHeight: '50px',
-                  resize: 'vertical'
-                }}
-              />
-            </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
-                Remark:
-              </label>
-              <textarea
-                value={formData.remark}
-                onChange={(e) => handleChange('remark', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '6px',
-                  border: '1px solid #ccc',
-                  borderRadius: '3px',
-                  fontSize: '12px',
-                  minHeight: '50px',
-                  resize: 'vertical'
-                }}
-              />
-            </div>
+          {/* Description and Remark - Full width section */}
+          {/* <div style={{ 
+          marginBottom: '20px',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '15px'
+        }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+              Description:
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '6px',
+                border: '1px solid #ccc',
+                borderRadius: '3px',
+                fontSize: '12px',
+                minHeight: '80px',
+                resize: 'vertical'
+              }}
+            />
           </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+              Remark:
+            </label>
+            <textarea
+              value={formData.remark}
+              onChange={(e) => handleChange('remark', e.target.value)}
+              style={{
+                width: '100%',
+                padding: '6px',
+                border: '1px solid #ccc',
+                borderRadius: '3px',
+                fontSize: '12px',
+                minHeight: '80px',
+                resize: 'vertical'
+              }}
+            />
+          </div>
+        </div> */}
 
           {/* Buttons */}
           <div style={{
@@ -935,11 +1132,17 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
 };
 
 // RBDBlock Component 
-   export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData }) => {
+export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData }) => {
+  const [formData, setFormData] = useState({
+    fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
+    k: blockData?.k || '2',
+    n: blockData?.n || '3',
+    mtbf: blockData?.mtbf || '1303617.9'
+  });
   const getBlockContent = () => {
-    switch(type) {
+    switch (type) {
       case 'Regular':
-        return 'RS\n19760.5';
+        return formData?.fr || 'Block';
       case 'K-out-of-N':
         const k = blockData?.k || '2';
         const n = blockData?.n || '3';
@@ -965,7 +1168,7 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
       style: { cursor: "pointer" }
     };
 
-    switch(type) {
+    switch (type) {
       case 'Regular':
         return (
           <>
@@ -974,7 +1177,7 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
               y={y}
               width="60"
               height="40"
-              fill="white"
+              fill={blockData.color || "white"}
               stroke="black"
               strokeWidth="2"
               rx="0"
@@ -997,7 +1200,7 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
       case 'K-out-of-N':
         const blockText = getBlockContent();
         const lines = blockText.split('\n');
-        
+
         return (
           <>
             <rect
@@ -1012,7 +1215,7 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
               ry="5"
               {...commonProps}
             />
-            
+
             <text
               x={x + 30}
               y={y + 15}
@@ -1025,7 +1228,7 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
             >
               {lines[0]}
             </text>
-            
+
             <text
               x={x + 30}
               y={y + 25}
@@ -1037,7 +1240,7 @@ export  const SwitchConfigurationModal = ({ isOpen, onClose, onSubmit, currentSw
             >
               {lines[1]}
             </text>
-            
+
             <text
               x={x + 30}
               y={y + 35}
@@ -1266,16 +1469,16 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
     const totalNodesWidth = (blocks.length + 1) * nodeSpacing * 2;
     const totalBlockSpacing = (blocks.length - 1) * blockSpacing;
     const totalNeededWidth = totalBlocksWidth + totalNodesWidth + totalBlockSpacing;
-    
+
     const requiredRightBoxX = leftBoxX + boxWidth + totalNeededWidth + minOutputGap + boxWidth;
     const actualRightBoxX = Math.max(baseRightBoxX, requiredRightBoxX);
-    
+
     const availableWidth = actualRightBoxX - leftBoxX - boxWidth * 2;
     const startX = leftBoxX + boxWidth + (availableWidth - totalNeededWidth) / 2 + nodeSpacing;
-    
+
     const items = [];
     let currentX = startX;
-    
+
     items.push({
       type: 'node',
       id: 'node-start',
@@ -1341,7 +1544,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
 
   const getConnectionPoints = () => {
     const connectionPoints = [];
-    
+
     if (items.length === 0) {
       connectionPoints.push({
         from: leftBoxX + boxWidth,
@@ -1358,21 +1561,21 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
       for (let i = 0; i < items.length - 1; i++) {
         const current = items[i];
         const next = items[i + 1];
-        
+
         let fromX, toX;
-        
+
         if (current.type === 'block') {
           fromX = current.x + blockWidth;
         } else {
           fromX = current.x + nodeRadius;
         }
-        
+
         if (next.type === 'block') {
           toX = next.x;
         } else {
           toX = next.x - nodeRadius;
         }
-        
+
         connectionPoints.push({
           from: fromX,
           to: toX,
@@ -1387,23 +1590,23 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
       } else {
         lastX = lastItem.x + nodeRadius;
       }
-      
+
       const minEndX = rightBoxX - minOutputGap;
       const endX = Math.min(lastX + 20, minEndX);
-      
+
       connectionPoints.push({
         from: lastX,
         to: endX,
         y: centerPointY
       });
-      
+
       connectionPoints.push({
         from: endX,
         to: rightBoxX,
         y: centerPointY
       });
     }
-    
+
     return connectionPoints;
   };
 
@@ -1614,9 +1817,9 @@ export default function RBDButton() {
 
   const handleSelect = (action) => {
     console.log("RBD action:", action);
-    
+
     const type = action.replace("Add ", "");
-    
+
     setElementModal({
       open: true,
       mode: 'add',
@@ -1629,35 +1832,35 @@ export default function RBDButton() {
     if (elementModal.mode === 'add') {
       const newBlock = {
         id: nextId,
-        type: elementModal.blockType === 'K_OUT_OF_N' ? 'K-out-of-N' : 
-              elementModal.blockType === 'SUBRBD' ? 'SubRBD' :
-              elementModal.blockType === 'PARALLEL_SECTION' ? 'Parallel Section' :
+        type: elementModal.blockType === 'K_OUT_OF_N' ? 'K-out-of-N' :
+          elementModal.blockType === 'SUBRBD' ? 'SubRBD' :
+            elementModal.blockType === 'PARALLEL_SECTION' ? 'Parallel Section' :
               elementModal.blockType === 'PARALLEL_BRANCH' ? 'Parallel Branch' : 'Regular',
         data: {
           ...formData,
-          elementType: elementModal.blockType === 'K_OUT_OF_N' ? 'K-out-of-N' : 
-                     elementModal.blockType === 'SUBRBD' ? 'SubRBD' :
-                     elementModal.blockType === 'PARALLEL_SECTION' ? 'Parallel Section' :
-                     elementModal.blockType === 'PARALLEL_BRANCH' ? 'Parallel Branch' : 'Regular'
+          elementType: elementModal.blockType === 'K_OUT_OF_N' ? 'K-out-of-N' :
+            elementModal.blockType === 'SUBRBD' ? 'SubRBD' :
+              elementModal.blockType === 'PARALLEL_SECTION' ? 'Parallel Section' :
+                elementModal.blockType === 'PARALLEL_BRANCH' ? 'Parallel Branch' : 'Regular'
         }
       };
-      
+
       setBlocks([...blocks, newBlock]);
       setNextId(nextId + 1);
     } else if (elementModal.mode === 'edit') {
-      setBlocks(blocks.map(block => 
-        block.id === elementModal.blockId 
-          ? { 
-              ...block, 
-              data: {
-                ...formData,
-                elementType: block.type
-              }
+      setBlocks(blocks.map(block =>
+        block.id === elementModal.blockId
+          ? {
+            ...block,
+            data: {
+              ...formData,
+              elementType: block.type
             }
+          }
           : block
       ));
     }
-    
+
     setElementModal({ open: false, mode: 'add', blockId: null, blockType: '' });
   };
 
@@ -1671,19 +1874,19 @@ export default function RBDButton() {
 
   const handleSwitchSubmit = (switchData) => {
     if (elementModal.blockId) {
-      setBlocks(blocks.map(block => 
-        block.id === elementModal.blockId 
-          ? { 
-              ...block, 
-              data: {
-                ...block.data,
-                switchData: switchData
-              }
+      setBlocks(blocks.map(block =>
+        block.id === elementModal.blockId
+          ? {
+            ...block,
+            data: {
+              ...block.data,
+              switchData: switchData
             }
+          }
           : block
       ));
     }
-    
+
     setSwitchModal({ open: false, blockId: null, initialData: null });
   };
 
@@ -1700,7 +1903,7 @@ export default function RBDButton() {
 
   const handleBlockMenuSelect = (action) => {
     if (!blockMenu.blockId) return;
-    
+
     if (action === "Edit...") {
       const block = blocks.find(b => b.id === blockMenu.blockId);
       setElementModal({
@@ -1708,9 +1911,9 @@ export default function RBDButton() {
         mode: 'edit',
         blockId: blockMenu.blockId,
         blockType: block?.type === 'K-out-of-N' ? 'K_OUT_OF_N' :
-                  block?.type === 'SubRBD' ? 'SUBRBD' :
-                  block?.type === 'Parallel Section' ? 'PARALLEL_SECTION' :
-                  block?.type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR'
+          block?.type === 'SubRBD' ? 'SUBRBD' :
+            block?.type === 'Parallel Section' ? 'PARALLEL_SECTION' :
+              block?.type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR'
       });
     } else if (action === "Delete...") {
       handleDeleteBlock(blockMenu.blockId);
@@ -1721,87 +1924,123 @@ export default function RBDButton() {
         mode: 'add',
         blockId: nextId,
         blockType: type === 'K-out-of-N' ? 'K_OUT_OF_N' :
-                  type === 'SubRBD' ? 'SUBRBD' :
-                  type === 'Parallel Section' ? 'PARALLEL_SECTION' :
-                  type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR'
+          type === 'SubRBD' ? 'SUBRBD' :
+            type === 'Parallel Section' ? 'PARALLEL_SECTION' :
+              type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR'
       });
     } else if (action === "Split K-out-of-N...") {
       alert("Splitting K-out-of-N block");
     }
-    
+
     setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
   };
+  const [listedRBDs, setListedRBDs] = useState([]);
 
   return (
-    <div style={{ minHeight: "100vh", padding: "20px", overflowX: 'auto' }}>
-      <div style={{ 
-        display: "flex", 
-        flexDirection: "column",
-        alignItems: "center",
-        width: "100%",
-        marginTop: "50px" 
-      }}>
-        <div style={{ marginBottom: "40px" }}>
-          <button
-            onClick={() => setShowSymbol(true)}
-            style={{
-              backgroundColor: "green",
-              color: "white",
-              padding: "8px 16px",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-          >
-            RBD
-          </button>
+    <>
+
+      <div style={{ minHeight: "100vh", padding: "20px", overflowX: "auto" }}>
+
+        {/* Center Content */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "100%",
+            marginTop: "50px",
+          }}
+        >
+          {/* RBD List */}
+          <RBDStructure />
+
+          {/* RBD Button */}
+          <div style={{ margin: "40px 0" }}>
+            <button
+              onClick={() => setShowSymbol(true)}
+              style={{
+                backgroundColor: "green",
+                color: "white",
+                padding: "8px 16px",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              RBD
+            </button>
+          </div>
+
+          {/* RBD Diagram */}
+          {showSymbol && (
+            <div style={{ width: "100%", overflowX: "auto" }}>
+              <BiDirectionalSymbol
+                onNodeClick={handleNodeClick}
+                onOpenMenu={openMenu}
+                blocks={blocks}
+                onDeleteBlock={handleDeleteBlock}
+                onEditBlock={handleEditBlock}
+              />
+            </div>
+          )}
         </div>
 
-        {showSymbol && (
-          <div style={{ marginTop: "20px", width: '100%', overflowX: 'auto' }}>
-            <BiDirectionalSymbol
-              onNodeClick={handleNodeClick}
-              onOpenMenu={openMenu}
-              blocks={blocks}
-              onDeleteBlock={handleDeleteBlock}
-              onEditBlock={handleEditBlock}
-            />
-          </div>
+        {/* Right-click Menu (RBD) */}
+        {menu && (
+          <RBDContextMenu
+            x={menu.x}
+            y={menu.y}
+            onSelect={handleSelect}
+            onClose={() => setMenu(null)}
+          />
         )}
+
+        {/* Right-click Menu (Block) */}
+        {blockMenu.open && (
+          <BlockContextMenu
+            x={blockMenu.x}
+            y={blockMenu.y}
+            onSelect={handleBlockMenuSelect}
+            onClose={() =>
+              setBlockMenu({ open: false, blockId: null, x: 0, y: 0 })
+            }
+          />
+        )}
+
+        {/* Element Modal */}
+        <ElementParametersModal
+          isOpen={elementModal.open}
+          onClose={() =>
+            setElementModal({
+              open: false,
+              mode: "add",
+              blockId: null,
+              blockType: "",
+            })
+          }
+          onSubmit={handleModalSubmit}
+          onOpenSwitchConfig={handleSwitchConfigOpen}
+          currentBlock={
+            blocks.find((b) => b.id === elementModal.blockId)?.data
+          }
+        />
+
+        {/* Switch Config Modal */}
+        <SwitchConfigurationModal
+          isOpen={switchModal.open}
+          onClose={() =>
+            setSwitchModal({
+              open: false,
+              blockId: null,
+              initialData: null,
+            })
+          }
+          onSubmit={handleSwitchSubmit}
+          currentSwitchData={switchModal.initialData}
+        />
       </div>
 
-      {menu && (
-        <RBDContextMenu
-          x={menu.x}
-          y={menu.y}
-          onSelect={handleSelect}
-          onClose={() => setMenu(null)}
-        />
-      )}
+    </>
 
-      {blockMenu.open && (
-        <BlockContextMenu
-          x={blockMenu.x}
-          y={blockMenu.y}
-          onSelect={handleBlockMenuSelect}
-          onClose={() => setBlockMenu({ open: false, blockId: null, x: 0, y: 0 })}
-        />
-      )}
-
-      <ElementParametersModal
-        isOpen={elementModal.open}
-        onClose={() => setElementModal({ open: false, mode: 'add', blockId: null, blockType: '' })}
-        onSubmit={handleModalSubmit}
-        onOpenSwitchConfig={handleSwitchConfigOpen}
-        currentBlock={blocks.find(b => b.id === elementModal.blockId)?.data}
-      />
-
-      <SwitchConfigurationModal
-        isOpen={switchModal.open}
-        onClose={() => setSwitchModal({ open: false, blockId: null, initialData: null })}
-        onSubmit={handleSwitchSubmit}
-        currentSwitchData={switchModal.initialData}
-      />
-    </div>
   );
 }

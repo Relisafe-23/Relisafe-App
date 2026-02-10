@@ -35,6 +35,7 @@ import Theme from "./components/Theme";
 import { ProtectedRoute, PublicRoute, USER_ROLES } from "./container/PublicLayout/PublicLayout";
 
 function App() {
+  const RBDRouteWrapper = (props) => <RBD {...props} />;
   return (
     <div>
       <ModalProvider>
@@ -139,7 +140,7 @@ function App() {
               name="RBD"
               selectedComponent="RBD"
               path="/rbd/:id"
-              component={RBD}
+             component={RBDRouteWrapper}  
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
             
