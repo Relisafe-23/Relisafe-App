@@ -18,6 +18,7 @@ import { useHistory } from "react-router-dom";
 import HeaderNavBar from "../HeaderNavBar";
 import EventsReportModal from "./EventsReportModal";
 import FTAtable from "./FTAtable";
+import { FaTrash } from "react-icons/fa";
 const initialData = {
   id: 1,
   code: "jack_hill",
@@ -63,11 +64,11 @@ const initialData = {
 
 export default function FTA(props) {
   const [showGrid, setShowGrid] = useState(false);
-const [viewMode, setViewMode] = useState('table'); // 'table' or 'chart'
-const [trees, setTrees] = useState([]); // All trees data for the table
-const [loading, setLoading] = useState(true);
-const [selectedTreeId, setSelectedTreeId] = useState(null);
- const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
+  const [viewMode, setViewMode] = useState("table"); // 'table' or 'chart'
+  const [trees, setTrees] = useState([]); // All trees data for the table
+  const [loading, setLoading] = useState(true);
+  const [selectedTreeId, setSelectedTreeId] = useState(null);
+  const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
   const [chartData, setChartData] = useState([]);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panning, setPanning] = useState(false);
@@ -77,12 +78,18 @@ const [selectedTreeId, setSelectedTreeId] = useState(null);
   const [nodeLength, setNodeLength] = useState([]);
   const [calcTypes, setCalcTypes] = useState();
   const [productData, setProductData] = useState([]);
-  const [currentReportType, setCurrentReportType] = useState('all');
- 
+  const [currentReportType, setCurrentReportType] = useState("all");
+
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [eventsData, setEventsData] = useState([]);
   const [gatesData, setGatesData] = useState([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Add this function to refresh data without causing loops
+  const refreshFTAData = () => {
+    console.log("Refreshing FTA data...");
+    getFTAData();
+  };
 
   const history = useHistory();
 
@@ -97,138 +104,151 @@ const [selectedTreeId, setSelectedTreeId] = useState(null);
     isDeleteSucess,
     saveFromFile,
     reloadData,
+    openDeleteNode,
     stopTriggerReload,
   } = useModal();
 
-  const handleZoomToFit = () => {
-
-  setPanOffset({ x: 0, y: 0 }); 
-  toast.success("Zoomed to fit screen");
-};
-
-const handleZoomOriginal = () => {
-  setZoomLevel(1); 
-  setPanOffset({ x: 0, y: 0 }); 
-  toast.success("Reset to original size");
-};
-
-const handleToggleGrid = () => {
-  const newShowGrid = !showGrid;
-  setShowGrid(newShowGrid);
-  toast.success(newShowGrid ? "Grid shown" : "Grid hidden");
-};
-
-const handleOriginalLayout = () => {
-  setZoomLevel(1);
-  setPanOffset({ x: 0, y: 0 });
-  setPanning(false);
-  setPanStart({ x: 0, y: 0 });
-  toast.success("Original layout restored");
-};
-
-const generateReport = (type = 'all') => {
-  if (!chartData) {
-    toast.warning('No fault tree data available');
-    return;
-  }
-
-
-  // Function to view a specific tree
-const handleViewTree = (tree) => {
-  setChartData(tree.treeStructure || {});
-  setSelectedTreeId(tree.id || tree._id);
-  setViewMode('chart');
-  
-  // Load full data if needed
-  if (tree.treeStructure?.parentId) {
-    getFullFTAdata(tree.treeStructure.parentId);
-  }
-  
-  toast.success(`Viewing tree: ${tree.name}`);
-};
-
-// Function to create new tree
-const handleCreateNewTree = () => {
-  setIsModalOpen(true);
-};
-
-// Function to delete a tree
-const handleDeleteTree = (treeId) => {
-  if (window.confirm('Are you sure you want to delete this tree?')) {
-    Api.delete(`/api/v1/FTA/delete/${treeId}`)
-      .then((res) => {
-        toast.success('Tree deleted successfully');
-        getFTAData(); // Refresh the list
-      })
-      .catch((error) => {
-        toast.error('Failed to delete tree');
-        console.error('Delete error:', error);
-      });
-  }
-};
-
-// Function to go back to table view
-const handleBackToTable = () => {
-  setViewMode('table');
-  setChartData([]);
-  setSelectedTreeId(null);
-};
-
-  const extractAllNodes = (node) => {
-    const nodes = [];
-    
-    if (node) {
-      const hasFailureRate = node.fr || node.failureRate || node.frValue || node.failureRateValue;
-      const isEvent = hasFailureRate || node.calcTypes || node.isEvent === true;
-      const isGate = node.gateType || (node.children && node.children.length > 0);
-      
-      const failureRate = node.fr || node.failureRate || node.frValue || node.failureRateValue || 'N/A';
-      
-      const nodeData = {
-        id: node.id,
-        code: node.code || node.name || `Gate ${node.gateId}`,
-        description: node.description || 'No description',
-        type: isEvent ? 'Event' : (isGate ? 'Gate' : 'Unknown'),
-        failureRate: isEvent ? failureRate : 'N/A',
-        calcType: node.calcTypes || 'N/A',
-        gateType: node.gateType || 'N/A',
-        gateId: node.gateId || 'N/A',
-        children: node.children || [],
-        product: node.product || 'N/A',
-        childCount: node.children ? node.children.length : 0,
-      };
-      
-      console.log("Node Data:", nodeData);
-      nodes.push(nodeData);
-      
-      if (node.children && node.children.length > 0) {
-        node.children.forEach(child => {
-          nodes.push(...extractAllNodes(child));
-        });
-      }
-    }
-    
-    return nodes;
+  const handelDelete = () => {
+    openDeleteNode();
   };
 
-  const allNodes = extractAllNodes(chartData);
-  
-  const events = allNodes.filter(node => node.type === 'Event');
-  const gates = allNodes.filter(node => node.type === 'Gate');
-  
-  console.log("Events found:", events);
-  console.log("Gates found:", gates);
-  
-  setEventsData(events);
-  setGatesData(gates);
-  setCurrentReportType(type); 
-  setIsReportModalOpen(true);
-  
-  toast.success(`${type === 'events' ? 'Events' : type === 'gates' ? 'Gates' : 'Report'} generated successfully`);
-};
+  const handleZoomToFit = () => {
+    setPanOffset({ x: 0, y: 0 });
+    toast.success("Zoomed to fit screen");
+  };
+
+  const handleZoomOriginal = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    toast.success("Reset to original size");
+  };
+
+  const handleToggleGrid = () => {
+    const newShowGrid = !showGrid;
+    setShowGrid(newShowGrid);
+    toast.success(newShowGrid ? "Grid shown" : "Grid hidden");
+  };
+
+  const handleOriginalLayout = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setPanning(false);
+    setPanStart({ x: 0, y: 0 });
+    toast.success("Original layout restored");
+  };
+
+  const generateReport = (type = "all") => {
+    if (!chartData) {
+      toast.warning("No fault tree data available");
+      return;
+    }
+
+    // Function to view a specific tree
+    const handleViewTree = (tree) => {
+      setChartData(tree.treeStructure || {});
+      setSelectedTreeId(tree.id || tree._id);
+      setViewMode("chart");
+
+      // Load full data if needed
+      if (tree.treeStructure?.parentId) {
+        getFullFTAdata(tree.treeStructure.parentId);
+      }
+
+      toast.success(`Viewing tree: ${tree.name}`);
+    };
+
+    // Function to create new tree
+    const handleCreateNewTree = () => {
+      setIsModalOpen(true);
+    };
+
+    // Function to delete a tree
+    const handleDeleteTree = (treeId) => {
+      if (window.confirm("Are you sure you want to delete this tree?")) {
+        Api.delete(`/api/v1/FTA/delete/${treeId}`)
+          .then((res) => {
+            toast.success("Tree deleted successfully");
+            getFTAData(); // Refresh the list
+          })
+          .catch((error) => {
+            toast.error("Failed to delete tree");
+            console.error("Delete error:", error);
+          });
+      }
+    };
+
+    // Function to go back to table view
+    const handleBackToTable = () => {
+      setViewMode("table");
+      setChartData([]);
+      setSelectedTreeId(null);
+    };
+
+    const extractAllNodes = (node) => {
+      const nodes = [];
+
+      if (node) {
+        const hasFailureRate =
+          node.fr || node.failureRate || node.frValue || node.failureRateValue;
+        const isEvent =
+          hasFailureRate || node.calcTypes || node.isEvent === true;
+        const isGate =
+          node.gateType || (node.children && node.children.length > 0);
+
+        const failureRate =
+          node.fr ||
+          node.failureRate ||
+          node.frValue ||
+          node.failureRateValue ||
+          "N/A";
+
+        const nodeData = {
+          id: node.id,
+          code: node.code || node.name || `Gate ${node.gateId}`,
+          description: node.description || "No description",
+          type: isEvent ? "Event" : isGate ? "Gate" : "Unknown",
+          failureRate: isEvent ? failureRate : "N/A",
+          calcType: node.calcTypes || "N/A",
+          gateType: node.gateType || "N/A",
+          gateId: node.gateId || "N/A",
+          children: node.children || [],
+          product: node.product || "N/A",
+          childCount: node.children ? node.children.length : 0,
+        };
+
+        console.log("Node Data:", nodeData);
+        nodes.push(nodeData);
+
+        if (node.children && node.children.length > 0) {
+          node.children.forEach((child) => {
+            nodes.push(...extractAllNodes(child));
+          });
+        }
+      }
+
+      return nodes;
+    };
+
+    const allNodes = extractAllNodes(chartData);
+
+    const events = allNodes.filter((node) => node.type === "Event");
+    const gates = allNodes.filter((node) => node.type === "Gate");
+
+    console.log("Events found:", events);
+    console.log("Gates found:", gates);
+
+    setEventsData(events);
+    setGatesData(gates);
+    setCurrentReportType(type);
+    setIsReportModalOpen(true);
+
+    toast.success(
+      `${type === "events" ? "Events" : type === "gates" ? "Gates" : "Report"} generated successfully`,
+    );
+  };
 
   const handleWheelScroll = (event) => {
-    const newZoom = zoomLevel + event.deltaY * -0.001; 
+    const newZoom = zoomLevel + event.deltaY * -0.001;
     setZoomLevel(Math.min(Math.max(0.1, newZoom), 2));
   };
   const handleMouseDown = (event) => {
@@ -376,115 +396,129 @@ const handleBackToTable = () => {
   //   });
   // };
 
-const getFTAData = () => {
-  setLoading(true);
-  Api.get(`/api/v1/FTA/get/${projectId}`).then((res) => {
-    const allTreeData = res?.data?.nodeData || [];
-    
-    // Store all trees for the table
-    setTrees(allTreeData);
-    
-    // For backward compatibility
-    setNodeLength(allTreeData);
-    
-    // If in chart view and there's data, load the selected tree
-    if (viewMode === 'chart' && allTreeData.length > 0 && selectedTreeId) {
-      const treeToShow = allTreeData.find(tree => 
-        tree._id === selectedTreeId || tree.id === selectedTreeId
-      ) || allTreeData[0];
-      setChartData(treeToShow.treeStructure || {});
-      if (treeToShow.treeStructure?.parentId) {
-        getFullFTAdata(treeToShow.treeStructure.parentId);
-      }
-    }
-    
-    setLoading(false);
-    stopTriggerReload();
-  }).catch(error => {
-    console.error("Error fetching trees:", error);
-    toast.error("Failed to load trees");
-    setLoading(false);
-  });
-};
-
-
-// Function to delete a tree
-const handleDeleteTree = (treeId) => {
-  if (!treeId) {
-    toast.error('Invalid tree ID');
-    return;
-  }
-  
-  if (window.confirm('Are you sure you want to delete this tree and all its nodes?')) {
-    // Try different API endpoints based on your backend
-    Api.delete(`/api/v1/FTA/delete/${treeId}`)
+  const getFTAData = () => {
+    setLoading(true);
+    Api.get(`/api/v1/FTA/get/${projectId}`)
       .then((res) => {
-        toast.success('Tree deleted successfully');
-        
-        // If we're deleting the currently viewed tree, go back to table
-        if (selectedTreeId === treeId) {
-          handleBackToTable();
+        const allTreeData = res?.data?.nodeData || [];
+
+        // Store all trees for the table
+        setTrees(allTreeData);
+
+        // For backward compatibility
+        setNodeLength(allTreeData);
+
+        // If in chart view and there's data, load the selected tree
+        if (viewMode === "chart" && allTreeData.length > 0 && selectedTreeId) {
+          const treeToShow =
+            allTreeData.find(
+              (tree) =>
+                tree._id === selectedTreeId || tree.id === selectedTreeId,
+            ) || allTreeData[0];
+          setChartData(treeToShow.treeStructure || {});
+          if (treeToShow.treeStructure?.parentId) {
+            getFullFTAdata(treeToShow.treeStructure.parentId);
+          }
         }
-        
-        // Refresh the list
-        getFTAData();
+
+        setLoading(false);
+        stopTriggerReload();
       })
       .catch((error) => {
-        console.error('Delete error:', error);
-        
-        // Try alternative endpoints
-        if (error.response?.status === 404) {
-          // Try deleting by parentId
-          const treeToDelete = trees.find(tree => tree.id === treeId || tree._id === treeId);
-          if (treeToDelete?.treeStructure?.parentId) {
-            Api.delete(`/api/v1/FTA/delete/parent/${treeToDelete.treeStructure.parentId}`)
-              .then((res) => {
-                toast.success('Tree deleted successfully');
-                getFTAData();
-              })
-              .catch((secondError) => {
-                console.error('Second delete error:', secondError);
-                toast.error('Failed to delete tree. Please check console for details.');
-              });
-          } else {
-            toast.error('Tree not found or invalid structure');
-          }
-        } else {
-          toast.error(`Failed to delete tree: ${error.message}`);
-        }
+        console.error("Error fetching trees:", error);
+        toast.error("Failed to load trees");
+        setLoading(false);
       });
-  }
-};
+  };
 
+  // Function to delete a tree
+  const handleDeleteTree = (tree) => {
+    console.log("tree id", tree.id);
+    console.log("tree projectId", tree.projectId);
 
+    // console.log('Attempting to delete tree with ID:', treeId);
 
-// Function to view a specific tree
-const handleViewTree = (tree) => {
-  setChartData(tree.treeStructure || {});
-  setSelectedTreeId(tree.id || tree._id);
-  setViewMode('chart');
-  
-  // Load full data if needed
-  if (tree.treeStructure?.parentId) {
-    getFullFTAdata(tree.treeStructure.parentId);
-  }
-  
-  toast.success(`Viewing tree: ${tree.name}`);
-};
+    if (!tree) {
+      toast.error("Invalid tree ID");
+      return;
+    }
 
-// Function to create new tree
-const handleCreateNewTree = () => {
-  setIsModalOpen(true);
-};
+    if (
+      window.confirm(
+        "Are you sure you want to delete this tree and all its nodes?",
+      )
+    ) {
+      // Try different API endpoints based on your backend
+      try {
+        Api.delete(`/api/v1/FTA/delete/${tree?.projectId}/${tree?.id}`)
+          .then((res) => {
+            console.log("Delete response:", res);
+            toast.success("Tree deleted successfully");
 
+            // If we're deleting the currently viewed tree, go back to table
+            if (selectedTreeId === tree?.id) {
+              handleBackToTable();
+            }
 
+            // Refresh the list
+            getFTAData();
+          })
+          .catch((error) => {
+            console.error("Delete error:", error);
 
-// Function to go back to table view
-const handleBackToTable = () => {
-  setViewMode('table');
-  setChartData([]);
-  setSelectedTreeId(null);
-};
+            // Try alternative endpoints
+            // if (error.response?.status === 404) {
+            //   // Try deleting by parentId
+            //   const treeToDelete = trees.find(tree => tree.id === treeId || tree._id === treeId);
+            //   if (treeToDelete?.treeStructure?.parentId) {
+            //     Api.delete(`/api/v1/FTA/delete/parent/${treeToDelete.treeStructure.parentId}`)
+            //       .then((res) => {
+            //         toast.success('Tree deleted successfully');
+            //         getFTAData();
+            //       })
+            //       .catch((secondError) => {
+            //         console.error('Second delete error:', secondError);
+            //         toast.error('Failed to delete tree. Please check console for details.');
+            //       });
+            //   } else {
+            //     toast.error('Tree not found or invalid structure');
+            //   }
+            // } else {
+            //   toast.error(`Failed to delete tree: ${error.message}`);
+            // }
+          });
+      } catch (error) {
+        console.error("Unexpected error during tree deletion:", error);
+        toast.error("An unexpected error occurred while deleting the tree.");
+      }
+    }
+  };
+
+  // Function to view a specific tree
+  const handleViewTree = (tree) => {
+    setChartData(tree.treeStructure || {});
+    setSelectedTreeId(tree.id || tree._id);
+    setViewMode("chart");
+
+    // Load full data if needed
+    if (tree.treeStructure?.parentId) {
+      getFullFTAdata(tree.treeStructure.parentId);
+    }
+
+    toast.success(`Viewing tree: ${tree.name}`);
+  };
+
+  // Function to create new tree
+  const handleCreateNewTree = () => {
+    setIsModalOpen(true);
+  };
+
+  // Function to go back to table view
+  const handleBackToTable = () => {
+    setViewMode("table");
+    setChartData([]);
+    setSelectedTreeId(null);
+  };
 
   const handleCancel = () => {
     if (formikRef.current) {
@@ -525,16 +559,43 @@ const handleBackToTable = () => {
     window.location.reload();
   };
 
+  // Update your useEffects in FTA.js:
+
+  // Initial data fetch
   useEffect(() => {
-    getFTAData();
-    getTreeProduct();
+    if (projectId) {
+      console.log("Initial data fetch");
+      getFTAData();
+      getTreeProduct();
+    }
+  }, [projectId]); // Only depend on projectId
+
+  // Handle reload from ModalContext
+  useEffect(() => {
+    if (reloadData && projectId) {
+      console.log("Reload triggered from context");
+      getFTAData();
+      stopTriggerReload(); // Make sure to stop the reload flag
+    }
+  }, [reloadData, projectId, stopTriggerReload]);
+
+  // Handle refresh trigger
+  useEffect(() => {
+    window.triggerFTAUpdate = () => {
+      setRefreshTrigger((prev) => prev + 1);
+    };
+
+    return () => {
+      delete window.triggerFTAUpdate;
+    };
   }, []);
 
+  // Fetch data when refreshTrigger changes
   useEffect(() => {
-    if (reloadData) {
+    if (projectId) {
       getFTAData();
     }
-  }, [reloadData]);
+  }, [projectId, refreshTrigger]);
 
   const getFullFTAdata = (id) => {
     if (id) {
@@ -549,7 +610,7 @@ const handleBackToTable = () => {
 
   return (
     <div>
-    <HeaderNavBar 
+      {/* <HeaderNavBar 
       selectedComponent="FTA"
       onGenerateReport={viewMode === 'chart' ? generateReport : null}
       onZoomToFit={viewMode === 'chart' ? handleZoomToFit : null}
@@ -568,20 +629,18 @@ const handleBackToTable = () => {
           </Button>
         ) : null
       }
-    />
-    
-    {/* Show table view OR chart view based on viewMode */}
-    {viewMode === 'table' ? (
-    <FTAtable
-  trees={trees}
-  loading={loading}
-  onViewTree={handleViewTree}
-  onCreateNewTree={handleCreateNewTree}
-  onDeleteTree={handleDeleteTree}
-  projectId={projectId}
-/>
-    ) : (
-      // Show chart view
+    /> */}
+
+      {/* Show table view OR chart view based on viewMode */}
+      {viewMode === "table" ? (
+        <FTAtable
+          trees={trees}
+          loading={loading}
+          onViewTree={handleViewTree}
+          onCreateNewTree={handleCreateNewTree}
+          projectId={projectId} // Pass projectId here
+        />
+      ) : // Show chart view
       nodeLength.length > 0 && chartData ? (
         <div
           className="org-chart-container"
@@ -594,7 +653,12 @@ const handleBackToTable = () => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         >
-          <Tree lineWidth={"2px"} lineColor={"green"} lineBorderRadius={"10px"} className="org-chart-container">
+          <Tree
+            lineWidth={"2px"}
+            lineColor={"green"}
+            lineBorderRadius={"10px"}
+            className="org-chart-container"
+          >
             <RenderTree
               data={chartData}
               handleRemove={removeChartData}
@@ -609,7 +673,9 @@ const handleBackToTable = () => {
           </Tree>
         </div>
       ) : (
-        <div style={{ height: "100vh", display: "flex", justifyContent: "center" }}>
+        <div
+          style={{ height: "100vh", display: "flex", justifyContent: "center" }}
+        >
           <div style={{ paddingTop: "90px" }}>
             <Button
               onClick={() => setIsModalOpen(true)}
@@ -627,31 +693,31 @@ const handleBackToTable = () => {
             </Button>
           </div>
         </div>
-      )
-    )}
-    
-    {/* Keep your EventsReportModal */}
-    <EventsReportModal
-      isOpen={isReportModalOpen}
-      onClose={() => setIsReportModalOpen(false)}
-      eventsData={eventsData}
-      gatesData={gatesData}
-      reportType={currentReportType}
-    />
+      )}
 
-
-  
+      {/* Keep your EventsReportModal */}
+      <EventsReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        eventsData={eventsData}
+        gatesData={gatesData}
+        reportType={currentReportType}
+      />
 
       <Modal
-        title={<p style={{ margin: "0px", color: "#00a9c9" ,width:'500px' }}>Fault Tree Properties</p>}
+        title={
+          <p style={{ margin: "0px", color: "#00a9c9", width: "500px" }}>
+            Fault Tree Properties
+          </p>
+        }
         open={
           isModalOpen
             ? isModalOpen
             : isFTAModalOpen
-            ? isFTAModalOpen
-            : isPropertiesModal && nodeLength.length > 0
-            ? isPropertiesModal
-            : null
+              ? isFTAModalOpen
+              : isPropertiesModal && nodeLength.length > 0
+                ? isPropertiesModal
+                : null
         }
         footer={null}
         onCancel={handleCancel}
@@ -663,7 +729,9 @@ const handleBackToTable = () => {
           initialValues={{
             name: isPropertiesModal ? chartData?.name : "",
             description: isPropertiesModal ? chartData?.description : "",
-            calcTypes: isPropertiesModal ? { label: chartData?.calcTypes, value: chartData?.calcTypes } : "",
+            calcTypes: isPropertiesModal
+              ? { label: chartData?.calcTypes, value: chartData?.calcTypes }
+              : "",
             missionTime: isPropertiesModal ? chartData?.missionTime : "",
             gateId: 1,
           }}
@@ -672,7 +740,15 @@ const handleBackToTable = () => {
           innerRef={formikRef}
         >
           {(formik) => {
-            const { values, handleChange, handleSubmit, handleBlur, isValid, mainProductForm, setFieldValue } = formik;
+            const {
+              values,
+              handleChange,
+              handleSubmit,
+              handleBlur,
+              isValid,
+              mainProductForm,
+              setFieldValue,
+            } = formik;
             return (
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-2">
@@ -685,7 +761,11 @@ const handleBackToTable = () => {
                     onBlur={handleBlur}
                     onChange={handleChange}
                   />
-                  <ErrorMessage className="error text-danger" component="span" name="name" />
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="name"
+                  />
                 </Form.Group>
                 <Form.Group className="mb-2">
                   <Label notify={true}>Description</Label>
@@ -699,7 +779,11 @@ const handleBackToTable = () => {
                     onBlur={handleBlur}
                     onChange={handleChange}
                   />
-                  <ErrorMessage className="error text-danger" component="span" name="description" />
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="description"
+                  />
                 </Form.Group>
                 <Form.Group className="mb-2">
                   <Label notify={true}>Calc.Types</Label>
@@ -725,7 +809,11 @@ const handleBackToTable = () => {
                     ]}
                   />
 
-                  <ErrorMessage className="error text-danger" component="span" name="calcTypes" />
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="calcTypes"
+                  />
                 </Form.Group>
                 {values.calcTypes.value === "Unavailability at time t Q(t)" ? (
                   <Form.Group className="mb-2">
@@ -740,15 +828,27 @@ const handleBackToTable = () => {
                         onChange={handleChange}
                         style={{ width: "80%" }}
                       />
-                      <p style={{ margin: "0px", fontWeight: "bold", marginLeft: "20px" }}>( hours)</p>
+                      <p
+                        style={{
+                          margin: "0px",
+                          fontWeight: "bold",
+                          marginLeft: "20px",
+                        }}
+                      >
+                        ( hours)
+                      </p>
                     </div>
 
-                    <ErrorMessage className="error text-danger" component="span" name="missionTime" />
+                    <ErrorMessage
+                      className="error text-danger"
+                      component="span"
+                      name="missionTime"
+                    />
                   </Form.Group>
                 ) : null}
 
-                // In FTAtable component, update the delete button:
-<Button
+                {/* // In FTAtable component, update the delete button: */}
+                {/* <Button
   variant="outline-danger"
   size="sm"
   onClick={() => {
@@ -757,8 +857,8 @@ const handleBackToTable = () => {
   }}
   title="Delete Tree"
 >
-  <FaTrash />
-</Button>
+  <FaTrash/>
+</Button> */}
 
                 <Form.Group className="mb-2">
                   <Label notify={true}>Gate Id</Label>
@@ -771,13 +871,24 @@ const handleBackToTable = () => {
                     onBlur={handleBlur}
                     onChange={handleChange}
                   />
-                  <ErrorMessage className="error text-danger" component="span" name="gateId" />
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="gateId"
+                  />
                 </Form.Group>
                 <div className="d-flex justify-content-end mt-4">
-                  <Button className=" me-2" variant="outline-secondary" type="reset" onClick={handleCancel}>
+                  <Button
+                    className=" me-2"
+                    variant="outline-secondary"
+                    type="reset"
+                    onClick={handleCancel}
+                  >
                     Cancel
                   </Button>
-                  <Button type="submit">{isPropertiesModal ? "Save Changes" : "Create"}</Button>
+                  <Button type="submit">
+                    {isPropertiesModal ? "Save Changes" : "Create"}
+                  </Button>
                 </div>
               </Form>
             );

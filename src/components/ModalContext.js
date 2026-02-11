@@ -25,13 +25,13 @@ export const ModalProvider = ({ children }) => {
     setIsFTAModalOpen(true);
   };
 
-  const openProbabilityCalculations = ()=>{
-    setIsProbOpen(true)
-  }
+  const openProbabilityCalculations = () => {
+    setIsProbOpen(true);
+  };
 
-  const closeProbabilityCalculations = ()=>{
-    setIsProbOpen(false)
-  }
+  const closeProbabilityCalculations = () => {
+    setIsProbOpen(false);
+  };
 
   const closeFTAModal = () => {
     setIsFTAModalOpen(false);
@@ -74,23 +74,45 @@ export const ModalProvider = ({ children }) => {
   };
 
   // Delete Node Open
-  const openDeleteNode = () => {
+  // In ModalContext.js, update the openDeleteNode function:
+
+  // Delete Node Open
+  const openDeleteNode = (deleteData) => {
+    console.log("Opening delete modal with data:", deleteData);
+
+    if (!deleteData) {
+      console.error("No delete data provided");
+      return;
+    }
+
+    // Store the data in a local variable to use in the modal callback
+    const deleteInfo = deleteData;
+
+    // Set the data state
+    setData(deleteInfo);
     setIsDeleteNode(true);
-    if (data && data.nodeActive) {
+
+    if (deleteInfo && deleteInfo.nodeActive) {
       Modal.confirm({
         title:
-          data.indexCount === 1 ? (
+          deleteInfo.indexCount === 1 ? (
             <span>
-              Are you sure you want to <span style={{ color: "red" }}>Delete Parent</span>?
+              Are you sure you want to{" "}
+              <span style={{ color: "red" }}>Delete Parent Tree</span>?
             </span>
           ) : (
-            "Are you sure you want to Delete"
+            "Are you sure you want to Delete this node?"
           ),
         icon: <ExclamationCircleOutlined />,
-        okText: "Ok",
+        content: deleteInfo.treeName
+          ? `Deleting: ${deleteInfo.treeName}`
+          : null,
+        okText: "Yes, Delete",
         cancelText: "Cancel",
+        okButtonProps: { danger: true },
         onOk: () => {
-          confirmDelete();
+          // Pass the deleteInfo directly to confirmDelete
+          confirmDelete(deleteInfo);
         },
       });
     }
@@ -101,14 +123,17 @@ export const ModalProvider = ({ children }) => {
     setIsDeleteNode(false);
   };
 
-  const confirmDelete = () => {
-    Api.delete(`/api/v1/FTA/delete/${data.projId}/${data.childId}`, {
-      params: {
-        tableParentId: data.tableParentId,
-      },
-    }).then((res) => {
-      setIsdeleteSucess(true);
-      toast(res?.data?.status === "Child Deleted" ? "Deleted Successfully" : "Parent Deleted Successfully", {
+  // In ModalContext.js, update confirmDelete:
+
+  const confirmDelete = (deleteData) => {
+    // Use the passed parameter instead of state
+    const dataToDelete = deleteData || data;
+
+    console.log("Confirm delete with data:", dataToDelete);
+
+    if (!dataToDelete) {
+      console.error("No data available for deletion");
+      toast.error("Delete failed: No data provided", {
         position: "top-right",
         autoClose: 5000,
         hideProgressBar: false,
@@ -117,10 +142,97 @@ export const ModalProvider = ({ children }) => {
         draggable: true,
         progress: undefined,
         theme: "light",
-        type: "warning",
+        type: "error",
       });
-      setIsdeleteSucess(false);
-    });
+      return;
+    }
+
+    if (!dataToDelete.projId) {
+      console.error("Missing projId in delete data:", dataToDelete);
+      toast.error("Delete failed: Missing project ID", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!dataToDelete.childId) {
+      console.error("Missing childId in delete data:", dataToDelete);
+      toast.error("Delete failed: Missing tree ID", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "error",
+      });
+      return;
+    }
+
+    Api.delete(
+      `/api/v1/FTA/delete/${dataToDelete.projId}/${dataToDelete.childId}`,
+      {
+        params: {
+          tableParentId: dataToDelete.tableParentId,
+        },
+      },
+    )
+      .then((res) => {
+        console.log("Delete response:", res);
+
+        // DON'T set isDeleteSucess here - it causes infinite loop
+        // Instead, trigger reload through a different mechanism
+
+        toast.success(
+          res?.data?.status === "Child Deleted"
+            ? "Deleted Successfully"
+            : "Parent Deleted Successfully",
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          },
+        );
+
+        // Use triggerReload instead of isDeleteSucess
+        // You need to add triggerReload to your context
+        if (typeof window.triggerFTAUpdate === "function") {
+          window.triggerFTAUpdate();
+        }
+      })
+      .catch((error) => {
+        console.error("Delete error:", error);
+        console.error("Error response:", error.response?.data);
+        toast.error(
+          error.response?.data?.message ||
+            "Failed to delete. Please try again.",
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          },
+        );
+      });
   };
 
   const saveFromFile = (values) => {

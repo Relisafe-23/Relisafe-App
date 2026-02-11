@@ -194,6 +194,9 @@
     };
 
     const updateFTA = (values) => {
+
+      console.log(values, "values in updateFTA");
+
       if (node?.indexCount === 1) {
         Api.patch(`/api/v1/FTA/update/property/${node?.parentId}`, {
           productId: node?.id,
