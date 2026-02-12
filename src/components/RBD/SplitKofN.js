@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-
+import SwitchConfigurationModal  from './SwitchConfig';
+import {ElementParametersModal} from './ElementParametersModal';
 import {
   BiDirectionalSymbol,
   RBDContextMenu,
   BlockContextMenu,
-  ElementParametersModal,
-  SwitchConfigurationModal,
+
   // SplitKOutOfNModa
 } from './index';
 
