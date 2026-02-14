@@ -15,10 +15,13 @@ import { customStyles } from "../../components/core/select";
 import { toast } from "react-toastify";
 import { useModal } from "../ModalContext";
 import { useHistory } from "react-router-dom";
-import HeaderNavBar from "../HeaderNavBar";
 import EventsReportModal from "./EventsReportModal";
 import FTAtable from "./FTAtable";
-import { FaTrash } from "react-icons/fa";
+import UnavailabilityReportModal from "./UnavailablityReportModal";
+import SteadyStateReportModal from "./SteadyStateReportModal";
+
+// Remove ProbabilityContext import
+
 const initialData = {
   id: 1,
   code: "jack_hill",
@@ -64,8 +67,8 @@ const initialData = {
 
 export default function FTA(props) {
   const [showGrid, setShowGrid] = useState(false);
-  const [viewMode, setViewMode] = useState("table"); // 'table' or 'chart'
-  const [trees, setTrees] = useState([]); // All trees data for the table
+  const [viewMode, setViewMode] = useState("table");
+  const [trees, setTrees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTreeId, setSelectedTreeId] = useState(null);
   const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
@@ -85,14 +88,16 @@ export default function FTA(props) {
   const [gatesData, setGatesData] = useState([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // Add this function to refresh data without causing loops
-  const refreshFTAData = () => {
-    console.log("Refreshing FTA data...");
-    getFTAData();
-  };
+  // LOCAL STATE for probability modal - NO CONTEXT NEEDED
+  const [isProbabilityModalOpen, setIsProbabilityModalOpen] = useState(false);
+  const [probabilityParams, setProbabilityParams] = useState(null);
+  
+  const [isUnavailabilityReportOpen, setIsUnavailabilityReportOpen] = useState(false);
+  const [isSteadyStateReportOpen, setIsSteadyStateReportOpen] = useState(false);
+  const [probabilityCalcData, setProbabilityCalcData] = useState([]);
+  const [currentMissionTime, setCurrentMissionTime] = useState('');
 
   const history = useHistory();
-
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const formikRef = useRef(null);
 
@@ -111,6 +116,95 @@ export default function FTA(props) {
   const handelDelete = () => {
     openDeleteNode();
   };
+
+  // ===== LOCAL MODAL FUNCTIONS - NO CONTEXT NEEDED =====
+  const openProbabilityModal = (params) => {
+    setProbabilityParams(params);
+    setIsProbabilityModalOpen(true);
+  };
+
+  const closeProbabilityModal = () => {
+    setIsProbabilityModalOpen(false);
+    setProbabilityParams(null);
+  };
+
+  const submitProbabilityCalculation = (values) => {
+    console.log('Submitting calculation:', values);
+    // calculateUnavailability(values);
+    closeProbabilityModal();
+  };
+
+  // ===== CALCULATE UNAVAILABILITY FUNCTION =====
+  // const calculateUnavailability = (values) => {
+  //   const extractProbabilityNodes = (node) => {
+  //     const nodes = [];
+      
+  //     if (node) {
+  //       const hasFailureData = node.fr || node.calcTypes;
+        
+  //       if (hasFailureData) {
+  //         let unavailability = 0;
+          
+  //         if (values.calcTypes?.value === "Unavailability at time t Q(t)") {
+  //           const lambda = parseFloat(node.fr) || 0;
+  //           const t = parseFloat(values.missionTime) || 0;
+  //           unavailability = 1 - Math.exp(-lambda * t);
+  //         } else {
+  //           const lambda = parseFloat(node.fr) || 0;
+  //           const mttr = parseFloat(node.mttr) || 0;
+  //           const mu = mttr > 0 ? 1 / mttr : 0;
+  //           unavailability = lambda + mu > 0 ? lambda / (lambda + mu) : 0;
+  //         }
+          
+  //         nodes.push({
+  //           name: node.name || node.code || `Gate ${node.gateId}`,
+  //           description: node.description || '',
+  //           failureRate: node.fr || 'N/A',
+  //           missionTime: values.missionTime || '',
+  //           mttr: node.mttr || 'N/A',
+  //           unavailability: unavailability.toExponential(4),
+  //           steadyStateUnavailability: unavailability.toExponential(4)
+  //         });
+  //       }
+        
+  //       if (node.children && node.children.length > 0) {
+  //         node.children.forEach(child => {
+  //           nodes.push(...extractProbabilityNodes(child));
+  //         });
+  //       }
+  //     }
+      
+  //     return nodes;
+  //   };
+
+  //   const calcData = extractProbabilityNodes(chartData);
+  //   setProbabilityCalcData(calcData);
+    
+  //   if (values.calcTypes?.value === "Unavailability at time t Q(t)") {
+  //     setCurrentMissionTime(values.missionTime);
+  //     setIsUnavailabilityReportOpen(true);
+  //   } else {
+  //     setIsSteadyStateReportOpen(true);
+  //   }
+  // };
+
+  // ===== USE EFFECT FOR PROBABILITY PARAMS =====
+  useEffect(() => {
+    if (probabilityParams) {
+      // calculateUnavailability(probabilityParams);
+    }
+  }, [probabilityParams]);
+
+  // ===== WINDOW OPEN PROBABILITY MODAL =====
+  useEffect(() => {
+    window.openProbabilityModal = (params) => {
+      openProbabilityModal(params);
+    };
+    
+    return () => {
+      delete window.openProbabilityModal;
+    };
+  }, []);
 
   const handleZoomToFit = () => {
     setPanOffset({ x: 0, y: 0 });
@@ -137,52 +231,12 @@ export default function FTA(props) {
     toast.success("Original layout restored");
   };
 
+  // ===== GENERATE REPORT FUNCTION - NO HOOKS INSIDE =====
   const generateReport = (type = "all") => {
     if (!chartData) {
       toast.warning("No fault tree data available");
       return;
     }
-
-    // Function to view a specific tree
-    const handleViewTree = (tree) => {
-      setChartData(tree.treeStructure || {});
-      setSelectedTreeId(tree.id || tree._id);
-      setViewMode("chart");
-
-      // Load full data if needed
-      if (tree.treeStructure?.parentId) {
-        getFullFTAdata(tree.treeStructure.parentId);
-      }
-
-      toast.success(`Viewing tree: ${tree.name}`);
-    };
-
-    // Function to create new tree
-    const handleCreateNewTree = () => {
-      setIsModalOpen(true);
-    };
-
-    // Function to delete a tree
-    const handleDeleteTree = (treeId) => {
-      if (window.confirm("Are you sure you want to delete this tree?")) {
-        Api.delete(`/api/v1/FTA/delete/${treeId}`)
-          .then((res) => {
-            toast.success("Tree deleted successfully");
-            getFTAData(); // Refresh the list
-          })
-          .catch((error) => {
-            toast.error("Failed to delete tree");
-            console.error("Delete error:", error);
-          });
-      }
-    };
-
-    // Function to go back to table view
-    const handleBackToTable = () => {
-      setViewMode("table");
-      setChartData([]);
-      setSelectedTreeId(null);
-    };
 
     const extractAllNodes = (node) => {
       const nodes = [];
@@ -216,7 +270,6 @@ export default function FTA(props) {
           childCount: node.children ? node.children.length : 0,
         };
 
-        console.log("Node Data:", nodeData);
         nodes.push(nodeData);
 
         if (node.children && node.children.length > 0) {
@@ -230,12 +283,8 @@ export default function FTA(props) {
     };
 
     const allNodes = extractAllNodes(chartData);
-
     const events = allNodes.filter((node) => node.type === "Event");
     const gates = allNodes.filter((node) => node.type === "Gate");
-
-    console.log("Events found:", events);
-    console.log("Gates found:", gates);
 
     setEventsData(events);
     setGatesData(gates);
@@ -251,6 +300,7 @@ export default function FTA(props) {
     const newZoom = zoomLevel + event.deltaY * -0.001;
     setZoomLevel(Math.min(Math.max(0.1, newZoom), 2));
   };
+
   const handleMouseDown = (event) => {
     if (event.button === 0) {
       setPanning(true);
@@ -315,15 +365,17 @@ export default function FTA(props) {
       return editNodeHelper(oldData);
     });
   };
+
   const validate = Yup.object().shape({
     name: Yup.string().required("Name is Required"),
     description: Yup.string().required("Description is Required"),
     gateId: Yup.string().required("Gate Id is Required"),
     calcTypes: Yup.object().required("Calc.Types is Required"),
-    missionTime:
-      calcTypes === "Unavailability at time t Q(t)"
-        ? Yup.string().required("Mission Time t is Required")
-        : Yup.object().nullable(),
+    missionTime: Yup.string().when('calcTypes', {
+      is: (calcTypes) => calcTypes?.value === "Unavailability at time t Q(t)",
+      then: Yup.string().required("Mission Time t is Required"),
+      otherwise: Yup.object().nullable(),
+    }),
   });
 
   const parentSubmit = (values, { resetForm }) => {
@@ -356,6 +408,7 @@ export default function FTA(props) {
       });
     });
   };
+
   const updateProperties = (values, { resetForm }) => {
     Api.patch(`/api/v1/FTA/update/property/${chartData?.parentId}`, {
       productId: chartData?.id,
@@ -384,31 +437,14 @@ export default function FTA(props) {
     });
   };
 
-  // const getFTAData = () => {
-  //   Api.get(`/api/v1/FTA/get/${projectId}`).then((res) => {
-  //     const getLength = res?.data?.nodeData;
-  //     const data = res?.data?.nodeData[0]?.treeStructure;
-  //     console.log(data,"....")
-  //     setChartData(data);
-  //     setNodeLength(getLength);
-  //     getFullFTAdata(data?.parentId);
-  //     stopTriggerReload();
-  //   });
-  // };
-
   const getFTAData = () => {
     setLoading(true);
     Api.get(`/api/v1/FTA/get/${projectId}`)
       .then((res) => {
         const allTreeData = res?.data?.nodeData || [];
-
-        // Store all trees for the table
         setTrees(allTreeData);
-
-        // For backward compatibility
         setNodeLength(allTreeData);
 
-        // If in chart view and there's data, load the selected tree
         if (viewMode === "chart" && allTreeData.length > 0 && selectedTreeId) {
           const treeToShow =
             allTreeData.find(
@@ -431,13 +467,7 @@ export default function FTA(props) {
       });
   };
 
-  // Function to delete a tree
   const handleDeleteTree = (tree) => {
-    console.log("tree id", tree.id);
-    console.log("tree projectId", tree.projectId);
-
-    // console.log('Attempting to delete tree with ID:', treeId);
-
     if (!tree) {
       toast.error("Invalid tree ID");
       return;
@@ -448,44 +478,19 @@ export default function FTA(props) {
         "Are you sure you want to delete this tree and all its nodes?",
       )
     ) {
-      // Try different API endpoints based on your backend
       try {
         Api.delete(`/api/v1/FTA/delete/${tree?.projectId}/${tree?.id}`)
           .then((res) => {
-            console.log("Delete response:", res);
             toast.success("Tree deleted successfully");
 
-            // If we're deleting the currently viewed tree, go back to table
             if (selectedTreeId === tree?.id) {
               handleBackToTable();
             }
 
-            // Refresh the list
             getFTAData();
           })
           .catch((error) => {
             console.error("Delete error:", error);
-
-            // Try alternative endpoints
-            // if (error.response?.status === 404) {
-            //   // Try deleting by parentId
-            //   const treeToDelete = trees.find(tree => tree.id === treeId || tree._id === treeId);
-            //   if (treeToDelete?.treeStructure?.parentId) {
-            //     Api.delete(`/api/v1/FTA/delete/parent/${treeToDelete.treeStructure.parentId}`)
-            //       .then((res) => {
-            //         toast.success('Tree deleted successfully');
-            //         getFTAData();
-            //       })
-            //       .catch((secondError) => {
-            //         console.error('Second delete error:', secondError);
-            //         toast.error('Failed to delete tree. Please check console for details.');
-            //       });
-            //   } else {
-            //     toast.error('Tree not found or invalid structure');
-            //   }
-            // } else {
-            //   toast.error(`Failed to delete tree: ${error.message}`);
-            // }
           });
       } catch (error) {
         console.error("Unexpected error during tree deletion:", error);
@@ -494,13 +499,11 @@ export default function FTA(props) {
     }
   };
 
-  // Function to view a specific tree
   const handleViewTree = (tree) => {
     setChartData(tree.treeStructure || {});
     setSelectedTreeId(tree.id || tree._id);
     setViewMode("chart");
 
-    // Load full data if needed
     if (tree.treeStructure?.parentId) {
       getFullFTAdata(tree.treeStructure.parentId);
     }
@@ -508,12 +511,10 @@ export default function FTA(props) {
     toast.success(`Viewing tree: ${tree.name}`);
   };
 
-  // Function to create new tree
   const handleCreateNewTree = () => {
     setIsModalOpen(true);
   };
 
-  // Function to go back to table view
   const handleBackToTable = () => {
     setViewMode("table");
     setChartData([]);
@@ -553,33 +554,25 @@ export default function FTA(props) {
       });
   };
 
-  //logout
   const logout = () => {
     localStorage.clear(history.push("/login"));
     window.location.reload();
   };
 
-  // Update your useEffects in FTA.js:
-
-  // Initial data fetch
   useEffect(() => {
     if (projectId) {
-      console.log("Initial data fetch");
       getFTAData();
       getTreeProduct();
     }
-  }, [projectId]); // Only depend on projectId
+  }, [projectId]);
 
-  // Handle reload from ModalContext
   useEffect(() => {
     if (reloadData && projectId) {
-      console.log("Reload triggered from context");
       getFTAData();
-      stopTriggerReload(); // Make sure to stop the reload flag
+      stopTriggerReload();
     }
   }, [reloadData, projectId, stopTriggerReload]);
 
-  // Handle refresh trigger
   useEffect(() => {
     window.triggerFTAUpdate = () => {
       setRefreshTrigger((prev) => prev + 1);
@@ -590,7 +583,6 @@ export default function FTA(props) {
     };
   }, []);
 
-  // Fetch data when refreshTrigger changes
   useEffect(() => {
     if (projectId) {
       getFTAData();
@@ -610,38 +602,15 @@ export default function FTA(props) {
 
   return (
     <div>
-      {/* <HeaderNavBar 
-      selectedComponent="FTA"
-      onGenerateReport={viewMode === 'chart' ? generateReport : null}
-      onZoomToFit={viewMode === 'chart' ? handleZoomToFit : null}
-      onZoomOriginal={viewMode === 'chart' ? handleZoomOriginal : null}
-      onToggleGrid={viewMode === 'chart' ? handleToggleGrid : null}
-      onOriginalLayout={viewMode === 'chart' ? handleOriginalLayout : null}
-      // Add back button when in chart view
-      additionalButtons={
-        viewMode === 'chart' ? (
-          <Button
-            variant="outline-secondary"
-            onClick={handleBackToTable}
-            style={{ marginRight: '10px' }}
-          >
-            Back to Trees List
-          </Button>
-        ) : null
-      }
-    /> */}
-
-      {/* Show table view OR chart view based on viewMode */}
       {viewMode === "table" ? (
         <FTAtable
           trees={trees}
           loading={loading}
           onViewTree={handleViewTree}
           onCreateNewTree={handleCreateNewTree}
-          projectId={projectId} // Pass projectId here
+          projectId={projectId}
         />
-      ) : // Show chart view
-      nodeLength.length > 0 && chartData ? (
+      ) : nodeLength.length > 0 && chartData ? (
         <div
           className="org-chart-container"
           style={{
@@ -695,13 +664,143 @@ export default function FTA(props) {
         </div>
       )}
 
-      {/* Keep your EventsReportModal */}
+      {/* LOCAL PROBABILITY MODAL - NO CONTEXT NEEDED */}
+      <Modal
+        title={
+          <p style={{ margin: "0px", color: "#00a9c9", width: '500px' }}>
+            Calculation Parameter
+          </p>
+        }
+        open={isProbabilityModalOpen}
+        footer={null}
+        onCancel={closeProbabilityModal}
+        maskClosable={false}
+      >
+        <hr />
+        <Formik
+          enableReinitialize={true}
+          initialValues={{
+            name: chartData?.name || "",
+            description: chartData?.description || "",
+            calcTypes: chartData?.calcTypes 
+              ? { label: chartData?.calcTypes, value: chartData?.calcTypes }
+              : "",
+            missionTime: chartData?.missionTime || "",
+          }}
+          onSubmit={(values) => {
+            submitProbabilityCalculation(values);
+          }}
+          validationSchema={Yup.object().shape({
+            name: Yup.string().required("Name is Required"),
+            description: Yup.string().required("Description is Required"),
+            calcTypes: Yup.object().required("Calc.Types is Required"),
+            missionTime: Yup.string().when('calcTypes', {
+              is: (calcTypes) => calcTypes?.value === "Unavailability at time t Q(t)",
+              then: Yup.string().required("Mission time t is required"),
+            }),
+          })}
+        >
+          {({ values, handleChange, handleSubmit, handleBlur, setFieldValue }) => (
+            <Form onSubmit={handleSubmit}>
+              <Form.Group className="mb-2">
+                <Label notify={true}>Name</Label>
+                <Form.Control
+                  type="text"
+                  name="name"
+                  placeholder="Name"
+                  value={values.name}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ErrorMessage className="error text-danger" component="span" name="name" />
+              </Form.Group>
+
+              <Form.Group className="mb-2">
+                <Label notify={true}>Description</Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  type="text"
+                  name="description"
+                  placeholder="Description"
+                  value={values.description}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ErrorMessage className="error text-danger" component="span" name="description" />
+              </Form.Group>
+
+              <Form.Group className="mb-2">
+                <Label notify={true}>Calc.Types</Label>
+                <Select
+                  styles={customStyles}
+                  name="calcTypes"
+                  value={values.calcTypes}
+                  onBlur={handleBlur}
+                  onChange={(e) => setFieldValue("calcTypes", e)}
+                  options={[
+                    {
+                      value: "Unavailability at time t Q(t)",
+                      label: "Unavailability at time t Q(t)",
+                    },
+                    {
+                      value: "Steady-state mean unavailability Q",
+                      label: "Steady-state mean unavailability Q",
+                    },
+                  ]}
+                />
+                <ErrorMessage className="error text-danger" component="span" name="calcTypes" />
+              </Form.Group>
+
+              {values.calcTypes?.value === "Unavailability at time t Q(t)" && (
+                <Form.Group className="mb-2">
+                  <Label notify={true}>Mission time t</Label>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <Form.Control
+                      type="text"
+                      name="missionTime"
+                      placeholder="Mission time t"
+                      value={values.missionTime}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                      style={{ width: "80%" }}
+                    />
+                    <p style={{ margin: "0px", fontWeight: "bold", marginLeft: "20px" }}>(hours)</p>
+                  </div>
+                  <ErrorMessage className="error text-danger" component="span" name="missionTime" />
+                </Form.Group>
+              )}
+
+              <div className="d-flex justify-content-end mt-4">
+                <Button className="me-2" variant="outline-secondary" onClick={closeProbabilityModal}>
+                  Cancel
+                </Button>
+                <Button type="submit">Calculate</Button>
+              </div>
+            </Form>
+          )}
+        </Formik>
+      </Modal>
+
       <EventsReportModal
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         eventsData={eventsData}
         gatesData={gatesData}
         reportType={currentReportType}
+      />
+
+      <UnavailabilityReportModal
+        isOpen={isUnavailabilityReportOpen}
+        onClose={() => setIsUnavailabilityReportOpen(false)}
+        calculationData={probabilityCalcData}
+        missionTime={currentMissionTime}
+      />
+
+      <SteadyStateReportModal
+        isOpen={isSteadyStateReportOpen}
+        onClose={() => setIsSteadyStateReportOpen(false)}
+        calculationData={probabilityCalcData}
       />
 
       <Modal
@@ -745,8 +844,6 @@ export default function FTA(props) {
               handleChange,
               handleSubmit,
               handleBlur,
-              isValid,
-              mainProductForm,
               setFieldValue,
             } = formik;
             return (
@@ -808,14 +905,13 @@ export default function FTA(props) {
                       },
                     ]}
                   />
-
                   <ErrorMessage
                     className="error text-danger"
                     component="span"
                     name="calcTypes"
                   />
                 </Form.Group>
-                {values.calcTypes.value === "Unavailability at time t Q(t)" ? (
+                {values.calcTypes?.value === "Unavailability at time t Q(t)" && (
                   <Form.Group className="mb-2">
                     <Label notify={true}>Mission time t</Label>
                     <div style={{ display: "flex", alignItems: "center" }}>
@@ -838,27 +934,13 @@ export default function FTA(props) {
                         ( hours)
                       </p>
                     </div>
-
                     <ErrorMessage
                       className="error text-danger"
                       component="span"
                       name="missionTime"
                     />
                   </Form.Group>
-                ) : null}
-
-                {/* // In FTAtable component, update the delete button: */}
-                {/* <Button
-  variant="outline-danger"
-  size="sm"
-  onClick={() => {
-    console.log('Deleting tree with ID:', tree.id, 'Full tree:', tree);
-    onDeleteTree(tree.id || tree._id);
-  }}
-  title="Delete Tree"
->
-  <FaTrash/>
-</Button> */}
+                )}
 
                 <Form.Group className="mb-2">
                   <Label notify={true}>Gate Id</Label>

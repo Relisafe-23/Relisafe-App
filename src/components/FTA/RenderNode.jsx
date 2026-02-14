@@ -757,7 +757,7 @@
                     </p>
                   </Form.Group>
                   <Form.Group className="mb-2">
-                    <Label notify={true}>Name</Label>
+                    <Label notify={true}>Name1</Label>
                     <Form.Control
                       type="text"
                       name="name"
@@ -855,7 +855,7 @@
               return (
                 <Form onSubmit={handleSubmit}>
                   <Form.Group className="mb-2">
-                    <Label notify={true}>Name</Label>
+                    <Label notify={true}>Name1</Label>
                     <Form.Control
                       type="text"
                       name="name"

@@ -160,6 +160,8 @@ const EventsReportModal = ({
   }, [reportType, initialReportType, eventsData, gatesData]);
 
   return (
+
+    
     <Modal
       title="Fault Tree Analysis Report"
       open={isOpen}

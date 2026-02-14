@@ -330,7 +330,16 @@ const HeaderNavBar = ({
                             }
                             id="basic-nav-dropdown"
                           >
-                            <NavDropdown.Item onClick={() => setOpenProbCal(true)}>Probability Calculations(MCS)</NavDropdown.Item>
+<NavDropdown.Item 
+onClick={() => {
+  // Call the context function directly
+  if (window.openProbabilityModal) {
+    window.openProbabilityModal();
+  }
+}}
+>
+  Probability Calculations(MCS)
+</NavDropdown.Item>
                             <NavDropdown.Item >Show Repeated Events</NavDropdown.Item>
                           </NavDropdown>
                         </Nav>
