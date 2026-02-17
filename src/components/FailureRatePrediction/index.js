@@ -210,7 +210,7 @@ function Index(props) {
     : props?.location?.state?.productId
       ? props?.location?.state?.productId
       : initialProductID;
-      console.log("initialTreeStructure.....",initialProductID);
+
 
   const treeStructure = props?.location?.state?.parentId
     ? props?.location?.state?.parentId

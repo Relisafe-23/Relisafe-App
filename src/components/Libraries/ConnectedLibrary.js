@@ -440,7 +440,6 @@ values.end.forEach((selectedOption, index) => {
 
  
   const getCustomValue = (value) => {
-
     Api.get("api/v1/library/get/separate/module/data", {
       params: {
         moduleName: selectModule,

@@ -41,9 +41,12 @@ import {
   faFileDownload,
   faFileUpload,
 } from "@fortawesome/free-solid-svg-icons";
+import VerifiedIcon from '@mui/icons-material/Verified';
+import WarningIcon from '@mui/icons-material/Warning';
 
 import { faAdd } from "@fortawesome/free-solid-svg-icons";
 import { CropPortrait } from "@mui/icons-material";
+import { useConnection } from '../../hooks/useConnection';
 
 const MTTRPrediction = (props, active) => {
   const projectId = props?.location?.state?.projectId
@@ -64,7 +67,7 @@ const MTTRPrediction = (props, active) => {
   const [levelOfRepair, setLevelOfRepair] = useState("");
   const [spare, setSpare] = useState("");
   const [show, setShow] = useState(false);
-    const [rowConnections, setRowConnections] = useState({});
+  const [rowConnections, setRowConnections] = useState({});
   const [partType, setPartType] = useState("");
   const [name, setName] = useState([]);
   const [reference, setReference] = useState([]);
@@ -101,6 +104,38 @@ const MTTRPrediction = (props, active) => {
   const [treeTable, setTreeTable] = useState([]);
   const [selectedFunction, setSelectedFunction] = useState();
 
+  // Add connection hook
+  const connection = useConnection();
+
+  // Load connections when component mounts
+  useEffect(() => {
+    if (projectId && connection?.loadConnections) {
+      connection.loadConnections(projectId);
+    }
+  }, [projectId, connection]);
+
+  // Add listener for MTTR destination updates
+  useEffect(() => {
+    const handleDestinationUpdate = (event) => {
+      const { destField, destValue, sourceModule, sourceField } = event.detail;
+      console.log(`MTTR destination updated from ${sourceModule}:`, destField, destValue);
+      
+      // Show notification
+      toast.info(`Field "${destField}" updated from ${sourceModule} (${sourceField})`, {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      
+      // Refresh procedure data to show updated values
+      getProcedureData();
+    };
+
+    window.addEventListener('mttrDestinationUpdated', handleDestinationUpdate);
+    
+    return () => {
+      window.removeEventListener('mttrDestinationUpdated', handleDestinationUpdate);
+    };
+  }, []);
 
   const [data, setData] = useState({
     toolType: "",
@@ -208,6 +243,7 @@ const MTTRPrediction = (props, active) => {
       }
     });
   };
+  
   const convertToJson = (headers, data) => {
     const rows = [];
     data.forEach((row) => {
@@ -219,9 +255,9 @@ const MTTRPrediction = (props, active) => {
       createMTTRDataFromExcel(rowData);
     });
   };
+  
   const createMTTRDataFromExcel = async (values) => {
     try {
-
       const companyId = localStorage.getItem("companyId");
       setCompanyId(companyId);
       const response = await Api.post("/api/v1/mttrPrediction/create/procedure", {
@@ -240,16 +276,24 @@ const MTTRPrediction = (props, active) => {
         levelOfRepair: values.levelOfRepair,
         levelOfReplace: values.levelOfReplace,
         spare: values.spare,
-
       });
-
-
 
       const mttrId = response?.data?.data?.id;
       setSuccessMessage(response?.data?.message);
       setMttrId(response?.data?.data?.id);
       setValidateData(response?.data?.data);
       getProcedureData();
+      
+      // Save sources after creation
+      if (response?.data?.data?.id) {
+        const newRowId = response.data.data.id;
+        const sourceFieldsToSave = ['taskType', 'time', 'totalLabour', 'skill', 'tools', 'partNo', 'toolType'];
+        sourceFieldsToSave.forEach(field => {
+          if (values[field]) {
+            connection?.saveSource('MTTR', newRowId, field, values[field]);
+          }
+        });
+      }
 
       return { success: true, data: response.data };
     } catch (error) {
@@ -292,7 +336,7 @@ const MTTRPrediction = (props, active) => {
           time: row.time || "",
           skill: row.skill || "",
           tools: row.tools || "",
-           taskType: row.taskType || "",
+          taskType: row.taskType || "",
           totalLabour: row.totalLabour || "",
           partNo: row.partNo || "",
           toolType: row.toolType || "",
@@ -303,7 +347,6 @@ const MTTRPrediction = (props, active) => {
         }));
 
         setTableData((prevData) => [...prevData, ...normalizedData]);
-        //       setTableData((prevData) => [...prevData, ...normalizedData]);
         setImportExcelData(normalizedData[normalizedData.length - 1]);
         applyExcelDataToForm(normalizedData[normalizedData.length - 1]);
 
@@ -410,7 +453,6 @@ const MTTRPrediction = (props, active) => {
     }
   };
 
-
   const handleCancelClick = () => {
     if (isSaving) {
       setIsSaving(false); // Stop spinner if cancel is clicked during save
@@ -426,7 +468,6 @@ const MTTRPrediction = (props, active) => {
   };
 
   if (shouldReload) {
-
     window.location.reload();
   }
 
@@ -455,7 +496,6 @@ const MTTRPrediction = (props, active) => {
       });
   };
 
-
   const projectSidebar = () => {
     const userId = localStorage.getItem("userId");
     Api.get(`/api/v1/projectCreation/${projectId}`, {
@@ -468,6 +508,7 @@ const MTTRPrediction = (props, active) => {
       setCreatedBy(res.data.data.createdBy);
     });
   };
+  
   // Log out
   const logout = () => {
     localStorage.clear(history.push("/login"));
@@ -475,6 +516,7 @@ const MTTRPrediction = (props, active) => {
   };
 
   const userId = localStorage.getItem("userId");
+  
   const getProjectPermission = () => {
     const userId = localStorage.getItem("userId");
     Api.get(`/api/v1/projectPermission/list`, {
@@ -522,7 +564,6 @@ const MTTRPrediction = (props, active) => {
     propstoGetTreeData();
     getProcedureData();
     getMttrData();
-
   }, [productId]);
 
   const propstoGetTreeData = () => {
@@ -537,7 +578,6 @@ const MTTRPrediction = (props, active) => {
       },
     })
       .then((res) => {
-        //  console.log("propstoGetTreeData response", res);
         const data = res?.data?.data;
         setCategory(
           data?.category ? { label: data?.category, value: data?.category } : ""
@@ -578,9 +618,9 @@ const MTTRPrediction = (props, active) => {
       },
     },
   });
+  
   // Add these states at the top of your component
   const [selectedSourceValues, setSelectedSourceValues] = useState({});
-
   const [flattenedConnect, setFlattenedConnect] = useState([]);
 
   // Modify your getAllConnect function
@@ -594,7 +634,7 @@ const MTTRPrediction = (props, active) => {
         const filteredData = res.data.getData.filter(
           (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
         );
-console.log("filteredData", filteredData)
+        console.log("filteredData", filteredData)
         const flattened = filteredData
           .flatMap((item) =>
             (item.destinationData || [])
@@ -684,7 +724,15 @@ console.log("filteredData", filteredData)
         return true;
       },
       editComponent: ({ value, onChange, rowData }) => {
-        const rowId = rowData?.tableData?.id;
+        const rowId = rowData?.id || rowData?.tableData?.id;
+        
+        // Get verification status
+        const isVerified = connection?.isSourceVerified('MTTR', rowId, fieldName);
+        const verification = connection?.getSourceVerification('MTTR', rowId, fieldName);
+        
+        // Get destinations from other modules
+        const destinations = connection?.getDestinationsForRow?.('MTTR', rowId) || [];
+        const fieldDestinations = destinations.filter(d => d.field === fieldName);
 
         // Check if this field is a destination field
         const isDestination = isDestinationField(fieldName);
@@ -700,112 +748,322 @@ console.log("filteredData", filteredData)
           ?.filter(item => item.sourceName === fieldName)
           .map(item => item.sourceValue) || [];
 
+        // Get values from FMECA
+        const fmecaValues = fieldDestinations
+          .filter(d => d.sourceModule === 'FMECA')
+          .map(d => d.value);
 
-        const allOptions = isDestination && destinationOptions.length > 0
-          ? destinationOptions 
-          : separateOptions;   
+        // Get values from other modules
+        const otherModuleValues = fieldDestinations
+          .filter(d => d.sourceModule !== 'FMECA' && d.sourceModule !== 'MTTR')
+          .map(d => d.value);
 
-        const hasError = required && (!value || value.toString().trim() === "");
-
-        // Only show dropdown if we have options
-        if (allOptions.length > 0) {
-          const options = allOptions.map(opt => ({
-            value: opt,
-            label: opt,
-            isDestination: destinationOptions.includes(opt)
-          }));
-
-          const selectedOption = options.find(opt => opt.value === value) ||
-            (value ? { value, label: value } : null);
-
-          return (
-            <div style={{ position: "relative" }}>
-              <CreatableSelect
-                name={fieldName}
-                value={selectedOption}
-                options={options}
-                onChange={(option) => {
-                  const newValue = option?.value || "";
-                  onChange(newValue);
-
-               
-                  if (isSourceField(fieldName)) {
-                    // handleSourceSelection(fieldName, newValue, rowId);
-                  }
-                }}
-                isClearable
-                menuPortalTarget={document.body}
-                styles={{
-                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                  control: (base) => ({
-                    ...base,
-                    borderColor: hasError ? "#d32f2f" : base.borderColor,
-                  }),
-                  option: (base, state) => ({
-                    ...base,
-                    backgroundColor: state.data?.isDestination ? '#e8f4fd' : base.backgroundColor,
-                    fontWeight: state.data?.isDestination ? 'bold' : base.fontWeight,
-                  }),
-                }}
-              />
-              {hasError && (
-                <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                  {label} is required
-                </div>
-              )}
-              {destinationOptions.length > 0 && (
-                <div style={{
-                  position: "absolute",
-                  top: "-18px",
-                  right: "5px",
-                  fontSize: "10px",
-                  color: "#1976d2",
-                  background: "#e8f4fd",
-                  padding: "2px 5px",
-                  borderRadius: "3px",
-                }}>
-                  Connected
-                </div>
-              )}
-            </div>
-          );
-        } else {
-          // Show regular input field
-          return (
-            <div style={{ position: "relative" }}>
-              <input
-                type="text"
-                name={fieldName}
-                value={value || ""}
-                onChange={(e) => {
-                  const newValue = e.target.value;
-                  onChange(newValue);
-
-                  // If this is a source field, update the selected source value
-                  if (isSourceField(fieldName)) {
-                    // handleSourceSelection(fieldName, newValue, rowId);
-                  }
-                }}
-                placeholder={required ? `${label} *` : label}
-                style={{
-                  height: "40px",
-                  borderRadius: "4px",
-                  width: "100%",
-                  borderColor: hasError ? "#d32f2f" : "#ccc",
-                }}
-              />
-              {hasError && (
-                <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                  {label} is required
-                </div>
-              )}
-            </div>
-          );
+        // Get destination from cache
+        const destinationInfo = connection?.destinationValues[`MTTR_${fieldName}`];
+        
+        // Build all options as an array of objects with source information
+        let options = [];
+        
+        // 1. Add FMECA values first (highest priority) - BLUE
+        fmecaValues.forEach(val => {
+          if (!options.some(opt => opt.value === val)) {
+            options.push({
+              value: val,
+              label: `${val} (from FMECA)`,
+              sourceType: 'FMECA',
+              sourceModule: 'FMECA',
+              isFromFMECA: true,
+              isFromOther: false,
+              isDestination: destinationOptions.includes(val)
+            });
+          }
+        });
+        
+        // 2. Add other module values - GREEN
+        otherModuleValues.forEach(val => {
+          if (!options.some(opt => opt.value === val)) {
+            const sourceMod = fieldDestinations.find(d => d.value === val)?.sourceModule || 'Other';
+            options.push({
+              value: val,
+              label: `${val} (from ${sourceMod})`,
+              sourceType: sourceMod,
+              sourceModule: sourceMod,
+              isFromFMECA: false,
+              isFromOther: true,
+              isDestination: destinationOptions.includes(val)
+            });
+          }
+        });
+        
+        // 3. Add destination from cache
+        if (destinationInfo && destinationInfo.value && !options.some(opt => opt.value === destinationInfo.value)) {
+          options.push({
+            value: destinationInfo.value,
+            label: `${destinationInfo.value} (from ${destinationInfo.sourceModule || 'Cache'})`,
+            sourceType: destinationInfo.sourceModule || 'Cache',
+            sourceModule: destinationInfo.sourceModule || 'Cache',
+            isFromFMECA: destinationInfo.sourceModule === 'FMECA',
+            isFromOther: destinationInfo.sourceModule !== 'FMECA' && destinationInfo.sourceModule !== 'MTTR',
+            isDestination: destinationOptions.includes(destinationInfo.value)
+          });
         }
+        
+        // 4. Add connected destination values - PURPLE
+        destinationOptions.forEach(val => {
+          if (!options.some(opt => opt.value === val)) {
+            options.push({
+              value: val,
+              label: `${val} (Connected)`,
+              sourceType: 'Connected',
+              sourceModule: 'MTTR',
+              isFromFMECA: false,
+              isFromOther: false,
+              isDestination: true
+            });
+          }
+        });
+        
+        // 5. Add separate library values - WHITE
+        separateOptions.forEach(val => {
+          if (!options.some(opt => opt.value === val)) {
+            options.push({
+              value: val,
+              label: val,
+              sourceType: 'Library',
+              sourceModule: 'MTTR',
+              isFromFMECA: false,
+              isFromOther: false,
+              isDestination: false
+            });
+          }
+        });
+        
+        // 6. Add current value if not in options
+        if (value && !options.some(opt => opt.value === value)) {
+          options.push({
+            value: value,
+            label: value,
+            sourceType: 'Manual',
+            sourceModule: 'Manual',
+            isFromFMECA: false,
+            isFromOther: false,
+            isDestination: false
+          });
+        }
+
+        const selectedOption = options.find(opt => opt.value === value) || 
+                              (value ? { value, label: value } : null);
+        
+        const hasError = required && (!value || value.toString().trim() === "");
+        
+        const hasFMECAValues = fmecaValues.length > 0;
+        const hasOtherValues = otherModuleValues.length > 0;
+        const hasDestinationFromCache = destinationInfo && destinationInfo.value;
+        const hasConnectedValues = destinationOptions.length > 0;
+
+        return (
+          <div style={{ position: "relative" }}>
+            <CreatableSelect
+              name={fieldName}
+              value={selectedOption}
+              options={options}
+              onChange={(option) => {
+                const newValue = option?.value || "";
+                onChange(newValue);
+
+                // Save as source when selected
+                if (newValue && rowId && isSourceField(fieldName)) {
+                  connection?.saveSource('MTTR', rowId, fieldName, newValue);
+                }
+              }}
+              onCreateOption={(inputValue) => {
+                onChange(inputValue);
+                if (inputValue && rowId && isSourceField(fieldName)) {
+                  connection?.saveSource('MTTR', rowId, fieldName, inputValue);
+                }
+              }}
+              isClearable
+              menuPortalTarget={document.body}
+              styles={{
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                control: (base) => ({
+                  ...base,
+                  borderColor: hasError ? "#d32f2f" : base.borderColor,
+                  borderLeft: hasFMECAValues ? '4px solid #1976d2' : 
+                             hasOtherValues ? '4px solid #4caf50' :
+                             hasConnectedValues ? '4px solid #9c27b0' : base.borderLeft,
+                  backgroundColor: hasFMECAValues ? '#e3f2fd' :
+                                 hasOtherValues ? '#f1f8e9' :
+                                 hasConnectedValues ? '#f3e5f5' : 'white'
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.data?.sourceType === 'FMECA' ? '#e3f2fd' :
+                                 state.data?.sourceType === 'PMMRA' ? '#fff3e0' :
+                                 state.data?.sourceType === 'SAFETY' ? '#ffebee' :
+                                 state.data?.sourceType === 'Connected' ? '#f3e5f5' :
+                                 state.data?.sourceType === 'Cache' ? '#e8f5e9' :
+                                 state.isFocused ? '#f5f5f5' : 'white',
+                  fontWeight: state.data?.sourceType !== 'Library' && state.data?.sourceType !== 'Manual' ? 'bold' : base.fontWeight,
+                }),
+              }}
+            />
+            
+            {hasError && (
+              <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
+                {label} is required
+              </div>
+            )}
+            
+            {/* Badge for FMECA values */}
+            {hasFMECAValues && (
+              <div style={{
+                position: "absolute",
+                top: "-18px",
+                right: "5px",
+                fontSize: "10px",
+                color: "#1976d2",
+                background: "#e3f2fd",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontWeight: "bold",
+                border: "1px solid #1976d2",
+                zIndex: 1
+              }}>
+                FMECA ({fmecaValues.length})
+              </div>
+            )}
+            
+            {/* Badge for other modules */}
+            {hasOtherValues && !hasFMECAValues && (
+              <div style={{
+                position: "absolute",
+                top: "-18px",
+                right: "5px",
+                fontSize: "10px",
+                color: "#4caf50",
+                background: "#e8f5e9",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontWeight: "bold",
+                border: "1px solid #4caf50",
+                zIndex: 1
+              }}>
+                Other Modules
+              </div>
+            )}
+            
+            {/* Badge for connected values */}
+            {hasConnectedValues && !hasFMECAValues && !hasOtherValues && (
+              <div style={{
+                position: "absolute",
+                top: "-18px",
+                right: "5px",
+                fontSize: "10px",
+                color: "#9c27b0",
+                background: "#f3e5f5",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontWeight: "bold",
+                border: "1px solid #9c27b0",
+                zIndex: 1
+              }}>
+                Connected
+              </div>
+            )}
+            
+            {/* Verify button for sources */}
+            {value && isSourceField(fieldName) && !isVerified && (
+              <button
+                onClick={() => connection?.verifySource('MTTR', rowId, fieldName, value)}
+                style={{
+                  position: 'absolute',
+                  right: '5px',
+                  top: '5px',
+                  background: '#ff9800',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '2px 8px',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  zIndex: 2
+                }}
+              >
+                Verify
+              </button>
+            )}
+            
+            {/* Verified badge */}
+            {isVerified && (
+              <div style={{
+                position: 'absolute',
+                left: '5px',
+                top: '5px',
+                background: '#4caf50',
+                color: 'white',
+                borderRadius: '12px',
+                padding: '2px 8px',
+                fontSize: '10px',
+                zIndex: 2,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '2px'
+              }}>
+                <VerifiedIcon style={{ fontSize: '12px' }} /> Verified
+              </div>
+            )}
+          </div>
+        );
       },
     };
   };
 
+  // Add verification status column
+  const verificationColumn = {
+    title: "Status",
+    field: "verificationStatus",
+    editable: "never",
+    render: (rowData) => {
+      const rowId = rowData.id;
+      const isVerified = connection?.isSourceVerified('MTTR', rowId, 'taskType');
+      const verification = connection?.getSourceVerification('MTTR', rowId, 'taskType');
+      
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+          {isVerified ? (
+            <Tooltip title={`Verified at: ${verification?.verifiedAt ? new Date(verification.verifiedAt).toLocaleString() : ''}`}>
+              <div style={{
+                background: '#4caf50',
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '12px',
+                fontSize: '11px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
+                <VerifiedIcon style={{ fontSize: '14px' }} /> Verified
+              </div>
+            </Tooltip>
+          ) : (
+            <div style={{
+              background: '#ff9800',
+              color: 'white',
+              padding: '4px 8px',
+              borderRadius: '12px',
+              fontSize: '11px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <WarningIcon style={{ fontSize: '14px' }} /> Pending
+            </div>
+          )}
+        </div>
+      );
+    }
+  };
  
   const columns = [
     {
@@ -813,6 +1071,7 @@ console.log("filteredData", filteredData)
       render: (rowData) => `${rowData?.tableData?.id + 1}`,
       editable: "never",
     },
+    verificationColumn,
     createEditComponent("taskType", "Task Type", true),
     createEditComponent("time", "Average Task Time(Hours)", true, {
       isNumber: true
@@ -825,7 +1084,6 @@ console.log("filteredData", filteredData)
     createEditComponent("partNo", "Part no", true),
     createEditComponent("toolType", "Tool Type", true),
   ];
-
 
   const submitSchema = Yup.object().shape({
     repairable: Yup.object().required("Repairable is required"),
@@ -844,11 +1102,6 @@ console.log("filteredData", filteredData)
     mlh: Yup.string().required("MLH is required"),
     remarks: Yup.string().min(3, 'Minimum 3 characters required')
       .max(200, 'Maximum 200 characters allowed')
-    // labourHour: Yup.string().required("Labour hour is required"),
-    // partType:
-    //   category === "" || category === "Assembly"
-    //     ? Yup.string().nullable()
-    //     : Yup.object().required("Part Type is Required"),
   });
 
   const CreateProcedureData = (value) => {
@@ -874,7 +1127,17 @@ console.log("filteredData", filteredData)
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
-
+        
+        // Save sources after creation
+        if (response?.data?.data?.id) {
+          const newRowId = response.data.data.id;
+          const sourceFieldsToSave = ['taskType', 'time', 'totalLabour', 'skill', 'tools', 'partNo', 'toolType'];
+          sourceFieldsToSave.forEach(field => {
+            if (value[field]) {
+              connection?.saveSource('MTTR', newRowId, field, value[field]);
+            }
+          });
+        }
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -884,10 +1147,7 @@ console.log("filteredData", filteredData)
       });
   };
 
-
-
   const updateProcedureData = (value) => {
-
     const companyId = localStorage.getItem("companyId");
     const rowId = value?.id;
     const userId = localStorage.getItem("userId");
@@ -907,18 +1167,24 @@ console.log("filteredData", filteredData)
       treeStructureId: treeStructure,
       token: token,
       userId: userId,
-
     };
-
 
     Api.patch(`/api/v1/mttrPrediction/update/procedure/${rowId}`, requestData)
       .then((response) => {
-        // console.log("Update Response:", response);
         getProcedureData();
         toast.success("Procedure Updated Successfully");
+        
+        // Save sources after update
+        if (value.id) {
+          const sourceFieldsToSave = ['taskType', 'time', 'totalLabour', 'skill', 'tools', 'partNo', 'toolType'];
+          sourceFieldsToSave.forEach(field => {
+            if (value[field]) {
+              connection?.saveSource('MTTR', value.id, field, value[field]);
+            }
+          });
+        }
       })
       .catch((error) => {
-
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
@@ -942,7 +1208,6 @@ console.log("filteredData", filteredData)
       },
     })
       .then((response) => {
-
         setTableData(response?.data?.procedureData);
         setValidateData(response?.data?.procedureData?.length);
         const mttrResult = response.data.mttrResult;
@@ -976,7 +1241,7 @@ console.log("filteredData", filteredData)
     })
       .then((response) => {
         getProcedureData();
-        toast.error("Procedure Deleted Successfully");
+        toast.success("Procedure Deleted Successfully");
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
@@ -989,13 +1254,11 @@ console.log("filteredData", filteredData)
   const submitForm = (values) => {
     setIsSaving(true);
     checkingMandatoryFields(values);
-    // getMttrData();
   };
 
   const checkingMandatoryFields = (values) => {
     if (validateData > 0) {
       const companyId = localStorage.getItem("companyId");
-
       const userId = localStorage.getItem("userId");
       Api.post("api/v1/mttrPrediction", {
         companyId: companyId,
@@ -1021,7 +1284,6 @@ console.log("filteredData", filteredData)
           setMttrId(res?.data?.data?.id);
           setIsSaving(false);
           NextPage();
-
         })
         .catch((error) => {
           const errorStatus = error?.response?.status;
@@ -1076,6 +1338,7 @@ console.log("filteredData", filteredData)
       setIsSaving(false);
     }
   };
+  
   const getMttrData = () => {
     const companyId = localStorage.getItem("companyId");
     const userId = localStorage.getItem("userId");
@@ -1093,7 +1356,6 @@ console.log("filteredData", filteredData)
         setMttrData(res?.data?.data);
         const data = res?.data?.data;
         setMttrId(res?.data?.data?.id ? res?.data?.data?.id : null);
-        // setMttrId(res?.data?.data?.id);
         setRepairable(
           data?.repairable
             ? { label: data?.repairable, value: data?.repairable }
@@ -1180,7 +1442,6 @@ console.log("filteredData", filteredData)
             mttrId ? patchMttrData(values) : submitForm(values);
           }}
         >
-
           {(formik) => {
             const {
               values,
@@ -1191,103 +1452,81 @@ console.log("filteredData", filteredData)
             } = formik;
             return (
               <div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-              
-
-                </div>
                 <Form onSubmit={handleSubmit} onReset={handleReset}>
-                  {/* <fieldset
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div style={{ width: "30%", marginRight: "20px" }}>
+                      <Projectname projectId={projectId} />
+                    </div>
+
+                    <div style={{ width: "100%", marginRight: "20px" }}>
+                      <Dropdown
+                        value={projectId}
+                        productId={productId}
+                        data={treeTableData}
+                      />
+                    </div>
+
+                    {(writePermission === true ||
+                      writePermission === "undefined" ||
+                      role === "admin" ||
+                      (isOwner === true && createdBy === userId)) && (
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          alignItems: "center",
+                          marginTop: "1px",
+                          height: "40px",
+                        }}
+                      >
+                        <Tooltip placement="right" title="Import">
+                          <div style={{ marginRight: "8px" }}>
+                            <label
+                              htmlFor="file-input"
+                              className="import-export-btn"
+                            >
+                              <FontAwesomeIcon icon={faFileDownload} />
+                            </label>
+                            <input
+                              type="file"
+                              className="input-fields"
+                              id="file-input"
+                              onChange={importExcel}
+                              style={{ display: "none" }}
+                            />
+                          </div>
+                        </Tooltip>
+                        <Tooltip placement="left" title="Export">
+                          <Button
+                            className="import-export-btn"
+                            style={{ marginLeft: "10px", borderStyle: "none", width: "40px", top: "-2px", minWidth: "38px", padding: "0px", }}
+                            onClick={() => exportToExcel(values)}
+                          >
+                            <FontAwesomeIcon
+                              icon={faFileUpload}
+                              style={{ width: "12px" }}
+                            />
+                          </Button>
+                        </Tooltip>
+                      </div>
+                    )}
+                  </div>
+
+                  <fieldset
                     disabled={
                       writePermission === true ||
-                        writePermission === "undefined" ||
-                        role === "admin" ||
-                        (isOwner === true && createdBy === userId)
+                      writePermission === "undefined" ||
+                      role === "admin" ||
+                      (isOwner === true && createdBy === userId)
                         ? null
                         : "disabled"
                     }
-                  > */}
-             <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ width: "30%", marginRight: "20px" }}>
-          <Projectname projectId={projectId} />
-        </div>
-
-        <div style={{ width: "100%", marginRight: "20px" }}>
-          <Dropdown
-            value={projectId}
-            productId={productId}
-            data={treeTableData}
-          />
-        </div>
-
-        {/* Conditionally show Import/Export buttons only if user has permission */}
-        {(writePermission === true ||
-          writePermission === "undefined" ||
-          role === "admin" ||
-          (isOwner === true && createdBy === userId)) && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              marginTop: "1px",
-              height: "40px",
-            }}
-          >
-            <Tooltip placement="right" title="Import">
-              <div style={{ marginRight: "8px" }}>
-                <label
-                  htmlFor="file-input"
-                  className="import-export-btn"
-                >
-                  <FontAwesomeIcon icon={faFileDownload} />
-                </label>
-                <input
-                  type="file"
-                  className="input-fields"
-                  id="file-input"
-                  onChange={importExcel}
-                  style={{ display: "none" }}
-                />
-              </div>
-            </Tooltip>
-            <Tooltip placement="left" title="Export">
-              <Button
-                className="import-export-btn"
-                style={{ marginLeft: "10px", borderStyle: "none", width: "40px", top: "-2px", minWidth: "38px", padding: "0px", }}
-                onClick={() => exportToExcel(values)}
-              >
-                <FontAwesomeIcon
-                  icon={faFileUpload}
-                  style={{ width: "12px" }}
-                />
-              </Button>
-            </Tooltip>
-          </div>
-        )}
-      </div>
-
-      {/* Keep the disabled fieldset only for the form inputs */}
-      <fieldset
-        disabled={
-          writePermission === true ||
-          writePermission === "undefined" ||
-          role === "admin" ||
-          (isOwner === true && createdBy === userId)
-            ? null
-            : "disabled"
-        }
-      >
+                  >
                     <Row className="d-flex">
                       <div className="mttr-sec mt-3">
                         <p className=" mb-0 para-tag">General Information</p>
@@ -1307,18 +1546,15 @@ console.log("filteredData", filteredData)
                               <Col>
                                 <Form.Group>
                                   <Label className="mb-1">Name</Label>
-
                                   <Form.Control
                                     type="text"
                                     name="name"
                                     placeholder="Name"
                                     disabled
                                     value={values.name}
-                                    // onChange={handleChange}
                                     onBlur={handleBlur}
                                     className="mt-1"
                                   />
-                                  {/* <ErrorMessage className="error text-danger" component="span" name="name" /> */}
                                 </Form.Group>
                               </Col>
                               <Col>
@@ -1332,7 +1568,6 @@ console.log("filteredData", filteredData)
                                     value={values.partNumber}
                                     className="mt-1"
                                     onBlur={handleBlur}
-                                  // onChange={handleChange}
                                   />
                                   <ErrorMessage
                                     className="error text-danger"
@@ -1346,7 +1581,6 @@ console.log("filteredData", filteredData)
                               <Col>
                                 <Form.Group className="mt-3">
                                   <Label notify="true">Quantity</Label>
-
                                   <Form.Control
                                     type="number"
                                     min="0"
@@ -1355,8 +1589,6 @@ console.log("filteredData", filteredData)
                                     placeholder="Quantity"
                                     value={values.quantity}
                                     className="mt-1"
-                                    // onChange={handleChange}
-
                                     onBlur={handleBlur}
                                   />
                                   <ErrorMessage
@@ -1368,7 +1600,6 @@ console.log("filteredData", filteredData)
                               </Col>
                               <Col>
                                 <Form.Group className="mt-3">
-                                  {" "}
                                   <Label>Reference or Position</Label>
                                   <Form.Control
                                     type="text"
@@ -1377,7 +1608,6 @@ console.log("filteredData", filteredData)
                                     placeholder="Reference or Position"
                                     className="mt-1"
                                     value={values.reference}
-                                    // onChange={handleChange}
                                     onBlur={handleBlur}
                                   />
                                   <ErrorMessage
@@ -1392,7 +1622,6 @@ console.log("filteredData", filteredData)
                               <Col>
                                 <Form.Group className="mt-3">
                                   <Label notify="true">Category</Label>
-
                                   <Select
                                     type="select"
                                     styles={customStyles}
@@ -1401,9 +1630,7 @@ console.log("filteredData", filteredData)
                                     name="category"
                                     onBlur={handleBlur}
                                     isDisabled
-                               
                                     className="mt-1"
-                                  
                                     options={[
                                       {
                                         value: "Electronic",
@@ -1427,8 +1654,8 @@ console.log("filteredData", filteredData)
                                 </Form.Group>
                               </Col>
                               <Col className="part-type-aln">
-                                {category.value === "Mechanical" ||
-                                  category.value === "Electronic" ? (
+                                {category?.value === "Mechanical" ||
+                                  category?.value === "Electronic" ? (
                                   <div>
                                     <Form.Group>
                                       <Label notify={true}>Part Type</Label>
@@ -1440,9 +1667,8 @@ console.log("filteredData", filteredData)
                                         name="partType"
                                         onBlur={handleBlur}
                                         isDisabled
-                                   
                                         options={[
-                                          category.value === "Electronic"
+                                          category?.value === "Electronic"
                                             ? {
                                               options: Electronic.map(
                                                 (list) => ({
@@ -1470,20 +1696,17 @@ console.log("filteredData", filteredData)
                                   </div>
                                 ) : null}
                               </Col>
-                              {/* <Col>
-                              <Form.Group>
-                                <Label>Suma</Label>
-                              </Form.Group>
-                              </Col> */}
                             </Row>
                           </div>
                         )}
                       </Card>
+                      
                       <div className="mttr-sec mt-4 ">
                         <p className=" mb-0 para-tag">
                           Environment Profile and Temperature
                         </p>
                       </div>
+                      
                       <Card className="mt-2 mttr-card">
                         {isSpinning ? (
                           <Spinner
@@ -1507,9 +1730,7 @@ console.log("filteredData", filteredData)
                                   value={values.environment}
                                   name="environment"
                                   isDisabled
-                              
                                   onBlur={handleBlur}
-                            
                                 />
                                 <ErrorMessage
                                   className="error text-danger"
@@ -1529,7 +1750,6 @@ console.log("filteredData", filteredData)
                                   placeholder="Temperature"
                                   value={values.temperature}
                                   className="mt-1"
-                                  // onChange={handleChange}
                                   onBlur={handleBlur}
                                 />
                                 <ErrorMessage
@@ -1542,9 +1762,11 @@ console.log("filteredData", filteredData)
                           </Row>
                         )}
                       </Card>
+                      
                       <div className="mttr-sec mt-4 ">
                         <p className=" mb-0 para-tag">MTTR Prediction</p>
                       </div>
+                      
                       <Card className="mt-2 mttr-card ">
                         {isSpinning ? (
                           <Spinner
@@ -1570,7 +1792,6 @@ console.log("filteredData", filteredData)
                               <Col>
                                 <Form.Group>
                                   <Label notify={true}>Repairable</Label>
-
                                   <Select
                                     type="select"
                                     value={repairable}
@@ -1615,7 +1836,7 @@ console.log("filteredData", filteredData)
                                       type="select"
                                       isDisabled
                                       className="mt-1 react-select__option"
-                                    />{" "}
+                                    />
                                     <ErrorMessage
                                       className="error text-danger"
                                       component="span"
@@ -1647,34 +1868,13 @@ console.log("filteredData", filteredData)
                                         setLevelOfRepair(e);
                                       }}
                                       options={[
-                                        {
-                                          value: "1",
-                                          label: "1",
-                                        },
-                                        {
-                                          value: "2",
-                                          label: "2",
-                                        },
-                                        {
-                                          value: "3",
-                                          label: "3",
-                                        },
-                                        {
-                                          value: "4",
-                                          label: "4",
-                                        },
-                                        {
-                                          value: "5",
-                                          label: "5",
-                                        },
-                                        {
-                                          value: "6",
-                                          label: "6",
-                                        },
-                                        {
-                                          value: "7",
-                                          label: "7",
-                                        },
+                                        { value: "1", label: "1" },
+                                        { value: "2", label: "2" },
+                                        { value: "3", label: "3" },
+                                        { value: "4", label: "4" },
+                                        { value: "5", label: "5" },
+                                        { value: "6", label: "6" },
+                                        { value: "7", label: "7" },
                                       ]}
                                     />
                                     <ErrorMessage
@@ -1689,7 +1889,6 @@ console.log("filteredData", filteredData)
                             <Row>
                               <Col>
                                 <Form.Group className="mt-3">
-                                  {" "}
                                   <Label notify={true}>Level of Replace</Label>
                                   <Select
                                     value={levelOfReplace}
@@ -1712,34 +1911,13 @@ console.log("filteredData", filteredData)
                                       setLevelOfReplace(e);
                                     }}
                                     options={[
-                                      {
-                                        value: "1",
-                                        label: "1",
-                                      },
-                                      {
-                                        value: "2",
-                                        label: "2",
-                                      },
-                                      {
-                                        value: "3",
-                                        label: "3",
-                                      },
-                                      {
-                                        value: "4",
-                                        label: "4",
-                                      },
-                                      {
-                                        value: "5",
-                                        label: "5",
-                                      },
-                                      {
-                                        value: "6",
-                                        label: "6",
-                                      },
-                                      {
-                                        value: "7",
-                                        label: "7",
-                                      },
+                                      { value: "1", label: "1" },
+                                      { value: "2", label: "2" },
+                                      { value: "3", label: "3" },
+                                      { value: "4", label: "4" },
+                                      { value: "5", label: "5" },
+                                      { value: "6", label: "6" },
+                                      { value: "7", label: "7" },
                                     ]}
                                   />
                                   <ErrorMessage
@@ -1804,6 +1982,7 @@ console.log("filteredData", filteredData)
                       <div className="mttr-sec mt-4 ">
                         <p className="mb-0 para-tag">Result</p>
                       </div>
+                      
                       <Card className="p-4 mttr-card ">
                         {validateData ? null : (
                           <Alert severity="info" className="warning-message">
@@ -1868,7 +2047,6 @@ console.log("filteredData", filteredData)
                                   title="(Calculated only for family type - Assemblie)"
                                   arrow
                                 >
-
                                   <Form.Control
                                     type="number"
                                     name="mttr"
@@ -1881,7 +2059,6 @@ console.log("filteredData", filteredData)
                                     onChange={handleChange}
                                     onBlur={handleBlur}
                                   />
-
                                 </Tooltip>
                                 <ErrorMessage
                                   className="text-danger"
@@ -1905,7 +2082,6 @@ console.log("filteredData", filteredData)
                                   onChange={handleChange}
                                   onBlur={handleBlur}
                                 />
-
                                 <ErrorMessage
                                   className="error text-danger"
                                   component="span"
@@ -1935,7 +2111,7 @@ console.log("filteredData", filteredData)
                               </Form.Group>
                             </Col>
                           </Row>
-                        </div>{" "}
+                        </div>
                       </Card>
 
                       <div className="d-flex flex-direction-row justify-content-end mt-4 mb-5">
@@ -1944,7 +2120,7 @@ console.log("filteredData", filteredData)
                           variant="outline-secondary"
                           type="reset"
                           onClick={handleCancelClick}
-                          disabled={isSaving} // Disable cancel when saving
+                          disabled={isSaving}
                         >
                           CANCEL
                         </Button>
@@ -1973,6 +2149,7 @@ console.log("filteredData", filteredData)
                           )}
                         </Button>
                       </div>
+                      
                       <Modal show={show} centered onHide={() => setShow(!show)}>
                         <div className="d-flex justify-content-center mt-5">
                           <FontAwesomeIcon
@@ -2027,7 +2204,6 @@ console.log("filteredData", filteredData)
                                 onRowAdd: productId
                                   ? (newRow) =>
                                     new Promise((resolve, reject) => {
-                                      // Check if any required fields are filled
                                       const hasData =
                                         newRow.taskType?.trim() ||
                                         newRow.time?.trim() ||
@@ -2050,9 +2226,8 @@ console.log("filteredData", filteredData)
 
                                 onRowUpdate: (newRow, oldData) =>
                                   new Promise((resolve, reject) => {
-                                    // Check if any data has actually changed
                                     const hasChanges =
-                                     newRow.taskType !== oldData.taskType ||
+                                      newRow.taskType !== oldData.taskType ||
                                       newRow.time !== oldData.time ||
                                       newRow.totalLabour !== oldData.totalLabour ||
                                       newRow.skill !== oldData.skill ||
@@ -2075,7 +2250,6 @@ console.log("filteredData", filteredData)
                                     deleteProcedureData(selectedRow);
                                     resolve();
                                   }),
-
                               }}
                               title="Separate Library"
                               icons={tableIcons}

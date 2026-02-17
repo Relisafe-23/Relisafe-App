@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Select from "react-select";
 import { Modal, Button, Row, Col } from "react-bootstrap";
 import "../../css/FMECA.scss";
@@ -7,10 +7,10 @@ import { tableIcons } from "../core/TableIcons";
 import Loader from "../core/Loader";
 import Projectname from "../Company/projectname";
 import { toast } from "react-toastify";
+import { useConnection } from '../../hooks/useConnection'; // ✅ FIXED: Correct import path
 import {
   faFileDownload,
   faTrash,
-  faEdit,
   faFileUpload,
 } from "@fortawesome/free-solid-svg-icons";
 import CreatableSelect from "react-select/creatable";
@@ -21,18 +21,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { FaExclamationCircle } from "react-icons/fa";
-import { TextField } from "@material-ui/core";
 import { useHistory } from "react-router-dom";
 import Dropdown from "../Company/Dropdown";
 import Tooltip from '@mui/material/Tooltip';
-import TableCell from '@mui/material/TableCell';
 import { customStyles } from "../core/select";
-import { ButtonBase, createTheme, Dialog, DialogActions, DialogContent, DialogTitle, Paper, Stack, Table, TableBody, TableContainer, TableHead, TableRow, ThemeProvider } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material";
 import MaterialTable from "material-table";
-import { connect } from "formik";
-import { TruckOutlined } from "@ant-design/icons";
-// Add this new import
-import { useConnection } from '../../hooks/useConnection';
 
 // hooks/useTableValidation.js
 const useTableValidation = () => {
@@ -54,7 +48,6 @@ const useTableValidation = () => {
 
   const validateAllRequiredFields = (tableData) => {
     const errors = [];
-
     tableData.forEach((row, rowIndex) => {
       const rowNumber = rowIndex + 1;
       const rowErrors = [];
@@ -76,7 +69,6 @@ const useTableValidation = () => {
 
     setValidationErrors(errors);
     setShowValidationModal(errors.length > 0);
-
     return errors.length === 0;
   };
 
@@ -115,6 +107,21 @@ function Index(props) {
     closeValidationModal
   } = useTableValidation();
 
+  // Define projectId FIRST
+  const projectId = props?.location?.state?.projectId
+    ? props?.location?.state?.projectId
+    : props?.match?.params?.id;
+
+  // Initialize connection hook
+  const connection = useConnection();
+
+  // Load connections
+  useEffect(() => {
+    if (projectId && connection?.loadConnections) {
+      connection.loadConnections(projectId);
+    }
+  }, [projectId, connection]);
+
   const [initialProductID, setInitialProductID] = useState();
   const [initialTreeStructure, setInitialTreeStructure] = useState();
   const [exceldata, setExcelData] = useState(null);
@@ -124,12 +131,11 @@ function Index(props) {
     : props?.location?.state?.productId
       ? props?.location?.state?.productId
       : initialProductID;
+      
   const treeStructure = props?.location?.props?.mainData?.id
     ? props?.location?.props?.mainData?.id
     : initialTreeStructure;
-  const projectId = props?.location?.state?.projectId
-    ? props?.location?.state?.projectId
-    : props?.match?.params?.id;
+
   const [show, setShow] = useState(false);
   const [treeTableData, setTreeTabledata] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -203,40 +209,8 @@ function Index(props) {
       [name]: selectedItems ? selectedItems.value : "",
     }));
   };
+  
   const [mergedData, setMergedData] = useState([]);
-
-  // Add connection hook
-  const connection = useConnection();
-
-  // Load connections when component mounts
-  useEffect(() => {
-    if (projectId) {
-      connection.loadConnections(projectId);
-    }
-  }, [projectId]);
-
-  // Add listener for FMECA destination updates
-  useEffect(() => {
-    const handleDestinationUpdate = (event) => {
-      const { destField, destValue, sourceModule, sourceField } = event.detail;
-      console.log(`FMECA destination updated from ${sourceModule}:`, destField, destValue);
-      
-      // Show notification
-      toast.info(`Field "${destField}" updated from ${sourceModule} (${sourceField})`, {
-        position: "top-right",
-        autoClose: 3000,
-      });
-      
-      // Optionally refresh data to show updated values
-      getProductData();
-    };
-
-    window.addEventListener('fmecaDestinationUpdated', handleDestinationUpdate);
-    
-    return () => {
-      window.removeEventListener('fmecaDestinationUpdated', handleDestinationUpdate);
-    };
-  }, []);
 
   const getAllSeprateLibraryData = async () => {
     const companyId = localStorage.getItem("companyId");
@@ -328,7 +302,7 @@ function Index(props) {
     const CompanyName = treeTableData[0]?.companyId?.companyName;
     const ProjectName = treeTableData[0]?.projectId?.projectName;
     const data = tableData[0];
-    const productName = data?.productId?.productName
+    const productName = data?.productId?.productName;
 
     const modifiedTableData = tableData.map((row) => {
       const newRow = {
@@ -345,11 +319,6 @@ function Index(props) {
     });
 
     if (modifiedTableData.length > 0) {
-      const columns = Object.keys(modifiedTableData[0])?.map((columnName) => ({
-        title: columnName,
-        field: columnName,
-      }));
-
       const workSheet = XLSX.utils.json_to_sheet(modifiedTableData, {
         skipHeader: false,
       });
@@ -357,8 +326,6 @@ function Index(props) {
       XLSX.utils.book_append_sheet(workBook, workSheet, "FMECA Data");
 
       const buf = XLSX.write(workBook, { bookType: "xlsx", type: "buffer" });
-
-      // Create a Blob object and initiate a download
       const blob = new Blob([buf], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
@@ -367,7 +334,6 @@ function Index(props) {
       link.href = url;
       link.download = "FMECA_Data.xlsx";
       link.click();
-      // Clean up
       URL.revokeObjectURL(url);
     } else {
       toast("Export Failed !! No Data Found", {
@@ -395,9 +361,7 @@ function Index(props) {
       userId: userId,
     }).then((response) => {
       setIsLoading(false);
-      const status = response?.status;
       getProductData();
-      setIsLoading(false);
     }).catch((error) => {
       setIsLoading(false);
       const errorMessage =
@@ -406,13 +370,11 @@ function Index(props) {
         "Something went wrong";
       toast.error(errorMessage);
       console.error("Error creating FMECA data:", errorMessage);
-    })
+    });
   };
 
   const importExcel = (e) => {
     const file = e.target.files[0];
-
-    // Check if the file is an Excel file by checking the extension
     const fileName = file.name;
     const validExtensions = ["xlsx", "xls"];
     const fileExtension = fileName.split(".").pop().toLowerCase();
@@ -519,7 +481,6 @@ function Index(props) {
       if (alphaTotal > 1) {
         validationErrors.push(`BULK UPLOAD FAILED: Total failureModeRatioAlpha = ${alphaTotal.toFixed(4)} (exceeds 1)`);
       }
-
       if (betaTotal > 1) {
         validationErrors.push(`BULK UPLOAD FAILED: Total endEffectRatioBeta = ${betaTotal.toFixed(4)} (exceeds 1)`);
       }
@@ -543,17 +504,6 @@ function Index(props) {
           `BULK DATA ISSUE: ${betaOnes} rows have endEffectRatioBeta = 1 (only one row can have value 1)`
         );
       }
-
-      const hasAlphaEqualsOne = rows.some(row => parseFloat(row.failureModeRatioAlpha) > 1);
-      const hasBetaEqualsOne = rows.some(row => parseFloat(row.endEffectRatioBeta) > 1);
-
-      if (hasAlphaEqualsOne) {
-        validationErrors.push("BULK DATA ISSUE: A single row has failureModeRatioAlpha = 1 (not allowed in bulk upload)");
-      }
-
-      if (hasBetaEqualsOne) {
-        validationErrors.push("BULK DATA ISSUE: A single row has endEffectRatioBeta = 1 (not allowed in bulk upload)");
-      }
     }
 
     if (validationErrors.length > 0) {
@@ -573,6 +523,7 @@ function Index(props) {
 
       return { isValid: false, rows: [] };
     }
+    
     const successMessage =
       `📊 Import Summary:\n` +
       `• Total rows: ${rows.length}\n` +
@@ -590,7 +541,6 @@ function Index(props) {
     });
 
     createFMECADataFromExcel(rows);
-
     return { isValid: true, rows: rows };
   };
 
@@ -600,7 +550,8 @@ function Index(props) {
   }, [productId]);
 
   const logout = () => {
-    localStorage.clear(history.push("/login"));
+    localStorage.clear();
+    history.push("/login");
     window.location.reload();
   };
 
@@ -644,10 +595,9 @@ function Index(props) {
       },
     })
       .then((res) => {
-       
         const initialProductID = res?.data?.data[0]?.treeStructure?.id;
         const treeData = res?.data?.data;
-        setTreeTabledata(treeData, projectId);
+        setTreeTabledata(treeData);
         setIsLoading(false);
         setInitialProductID(initialProductID);
         setInitialTreeStructure(res?.data?.data[0]?.id);
@@ -687,12 +637,14 @@ function Index(props) {
   }, [projectId]);
 
   const tableTheme = createTheme({
-    overrides: {
+    components: {
       MuiTableRow: {
-        root: {
-          "&:hover": {
-            cursor: "pointer",
-            backgroundColor: "rgba(224, 224, 224, 1) !important",
+        styleOverrides: {
+          root: {
+            "&:hover": {
+              cursor: "pointer",
+              backgroundColor: "rgba(224, 224, 224, 1) !important",
+            },
           },
         },
       },
@@ -712,7 +664,7 @@ function Index(props) {
           logout();
         }
       });
-  };  
+  };
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [rowToDelete, setRowToDelete] = useState(null);
@@ -728,7 +680,6 @@ function Index(props) {
     setSelectedProductName(selectedItem?.treeStructure?.productName || "");
   };
 
-  // Function to get connected values for a field based on selected source
   const getConnectedValuesForField = (fieldName, rowData) => {
     let connectedValues = [];
 
@@ -743,23 +694,19 @@ function Index(props) {
             String(item.fieldValue) === String(sourceValue) &&
             item.destName === fieldName
         ) || [];
- console.log("bhihi",flattenedConnect)
+
       connectedValues.push(...connections);
+      console.log("123456")
     });
-    console.log("gjhfhv")
-    console.log("123456", connectedValues);
+  console.log("Connected values for", fieldName, "in row", rowData, ":", connectedValues, connections);
     return connectedValues;
-    console.log("Connected values for", fieldName, "in row", rowData, ":", connectedValues);
   };
 
-  // Function to handle source selection and update connections
   const handleSourceSelection = (fieldName, value, rowData) => {
     const rowId = rowData.fmecaId;
-    console.log("rowId", rowId);
     if (!rowId) return;
 
     const normalizedValue = String(value);
-    console.log("normalizedValue.....", normalizedValue)
 
     setSelectedSourceValues(prev => ({
       ...prev,
@@ -817,7 +764,11 @@ function Index(props) {
 
     setIsLoading(true);
     const rowId = rowToDelete?.id;
-
+    
+    if (connection && rowId) {
+      connection.clearRow('FMECA', rowId);
+    }
+    
     Api.delete(`api/v1/FMECA/${rowId}`, { headers: { userId: userId } })
       .then((response) => {
         console.log("Delete successful");
@@ -844,7 +795,6 @@ function Index(props) {
     setRowToDelete(null);
   };
 
-  // Validation utility
   const validateField = (fieldName, value, isRequired) => {
     if (isRequired && (!value || value?.toString()?.trim() === '')) {
       return `${fieldName} is required`;
@@ -852,7 +802,6 @@ function Index(props) {
     return null;
   };
 
-  // Validation Modal Component
   const ValidationModal = ({ isOpen, errors, onClose }) => {
     if (!isOpen) return null;
 
@@ -964,16 +913,13 @@ function Index(props) {
   };
 
   const isSourceField = (fieldName) => {
-    const result = flattenedConnect.some(item => item.fieldName === fieldName);
-    console.log("result", result)
-    return result;
+    return flattenedConnect.some(item => item.sourceName === fieldName);
   };
 
   const isDestinationField = (fieldName) => {
-    return flattenedConnect.some(item => item.destName === fieldName);
+    return flattenedConnect.some(item => item.destinationName === fieldName);
   };
 
-  // Function to get destination fields for a source
   const getDestinationFieldsForSource = (sourceField, sourceValue) => {
     return flattenedConnect
       ?.filter(item => item.fieldName === sourceField && item.fieldValue === sourceValue)
@@ -983,390 +929,199 @@ function Index(props) {
       })) || [];
   };
 
-  const createSmartSelectField = (fieldName, label, required = false, isSourceFieldCheck = false) => ({
-    ...createEditComponent(fieldName, label, required),
-    editComponent: ({ value, onChange, rowData }) => {
+const createSmartSelectField = (fieldName, label, required = false, isSourceFieldCheck = false) => ({
+  ...createEditComponent(fieldName, label, required),
+  editComponent: React.useMemo(() => {
+    return ({ value, onChange, rowData }) => {
       const rowId = rowData?.id || rowData?.fmecaId || rowData?.tableData?.id;
       
-      // Get connected values for this field based on selected sources in this row
-      const connectedValues = getConnectedValuesForField(fieldName, rowData);
+      // Get destinations from ALL modules (FMECA, MTTR, etc.)
+      const destinations = connection?.getDestinationsForRow?.('FMECA', rowId) || [];
+      const fieldDestinations = destinations.filter(d => d.destField === fieldName);
+      const hasConnectedValues = fieldDestinations.length > 0;
       
-      // Get values from other modules (destinations)
-      const destinationInfo = connection?.destinationValues[`FMECA_${fieldName}`];
-      const isVerified = connection?.isSourceVerified('FMECA', rowId, fieldName);
-      
-      // Get separate library data
-      const separateFilteredData = allSepareteData?.filter((item) => item?.sourceName === fieldName) || [];
-      
-      // Build options array
+      // Build options
       let options = [];
       
-      // 1. Add connected values from FMECA sources (same module connections)
-      if (connectedValues.length > 0) {
-        connectedValues.forEach(item => {
-          if (!options.some(opt => opt.value === String(item.destValue))) {
-            options.push({
-              value: String(item.destValue),
-              label: `${item.destValue} (Connected - ${item.fieldName})`,
-              isConnected: true,
-              sourceType: 'FMECA',
-              connectionSource: item.fieldName
-            });
-          }
+      // Add connected values from ALL source modules (including MTTR)
+      if (hasConnectedValues) {
+        fieldDestinations.forEach(d => {
+          options.push({
+            value: d.destValue,
+            label: `${d.destValue} (from ${d.sourceModule} - ${d.sourceField})`,
+            isConnected: true,
+            sourceModule: d.sourceModule
+          });
         });
       }
       
-      // 2. Add destination values from other modules (MTTR, PMMRA, SAFETY, etc.)
-      if (destinationInfo && destinationInfo.value) {
-        const destValue = String(destinationInfo.value);
-        if (!options.some(opt => opt.value === destValue)) {
-          options.push({
-            value: destValue,
-            label: `${destValue} (from ${destinationInfo.sourceModule || 'Other Module'} - ${destinationInfo.sourceField || ''})`,
-            isConnected: true,
-            sourceType: destinationInfo.sourceModule,
-            isDestination: true
-          });
-        }
-      }
-      
-      // 3. Add separate library values (avoid duplicates)
+      // Add separate library values
+      const separateFilteredData = allSepareteData?.filter(item => item?.sourceName === fieldName) || [];
       separateFilteredData.forEach(item => {
-        if (!options.some(opt => opt.value === String(item.sourceValue))) {
+        if (!options.some(opt => opt.value === item.sourceValue)) {
           options.push({
-            value: String(item.sourceValue),
-            label: String(item.sourceValue),
-            isConnected: false,
-            sourceType: 'Library'
+            value: item.sourceValue,
+            label: item.sourceValue,
+            isConnected: false
           });
         }
       });
       
-      // 4. Add current value if not in options
+      // Add current value if not present
       if (value && !options.some(opt => opt.value === String(value))) {
         options.push({
           value: String(value),
           label: String(value),
-          isConnected: false,
-          sourceType: 'Manual'
+          isConnected: false
         });
       }
       
-      const selectedOption = options.find(opt => opt.value === String(value)) ||
+      const selectedOption = options.find(opt => opt.value === String(value)) || 
                             (value ? { label: String(value), value: String(value) } : null);
       
       const hasError = required && (!value || String(value)?.trim() === "");
       
-      // Determine if this field has any external values
-      const hasExternalValues = destinationInfo || connectedValues.length > 0;
-      
-      // If no options from anywhere, show input field
-      if (options.length === 0) {
-        return (
-          <div style={{ position: "relative" }}>
-            <input
-              type="text"
-              value={value || ""}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                onChange(newValue);
-                
-                // Save as source when typing
-                if (newValue && rowId && isSourceField(fieldName)) {
-                  connection?.saveSource('FMECA', rowId, fieldName, newValue);
-                }
-              }}
-              placeholder={label + (required ? " *" : "")}
-              style={{
-                height: "40px",
-                borderRadius: "4px",
-                width: "100%",
-                borderColor: hasError ? "#d32f2f" : "#ccc",
-                borderLeft: destinationInfo ? '4px solid #4caf50' : 
-                           connectedValues.length > 0 ? '4px solid #1976d2' : undefined,
-                backgroundColor: destinationInfo ? '#f1f8e9' : 'white'
-              }}
-            />
-            {hasError && (
-              <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                {label} is required
-              </div>
-            )}
-            
-            {/* Badge for external values */}
-            {destinationInfo && (
-              <div style={{
-                position: 'absolute',
-                top: '-18px',
-                right: '5px',
-                fontSize: '10px',
-                color: '#4caf50',
-                background: '#e8f5e9',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                fontWeight: 'bold',
-                border: '1px solid #4caf50',
-                zIndex: 1
-              }}>
-                From {destinationInfo.sourceModule}
-              </div>
-            )}
-            
-            {/* Badge for same module connections */}
-            {connectedValues.length > 0 && !destinationInfo && (
-              <div style={{
-                position: 'absolute',
-                top: '-18px',
-                right: '5px',
-                fontSize: '10px',
-                color: '#1976d2',
-                background: '#e8f4fd',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                fontWeight: 'bold',
-                border: '1px solid #1976d2',
-                zIndex: 1
-              }}>
-                Connected
-              </div>
-            )}
-            
-            {/* Verify button for sources */}
-            {value && isSourceField(fieldName) && !isVerified && (
-              <button
-                onClick={() => connection?.verifySource('FMECA', rowId, fieldName, value)}
-                style={{
-                  position: 'absolute',
-                  right: '5px',
-                  top: '5px',
-                  background: '#ff9800',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '2px 8px',
-                  fontSize: '11px',
-                  cursor: 'pointer',
-                  zIndex: 2
-                }}
-              >
-                Verify
-              </button>
-            )}
-            
-            {/* Verified badge */}
-            {isVerified && (
-              <div style={{
-                position: 'absolute',
-                left: '5px',
-                top: '5px',
-                background: '#4caf50',
-                color: 'white',
-                borderRadius: '12px',
-                padding: '2px 8px',
-                fontSize: '10px',
-                zIndex: 2
-              }}>
-                ✓ Verified
-              </div>
-            )}
-          </div>
-        );
-      }
-      
-      // Show dropdown with options
       return (
-        <div style={{ position: "relative" }}>
+        <div 
+          style={{ 
+            position: "relative", 
+            width: "100%",
+            minWidth: "200px",
+          }}
+        >
           <CreatableSelect
             name={fieldName}
             value={selectedOption}
             options={options}
-            isClearable
             onChange={(option) => {
               const newValue = option?.value != null ? String(option.value) : "";
               onChange(newValue);
               
-              // Save as source when selected
-              if (newValue && rowId && isSourceField(fieldName)) {
-                connection?.saveSource('FMECA', rowId, fieldName, newValue);
+              // Save source value when selected
+              if (isSourceFieldCheck && newValue && rowId && connection) {
+                setTimeout(() => {
+                  connection.saveSource('FMECA', rowId, fieldName, newValue);
+                }, 0);
               }
             }}
-            onCreateOption={(inputValue) => {
-              // Allow creating new options
-              onChange(inputValue);
-              
-              // Save as source when creating new
-              if (inputValue && rowId && isSourceField(fieldName)) {
-                connection?.saveSource('FMECA', rowId, fieldName, inputValue);
-              }
-            }}
+            isClearable
             menuPortalTarget={document.body}
             styles={{
-              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-              control: (base) => ({
+              menuPortal: (base) => ({ 
+                ...base, 
+                zIndex: 9999,
+                position: 'fixed',
+              }),
+              menu: (base) => ({ 
+                ...base, 
+                zIndex: 9999,
+                backgroundColor: 'white',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                marginTop: '4px',
+                pointerEvents: 'auto',
+              }),
+              control: (base, state) => ({
                 ...base,
-                borderColor: hasError ? "#d32f2f" : base.borderColor,
-                borderLeft: destinationInfo ? '4px solid #4caf50' : 
-                           connectedValues.length > 0 ? '4px solid #1976d2' : base.borderLeft,
-                backgroundColor: destinationInfo ? '#f1f8e9' : 'white'
+                borderColor: hasError ? "#d32f2f" : '#ccc',
+                borderLeft: hasConnectedValues ? '4px solid #1976d2' : base.borderLeft,
+                backgroundColor: 'white',
+                minHeight: '38px',
+                '&:hover': {
+                  borderColor: hasError ? "#d32f2f" : '#1976d2',
+                },
+                ...(state.isFocused ? {
+                  boxShadow: `0 0 0 1px ${hasError ? '#d32f2f' : '#1976d2'}`,
+                  borderColor: hasError ? '#d32f2f' : '#1976d2',
+                } : {}),
               }),
               option: (base, state) => ({
                 ...base,
-                backgroundColor: state.data?.sourceType === 'MTTR' ? '#e8f5e9' :
-                               state.data?.sourceType === 'PMMRA' ? '#fff3e0' :
-                               state.data?.sourceType === 'SAFETY' ? '#ffebee' :
-                               state.data?.sourceType === 'FMECA' && state.data?.isConnected ? '#e3f2fd' :
-                               state.data?.isConnected ? '#e3f2fd' :
-                               state.isFocused ? '#f5f5f5' : 'white',
-                fontWeight: state.data?.isConnected ? 'bold' : base.fontWeight,
+                backgroundColor: state.isSelected 
+                  ? '#1976d2' 
+                  : state.data?.isConnected 
+                    ? state.data?.sourceModule === 'MTTR' 
+                      ? '#e8f4fd'  // Light blue for MTTR
+                      : '#e8f4fd'  // Same color for other modules
+                    : state.isFocused 
+                      ? '#f5f5f5' 
+                      : 'white',
+                fontWeight: state.data?.isConnected ? 'bold' : 'normal',
+                color: state.isSelected ? 'white' : 'inherit',
+                cursor: 'pointer',
+                '&:active': {
+                  backgroundColor: state.isSelected ? '#1976d2' : '#e0e0e0',
+                },
+              }),
+              singleValue: (base) => ({
+                ...base,
+                color: 'inherit',
+              }),
+              indicatorSeparator: (base) => ({
+                ...base,
+                display: 'none',
+              }),
+              dropdownIndicator: (base) => ({
+                ...base,
+                color: '#666',
+                '&:hover': {
+                  color: '#1976d2',
+                },
               }),
             }}
           />
           
-          {hasError && (
-            <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-              {label} is required
-            </div>
-          )}
-          
-          {/* Badge for connected values */}
-          {connectedValues.length > 0 && (
-            <div style={{
-              position: "absolute",
-              top: "-18px",
-              right: "5px",
-              fontSize: "10px",
-              color: "#1976d2",
-              background: "#e8f4fd",
-              padding: "2px 8px",
-              borderRadius: "12px",
-              fontWeight: "bold",
-              border: "1px solid #1976d2",
-              zIndex: 1
-            }}>
-              Connected ({connectedValues.length})
-            </div>
-          )}
-          
-          {/* Badge for destination from other modules */}
-          {destinationInfo && !connectedValues.length && (
-            <div style={{
-              position: "absolute",
-              top: "-18px",
-              right: "5px",
-              fontSize: "10px",
-              color: "#4caf50",
-              background: "#e8f5e9",
-              padding: "2px 8px",
-              borderRadius: "12px",
-              fontWeight: "bold",
-              border: "1px solid #4caf50",
-              zIndex: 1
-            }}>
-              From {destinationInfo.sourceModule}
-            </div>
-          )}
-          
-          {/* Verify button for sources */}
-          {value && isSourceField(fieldName) && !isVerified && (
-            <button
-              onClick={() => connection?.verifySource('FMECA', rowId, fieldName, value)}
+          {hasConnectedValues && (
+            <div
               style={{
-                position: 'absolute',
-                right: '5px',
-                top: '5px',
-                background: '#ff9800',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '2px 8px',
-                fontSize: '11px',
-                cursor: 'pointer',
-                zIndex: 2
+                position: "absolute",
+                top: "-18px",
+                right: "5px",
+                fontSize: "10px",
+                color: "#1976d2",
+                background: "#e3f2fd",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                fontWeight: "bold",
+                border: '1px solid #1976d2',
+                zIndex: 1,
+                pointerEvents: 'none',
               }}
             >
-              Verify
-            </button>
+              ✓ From saved source
+            </div>
           )}
           
-          {/* Verified badge */}
-          {isVerified && (
-            <div style={{
-              position: 'absolute',
-              left: '5px',
-              top: '5px',
-              background: '#4caf50',
-              color: 'white',
-              borderRadius: '12px',
-              padding: '2px 8px',
-              fontSize: '10px',
-              zIndex: 2
-            }}>
-              ✓ Verified
+          {hasError && (
+            <div
+              style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                color: "#d32f2f",
+                fontSize: "11px",
+                marginTop: "2px",
+              }}
+            >
+              {label} is required
             </div>
           )}
         </div>
       );
-    },
-  });
-
-  // Special case for FMECA ID
+    };
+  }, [fieldName, label, required, isSourceFieldCheck, allSepareteData, connection]),
+});
+console.log("Connection", connection)
+  // Special case for FMECA IDF
   const fmecaIdColumn = {
     render: (rowData) => `${rowData?.tableData?.id + 1}`,
     title: "FMECA ID",
   };
 
-  // Add verification status column
-  const verificationColumn = {
-    title: "Status",
-    field: "verificationStatus",
-    editable: "never",
-    render: (rowData) => {
-      const rowId = rowData.id;
-      const isVerified = connection?.isSourceVerified('FMECA', rowId, 'failureMode');
-      const verification = connection?.getSourceVerification('FMECA', rowId, 'failureMode');
-      
-      return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-          {isVerified ? (
-            <Tooltip title={`Verified at: ${new Date(verification?.verifiedAt).toLocaleString()}`}>
-              <div style={{
-                background: '#4caf50',
-                color: 'white',
-                padding: '4px 8px',
-                borderRadius: '12px',
-                fontSize: '11px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                <span>✓</span> Verified
-              </div>
-            </Tooltip>
-          ) : (
-            <div style={{
-              background: '#ff9800',
-              color: 'white',
-              padding: '4px 8px',
-              borderRadius: '12px',
-              fontSize: '11px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}>
-              <span>⏳</span> Pending
-            </div>
-          )}
-        </div>
-      );
-    }
-  };
-
-  // Define which fields are source fields (fields that have connections to other fields)
-  const sourceFields = ['function', 'operatingPhase', 'failureMode', 'cause', 'subSystemEffect', 'systemEffect', 'endEffect'];
+  // Define which fields are source fields
+  const sourceFields = ['function', 'operatingPhase', 'failureMode'];
 
   const columns = [
     fmecaIdColumn,
-    verificationColumn, // Add verification column
     createSmartSelectField("operatingPhase", "Operating Phases", true, sourceFields.includes('operatingPhase')),
     createSmartSelectField("function", "Function", true, sourceFields.includes('function')),
     createSmartSelectField("failureMode", "Failure Mode", true, sourceFields.includes('failureMode')),
@@ -1512,93 +1267,58 @@ function Index(props) {
       const companyId = localStorage.getItem("companyId");
       setIsLoading(true);
       Api.post("api/v1/FMECA/", {
-        operatingPhase: values.operatingPhase
-          ? values.operatingPhase
-          : data.operatingPhase,
-        function: values.function ? values.function : data.function,
-        failureMode: values.failureMode ? values.failureMode : data.failureMode,
-        cause: values.cause ? values.cause : data.cause,
-        failureModeRatioAlpha: values?.failureModeRatioAlpha
-          ? values?.failureModeRatioAlpha
-          : 1,
-        detectableMeansDuringOperation: values.detectableMeansDuringOperation
-          ? values.detectableMeansDuringOperation
-          : data.detectableMeansDuringOperation,
-        detectableMeansToMaintainer: values.detectableMeansToMaintainer
-          ? values.detectableMeansToMaintainer
-          : data.detectableMeansToMaintainer,
-        BuiltInTest: values.BuiltInTest ? values.BuiltInTest : data.BuiltInTest,
-        subSystemEffect: values.subSystemEffect
-          ? values.subSystemEffect
-          : data.subSystemEffect,
-        systemEffect: values.systemEffect
-          ? values.systemEffect
-          : data.systemEffect,
-        endEffect: values.endEffect ? values.endEffect : data.endEffect,
-        endEffectRatioBeta: values.endEffectRatioBeta
-          ? values.endEffectRatioBeta
-          : 1,
-        safetyImpact: values.safetyImpact
-          ? values.safetyImpact
-          : data.safetyImpact,
-        referenceHazardId: values.referenceHazardId
-          ? values.referenceHazardId
-          : data.referenceHazardId,
-        realibilityImpact: values.realibilityImpact
-          ? values.realibilityImpact
-          : data.realibilityImpact,
-        serviceDisruptionTime: values.serviceDisruptionTime
-          ? values.serviceDisruptionTime
-          : data.serviceDisruptionTime,
-        frequency: values.frequency ? values.frequency : data.frequency,
-        severity: values.severity ? values.severity : data.severity,
-        riskIndex: values.riskIndex ? values.riskIndex : data.riskIndex,
-        designControl: values.designControl
-          ? values.designControl
-          : data.designControl,
-        maintenanceControl: values.maintenanceControl
-          ? values.maintenanceControl
-          : data.maintenanceControl,
-        exportConstraints: values.exportConstraints
-          ? values.exportConstraints
-          : data.exportConstraints,
-        immediteActionDuringOperationalPhase:
-          values.immediteActionDuringOperationalPhase
-            ? values.immediteActionDuringOperationalPhase
-            : data.immediteActionDuringOperationalPhase,
-        immediteActionDuringNonOperationalPhase:
-          values.immediteActionDuringNonOperationalPhase
-            ? values.immediteActionDuringNonOperationalPhase
-            : data.immediteActionDuringNonOperationalPhase,
-        userField1: values.userField1 ? values.userField1 : data.userField1,
-        userField2: values.userField2 ? values.userField2 : data.userField2,
-        userField3: values.userField3 ? values.userField3 : data.userField3,
-        userField4: values.userField4 ? values.userField4 : data.userField4,
-        userField5: values.userField5 ? values.userField5 : data.userField5,
-        userField6: values.userField6 ? values.userField6 : data.userField6,
-        userField7: values.userField7 ? values.userField7 : data.userField7,
-        userField8: values.userField8 ? values.userField8 : data.userField8,
-        userField9: values.userField9 ? values.userField9 : data.userField9,
-        userField10: values.userField10 ? values.userField10 : data.userField10,
+        operatingPhase: values.operatingPhase || data.operatingPhase,
+        function: values.function || data.function,
+        failureMode: values.failureMode || data.failureMode,
+        cause: values.cause || data.cause,
+        failureModeRatioAlpha: values?.failureModeRatioAlpha || 1,
+        detectableMeansDuringOperation: values.detectableMeansDuringOperation || data.detectableMeansDuringOperation,
+        detectableMeansToMaintainer: values.detectableMeansToMaintainer || data.detectableMeansToMaintainer,
+        BuiltInTest: values.BuiltInTest || data.BuiltInTest,
+        subSystemEffect: values.subSystemEffect || data.subSystemEffect,
+        systemEffect: values.systemEffect || data.systemEffect,
+        endEffect: values.endEffect || data.endEffect,
+        endEffectRatioBeta: values.endEffectRatioBeta || 1,
+        safetyImpact: values.safetyImpact || data.safetyImpact,
+        referenceHazardId: values.referenceHazardId || data.referenceHazardId,
+        realibilityImpact: values.realibilityImpact || data.realibilityImpact,
+        serviceDisruptionTime: values.serviceDisruptionTime || data.serviceDisruptionTime,
+        frequency: values.frequency || data.frequency,
+        severity: values.severity || data.severity,
+        riskIndex: values.riskIndex || data.riskIndex,
+        designControl: values.designControl || data.designControl,
+        maintenanceControl: values.maintenanceControl || data.maintenanceControl,
+        exportConstraints: values.exportConstraints || data.exportConstraints,
+        immediteActionDuringOperationalPhase: values.immediteActionDuringOperationalPhase || data.immediteActionDuringOperationalPhase,
+        immediteActionDuringNonOperationalPhase: values.immediteActionDuringNonOperationalPhase || data.immediteActionDuringNonOperationalPhase,
+        userField1: values.userField1 || data.userField1,
+        userField2: values.userField2 || data.userField2,
+        userField3: values.userField3 || data.userField3,
+        userField4: values.userField4 || data.userField4,
+        userField5: values.userField5 || data.userField5,
+        userField6: values.userField6 || data.userField6,
+        userField7: values.userField7 || data.userField7,
+        userField8: values.userField8 || data.userField8,
+        userField9: values.userField9 || data.userField9,
+        userField10: values.userField10 || data.userField10,
         projectId: projectId,
         companyId: companyId,
         productId: productId,
         userId: userId,
         Alldata: tableData,
-      }).then((response) => {
+      })
+      .then((response) => {
         toast.success("FMECA created successfully!");
         getProductData();
         setIsLoading(false);
         
-        // NEW: Save sources after successful creation
-        if (response?.data?.data?.id) {
-          const newRowId = response.data.data.id;
-          
-          // Save source values for fields that are sources
-          const sourceFieldsToSave = ['operatingPhase', 'function', 'failureMode', 'cause', 'subSystemEffect', 'systemEffect', 'endEffect'];
-          sourceFieldsToSave.forEach(field => {
+        const sourceFields = ['operatingPhase', 'function', 'failureMode'];
+        const newRowId = response?.data?.data?.id;
+        
+        if (newRowId && connection) {
+          sourceFields.forEach(field => {
             if (values[field]) {
-              connection?.saveSource('FMECA', newRowId, field, values[field]);
+              connection.saveSource('FMECA', newRowId, field, values[field]);
             }
           });
         }
@@ -1612,7 +1332,7 @@ function Index(props) {
           "Something went wrong";
         toast.error(errorMessage);
         console.error("Error creating FMECA data:", errorMessage);
-      })
+      });
     } else {
       setProductModal(true);
       return Promise.reject(new Error("No product selected"));
@@ -1674,11 +1394,7 @@ function Index(props) {
     }
 
     const companyId = localStorage.getItem("companyId");
-    if (!values.operatingPhase || !values.function || !values.failureMode) {
-      toast.error("Operating Phase, Function, and Failure Mode are required.");
-      return;
-    }
-
+    
     const payload = {
       operatingPhase: values.operatingPhase,
       function: values.function,
@@ -1721,12 +1437,10 @@ function Index(props) {
       fmecaId: values.id,
       userId: userId,
       Alldata: tableData,
-
-      // ADD THIS FLAG TO INDICATE CONNECTED UPDATE
       isConnectedUpdate: true,
-      updatedField: values.updatedField, // Track which field was updated
-      oldValue: values.oldValue, // Previous value before update
-      newValue: values.newValue, // New value after update
+      updatedField: values.updatedField,
+      oldValue: values.oldValue,
+      newValue: values.newValue,
     };
 
     try {
@@ -1734,22 +1448,20 @@ function Index(props) {
       if (response?.status === 200) {
         toast.success("FMECA updated successfully!");
         getProductData();
-        getAllConnectedLibraryAfterUpdate();
         
-        // NEW: Save sources after successful update
-        if (values.id) {
-          const sourceFieldsToSave = ['operatingPhase', 'function', 'failureMode', 'cause', 'subSystemEffect', 'systemEffect', 'endEffect'];
-          sourceFieldsToSave.forEach(field => {
+        const sourceFields = ['operatingPhase', 'function', 'failureMode'];
+        if (connection) {
+          sourceFields.forEach(field => {
             if (values[field]) {
-              connection?.saveSource('FMECA', values.id, field, values[field]);
+              connection.saveSource('FMECA', values.id, field, values[field]);
             }
           });
         }
-      }
-      else if (response?.status === 204) {
+        
+        getAllConnectedLibraryAfterUpdate();
+      } else if (response?.status === 204) {
         toast.error("Failure Mode Radio Alpha Must be Equal to One !");
-      }
-      else {
+      } else {
         toast.warning("Update request completed, but status not ideal.");
         getProductData();
         getAllConnectedLibraryAfterUpdate();
@@ -1759,8 +1471,8 @@ function Index(props) {
       if (errorStatus === 401) {
         logout();
       } else {
-        toast.error(errorStatus?.response?.status === 422 ? "Failed to update FMECA. Please try again." : "Failure Mode Ratio Alpha must sum to exactly 1");
-        console.error("Update Error:", errorStatus?.response?.status === 422);
+        toast.error(errorStatus === 422 ? "Failed to update FMECA. Please try again." : "Failure Mode Ratio Alpha must sum to exactly 1");
+        console.error("Update Error:", errorStatus === 422);
       }
     } finally {
       setIsLoading(false);
@@ -1922,7 +1634,6 @@ function Index(props) {
                               .catch(() => reject());
                           })
                         : null,
-
                     onRowUpdate:
                       writePermission === true ||
                         writePermission === undefined ||

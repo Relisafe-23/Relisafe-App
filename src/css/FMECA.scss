@@ -12,7 +12,42 @@
 
 }
 
+// Add to FMECA.scss
+.select-portal {
+  position: relative;
+  z-index: 9999;
+}
 
+// Fix for Material Table cell overflow
+.MuiTableCell-root {
+  overflow: visible !important;
+}
+
+// Ensure dropdown doesn't get clipped
+.react-select__menu-portal {
+  z-index: 9999 !important;
+  position: fixed !important;
+}
+
+.react-select__menu {
+  z-index: 9999 !important;
+  position: absolute !important;
+}
+
+// Prevent table cell from clipping
+td {
+  overflow: visible !important;
+}
+
+// Fix for Material Table container
+.MuiTableContainer-root {
+  overflow: visible !important;
+}
+
+// Prevent body scroll when menu is open
+body.react-select-menu-open {
+  overflow: auto !important;
+}
 .product-modal-heading {
   background-color: var(--primary-color);
   color: var(--secondary-color);
