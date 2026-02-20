@@ -209,7 +209,7 @@ const useConnectionManagement = (projectId) => {
         projectId: projectId,
       },
     }).then((res) => {
-      console.log(res, "res seperate value")
+      // console.log(res, "res seperate value")
       const filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "PMMRA"
       );
@@ -222,7 +222,7 @@ const useConnectionManagement = (projectId) => {
     Api.get("api/v1/library/get/all/connect/value", {
       params: { projectId },
     }).then((res) => {
-      console.log(res, "res connect value")
+      // console.log(res, "res connect value")
       const filteredData = res.data.getData.filter(
         (entry) =>
           entry?.libraryId?.moduleName === "PMMRA" ||
@@ -390,7 +390,8 @@ export default function PMMRA(props) {
   const [reference, setReference] = useState();
   const [pmmraData, setpmmraData] = useState([]);
   const [fmecaData, setFmecaData] = useState([]);
-  const [pmmraId, setpmmraId] = useState([]);
+  const [pmmraId, setpmmraId] = useState(null);
+  const [existingId, setExistingId] = useState(null);
   const [writePermission, setWritePermission] = useState();
   const role = localStorage.getItem("role");
   const userId = localStorage.getItem("userId");
@@ -1018,6 +1019,7 @@ export default function PMMRA(props) {
       },
     }).then((res) => {
       const data = res?.data?.data;
+      // console.log(data)
       setFmecaData(data);
     });
   };
@@ -1029,6 +1031,7 @@ export default function PMMRA(props) {
       },
     }).then((res) => {
       const data = res?.data?.data;
+      console.log(data, 'fmeca data')
       setFmecaData(data);
       const filteredData = data.filter((item) => item.failureMode === failureMode);
 
@@ -1142,7 +1145,7 @@ export default function PMMRA(props) {
     getpmmraDetails();
     getMttrData();
     getFMECAData();
-  }, [productId]);
+  }, [productId, failureMode]);
 
   // Get PMMRA details
   const getpmmraDetails = () => {
@@ -1157,34 +1160,47 @@ export default function PMMRA(props) {
     })
       .then((res) => {
         const pmmraData = res?.data?.data;
-        setSeverity(pmmraData?.severity);
-        setRepairable(pmmraData?.repairable);
-        setLevelofRaplace(pmmraData?.levelOfReplace);
-        setLevelofRepair(pmmraData?.levelOfRepair);
-        setRiskIndex(pmmraData?.riskIndex);
-        setSpare(pmmraData?.spare);
-        setTaskIntervalUnit(pmmraData?.taskIntrvlUnit);
-        setCombinationofTsk(pmmraData?.combinationOfTsk);
-        setLosofFuntEvident(pmmraData?.LossOfEvident);
-        setLubrication(pmmraData?.LubricationservceTsk);
-        setConditionMonitrTsk(pmmraData?.conditionMonitrTsk);
-        setCriticallyAccept(pmmraData?.criticalityAccept);
-        setFailureFindTsk(pmmraData?.failureFindTsk);
-        setResdesign(pmmraData?.reDesign);
-        setRestoreDiscardTsk(pmmraData?.restoreDiscrdTsk);
-        setSignificantItem(pmmraData?.significantItem);
-        setTaskIntervalUnit(pmmraData?.taskIntrvlUnit);
-        const pmmraId = res?.data?.data?.id;
-        setpmmraId(pmmraId);
-
-        setpmmraData(pmmraData);
-        setFailureMode(pmmraData?.failureMode);
-        getFMECADataAfterChange(pmmraData?.failureMode);
+        if (pmmraData != null) {
+          console.log(pmmraData, "pmmraData after changing mode");
+          setSeverity(pmmraData?.severity);
+          setRepairable(pmmraData?.repairable);
+          setLevelofRaplace(pmmraData?.levelOfReplace);
+          setLevelofRepair(pmmraData?.levelOfRepair);
+          setRiskIndex(pmmraData?.riskIndex);
+          setSpare(pmmraData?.spare);
+          setTaskIntervalUnit(pmmraData?.taskIntrvlUnit);
+          setCombinationofTsk(pmmraData?.combinationOfTsk);
+          setLosofFuntEvident(pmmraData?.LossOfEvident);
+          setLubrication(pmmraData?.LubricationservceTsk);
+          setConditionMonitrTsk(pmmraData?.conditionMonitrTsk);
+          setCriticallyAccept(pmmraData?.criticalityAccept);
+          setFailureFindTsk(pmmraData?.failureFindTsk);
+          setResdesign(pmmraData?.reDesign);
+          setRestoreDiscardTsk(pmmraData?.restoreDiscrdTsk);
+          setSignificantItem(pmmraData?.significantItem);
+          setTaskIntervalUnit(pmmraData?.taskIntrvlUnit);
+          const pmmraId = res?.data?.data?.id;
+          setpmmraId(pmmraId);
+          setExistingId(pmmraId);
+          setpmmraData(pmmraData);
+          getFMECADataAfterChange(pmmraData?.failureMode);
+        } else {
+          toast.warning('No Data available for this failure mode');
+          setpmmraData(null);
+          setpmmraId(null);
+          setExistingId(null);
+        }
       })
       .catch((error) => {
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
+        } else {
+          // Handle other errors gracefully
+          console.error("Error fetching PMMRA details:", error);
+          setpmmraData(null);
+          setpmmraId(null);
+          setExistingId(null);
         }
       });
   };
@@ -1227,268 +1243,99 @@ export default function PMMRA(props) {
 
   // Submit function
   const submit = (values) => {
+    console.log("Submit values:", values);
     const companyId = localStorage.getItem("companyId");
 
     Api.post("/api/v1/pmMra/", {
+      failureMode: fmecaFillterData?.failureMode || values.failureMode,
+      fmecaModeId: fmecaFillterData?.id, // Send FMECA ID separately
       name: name,
       partNumber: partNumber,
-      category:
-        category && values?.category?.value
-          ? values?.category?.value
-          : values?.category,
+      category: category && values?.category?.value ? values?.category?.value : values?.category,
       quantity: quantity,
-      partType:
-        partType && values?.partType?.value
-          ? values?.partType?.value
-          : values?.partType,
-      failureMode: fmecaFillterData?.failureMode,
+      partType: partType && values?.partType?.value ? values?.partType?.value : values?.partType,
       repairable: repairable,
       levelOfRepair: levelofRepair,
       levelOfReplace: levelofreplace,
       spare: spare,
-      endEffect:
-        values?.endeffect && values?.endeffect?.value
-          ? values?.endeffect?.value
-          : values?.endeffect,
-      safetyImpact:
-        values?.safetyimpact && values?.safetyimpact?.value
-          ? values?.safetyimpact?.value
-          : values?.safetyimpact,
-      reliabilityImpact:
-        values?.reliability && values?.reliability?.value
-          ? values?.reliability?.value
-          : values?.reliability,
-      frequency:
-        values?.frequency && values?.frequency?.value
-          ? values?.frequency?.value
-          : values?.frequency,
-      severity: Severity ? Severity : value?.severity?.value || values.severity,
-      riskIndex: riskIndex
-        ? riskIndex
-        : value?.riskIndex?.value || values.riskindex,
-      LossOfEvident: lossofFuntEvident
-        ? lossofFuntEvident
-        : value?.lossofFuntEvident?.value || values.Evident1,
-      significantItem: significantItem
-        ? significantItem
-        : value?.significantItem?.value || values.Items,
-      criticalityAccept: criticallyAccept
-        ? criticallyAccept
-        : value?.criticallyAccept?.value || values.acceptable,
-      LubricationservceTsk: lubrication
-        ? lubrication
-        : value?.lubrication?.value || values.lubrication,
-      conditionMonitrTsk: conditionMonitrTsk
-        ? conditionMonitrTsk
-        : value?.conditionMonitrTsk?.value || values.condition,
-      restoreDiscrdTsk: restoreDiscardTsk
-        ? restoreDiscardTsk
-        : value?.restoreDiscardTsk?.value || values.task,
-      failureFindTsk: failureFindTask
-        ? failureFindTask
-        : value?.failureFindTask?.value || values.failure,
-      combinationOfTsk: combinationofTsk
-        ? combinationofTsk
-        : value?.combinationofTsk?.value || values.combination,
-      reDesign: reDesign ? reDesign : value?.reDesign?.value || values.redesign,
-      rcmnotes:
-        values?.rcmnotes && values?.rcmnotes?.value
-          ? values?.rcmnotes?.value
-          : values?.rcmnotes,
-      pmTaskId:
-        values?.pmtaskid && values?.pmtaskid?.value
-          ? values?.pmtaskid?.value
-          : values?.pmtaskid,
-      pmTaskType:
-        values?.PMtasktype && values?.PMtasktype?.value
-          ? values?.PMtasktype?.value
-          : values?.PMtasktype,
-      taskIntrvlFreq:
-        values?.taskintervalFrequency && values?.taskintervalFrequency?.value
-          ? values?.taskintervalFrequency?.value
-          : values?.taskintervalFrequency,
-      taskIntrvlUnit: taskIntervalUnit
-        ? taskIntervalUnit
-        : value?.taskIntervalUnit?.value || values.taskIntervalunit,
-      LatitudeFreqTolrnc:
-        values?.latitudeFrequency && values?.latitudeFrequency?.value
-          ? values?.latitudeFrequency?.value
-          : values?.latitudeFrequency,
-      tskInteralDetermination:
-        values?.taskInterval && values?.taskInterval?.value
-          ? values?.taskInterval?.value
-          : values?.taskInterval,
-      scheduleMaintenceTsk:
-        values?.scheduledMaintenanceTask &&
-          values?.scheduledMaintenanceTask?.value
-          ? values?.scheduledMaintenanceTask?.value
-          : values?.scheduledMaintenanceTask,
-      taskDesc:
-        values?.taskDescription && values?.taskDescription?.value
-          ? values?.taskDescription?.value
-          : values?.taskDescription,
-      tskTimeML1:
-        values?.tasktimeML1 && values?.tasktimeML1?.value
-          ? values?.tasktimeML1?.value
-          : values?.tasktimeML1,
-      tskTimeML2:
-        values?.tasktimeML2 && values?.tasktimeML2?.value
-          ? values?.tasktimeML2?.value
-          : values?.tasktimeML2,
-      tskTimeML3:
-        values?.tasktimeML3 && values?.tasktimeML3?.value
-          ? values?.tasktimeML3?.value
-          : values?.tasktimeML3,
-      tskTimeML4:
-        values?.tasktimeML4 && values?.tasktimeML4?.value
-          ? values?.tasktimeML4?.value
-          : values?.tasktimeML4,
-      tskTimeML5:
-        values?.tasktimeML5 && values?.tasktimeML5?.value
-          ? values?.tasktimeML5?.value
-          : values?.tasktimeML5,
-      tskTimeML6:
-        values?.tasktimeML6 && values?.tasktimeML6?.value
-          ? values?.tasktimeML6?.value
-          : values?.tasktimeML6,
-      tskTimeML7:
-        values?.tasktimeML7 && values?.tasktimeML7.value
-          ? values?.tasktimeML7?.value
-          : values?.tasktimeML7,
-      skill1:
-        values?.skill1 && values?.skill1?.value
-          ? values?.skill1?.value
-          : values?.skill1,
-      skillOneNos:
-        values?.skill1nos && values?.skill1nos?.value
-          ? values?.skill1nos?.value
-          : values?.skill1nos,
-      skillOneContribution:
-        values?.skill1contribution && values?.skill1contribution?.value
-          ? values?.skill1contribution?.value
-          : values?.skill1contribution,
-      skill2:
-        values?.skill2 && values?.skill2?.value
-          ? values?.skill2?.value
-          : values?.skill2,
-      skillTwoNos:
-        values?.skill2nos && values?.skill2nos?.value
-          ? values?.skill2nos?.value
-          : values?.skill2nos,
-      skillTwoContribution:
-        values?.skill2contribution && values?.skill2contribution?.value
-          ? values?.skill2contribution?.value
-          : values?.skill2contribution,
-      skill3:
-        values?.skill3 && values?.skill3?.value
-          ? values?.skill3?.value
-          : values?.skill3,
-      skillThreeNos:
-        values?.skill3nos && values?.skill3nos?.value
-          ? values?.skill3nos?.value
-          : values?.skill3nos,
-      skillThreeContribution:
-        values?.skill3contribution && values?.skill3contribution?.value
-          ? values?.skill3contribution?.value
-          : values?.skill3contribution,
-      addiReplaceSpare1:
-        values?.addReplacespare1 && values?.addReplacespare1?.value
-          ? values?.addReplacespare1?.value
-          : values?.addReplacespare1,
-      addiReplaceSpare1Qty:
-        values?.addReplacespare1qty && values?.addReplacespare1qty?.value
-          ? values?.addReplacespare1qty?.value
-          : values?.addReplacespare1qty,
-      addiReplaceSpare2:
-        values?.addReplacespare2 && values?.addReplacespare2?.value
-          ? values?.addReplacespare2?.value
-          : values?.addReplacespare2,
-      addiReplaceSpare2Qty:
-        values?.addReplacespare2qty && values?.addReplacespare2qty?.value
-          ? values?.addReplacespare2qty?.value
-          : values?.addReplacespare2qty,
-      addiReplaceSpare3:
-        values?.addReplacespare3 && values?.addReplacespare3?.value
-          ? values?.addReplacespare3?.value
-          : values?.addReplacespare3,
-      addiReplaceSpare3Qty:
-        values?.addReplacespare3qty && values?.addReplacespare3qty?.value
-          ? values?.addReplacespare3qty?.value
-          : values?.addReplacespare3qty,
-      consumable1:
-        values?.Consumable1 && values?.Consumable1?.value
-          ? values?.Consumable1?.value
-          : values?.Consumable1,
-      consumable1Qty:
-        values?.consumable1Qty && values?.consumable1Qty?.value
-          ? values?.consumable1Qty?.value
-          : values?.consumable1Qty,
-      consumable2:
-        values?.Consumable2 && values?.consumable2?.value
-          ? values?.consumable2?.value
-          : values?.Consumable2,
-      consumable2Qty:
-        values?.Consumable2qty && values?.Consumable2qty?.value
-          ? values?.Consumable2qty?.value
-          : values?.Consumable2qty,
-      consumable3:
-        values?.Consumable3 && values?.Consumable3?.value
-          ? values?.Consumable3?.value
-          : values?.Consumable3,
-      consumable3Qty:
-        values?.Consumable3qty && values?.Consumable3qty?.value
-          ? values?.Consumable3qty?.value
-          : values?.Consumable3qty,
-      consumable4:
-        values?.Consumable4 && values?.Consumable4?.value
-          ? values?.Consumable4?.value
-          : values?.Consumable4,
-      consumable4Qty:
-        values?.Consumable4qty && values?.Consumable4qty?.value
-          ? values?.Consumable4qty?.value
-          : values?.Consumable4qty,
-      consumable5:
-        values?.Consumable5 && values?.Consumable5?.value
-          ? values?.Consumable5?.value
-          : values?.Consumable5,
-      consumable5Qty:
-        values?.Consumable5qty && values?.Consumable5qty?.value
-          ? values?.Consumable5qty?.value
-          : values?.Consumable5qty,
-      userField1:
-        values?.userfield1 && values?.userfield1?.value
-          ? values?.userfield1?.value
-          : values?.userfield1,
-      userField2:
-        values?.userfield2 && values?.userfield2?.value
-          ? values?.userfield2?.value
-          : values?.userfield2,
-      userField3:
-        values?.userfield3 && values?.userfield3?.value
-          ? values?.userfield3?.value
-          : values?.userfield3,
-      userField4:
-        values?.userfield4 && values?.userfield4?.value
-          ? values?.userfield4?.value
-          : values?.userfield4,
-      userField5:
-        values?.userfield5 && values?.userfield5?.value
-          ? values?.userfield5?.value
-          : values?.userfield5,
+      endEffect: values?.endeffect && values?.endeffect?.value ? values?.endeffect?.value : values?.endeffect,
+      safetyImpact: values?.safetyimpact && values?.safetyimpact?.value ? values?.safetyimpact?.value : values?.safetyimpact,
+      reliabilityImpact: values?.reliability && values?.reliability?.value ? values?.reliability?.value : values?.reliability,
+      frequency: values?.frequency && values?.frequency?.value ? values?.frequency?.value : values?.frequency,
+      severity: Severity || values.severity,
+      riskIndex: riskIndex || values.riskindex,
+      LossOfEvident: lossofFuntEvident || values.Evident1,
+      significantItem: significantItem || values.Items,
+      criticalityAccept: criticallyAccept || values.acceptable,
+      LubricationservceTsk: lubrication || values.lubrication,
+      conditionMonitrTsk: conditionMonitrTsk || values.condition,
+      restoreDiscrdTsk: restoreDiscardTsk || values.task,
+      failureFindTsk: failureFindTask || values.failure,
+      combinationOfTsk: combinationofTsk || values.combination,
+      reDesign: reDesign || values.redesign,
+      rcmNotes: values.rcmnotes, // This should match backend's rcmNotes
+      pmTaskId: values.pmtaskid,
+      pmTaskType: values.PMtasktype,
+      taskIntrvlFreq: values.taskintervalFrequency,
+      taskIntrvlUnit: taskIntervalUnit || values.taskIntervalunit,
+      LatitudeFreqTolrnc: values.latitudeFrequency,
+      scheduleMaintenceTsk: values.scheduledMaintenanceTask,
+      tskInteralDetermination: values.taskInterval,
+      taskDesc: values.taskDescription,
+      tskTimeML1: values.tasktimeML1,
+      tskTimeML2: values.tasktimeML2,
+      tskTimeML3: values.tasktimeML3,
+      tskTimeML4: values.tasktimeML4,
+      tskTimeML5: values.tasktimeML5,
+      tskTimeML6: values.tasktimeML6,
+      tskTimeML7: values.tasktimeML7,
+      skill1: values.skill1,
+      skillOneNos: values.skill1nos,
+      skillOneContribution: values.skill1contribution,
+      skill2: values.skill2,
+      skillTwoNos: values.skill2nos,
+      skillTwoContribution: values.skill2contribution,
+      skill3: values.skill3,
+      skillThreeNos: values.skill3nos,
+      skillThreeContribution: values.skill3contribution,
+      addiReplaceSpare1: values.addReplacespare1,
+      addiReplaceSpare1Qty: values.addReplacespare1qty,
+      addiReplaceSpare2: values.addReplacespare2,
+      addiReplaceSpare2Qty: values.addReplacespare2qty,
+      addiReplaceSpare3: values.addReplacespare3,
+      addiReplaceSpare3Qty: values.addReplacespare3qty,
+      consumable1: values.Consumable1,
+      consumable1Qty: values.consumable1Qty,
+      consumable2: values.Consumable2,
+      consumable2Qty: values.Consumable2qty,
+      consumable3: values.Consumable3,
+      consumable3Qty: values.Consumable3qty,
+      consumable4: values.Consumable4,
+      consumable4Qty: values.Consumable4qty,
+      consumable5: values.Consumable5,
+      consumable5Qty: values.Consumable5qty,
+      userField1: values.userfield1,
+      userField2: values.userfield2,
+      userField3: values.userfield3,
+      userField4: values.userfield4,
+      userField5: values.userfield5,
       projectId: projectId,
       companyId: companyId,
       productId: productId,
       userId: userId,
     })
       .then((res) => {
+        console.log("Create response:", res);
         const pmmraData = res?.data?.data?.createData;
-        const pmmraId = res?.data?.data?.createData?.id;
-        setpmmraId(pmmraId);
-        setFailureMode(pmmraData?.failureMode);
-        setpmmraData(pmmraData);
 
-        const status = res.status;
-        if (status === 201) {
+        if (pmmraData) {
+          setpmmraId(pmmraData?.id);
+          setFailureMode(pmmraData?.failureMode);
+          setpmmraData(pmmraData);
+          getpmmraDetails();
+        }
+
+        if (res.status === 201) {
           setShowValue(res.data.message);
           NextPage();
         } else {
@@ -1497,15 +1344,19 @@ export default function PMMRA(props) {
         }
       })
       .catch((error) => {
+        console.error("Create error:", error);
         const errorStatus = error?.response?.status;
         if (errorStatus === 401) {
           logout();
+        } else if (errorStatus === 208) {
+          toast.warning("PM MRA already exists for this failure mode");
         }
       });
   };
 
   // Update PMMRA details
   const UpdatepmmraDetails = (values) => {
+    console.log(values)
     const companyId = localStorage.getItem("companyId");
     Api.patch("/api/v1/pmMra/update", {
       name: name,
@@ -1524,15 +1375,15 @@ export default function PMMRA(props) {
       frequency: values.frequency,
       severity: Severity || values.severity,
       riskIndex: riskIndex || values.riskindex,
-      LossOfEvident: lossofFuntEvident || values.Evident1,
-      significantItem: significantItem || values.Items,
-      criticalityAccept: criticallyAccept || values.acceptable,
-      LubricationservceTsk: lubrication || values.lubrication,
-      conditionMonitrTsk: conditionMonitrTsk || values.condition,
-      restoreDiscrdTsk: restoreDiscardTsk || values.task,
-      failureFindTsk: failureFindTask || values.failure,
-      combinationOfTsk: combinationofTsk || values.combination,
-      reDesign: reDesign || values.redesign,
+      LossOfEvident: values.Evident1,
+      significantItem: values.Items,
+      criticalityAccept: values.acceptable,
+      LubricationservceTsk: values.lubrication,
+      conditionMonitrTsk: values.condition,
+      restoreDiscrdTsk: values.task,
+      failureFindTsk: values.failure,
+      combinationOfTsk: values.combination,
+      reDesign: values.redesign,
       rcmnotes: values.rcmnotes,
       pmTaskId: values.pmtaskid,
       pmTaskType: values.PMtasktype,
@@ -1582,8 +1433,8 @@ export default function PMMRA(props) {
       projectId: projectId,
       companyId: companyId,
       productId: productId,
-      pmMraId: pmmraId,
       userId: userId,
+      pmMraId : pmmraId,
     })
       .then((res) => {
         const pmmraData = res?.data?.editDetail;
@@ -1603,7 +1454,10 @@ export default function PMMRA(props) {
         if (errorStatus === 401) {
           logout();
         }
-      });
+      })
+      .finally(() => {
+        getpmmraDetails();
+      })
   };
 
   // Next page function
@@ -1616,7 +1470,10 @@ export default function PMMRA(props) {
 
   // Get FMECA filter data
   const getFmecaFilterData = (value) => {
+    // console.log("getFmecaFilterData" , value)
     const filteredData = fmecaData.filter((item) => item.failureMode === value);
+
+    console.log(filteredData, "filteredData")
 
     setFmecaFillterData(filteredData[0]);
   };
@@ -1628,8 +1485,8 @@ export default function PMMRA(props) {
   }));
 
 
-  console.log(pmmraData, "pmmraData")
-  console.log(importExcelData, "importExcelData")
+  // console.log(pmmraData, "pmmraData")
+  // console.log(importExcelData, "importExcelData")
 
 
   // Initial values for form
@@ -1754,7 +1611,7 @@ export default function PMMRA(props) {
     combination:
       importExcelData?.combinationofTsk || pmmraData?.combinationOfTsk || "",
     taskIntervalunit:
-      importExcelData?.taskIntrvlUnit || pmmraData?.taskIntervalunit || "",
+      importExcelData?.taskIntrvlUnit || pmmraData?.taskIntrvlUnit || "",
   };
 
   return (
@@ -1848,11 +1705,16 @@ export default function PMMRA(props) {
               enableReinitialize={true}
               initialValues={InitialValues}
               validationSchema={Validation}
-              onSubmit={(values, { resetForm }) =>
-                pmmraId && failureMode
-                  ? UpdatepmmraDetails(values)
-                  : submit(values, { resetForm })
-              }
+              onSubmit={(values, { resetForm }) => {
+                // Check if we have an existing PMMRA record to update
+                if (pmmraId && existingId && failureMode) {
+                  console.log("Updating existing PMMRA", pmmraId, failureMode);
+                  UpdatepmmraDetails(values);
+                } else {
+                  console.log("Creating new PMMRA", values);
+                  submit(values, { resetForm });
+                }
+              }}
             >
               {(formik) => {
                 const {
@@ -2066,7 +1928,7 @@ export default function PMMRA(props) {
                                 <Label notify={true}>
                                   Condition Monitoring Task
                                 </Label>
-                                {console.log(values, "values")}
+                                {/* {console.log(values, "values")} */}
                                 {createSmartSelectField(
                                   "condition",
                                   "Condition Monitoring Task",
