@@ -331,16 +331,18 @@ const HeaderNavBar = ({
                             id="basic-nav-dropdown"
                           >
 <NavDropdown.Item 
-onClick={() => {
-  // Call the context function directly
-  if (window.openProbabilityModal) {
-    window.openProbabilityModal();
-  }
-}}
+  onClick={() => {
+    // Check if we're in FTA view and have chart data
+    if (window.openProbabilityModal) {
+      window.openProbabilityModal();
+    } else {
+      toast.warning("Please open a fault tree first");
+    }
+  }}
 >
   Probability Calculations(MCS)
 </NavDropdown.Item>
-                            <NavDropdown.Item >Show Repeated Events</NavDropdown.Item>
+<NavDropdown.Item >Show Repeated Events</NavDropdown.Item>
                           </NavDropdown>
                         </Nav>
                       </Navbar.Collapse>

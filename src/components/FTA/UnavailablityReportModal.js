@@ -11,13 +11,17 @@ const UnavailabilityReportModal = ({
   missionTime 
 }) => {
   
-  const columns = [
-    { title: 'Component/Event', field: 'name', width: '25%' },
-    { title: 'Description', field: 'description', width: '30%' },
-    { title: 'Failure Rate (λ)', field: 'failureRate', width: '15%' },
-    { title: 'Mission Time (t)', field: 'missionTime', width: '15%' },
-    { title: 'Unavailability Q(t)', field: 'unavailability', width: '15%' }
-  ];
+// In UnavailabilityReportModal.js
+const columns = [
+  { title: 'Component/Event', field: 'name', width: '20%' },
+  { title: 'Description', field: 'description', width: '25%' },
+  { title: 'Calc Type', field: 'calcType', width: '20%' },
+  { title: 'Failure Rate (λ)', field: 'failureRate', width: '10%' },
+  { title: 'q', field: 'q', width: '5%' },
+  { title: 'T', field: 'T', width: '5%' },
+  { title: 'Mission Time', field: 'missionTime', width: '5%' },
+  { title: 'Unavailability Q(t)', field: 'unavailability', width: '10%' }
+];
 
   const downloadCSV = () => {
     const headers = ['Component/Event', 'Description', 'Failure Rate (λ)', 'Mission Time (t)', 'Unavailability Q(t)'];
