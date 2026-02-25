@@ -41,7 +41,7 @@ function PreventiveManitenance(props) {
   const [pmmraTreeData, setPmmraTreeData] = useState([]);
   const [columnLength, setColumnLength] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState({
-     Id: true,
+    Id: true,
     "PM Task ID": true,
     "PM Task Type": true,
     "Task Intervel Frequency": true,
@@ -121,7 +121,7 @@ function PreventiveManitenance(props) {
 
   const headers = [
     "S.No",
-     "Id",
+    "Id",
     "Product Name",
     "Part Number",
     "Quantity",
@@ -650,43 +650,62 @@ function PreventiveManitenance(props) {
                           ))}
                         </tr>
                       </thead>
+                      {console.log(preventiveData, 'preventiveData')}
                       <tbody>
-                        {preventiveData?.map((row, rowIndex) => (
-                          <tr key={rowIndex}>
-                            {headers.map((header) => {
-                              const key = headerKeyMapping[header];
-                              let value =
-                                row.productId[key] ?? row.pmmraData[key] ?? "-";
+                        {(() => {
+                          let serialCounter = 1;
 
-                              // Check if the header is "FR" and format the value to 6 decimal places
-                              if (header === "S.No") {
+                          return preventiveData?.flatMap((row, rowIndex) => {
+                            // Get the length of pmmraData array, default to 1 if empty
+                            const pmmraLength = row.pmmraData?.length || 1;
+
+                            // Create a row for each PMMRA record
+                            return Array.from({ length: pmmraLength }, (_, pmmraIndex) => {
+                              const currentSerial = serialCounter++;
+
                               return (
-                                <td
-                                  key={header}
-                                  style={{ textAlign: "center" }}
-                                >
-                                  {rowIndex + 1}
-                                </td>
-                              )
-                            }
-                              
-                              if (
-                                header === "FR" &&
-                                typeof value === "number"
-                              ) {
-                                value = value.toFixed(6);
-                              }
-                              return (
-                                <td
-                                  key={header}
-                                  style={{ textAlign: "center" }}
-                                >
-                                  {value}
-                                </td>
+                                <tr key={`${rowIndex}-${pmmraIndex}`}>
+                                  {headers.map((header) => {
+                                    const key = headerKeyMapping[header];
+                                    let value;
+
+                                    // Handle S.No header with sequential numbering
+                                    if (header === "S.No") {
+                                      return (
+                                        <td key={header} style={{ textAlign: "center" }}>
+                                          {currentSerial}
+                                        </td>
+                                      );
+                                    }
+
+                                    // Get value based on priority:
+                                    // 1. Current PMMRA record data (if exists)
+                                    // 2. Product data
+                                    // 3. Default to "-"
+                                    if (row.pmmraData?.[pmmraIndex]?.[key] !== undefined) {
+                                      value = row.pmmraData[pmmraIndex][key];
+                                    } else if (row.productId?.[key] !== undefined) {
+                                      value = row.productId[key];
+                                    } else {
+                                      value = "-";
+                                    }
+
+                                    // Format FR values to 6 decimal places
+                                    if (header === "FR" && typeof value === "number") {
+                                      value = value.toFixed(6);
+                                    }
+
+                                    return (
+                                      <td key={header} style={{ textAlign: "center" }}>
+                                        {value}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
                               );
-                            })}
-                          </tr>
-                        ))}
+                            });
+                          });
+                        })()}
                       </tbody>
                     </table>
                   </div>
