@@ -195,11 +195,46 @@ const Validation = Yup.object().shape({
 });
 
 // Custom hook for connection management
-const useConnectionManagement = (projectId) => {
+const useConnectionManagement = (projectId, productId) => {
   const [allSepareteData, setAllSepareteData] = useState([]);
   const [flattenedConnect, setFlattenedConnect] = useState([]);
   const [selectedSourceValues, setSelectedSourceValues] = useState({});
   const [rowConnections, setRowConnections] = useState({});
+
+  // State for source module data - used to check if source records exist
+  const [sourceModuleData, setSourceModuleData] = useState({});
+
+  // Module name to API endpoint mapping
+  const moduleApiMap = {
+    FMECA: "/api/v1/fmeca/product/list",
+    SAFETY: "/api/v1/safety/product/list",
+    MTTR: "/api/v1/mttrPrediction/details",
+  };
+
+  const getSourceModuleData = (moduleNames) => {
+    // Fetch data for each unique source module
+    const uniqueModules = [...new Set(moduleNames)];
+
+    uniqueModules.forEach((moduleName) => {
+      // Normalize module name for lookup (e.g., FMECA, SAFETY, MTTR)
+      const normalizedName = String(moduleName).toUpperCase();
+      const apiEndpoint = moduleApiMap[normalizedName];
+      if (!apiEndpoint) return;
+
+      Api.get(apiEndpoint, {
+        params: {
+          projectId: projectId,
+          productId: productId,
+          userId: localStorage.getItem("userId"),
+        },
+      }).then((res) => {
+        const data = res?.data?.data || [];
+        setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));
+      }).catch((error) => {
+        console.log(`Error fetching ${normalizedName} data for connected library check:`, error);
+      });
+    });
+  };
 
   // Get all separate library data
   const getAllSeprateLibraryData = async () => {
@@ -232,13 +267,12 @@ const useConnectionManagement = (projectId) => {
       const flattened = filteredData.flatMap((item) =>
         (item.destinationData || [])
           .filter(
-            (d) =>
-              d.destinationModuleName === "PMMRA" &&
-              d.destinationModuleName === item.libraryId.moduleName
+            (d) => d.destinationModuleName === "PMMRA"
           )
           .map((d) => ({
             fieldName: item.sourceName,
             fieldValue: item.sourceValue,
+            sourceModuleName: item?.libraryId?.moduleName || "",
             destName: d.destinationName,
             destValue: d.destinationValue,
             destModule: d.destinationModuleName,
@@ -246,6 +280,12 @@ const useConnectionManagement = (projectId) => {
       );
 
       setFlattenedConnect(flattened);
+
+      // Fetch source module data for all unique source modules in the connections
+      const sourceModules = [...new Set(flattened.map(f => f.sourceModuleName).filter(Boolean))];
+      if (sourceModules.length > 0) {
+        getSourceModuleData(sourceModules);
+      }
     });
   };
 
@@ -283,6 +323,23 @@ const useConnectionManagement = (projectId) => {
         connectedValues = [...connectedValues, ...connections];
       }
     });
+
+    // Fallback: If no same-module connections found, check cross-module connections
+    if (connectedValues.length === 0) {
+      const allPossibleConnections = flattenedConnect?.filter(item => {
+        if (item.destName !== fieldName) return false;
+
+        // Check if a record with the source value exists in the source module
+        // Normalize comparison for safety
+        const normSourceModule = String(item.sourceModuleName).toUpperCase();
+        const moduleData = sourceModuleData[normSourceModule] || [];
+        return moduleData.some(
+          row => String(row[item.fieldName]) === String(item.fieldValue)
+        );
+      }) || [];
+
+      connectedValues = [...connectedValues, ...allPossibleConnections];
+    }
 
     return connectedValues;
   };
@@ -337,6 +394,14 @@ export default function PMMRA(props) {
     ? props?.location?.state?.projectId
     : props?.match?.params?.id;
 
+    const [initialProductId, setInitialProductId] = useState();
+
+      const productId = props?.location?.props?.data?.id
+    ? props?.location?.props?.data?.id
+    : props?.location?.state?.productId
+      ? props?.location?.state?.productId
+      : initialProductId;
+
   // Use the custom connection management hook
   const {
     allSepareteData,
@@ -348,7 +413,7 @@ export default function PMMRA(props) {
     getConnectedValuesForField,
     handleSourceSelection,
     initializeConnections
-  } = useConnectionManagement(projectId);
+  } = useConnectionManagement(projectId, productId);
 
   // Existing state variables
   const [partType, setPartType] = useState();
@@ -380,12 +445,8 @@ export default function PMMRA(props) {
   const [partNumber, setPartNumber] = useState();
   const [quantity, setQuantity] = useState();
   const [isSpinning, setIsSpinning] = useState(true);
-  const [initialProductId, setInitialProductId] = useState();
-  const productId = props?.location?.props?.data?.id
-    ? props?.location?.props?.data?.id
-    : props?.location?.state?.productId
-      ? props?.location?.state?.productId
-      : initialProductId;
+  
+
   const [projectname, setProjectName] = useState();
   const [reference, setReference] = useState();
   const [pmmraData, setpmmraData] = useState([]);
@@ -413,8 +474,10 @@ export default function PMMRA(props) {
   // Initialize connections on component mount
   const [failureMode, setFailureMode] = useState();
   useEffect(() => {
-    initializeConnections();
-  }, []);
+    if (productId) {
+      initializeConnections();
+    }
+  }, [productId]);
 
   // Function to create a smart select field with connections
   const createSmartSelectField = (fieldName, label, values, setFieldValue, formId = "main") => {
@@ -1151,14 +1214,14 @@ export default function PMMRA(props) {
   // Get PMMRA details
   const getpmmraDetails = () => {
     const companyId = localStorage.getItem("companyId");
-    console.log(fmecaModeId,"fmecaModeId of fmeca")
+    console.log(fmecaModeId, "fmecaModeId of fmeca")
     Api.get("/api/v1/pmMra/details", {
       params: {
         projectId: projectId,
         productId: productId,
         companyId: companyId,
         userId: userId,
-        fmecaModeId : fmecaModeId,
+        fmecaModeId: fmecaModeId,
       },
     })
       .then((res) => {
@@ -1438,7 +1501,7 @@ export default function PMMRA(props) {
       companyId: companyId,
       productId: productId,
       userId: userId,
-      pmMraId : pmmraId,
+      pmMraId: pmmraId,
     })
       .then((res) => {
         const pmmraData = res?.data?.editDetail;
@@ -1474,7 +1537,7 @@ export default function PMMRA(props) {
 
   // Get FMECA filter data
   const getFmecaFilterData = (value) => {
-    console.log("getFmecaFilterData" , value)
+    console.log("getFmecaFilterData", value)
     const filteredData = fmecaData.filter((item) => item.failureMode === value);
 
     console.log(filteredData, "filteredData")
@@ -1714,7 +1777,7 @@ export default function PMMRA(props) {
               onSubmit={(values, { resetForm }) => {
                 // Check if we have an existing PMMRA record to update
                 // console.log("Updating existing PMMRA", pmmraId, existingId, failureMode);
-                if (pmmraId  && failureMode) {
+                if (pmmraId && failureMode) {
                   console.log("Updating existing PMMRA", pmmraId, failureMode);
                   UpdatepmmraDetails(values);
                 } else {
