@@ -181,6 +181,7 @@ function MaintainabilityReport(props) {
     "Environment",
     "Temperature",
     "FR",
+    "FMECA Failure ID",
     "MTTR",
     "MCT",
     "MLH",
@@ -820,6 +821,7 @@ function MaintainabilityReport(props) {
                         )}
                       </tr>
                     </thead>
+                    {console.log(safeData,'safeData')}
                     <tbody>
                       {safeData?.map((row, rowIndex) => (
                         <tr key={rowIndex}>

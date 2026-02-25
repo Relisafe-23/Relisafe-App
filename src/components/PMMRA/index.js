@@ -408,6 +408,7 @@ export default function PMMRA(props) {
   const [companyId, setCompanyId] = useState();
   const [fmecaId, setFmecaId] = useState();
   const [fmecaFillterData, setFmecaFillterData] = useState();
+  const [fmecaModeId, setFmecaModeId] = useState('');
 
   // Initialize connections on component mount
   const [failureMode, setFailureMode] = useState();
@@ -1150,12 +1151,14 @@ export default function PMMRA(props) {
   // Get PMMRA details
   const getpmmraDetails = () => {
     const companyId = localStorage.getItem("companyId");
+    console.log(fmecaModeId,"fmecaModeId of fmeca")
     Api.get("/api/v1/pmMra/details", {
       params: {
         projectId: projectId,
         productId: productId,
         companyId: companyId,
         userId: userId,
+        fmecaModeId : fmecaModeId,
       },
     })
       .then((res) => {
@@ -1180,14 +1183,14 @@ export default function PMMRA(props) {
           setSignificantItem(pmmraData?.significantItem);
           setTaskIntervalUnit(pmmraData?.taskIntrvlUnit);
           const pmmraId = res?.data?.data?.id;
-          setpmmraId(pmmraId);
-          setExistingId(pmmraId);
+          // setpmmraId(pmmraId);
+          // setExistingId(pmmraId);
           setpmmraData(pmmraData);
           getFMECADataAfterChange(pmmraData?.failureMode);
         } else {
           toast.warning('No Data available for this failure mode');
           setpmmraData(null);
-          setpmmraId(null);
+          // setpmmraId(null);
           setExistingId(null);
         }
       })
@@ -1199,7 +1202,7 @@ export default function PMMRA(props) {
           // Handle other errors gracefully
           console.error("Error fetching PMMRA details:", error);
           setpmmraData(null);
-          setpmmraId(null);
+          // setpmmraId(null);
           setExistingId(null);
         }
       });
@@ -1245,6 +1248,7 @@ export default function PMMRA(props) {
   const submit = (values) => {
     console.log("Submit values:", values);
     const companyId = localStorage.getItem("companyId");
+
 
     Api.post("/api/v1/pmMra/", {
       failureMode: fmecaFillterData?.failureMode || values.failureMode,
@@ -1329,7 +1333,7 @@ export default function PMMRA(props) {
         const pmmraData = res?.data?.data?.createData;
 
         if (pmmraData) {
-          setpmmraId(pmmraData?.id);
+          setpmmraId(pmmraData?.fmecaId);
           setFailureMode(pmmraData?.failureMode);
           setpmmraData(pmmraData);
           getpmmraDetails();
@@ -1470,12 +1474,14 @@ export default function PMMRA(props) {
 
   // Get FMECA filter data
   const getFmecaFilterData = (value) => {
-    // console.log("getFmecaFilterData" , value)
+    console.log("getFmecaFilterData" , value)
     const filteredData = fmecaData.filter((item) => item.failureMode === value);
 
     console.log(filteredData, "filteredData")
-
     setFmecaFillterData(filteredData[0]);
+    setFmecaModeId(filteredData[0]?.id)
+    setpmmraId(filteredData[0]?.id);
+
   };
 
   // FMECA options
@@ -1707,7 +1713,8 @@ export default function PMMRA(props) {
               validationSchema={Validation}
               onSubmit={(values, { resetForm }) => {
                 // Check if we have an existing PMMRA record to update
-                if (pmmraId && existingId && failureMode) {
+                // console.log("Updating existing PMMRA", pmmraId, existingId, failureMode);
+                if (pmmraId  && failureMode) {
                   console.log("Updating existing PMMRA", pmmraId, failureMode);
                   UpdatepmmraDetails(values);
                 } else {
