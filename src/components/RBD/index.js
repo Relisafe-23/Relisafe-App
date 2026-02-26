@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import SplitKofN from './SplitKofN';
 import Api from "../../Api";
-import RBDStructure from './RBDStructure';
+import EditRBDConfigurationModal from './EditRBDConfigurationModal';
 import { useParams } from 'react-router-dom';
 import CreatableSelect from "react-select/creatable";
-import 
-{ElementParametersModal} from './ElementParametersModal';
+import { FiSettings, FiEdit2, FiSliders } from 'react-icons/fi';
+import { BiCog } from 'react-icons/bi';
+import { MdOutlineSettingsApplications } from 'react-icons/md';
+
+import {ElementParametersModal} from './ElementParametersModal';
 
 import SwitchConfigurationModal from './SwitchConfig';
 
@@ -14,20 +17,22 @@ import RBDBlock from './RBDBlock';
 export const InsertionNode = ({ x, y, onOpenMenu }) => {
   return (
     <g>
-      <circle
-        cx={x}
-        cy={y}
-        r="6"
-        fill="black"
-        stroke="black"
-        strokeWidth="1"
-        style={{ cursor: "context-menu" }}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onOpenMenu(e.clientX, e.clientY);
-        }}
-      />
+<circle
+  cx={x}
+  cy={y}
+  r="6"
+  fill="black"
+  stroke="black"
+  strokeWidth="1"
+  style={{ cursor: "pointer" }}
+  onMouseEnter={(e) => {
+    onOpenMenu(e.clientX, e.clientY);
+  }}
+  // onMouseLeave={() => {
+  //   onCloseMenu();   
+  // }}
+/>
+
       <line
         x1={x - 3} y1={y}
         x2={x + 3} y2={y}
@@ -425,7 +430,6 @@ export default function RBDButton() {
     console.log("RBD action:", action);
 
     const type = action.replace("Add ", "");
-
     setElementModal({
       open: true,
       mode: 'add',
@@ -477,7 +481,33 @@ export default function RBDButton() {
       initialData
     });
   };
+  const SettingsButton1 = () => (
+    <button
+      onClick={() => setIsModalOpen(true)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '8px 16px',
+        backgroundColor: '#2b4f81',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: '500',
+        transition: 'background-color 0.3s'
+      }}
+      onMouseEnter={(e) => e.target.style.backgroundColor = '#1e3c66'}
+      onMouseLeave={(e) => e.target.style.backgroundColor = '#2b4f81'}
+    >
+      <FiSettings size={18} />
+      <span>RBD Configuration</span>
+    </button>
+  );
 
+
+     
   const handleSwitchSubmit = (switchData) => {
     if (elementModal.blockId) {
       setBlocks(blocks.map(block =>
@@ -495,7 +525,20 @@ export default function RBDButton() {
 
     setSwitchModal({ open: false, blockId: null, initialData: null });
   };
+const [isModalOpen, setIsModalOpen] = useState(false);
+const [rbdConfig, setRbdConfig] = useState({
+  rbdTitle: "My RBD",
+  missionTime: 24,
+  displayUpper: "Part number",
+  displayLower: "MTBF",
+  printRemarks: "Yes"
+});
 
+const handleSaveConfig = (newConfig) => {
+  setRbdConfig(newConfig);
+  // You can also save to backend here
+  console.log("Saved config:", newConfig);
+};
   const handleDeleteBlock = (id) => {
     setBlocks(blocks.filter(block => block.id !== id));
   };
@@ -557,9 +600,15 @@ export default function RBDButton() {
             marginTop: "50px",
           }}
         >
-          {/* RBD List */}
-          <RBDStructure />
-
+      Edit RBD Configuration
+        <SettingsButton1 />
+          
+      <EditRBDConfigurationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveConfig}
+        initialConfig={rbdConfig}
+      />
           {/* RBD Button */}
           <div style={{ margin: "40px 0" }}>
             <button
@@ -574,7 +623,9 @@ export default function RBDButton() {
               }}
             >
               RBD
+
             </button>
+         
           </div>
 
           {/* RBD Diagram */}
