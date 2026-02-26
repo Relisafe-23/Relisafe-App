@@ -208,6 +208,13 @@ const HeaderNavBar = ({
                       height: "100%",
                     }}
                   >
+                      {/* <Navbar variant="dark" style={{color:"black"}} expand="lg">
+    <Navbar.Collapse id="navbar-dark-example">
+      <Nav>
+        Back
+      </Nav>
+    </Navbar.Collapse>
+    </Navbar> */}
                     <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
                         <Nav>
@@ -319,6 +326,7 @@ const HeaderNavBar = ({
       </NavDropdown>
     </Nav>
   </Navbar.Collapse>
+
     <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
                         <Nav>
@@ -343,11 +351,13 @@ const HeaderNavBar = ({
   Probability Calculations(MCS)
 </NavDropdown.Item>
 <NavDropdown.Item >Show Repeated Events</NavDropdown.Item>
+
+
                           </NavDropdown>
                         </Nav>
                       </Navbar.Collapse>
                     </Navbar>
-</Navbar>
+                 </Navbar>
 
 
 

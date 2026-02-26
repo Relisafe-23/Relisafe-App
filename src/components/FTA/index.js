@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { removeChartDataHelper } from "../../utils";
 import RenderTree from "../../components/FTA/RenderTree";
 import "../../App.css";
+import { FaEdit, FaTrash, FaEye, FaFileAlt, FaArrowLeft } from "react-icons/fa";
 import Api from "../../Api";
 import { Button, Form } from "react-bootstrap";
 import { Modal } from "antd";
@@ -91,11 +92,13 @@ export default function FTA(props) {
   // LOCAL STATE for probability modal - NO CONTEXT NEEDED
   const [isProbabilityModalOpen, setIsProbabilityModalOpen] = useState(false);
   const [probabilityParams, setProbabilityParams] = useState(null);
-  
-  const [isUnavailabilityReportOpen, setIsUnavailabilityReportOpen] = useState(false);
+
+  const [isUnavailabilityReportOpen, setIsUnavailabilityReportOpen] =
+    useState(false);
   const [isSteadyStateReportOpen, setIsSteadyStateReportOpen] = useState(false);
   const [probabilityCalcData, setProbabilityCalcData] = useState([]);
-  const [currentMissionTime, setCurrentMissionTime] = useState('');
+  const [currentMissionTime, setCurrentMissionTime] = useState("");
+const [isCutSetReportOpen, setIsCutSetReportOpen] = useState(false);
 
   const history = useHistory();
   const [selectedNodeId, setSelectedNodeId] = useState(null);
@@ -111,6 +114,8 @@ export default function FTA(props) {
     reloadData,
     openDeleteNode,
     stopTriggerReload,
+    onBack, // Add this prop
+    showBackButton = false,
   } = useModal();
 
   const handelDelete = () => {
@@ -128,66 +133,86 @@ export default function FTA(props) {
     setProbabilityParams(null);
   };
 
-
-// In FTA component - replace the calculateUnavailability function
-// In your FTA component (the main one with the chart view)
-// In FTA component - Enhanced calculateUnavailability function
-const calculateUnavailability = (values) => {
-  console.log('Calculating unavailability with values:', values);
   
-  // Determine which calculation type was selected
+
+  // In FTA component - replace the calculateUnavailability function
+  // In your FTA component (the main one with the chart view)
+  // In FTA component - Enhanced calculateUnavailability function
+ // In FTA component - Enhanced calculateUnavailability function with proper separation
+// In FTA component - Enhanced calculateUnavailability function with proper separation
+const calculateUnavailability = (values) => {
+  console.log("Calculating unavailability with values:", values);
+
+  // Determine which calculation type was selected from the dropdown
   const calculationType = values.calcTypes?.value;
   const isUnavailabilityMode = calculationType === "Unavailability at time t Q(t)";
-  
+  const isSteadyStateMode = calculationType === "Steady-state mean unavailability Q";
   const extractProbabilityNodes = (node) => {
     const nodes = [];
-    
+
     if (node) {
       const hasFailureData = node.fr || node.calcTypes || node.isEvent;
-      
+
       if (hasFailureData) {
         // Parse parameters
-        const lambda = parseFloat(node.fr) || 0;                    // Failure Rate λ
-        const t = parseFloat(values.missionTime) || 0;              // Mission time t
-        const q = parseFloat(node.isP) || 0;                        // Probability q
-        const mttr = parseFloat(node.mttr) || 0;                    // MTTR (hours)
-        const mu = mttr > 0 ? 1 / mttr : 0;                         // Repair rate μ = 1/MTTR
-        const T = parseFloat(node.isT) || 0;                        // Inspection interval T_i
-        const tm = parseFloat(node.eventMissionTime) || t;          // Mission time for constant mission type
-        
+        const lambda = parseFloat(node.fr) || 0; // Failure Rate λ
+        const t = parseFloat(values.missionTime) || 0; // Mission time t (only used for Q(t) mode)
+        const q = parseFloat(node.isP) || 0; // Probability q
+        const mttr = parseFloat(node.mttr) || 0; // MTTR (hours)
+        const mu = mttr > 0 ? 1 / mttr : 0; // Repair rate μ = 1/MTTR
+        const T = parseFloat(node.isT) || 0; // Inspection interval T_i
+        const tm = parseFloat(node.eventMissionTime) || t; // Mission time for constant mission type
+
         let result = 0;
-        let formula = '';
-        let resultType = '';
-        
+        let formula = "";
+        let resultType = "";
+
         // Calculate based on event type and selected calculation mode
-        switch(node.calcTypes) {
+        switch (node.calcTypes) {
           // #1 Probability
-          case "Constant Probability":
-            result = q;
-            formula = `Q = q = ${q}`;
-            resultType = 'Probability';
-            break;
-            
-          // #2 Frequency
-          case "Frequency":
-            result = 0;
-            formula = `Q = 0 (Frequency event)`;
-            resultType = 'Frequency';
-            break;
-            
-          // #3 Constant mission time
-          case "Const.mission time, P=λ*tm":
+          case "Probability":
             if (isUnavailabilityMode) {
-              // Q(t) = 1 - (1-q)*exp(-λ*Tm)
-              result = 1 - (1 - q) * Math.exp(-lambda * tm);
-              formula = `Q(t) = 1-(1-${q})*exp(-${lambda.toExponential(2)}*${tm}) = ${result.toExponential(4)}`;
-            } else {
-              // Q̄ = same as Q(t) for constant mission time
-              result = 1 - (1 - q) * Math.exp(-lambda * tm);
-              formula = `Q̄ = 1-(1-${q})*exp(-${lambda.toExponential(2)}*${tm}) = ${result.toExponential(4)}`;
+              // Q(t) = q
+              result = q;
+              formula = `Q(t) = q = ${q}`;
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability = q
+              result = q;
+              formula = `Q̄ = q = ${q}`;
             }
             break;
-            
+
+          // #2 Frequency
+          case "Frequency":
+            if (isUnavailabilityMode) {
+              // Q(t) = 0
+              result = 0;
+              formula = `Q(t) = 0 (Frequency event)`;
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability = 0
+              result = 0;
+              formula = `Q̄ = 0 (Frequency event)`;
+            }
+            break;
+
+          // #3 Constant mission time
+          case "Constant mission time":
+            if (isUnavailabilityMode) {
+              // Q(t) = 1 - (1-q)^Tm
+              result = 1 - Math.pow(1 - q, tm);
+              formula = `Q(t) = 1-(1-${q})^${tm} = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability = 1 - (1-q)^Tm (or λ*Tm)
+              if (lambda > 0) {
+                result = lambda * tm;
+                formula = `Q̄ = λ*tm = ${lambda.toExponential(2)}*${tm} = ${result.toExponential(4)}`;
+              } else {
+                result = 1 - Math.pow(1 - q, tm);
+                formula = `Q̄ = 1-(1-${q})^${tm} = ${result.toExponential(4)}`;
+              }
+            }
+            break;
+
           // #4 Repairable
           case "Repairable": {
             const lambdaMu = lambda + mu;
@@ -200,124 +225,123 @@ const calculateUnavailability = (values) => {
                 result = q;
               }
               formula = `Q(t) = ${q}*exp(-${lambdaMu.toExponential(2)}*${t}) + (${lambda.toExponential(2)}/${lambdaMu.toExponential(2)})[1-exp(-${lambdaMu.toExponential(2)}*${t})] = ${result.toExponential(4)}`;
-            } else {
-              // Q̄ = λ/(λ+μ)
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability = λ/(λ+μ)
               result = lambda / (lambda + mu);
               formula = `Q̄ = λ/(λ+μ) = ${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}) = ${result.toExponential(4)}`;
             }
             break;
           }
-            
+
           // #5 Unrepairable
-          case "Unrepairable, P=1-(1-q)*exp(-λ*t)": {
+          case "Unrepairable": {
             if (isUnavailabilityMode) {
               // Q(t) = 1 - (1-q)*exp(-λt)
               result = 1 - (1 - q) * Math.exp(-lambda * t);
-              
-              // For very small λ, simplified formula P = λt is used
-              if (lambda < 1e-15) {
-                result = lambda * t;
-              }
               formula = `Q(t) = 1-(1-${q})*exp(-${lambda.toExponential(2)}*${t}) = ${result.toExponential(4)}`;
-            } else {
-              // Q̄ = 1 (Unrepairable elements eventually fail)
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability = 1 (Unrepairable elements eventually fail)
               result = 1;
               formula = `Q̄ = 1 (Unrepairable)`;
             }
             break;
           }
-            
+
           // #6 Periodical tests
           case "Periodical tests": {
             if (isUnavailabilityMode) {
-              // Table 2 formulas
-              const TT = 0; // Time to first test (default to 0)
-              const n = Math.floor((t - TT) / T);
-              
-              if (t < TT) {
-                result = 1 - (1 - q) * Math.exp(-lambda * t);
-              } else if (Math.abs(t - (TT + n * T)) < 0.001) {
-                result = 1 - (1 - q) * Math.exp(-lambda * T);
-              } else if (t < TT + n * T + mttr) {
-                const expTerm = (1 - q) * Math.exp(-lambda * T);
-                result = 1 - expTerm + Math.pow(expTerm, n) * (1 - expTerm);
+              // Q(t) for Periodical Tests
+              if (T === 0) {
+                result = 0;
+                formula = "Q(t) = 0 (No test interval)";
               } else {
-                result = 1 - (1 - q) * Math.exp(-lambda * T);
+                // Simplified calculation for Periodical Tests
+                // Q(t) ≈ λ*T/2 for small λ
+                result = (lambda * T) / 2;
+                formula = `Q(t) ≈ λ*T/2 = (${lambda.toExponential(2)}*${T})/2 = ${result.toExponential(4)}`;
               }
-              formula = `Q(t) = ${result.toExponential(4)} (Periodical Tests)`;
-            } else {
-              // Table 3: Mean Unavailability
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability for Periodical Tests
               if (lambda * T > 0) {
-                const expTerm = Math.exp(-lambda * T);
-                const term1 = q;
-                const term2 = (1 - q) * (1 - 1/(lambda * T)) * q * (1 - expTerm);
-                const term3 = (q + (1 - q) * q * (1 - expTerm)) * (mttr / T);
-                result = term1 + term2 + term3;
+                // Q̄ ≈ λ*T/2 + λ*MTTR
+                result = (lambda * T) / 2 + lambda * mttr;
+                formula = `Q̄ ≈ λ*T/2 + λ*MTTR = (${lambda.toExponential(2)}*${T})/2 + ${lambda.toExponential(2)}*${mttr} = ${result.toExponential(4)}`;
               } else {
-                result = q;
+                result = 0;
+                formula = `Q̄ = 0`;
               }
-              formula = `Q̄ = ${result.toExponential(4)} (Periodical Tests)`;
             }
             break;
           }
-            
+
           // #7 Latent
-          case "Latent, P=λ*T":
+          case "Latent":
             if (isUnavailabilityMode) {
-              result = 1 - (1 - q) * Math.exp(-lambda * T);
-              formula = `Q(t) = 1-(1-${q})*exp(-${lambda.toExponential(2)}*${T}) = ${result.toExponential(4)}`;
-            } else {
-              result = 1 - (1 - q) * Math.exp(-lambda * T);
-              formula = `Q̄ = 1-(1-${q})*exp(-${lambda.toExponential(2)}*${T}) = ${result.toExponential(4)}`;
+              result = lambda * T;
+              formula = `Q(t) = λ*T = ${lambda.toExponential(2)}*${T} = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              result = lambda * T;
+              formula = `Q̄ = λ*T = ${lambda.toExponential(2)}*${T} = ${result.toExponential(4)}`;
             }
             break;
-            
+
           // Latent variants
           case "Latent, P=λ*T/2":
-            result = (lambda * T) / 2;
             if (isUnavailabilityMode) {
+              result = (lambda * T) / 2;
               formula = `Q(t) = λ*T/2 = (${lambda.toExponential(2)}*${T})/2 = ${result.toExponential(4)}`;
-            } else {
+            } else if (isSteadyStateMode) {
+              result = (lambda * T) / 2;
               formula = `Q̄ = λ*T/2 = (${lambda.toExponential(2)}*${T})/2 = ${result.toExponential(4)}`;
             }
             break;
-            
+
           case "Latent,Life-time, P=1-e^(-λ*T)":
-            result = 1 - Math.exp(-lambda * T);
             if (isUnavailabilityMode) {
+              result = 1 - Math.exp(-lambda * T);
               formula = `Q(t) = 1-exp(-${lambda.toExponential(2)}*${T}) = ${result.toExponential(4)}`;
-            } else {
+            } else if (isSteadyStateMode) {
+              result = 1 - Math.exp(-lambda * T);
               formula = `Q̄ = 1-exp(-${lambda.toExponential(2)}*${T}) = ${result.toExponential(4)}`;
             }
             break;
-            
+
           // #8 Average probability per mission hour
           case "Average probability per mission hour":
-            result = 1 - Math.pow(1 - q, t);
             if (isUnavailabilityMode) {
-              formula = `Q(t) = 1-(1-${q})^${t} = ${result.toExponential(4)}`;
-            } else {
-              formula = `Q̄ = 1-(1-${q})^${t} = ${result.toExponential(4)}`;
+              // For small λ, 1-(1-λ)^t ≈ λ*t
+              result = lambda * t;
+              formula = `Q(t) ≈ λ*t = ${lambda.toExponential(2)}*${t} = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              result = lambda;
+              formula = `Q̄ ≈ λ = ${lambda.toExponential(2)}`;
             }
             break;
-            
+
           // #9 Periodical Tests #2
-          case "Periodical Tests #2":
-            result = 0; // Placeholder
-            formula = `${isUnavailabilityMode ? 'Q(t)' : 'Q̄'} = Algorithm (complex)`;
+          case "Periodical Tests #2": {
+            if (isUnavailabilityMode) {
+              // Similar to Periodical tests but with different test interval
+              result = (lambda * T) / 2;
+              formula = `Q(t) = λ*T/2 = (${lambda.toExponential(2)}*${T})/2 = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              result = (lambda * T) / 2 + lambda * mttr;
+              formula = `Q̄ = λ*T/2 + λ*MTTR = (${lambda.toExponential(2)}*${T})/2 + ${lambda.toExponential(2)}*${mttr} = ${result.toExponential(4)}`;
+            }
             break;
-            
-          // Existing types
+          }
+
+          // Existing types for backward compatibility
           case "Evident, P=λ*t":
             if (isUnavailabilityMode) {
               result = lambda * t;
               formula = `Q(t) = λ*t = ${lambda.toExponential(2)}*${t} = ${result.toExponential(4)}`;
-            } else {
+            } else if (isSteadyStateMode) {
               result = 0;
-              formula = `Q̄ = 0 (Frequency event)`;
+              formula = `Q̄ = 0 (Evident event)`;
             }
             break;
-            
+
           case "Latent repairable": {
             const lambdaMu = lambda + mu;
             if (isUnavailabilityMode) {
@@ -327,81 +351,80 @@ const calculateUnavailability = (values) => {
                 result = 0;
               }
               formula = `Q(t) = (λ/(λ+μ))[1-exp(-(λ+μ)T)] = ${result.toExponential(4)}`;
-            } else {
+            } else if (isSteadyStateMode) {
               result = lambda / (lambda + mu);
               formula = `Q̄ = λ/(λ+μ) = ${result.toExponential(4)}`;
             }
             break;
           }
-            
+
           default:
             result = 0;
-            formula = 'No calculation available';
+            formula = "No calculation available";
         }
-        
+
         // Handle NaN or infinite values
         if (isNaN(result) || !isFinite(result)) result = 0;
-        
+
         nodes.push({
           name: node.name || node.code || `Gate ${node.gateId}`,
-          description: node.description || '',
-          failureRate: node.fr || 'N/A',
+          description: node.description || "",
+          failureRate: node.fr || "N/A",
           missionTime: t.toString(),
-          mttr: node.mttr || 'N/A',
-          calcType: node.calcTypes || 'N/A',
-          q: node.isP || 'N/A',
-          T: node.isT || 'N/A',
-          // Store the calculated value based on selection
+          mttr: node.mttr || "N/A",
+          calcType: node.calcTypes || "N/A",
+          q: node.isP || "N/A",
+          T: node.isT || "N/A",
+          timeToFirstTest: node.timeToFirstTest || "0",
+          // Store the calculated value based on mode
           calculatedValue: result.toExponential(4),
-          // Store both values for reference
-          unavailability: isUnavailabilityMode ? result.toExponential(4) : 'N/A',
-          steadyState: !isUnavailabilityMode ? result.toExponential(4) : 'N/A',
+          // Store appropriate values based on mode
+          unavailability: isUnavailabilityMode ? result.toExponential(4) : "N/A",
+          steadyState: isSteadyStateMode ? result.toExponential(4) : "N/A",
           formula: formula,
-          calculationMode: isUnavailabilityMode ? 'Q(t)' : 'Q̄',
-          rawValue: result
+          calculationMode: isUnavailabilityMode ? "Q(t)" : "Q̄",
+          rawValue: result,
         });
       }
-      
+
       if (node.children && node.children.length > 0) {
-        node.children.forEach(child => {
+        node.children.forEach((child) => {
           nodes.push(...extractProbabilityNodes(child));
         });
       }
     }
-    
+
     return nodes;
   };
 
   const calcData = extractProbabilityNodes(chartData);
-  console.log('Calculation results:', calcData);
+  console.log("Calculation results:", calcData);
   setProbabilityCalcData(calcData);
-  
-  // Store the mission time and open the appropriate report modal
+
+  // Open the appropriate report modal based on selection
   if (isUnavailabilityMode) {
     setCurrentMissionTime(values.missionTime);
     setIsUnavailabilityReportOpen(true);
-  } else {
+  } else if (isSteadyStateMode) {
     setIsSteadyStateReportOpen(true);
   }
 };
-const submitProbabilityCalculation = (values) => {
-  console.log('Submitting calculation:', values);
-  calculateUnavailability(values);
-  closeProbabilityModal();
-};
-
-
+  const submitProbabilityCalculation = (values) => {
+    console.log("Submitting calculation:", values);
+    calculateUnavailability(values);
+    closeProbabilityModal();
+  };
 
   // const calculateUnavailability = (values) => {
   //   const extractProbabilityNodes = (node) => {
   //     const nodes = [];
-      
+
   //     if (node) {
   //       const hasFailureData = node.fr || node.calcTypes;
-        
+
   //       if (hasFailureData) {
   //         let unavailability = 0;
-          
+
   //         if (values.calcTypes?.value === "Unavailability at time t Q(t)") {
   //           const lambda = parseFloat(node.fr) || 0;
   //           const t = parseFloat(values.missionTime) || 0;
@@ -412,7 +435,7 @@ const submitProbabilityCalculation = (values) => {
   //           const mu = mttr > 0 ? 1 / mttr : 0;
   //           unavailability = lambda + mu > 0 ? lambda / (lambda + mu) : 0;
   //         }
-          
+
   //         nodes.push({
   //           name: node.name || node.code || `Gate ${node.gateId}`,
   //           description: node.description || '',
@@ -423,20 +446,20 @@ const submitProbabilityCalculation = (values) => {
   //           steadyStateUnavailability: unavailability.toExponential(4)
   //         });
   //       }
-        
+
   //       if (node.children && node.children.length > 0) {
   //         node.children.forEach(child => {
   //           nodes.push(...extractProbabilityNodes(child));
   //         });
   //       }
   //     }
-      
+
   //     return nodes;
   //   };
 
   //   const calcData = extractProbabilityNodes(chartData);
   //   setProbabilityCalcData(calcData);
-    
+
   //   if (values.calcTypes?.value === "Unavailability at time t Q(t)") {
   //     setCurrentMissionTime(values.missionTime);
   //     setIsUnavailabilityReportOpen(true);
@@ -457,7 +480,7 @@ const submitProbabilityCalculation = (values) => {
     window.openProbabilityModal = (params) => {
       openProbabilityModal(params);
     };
-    
+
     return () => {
       delete window.openProbabilityModal;
     };
@@ -623,17 +646,17 @@ const submitProbabilityCalculation = (values) => {
     });
   };
 
-const validate = Yup.object().shape({
-  name: Yup.string().required("Name is Required"),
-  description: Yup.string().required("Description is Required"),
-  gateId: Yup.string().required("Gate Id is Required"),
-  calcTypes: Yup.object().required("Calc.Types is Required"),
-  missionTime: Yup.mixed().when('calcTypes', {
-    is: (calcTypes) => calcTypes?.value === "Unavailability at time t Q(t)",
-    then: Yup.string().required("Mission Time t is Required"),
-    otherwise: Yup.string().nullable() // Changed from Yup.object().nullable()
-  }),
-});
+  const validate = Yup.object().shape({
+    name: Yup.string().required("Name is Required"),
+    description: Yup.string().required("Description is Required"),
+    gateId: Yup.string().required("Gate Id is Required"),
+    calcTypes: Yup.object().required("Calc.Types is Required"),
+    missionTime: Yup.mixed().when("calcTypes", {
+      is: (calcTypes) => calcTypes?.value === "Unavailability at time t Q(t)",
+      then: Yup.string().required("Mission Time t is Required"),
+      otherwise: Yup.string().nullable(), // Changed from Yup.object().nullable()
+    }),
+  });
   const parentSubmit = (values, { resetForm }) => {
     const companyId = localStorage.getItem("companyId");
     Api.post("/api/v1/FTA/create/parent", {
@@ -865,37 +888,71 @@ const validate = Yup.object().shape({
           onViewTree={handleViewTree}
           onCreateNewTree={handleCreateNewTree}
           projectId={projectId}
+          onBack={() => window.history.back()} // or your custom back function
+          showBackButton={true}
         />
       ) : nodeLength.length > 0 && chartData ? (
-        <div
-          className="org-chart-container"
-          style={{
-            transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`,
-            paddingTop: "70px",
-          }}
-          onWheel={handleWheelScroll}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-        >
-          <Tree
-            lineWidth={"2px"}
-            lineColor={"green"}
-            lineBorderRadius={"10px"}
+        <div>
+          <div style={{ padding: "20px", paddingTop: "20px" }}>
+            <Button
+              variant="outline-secondary"
+              onClick={handleBackToTable}
+                                      style={{marginBottom:"-100px"}}
+
+              // style={{
+              //   height: "35px",
+              //   width: "35px",
+              //   borderRadius: "5px",
+              //   display: "flex",
+              //   alignItems: "center",
+              //   justifyContent: "center",
+              //   marginBottom: "1px"
+              // }}
+              title="Back to Trees List"
+            >
+              <FaArrowLeft />
+            </Button>
+          </div>
+          <div
             className="org-chart-container"
+            style={{
+              transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`,
+              paddingTop: "70px",
+              display: "flex",
+              justifyContent: "center",
+              width: "100%",
+              transformOrigin: "center center"
+            }}
+            onWheel={handleWheelScroll}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
           >
-            <RenderTree
-              data={chartData}
-              handleRemove={removeChartData}
-              handleAdd={addChartNode}
-              handleEdit={editChartNode}
-              projectId={projectId}
-              getFTAData={getFTAData}
-              productData={productData}
-              selectedNodeId={selectedNodeId}
-              setSelectedNodeId={setSelectedNodeId}
-            />
-          </Tree>
+            <Tree
+              lineWidth={"2px"}
+              lineColor={"green"}
+              lineBorderRadius={"10px"}
+              className="org-chart-container"
+                     style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center"
+              }}
+            >
+              <RenderTree
+                data={chartData}
+                handleRemove={removeChartData}
+                handleAdd={addChartNode}
+                handleEdit={editChartNode}
+                projectId={projectId}
+                getFTAData={getFTAData}
+                productData={productData}
+                selectedNodeId={selectedNodeId}
+                setSelectedNodeId={setSelectedNodeId}
+                calculationResults={probabilityCalcData}
+              />
+            </Tree>
+          </div>
         </div>
       ) : (
         <div
@@ -923,7 +980,7 @@ const validate = Yup.object().shape({
       {/* LOCAL PROBABILITY MODAL - NO CONTEXT NEEDED */}
       <Modal
         title={
-          <p style={{ margin: "0px", color: "#00a9c9", width: '500px' }}>
+          <p style={{ margin: "0px", color: "#00a9c9", width: "500px" }}>
             Calculation Parameter
           </p>
         }
@@ -938,7 +995,7 @@ const validate = Yup.object().shape({
           initialValues={{
             name: chartData?.name || "",
             description: chartData?.description || "",
-            calcTypes: chartData?.calcTypes 
+            calcTypes: chartData?.calcTypes
               ? { label: chartData?.calcTypes, value: chartData?.calcTypes }
               : "",
             missionTime: chartData?.missionTime || "",
@@ -950,13 +1007,20 @@ const validate = Yup.object().shape({
             name: Yup.string().required("Name is Required"),
             description: Yup.string().required("Description is Required"),
             calcTypes: Yup.object().required("Calc.Types is Required"),
-            missionTime: Yup.string().when('calcTypes', {
-              is: (calcTypes) => calcTypes?.value === "Unavailability at time t Q(t)",
+            missionTime: Yup.string().when("calcTypes", {
+              is: (calcTypes) =>
+                calcTypes?.value === "Unavailability at time t Q(t)",
               then: Yup.string().required("Mission time t is required"),
             }),
           })}
         >
-          {({ values, handleChange, handleSubmit, handleBlur, setFieldValue }) => (
+          {({
+            values,
+            handleChange,
+            handleSubmit,
+            handleBlur,
+            setFieldValue,
+          }) => (
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-2">
                 <Label notify={true}>Name</Label>
@@ -968,7 +1032,11 @@ const validate = Yup.object().shape({
                   onBlur={handleBlur}
                   onChange={handleChange}
                 />
-                <ErrorMessage className="error text-danger" component="span" name="name" />
+                <ErrorMessage
+                  className="error text-danger"
+                  component="span"
+                  name="name"
+                />
               </Form.Group>
 
               <Form.Group className="mb-2">
@@ -983,7 +1051,11 @@ const validate = Yup.object().shape({
                   onBlur={handleBlur}
                   onChange={handleChange}
                 />
-                <ErrorMessage className="error text-danger" component="span" name="description" />
+                <ErrorMessage
+                  className="error text-danger"
+                  component="span"
+                  name="description"
+                />
               </Form.Group>
 
               <Form.Group className="mb-2">
@@ -1005,7 +1077,11 @@ const validate = Yup.object().shape({
                     },
                   ]}
                 />
-                <ErrorMessage className="error text-danger" component="span" name="calcTypes" />
+                <ErrorMessage
+                  className="error text-danger"
+                  component="span"
+                  name="calcTypes"
+                />
               </Form.Group>
 
               {values.calcTypes?.value === "Unavailability at time t Q(t)" && (
@@ -1021,14 +1097,30 @@ const validate = Yup.object().shape({
                       onChange={handleChange}
                       style={{ width: "80%" }}
                     />
-                    <p style={{ margin: "0px", fontWeight: "bold", marginLeft: "20px" }}>(hours)</p>
+                    <p
+                      style={{
+                        margin: "0px",
+                        fontWeight: "bold",
+                        marginLeft: "20px",
+                      }}
+                    >
+                      (hours)
+                    </p>
                   </div>
-                  <ErrorMessage className="error text-danger" component="span" name="missionTime" />
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="missionTime"
+                  />
                 </Form.Group>
               )}
 
               <div className="d-flex justify-content-end mt-4">
-                <Button className="me-2" variant="outline-secondary" onClick={closeProbabilityModal}>
+                <Button
+                  className="me-2"
+                  variant="outline-secondary"
+                  onClick={closeProbabilityModal}
+                >
                   Cancel
                 </Button>
                 <Button type="submit">Calculate</Button>
@@ -1167,7 +1259,8 @@ const validate = Yup.object().shape({
                     name="calcTypes"
                   />
                 </Form.Group>
-                {values.calcTypes?.value === "Unavailability at time t Q(t)" && (
+                {values.calcTypes?.value ===
+                  "Unavailability at time t Q(t)" && (
                   <Form.Group className="mb-2">
                     <Label notify={true}>Mission time t</Label>
                     <div style={{ display: "flex", alignItems: "center" }}>

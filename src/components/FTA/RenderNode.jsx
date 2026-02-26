@@ -15,6 +15,7 @@ import { useModal } from "../ModalContext";
 import andGate from "../core/Images/andGate.png";
 import orGate from "../core/Images/orGate.png";
 import Tooltip from "@mui/material/Tooltip";
+import { fa4 } from "@fortawesome/free-solid-svg-icons";
 
 export default function RenderNode({
   node,
@@ -463,17 +464,18 @@ export default function RenderNode({
     setModal2Open(true);
   };
 
-  const eventFields = [
-    { value: "Constant Probability", label: "Constant Probability" },
-    { value: "Evident, P=λ*t", label: "Evident, P=λ*t" },
-    { value: "Const.mission time, P=λ*tm", label: "Const.mission time, P=λ*tm" },
-    { value: "Unrepairable, P=1-(1-q)*exp(-λ*t)", label: "Unrepairable, P=1-(1-q)*exp(-λ*t)" },
-    { value: "Repairable", label: "Repairable" },
-    { value: "Latent, P=λ*T", label: "Latent, P=λ*T" },
-    { value: "Latent, P=λ*T/2", label: "Latent, P=λ*T/2" },
-    { value: "Latent,Life-time, P=1-e^(-λ*T)", label: "Latent,Life-time, P=1-e^(-λ*T)" },
-    { value: "Latent repairable", label: "Latent repairable" },
-  ];
+const eventFields = [
+  { value: "Probability", label: "Probability" },
+  { value: "Frequency", label: "Frequency" },
+  { value: "Constant mission time", label: "Constant mission time" },
+  { value: "Repairable", label: "Repairable" },
+  { value: "Unrepairable", label: "Unrepairable" },
+  { value: "Periodical tests", label: "Periodical tests" },
+  { value: "Latent", label: "Latent" },
+  { value: "Average probability per mission hour", label: "Average probability per mission hour" },
+  { value: "Periodical Tests #2", label: "Periodical Tests #2" },
+];
+
 
   const handleGetFRapi = (e) => {
     const companyId = localStorage.getItem("companyId");
@@ -525,7 +527,7 @@ export default function RenderNode({
         });
       });
     } else {
-      Api.put(`/api/v1/FTA/update/${projectId}/${node?.id}`, {
+      Api.put(`/api/v1/FTA/update/${projectId}/${node?.id}/${node?.parentId}`, {
         name: values.name,
         description: values.description,
         calcTypes: values.calcTypes.value,
@@ -570,7 +572,7 @@ export default function RenderNode({
         border: "1px solid #00a9c9",
         borderRadius: "50%",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "flex-start", 
         padding: "5px"
       };
     } else if (shouldShowGate()) {
@@ -661,7 +663,7 @@ export default function RenderNode({
               onClick={handleClick} 
               style={{ 
                 padding: "5px", 
-                height: node?.isEvent ? "70px" : "60px",
+                 height: node?.isEvent ? "95px" : "60px",
                 overflow: "hidden",
                 cursor: "pointer",
                 position: "relative",
@@ -721,23 +723,59 @@ export default function RenderNode({
                     </div>
                   )}
                   
-                  {/* Display formula for event nodes */}
-                  {node?.isEvent && node?.calcTypes && (
-                    <div style={{ fontSize: "7px", marginTop: "5px", width: "100%", textAlign: "center" }}>
-                      {node?.calcTypes === "Constant Probability" && (
-                        <span>P = {node?.isP || '0'}</span>
-                      )}
-                      {node?.calcTypes === "Evident, P=λ*t" && (
-                        <span>P = λ·t, λ={node?.fr ? parseFloat(node.fr).toExponential(1) : '0'}</span>
-                      )}
-                      {node?.calcTypes === "Const.mission time, P=λ*tm" && (
-                        <span>P = λ·tm, tm={node?.eventMissionTime || '0'}h</span>
-                      )}
-                      {node?.calcTypes === "Unrepairable, P=1-(1-q)*exp(-λ*t)" && (
-                        <span>P = 1-(1-q)e^(-λt)</span>
-                      )}
-                    </div>
-                  )}
+             {/* Display calculated value if available */}
+{node?.qn && (
+  <div
+    style={{
+      marginTop: "8px",
+      padding: "2px 6px",
+      backgroundColor: "#4caf50",
+      color: "white",
+      borderRadius: "10px",
+      fontSize: "10px",
+      fontWeight: "bold",
+      alignSelf: "center",
+    }}
+  >
+    Q = {node.qn}
+  </div>
+)}
+
+{/* Display formula only if no calculated value */}
+{!node?.qn && node?.isEvent && node?.calcTypes && (
+  <div style={{ fontSize: "7px", marginTop: "5px", width: "100%", textAlign: "center" }}>
+    {node?.calcTypes === "Probability" && (
+      <span>P = {node?.isP || '0'}</span>
+    )}
+    {node?.calcTypes === "Frequency" && (
+      <span>f = {node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
+    )}
+    {node?.calcTypes === "Constant mission time" && (
+      <span>P = λ·tm, λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}</span>
+    )}
+    {node?.calcTypes === "Repairable" && (
+      <span>P = (λ/(λ+μ))[1-e^(-(λ+μ)t]</span>
+    )}
+    {node?.calcTypes === "Unrepairable" && (
+      <span>P = 1-(1-q)e^(-λt)</span>
+    )}
+    {node?.calcTypes === "Periodical tests" && (
+      <span>Periodical Tests, Ti={node?.isT || '0'}h</span>
+    )}
+    {node?.calcTypes === "Latent" && (
+      <span>P = 1-(1-q)^q·e^(-λT), T={node?.isT || '0'}h</span>
+    )}
+    {node?.calcTypes === "Latent, P=λ*T/2" && (
+      <span>P = λ·T/2, T={node?.isT || '0'}h</span>
+    )}
+    {node?.calcTypes === "Latent,Life-time, P=1-e^(-λ*T)" && (
+      <span>P = 1-e^(-λT), T={node?.isT || '0'}h</span>
+    )}
+    {node?.calcTypes === "Average probability per mission hour" && (
+      <span>Avg P = 1-(1-q)^t</span>
+    )}
+  </div>
+)}
                 </div>
               </Tooltip>
             </Card.Body>
@@ -795,144 +833,103 @@ export default function RenderNode({
           )}
 
           {/* Connecting line for event nodes */}
-          {node?.isEvent && (
-            <div>
-              <div style={{ width: "2px", border: "1px solid green", height: "30px", top: "5px", left: "70px" }} />
-              <div
-                style={{
-                  position: "absolute",
-                  top: "30px",
-                  left: "54px",
-                  backgroundColor: "#00ffff",
-                  zIndex: 2,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: "35px",
-                  height: "35px",
-                  borderRadius: "50%",
-                  color: "white",
-                  fontSize: "9px",
-                  fontWeight: "bold",
-                }}
-              ></div>
-              <div style={{ top: "40px", fontSize: "8px", width: "100%", textAlign: "center" }}>
-                {/* Dynamic formula display based on calcTypes */}
-                {node?.calcTypes === "Constant Probability" && (
-                  <>
-                    <p style={{ margin: "0px" }}>p = {node?.isP || '0'}</p>
-                  </>
-                )}
-                
-                {node?.calcTypes === "Evident, P=λ*t" && (
-                  <>
-                    <p style={{ margin: "0px" }}>P = λ * t</p>
-                    <p>λ = {
-                      node?.fr && !isNaN(parseFloat(node.fr)) 
-                        ? parseFloat(node.fr).toExponential(2) 
-                        : '0'
-                    }</p>
-                  </>
-                )}
-                
-                {node?.calcTypes === "Const.mission time, P=λ*tm" && (
-                  <>
-                    <p style={{ margin: "0px" }}>P = λ * tm</p>
-                    <p>λ = {
-                      node?.fr && !isNaN(parseFloat(node.fr)) 
-                        ? parseFloat(node.fr).toExponential(2) 
-                        : '0'
-                    }</p>
-                    {node?.eventMissionTime && <p>tm = {node.eventMissionTime}h</p>}
-                  </>
-                )}
-                
-                {node?.calcTypes === "Unrepairable, P=1-(1-q)*exp(-λ*t)" && (
-                  <>
-                    <p style={{ margin: "0px", fontSize: "7px" }}>P = 1-(1-q)e^(-λt)</p>
-                    <p style={{ fontSize: "7px" }}>
-                      λ = {
-                        (() => {
-                          const frValue = node?.fr || node?.showFrRate;
-                          if (frValue && !isNaN(parseFloat(frValue))) {
-                            return parseFloat(frValue).toExponential(2);
-                          }
-                          return '0';
-                        })()
-                      }
-                    </p>
-                    {node?.isP && node.isP !== '0' && node.isP !== '' && (
-                      <p style={{ fontSize: "7px" }}>q = {node.isP}</p>
-                    )}
-                  </>
-                )}
-                
-                {node?.calcTypes === "Repairable" && (
-                  <>
-                    <p style={{ margin: "0px", fontSize: "7px" }}>P = (λ/(λ+μ))[1-e^(-(λ+μ)t)]</p>
-                    <p style={{ fontSize: "7px" }}>λ = {
-                      node?.fr && !isNaN(parseFloat(node.fr)) 
-                        ? parseFloat(node.fr).toExponential(2) 
-                        : '0'
-                    }</p>
-                    {node?.mttr && <p style={{ fontSize: "7px" }}>MTTR = {node.mttr}h</p>}
-                  </>
-                )}
-                
-                {node?.calcTypes === "Latent, P=λ*T" && (
-                  <>
-                    <p style={{ margin: "0px", fontSize: "7px" }}>P = λ * T</p>
-                    <p style={{ fontSize: "7px" }}>λ = {
-                      node?.fr && !isNaN(parseFloat(node.fr)) 
-                        ? parseFloat(node.fr).toExponential(2) 
-                        : '0'
-                    }</p>
-                    {node?.isT && <p style={{ fontSize: "7px" }}>T = {node.isT}h</p>}
-                  </>
-                )}
-                
-                {node?.calcTypes === "Latent, P=λ*T/2" && (
-                  <>
-                    <p style={{ margin: "0px", fontSize: "7px" }}>P = (λ * T)/2</p>
-                    <p style={{ fontSize: "7px" }}>λ = {
-                      node?.fr && !isNaN(parseFloat(node.fr)) 
-                        ? parseFloat(node.fr).toExponential(2) 
-                        : '0'
-                    }</p>
-                    {node?.isT && <p style={{ fontSize: "7px" }}>T = {node.isT}h</p>}
-                  </>
-                )}
-                
-                {node?.calcTypes === "Latent,Life-time, P=1-e^(-λ*T)" && (
-                  <>
-                    <p style={{ margin: "0px", fontSize: "7px" }}>P = 1-e^(-λT)</p>
-                    <p style={{ fontSize: "7px" }}>λ = {
-                      node?.fr && !isNaN(parseFloat(node.fr)) 
-                        ? parseFloat(node.fr).toExponential(2) 
-                        : '0'
-                    }</p>
-                    {node?.isT && <p style={{ fontSize: "7px" }}>T = {node.isT}h</p>}
-                  </>
-                )}
-                
-                {node?.calcTypes === "Latent repairable" && (
-                  <>
-                    <p style={{ margin: "0px", fontSize: "7px" }}>Latent Repairable</p>
-                    <p style={{ fontSize: "7px" }}>λ = {
-                      node?.fr && !isNaN(parseFloat(node.fr)) 
-                        ? parseFloat(node.fr).toExponential(2) 
-                        : '0'
-                    }</p>
-                  </>
-                )}
-                {!node?.calcTypes && (
-                  <>
-                    <p style={{ margin: "0px" }}>Event</p>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+{/* Connecting line for event nodes */}
+{node?.isEvent && (
+  <div>
+    {/* Line connecting to parent */}
+    <div style={{ width: "2px", border: "1px solid green", height: "30px", top: "5px", left: "70px" }} />
+    
+    {/* Sky blue circle - shows the Q value */}
+    <div
+      style={{
+        position: "absolute",
+        top: "30px",
+        left: "54px",
+        backgroundColor: "#00ffff",
+        zIndex: 2,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        width: "35px",
+        height: "35px",
+        borderRadius: "50%",
+        color: "white",
+        fontSize: "9px",
+        fontWeight: "bold",
+      }}
+    >
+      {/* This puts the Q value inside the blue circle */}
+      {node?.qn ? parseFloat(node.qn).toExponential(2) : " "}
+    </div>
+    
+    {/* White box below with all the formulas and values */}
+    <div style={{ 
+      position: "absolute",
+      top: "70px",
+      left: "0",
+      fontSize: "8px", 
+      width: "160px", 
+      textAlign: "center",
+      backgroundColor: "white",
+      padding: "4px",
+      borderRadius: "4px",
+      border: "1px solid #ccc",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+    }}>
+      
+      {/* FORMULA - Shows the formula text */}
+      <div style={{ fontWeight: "bold", marginBottom: "2px" }}>
+        {node?.calcTypes === "Probability" && "Q = q"}
+        {node?.calcTypes === "Frequency" && "f = λ"}
+        {node?.calcTypes === "Constant mission time" && "Q = 1-(1-q)^tm"}
+        {node?.calcTypes === "Repairable" && "Q = (λ/(λ+μ))[1-e^(-(λ+μ)t)]"}
+        {node?.calcTypes === "Unrepairable" && "Q = 1-(1-q)e^(-λt)"}
+        {node?.calcTypes === "Periodical tests" && "Q = λ·T/2"}
+        {node?.calcTypes === "Latent" && "Q = λ·T"}
+        {node?.calcTypes === "Latent, P=λ*T/2" && "Q = λ·T/2"}
+        {node?.calcTypes === "Latent,Life-time, P=1-e^(-λ*T)" && "Q = 1-e^(-λT)"}
+        {node?.calcTypes === "Average probability per mission hour" && "Q = λ·t"}
+        {node?.calcTypes === "Periodical Tests #2" && "Q = λ·T/2"}
+        {node?.calcTypes === "Evident, P=λ*t" && "Q = λ·t"}
+        {node?.calcTypes === "Const.mission time, P=λ*tm" && "Q = λ·tm"}
+        {node?.calcTypes === "Latent repairable" && "Q = (λ/(λ+μ))[1-e^(-(λ+μ)T)]"}
+      </div>
+      
+      {/* PARAMETERS - Shows the actual numbers like λ = 1.82e+1 */}
+      <div style={{ textAlign: "left", paddingLeft: "5px", marginTop: "2px" }}>
+        {node?.fr && node.fr !== "0" && node.fr !== "-" && (
+          <div>λ = {parseFloat(node.fr).toExponential(2)}</div>
+        )}
+        {node?.isP && node.isP !== "0" && node.isP !== "" && (
+          <div>q = {node.isP}</div>
+        )}
+        {node?.mttr && node.mttr !== "0" && (
+          <div>MTTR = {node.mttr}h</div>
+        )}
+        {node?.isT && node.isT !== "0" && (
+          <div>T = {node.isT}h</div>
+        )}
+        {node?.eventMissionTime && node.eventMissionTime !== "0" && (
+          <div>tm = {node.eventMissionTime}h</div>
+        )}
+      </div>
+      
+      {/* CALCULATED VALUE - Shows the result in green */}
+      {node?.qn && (
+        <div style={{ 
+          marginTop: "4px", 
+          padding: "2px", 
+          backgroundColor: "#4caf50", 
+          color: "white",
+          borderRadius: "3px",
+          fontWeight: "bold"
+        }}>
+          Q = {parseFloat(node.qn).toExponential(4)}
+        </div>
+      )}
+    </div>
+  </div>
+)}
         </div>
       </div>
 
