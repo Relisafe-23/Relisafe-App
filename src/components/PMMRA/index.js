@@ -1249,6 +1249,7 @@ export default function PMMRA(props) {
           // setpmmraId(pmmraId);
           // setExistingId(pmmraId);
           setpmmraData(pmmraData);
+          setFmecaModeId(pmmraData?.fmecaId)
           getFMECADataAfterChange(pmmraData?.failureMode);
         } else {
           toast.warning('No Data available for this failure mode');
@@ -1542,7 +1543,7 @@ export default function PMMRA(props) {
 
     console.log(filteredData, "filteredData")
     setFmecaFillterData(filteredData[0]);
-    setFmecaModeId(filteredData[0]?.id)
+    // setFmecaModeId(filteredData[0]?.id)
     setpmmraId(filteredData[0]?.id);
 
   };
@@ -1777,8 +1778,8 @@ export default function PMMRA(props) {
               onSubmit={(values, { resetForm }) => {
                 // Check if we have an existing PMMRA record to update
                 // console.log("Updating existing PMMRA", pmmraId, existingId, failureMode);
-                if (pmmraId && failureMode) {
-                  console.log("Updating existing PMMRA", pmmraId, failureMode);
+                if ((pmmraId == fmecaModeId) && failureMode) {
+                  console.log("Updating existing PMMRA", pmmraId, failureMode, "fmecaModeId - ", fmecaModeId);
                   UpdatepmmraDetails(values);
                 } else {
                   console.log("Creating new PMMRA", values);
