@@ -279,19 +279,44 @@ const HeaderNavBar = ({
   }
   id="basic-nav-dropdown"
 >
-  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('all')}>
+  <NavDropdown.Item 
+    onClick={() => {
+      if (window.generateFTAReport) {
+        window.generateFTAReport('all');
+      } else {
+        toast.warning("Please open a fault tree first");
+      }
+    }}
+  >
     <FontAwesomeIcon icon={faFileAlt} style={{ paddingRight: "10px" }} />
     All Nodes Report
   </NavDropdown.Item>
-  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('events')}>
+  <NavDropdown.Item 
+    onClick={() => {
+      if (window.generateFTAReport) {
+        window.generateFTAReport('events');
+      } else {
+        toast.warning("Please open a fault tree first");
+      }
+    }}
+  >
     <FontAwesomeIcon icon={faFileCsv} style={{ paddingRight: "10px" }} />
     List of Events
   </NavDropdown.Item>
-  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('gates')}>
+  <NavDropdown.Item 
+    onClick={() => {
+      if (window.generateFTAReport) {
+        window.generateFTAReport('gates');
+      } else {
+        toast.warning("Please open a fault tree first");
+      }
+    }}
+  >
     <FontAwesomeIcon icon={faFilePdf} style={{ paddingRight: "10px" }} />
     List of Gates
   </NavDropdown.Item>
 </NavDropdown>
+
 </Nav>  
 </Navbar.Collapse>
 </Navbar>

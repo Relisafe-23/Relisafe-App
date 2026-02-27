@@ -1,5 +1,5 @@
 // src/components/FTA/EventsReportModal.js
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Modal } from 'antd';
 import { Button } from 'react-bootstrap';
 import MaterialTable from 'material-table';
@@ -26,10 +26,10 @@ const EventsReportModal = ({
   onClose, 
   eventsData = [], 
   gatesData = [], 
-  reportType: initialReportType = 'all' 
+   reportType: propReportType = 'all' 
 }) => {
-  const [reportType, setReportType] = useState(initialReportType);
-  
+  const [reportType, setReportType] = useState(propReportType);
+  const [initialReportType] = useState(propReportType); // Store initial report type for comparison
   // Table icons configuration
   const tableIcons = {
     Add: AddBox,
@@ -119,45 +119,50 @@ const EventsReportModal = ({
     document.body.removeChild(link);
   };
 
+    useEffect(() => {
+    setReportType(propReportType);
+  }, [propReportType])
+
   // Only show buttons when report type is 'all'
-  const showButtons = initialReportType === 'all';
+  const showButtons = propReportType === 'all';
 
   // Prepare table data and columns based on report type
-  const { tableData, columns } = useMemo(() => {
-    let data = [];
-    let cols = [];
+// Prepare table data and columns based on report type
+const { tableData, columns } = useMemo(() => {
+  let data = [];
+  let cols = [];
 
-    if (reportType === 'events' || (initialReportType === 'events' && reportType !== 'gates')) {
-      data = eventsData;
-      cols = [
-        { title: 'Event Name', field: 'code', width: '20%' },
-        { title: 'Description', field: 'description', width: '30%' },
-        { title: 'Failure Rate', field: 'failureRate', width: '15%' },
-        { title: 'Calc Type', field: 'calcType', width: '35%' }
-      ];
-    } else if (reportType === 'gates' || (initialReportType === 'gates' && reportType !== 'events')) {
-      data = gatesData;
-      cols = [
-        { title: 'Gate Name', field: 'code', width: '20%' },
-        { title: 'Description', field: 'description', width: '25%' },
-        { title: 'Gate Type', field: 'gateType', width: '15%' },
-        { title: 'Gate ID', field: 'gateId', width: '15%' },
-        { title: 'Child Count', field: 'childCount', width: '10%' }
-      ];
-    } else if (reportType === 'all' && initialReportType === 'all') {
-      data = [...eventsData, ...gatesData];
-      cols = [
-        { title: 'Name', field: 'code', width: '15%' },
-        { title: 'Description', field: 'description', width: '25%' },
-        { title: 'Type', field: 'type', width: '10%' },
-        { title: 'Gate Type', field: 'gateType', width: '15%' },
-        { title: 'Failure Rate', field: 'failureRate', width: '15%' },
-        { title: 'Calc Type', field: 'calcType', width: '20%' }
-      ];
-    }
+  if (reportType === 'events') {
+    data = eventsData;
+    cols = [
+      { title: 'Event Name', field: 'code', width: '20%' },
+      { title: 'Description', field: 'description', width: '30%' },
+      { title: 'Failure Rate', field: 'failureRate', width: '15%' },
+      { title: 'Calc Type', field: 'calcType', width: '35%' }
+    ];
+  } else if (reportType === 'gates') {
+    data = gatesData;
+    cols = [
+      { title: 'Gate Name', field: 'code', width: '20%' },
+      { title: 'Description', field: 'description', width: '25%' },
+      { title: 'Gate Type', field: 'gateType', width: '15%' },
+      { title: 'Gate ID', field: 'gateId', width: '15%' },
+      { title: 'Child Count', field: 'childCount', width: '10%' }
+    ];
+  } else if (reportType === 'all') {
+    data = [...eventsData, ...gatesData];
+    cols = [
+      { title: 'Name', field: 'code', width: '15%' },
+      { title: 'Description', field: 'description', width: '25%' },
+      { title: 'Type', field: 'type', width: '10%' },
+      { title: 'Gate Type', field: 'gateType', width: '15%' },
+      { title: 'Failure Rate', field: 'failureRate', width: '15%' },
+      { title: 'Calc Type', field: 'calcType', width: '20%' }
+    ];
+  }
 
-    return { tableData: data, columns: cols };
-  }, [reportType, initialReportType, eventsData, gatesData]);
+  return { tableData: data, columns: cols };
+}, [reportType, eventsData, gatesData]);
 
   return (
 

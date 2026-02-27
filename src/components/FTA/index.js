@@ -20,7 +20,7 @@ import EventsReportModal from "./EventsReportModal";
 import FTAtable from "./FTAtable";
 import UnavailabilityReportModal from "./UnavailablityReportModal";
 import SteadyStateReportModal from "./SteadyStateReportModal";
-
+import HeaderNavBar from "../HeaderNavBar";
 // Remove ProbabilityContext import
 
 const initialData = {
@@ -468,51 +468,8 @@ const calculateUnavailability = (values) => {
   //   }
   // };
 
-  // ===== USE EFFECT FOR PROBABILITY PARAMS =====
-  useEffect(() => {
-    if (probabilityParams) {
-      // calculateUnavailability(probabilityParams);
-    }
-  }, [probabilityParams]);
 
-  // ===== WINDOW OPEN PROBABILITY MODAL =====
-  useEffect(() => {
-    window.openProbabilityModal = (params) => {
-      openProbabilityModal(params);
-    };
-
-    return () => {
-      delete window.openProbabilityModal;
-    };
-  }, []);
-
-  const handleZoomToFit = () => {
-    setPanOffset({ x: 0, y: 0 });
-    toast.success("Zoomed to fit screen");
-  };
-
-  const handleZoomOriginal = () => {
-    setZoomLevel(1);
-    setPanOffset({ x: 0, y: 0 });
-    toast.success("Reset to original size");
-  };
-
-  const handleToggleGrid = () => {
-    const newShowGrid = !showGrid;
-    setShowGrid(newShowGrid);
-    toast.success(newShowGrid ? "Grid shown" : "Grid hidden");
-  };
-
-  const handleOriginalLayout = () => {
-    setZoomLevel(1);
-    setPanOffset({ x: 0, y: 0 });
-    setPanning(false);
-    setPanStart({ x: 0, y: 0 });
-    toast.success("Original layout restored");
-  };
-
-  // ===== GENERATE REPORT FUNCTION - NO HOOKS INSIDE =====
-  const generateReport = (type = "all") => {
+    const generateReport = (type = "all") => {
     if (!chartData) {
       toast.warning("No fault tree data available");
       return;
@@ -575,6 +532,64 @@ const calculateUnavailability = (values) => {
       `${type === "events" ? "Events" : type === "gates" ? "Gates" : "Report"} generated successfully`,
     );
   };
+
+
+
+useEffect(() => {
+  window.generateFTAReport = (type) => {
+    generateReport(type);
+  };
+
+  return () => {
+    delete window.generateFTAReport;
+  };
+}, [generateReport]); // This useEffect references generateReport
+
+
+  // ===== USE EFFECT FOR PROBABILITY PARAMS =====
+  useEffect(() => {
+    if (probabilityParams) {
+      // calculateUnavailability(probabilityParams);
+    }
+  }, [probabilityParams]);
+
+  // ===== WINDOW OPEN PROBABILITY MODAL =====
+  useEffect(() => {
+    window.openProbabilityModal = (params) => {
+      openProbabilityModal(params);
+    };
+
+    return () => {
+      delete window.openProbabilityModal;
+    };
+  }, []);
+
+  const handleZoomToFit = () => {
+    setPanOffset({ x: 0, y: 0 });
+    toast.success("Zoomed to fit screen");
+  };
+
+  const handleZoomOriginal = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    toast.success("Reset to original size");
+  };
+
+  const handleToggleGrid = () => {
+    const newShowGrid = !showGrid;
+    setShowGrid(newShowGrid);
+    toast.success(newShowGrid ? "Grid shown" : "Grid hidden");
+  };
+
+  const handleOriginalLayout = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setPanning(false);
+    setPanStart({ x: 0, y: 0 });
+    toast.success("Original layout restored");
+  };
+
+  // ===== GENERATE REPORT FUNCTION - NO HOOKS INSIDE =====
 
   const handleWheelScroll = (event) => {
     const newZoom = zoomLevel + event.deltaY * -0.001;
@@ -1135,6 +1150,7 @@ const calculateUnavailability = (values) => {
         onClose={() => setIsReportModalOpen(false)}
         eventsData={eventsData}
         gatesData={gatesData}
+        //  onGenerateReport={generateReport}
         reportType={currentReportType}
       />
 

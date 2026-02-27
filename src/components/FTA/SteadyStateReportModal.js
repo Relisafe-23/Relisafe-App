@@ -59,12 +59,7 @@ const SteadyStateReportModal = ({
     { title: 'Calc Type', field: 'calcType', width: '10%' },
     { title: 'Formula', field: 'formula', width: '15%', render: rowData => getFormula(rowData.calcType) },
     { title: 'Parameters', field: 'parameters', width: '15%', render: rowData => formatParameters(rowData) },
-    { title: 'Failure Rate (λ)', field: 'failureRate', width: '8%' },
-    { title: 'q', field: 'q', width: '5%' },
-    { title: 'T', field: 'T', width: '5%' },
-    { title: 'MTTR', field: 'mttr', width: '5%' },
     { title: 'CutSet Prob.', field: 'cutSetProb', width: '8%', render: rowData => rowData.steadyStateUnavailability || '0' },
-    { title: 'Steady State Q̄', field: 'steadyStateUnavailability', width: '8%' }
   ];
 
   const downloadCSV = () => {
@@ -76,10 +71,6 @@ const SteadyStateReportModal = ({
       `"${item.calcType || ''}"`,
       `"${getFormula(item.calcType)}"`,
       `"${formatParameters(item)}"`,
-      `"${item.failureRate || 'N/A'}"`,
-      `"${item.q || 'N/A'}"`,
-      `"${item.T || 'N/A'}"`,
-      `"${item.mttr || 'N/A'}"`,
       `"${item.steadyStateUnavailability || '0'}"`,
       `"${item.steadyStateUnavailability || '0'}"`
     ]);
