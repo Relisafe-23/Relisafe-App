@@ -5,11 +5,11 @@ import CreatableSelect from 'react-select/creatable';
 
 const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitchConfig, currentBlock }) => {
 
-  const [formData, setFormData] = useState({
+  const [values, setValues] = useState({
     relDes: currentBlock?.relDes || '',
     time: currentBlock?.time || " ",
     elementType: currentBlock?.elementType || 'REGULAR',
-    patNumber: currentBlock?.patNumber || '',
+    partNumber: currentBlock?.partNumber || '',
     fr: currentBlock?.fr || '',
     repair: currentBlock?.repair || 'Full repair',
     inspectionPeriod: currentBlock?.inspectionPeriod || '',
@@ -44,18 +44,23 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
   const [productIds, setProductIds] = useState(null);
   const [tableData, setTableData] = useState("");
   const [selectedProductId, setSelectedProductId] = useState([]);
-  const productId = formData?.id || formData?.productId || "";
-  const productName = formData?.productName || "";
+  const productId = values?.id || values?.productId || "";
+  const productName = values?.productName || "";
   const [alpha, setAlpha] = useState([]);
 
-  const createRBD = () => {
-    Api.post(`/api/v1/rbd/create`, {
-      projectId,
-      productId,
-    }).then((res) => {
-      console.log("RBD created successfully:", res);
-    });
-  };
+
+  useEffect(()=>{
+getElement()
+  },[projectId])
+
+  // const createRBD = () => {
+  //   Api.post(`/api/v1/rbd/create`, {
+  //     projectId,
+  //     productId,
+  //   }).then((res) => {
+  //     console.log("RBD created successfully:", res);
+  //   });
+  // };
 
   const getProductName = () => {
     const sessionId = localStorage.getItem("sessionId");
@@ -116,7 +121,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
         const data = res?.data?.data;
         setTableData(data);
         if (data && data.length > 0) {
-          setFormData((prev) => ({
+          setValues((prev) => ({
             ...prev,
             productId: data[0].productId
           }));
@@ -160,12 +165,52 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    const companyId = localStorage.getItem("companyId");
+    Api.post("/api/v1/elementParametersRBD/create",{
+        indexCount: values.indexCount,
+  partNumber: values.partNumber,
+  productName: values.productName,
+  fr: values.fr,
+  // blockId:blockId,
+  productId: values.productId,
+  fmecaId: values.fmecaId,
+  fmDescription: values.fmDescription,
+  elementType: values.elementType,
+  time: values.time,
+  repair: values.repair,
+  inspectionPeriod: values.inspectionPeriod,
+  dutyCycle: values.dutyCycle,
+  color: values.color,
+  frDistribution: values.frDistribution,
+  k: values.k,
+  n: values.n,
+  repairDistribution: values.repairDistribution,
+  load: values.load,
+  mct: values.mct,
+  projectId: projectId,
+  companyId: companyId,
+    }).then((res)=>{
+
+      console.log("res",res)
+    })
+    onSubmit(values);
     onClose();
   };
 
+
+const getElement =()=>{
+  console.log("Loadvchvghhv")
+  Api.get(`/api/v1/elementParametersRBD/get/all`,{
+    params:{
+      projectId:projectId, 
+    }
+  })
+  .then((res)=>{
+    console.log("res12334",res)
+  })
+}
   const handleChange = (field, value) => {
-    setFormData(prev => ({
+    setValues(prev => ({
       ...prev,
       [field]: value
     }));
@@ -173,8 +218,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
 
   const handleSwitchClick = () => {
     onOpenSwitchConfig({
-      n: formData.n,
-      k: formData.k,
+      n: values.n,
+      k: values.k,
       ...(currentBlock?.switchData || {})
     });
   };
@@ -200,7 +245,9 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
         maxHeight: '90vh',
         overflowY: 'auto'
       }}>
-        <h2 style={{ marginBottom: '20px', color: '#333' }}>Element parameters definition</h2>
+        <h2 style={{ marginBottom: '20px', color: '#333' }}><h2 style={{ marginBottom: '20px', color: '#333' }}>
+  {currentBlock ? "Edit Element Parameters" : "Add Element Parameters"}
+</h2></h2>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '20px' }}>
             <div style={{
@@ -232,8 +279,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                   <CreatableSelect
                     type="text"
                     value={
-                      formData?.indexCount
-                        ? { label: formData.indexCount, value: formData.indexCount }
+                      values?.indexCount
+                        ? { label: values.indexCount, value: values.indexCount }
                         : null
                     }
                     options={options}
@@ -272,7 +319,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                     fontWeight: 'bold'
                   }}>FM Number</label>
                   <select
-                    value={formData?.fmecaId || ""}
+                    value={values?.fmecaId || ""}
                     onChange={(e) => handleChange("fmecaId", e.target.value)}
                     style={{
                       width: '100%',
@@ -297,7 +344,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                     FM description:
                   </label>
                   <textarea
-                    value={formData?.fmDescription || ""}
+                    value={values?.fmDescription || ""}
                     onChange={(e) => handleChange('fmDescription', e.target.value)}
                     style={{
                       width: '100%',
@@ -328,7 +375,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                   </label>
                   <input
                     type="text"
-                    value={formData?.productName || ""}
+                    value={values?.productName || ""}
                     onChange={(e) => handleChange('productName', e.target.value)}
                     placeholder="Transmitter"
                     style={{
@@ -346,7 +393,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                     Element Type:
                   </label>
                   <select
-                    value={formData.elementType}
+                    value={values?.elementType}
                     onChange={(e) => handleChange('elementType', e.target.value)}
                     style={{
                       width: '100%',
@@ -371,7 +418,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                   </label>
                   <input
                     type="text"
-                    value={formData?.partNumber || ""}
+                    value={values?.partNumber || ""}
                     onChange={(e) => handleChange("partNumber", e.target.value)}
                     style={{
                       width: "100%",
@@ -383,13 +430,13 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                   />
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
+                {/* <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
                     Machine Time [hours] (t):
                   </label>
                   <input
                     type="text"
-                    value={formData?.time || ""}
+                    value={values?.time || ""}
                     onChange={(e) => handleChange("time", e.target.value)}
                     style={{
                       width: "100%",
@@ -399,10 +446,10 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                       fontSize: "12px"
                     }}
                   />
-                </div>
+                </div> */}
 
-                {/* Switch button for K-out-of-N */}
-                {formData.elementType === 'K_OUT_OF_N' && (
+          
+                {values.elementType === 'K_OUT_OF_N' && (
                   <div style={{ marginBottom: '15px' }}>
                     <button
                       type="button"
@@ -437,7 +484,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                     Repair:
                   </label>
                   <select
-                    value={formData.repair}
+                    value={values.repair}
                     onChange={(e) => handleChange('repair', e.target.value)}
                     style={{
                       width: '100%',
@@ -458,7 +505,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
                     <input
                       type="checkbox"
-                      checked={formData.inspectionPeriod !== ''}
+                      checked={values.inspectionPeriod !== ''}
                       onChange={(e) => handleChange('inspectionPeriod', e.target.checked ? '--' : '')}
                       style={{ marginRight: '5px' }}
                     />
@@ -466,16 +513,16 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                   </label>
                   <input
                     type="text"
-                    value={formData.inspectionPeriod}
+                    value={values.inspectionPeriod}
                     onChange={(e) => handleChange('inspectionPeriod', e.target.value)}
-                    disabled={formData.inspectionPeriod === ''}
+                    disabled={values.inspectionPeriod === ''}
                     style={{
                       width: '100%',
                       padding: '6px',
                       border: '1px solid #ccc',
                       borderRadius: '3px',
                       fontSize: '12px',
-                      backgroundColor: formData.inspectionPeriod === '' ? '#f0f0f0' : 'white'
+                      backgroundColor: values.inspectionPeriod === '' ? '#f0f0f0' : 'white'
                     }}
                     placeholder="--"
                   />
@@ -487,7 +534,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                   </label>
                   <input
                     type="text"
-                    value={formData.dutyCycle}
+                    value={values.dutyCycle}
                     onChange={(e) => handleChange('dutyCycle', e.target.value)}
                     style={{
                       width: '100%',
@@ -505,7 +552,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                   </label>
                   <input
                     type="color"
-                    value={formData.color}
+                    value={values.color}
                     onChange={(e) => handleChange('color', e.target.value)}
                     style={{
                       width: '100%',
@@ -531,7 +578,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                         id="frDefault"
                         name="frDistribution"
                         value="default"
-                        checked={formData.frDistribution === "default"}
+                        checked={values.frDistribution === "default"}
                         onChange={(e) => handleChange("frDistribution", e.target.value)}
                       />
                       <label htmlFor="frDefault" style={{ marginLeft: "5px", fontSize: "12px" }}>
@@ -545,7 +592,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                         id="frKOutOfN"
                         name="frDistribution"
                         value="kOutOfN"
-                        checked={formData.frDistribution === "kOutOfN"}
+                        checked={values.frDistribution === "kOutOfN"}
                         onChange={(e) => handleChange("frDistribution", e.target.value)}
                       />
                       <label htmlFor="frKOutOfN" style={{ marginLeft: "5px", fontSize: "12px" }}>
@@ -554,13 +601,13 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                     </div>
                   </div>
 
-                  {formData?.frDistribution === "kOutOfN" && (
+                  {values?.frDistribution === "kOutOfN" && (
                     <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                       <div>
                         <label style={{ fontSize: '11px', marginRight: '5px' }}>K:</label>
                         <input
                           type="text"
-                          value={formData.k}
+                          value={values.k}
                           onChange={(e) => handleChange('k', e.target.value)}
                           style={{
                             width: '60px',
@@ -575,7 +622,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                         <label style={{ fontSize: '11px', marginRight: '5px' }}>N:</label>
                         <input
                           type="text"
-                          value={formData.n}
+                          value={values.n}
                           onChange={(e) => handleChange('n', e.target.value)}
                           style={{
                             width: '60px',
@@ -595,7 +642,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                     Repair distribution:
                   </label>
                   <select
-                    value={formData.repairDistribution}
+                    value={values.repairDistribution}
                     onChange={(e) => handleChange('repairDistribution', e.target.value)}
                     style={{
                       width: '100%',
@@ -626,7 +673,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                       <label style={{ fontSize: '11px', marginRight: '5px' }}>MTBF [hours]:</label>
                       <input
                         type="text"
-                        value={formData?.fr ? (1 / parseFloat(formData.fr)).toFixed(2) : ""}
+                        value={values?.fr ? (1 / parseFloat(values.fr)).toFixed(2) : ""}
                         onChange={(e) => handleChange('fr', e.target.value)}
                         style={{
                           width: '100px',
@@ -642,7 +689,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                       <label style={{ fontSize: '11px', marginRight: '5px' }}>Load:</label>
                       <input
                         type="text"
-                        value={formData.load}
+                        value={values.load}
                         onChange={(e) => handleChange('load', e.target.value)}
                         style={{
                           width: '60px',
@@ -665,7 +712,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                     <label style={{ fontSize: '11px', marginRight: '5px' }}>MCT [hours]:</label>
                     <input
                       type="text"
-                      value={formData.mct}
+                      value={values.mct}
                       onChange={(e) => handleChange('mct', e.target.value)}
                       style={{
                         width: '100px',

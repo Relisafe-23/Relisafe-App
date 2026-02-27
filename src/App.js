@@ -30,7 +30,7 @@ import SeparateLibrary from "./components/Libraries/SeparateLibrary";
 import ConnectedLibrary from "./components/Libraries/ConnectedLibrary";
 import Reports from "./components/Reports";
 import Theme from "./components/Theme";
-
+import RBDStructure from "./components/RBD/RBDStructure";
 // Import route components with USER_ROLES
 import { ProtectedRoute, PublicRoute, USER_ROLES } from "./container/PublicLayout/PublicLayout";
 
@@ -69,7 +69,7 @@ function App() {
               component={Company}
               roles={[USER_ROLES.SUPER_ADMIN]}
             />
-            
+
             <ProtectedRoute
               exact
               name="CompanyAdmin"
@@ -85,7 +85,7 @@ function App() {
               path="/dashboard"
               component={Dashboard}
             />
-            
+
             <ProtectedRoute
               exact
               name="User"
@@ -93,7 +93,7 @@ function App() {
               component={User}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="ProjectList"
@@ -101,7 +101,7 @@ function App() {
               component={ProjectList}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="PBS"
@@ -109,7 +109,7 @@ function App() {
               component={PBS}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="FailureRatePrediction"
@@ -117,7 +117,7 @@ function App() {
               component={FailureRatePrediction}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="MTTRPrediction"
@@ -125,7 +125,7 @@ function App() {
               component={MTTRPrediction}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="FMECA"
@@ -134,16 +134,16 @@ function App() {
               component={FMECA}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="RBD"
               selectedComponent="RBD"
               path="/rbd/:id"
-             component={RBDRouteWrapper}  
+              component={RBDRouteWrapper}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="FTA"
@@ -152,7 +152,7 @@ function App() {
               component={FTA}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="PMMRA"
@@ -160,7 +160,7 @@ function App() {
               component={PMMRA}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="SparePartsAnalysis"
@@ -168,7 +168,7 @@ function App() {
               component={SparePartsAnalysis}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="Safety"
@@ -176,7 +176,7 @@ function App() {
               component={Safety}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="ProjectDetails"
@@ -184,7 +184,7 @@ function App() {
               component={ProjectDetails}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="Projectpermission"
@@ -192,7 +192,7 @@ function App() {
               component={Projectpermission}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="EditprojectDetails"
@@ -200,7 +200,7 @@ function App() {
               component={EditprojectDetails}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="SeparateLibrary"
@@ -208,7 +208,7 @@ function App() {
               component={SeparateLibrary}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="ConnectedLibrary"
@@ -216,7 +216,7 @@ function App() {
               component={ConnectedLibrary}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="Theme"
@@ -224,7 +224,7 @@ function App() {
               component={Theme}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-            
+
             <ProtectedRoute
               exact
               name="Reports"
@@ -232,8 +232,13 @@ function App() {
               component={Reports}
               roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
             />
-
-            {/* Fallback route */}
+            <ProtectedRoute
+              exact
+              name="RBDStructure"
+              path="/project/:id/rbd/structure/:rbdId"
+              component={RBDStructure}
+              roles={[USER_ROLES.ADMIN, USER_ROLES.EMPLOYEE]}
+            />
             <Route path="*">
               <Redirect to="/login" />
             </Route>

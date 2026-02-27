@@ -1,29 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import EditRBDConfigurationModal from './EditRBDConfigurationModal'
-import { FiSettings, FiEdit2, FiEye, FiTrash2, FiMoreVertical } from 'react-icons/fi';
-import RBDBlock from './RBDBlock';
+import SplitKofN from './SplitKofN';
 import Api from "../../Api";
-import RBDStructure from "../../components/RBD/RBDStructure"
-import { useHistory, useParams, useLocation } from "react-router-dom";
+import EditRBDConfigurationModal from './EditRBDConfigurationModal';
+import { useParams, useLocation } from 'react-router-dom';
+import CreatableSelect from "react-select/creatable";
+import { FiSettings, FiEdit2, FiSliders } from 'react-icons/fi';
+import {ElementParametersModal} from './ElementParametersModal';
 
-// MUI imports
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper,
-  Button,
-  IconButton,
-  Typography,
-  Box,
-  Chip,
-  Tooltip
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { NavItem } from 'react-bootstrap';
+import SwitchConfigurationModal from './SwitchConfig';
+
+import RBDBlock from './RBDBlock';
 
 export const InsertionNode = ({ x, y, onOpenMenu }) => {
   return (
@@ -417,225 +403,323 @@ export const BlockContextMenu = ({ x, y, onSelect, onClose }) => (
   </div>
 );
 
-// Styled Components
-const StyledTableContainer = styled(TableContainer)({
-  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-  borderRadius: '12px',
-  overflow: 'hidden',
-  marginTop: '24px'
-});
-
-const StyledTableHead = styled(TableHead)({
-  backgroundColor: '#f8f9fa',
-  '& .MuiTableCell-head': {
-    fontWeight: 600,
-    color: '#495057',
-    fontSize: '0.95rem',
-    borderBottom: '2px solid #dee2e6'
-  }
-});
-
-const StyledTableRow = styled(TableRow)({
-  '&:hover': {
-    backgroundColor: '#f8f9fa',
-    transition: 'background-color 0.3s ease'
-  }
-});
-
 // Main Component
 export default function RBDButton() {
-  const { id } = useParams();
-  const projectId = id;
-  const location = useLocation();
-  const history = useHistory();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const[rbdList,setRbdList]=useState([])
-  const[rBDTitle,setRBDTitle] = useState([])
-  const[mission,setMission]= useState([])
-  const[rbdId,  setRbdId]=useState("")
-
-  const [rbdConfig, setRbdConfig] = useState({
-    rbdTitle: "My RBD",
-    missionTime: 24,
-    displayUpper: "Part number",
-    displayLower: "MTBF",
-    printRemarks: "Yes"
+  const [showSymbol, setShowSymbol] = useState(false);
+  const [menu, setMenu] = useState(null);
+  const [blockMenu, setBlockMenu] = useState({ open: false, blockId: null, x: 0, y: 0 });
+  const [blocks, setBlocks] = useState([]);
+  const [nextId, setNextId] = useState(1);
+  const [elementModal, setElementModal] = useState({
+    open: false,
+    mode: 'add',
+    blockId: null,
+    blockType: ''
   });
+    const location = useLocation();
+  const [switchModal, setSwitchModal] = useState({
+    open: false,
+    blockId: null,
+    initialData: null
+  });
+
+  const openMenu = (x, y) => setMenu({ x, y });
+
+  const handleNodeClick = (node) => {
+    console.log("Node clicked:", node);
+  };
+    useEffect(() => {
+
+    const queryParams = new URLSearchParams(location.search);
+    const rbdTitle = queryParams.get('title');
+    const rbdIndex = queryParams.get('index');
+    
   
-  useEffect(()=>{
-    getRbdConfig()
-  },[projectId])
-  
-  const getRbdConfig =() =>{
-    console.log("Fetching RBD configuration...")
-    Api.get("/api/v1/EditConfigRBD/",{
-      params:{
-        projectId:projectId, 
-      }
-    })
-    .then((res)=>{
-       const rbdIds = res.data.data.map((item) => item.id);
-    console.log("RBD IDs:", rbdIds);
-      setRbdId(rbdIds);
-      console.log("rbdId",rbdId)
-      console.log("RBD Config Response:",res.data.data.filter((item)=>item.id).map((item)=>item.id))
-      const rbdName = res.data.data.filter((item)=>item.rbdTitle).map((item)=>item.rbdTitle)
-      console.log(rbdName,"rbdName")
-      const rbdMission = res.data.data.filter((item)=>item.missionTime).map((item)=>item.missionTime)
-      setMission(rbdMission)
-      setRBDTitle(rbdName )
-      setRbdList(res.data.data)
-      // Update state with fetched data if needed
-      // setRbdConfig(res.data.data);
-    })
-    .catch((error) => {
-      console.error("Error fetching RBD config:", error);
+    console.log("RBD Title from query:", rbdTitle);
+    console.log("RBD Index from query:", rbdIndex);
+    
+
+    const { state } = location;
+    if (state) {
+      console.log("RBD Title from state:", state.rbdTitle);
+      console.log("RBD Data from state:", state.rbdData);
+    }
+    
+   
+    
+  }, [location]);
+
+const handleEdit = (block) => {
+  setElementModal({
+    open: true,
+    mode: "edit",    
+    blockId: block.id,
+    blockType: block.type,
+  });
+};
+  const handleSelect = (action) => {
+    console.log("RBD action:", action);
+
+    const type = action.replace("Add ", "");
+    setElementModal({
+      open: true,
+      mode: 'add',
+      blockId: nextId,
+      blockType: type
     });
-  }
-  
-  const handleSaveConfig = (newConfig) => {
-    setRbdConfig(newConfig);
-    console.log("Saved config:", newConfig);
   };
-  
-  const handleEditClick = (title, index) => {
-    setIsModalOpen(true);
-    console.log("Edit clicked for:", title, "at index:", index);
+
+  const handleModalSubmit = (formData) => {
+    if (elementModal.mode === 'add') {
+      const newBlock = {
+        id: nextId,
+        type: elementModal.blockType === 'K_OUT_OF_N' ? 'K-out-of-N' :
+          elementModal.blockType === 'SUBRBD' ? 'SubRBD' :
+            elementModal.blockType === 'PARALLEL_SECTION' ? 'Parallel Section' :
+              elementModal.blockType === 'PARALLEL_BRANCH' ? 'Parallel Branch' : 'Regular',
+        data: {
+          ...formData,
+          elementType: elementModal.blockType === 'K_OUT_OF_N' ? 'K-out-of-N' :
+            elementModal.blockType === 'SUBRBD' ? 'SubRBD' :
+              elementModal.blockType === 'PARALLEL_SECTION' ? 'Parallel Section' :
+                elementModal.blockType === 'PARALLEL_BRANCH' ? 'Parallel Branch' : 'Regular'
+        }
+      };
+
+      setBlocks([...blocks, newBlock]);
+      setNextId(nextId + 1);
+    } else if (elementModal.mode === 'edit') {
+      setBlocks(blocks.map(block =>
+        block.id === elementModal.blockId
+          ? {
+            ...block,
+            data: {
+              ...formData,
+              elementType: block.type
+            }
+          }
+          : block
+      ));
+    }
+
+    setElementModal({ open: false, mode: 'add', blockId: null, blockType: '' });
   };
-const handleViewClick = (title, index) => {
-  console.log("View clicked for:", title, "at index:", index);
 
-  const selectedRbdId = rbdId[index];
-  console.log("Selected RBD ID:", selectedRbdId);
+  const handleSwitchConfigOpen = (initialData) => {
+    setSwitchModal({
+      open: true,
+      blockId: elementModal.blockId,
+      initialData
+    });
+  };
+  const SettingsButton1 = () => (
+    <button
+      onClick={() => setIsModalOpen(true)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '8px 16px',
+        backgroundColor: '#2b4f81',
+        color: 'white',
+        border: 'none',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        fontSize: '14px',
+        fontWeight: '500',
+        transition: 'background-color 0.3s'
+      }}
+      onMouseEnter={(e) => e.target.style.backgroundColor = '#1e3c66'}
+      onMouseLeave={(e) => e.target.style.backgroundColor = '#2b4f81'}
+    >
+      <FiSettings size={18} />
+      <span>RBD Configuration</span>
+    </button>
+  );
 
-  history.push(`/project/${projectId}/rbd/structure/${selectedRbdId}`);
-}
 
-  const handleDeleteClick = (title, index) => {
-    console.log("Delete clicked for:", title, "at index:", index);
-    // Add your delete logic here (e.g., show confirmation dialog)
-    if (window.confirm(`Are you sure you want to delete "${title}"?`)) {
-      // Perform delete operation
-      const updatedTitles = rBDTitle.filter((_, i) => i !== index);
-      const updatedMissions = mission.filter((_, i) => i !== index);
-      setRBDTitle(updatedTitles);
-      setMission(updatedMissions);
-      // You might also want to call an API to delete from backend
+     
+  const handleSwitchSubmit = (switchData) => {
+    if (elementModal.blockId) {
+      setBlocks(blocks.map(block =>
+        block.id === elementModal.blockId
+          ? {
+            ...block,
+            data: {
+              ...block.data,
+              switchData: switchData
+            }
+          }
+          : block
+      ));
+    }
+
+    setSwitchModal({ open: false, blockId: null, initialData: null });
+  };
+const [isModalOpen, setIsModalOpen] = useState(false);
+const [rbdConfig, setRbdConfig] = useState({
+  rbdTitle: "My RBD",
+  missionTime: 24,
+  displayUpper: "Part number",
+  displayLower: "MTBF",
+  printRemarks: "Yes"
+});
+
+const handleSaveConfig = (newConfig) => {
+  setRbdConfig(newConfig);
+  // You can also save to backend here
+  console.log("Saved config:", newConfig);
+};
+  const handleDeleteBlock = (id) => {
+    setBlocks(blocks.filter(block => block.id !== id));
+  };
+
+  const handleEditBlock = (e, id, blockData) => {
+    if (e) {
+      const rect = e.target.getBoundingClientRect();
+      setBlockMenu({ open: true, blockId: id, x: rect.right, y: rect.top });
     }
   };
-  
+
+  const handleBlockMenuSelect = (action) => {
+    if (!blockMenu.blockId) return;
+
+    if (action === "Edit...") {
+      const block = blocks.find(b => b.id === blockMenu.blockId);
+      setElementModal({
+        open: true,
+        mode: 'edit',
+        blockId: blockMenu.blockId,
+        blockType: block?.type === 'K-out-of-N' ? 'K_OUT_OF_N' :
+          block?.type === 'SubRBD' ? 'SUBRBD' :
+            block?.type === 'Parallel Section' ? 'PARALLEL_SECTION' :
+              block?.type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR'
+      }) }else
+     if (action === "Delete...") {
+      handleDeleteBlock(blockMenu.blockId);
+    } else
+     if (action.startsWith("Add ")) {
+      const type = action.replace("Add ", "");
+      setElementModal({
+        open: true,
+        mode: 'add',
+        blockId: nextId,
+        blockType: type === 'K-out-of-N' ? 'K_OUT_OF_N' :
+          type === 'SubRBD' ? 'SUBRBD' :
+            type === 'Parallel Section' ? 'PARALLEL_SECTION' :
+              type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR'
+      });
+    } else if (action === "Split K-out-of-N...") {
+      alert("Splitting K-out-of-N block");
+    }
+
+    setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+  };
+  const [listedRBDs, setListedRBDs] = useState([]);
+
   return (
-    <Box sx={{ minHeight: '100vh', p: 3, backgroundColor: '#f5f5f5' }}>
-     
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        mb: 4
-      }}>
-        <Typography variant="h5" sx={{ fontWeight: 600, color: '#2c3e50' }}>
-          RBD Configuration
-        </Typography>
-        
-        <Button
-          variant="contained"
-          onClick={() => setIsModalOpen(true)}
-          startIcon={<FiSettings />}
-          sx={{
-            backgroundColor: '#2b4f81',
-            '&:hover': {
-              backgroundColor: '#1e3c66'
-            },
-            textTransform: 'none',
-            fontWeight: 500,
-            px: 3,
-            py: 1
+    <>
+
+      <div style={{ minHeight: "100vh", padding: "20px", overflowX: "auto" }}>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "100%",
+            marginTop: "50px",
           }}
         >
-          RBD Configuration
-        </Button>
-      </Box>
 
-      <StyledTableContainer component={Paper}>
-        <Table>
-          <StyledTableHead>
-            <TableRow>
-              <TableCell>S.No</TableCell>
-              <TableCell>RBD Title</TableCell>
-              <TableCell>Remarks</TableCell>
-              <TableCell>Mission Time (hrs)</TableCell>
-              <TableCell align="right">Actions</TableCell>
-            </TableRow>
-          </StyledTableHead>
-          <TableBody>
-            {rBDTitle.map((title, index) => (
-              <StyledTableRow key={index}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{title}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={rbdConfig?.printRemarks || "No"} 
-                    size="small"
-                    color={rbdConfig?.printRemarks === "Yes" ? "success" : "default"}
-                    sx={{ fontWeight: 500 }}
-                  />
-                </TableCell>
-                <TableCell>
-                  {mission && mission[index] ? mission[index] : "-"}
-                </TableCell>
-                <TableCell align="right">
-                  <Tooltip title="View">
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleViewClick(title, index)}
-                      sx={{ 
-                        mr: 1,
-                        color: '#2b4f81',
-                        '&:hover': { backgroundColor: 'rgba(43, 79, 129, 0.04)' }
-                      }}
-                    >
-                      <FiEye size={18} />
-                    </IconButton>
-                  </Tooltip>
-                  
-                  <Tooltip title="Edit">
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleEditClick(title, index)}
-                      sx={{ 
-                        mr: 1,
-                        color: '#4CAF50',
-                        '&:hover': { backgroundColor: 'rgba(76, 175, 80, 0.04)' }
-                      }}
-                    >
-                      <FiEdit2 size={18} />
-                    </IconButton>
-                  </Tooltip>
-                  
-                  <Tooltip title="Delete">
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleDeleteClick(title, index)}
-                      sx={{ 
-                        color: '#f44336',
-                        '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.04)' }
-                      }}
-                    >
-                      <FiTrash2 size={18} />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
-              </StyledTableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </StyledTableContainer>
-      <EditRBDConfigurationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveConfig}
-        initialConfig={rbdConfig}
-      />
-    </Box>
+          <div style={{ margin: "40px 0" }}>
+            <button
+              onClick={() => setShowSymbol(true)}
+              style={{
+                backgroundColor: "green",
+                color: "white",
+                padding: "8px 16px",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              RBD
+
+            </button>
+         
+          </div>
+
+          {/* RBD Diagram */}
+          {showSymbol && (
+            <div style={{ width: "100%", overflowX: "auto" }}>
+              <BiDirectionalSymbol
+                onNodeClick={handleNodeClick}
+                onOpenMenu={openMenu}
+                blocks={blocks}
+                onDeleteBlock={handleDeleteBlock}
+                onEditBlock={handleEditBlock}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Right-click Menu (RBD) */}
+        {menu && (
+          <RBDContextMenu
+            x={menu.x}
+            y={menu.y}
+            onSelect={handleSelect}
+            onClose={() => setMenu(null)}
+          />
+        )}
+
+        {/* Right-click Menu (Block) */}
+        {blockMenu.open && (
+          <BlockContextMenu
+            x={blockMenu.x}
+            y={blockMenu.y}
+            onSelect={handleBlockMenuSelect}
+            onClose={() =>
+              setBlockMenu({ open: false, blockId: null, x: 0, y: 0 })
+            }
+          />
+        )}
+    {elementModal.open && (
+        <ElementParametersModal
+            key={elementModal.blockId} 
+          isOpen={elementModal.open}
+          onClose={() =>
+            setElementModal({
+              open: false,
+              mode: "add",
+              blockId: null,
+              blockType: "",
+            })
+          }
+          onSubmit={handleModalSubmit}
+          onOpenSwitchConfig={handleSwitchConfigOpen}
+          currentBlock={
+            blocks.find((b) => b.id === elementModal.blockId)?.data
+          }
+        />
+        )}
+     
+        <SwitchConfigurationModal
+          isOpen={switchModal.open}
+          onClose={() =>
+            setSwitchModal({
+              open: false,
+              blockId: null,
+              initialData: null,
+            })
+          }
+          onSubmit={handleSwitchSubmit}
+          currentSwitchData={switchModal.initialData}
+        />
+      </div>
+
+    </>
+
   );
 }

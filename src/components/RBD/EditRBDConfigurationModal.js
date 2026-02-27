@@ -107,6 +107,7 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave }) => {
     borderRadius: "3px",
     cursor: "pointer"
   };
+
   useEffect(() => {
     if (isOpen) {
       setValues(initialState);
@@ -161,6 +162,7 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave }) => {
         console.error("Error saving config:", error);
       });
   };
+
 
   if (!isOpen) return null;
 
