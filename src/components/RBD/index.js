@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EditRBDConfigurationModal from './EditRBDConfigurationModal'
 import { FiSettings, FiEdit2, FiEye, FiTrash2, FiMoreVertical } from 'react-icons/fi';
-import { RBDBlock } from './RBDBlock';
+import {RBDBlock }  from './RBDBlock';
 import Api from "../../Api";
 import RBDStructure from "../../components/RBD/RBDStructure"
 import { useHistory, useParams, useLocation } from "react-router-dom";

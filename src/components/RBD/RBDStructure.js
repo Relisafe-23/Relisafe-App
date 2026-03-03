@@ -56,36 +56,34 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
   const baseRightBoxX = 650;
   const dynamicRightBoxX = baseRightBoxX + (blocks.length * 30);
 
-  // Process blocks to identify parallel sections
+  // Process blocks to identify parallel sections and their branches
   const processBlocksWithParallelSections = (blocks) => {
-    const regularBlocks = [];
     const parallelSections = {};
     
+    // First, identify all parallel sections
     blocks.forEach(block => {
       if (block.type === 'Parallel Section') {
         parallelSections[block.id] = {
           ...block,
           branches: []
         };
-      } else if (block.data?.parentSection) {
-        const parentId = block.data.parentSection;
-        if (parallelSections[parentId]) {
-          parallelSections[parentId].branches.push(block);
-        } else {
-          regularBlocks.push(block);
-        }
-      } else {
-        regularBlocks.push(block);
       }
     });
     
-    return { regularBlocks, parallelSections };
+    // Then, assign branches to their parent sections
+    blocks.forEach(block => {
+      if (block.data?.parentSection && parallelSections[block.data.parentSection]) {
+        parallelSections[block.data.parentSection].branches.push(block);
+      }
+    });
+    
+    return parallelSections;
   };
 
   const calculateLayout = () => {
-    const { regularBlocks, parallelSections } = processBlocksWithParallelSections(blocks);
+    const parallelSections = processBlocksWithParallelSections(blocks);
     
-    // Calculate total height needed for all elements to determine canvas height
+    // Calculate total height needed
     let maxY = centerPointY + 150;
     
     if (blocks.length === 0) {
@@ -96,17 +94,31 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
         startX: centerX,
         actualRightBoxX: baseRightBoxX,
         parallelSections: {},
-        regularBlocks: [],
         maxY: maxY
       };
     }
 
+    // Get only top-level blocks (not branches) in their original order
+    const topLevelBlocks = blocks.filter(block => 
+      block.type === 'Parallel Section' || !block.data?.parentSection
+    );
+
     // Calculate total width needed
-    const totalRegularBlocksWidth = regularBlocks.length * blockWidth;
-    const totalParallelSectionsWidth = Object.keys(parallelSections).length * (blockWidth + 40);
-    const totalNodesWidth = (regularBlocks.length + Object.keys(parallelSections).length + 1) * nodeSpacing * 2;
-    const totalBlockSpacing = (regularBlocks.length + Object.keys(parallelSections).length - 1) * blockSpacing;
-    const totalNeededWidth = totalRegularBlocksWidth + totalParallelSectionsWidth + totalNodesWidth + totalBlockSpacing;
+    const totalTopLevelBlocks = topLevelBlocks.length;
+    const totalNodesWidth = (totalTopLevelBlocks + 1) * nodeSpacing * 2;
+    const totalBlockSpacing = (totalTopLevelBlocks - 1) * blockSpacing;
+    
+    // Calculate width for each type
+    let totalElementsWidth = 0;
+    topLevelBlocks.forEach(block => {
+      if (block.type === 'Parallel Section') {
+        totalElementsWidth += blockWidth + 40; // Extra width for parallel section
+      } else {
+        totalElementsWidth += blockWidth;
+      }
+    });
+    
+    const totalNeededWidth = totalElementsWidth + totalNodesWidth + totalBlockSpacing;
 
     const requiredRightBoxX = leftBoxX + boxWidth + totalNeededWidth + minOutputGap + boxWidth;
     const actualRightBoxX = Math.max(baseRightBoxX, requiredRightBoxX);
@@ -126,53 +138,32 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
     });
     currentX += nodeSpacing;
 
-    // Combine regular blocks and parallel sections in order
-    const allElements = [...regularBlocks];
-    
-    blocks.forEach(block => {
-      if (block.type === 'Parallel Section' && parallelSections[block.id]) {
-        const index = allElements.findIndex(b => b.id === block.id);
-        if (index === -1) {
-          allElements.push(block);
-        }
-      }
-    });
-
-    // Sort to maintain original order
-    allElements.sort((a, b) => {
-      const indexA = blocks.findIndex(b => b.id === a.id);
-      const indexB = blocks.findIndex(b => b.id === b.id);
-      return indexA - indexB;
-    });
-
-    allElements.forEach((element) => {
-      if (element.type === 'Parallel Section') {
-      
-        const section = parallelSections[element.id];
+    // Iterate through top-level blocks in their original order
+    topLevelBlocks.forEach((block, index) => {
+      if (block.type === 'Parallel Section') {
+        // Render parallel section
+        const section = parallelSections[block.id];
         if (section) {
           const branchCount = section.branches.length;
-          const sectionHeight = branchCount * blockHeight + (branchCount - 1) * 10;
+          const sectionHeight = Math.max(branchCount * blockHeight + (branchCount - 1) * 10, blockHeight + 20);
           
-      
           const startY = centerPointY - (sectionHeight / 2);
           
-       
           if (startY + sectionHeight + 30 > maxY) {
             maxY = startY + sectionHeight + 50;
           }
           
           items.push({
             type: 'parallel-section',
-            id: element.id,
-            blockType: element.type,
-            blockData: element.data,
+            id: block.id,
+            blockType: block.type,
+            blockData: block.data,
             x: currentX,
             y: startY,
             width: blockWidth + 20,
             height: sectionHeight + 30,
-            branches: section.branches.map((branch, index) => {
-              // Position branches evenly within the section
-              const branchY = startY + 20 + index * (blockHeight + 10);
+            branches: section.branches.map((branch, branchIndex) => {
+              const branchY = startY + 20 + branchIndex * (blockHeight + 10);
               return {
                 ...branch,
                 x: currentX + 10,
@@ -184,23 +175,23 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
           currentX += blockWidth + 40;
         }
       } else {
-        // Render regular block horizontally
+        // Render regular block
         items.push({
           type: 'block',
-          id: element.id,
-          blockType: element.type,
-          blockData: element.data,
+          id: block.id,
+          blockType: block.type,
+          blockData: block.data,
           x: currentX,
           y: centerPointY - 20
         });
         currentX += blockWidth + blockSpacing;
       }
 
-      // Add node after element
-      if (allElements.indexOf(element) < allElements.length - 1) {
+      // Add node after element (except for the last one)
+      if (index < topLevelBlocks.length - 1) {
         items.push({
           type: 'node',
-          id: `node-${element.id}`,
+          id: `node-${block.id}`,
           x: currentX,
           y: centerPointY
         });
@@ -224,7 +215,6 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
       startX,
       actualRightBoxX,
       parallelSections,
-      regularBlocks,
       maxY: Math.max(maxY, centerPointY + 100)
     };
   };
@@ -234,6 +224,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
   const rightBoxX = layout.actualRightBoxX;
   const canvasHeight = Math.max(400, layout.maxY + 50);
 
+  // Arrow points calculation
   const leftArrowPoints = [
     [rightBoxX, centerPointY - arrowHeight / 2],
     [rightBoxX + arrowWidth, centerPointY],
@@ -246,6 +237,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
     [leftBoxX + boxWidth, centerPointY + arrowHeight / 2]
   ].map(p => p.join(',')).join(' ');
 
+  // Connection points calculation
   const getConnectionPoints = () => {
     const connectionPoints = [];
 
@@ -321,6 +313,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
 
   return (
     <svg width={svgWidth} height={canvasHeight} viewBox={`0 0 ${svgWidth} ${canvasHeight}`} style={{ overflow: 'visible' }}>
+      {/* Connection lines */}
       {connectionPoints.map((point, index) => (
         <line
           key={`line-${index}`}
@@ -333,6 +326,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
         />
       ))}
 
+      {/* Input box */}
       <g onClick={() => onNodeClick("LEFT")} style={{ cursor: "pointer" }}>
         <rect
           x={leftBoxX}
@@ -355,6 +349,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
         </text>
       </g>
 
+      {/* Output box */}
       <g onClick={() => onNodeClick("RIGHT")} style={{ cursor: "pointer" }}>
         <rect
           x={rightBoxX}
@@ -377,6 +372,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
         </text>
       </g>
 
+      {/* Render items (nodes, blocks, parallel sections) */}
       {items.map((item) => {
         if (item.type === 'node') {
           return (
@@ -396,27 +392,24 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
                 y1={item.y + 20}
                 x2={item.x - 5}
                 y2={item.y + item.height - 20}
-                 stroke="black"
+                stroke="black"
                 strokeWidth="2"
-                // strokeDasharray="5,3"
               />
               <line
                 x1={item.x + item.width + 5}
                 y1={item.y + 20}
                 x2={item.x + item.width + 5}
                 y2={item.y + item.height - 20}
-                  stroke="black"
+                stroke="black"
                 strokeWidth="2"
-                // strokeDasharray="5,3"
               />
               
-      
               <line
                 x1={item.x - 5}
                 y1={item.y + 20}
                 x2={item.x}
                 y2={item.y + 20}
-               stroke="black"
+                stroke="black"
                 strokeWidth="2"
               />
               <line
@@ -424,7 +417,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
                 y1={item.y + item.height - 20}
                 x2={item.x}
                 y2={item.y + item.height - 20}
-             stroke="black"
+                stroke="black"
                 strokeWidth="2"
               />
               <line
@@ -432,7 +425,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
                 y1={item.y + 20}
                 x2={item.x + item.width + 5}
                 y2={item.y + 20}
-                  stroke="black"
+                stroke="black"
                 strokeWidth="2"
               />
               <line
@@ -444,9 +437,6 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
                 strokeWidth="2"
               />
 
-              {/* Draw parallel section container background */}
-           
-              
               {/* Render branches vertically */}
               {item.branches.map((branch) => (
                 <RBDBlock
@@ -479,6 +469,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
         return null;
       })}
 
+      {/* Empty state */}
       {blocks.length === 0 && (
         <InsertionNode
           x={layout.startX}
@@ -600,7 +591,12 @@ export default function RBDButton() {
     blockType: ''
   });
   
-  // Add state for K-out-of-N modal
+  const [clickedNodeInfo, setClickedNodeInfo] = useState({
+    index: null,
+    position: null, // 'left' or 'right' relative to existing blocks
+    x: 0,
+    y: 0
+  });
   const [kOfNModal, setKOfNModal] = useState({
     open: false,
     blockId: null,

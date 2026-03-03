@@ -1,9 +1,14 @@
 // RBDBlock.jsx
-import React from 'react';
+import React,{useState} from 'react';
 import { KOfNBlock } from './KOfNBlock';
 
 export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData }) => {
-  // Handle different block types
+   const [formData, setFormData] = useState({
+    fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
+    k: blockData?.k || '2',
+    n: blockData?.n || '3',
+    mtbf: blockData?.mtbf || '1303617.9'
+  });
   if (type === 'K-out-of-N') {
     return (
       <KOfNBlock
@@ -29,7 +34,25 @@ export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData }) => {
     }
   };
 
-  // Different colors for different block types
+   const getBlockContent = () => {
+    switch (type) {
+      case 'Regular':
+        return formData?.fr || 'Block';
+      case 'K-out-of-N':
+        const k = blockData?.k || '2';
+        const n = blockData?.n || '3';
+        const mtbf = blockData?.mtbf || '1303617.9';
+        return `Recover\n${mtbf}\n${k}/${n}`;
+      case 'SubRBD':
+        return 'Sub RBD';
+      case 'Parallel Section':
+        return 'PS\n119760.5';
+      case 'Parallel Branch':
+        return 'Branch';
+      default:
+        return 'Block';
+    }
+  };
   const getBlockColor = () => {
     switch(type) {
       case 'Regular':
@@ -67,7 +90,7 @@ export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData }) => {
         fontSize="10"
         fontWeight="bold"
       >
-        {type === 'Regular' ? (blockData?.name || 'Regular') : type}
+       {getBlockContent()}
       </text>
       {blockData?.name && type !== 'Regular' && (
         <text
