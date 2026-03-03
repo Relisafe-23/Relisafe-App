@@ -46,7 +46,7 @@ export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData }) => {
       case 'SubRBD':
         return 'Sub RBD';
       case 'Parallel Section':
-        return 'PS\n119760.5';
+        return formData?.fr || 'Block';
       case 'Parallel Branch':
         return 'Branch';
       default:
