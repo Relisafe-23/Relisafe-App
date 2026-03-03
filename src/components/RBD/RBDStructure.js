@@ -341,10 +341,10 @@ const renderParallelSection = (item) => {
         y={y}
         width={width}
         height={height}
-        fill="#f8f8f8"
-        stroke="#999"
+        fill="white"
+        // stroke="#999"
         strokeWidth="1"
-        rx="3"
+        rx="2"
       />
       
       {/* Left vertical rail */}
@@ -853,14 +853,7 @@ export default function RBDButton() {
     const topLevelBlocks = blocks.filter(block => 
       block.type === 'Parallel Section' || !block.data?.parentSection
     );
-    
-    console.log("Top level blocks count:", topLevelBlocks.length, "Node index:", nodeIndex);
-    console.log("Top level blocks:", topLevelBlocks?.map(b => ({ id: b.id, type: b.type })));
-    
-    // Node indices correspond to positions between top-level blocks
-    // Node 0: before first block
-    // Node 1: between block 0 and block 1
-    // Node n: after last block (where n = topLevelBlocks.length)
+  
     
     if (nodeIndex === 0) {
       console.log("Inserting at beginning (index 0)");
@@ -886,14 +879,9 @@ export default function RBDButton() {
 
   // Helper function to insert a block at a specific position
   const insertBlockAtPosition = (newBlock, nodeIndex) => {
-    console.log("=== insertBlockAtPosition ===");
-    console.log("Current blocks:", blocks);
-    console.log("Node index received:", nodeIndex);
-    
+  
     const insertAtIndex = findInsertionIndex(nodeIndex);
-    
-    console.log("Inserting block at array index:", insertAtIndex);
-    console.log("New block:", newBlock);
+
     
     const newBlocks = [...blocks];
     newBlocks.splice(insertAtIndex, 0, newBlock);
