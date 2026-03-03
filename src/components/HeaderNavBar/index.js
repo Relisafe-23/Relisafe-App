@@ -279,7 +279,7 @@ const HeaderNavBar = ({
   }
   id="basic-nav-dropdown"
 >
-  <NavDropdown.Item 
+  {/* <NavDropdown.Item 
     onClick={() => {
       if (window.generateFTAReport) {
         window.generateFTAReport('all');
@@ -290,7 +290,7 @@ const HeaderNavBar = ({
   >
     <FontAwesomeIcon icon={faFileAlt} style={{ paddingRight: "10px" }} />
     All Nodes Report
-  </NavDropdown.Item>
+  </NavDropdown.Item> */}
   <NavDropdown.Item 
     onClick={() => {
       if (window.generateFTAReport) {

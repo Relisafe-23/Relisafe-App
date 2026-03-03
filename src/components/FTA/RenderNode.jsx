@@ -570,7 +570,7 @@ const eventFields = [
         ...baseStyles,
         backgroundColor: shouldHighlightYellow() ? "#ffff99" : "#e6f3ff",
         border: "1px solid #00a9c9",
-        borderRadius: "50%",
+         borderRadius: "0px",
         alignItems: "center",
         justifyContent: "flex-start", 
         padding: "5px"
@@ -608,6 +608,7 @@ const eventFields = [
             border: isActive ? "2px solid green" : "none",
             margin: "auto",
             width: 160,
+            
             height: 120,
             position: 'relative',
           }}
@@ -620,7 +621,7 @@ const eventFields = [
               height: "100%",
               boxShadow: "rgba(0, 0, 0, 0.16) 0px 1px 4px",
               border: "none",
-              borderRadius: node?.isEvent ? "50%" : "0px",
+               borderRadius: node?.isEvent ? "0" : "0px",
               ...getNodeStyles(),
             }}
             className="FTA-card"
@@ -632,13 +633,13 @@ const eventFields = [
           >
             <Card.Header
               style={{
-                height: node?.isEvent ? "25px" : "20px",
+                height: node?.isEvent ? "20px" : "20px",
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 padding: "0px",
-                backgroundColor: node?.isEvent ? "#4caf50" : "#00a9c9",
-                borderRadius: node?.isEvent ? "50% 50% 0 0" : "0px",
+                backgroundColor: node?.isEvent ? "#00a9c9" : "#00a9c9",
+                borderRadius: node?.isEvent ? "0px" : "0px",
                 color: "#fff",
                 fontSize: "10px",
                 fontWeight: "bold",
@@ -742,37 +743,77 @@ const eventFields = [
 )}
 
 {/* Display formula only if no calculated value */}
+{/* Display formula only if no calculated value */}
 {!node?.qn && node?.isEvent && node?.calcTypes && (
   <div style={{ fontSize: "7px", marginTop: "5px", width: "100%", textAlign: "center" }}>
+    {/* #1 Probability */}
     {node?.calcTypes === "Probability" && (
       <span>P = {node?.isP || '0'}</span>
     )}
+    
+    {/* #2 Frequency */}
     {node?.calcTypes === "Frequency" && (
       <span>f = {node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
     )}
+    
+    {/* #3 Constant mission time */}
     {node?.calcTypes === "Constant mission time" && (
-      <span>P = λ·tm, λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}</span>
+      <span>Q = 1-(1-{node?.isP || '0'})^tm · e^(-λ·tm), λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
     )}
+    
+    {/* #4 Repairable */}
     {node?.calcTypes === "Repairable" && (
-      <span>P = (λ/(λ+μ))[1-e^(-(λ+μ)t]</span>
+      <span>Q(t)=q·e^(-(λ+μ)t)+(λ/(λ+μ))[1-e^(-(λ+μ)t)], λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
     )}
+    
+    {/* #5 Unrepairable */}
     {node?.calcTypes === "Unrepairable" && (
-      <span>P = 1-(1-q)e^(-λt)</span>
+      <span>Q = 1-(1-{node?.isP || '0'})·e^(-λt), λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
     )}
+    
+    {/* #6 Periodical tests */}
     {node?.calcTypes === "Periodical tests" && (
-      <span>Periodical Tests, Ti={node?.isT || '0'}h</span>
+      <span>See Table 2, Ti={node?.isT || '0'}h, λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
     )}
+    
+    {/* #7 Latent */}
     {node?.calcTypes === "Latent" && (
-      <span>P = 1-(1-q)^q·e^(-λT), T={node?.isT || '0'}h</span>
+      <span>Q = 1-(1-{node?.isP || '0'})^t·e^(-λ·Ti), Ti={node?.isT || '0'}h, λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
     )}
-    {node?.calcTypes === "Latent, P=λ*T/2" && (
-      <span>P = λ·T/2, T={node?.isT || '0'}h</span>
-    )}
-    {node?.calcTypes === "Latent,Life-time, P=1-e^(-λ*T)" && (
-      <span>P = 1-e^(-λT), T={node?.isT || '0'}h</span>
-    )}
+    
+    {/* #8 Average probability per mission hour */}
     {node?.calcTypes === "Average probability per mission hour" && (
-      <span>Avg P = 1-(1-q)^t</span>
+      <span>Q = 1-(1-{node?.isP || '0'})^t</span>
+    )}
+    
+    {/* #9 Periodical Tests #2 */}
+    {node?.calcTypes === "Periodical Tests #2" && (
+      <span>Algorithm (see Table 1), Ti={node?.isT || '0'}h, λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
+    )}
+    
+    {/* Backward compatibility cases */}
+    {node?.calcTypes === "Evident, P=λ*t" && (
+      <span>Q = λ·t, λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
+    )}
+    
+    {node?.calcTypes === "Const.mission time, P=λ*tm" && (
+      <span>Q = λ·tm, λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
+    )}
+    
+    {node?.calcTypes === "Latent, P=λ*T" && (
+      <span>Q = λ·T, T={node?.isT || '0'}h, λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
+    )}
+    
+    {node?.calcTypes === "Latent, P=λ*T/2" && (
+      <span>Q = λ·T/2, T={node?.isT || '0'}h, λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
+    )}
+    
+    {node?.calcTypes === "Latent,Life-time, P=1-e^(-λ*T)" && (
+      <span>Q = 1-e^(-λ·T), T={node?.isT || '0'}h, λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
+    )}
+    
+    {node?.calcTypes === "Latent repairable" && (
+      <span>Q = (λ/(λ+μ))[1-e^(-(λ+μ)T)], λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
     )}
   </div>
 )}
@@ -863,71 +904,140 @@ const eventFields = [
     </div>
     
     {/* White box below with all the formulas and values */}
-    <div style={{ 
-      position: "absolute",
-      top: "70px",
-      left: "0",
-      fontSize: "8px", 
-      width: "160px", 
-      textAlign: "center",
-      backgroundColor: "white",
-      padding: "4px",
-      borderRadius: "4px",
-      border: "1px solid #ccc",
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-    }}>
-      
-      {/* FORMULA - Shows the formula text */}
-      <div style={{ fontWeight: "bold", marginBottom: "2px" }}>
-        {node?.calcTypes === "Probability" && "Q = q"}
-        {node?.calcTypes === "Frequency" && "f = λ"}
-        {node?.calcTypes === "Constant mission time" && "Q = 1-(1-q)^tm"}
-        {node?.calcTypes === "Repairable" && "Q = (λ/(λ+μ))[1-e^(-(λ+μ)t)]"}
-        {node?.calcTypes === "Unrepairable" && "Q = 1-(1-q)e^(-λt)"}
-        {node?.calcTypes === "Periodical tests" && "Q = λ·T/2"}
-        {node?.calcTypes === "Latent" && "Q = λ·T"}
-        {node?.calcTypes === "Latent, P=λ*T/2" && "Q = λ·T/2"}
-        {node?.calcTypes === "Latent,Life-time, P=1-e^(-λ*T)" && "Q = 1-e^(-λT)"}
-        {node?.calcTypes === "Average probability per mission hour" && "Q = λ·t"}
-        {node?.calcTypes === "Periodical Tests #2" && "Q = λ·T/2"}
-        {node?.calcTypes === "Evident, P=λ*t" && "Q = λ·t"}
-        {node?.calcTypes === "Const.mission time, P=λ*tm" && "Q = λ·tm"}
-        {node?.calcTypes === "Latent repairable" && "Q = (λ/(λ+μ))[1-e^(-(λ+μ)T)]"}
+{/* White box below with all the formulas and values */}
+<div style={{ 
+  position: "absolute",
+  top: "70px",
+  left: "0",
+  fontSize: "8px", 
+  width: "160px", 
+  textAlign: "center",
+  backgroundColor: "white",
+  padding: "4px",
+  borderRadius: "4px",
+  border: "1px solid #ccc",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+}}>
+  
+  {/* FORMULA - Shows the formula text */}
+  <div style={{ fontWeight: "bold", marginBottom: "2px" }}>
+    {/* #1 Probability */}
+    {node?.calcTypes === "Probability" && "Q = q"}
+    
+    {/* #2 Frequency */}
+    {node?.calcTypes === "Frequency" && "w(t) = f"}
+    
+    {/* #3 Constant mission time */}
+    {node?.calcTypes === "Constant mission time" && "Q = 1-(1-q)^n·exp(-λ·Tm)"}
+    
+    {/* #4 Repairable */}
+    {node?.calcTypes === "Repairable" && "Q(t)=q^n·e^(-(λ+μ)t)+(λ/(λ+μ))^n[1-e^(-(λ+μ)t)]"}
+    
+    {/* #5 Unrepairable */}
+    {node?.calcTypes === "Unrepairable" && "Q = 1-(1-q)^n·e^(-λt)"}
+    
+    {/* #6 Periodical tests */}
+    {node?.calcTypes === "Periodical tests" && "See Table 2 for Q(t)"}
+    
+    {/* #7 Latent */}
+    {node?.calcTypes === "Latent" && "Q = 1-(1-q)^t·e^(-λ·Ti)"}
+    
+    {/* #8 Average probability per mission hour */}
+    {node?.calcTypes === "Average probability per mission hour" && "Q = 1-(1-q)^t"}
+    
+    {/* #9 Periodical Tests #2 */}
+    {node?.calcTypes === "Periodical Tests #2" && "Algorithm (see Table 1)"}
+    
+    {/* Backward compatibility */}
+    {node?.calcTypes === "Evident, P=λ*t" && "Q = λ·t"}
+    {node?.calcTypes === "Const.mission time, P=λ*tm" && "Q = λ·tm"}
+    {node?.calcTypes === "Latent, P=λ*T" && "Q = λ·T"}
+    {node?.calcTypes === "Latent, P=λ*T/2" && "Q = λ·T/2"}
+    {node?.calcTypes === "Latent,Life-time, P=1-e^(-λ*T)" && "Q = 1-e^(-λ·T)"}
+    {node?.calcTypes === "Latent repairable" && "Q = (λ/(λ+μ))[1-e^(-(λ+μ)T)]"}
+  </div>
+  
+  {/* PARAMETERS - Shows the actual numbers */}
+  <div style={{ textAlign: "left", paddingLeft: "5px", marginTop: "2px" }}>
+    {/* Failure Rate λ */}
+    {node?.fr && node.fr !== "0" && node.fr !== "-" && (
+      <div>λ = {parseFloat(node.fr).toExponential(2)}/h</div>
+    )}
+    
+    {/* Probability q */}
+    {node?.isP && node.isP !== "0" && node.isP !== "" && (
+      <div>q = {node.isP}</div>
+    )}
+    
+    {/* MTTR */}
+    {node?.mttr && node.mttr !== "0" && (
+      <div>MTTR = {node.mttr}h</div>
+    )}
+    
+    {/* Test Interval T/Ti */}
+    {node?.isT && node.isT !== "0" && (
+      <div>T = {node.isT}h</div>
+    )}
+    
+    {/* Mission Time tm */}
+    {node?.eventMissionTime && node.eventMissionTime !== "0" && (
+      <div>tm = {node.eventMissionTime}h</div>
+    )}
+    
+    {/* Time to first test for Periodical tests */}
+    {node?.timeToFirstTest && node.timeToFirstTest !== "0" && (
+      <div>Tf = {node.timeToFirstTest}h</div>
+    )}
+  </div>
+  
+  {/* CALCULATED VALUES - Shows Q and frequency results */}
+  {node?.qn && (
+    <div>
+      {/* Unavailability Q value */}
+      <div style={{ 
+        marginTop: "4px", 
+        padding: "2px", 
+        backgroundColor: "#4caf50", 
+        color: "white",
+        borderRadius: "3px",
+        fontWeight: "bold"
+      }}>
+        Q = {parseFloat(node.qn).toExponential(4)}
       </div>
       
-      {/* PARAMETERS - Shows the actual numbers like λ = 1.82e+1 */}
-      <div style={{ textAlign: "left", paddingLeft: "5px", marginTop: "2px" }}>
-        {node?.fr && node.fr !== "0" && node.fr !== "-" && (
-          <div>λ = {parseFloat(node.fr).toExponential(2)}</div>
-        )}
-        {node?.isP && node.isP !== "0" && node.isP !== "" && (
-          <div>q = {node.isP}</div>
-        )}
-        {node?.mttr && node.mttr !== "0" && (
-          <div>MTTR = {node.mttr}h</div>
-        )}
-        {node?.isT && node.isT !== "0" && (
-          <div>T = {node.isT}h</div>
-        )}
-        {node?.eventMissionTime && node.eventMissionTime !== "0" && (
-          <div>tm = {node.eventMissionTime}h</div>
-        )}
-      </div>
-      
-      {/* CALCULATED VALUE - Shows the result in green */}
-      {node?.qn && (
+      {/* Frequency w(t) - shown for applicable types */}
+      {node?.calcTypes !== "Probability" && 
+       node?.calcTypes !== "Frequency" && 
+       node?.calcTypes !== "Average probability per mission hour" && 
+       node?.fr && node.fr !== "0" && (
         <div style={{ 
-          marginTop: "4px", 
+          marginTop: "2px", 
           padding: "2px", 
-          backgroundColor: "#4caf50", 
+          backgroundColor: "#2196f3", 
+          color: "white",
+          borderRadius: "3px",
+          fontSize: "7px"
+        }}>
+          w(t) = {parseFloat(node.fr).toExponential(2)}/h
+        </div>
+      )}
+      
+      {/* For Frequency event type, show the frequency prominently */}
+      {node?.calcTypes === "Frequency" && node?.fr && node.fr !== "0" && (
+        <div style={{ 
+          marginTop: "2px", 
+          padding: "2px", 
+          backgroundColor: "#ff9800", 
           color: "white",
           borderRadius: "3px",
           fontWeight: "bold"
         }}>
-          Q = {parseFloat(node.qn).toExponential(4)}
+          w(t) = {parseFloat(node.fr).toExponential(2)}/h
         </div>
       )}
     </div>
+  )}
+</div>
   </div>
 )}
         </div>
