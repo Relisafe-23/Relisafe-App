@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import EditRBDConfigurationModal from './EditRBDConfigurationModal'
 import { FiSettings, FiEdit2, FiEye, FiTrash2, FiMoreVertical } from 'react-icons/fi';
-import RBDBlock from './RBDBlock';
+import { RBDBlock } from './RBDBlock';
 import Api from "../../Api";
 import RBDStructure from "../../components/RBD/RBDStructure"
 import { useHistory, useParams, useLocation } from "react-router-dom";
 
 // MUI imports
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Paper,
   Button,
   IconButton,
@@ -28,21 +28,21 @@ import { NavItem } from 'react-bootstrap';
 export const InsertionNode = ({ x, y, onOpenMenu }) => {
   return (
     <g>
-<circle
-  cx={x}
-  cy={y}
-  r="6"
-  fill="black"
-  stroke="black"
-  strokeWidth="1"
-  style={{ cursor: "pointer" }}
-  onMouseEnter={(e) => {
-    onOpenMenu(e.clientX, e.clientY);
-  }}
-  // onMouseLeave={() => {
-  //   onCloseMenu();   
-  // }}
-/>
+      <circle
+        cx={x}
+        cy={y}
+        r="6"
+        fill="black"
+        stroke="black"
+        strokeWidth="1"
+        style={{ cursor: "pointer" }}
+        onMouseEnter={(e) => {
+          onOpenMenu(e.clientX, e.clientY);
+        }}
+      // onMouseLeave={() => {
+      //   onCloseMenu();   
+      // }}
+      />
 
       <line
         x1={x - 3} y1={y}
@@ -395,25 +395,26 @@ export const BlockContextMenu = ({ x, y, onSelect, onClose }) => (
       "Add Parallel Section",
       "Add Parallel Branch"
     ].map(item => {
-        console.log("ITEM,....",item)
-        return(
-           <div
-        key={item}
-        onClick={() => onSelect(item)}
-        style={{
-          padding: "8px",
-          cursor: "pointer",
-          ":hover": {
-            backgroundColor: "#f0f0f0"
-          }
-        }}
-      >
-       
-        {item}
-      </div>
-        )}    
+      console.log("ITEM,....", item)
+      return (
+        <div
+          key={item}
+          onClick={() => onSelect(item)}
+          style={{
+            padding: "8px",
+            cursor: "pointer",
+            ":hover": {
+              backgroundColor: "#f0f0f0"
+            }
+          }}
+        >
+
+          {item}
+        </div>
+      )
+    }
     )}
-  
+
   </div>
 );
 
@@ -448,11 +449,13 @@ export default function RBDButton() {
   const projectId = id;
   const location = useLocation();
   const history = useHistory();
+  const[selectedRBD,setSelectedRBD]= useState([])
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const[rbdList,setRbdList]=useState([])
-  const[rBDTitle,setRBDTitle] = useState([])
-  const[mission,setMission]= useState([])
-  const[rbdId,  setRbdId]=useState("")
+  const [rbdList, setRbdList] = useState([])
+  const [rBDTitle, setRBDTitle] = useState([])
+  const [mission, setMission] = useState([])
+  const [description, setDescription] = useState([])
+  const [rbdId, setRbdId] = useState("")
 
   const [rbdConfig, setRbdConfig] = useState({
     rbdTitle: "My RBD",
@@ -461,55 +464,60 @@ export default function RBDButton() {
     displayLower: "MTBF",
     printRemarks: "Yes"
   });
-  
-  useEffect(()=>{
+
+  useEffect(() => {
     getRbdConfig()
-  },[projectId])
-  
-  const getRbdConfig =() =>{
+  }, [projectId])
+
+  const getRbdConfig = () => {
     console.log("Fetching RBD configuration...")
-    Api.get("/api/v1/EditConfigRBD/",{
-      params:{
-        projectId:projectId, 
+    Api.get("/api/v1/EditConfigRBD/", {
+      params: {
+        projectId: projectId,
       }
     })
-    .then((res)=>{
-       const rbdIds = res.data.data.map((item) => item.id);
-    console.log("RBD IDs:", rbdIds);
-      setRbdId(rbdIds);
-      console.log("rbdId",rbdId)
-      console.log("RBD Config Response:",res.data.data.filter((item)=>item.id).map((item)=>item.id))
-      const rbdName = res.data.data.filter((item)=>item.rbdTitle).map((item)=>item.rbdTitle)
-      console.log(rbdName,"rbdName")
-      const rbdMission = res.data.data.filter((item)=>item.missionTime).map((item)=>item.missionTime)
-      setMission(rbdMission)
-      setRBDTitle(rbdName )
-      setRbdList(res.data.data)
-      // Update state with fetched data if needed
-      // setRbdConfig(res.data.data);
-    })
-    .catch((error) => {
-      console.error("Error fetching RBD config:", error);
-    });
+      .then((res) => {
+        const rbdIds = res.data.data.map((item) => item.id);
+        console.log("RBD IDs:", res);
+        setRbdId(rbdIds);
+        console.log("rbdId", rbdId)
+        console.log("RBD Config Response:", res.data.data.filter((item) => item.id).map((item) => item.id))
+        const rbdName = res.data.data.filter((item) => item.rbdTitle).map((item) => item.rbdTitle)
+        console.log(rbdName, "rbdName")
+        const rbdDescription = res.data.data.filter((item) => item.description).map((item) => item.description)
+        setDescription(rbdDescription)
+        console.log("descriptio.....n",rbdDescription)
+        const rbdMission = res.data.data.filter((item) => item.missionTime).map((item) => item.missionTime)
+        setMission(rbdMission)
+        setRBDTitle(rbdName)
+        setRbdList(res.data.data)
+        // Update state with fetched data if needed
+        // setRbdConfig(res.data.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching RBD config:", error);
+      });
   }
-  
+
   const handleSaveConfig = (newConfig) => {
     setRbdConfig(newConfig);
     console.log("Saved config:", newConfig);
   };
-  
+
   const handleEditClick = (title, index) => {
     setIsModalOpen(true);
+       const selectedRbdId = rbdId[index];
+    console.log("Selected RBD ID:", selectedRbdId);
     console.log("Edit clicked for:", title, "at index:", index);
   };
-const handleViewClick = (title, index) => {
-  console.log("View clicked for:", title, "at index:", index);
+  const handleViewClick = (title, index) => {
+    console.log("View clicked for:", title, "at index:", index);
 
-  const selectedRbdId = rbdId[index];
-  console.log("Selected RBD ID:", selectedRbdId);
+    const selectedRbdId = rbdId[index];
+    console.log("Selected RBD ID:", selectedRbdId);
 
-  history.push(`/project/${projectId}/rbd/structure/${selectedRbdId}`);
-}
+    history.push(`/project/${projectId}/rbd/structure/${selectedRbdId}`);
+  }
 
   const handleDeleteClick = (title, index) => {
     console.log("Delete clicked for:", title, "at index:", index);
@@ -523,20 +531,20 @@ const handleViewClick = (title, index) => {
       // You might also want to call an API to delete from backend
     }
   };
-  
+
   return (
     <Box sx={{ minHeight: '100vh', p: 3, backgroundColor: '#f5f5f5' }}>
-     
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
+
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
         mb: 4
       }}>
         <Typography variant="h5" sx={{ fontWeight: 600, color: '#2c3e50' }}>
           RBD Configuration
         </Typography>
-        
+
         <Button
           variant="contained"
           onClick={() => setIsModalOpen(true)}
@@ -562,9 +570,9 @@ const handleViewClick = (title, index) => {
             <TableRow>
               <TableCell>S.No</TableCell>
               <TableCell>RBD Title</TableCell>
-              <TableCell>Remarks</TableCell>
+              <TableCell>Description</TableCell>
               <TableCell>Mission Time (hrs)</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell >Actions</TableCell>
             </TableRow>
           </StyledTableHead>
           <TableBody>
@@ -573,55 +581,50 @@ const handleViewClick = (title, index) => {
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{title}</TableCell>
                 <TableCell>
-                  <Chip 
-                    label={rbdConfig?.printRemarks || "No"} 
-                    size="small"
-                    color={rbdConfig?.printRemarks === "Yes" ? "success" : "default"}
-                    sx={{ fontWeight: 500 }}
-                  />
+                  {description && description[index]?description[index] : "-"}
                 </TableCell>
                 <TableCell>
                   {mission && mission[index] ? mission[index] : "-"}
                 </TableCell>
-                <TableCell align="right">
+                <TableCell >
                   <Tooltip title="View">
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       onClick={() => handleViewClick(title, index)}
-                      sx={{ 
+                      sx={{
                         mr: 1,
                         color: '#2b4f81',
                         '&:hover': { backgroundColor: 'rgba(43, 79, 129, 0.04)' }
                       }}
                     >
-                      <FiEye size={18} />
+                      <FiEye size={20} />
                     </IconButton>
                   </Tooltip>
-                  
+
                   <Tooltip title="Edit">
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       onClick={() => handleEditClick(title, index)}
-                      sx={{ 
+                      sx={{
                         mr: 1,
                         color: '#4CAF50',
                         '&:hover': { backgroundColor: 'rgba(76, 175, 80, 0.04)' }
                       }}
                     >
-                      <FiEdit2 size={18} />
+                      <FiEdit2 size={20} />
                     </IconButton>
                   </Tooltip>
-                  
+
                   <Tooltip title="Delete">
-                    <IconButton 
-                      size="small" 
+                    <IconButton
+                      size="small"
                       onClick={() => handleDeleteClick(title, index)}
-                      sx={{ 
+                      sx={{
                         color: '#f44336',
                         '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.04)' }
                       }}
                     >
-                      <FiTrash2 size={18} />
+                      <FiTrash2 size={20} />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
@@ -630,11 +633,18 @@ const handleViewClick = (title, index) => {
           </TableBody>
         </Table>
       </StyledTableContainer>
+      {/* <EditRBDConfigurationModal
+  isOpen={isEditModalOpen}
+  onClose={() => setIsEditModalOpen(false)}
+  onSave={handleSave}
+  editData={selectedRBD}   
+/> */}
       <EditRBDConfigurationModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveConfig}
         initialConfig={rbdConfig}
+         editData={selectedRBD} 
       />
     </Box>
   );

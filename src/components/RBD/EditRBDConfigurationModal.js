@@ -3,7 +3,7 @@
 import Api from "../../Api";
 import { useParams } from "react-router-dom";
 
-const EditRBDConfigurationModal = ({ isOpen, onClose, onSave }) => {
+const EditRBDConfigurationModal = ({ isOpen, onClose, onSave, editData  }) => {
 
   const { id } = useParams();
   const projectId = id;
@@ -11,13 +11,24 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave }) => {
   const initialState = {
     rbdTitle: "",
     missionTime: 1,
-    displayUpper: "Reference designator",
-    displayLower: "FR parameter1",
-    printRemarks: "Yes",
+    description: "",
   };
   const [errors, setErrors] = useState({});
   const [values, setValues] = useState(initialState);
-
+useEffect(() => {
+  if (isOpen) {
+    if (editData) {
+      setValues({
+        rbdTitle: editData.rbdTitle || "",
+        missionTime: editData.missionTime || 1,
+        description: editData.description || "",
+      });
+    } else {
+      setValues(initialState);
+    }
+    setErrors({});
+  }
+}, [isOpen, editData]);
   const overlayStyle = {
     position: "fixed",
     top: 0,
@@ -150,11 +161,10 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave }) => {
       projectId: projectId,
     rbdTitle: values.rbdTitle,
     missionTime: values.missionTime,
-    displayUpper: values.displayUpper,
-    displayLower: values.displayLower,
-    printRemarks: values.printRemarks,
+    description: values.description,
     })
       .then((res) => {
+        console.log("res",res)
         onSave(res.data);
      
       })
@@ -211,36 +221,7 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave }) => {
             </p>
           )}
 
-          {/* Display Upper */}
-          <div style={rowStyle}>
-            <label style={labelStyle}>Display Upper:</label>
-            <select
-              value={values.displayUpper}
-              onChange={(e) => handleChange("displayUpper", e.target.value)}
-              style={inputStyle}
-            >
-              <option value="Reference designator">Reference designator</option>
-              <option value="Part number">Part number</option>
-              <option value="Product name">Product name</option>
-            </select>
-          </div>
-
-          {/* Display Lower */}
-          <div style={rowStyle}>
-            <label style={labelStyle}>Display Lower:</label>
-            <select
-              value={values.displayLower}
-              onChange={(e) => handleChange("displayLower", e.target.value)}
-              style={inputStyle}
-            >
-              <option value="FR parameter1">FR parameter1</option>
-              <option value="MTBF">MTBF</option>
-              <option value="None">None</option>
-            </select>
-          </div>
-
-          {/* Print Remarks */}
-          <div style={rowStyle}>
+          {/* <div style={rowStyle}>
             <label style={labelStyle}>Print Remarks:</label>
             <select
               value={values.printRemarks}
@@ -250,6 +231,17 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave }) => {
               <option value="Yes">Yes</option>
               <option value="No">No</option>
             </select>
+          </div> */}
+          <div style={rowStyle}>
+             <label style={labelStyle}>Description:</label>
+               <input
+              type="text"
+              value={values.description}
+              onChange={(e) =>
+                handleChange("description",e.target.value)
+              }
+                style={inputStyle}
+            />
           </div>
 
           {/* Buttons */}
