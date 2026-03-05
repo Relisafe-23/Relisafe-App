@@ -63,12 +63,12 @@ export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
     <rect
       key={`stack-${index}`}
       x={x + offset}
-      y={y - 40 + offset}
+      y={y - 10 + offset}
       width={blockWidth}
-      height={80}
-      fill="#8fd3d3"
+      height={40}
+      fill="#4CAF50"               
       stroke="#000"
-      strokeWidth="2"
+      strokeWidth="1"
       rx="2"
     />
   );
