@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EditRBDConfigurationModal from './EditRBDConfigurationModal'
 import { FiSettings, FiEdit2, FiEye, FiTrash2, FiMoreVertical } from 'react-icons/fi';
-import {RBDBlock }  from './RBDBlock';
+import { RBDBlock } from './RBDBlock';
 import Api from "../../Api";
 import RBDStructure from "../../components/RBD/RBDStructure"
 import { useHistory, useParams, useLocation } from "react-router-dom";
@@ -294,6 +294,8 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
         </text>
       </g>
 
+      {/* {console.log('item',items)} */}
+
       {items.map((item) => {
         if (item.type === 'node') {
           return (
@@ -395,7 +397,7 @@ export const BlockContextMenu = ({ x, y, onSelect, onClose }) => (
       "Add Parallel Section",
       "Add Parallel Branch"
     ].map(item => {
-      console.log("ITEM,....", item)
+      // console.log("ITEM,....", item)
       return (
         <div
           key={item}
@@ -449,13 +451,15 @@ export default function RBDButton() {
   const projectId = id;
   const location = useLocation();
   const history = useHistory();
-  const[selectedRBD,setSelectedRBD]= useState([])
+  const [selectedRBD, setSelectedRBD] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modelItem, setModelItem] = useState(null)
   const [rbdList, setRbdList] = useState([])
   const [rBDTitle, setRBDTitle] = useState([])
   const [mission, setMission] = useState([])
   const [description, setDescription] = useState([])
   const [rbdId, setRbdId] = useState("")
+  const [rbdlistData, setRbdlistData] = useState([])
 
   const [rbdConfig, setRbdConfig] = useState({
     rbdTitle: "My RBD",
@@ -470,23 +474,26 @@ export default function RBDButton() {
   }, [projectId])
 
   const getRbdConfig = () => {
-    console.log("Fetching RBD configuration...")
+    // console.log("Fetching RBD configuration...")
     Api.get("/api/v1/EditConfigRBD/", {
       params: {
         projectId: projectId,
       }
     })
       .then((res) => {
+        // console.log(res.data.data, 'res')
+        // console.log(res, 'response')
+        setRbdlistData(res.data.data)
         const rbdIds = res.data.data.map((item) => item.id);
-        console.log("RBD IDs:", res);
+        // console.log("RBD IDs:", res);
         setRbdId(rbdIds);
-        console.log("rbdId", rbdId)
-        console.log("RBD Config Response:", res.data.data.filter((item) => item.id).map((item) => item.id))
+        // console.log("rbdId", rbdId)
+        // console.log("RBD Config Response:", res.data.data.filter((item) => item.id).map((item) => item.id))
         const rbdName = res.data.data.filter((item) => item.rbdTitle).map((item) => item.rbdTitle)
-        console.log(rbdName, "rbdName")
+        // console.log(rbdName, "rbdName")
         const rbdDescription = res.data.data.filter((item) => item.description).map((item) => item.description)
         setDescription(rbdDescription)
-        console.log("descriptio.....n",rbdDescription)
+        // console.log("descriptio.....n",rbdDescription)
         const rbdMission = res.data.data.filter((item) => item.missionTime).map((item) => item.missionTime)
         setMission(rbdMission)
         setRBDTitle(rbdName)
@@ -501,39 +508,49 @@ export default function RBDButton() {
 
   const handleSaveConfig = (newConfig) => {
     setRbdConfig(newConfig);
-    console.log("Saved config:", newConfig);
+    // console.log("Saved config:", newConfig);
   };
 
-  const handleEditClick = (title, index) => {
+  const handleClose = () => {
+  setModelItem(null);
+  setIsModalOpen(false);
+};
+
+  const handleEditClick = (item, index) => {
+    // console.log(item, 'title data')
     setIsModalOpen(true);
-       const selectedRbdId = rbdId[index];
-    console.log("Selected RBD ID:", selectedRbdId);
-    console.log("Edit clicked for:", title, "at index:", index);
+    setModelItem(item)
+    const selectedRbdId = rbdId[index];
+    // console.log("Selected RBD ID:", selectedRbdId);
+    // console.log("Edit clicked for:", title, "at index:", index);
   };
-  const handleViewClick = (title, index) => {
-    console.log("View clicked for:", title, "at index:", index);
+  const handleViewClick = (item, index) => {
+    // console.log("View clicked for:", title, "at index:", index);
 
     const selectedRbdId = rbdId[index];
-    console.log("Selected RBD ID:", selectedRbdId);
+    // console.log("Selected RBD ID:", selectedRbdId);
 
-    history.push(`/project/${projectId}/rbd/structure/${selectedRbdId}`);
+    history.push(`/project/${item?.projectId}/rbd/structure/${selectedRbdId}`);
   }
 
-  const handleDeleteClick = (title, index) => {
-    console.log("Delete clicked for:", title, "at index:", index);
-    // Add your delete logic here (e.g., show confirmation dialog)
-    if (window.confirm(`Are you sure you want to delete "${title}"?`)) {
-      // Perform delete operation
-      const updatedTitles = rBDTitle.filter((_, i) => i !== index);
-      const updatedMissions = mission.filter((_, i) => i !== index);
-      setRBDTitle(updatedTitles);
-      setMission(updatedMissions);
-      // You might also want to call an API to delete from backend
+  const handleDeleteClick = async (item) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to delete "${item?.rbdTitle}"?`
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      await Api.delete(`/api/v1/EditConfigRBD/delete/${item?.id}`);
+      getRbdConfig();
+    } catch (error) {
+      console.log("Delete failed:", error);
+      alert("Failed to delete. Please try again.");
     }
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', p: 3, backgroundColor: '#f5f5f5' }}>
+    <Box sx={{ minHeight: '100vh', p: 3, mt: 5, backgroundColor: '#f5f5f5' }}>
 
       <Box sx={{
         display: 'flex',
@@ -575,22 +592,27 @@ export default function RBDButton() {
               <TableCell >Actions</TableCell>
             </TableRow>
           </StyledTableHead>
+          {/* {console.log(rbdlistData, 'rbd list Data')} */}
           <TableBody>
-            {rBDTitle.map((title, index) => (
+            {rbdlistData.map((item, index) => (
               <StyledTableRow key={index}>
+                {/* {console.log(title,'title')} */}
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{title}</TableCell>
+                <TableCell>{item?.rbdTitle}</TableCell>
                 <TableCell>
-                  {description && description[index]?description[index] : "-"}
+                  {/* {description && description[index]?description[index] : "-"} */}
+                  {item?.description ? item?.description : "-"}
                 </TableCell>
                 <TableCell>
-                  {mission && mission[index] ? mission[index] : "-"}
+                  {/* {mission && mission[index] ? mission[index] : "-"} */}
+                  {item?.missionTime ? item?.missionTime : "-"}
+
                 </TableCell>
                 <TableCell >
                   <Tooltip title="View">
                     <IconButton
                       size="small"
-                      onClick={() => handleViewClick(title, index)}
+                      onClick={() => handleViewClick(item, index)}
                       sx={{
                         mr: 1,
                         color: '#2b4f81',
@@ -604,7 +626,7 @@ export default function RBDButton() {
                   <Tooltip title="Edit">
                     <IconButton
                       size="small"
-                      onClick={() => handleEditClick(title, index)}
+                      onClick={() => handleEditClick(item, index)}
                       sx={{
                         mr: 1,
                         color: '#4CAF50',
@@ -618,7 +640,7 @@ export default function RBDButton() {
                   <Tooltip title="Delete">
                     <IconButton
                       size="small"
-                      onClick={() => handleDeleteClick(title, index)}
+                      onClick={() => handleDeleteClick(item, index)}
                       sx={{
                         color: '#f44336',
                         '&:hover': { backgroundColor: 'rgba(244, 67, 54, 0.04)' }
@@ -641,10 +663,14 @@ export default function RBDButton() {
 /> */}
       <EditRBDConfigurationModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        modelItem={modelItem}
+        setModelItem={setModelItem}
+        getRbdConfig={getRbdConfig}
+        onClose={handleClose}
+        setIsModalOpen={setIsModalOpen}
         onSave={handleSaveConfig}
         initialConfig={rbdConfig}
-         editData={selectedRBD} 
+        editData={selectedRBD}
       />
     </Box>
   );

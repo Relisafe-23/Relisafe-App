@@ -5,6 +5,9 @@ import CreatableSelect from 'react-select/creatable';
 
 const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitchConfig, currentBlock }) => {
 
+
+  // console.log('currentBlock - :', currentBlock)
+
   const [values, setValues] = useState({
     relDes: currentBlock?.relDes || '',
     time: currentBlock?.time || " ",
@@ -36,6 +39,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
     fmDescription: currentBlock?.fmDescription || ''
   });
 
+  // console.log('fr value is : ',values?.fr)
+
   const { id } = useParams();
   const [options, setOptions] = useState([]);
   const projectId = id || props?.match?.params?.id;
@@ -49,9 +54,10 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
   const [alpha, setAlpha] = useState([]);
 
 
-  useEffect(()=>{
-getElement()
-  },[projectId])
+
+  useEffect(() => {
+    getElement()
+  }, [projectId])
 
   // const createRBD = () => {
   //   Api.post(`/api/v1/rbd/create`, {
@@ -73,6 +79,8 @@ getElement()
       },
     })
       .then((res) => {
+
+        // console.log(res.data,'pbs')
         const options = res.data.data
           .filter(item => item?.indexCount && item?.partNumber)
           .map(item => ({
@@ -84,15 +92,16 @@ getElement()
             fr: item.fr,
             id: item.id
           }));
+
         const productIdst = res.data.data.filter(item => item?.productId).map(item => item.productId);
-        console.log("Options", options);
+        // console.log("Options", options);
         setProductIds(productIdst);
         setOptions(options);
       });
   };
 
   const getProductData = () => {
-    console.log("Fetching product data");
+    // console.log("Fetching product data");
 
     Api.get("/api/v1/fmeca/product/list", {
       params: {
@@ -102,21 +111,21 @@ getElement()
       },
     })
       .then((res) => {
-        console.log("FMECA Product Data:", res.data.data);
-        
+        // console.log("FMECA Product Data:", res.data.data);
+
         const failureAlphas = res.data.data
           .filter(item => item.failureModeRatioAlpha)
           .map(item => item.failureModeRatioAlpha);
-        
+
         setAlpha(failureAlphas);
-        
+
         const fmecaIds = res.data.data
           .filter(item => item.fmecaId)
           .map(item => item.fmecaId);
-        
+
         setSelectedProductId(fmecaIds);
-        console.log("selectedProductId", fmecaIds);
-        console.log("failureAlphas", failureAlphas);
+        // console.log("selectedProductId", fmecaIds);
+        // console.log("failureAlphas", failureAlphas);
 
         const data = res?.data?.data;
         setTableData(data);
@@ -134,6 +143,27 @@ getElement()
           console.error("Unauthorized access");
         }
       });
+
+
+    Api.get(`/api/v1/mttrPrediction/${productId}`)
+      .then((res) => {
+        // console.log(res?.data?.data?.mct, 'response mttr')
+        let mct = res?.data?.data?.mct
+
+        setValues(prev => ({
+          ...prev,
+          mct: mct
+        }));
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          // Handle unauthorized
+          console.error("Unauthorized access");
+        }
+      });
+
+
   };
 
   const getProductFRPData = () => {
@@ -148,7 +178,7 @@ getElement()
         userId: userId,
       },
     }).then((res) => {
-      console.log("FRP Data:", res.data);
+      // console.log("FRP Data:", res.data);
     }).catch((error) => {
       console.error("Error fetching FRP data:", error);
     });
@@ -166,49 +196,49 @@ getElement()
   const handleSubmit = (e) => {
     e.preventDefault();
     const companyId = localStorage.getItem("companyId");
-    Api.post("/api/v1/elementParametersRBD/create",{
-        indexCount: values.indexCount,
-  partNumber: values.partNumber,
-  productName: values.productName,
-  fr: values.fr,
-  // blockId:blockId,
-  productId: values.productId,
-  fmecaId: values.fmecaId,
-  fmDescription: values.fmDescription,
-  elementType: values.elementType,
-  time: values.time,
-  repair: values.repair,
-  inspectionPeriod: values.inspectionPeriod,
-  dutyCycle: values.dutyCycle,
-  color: values.color,
-  frDistribution: values.frDistribution,
-  k: values.k,
-  n: values.n,
-  repairDistribution: values.repairDistribution,
-  load: values.load,
-  mct: values.mct,
-  projectId: projectId,
-  companyId: companyId,
-    }).then((res)=>{
+    Api.post("/api/v1/elementParametersRBD/create", {
+      indexCount: values.indexCount,
+      partNumber: values.partNumber,
+      productName: values.productName,
+      fr: values.fr,
+      // blockId:blockId,
+      productId: values.productId,
+      fmecaId: values.fmecaId,
+      fmDescription: values.fmDescription,
+      elementType: values.elementType,
+      time: values.time,
+      repair: values.repair,
+      inspectionPeriod: values.inspectionPeriod,
+      dutyCycle: values.dutyCycle,
+      color: values.color,
+      frDistribution: values.frDistribution,
+      k: values.k,
+      n: values.n,
+      repairDistribution: values.repairDistribution,
+      load: values.load,
+      mct: values.mct,
+      projectId: projectId,
+      companyId: companyId,
+    }).then((res) => {
 
-      console.log("res",res)
+      // console.log("res", res)
     })
     onSubmit(values);
     onClose();
   };
 
 
-const getElement =()=>{
-  console.log("Loadvchvghhv")
-  Api.get(`/api/v1/elementParametersRBD/get/all`,{
-    params:{
-      projectId:projectId, 
-    }
-  })
-  .then((res)=>{
-    console.log("res12334",res)
-  })
-}
+  const getElement = () => {
+    // console.log("Loadvchvghhv")
+    Api.get(`/api/v1/elementParametersRBD/get/all`, {
+      params: {
+        projectId: projectId,
+      }
+    })
+      .then((res) => {
+        // console.log("res12334", res)
+      })
+  }
   const handleChange = (field, value) => {
     setValues(prev => ({
       ...prev,
@@ -246,8 +276,8 @@ const getElement =()=>{
         overflowY: 'auto'
       }}>
         <h2 style={{ marginBottom: '20px', color: '#333' }}><h2 style={{ marginBottom: '20px', color: '#333' }}>
-  {currentBlock ? "Edit Element Parameters" : "Add Element Parameters"}
-</h2></h2>
+          {currentBlock ? "Edit Element Parameters" : "Add Element Parameters"}
+        </h2></h2>
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '20px' }}>
             <div style={{
@@ -331,14 +361,14 @@ const getElement =()=>{
                   >
                     <option value="">-- Select FM Number --</option>
                     {selectedProductId?.map((id, index) => (
-                      <option key={index} value={id} label={index+1}>
+                      <option key={index} value={id} label={index + 1}>
                         {id}
                       </option>
                     ))}
                   </select>
-                  {console.log("selectedProductId12345", selectedProductId)}
+                  {/* {console.log("selectedProductId12345", selectedProductId)} */}
                 </div>
-                
+
                 <div>
                   <label style={{ fontSize: '11px', display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
                     FM description:
@@ -448,7 +478,7 @@ const getElement =()=>{
                   />
                 </div> */}
 
-          
+
                 {values.elementType === 'K_OUT_OF_N' && (
                   <div style={{ marginBottom: '15px' }}>
                     <button

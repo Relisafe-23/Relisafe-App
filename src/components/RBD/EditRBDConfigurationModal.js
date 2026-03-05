@@ -1,34 +1,43 @@
 
- import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Api from "../../Api";
 import { useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
-const EditRBDConfigurationModal = ({ isOpen, onClose, onSave, editData  }) => {
+const EditRBDConfigurationModal = ({ isOpen, onClose, onSave, editData, modelItem, setIsModalOpen,setModelItem, getRbdConfig }) => {
 
   const { id } = useParams();
   const projectId = id;
+
+  // console.log(modelItem, 'modelItem')
 
   const initialState = {
     rbdTitle: "",
     missionTime: 1,
     description: "",
+    id: null,
   };
-  const [errors, setErrors] = useState({});
-  const [values, setValues] = useState(initialState);
-useEffect(() => {
-  if (isOpen) {
-    if (editData) {
-      setValues({
-        rbdTitle: editData.rbdTitle || "",
-        missionTime: editData.missionTime || 1,
-        description: editData.description || "",
-      });
-    } else {
-      setValues(initialState);
-    }
+
+  const resetForm = () => {
+    setValues(initialState);
+    // setModelItem(null);
     setErrors({});
-  }
-}, [isOpen, editData]);
+  };
+  const [values, setValues] = useState(initialState);
+
+  const [errors, setErrors] = useState({});
+  useEffect(() => {
+    if (isOpen && modelItem) {
+      setValues({
+        rbdTitle: modelItem.rbdTitle || "",
+        missionTime: modelItem.missionTime || 1,
+        description: modelItem.description || "",
+        id: modelItem.id || null
+      });
+    }
+  }, [isOpen, modelItem]);
+
+
   const overlayStyle = {
     position: "fixed",
     top: 0,
@@ -119,10 +128,16 @@ useEffect(() => {
     cursor: "pointer"
   };
 
+  // useEffect(() => {
+  //   if (isOpen) {
+  //     setValues(initialState);
+  //     setErrors({});
+  //   }
+  // }, [isOpen]);
+
   useEffect(() => {
-    if (isOpen) {
-      setValues(initialState);
-      setErrors({});
+    if (!isOpen) {
+      resetForm();
     }
   }, [isOpen]);
 
@@ -151,38 +166,79 @@ useEffect(() => {
     return Object.keys(tempErrors).length === 0;
   };
 
-  // Submit
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!validate()) return;
 
-    Api.post("/api/v1/EditConfigRBD/create", {
+    let data = {
+      id : values.id,
       projectId: projectId,
-    rbdTitle: values.rbdTitle,
-    missionTime: values.missionTime,
-    description: values.description,
-    })
-      .then((res) => {
-        console.log("res",res)
-        onSave(res.data);
-     
+      rbdTitle: values.rbdTitle,
+      missionTime: values.missionTime,
+      description: values.description,
+    }
+
+    console.log(values.id)
+
+    values.id ? (
+      Api.patch("/api/v1/EditConfigRBD/edit", data)
+        .then((res) => {
+          onSave(res.data);
+          resetForm();
+          setIsModalOpen(false);
+          getRbdConfig();
+          setModelItem(null);
+          toast.success("Updated RBD")
+        })
+        .catch((error) => {
+          console.error("Error saving config:", error);
+        })
+    ) : (
+      Api.post("/api/v1/EditConfigRBD/create", {
+        projectId: projectId,
+        rbdTitle: values.rbdTitle,
+        missionTime: values.missionTime,
+        description: values.description,
       })
-      .catch((error) => {
-        console.error("Error saving config:", error);
-      });
+        .then((res) => {
+          onSave(res.data);
+          getRbdConfig();
+          toast.success("Created RBD")
+          resetForm();
+          setModelItem(null);
+          setIsModalOpen(false)
+        })
+        .catch((error) => {
+          console.error("Error saving config:", error);
+        })
+    )
   };
 
 
   if (!isOpen) return null;
 
   return (
-    <div style={overlayStyle} onClick={onClose}>
+    <div
+      style={overlayStyle}
+      onClick={() => {
+        resetForm();
+        onClose();
+      }}
+    >
       <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
 
         <div style={headerStyle}>
           <span>Edit RBD Configuration</span>
-          <button onClick={onClose} style={closeBtnStyle}>✕</button>
+          <button
+            onClick={() => {
+              resetForm();
+              onClose();
+            }}
+            style={closeBtnStyle}
+          >
+            ✕
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} style={{ padding: "20px" }}>
@@ -233,14 +289,14 @@ useEffect(() => {
             </select>
           </div> */}
           <div style={rowStyle}>
-             <label style={labelStyle}>Description:</label>
-               <input
+            <label style={labelStyle}>Description:</label>
+            <input
               type="text"
               value={values.description}
               onChange={(e) =>
-                handleChange("description",e.target.value)
+                handleChange("description", e.target.value)
               }
-                style={inputStyle}
+              style={inputStyle}
             />
           </div>
 
@@ -251,7 +307,10 @@ useEffect(() => {
             </button>
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                resetForm();
+                onClose();
+              }}
               style={cancelBtnStyle}
             >
               Cancel
