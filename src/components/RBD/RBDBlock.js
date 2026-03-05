@@ -2,7 +2,7 @@
 import React,{useState} from 'react';
 import { KOfNBlock } from './KOfNBlock';
 
-export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData }) => {
+export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData,width = 60, height = 70 }) => {
    const [formData, setFormData] = useState({
     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
     k: blockData?.k || '2',
