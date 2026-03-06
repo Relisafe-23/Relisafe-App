@@ -13,8 +13,11 @@ const RenderTree = ({
   selectedNodeId,
   setSelectedNodeId,
   productData,
+   calculationMode,
+   setCurrentCalculationMode,
 }) => {
-  
+
+console.log(calculationMode,'calculationMode in render tree')
   return (
     <TreeNode
       label={
@@ -29,6 +32,8 @@ const RenderTree = ({
           productData={productData}
           selectedNodeId={selectedNodeId} 
           setSelectedNodeId={setSelectedNodeId} 
+          calculationMode={calculationMode} 
+          setCurrentCalculationMode={setCurrentCalculationMode}
         />
       }
     >
@@ -45,6 +50,8 @@ const RenderTree = ({
           productData={productData}
           selectedNodeId={selectedNodeId} 
           setSelectedNodeId={setSelectedNodeId} 
+           calculationMode={calculationMode}
+           setCurrentCalculationMode={setCurrentCalculationMode}
         />
       ))}
     </TreeNode>
