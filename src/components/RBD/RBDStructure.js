@@ -57,6 +57,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
 
   const processBlocksWithParallelSections = (blocks) => {
     const parallelSections = {};
+    const normalBlocks = [];
 
     blocks.forEach(block => {
       if (block.type === 'Parallel Section') {
@@ -76,296 +77,411 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
     return parallelSections;
   };
 
-  const calculateLayout = () => {
-    const parallelSections = processBlocksWithParallelSections(blocks);
+const calculateLayout = () => {
+  const parallelSections = processBlocksWithParallelSections(blocks);
 
-    let maxY = centerPointY + 150;
+  let maxY = centerPointY + 150;
 
-    if (blocks.length === 0) {
-      const centerX = (leftBoxX + boxWidth + baseRightBoxX) / 2;
-      return {
-        items: [],
-        totalWidth: 0,
-        startX: centerX,
-        actualRightBoxX: baseRightBoxX,
-        parallelSections: {},
-        maxY: maxY,
-        topLevelBlocks: []
-      };
-    }
+  if (blocks.length === 0) {
+    const centerX = (leftBoxX + boxWidth + baseRightBoxX) / 2;
+    return {
+      items: [],
+      totalWidth: 0,
+      startX: centerX,
+      actualRightBoxX: baseRightBoxX,
+      parallelSections: {},
+      maxY: maxY,
+      topLevelBlocks: []
+    };
+  }
 
-    const topLevelBlocks = blocks.filter(block =>
-      block.type === 'Parallel Section' || !block.data?.parentSection
-    );
+  const topLevelBlocks = blocks.filter(block =>
+    block.type === 'Parallel Section' || !block.data?.parentSection
+  );
 
-    const totalTopLevelBlocks = topLevelBlocks.length;
-    const totalNodesWidth = (totalTopLevelBlocks * 2 + 1) * nodeSpacing;
-    const totalBlockSpacing = (totalTopLevelBlocks - 1) * blockSpacing;
+  const totalTopLevelBlocks = topLevelBlocks.length;
+  const totalNodesWidth = (totalTopLevelBlocks * 2 + 1) * nodeSpacing;
+  const totalBlockSpacing = (totalTopLevelBlocks - 1) * blockSpacing;
 
-    let totalElementsWidth = 0;
-    topLevelBlocks.forEach(block => {
-      if (block.type === 'Parallel Section') {
-        totalElementsWidth += 160;
+  let totalElementsWidth = 0;
+  
+  // Calculate dynamic widths for parallel sections based on their blocks
+  topLevelBlocks.forEach(block => {
+    if (block.type === 'Parallel Section') {
+      const section = parallelSections[block.id];
+      if (section) {
+        // Calculate max blocks in any branch
+        const maxBlocksInBranch = Math.max(...(section.branches || []).map(b => (b.blocks || []).length));
+        const baseWidth = 160;
+        const additionalWidthPerBlock = maxBlocksInBranch > 0 
+          ? maxBlocksInBranch * 70 // 60 width + 10 spacing
+          : 0;
+        totalElementsWidth += baseWidth + additionalWidthPerBlock + 30;
       } else {
-        totalElementsWidth += blockWidth;
+        totalElementsWidth += 160; // Default width
       }
-    });
+    } else {
+      totalElementsWidth += blockWidth;
+    }
+  });
 
-    const totalNeededWidth = totalElementsWidth + totalNodesWidth + totalBlockSpacing;
-    const requiredRightBoxX = leftBoxX + boxWidth + totalNeededWidth + minOutputGap + boxWidth;
-    const actualRightBoxX = Math.max(baseRightBoxX, requiredRightBoxX);
+  const totalNeededWidth = totalElementsWidth + totalNodesWidth + totalBlockSpacing;
+  const requiredRightBoxX = leftBoxX + boxWidth + totalNeededWidth + minOutputGap + boxWidth;
+  const actualRightBoxX = Math.max(baseRightBoxX, requiredRightBoxX);
 
-    const availableWidth = actualRightBoxX - leftBoxX - boxWidth * 2;
-    const startX = leftBoxX + boxWidth + (availableWidth - totalNeededWidth) / 2 + nodeSpacing;
+  const availableWidth = actualRightBoxX - leftBoxX - boxWidth * 2;
+  const startX = leftBoxX + boxWidth + (availableWidth - totalNeededWidth) / 2 + nodeSpacing;
 
-    const items = [];
-    let currentX = startX;
-    let nodeIndex = 0;
+  const items = [];
+  let currentX = startX;
+  let nodeIndex = 0;
+
+  items.push({
+    type: 'node',
+    id: 'node-start',
+    x: currentX,
+    y: centerPointY,
+    nodeIndex: nodeIndex++
+  });
+  currentX += nodeSpacing;
+
+  topLevelBlocks.forEach((block) => {
+    if (block.type === 'Parallel Section') {
+      const section = parallelSections[block.id];
+      if (section) {
+        // Calculate dynamic width for this parallel section
+        const maxBlocksInBranch = Math.max(...(section.branches || []).map(b => (b.blocks || []).length));
+        const baseWidth = 160;
+        const additionalWidthPerBlock = maxBlocksInBranch > 0 
+          ? maxBlocksInBranch * 70 // 60 width + 10 spacing
+          : 0;
+        const sectionWidth = baseWidth + additionalWidthPerBlock + 30;
+
+        const branchCount = section.branches.length;
+        const branchHeight = 60;
+        const branchSpacing = 20;
+        const totalBranchesHeight = branchCount * branchHeight + (branchCount - 1) * branchSpacing;
+        const sectionHeight = totalBranchesHeight + 40;
+
+        const startY = centerPointY - (sectionHeight / 2);
+
+        if (startY + sectionHeight + 30 > maxY) {
+          maxY = startY + sectionHeight + 50;
+        }
+
+        items.push({
+          type: 'parallel-section',
+          id: block.id,
+          blockType: block.type,
+          blockData: block.data,
+          x: currentX,
+          y: startY,
+          width: sectionWidth,
+          height: sectionHeight,
+          branches: section.branches,
+          leftConnectionX: currentX,
+          rightConnectionX: currentX + sectionWidth,
+          centerY: centerPointY
+        });
+
+        currentX += sectionWidth + blockSpacing;
+      }
+    } else {
+      items.push({
+        type: 'block',
+        id: block.id,
+        blockType: block.type,
+        blockData: block.data,
+        x: currentX,
+        y: centerPointY - 20
+      });
+      currentX += blockWidth + blockSpacing;
+    }
 
     items.push({
       type: 'node',
-      id: 'node-start',
+      id: `node-${block.id}`,
       x: currentX,
       y: centerPointY,
       nodeIndex: nodeIndex++
     });
     currentX += nodeSpacing;
+  });
 
-    topLevelBlocks.forEach((block) => {
-      if (block.type === 'Parallel Section') {
-        const section = parallelSections[block.id];
-        if (section) {
-          const branchCount = section.branches.length;
-
-          const branchHeight = 60;
-          const branchSpacing = 20;
-          const totalBranchesHeight = branchCount * branchHeight + (branchCount - 1) * branchSpacing;
-          const sectionHeight = totalBranchesHeight + 40;
-
-          const startY = centerPointY - (sectionHeight / 2);
-
-          if (startY + sectionHeight + 30 > maxY) {
-            maxY = startY + sectionHeight + 50;
-          }
-
-          items.push({
-            type: 'parallel-section',
-            id: block.id,
-            blockType: block.type,
-            blockData: block.data,
-            x: currentX,
-            y: startY,
-            width: 160,
-            height: sectionHeight,
-            branches: section.branches,
-            leftConnectionX: currentX,
-            rightConnectionX: currentX + 160,
-            centerY: centerPointY
-          });
-
-          currentX += 160 + blockSpacing;
-        }
-      } else {
-        items.push({
-          type: 'block',
-          id: block.id,
-          blockType: block.type,
-          blockData: block.data,
-          x: currentX,
-          y: centerPointY - 20
-        });
-        currentX += blockWidth + blockSpacing;
-      }
-
-      items.push({
-        type: 'node',
-        id: `node-${block.id}`,
-        x: currentX,
-        y: centerPointY,
-        nodeIndex: nodeIndex++
-      });
-      currentX += nodeSpacing;
-    });
-
-    return {
-      items,
-      totalWidth: currentX - startX,
-      startX,
-      actualRightBoxX,
-      parallelSections,
-      topLevelBlocks,
-      maxY: Math.max(maxY, centerPointY + 100)
-    };
+  return {
+    items,
+    totalWidth: currentX - startX,
+    startX,
+    actualRightBoxX,
+    parallelSections,
+    topLevelBlocks,
+    maxY: Math.max(maxY, centerPointY + 100)
   };
+};
 
-  const renderParallelSection = (item) => {
-    const { x, y, width, branches, id, blockData } = item;
+const renderParallelSection = (item) => {
+  const { x, y, width, branches, id, blockData } = item;
 
-    if (!branches || branches.length === 0) return null;
+  if (!branches || branches.length === 0) return null;
 
-    const branchHeight = 60;
-    const branchSpacing = 20;
-    const totalBranchesHeight = branches.length * branchHeight + (branches.length - 1) * branchSpacing;
-    const sectionHeight = totalBranchesHeight + 40;
+  const branchHeight = 60;
+  const branchSpacing = 20;
+  const blockWidth = 60;
+  const blockSpacing = 12;
 
-    const startY = y;
+  const maxBlocksInBranch = Math.max(...branches.map(b => (b.blocks || []).length));
 
-    const leftRailX = x + 30;
-    const rightRailX = x + width - 10;
-    const topY = startY + 20;
-    const bottomY = startY + sectionHeight - 20;
+  const baseWidth = 160;
+  const additionalWidthPerBlock = maxBlocksInBranch > 0 
+    ? maxBlocksInBranch * (blockWidth + blockSpacing) 
+    : 0;
+  
 
-    return (
-      <g key={id}>
-        <line
-          x1={x}
-          y1={centerPointY}
-          x2={x - 10}
-          y2={centerPointY}
-          stroke="black"
-          strokeWidth="2"
-        />
-        <line
-          x1={x + width}
-          y1={centerPointY}
-          x2={x + width + 10}
-          y2={centerPointY}
-          stroke="black"
-          strokeWidth="2"
-        />
+  const dynamicWidth = baseWidth + additionalWidthPerBlock + 30;
+  
+  item.width = dynamicWidth;
 
-        {/* <rect
-          x={x}
-          y={startY}
-          width={width}
-          height={sectionHeight}
-          fill="white"
-          // stroke="#999"
-          strokeWidth="1"
-          strokeDasharray="5 5"
-          rx="5"
-        /> */}
+  const totalBranchesHeight = branches.length * branchHeight + (branches.length - 1) * branchSpacing;
+  const sectionHeight = totalBranchesHeight + 40;
 
-        <line
-          x1={leftRailX - 30}
-          y1={topY + 30}
-          x2={leftRailX - 30}
-          y2={bottomY - 30}
-          stroke="black"
-          strokeWidth="2"
-        />
+  const mainBranchIndex = 0;
+  const mainBranchY = centerPointY - branchHeight / 2;
+  
 
-        <line
-          x1={rightRailX + 10}
-          y1={topY + 30}
-          x2={rightRailX + 10}
-          y2={bottomY - 30}
-          stroke="black"
-          strokeWidth="2"
-        />
+  const startY = mainBranchY - mainBranchIndex * (branchHeight + branchSpacing);
 
-        <text
-          x={x + width / 2}
-          y={startY + 12}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize="10"
-          fontWeight="bold"
-          fill="#333"
-        >
-          K={blockData?.k || 1}:N={branches.length}
-        </text>
+  const leftRailX = x + 30;
+  const rightRailX = x + dynamicWidth - 10;
+  const topY = startY + 20;
+  const bottomY = startY + sectionHeight - 20;
 
-        {console.log(branches,'branches of blocks')}
+  return (
+    <g key={id}>
 
-        {branches?.map((branch, index) => {
-          const branchY = startY + 20 + (index * (branchHeight + branchSpacing));
-          const branchCenterY = branchY + branchHeight / 2;
+      <line
+        x1={x}
+        y1={centerPointY}
+        x2={x - 10}
+        y2={centerPointY}
+        stroke="black"
+        strokeWidth="2"
+      />
+      
+  
+      <line
+        x1={x + dynamicWidth}
+        y1={centerPointY}
+        x2={x + dynamicWidth + 5}
+        y2={centerPointY}
+        stroke="black"
+        strokeWidth="2"
+      />
 
-          return (
-            <g key={branch.id}>
-             
-              <line
-                x1={leftRailX}
-                y1={branchCenterY}
-                x2={leftRailX - 10}
-                y2={branchCenterY}
-                stroke="black"
-                strokeWidth="2"
-              />
+      {/* Left vertical rail */}
+      <line
+        x1={leftRailX - 30}
+        y1={topY -70}
+        x2={leftRailX - 30}
+        y2={bottomY - 130}
+        stroke="black"
+        strokeWidth="2"
+      />
 
-              
-              <circle
-                cx={leftRailX - 10}
-                cy={branchCenterY}
-                r="4"
-                fill={selectedNode === `branch-${branch.id}-left` ? "#0078d4" : "black"}
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenMenu(e.clientX, e.clientY, `branch-${branch.id}-left`);
-                }}
-              />
+      {/* Right vertical rail */}
+      <line
+        x1={rightRailX}
+        y1={topY - 70}
+        x2={rightRailX}
+        y2={bottomY - 130}
+        stroke="black"
+        strokeWidth="2"
+      />
 
-              <line
-                x1={leftRailX - 31}
-                y1={branchCenterY}
-                x2={leftRailX + 10}
-                y2={branchCenterY}
-                stroke="black"
-                strokeWidth="2"
-              />
+      {/* K:N label */}
+      <text
+        x={x + dynamicWidth / 2}
+        y={startY - 88}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize="10"
+        fontWeight="bold"
+        fill="#333"
+      >
+        K={blockData?.k || 1}:N={branches.length}
+      </text>
 
-           
-              <RBDBlock
-                id={branch.id}
-                type={branch.type}
-                x={leftRailX +10}
-                y={branchY+10}
-                onEdit={onEditBlock}
-                onDelete={onDeleteBlock}
-                blockData={branch.data}
-                width={120}
-                height={branchHeight}
-              />
+      {branches?.map((branch, index) => {
+        const branchY = startY + 20 + index * (branchHeight + branchSpacing);
+        const branchCenterY = branchY + branchHeight / 2;
+        const branchBlocks = branch.blocks || [];
+        const isMainBranch = index === 0; // First branch is main branch (at center)
 
+        return (
+          <g key={branch.id}>
+            {/* Connection from left rail to this branch */}
+            {/* <line
+              x1={leftRailX}
+              y1={branchCenterY}
+              x2={leftRailX - 10}
+              y2={branchCenterY}
+              stroke="black"
+              strokeWidth="2"
+              strokeDasharray={isMainBranch ? "none" : "5,3"} // Dashed for bypass branch
+            /> */}
             
-              <line
-                x1={leftRailX + 131} 
-                y1={branchCenterY}
-                x2={rightRailX - 50}
-                y2={branchCenterY}
-                stroke="black"
-                strokeWidth="2"
-              />
+            {/* Left node for branch */}
+            <circle
+              cx={leftRailX - 10}
+              cy={branchCenterY-100}
+              r="4"
+              fill={selectedNode === `branch-${branch.id}-left` ? "#0078d4" : "black"}
+              style={{ cursor: "pointer" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenMenu(e.clientX, e.clientY, `branch-${branch.id}-left`);
+              }}
+            />
 
-           
-              <circle
-                cx={rightRailX - 30}
-                cy={branchCenterY}
-                r="4"
-                fill={selectedNode === `branch-${branch.id}-right` ? "#0078d4" : "black"}
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenMenu(e.clientX, e.clientY, `branch-${branch.id}-right`);
-                }}
-              />
+            {/* Horizontal line from left rail to first block */}
+            <line
+              x1={leftRailX -31}
+              y1={branchCenterY-100}
+              x2={branchBlocks.length === 0 ? rightRailX - 50 : leftRailX + 10}
+              y2={branchCenterY-100}
+              stroke="black"
+              strokeWidth="2"
+              strokeDasharray={isMainBranch ? "none" : "5,3"}
+            />
 
-              <line
-                x1={rightRailX - 30}
-                y1={branchCenterY}
-                x2={rightRailX}
-                y2={branchCenterY}
-                stroke="black"
-                strokeWidth="2"
-              />
-            </g>
-          );
-        })}
-      </g>
-    );
-  };
+            {branchBlocks.length === 0 ? (
+              <>
+                {/* Direct connection to right rail */}
+                <line
+                  x1={leftRailX - 31}
+                  y1={branchCenterY-100}
+                  x2={rightRailX - 10}
+                  y2={branchCenterY-100}
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeDasharray={isMainBranch ? "none" : "5,3"}
+                />
+                <line
+                  x1={rightRailX - 30}
+                  y1={branchCenterY}
+                  x2={rightRailX}
+                  y2={branchCenterY}
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeDasharray={isMainBranch ? "none" : "5,3"}
+                />
+              </>
+            ) : (
+              <>
+                {/* Render blocks horizontally */}
+                {branchBlocks.map((block, blockIndex) => {
+                  const blockX = leftRailX + 10 + blockIndex * (blockWidth + blockSpacing);
+
+                  return (
+                    <g key={block.id}>
+                      {/* Node before each block (except first) */}
+                      {/* {blockIndex > 0 && (
+                        <circle
+                          cx={blockX - blockSpacing/2}
+                          cy={branchCenterY-100}
+                          r="4"
+                          fill={selectedNode === `branch-${branch.id}-node-${block.id}-left` ? "#0078d4" : "black"}
+                          style={{ cursor: "pointer" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenMenu(e.clientX, e.clientY, `branch-${branch.id}-node-${block.id}-left`);
+                          }}
+                        />
+                      )} */}
+
+                      <RBDBlock
+                        id={block.id}
+                        type={block.type}
+                        x={blockX}
+                        y={branchY - 90}
+                        onEdit={onEditBlock}
+                        onDelete={onDeleteBlock}
+                        blockData={block.data}
+                        width={blockWidth}
+                        height={branchHeight}
+                      />
+
+                      {/* Node after each block (except last) */}
+                      {blockIndex < branchBlocks.length - 1 && (
+                        <circle
+                          cx={blockX + blockWidth + blockSpacing/2}
+                          cy={branchCenterY-100}
+                          r="4"
+                          fill={selectedNode === `branch-${branch.id}-node-${block.id}-right` ? "#0078d4" : "black"}
+                          style={{ cursor: "pointer" }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenMenu(e.clientX, e.clientY, `branch-${branch.id}-node-${block.id}-right`);
+                          }}
+                        />
+                      )}
+
+                      {/* Connection line between blocks */}
+                      {blockIndex < branchBlocks.length - 1 && (
+                        <line
+                          x1={blockX + blockWidth}
+                          y1={branchCenterY-100}
+                          x2={blockX + blockWidth + blockSpacing}
+                          y2={branchCenterY-100}
+                          stroke="black"
+                          strokeWidth="2"
+                          strokeDasharray={isMainBranch ? "none" : "5,3"}
+                        />
+                      )}
+                    </g>
+                  );
+                })}
+
+                {/* Line from last block to right rail */}
+                <line
+                  x1={leftRailX + 10 + branchBlocks.length * (blockWidth + blockSpacing)}
+                  y1={branchCenterY-100}
+                  x2={rightRailX - 50}
+                  y2={branchCenterY-100}
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeDasharray={isMainBranch ? "none" : "5,3"}
+                />
+
+                {/* Right node for branch */}
+                <circle
+                  cx={rightRailX - 50}
+                  cy={branchCenterY-100}
+                  r="4"
+                  fill={selectedNode === `branch-${branch.id}-right` ? "#0078d4" : "black"}
+                  style={{ cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenMenu(e.clientX, e.clientY, `branch-${branch.id}-right`);
+                  }}
+                />
+                
+                <line
+                  x1={rightRailX - 30}
+                  y1={branchCenterY-100}
+                  x2={rightRailX}
+                  y2={branchCenterY-100}
+                  stroke="black"
+                  strokeWidth="2"
+                  strokeDasharray={isMainBranch ? "none" : "5,3"}
+                />
+              </>
+            )}
+          </g>
+        );
+      })}
+    </g>
+  );
+};
 
   const layout = calculateLayout();
   const items = layout.items;
@@ -457,11 +573,10 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
   const connectionPoints = getConnectionPoints();
   const svgWidth = Math.max(750, rightBoxX + 100);
 
-  const handleNodeClick = (e, nodeIndex) => {
+  const handleNodeClick = (e, nodeId) => {
     e.stopPropagation();
-    if (onNodeClick) {
-      onNodeClick(nodeIndex);
-    }
+    onNodeClick(nodeId);
+    onOpenMenu(e.clientX, e.clientY, nodeId);
   };
 
   return (
@@ -546,7 +661,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
                 fill={isSelected ? "#0078d4" : "black"}
                 style={{ cursor: "pointer" }}
                 onClick={(e) => {
-                  handleNodeClick(e, item.nodeIndex);
+                  e.stopPropagation();
                   onOpenMenu(e.clientX, e.clientY, item.nodeIndex);
                 }}
               />
@@ -567,6 +682,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
         } else if (item.type === 'parallel-section') {
           return renderParallelSection(item);
         } else if (item.type === 'block') {
+          {console.log("item....",item)}
           return (
             <RBDBlock
               key={item.id}
@@ -605,7 +721,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
             fill={selectedNode === 0 ? "#0078d4" : "black"}
             style={{ cursor: "pointer" }}
             onClick={(e) => {
-              handleNodeClick(e, 0);
+              e.stopPropagation();
               onOpenMenu(e.clientX, e.clientY, 0);
             }}
           />
@@ -626,7 +742,6 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
     </svg>
   );
 };
-
 
 export const RBDContextMenu = ({ x, y, onSelect, onClose }) => {
   const handleItemClick = (item) => {
@@ -673,7 +788,6 @@ export const RBDContextMenu = ({ x, y, onSelect, onClose }) => {
     </div>
   );
 };
-
 
 export const BlockContextMenu = ({ x, y, onSelect, onClose }) => {
   const handleItemClick = (item) => {
@@ -725,6 +839,11 @@ export const BlockContextMenu = ({ x, y, onSelect, onClose }) => {
 };
 
 export default function RBDButton() {
+  const [parallelBranchMode, setParallelBranchMode] = useState({
+  active: false,
+  startNode: null,
+  endNode: null
+});
   const [showSymbol, setShowSymbol] = useState(false);
   const [menu, setMenu] = useState(null);
   const [blockMenu, setBlockMenu] = useState({ open: false, blockId: null, x: 0, y: 0 });
@@ -785,32 +904,199 @@ export default function RBDButton() {
       console.log("RBD Data from state:", state.rbdData);
     }
   }, [location]);
+const createParallelBranch = (startNode, endNode) => {
+  console.log("Creating parallel branch from", startNode, "to", endNode);
 
-  const openMenu = (x, y, index) => {
-    console.log("openMenu called with index:", index);
-    setMenu({ x, y });
-    setSelectedNode(index);
-    setClickedNodeInfo({
-      index: index,
-      x: x,
-      y: y
-    });
+  // Parse node indices to find their positions
+  const parseNodeIndex = (nodeIndex) => {
+    if (typeof nodeIndex === 'string' && nodeIndex.startsWith('branch-')) {
+      const parts = nodeIndex.split('-');
+      return {
+        type: 'branch',
+        branchId: parseInt(parts[1]),
+        position: parts[2]
+      };
+    } else {
+      return {
+        type: 'top-level',
+        nodeIndex: parseInt(nodeIndex)
+      };
+    }
   };
 
-  const handleNodeClick = (nodeIndex) => {
+  const start = parseNodeIndex(startNode);
+  const end = parseNodeIndex(endNode);
+
+  // Get the top-level blocks
+  const topLevelBlocks = blocks.filter(block =>
+    block.type === 'Parallel Section' || !block.data?.parentSection
+  );
+
+  // Find the indices where to connect the parallel branch
+  let startBlockIndex = -1;
+  let endBlockIndex = -1;
+
+  if (start.type === 'top-level' && end.type === 'top-level') {
+    // Node indices correspond to positions between blocks
+    // Node 0 is before first block, node 1 is between block 0 and 1, etc.
+    startBlockIndex = start.nodeIndex;
+    endBlockIndex = end.nodeIndex;
+  }
+
+  if (startBlockIndex === -1 || endBlockIndex === -1 || startBlockIndex >= endBlockIndex) {
+    alert("Invalid start and end nodes for parallel branch");
+    return;
+  }
+
+  // Get the blocks that will be in the main branch (between start and end nodes)
+  const mainBranchBlocks = topLevelBlocks.slice(startBlockIndex, endBlockIndex);
   
-    setSelectedNode(nodeIndex);
+  if (mainBranchBlocks.length === 0) {
+    alert("No blocks between selected nodes");
+    return;
+  }
+
+  // Create a new parallel section ID
+  const sectionId = nextId;
+
+  const parallelSectionBlock = {
+    id: sectionId,
+    type: 'Parallel Section',
+    data: {
+      elementType: 'Parallel Section',
+      name: `Parallel Section`,
+      branchCount: 2,
+      sectionId: sectionId,
+      isParallel: true,
+      arrangement: 'horizontal',
+      k: 1,
+      n: 2
+    },
+    branches: []
   };
 
-  const handleEdit = (block) => {
-    setElementModal({
-      open: true,
-      mode: "edit",
-      blockId: block.id,
-      blockType: block.type,
-      nodeIndex: null
-    });
+  // Create main branch (top) - contains the original blocks
+  const mainBranchId = nextId + 1;
+  const mainBranch = {
+    id: mainBranchId,
+    type: 'Parallel Branch',
+    data: {
+      elementType: 'Parallel Branch',
+      name: `Main Branch`,
+      branchIndex: 0,
+      parentSection: sectionId,
+      isParallelBranch: true,
+      isMainBranch: true // Flag to identify main branch
+    },
+    blocks: mainBranchBlocks.map(block => ({
+      id: block.id,
+      type: block.type,
+      data: {
+        ...block.data,
+        parentSection: sectionId,
+        originalParentSection: block.data?.parentSection
+      }
+    }))
   };
+
+  // Create bypass branch (bottom) - contains a single new block
+  const bypassBranchId = nextId + 2;
+  const bypassBranch = {
+    id: bypassBranchId,
+    type: 'Parallel Branch',
+    data: {
+      elementType: 'Parallel Branch',
+      name: `Bypass Branch`,
+      branchIndex: 1,
+      parentSection: sectionId,
+      isParallelBranch: true,
+      isBypassBranch: true // Flag to identify bypass branch
+    },
+    blocks: [
+      {
+        id: nextId + 3,
+        type: 'Regular',
+        data: {
+          elementType: 'Regular',
+          name: `Bypass Block`,
+          parentSection: sectionId,
+          reliabilityData: null,
+          failureRate: 0.001,
+          mtbf: 1000
+        }
+      }
+    ]
+  };
+
+  // Remove the original blocks from the top level
+  const blocksToRemove = new Set(mainBranchBlocks.map(b => b.id));
+  const remainingBlocks = blocks.filter(block => !blocksToRemove.has(block.id));
+
+  const firstBlockId = mainBranchBlocks[0].id;
+  const insertIndex = remainingBlocks.findIndex(block => block.id === firstBlockId);
+
+  const newBlocks = [...remainingBlocks];
+  
+  if (insertIndex !== -1) {
+
+    newBlocks.splice(insertIndex, 0, parallelSectionBlock, mainBranch, bypassBranch);
+  } else {
+  
+    newBlocks.push(parallelSectionBlock, mainBranch, bypassBranch);
+  }
+
+  setBlocks(newBlocks);
+  setNextId(prevId => prevId + 4); 
+}
+const openMenu = (x, y, index) => {
+  console.log("openMenu called with index:", index);
+  
+  // Check if we're in parallel branch creation mode
+  if (parallelBranchMode.active) {
+    if (!parallelBranchMode.startNode) {
+      setParallelBranchMode({
+        active: false,
+        startNode: null,
+        endNode: null
+      });
+      return;
+    }
+    
+    // Set the end node and create the parallel branch
+    const startNode = parallelBranchMode.startNode;
+    const endNode = index;
+    
+    // Create the parallel branch that goes below the main flow
+    createParallelBranch(startNode, endNode);
+    
+    // Exit parallel branch mode
+    setParallelBranchMode({
+      active: false,
+      startNode: null,
+      endNode: null
+    });
+    
+    return;
+  }
+  
+  // Normal menu opening
+  setMenu({ x, y });
+  setSelectedNode(index);
+  setClickedNodeInfo({
+    index: index,
+    x: x,
+    y: y
+  });
+};
+const handleNodeClick = (nodeIndex) => {
+  setSelectedNode(nodeIndex);
+  
+
+  if (parallelBranchMode.active && parallelBranchMode.startNode) {
+
+  }
+};
+
 
   const handleOpenParallelModal = (from) => {
     console.log("Opening parallel modal from:", from, "at node index:", clickedNodeInfo.index);
@@ -829,7 +1115,6 @@ export default function RBDButton() {
     }
 
     if (typeof nodeIndex === 'string' && nodeIndex.startsWith('branch-')) {
-
       const parts = nodeIndex.split('-');
       return {
         isBranch: true,
@@ -837,7 +1122,6 @@ export default function RBDButton() {
         position: parts[2]
       };
     }
-
 
     const topLevelBlocks = blocks.filter(block =>
       block.type === 'Parallel Section' || !block.data?.parentSection
@@ -850,7 +1134,6 @@ export default function RBDButton() {
       console.log("Inserting at end (index", blocks.length, ")");
       return blocks.length;
     } else {
-   
       const blockAfterNode = topLevelBlocks[nodeIndex];
       console.log("Block after node:", blockAfterNode);
 
@@ -864,101 +1147,107 @@ export default function RBDButton() {
       }
     }
   };
-  const insertBlockAtPosition = (newBlock, nodeIndex) => {
-    const insertInfo = findInsertionIndex(nodeIndex);
 
-    if (insertInfo && insertInfo.isBranch) {
-      const { branchId, position } = insertInfo;
+const insertBlockAtPosition = (newBlock, nodeIndex) => {
+  const insertInfo = findInsertionIndex(nodeIndex);
 
-      const branchBlock = blocks.find(b => b.id === parseInt(branchId));
-      if (!branchBlock) return;
-
-      const parentSectionId = branchBlock.data?.parentSection;
-      const parentSection = blocks.find(b => b.id === parentSectionId);
-
-      if (!parentSection) return;
-
-
-      const isAddingParallelSection = newBlock.type === 'Parallel Section';
-
-      if (isAddingParallelSection) {
-       
-        const topLevelBlocks = blocks.filter(block =>
-          block.type === 'Parallel Section' || !block.data?.parentSection
-        );
-
-        const parentSectionIndex = topLevelBlocks.findIndex(b => b.id === parentSectionId);
-
-        if (parentSectionIndex !== -1) {
-         
-          let insertAtIndex;
-
-          if (position === 'left') {
-           
-            insertAtIndex = blocks.findIndex(b => b.id === parentSectionId);
-          } else {
-            
-            const parentBlockIndex = blocks.findIndex(b => b.id === parentSectionId);
-            const parentSection = blocks[parentBlockIndex];
-            const sectionBranches = blocks.filter(b => b.data?.parentSection === parentSectionId);
-            const lastBranchIndex = blocks.findIndex(b => b.id === sectionBranches[sectionBranches.length - 1].id);
-            insertAtIndex = lastBranchIndex + 1;
-          }
-
-          const newBlocks = [...blocks];
-          newBlocks.splice(insertAtIndex, 0, newBlock);
-          setBlocks(newBlocks);
-        }
-      } else {
-  
-        const sectionBranches = blocks.filter(b => b.data?.parentSection === parentSectionId);
-        const branchIndex = sectionBranches.findIndex(b => b.id === branchBlock.id);
-
-        if (position === 'left') {
-          const newBlocks = [...blocks];
-          const insertAtIndex = blocks.findIndex(b => b.id === branchBlock.id);
-          newBlock.data = { ...newBlock.data, parentSection: parentSectionId };
-          newBlocks.splice(insertAtIndex, 0, newBlock);
-          setBlocks(newBlocks);
-        } else {
-          const newBlocks = [...blocks];
-          const insertAtIndex = blocks.findIndex(b => b.id === branchBlock.id) + 1;
-          newBlock.data = { ...newBlock.data, parentSection: parentSectionId };
-          newBlocks.splice(insertAtIndex, 0, newBlock);
-          setBlocks(newBlocks);
-        }
-
-        updateParallelSectionBranchCount(parentSectionId);
-      }
-    } else {
-     
-      const insertAtIndex = insertInfo;
-      const newBlocks = [...blocks];
-      newBlocks.splice(insertAtIndex, 0, newBlock);
-      setBlocks(newBlocks);
+  if (insertInfo && insertInfo.isBranch) {
+    const { branchId, position } = insertInfo;
+    
+    // Handle different node types
+    let targetBranchId = branchId;
+    let insertPosition = position;
+    let targetBlockId = null;
+    
+    // Check if this is a node between blocks (format: branch-{branchId}-node-{blockId}-{side})
+    if (branchId.includes('-node-')) {
+      const parts = branchId.split('-node-');
+      targetBranchId = parts[0];
+      const blockParts = parts[1].split('-');
+      targetBlockId = blockParts[0];
+      insertPosition = blockParts[1]; // 'left' or 'right'
     }
 
-    setNextId(prevId => prevId + 1);
-  };
+    const branchIndex = blocks.findIndex(b => b.id === parseInt(targetBranchId));
+    if (branchIndex === -1) return;
 
-  const updateParallelSectionBranchCount = (sectionId) => {
-    setBlocks(prevBlocks => {
-      const sectionBranches = prevBlocks.filter(b => b.data?.parentSection === sectionId);
-      return prevBlocks.map(block => {
-        if (block.id === sectionId) {
-          return {
-            ...block,
-            data: {
-              ...block.data,
-              branchCount: sectionBranches.length,
-              n: sectionBranches.length
-            }
-          };
+    const branch = blocks[branchIndex];
+    const parentSectionId = branch.data?.parentSection;
+
+    if (newBlock.type !== 'Parallel Section') {
+      const newBlocks = [...blocks];
+      
+      if (!newBlocks[branchIndex].blocks) {
+        newBlocks[branchIndex].blocks = [];
+      }
+      
+      const newBlockWithParent = {
+        ...newBlock,
+        data: { ...newBlock.data, parentSection: parentSectionId }
+      };
+
+      if (insertPosition === 'left') {
+        if (targetBlockId) {
+          // Insert before a specific block
+          const blockIndex = newBlocks[branchIndex].blocks.findIndex(b => b.id === parseInt(targetBlockId));
+          if (blockIndex !== -1) {
+            newBlocks[branchIndex].blocks.splice(blockIndex, 0, newBlockWithParent);
+          }
+        } else {
+          // Insert at beginning of branch
+          newBlocks[branchIndex].blocks.unshift(newBlockWithParent);
         }
-        return block;
-      });
-    });
-  };
+      } else {
+        if (targetBlockId) {
+          // Insert after a specific block
+          const blockIndex = newBlocks[branchIndex].blocks.findIndex(b => b.id === parseInt(targetBlockId));
+          if (blockIndex !== -1) {
+            newBlocks[branchIndex].blocks.splice(blockIndex + 1, 0, newBlockWithParent);
+          }
+        } else {
+          // Insert at end of branch
+          newBlocks[branchIndex].blocks.push(newBlockWithParent);
+        }
+      }
+      
+      setBlocks(newBlocks);
+    } else {
+      // Handle adding parallel section at branch level
+      const topLevelBlocks = blocks.filter(block =>
+        block.type === 'Parallel Section' || !block.data?.parentSection
+      );
+
+      const parentSectionIndex = topLevelBlocks.findIndex(b => b.id === parentSectionId);
+
+      if (parentSectionIndex !== -1) {
+        let insertAtIndex;
+
+        if (insertPosition === 'left') {
+          insertAtIndex = blocks.findIndex(b => b.id === parentSectionId);
+        } else {
+          const parentBlockIndex = blocks.findIndex(b => b.id === parentSectionId);
+          const sectionBranches = blocks.filter(b => b.data?.parentSection === parentSectionId);
+          const lastBranchIndex = blocks.findIndex(b => b.id === sectionBranches[sectionBranches.length - 1].id);
+          insertAtIndex = lastBranchIndex + 1;
+        }
+
+        const newBlocks = [...blocks];
+        newBlocks.splice(insertAtIndex, 0, newBlock);
+        setBlocks(newBlocks);
+      }
+    }
+  } else {
+    // Top level insertion
+    const insertAtIndex = insertInfo;
+    const newBlocks = [...blocks];
+    newBlocks.splice(insertAtIndex, 0, newBlock);
+    setBlocks(newBlocks);
+  }
+
+  setNextId(prevId => prevId + 1);
+};
+
+
 
   const insertBlocksAtPosition = (newBlocksArray, nodeIndex) => {
     const insertAtIndex = findInsertionIndex(nodeIndex);
@@ -975,7 +1264,6 @@ export default function RBDButton() {
   const handleParallelModalSubmit = () => {
     console.log("Creating", branchCount, "parallel branches");
 
-    const parentSectionId = `parallel-${Date.now()}`;
     const sectionId = nextId;
 
     const parallelSectionBlock = {
@@ -985,37 +1273,51 @@ export default function RBDButton() {
         elementType: 'Parallel Section',
         name: `Parallel Section`,
         branchCount: branchCount,
-        sectionId: parentSectionId,
+        sectionId: sectionId,
         isParallel: true,
-        arrangement: 'vertical',
+        arrangement: 'horizontal',
         k: 1,
         n: branchCount
-      }
+      },
+      branches: []
     };
 
     const branchBlocks = [];
     for (let i = 0; i < branchCount; i++) {
-      branchBlocks.push({
-        id: nextId + i + 1,
-        type: 'Regular',
+      const branchId = nextId + i + 1;
+      const branch = {
+        id: branchId,
+        type: 'Parallel Branch',
         data: {
-          elementType: 'Regular',
+          elementType: 'Parallel Branch',
           name: `Branch ${i + 1}`,
           branchIndex: i,
           parentSection: sectionId,
-          isParallelBranch: true,
+          isParallelBranch: true
+        },
+        blocks: []
+      };
+      
+      branch.blocks.push({
+        id: nextId + i + 1 + branchCount,
+        type: 'Regular',
+        data: {
+          elementType: 'Regular',
+          name: `Branch ${i + 1} Block`,
+          branchIndex: i,
+          parentSection: sectionId,
           reliabilityData: null,
           failureRate: 0.001,
           mtbf: 1000
         }
       });
+      
+      branchBlocks.push(branch);
     }
 
     const nodeIndexToUse = pendingAction?.nodeIndex !== undefined
       ? pendingAction.nodeIndex
       : clickedNodeInfo.index;
-
-    console.log("Using node index for parallel section:", nodeIndexToUse);
 
     const allNewBlocks = [parallelSectionBlock, ...branchBlocks];
     insertBlocksAtPosition(allNewBlocks, nodeIndexToUse);
@@ -1057,73 +1359,68 @@ export default function RBDButton() {
     return mu * k;
   };
 
-  const handleSelect = (action) => {
-    console.log("RBD action received:", action, "at node index:", clickedNodeInfo.index);
+const handleSelect = (action) => {
+  console.log("RBD action received:", action, "at node index:", clickedNodeInfo.index);
 
-    const isBranchNode = typeof clickedNodeInfo.index === 'string' &&
-      clickedNodeInfo.index.startsWith('branch-');
+  const isBranchNode = typeof clickedNodeInfo.index === 'string' &&
+    clickedNodeInfo.index.startsWith('branch-');
 
-    if (action === "Add Parallel Section") {
-      setPendingAction({
-        type: 'parallel',
-        nodeIndex: clickedNodeInfo.index
-      });
-      setShowParallelModal(true);
-      return;
-    }
+  if (action === "Add Parallel Section") {
+    setPendingAction({
+      type: 'parallel',
+      nodeIndex: clickedNodeInfo.index
+    });
+    setShowParallelModal(true);
+    return;
+  }
 
-    if (action === "Add K-out-of-N") {
-      setKOfNModal({
-        open: true,
-        mode: 'add',
-        blockId: nextId,
-        nodeIndex: clickedNodeInfo.index,
-        initialData: {
-          k: 2,
-          n: 3,
-          lambda: 0.001,
-          mu: 1000,
-          formula: 'standard',
-          name: 'K-out-of-N Block'
-        }
-      });
-      return;
-    }
+  if (action === "Add Parallel Branch") {
+    // Start parallel branch creation mode
+    setParallelBranchMode({
+      active: true,
+      startNode: clickedNodeInfo.index,
+      endNode: null
+    });
+    // Close the context menu
+    setMenu(null);
+    alert("Select the end node for the parallel branch");
+    return;
+  }
 
-    if (action === "Add Regular" || action === "Add SubRBD") {
-      const type = action.replace("Add ", "");
-      console.log("Setting element modal for", type, "with node index:", clickedNodeInfo.index);
-
-      setElementModal({
-        open: true,
-        mode: 'add',
-        blockId: nextId,
-        blockType: type,
-        nodeIndex: clickedNodeInfo.index
-      });
-      return;
-    }
-
-    if (action === "Add Parallel Branch") {
-
-      if (isBranchNode) {
-        const type = "Parallel Branch";
-        setElementModal({
-          open: true,
-          mode: 'add',
-          blockId: nextId,
-          blockType: type,
-          nodeIndex: clickedNodeInfo.index
-        });
-      } else {
-        console.log("Cannot add parallel branch at top level");
-
+  if (action === "Add K-out-of-N") {
+    setKOfNModal({
+      open: true,
+      mode: 'add',
+      blockId: nextId,
+      nodeIndex: clickedNodeInfo.index,
+      initialData: {
+        k: 2,
+        n: 3,
+        lambda: 0.001,
+        mu: 1000,
+        formula: 'standard',
+        name: 'K-out-of-N Block'
       }
-      return;
-    }
+    });
+    return;
+  }
 
-    console.log("Unhandled action:", action);
-  };
+  if (action === "Add Regular" || action === "Add SubRBD") {
+    const type = action.replace("Add ", "");
+    console.log("Setting element modal for", type, "with node index:", clickedNodeInfo.index);
+
+    setElementModal({
+      open: true,
+      mode: 'add',
+      blockId: nextId,
+      blockType: type,
+      nodeIndex: clickedNodeInfo.index
+    });
+    return;
+  }
+
+  console.log("Unhandled action:", action);
+};
 
   const handleKOfNSubmit = (data) => {
     console.log("handleKOfNSubmit called with data:", data);
@@ -1166,21 +1463,19 @@ export default function RBDButton() {
   };
 
   const handleModalSubmit = (formData) => {
-
-
     if (elementModal.mode === 'add') {
       const newBlock = {
         id: nextId,
         type: elementModal.blockType === 'K_OUT_OF_N' ? 'K-out-of-N' :
-          elementModal.blockType === 'SUBRBD' ? 'SubRBD' :
-            elementModal.blockType === 'PARALLEL_SECTION' ? 'Parallel Section' :
-              elementModal.blockType === 'PARALLEL_BRANCH' ? 'Parallel Branch' : 'Regular',
+          elementModal.blockType === 'SubRBD' ? 'SubRBD' :
+            elementModal.blockType === 'Parallel Section' ? 'Parallel Section' :
+              elementModal.blockType === 'Parallel Branch' ? 'Parallel Branch' : 'Regular',
         data: {
           ...formData,
           elementType: elementModal.blockType === 'K_OUT_OF_N' ? 'K-out-of-N' :
-            elementModal.blockType === 'SUBRBD' ? 'SubRBD' :
-              elementModal.blockType === 'PARALLEL_SECTION' ? 'Parallel Section' :
-                elementModal.blockType === 'PARALLEL_BRANCH' ? 'Parallel Branch' : 'Regular'
+            elementModal.blockType === 'SubRBD' ? 'SubRBD' :
+              elementModal.blockType === 'Parallel Section' ? 'Parallel Section' :
+                elementModal.blockType === 'Parallel Branch' ? 'Parallel Branch' : 'Regular'
         }
       };
 
@@ -1198,12 +1493,12 @@ export default function RBDButton() {
       setBlocks(blocks.map(block =>
         block.id === elementModal.blockId
           ? {
-            ...block,
-            data: {
-              ...formData,
-              elementType: block.type
+              ...block,
+              data: {
+                ...formData,
+                elementType: block.type
+              }
             }
-          }
           : block
       ));
     }
@@ -1224,12 +1519,12 @@ export default function RBDButton() {
       setBlocks(blocks.map(block =>
         block.id === elementModal.blockId
           ? {
-            ...block,
-            data: {
-              ...block.data,
-              switchData: switchData
+              ...block,
+              data: {
+                ...block.data,
+                switchData: switchData
+              }
             }
-          }
           : block
       ));
     }
@@ -1260,6 +1555,56 @@ export default function RBDButton() {
     }
   };
 
+{parallelBranchMode.active && (
+  <div style={{
+    position: 'fixed',
+    top: 10,
+    left: '50%',
+    transform: 'translateX(-50%)',
+    backgroundColor: '#0078d4',
+    color: 'white',
+    padding: '8px 16px',
+    borderRadius: '4px',
+    zIndex: 2000,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px'
+  }}>
+    <span>Select the end node for the parallel branch</span>
+    <button
+      onClick={() => setParallelBranchMode({ active: false, startNode: null, endNode: null })}
+      style={{
+        background: 'transparent',
+        border: '1px solid white',
+        color: 'white',
+        padding: '2px 8px',
+        borderRadius: '4px',
+        cursor: 'pointer'
+      }}
+    >
+      Cancel
+    </button>
+  </div>
+)}
+
+{/* Highlight the start node */}
+{parallelBranchMode.active && parallelBranchMode.startNode && (
+  <div style={{
+    position: 'fixed',
+    left: clickedNodeInfo.x,
+    top: clickedNodeInfo.y - 20,
+    transform: 'translateX(-50%)',
+    backgroundColor: '#0078d4',
+    color: 'white',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    fontSize: '12px',
+    zIndex: 1500
+  }}>
+    Start
+  </div>
+)}
   const handleBlockMenuSelect = (action) => {
     console.log("Block menu action received:", action);
 
