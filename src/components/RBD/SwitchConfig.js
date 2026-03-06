@@ -12,7 +12,7 @@ import Api from '../../Api';
     : props?.location?.state?.productId
       ? props?.location?.state?.productId
       : ""
-  console.log("productId45", productIds)
+  // console.log("productId45", productIds)
   //  const projectId = props?.location?.state?.projectId
   //   ? props?.location?.state?.projectId
   //   : props?.match?.params?.id;

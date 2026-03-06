@@ -55,6 +55,8 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
   const leftBoxX = 50;
   const baseRightBoxX = 650;
 
+  // console.log(blocks,'blocks from BI')
+
   const processBlocksWithParallelSections = (blocks) => {
     const parallelSections = {};
 
@@ -132,7 +134,8 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
     currentX += nodeSpacing;
 
     topLevelBlocks.forEach((block) => {
-      if (block.type === 'Parallel Section') {
+      // console.log(block,'block for to set')
+      if (block.elementType === 'Parallel Section') {
         const section = parallelSections[block.id];
         if (section) {
           const branchCount = section.branches.length;
@@ -169,8 +172,8 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
         items.push({
           type: 'block',
           id: block.id,
-          blockType: block.type,
-          blockData: block.data,
+          blockType: block.elementType,
+          blockData: block,
           x: currentX,
           y: centerPointY - 20
         });
@@ -276,7 +279,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
           K={blockData?.k || 1}:N={branches.length}
         </text>
 
-        {console.log(branches,'branches of blocks')}
+        {/* {console.log(branches, 'branches of blocks')} */}
 
         {branches?.map((branch, index) => {
           const branchY = startY + 20 + (index * (branchHeight + branchSpacing));
@@ -284,7 +287,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
 
           return (
             <g key={branch.id}>
-             
+
               <line
                 x1={leftRailX}
                 y1={branchCenterY}
@@ -294,7 +297,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
                 strokeWidth="2"
               />
 
-              
+
               <circle
                 cx={leftRailX - 10}
                 cy={branchCenterY}
@@ -316,8 +319,8 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
                 strokeWidth="2"
               />
 
-           
-              <RBDBlock
+
+              {/* <RBDBlock
                 id={branch.id}
                 type={branch.type}
                 x={leftRailX +10}
@@ -327,11 +330,11 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
                 blockData={branch.data}
                 width={120}
                 height={branchHeight}
-              />
+              /> */}
 
-            
+
               <line
-                x1={leftRailX + 131} 
+                x1={leftRailX + 131}
                 y1={branchCenterY}
                 x2={rightRailX - 50}
                 y2={branchCenterY}
@@ -339,7 +342,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
                 strokeWidth="2"
               />
 
-           
+
               <circle
                 cx={rightRailX - 30}
                 cy={branchCenterY}
@@ -367,7 +370,9 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
     );
   };
 
+  console.log(calculateLayout(),'calculateLayout')
   const layout = calculateLayout();
+  console.log(layout,'layout')
   const items = layout.items;
   const rightBoxX = layout.actualRightBoxX;
   const canvasHeight = Math.max(400, layout.maxY + 50);
@@ -521,11 +526,10 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
           Output
         </text>
       </g>
-
+      {console.log(items, 'items')}
       {items?.map((item) => {
         if (item.type === 'node') {
           const isSelected = selectedNode === item.nodeIndex;
-
           return (
             <g key={item.id}>
               {isSelected && (
@@ -630,7 +634,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
 
 export const RBDContextMenu = ({ x, y, onSelect, onClose }) => {
   const handleItemClick = (item) => {
-    console.log("item......", item);
+    // console.log("item......", item);
     onSelect(item);
     onClose();
   };
@@ -677,7 +681,7 @@ export const RBDContextMenu = ({ x, y, onSelect, onClose }) => {
 
 export const BlockContextMenu = ({ x, y, onSelect, onClose }) => {
   const handleItemClick = (item) => {
-    console.log("block menu item......", item);
+    // console.log("block menu item......", item);
     onSelect(item);
     onClose();
   };
@@ -725,6 +729,13 @@ export const BlockContextMenu = ({ x, y, onSelect, onClose }) => {
 };
 
 export default function RBDButton() {
+
+  const { id, rbdId } = useParams();
+
+  const projectId = id;
+
+  console.log(projectId, 'projectId -', rbdId, 'rbdId')
+
   const [showSymbol, setShowSymbol] = useState(false);
   const [menu, setMenu] = useState(null);
   const [blockMenu, setBlockMenu] = useState({ open: false, blockId: null, x: 0, y: 0 });
@@ -787,7 +798,7 @@ export default function RBDButton() {
   }, [location]);
 
   const openMenu = (x, y, index) => {
-    console.log("openMenu called with index:", index);
+    // console.log("openMenu called with index:", index);
     setMenu({ x, y });
     setSelectedNode(index);
     setClickedNodeInfo({
@@ -797,8 +808,35 @@ export default function RBDButton() {
     });
   };
 
+  console.log(blocks, 'blocks')
+
+  useEffect(() => {
+    getBlock();
+  }, [rbdId, projectId])
+
+  // Get API for current the blocks 
+  const getBlock = () => {
+    try {
+      Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
+        .then((res) => {
+          console.log(res.data)
+          let dataLength = res.data.data.length
+          if (dataLength > 0) {
+            setShowSymbol(true);
+          } else {
+            setShowSymbol(false);
+          }
+          setBlocks(res.data.data)
+
+        })
+    } catch (error) {
+      console.log(error, "error")
+    }
+  }
+
+
   const handleNodeClick = (nodeIndex) => {
-  
+
     setSelectedNode(nodeIndex);
   };
 
@@ -813,7 +851,7 @@ export default function RBDButton() {
   };
 
   const handleOpenParallelModal = (from) => {
-    console.log("Opening parallel modal from:", from, "at node index:", clickedNodeInfo.index);
+    // console.log("Opening parallel modal from:", from, "at node index:", clickedNodeInfo.index);
     setPendingAction({
       from,
       nodeIndex: clickedNodeInfo.index
@@ -822,7 +860,7 @@ export default function RBDButton() {
   };
 
   const findInsertionIndex = (nodeIndex) => {
-    console.log("findInsertionIndex called with nodeIndex:", nodeIndex);
+    // console.log("findInsertionIndex called with nodeIndex:", nodeIndex);
 
     if (nodeIndex === null || nodeIndex === undefined) {
       return blocks.length;
@@ -850,7 +888,7 @@ export default function RBDButton() {
       console.log("Inserting at end (index", blocks.length, ")");
       return blocks.length;
     } else {
-   
+
       const blockAfterNode = topLevelBlocks[nodeIndex];
       console.log("Block after node:", blockAfterNode);
 
@@ -882,7 +920,7 @@ export default function RBDButton() {
       const isAddingParallelSection = newBlock.type === 'Parallel Section';
 
       if (isAddingParallelSection) {
-       
+
         const topLevelBlocks = blocks.filter(block =>
           block.type === 'Parallel Section' || !block.data?.parentSection
         );
@@ -890,14 +928,14 @@ export default function RBDButton() {
         const parentSectionIndex = topLevelBlocks.findIndex(b => b.id === parentSectionId);
 
         if (parentSectionIndex !== -1) {
-         
+
           let insertAtIndex;
 
           if (position === 'left') {
-           
+
             insertAtIndex = blocks.findIndex(b => b.id === parentSectionId);
           } else {
-            
+
             const parentBlockIndex = blocks.findIndex(b => b.id === parentSectionId);
             const parentSection = blocks[parentBlockIndex];
             const sectionBranches = blocks.filter(b => b.data?.parentSection === parentSectionId);
@@ -910,7 +948,7 @@ export default function RBDButton() {
           setBlocks(newBlocks);
         }
       } else {
-  
+
         const sectionBranches = blocks.filter(b => b.data?.parentSection === parentSectionId);
         const branchIndex = sectionBranches.findIndex(b => b.id === branchBlock.id);
 
@@ -931,7 +969,7 @@ export default function RBDButton() {
         updateParallelSectionBranchCount(parentSectionId);
       }
     } else {
-     
+
       const insertAtIndex = insertInfo;
       const newBlocks = [...blocks];
       newBlocks.splice(insertAtIndex, 0, newBlock);
@@ -963,7 +1001,7 @@ export default function RBDButton() {
   const insertBlocksAtPosition = (newBlocksArray, nodeIndex) => {
     const insertAtIndex = findInsertionIndex(nodeIndex);
 
-    console.log("Inserting", newBlocksArray.length, "blocks at index:", insertAtIndex);
+    // console.log("Inserting", newBlocksArray.length, "blocks at index:", insertAtIndex);
 
     const newBlocks = [...blocks];
     newBlocks.splice(insertAtIndex, 0, ...newBlocksArray);
@@ -973,7 +1011,7 @@ export default function RBDButton() {
   };
 
   const handleParallelModalSubmit = () => {
-    console.log("Creating", branchCount, "parallel branches");
+    // console.log("Creating", branchCount, "parallel branches");
 
     const parentSectionId = `parallel-${Date.now()}`;
     const sectionId = nextId;
@@ -1015,7 +1053,7 @@ export default function RBDButton() {
       ? pendingAction.nodeIndex
       : clickedNodeInfo.index;
 
-    console.log("Using node index for parallel section:", nodeIndexToUse);
+    // console.log("Using node index for parallel section:", nodeIndexToUse);
 
     const allNewBlocks = [parallelSectionBlock, ...branchBlocks];
     insertBlocksAtPosition(allNewBlocks, nodeIndexToUse);
@@ -1058,7 +1096,7 @@ export default function RBDButton() {
   };
 
   const handleSelect = (action) => {
-    console.log("RBD action received:", action, "at node index:", clickedNodeInfo.index);
+    // console.log("RBD action received:", action, "at node index:", clickedNodeInfo.index);
 
     const isBranchNode = typeof clickedNodeInfo.index === 'string' &&
       clickedNodeInfo.index.startsWith('branch-');
@@ -1092,7 +1130,7 @@ export default function RBDButton() {
 
     if (action === "Add Regular" || action === "Add SubRBD") {
       const type = action.replace("Add ", "");
-      console.log("Setting element modal for", type, "with node index:", clickedNodeInfo.index);
+      // console.log("Setting element modal for", type, "with node index:", clickedNodeInfo.index);
 
       setElementModal({
         open: true,
@@ -1126,7 +1164,7 @@ export default function RBDButton() {
   };
 
   const handleKOfNSubmit = (data) => {
-    console.log("handleKOfNSubmit called with data:", data);
+    // console.log("handleKOfNSubmit called with data:", data);
 
     const effectiveLambda = calculateKOfNLambda(data);
     const effectiveMu = calculateKOfNMu(data);
@@ -1147,12 +1185,12 @@ export default function RBDButton() {
     if (kOfNModal.mode === 'add') {
       const nodeIndexToUse = kOfNModal.nodeIndex !== undefined ? kOfNModal.nodeIndex : clickedNodeInfo.index;
 
-      console.log("Creating K-out-of-N block at node index:", nodeIndexToUse);
+      // console.log("Creating K-out-of-N block at node index:", nodeIndexToUse);
 
       if (nodeIndexToUse !== null && nodeIndexToUse !== undefined) {
         insertBlockAtPosition(newBlock, nodeIndexToUse);
       } else {
-        console.log("No node index, appending to end");
+        // console.log("No node index, appending to end");
         setBlocks([...blocks, newBlock]);
         setNextId(nextId + 1);
       }
@@ -1185,12 +1223,12 @@ export default function RBDButton() {
       };
 
       const nodeIndexToUse = elementModal.nodeIndex;
-      console.log("Using node index for insertion:", nodeIndexToUse);
+      // console.log("Using node index for insertion:", nodeIndexToUse);
 
       if (nodeIndexToUse !== null && nodeIndexToUse !== undefined) {
         insertBlockAtPosition(newBlock, nodeIndexToUse);
       } else {
-        console.log("No node index, appending to end");
+        // console.log("No node index, appending to end");
         setBlocks([...blocks, newBlock]);
         setNextId(nextId + 1);
       }
@@ -1239,7 +1277,7 @@ export default function RBDButton() {
 
   const handleSaveConfig = (newConfig) => {
     setRbdConfig(newConfig);
-    console.log("Saved config:", newConfig);
+    // console.log("Saved config:", newConfig);
   };
 
   const handleDeleteBlock = (id) => {
@@ -1261,7 +1299,7 @@ export default function RBDButton() {
   };
 
   const handleBlockMenuSelect = (action) => {
-    console.log("Block menu action received:", action);
+    // console.log("Block menu action received:", action);
 
     if (!blockMenu.blockId) return;
 
@@ -1431,6 +1469,8 @@ export default function RBDButton() {
             }
             onSubmit={handleModalSubmit}
             onOpenSwitchConfig={handleSwitchConfigOpen}
+            rbdId={rbdId}
+            projectId={id}
             currentBlock={
               blocks.find((b) => b.id === elementModal.blockId)?.data
             }

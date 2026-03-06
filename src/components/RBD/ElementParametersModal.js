@@ -3,12 +3,12 @@ import { useParams } from 'react-router-dom';
 import Api from '../../Api';
 import CreatableSelect from 'react-select/creatable';
 
-const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitchConfig, currentBlock }) => {
-
+const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitchConfig,rbdId, currentBlock }) => {
 
   // console.log('currentBlock - :', currentBlock)
 
   const [values, setValues] = useState({
+    rbdId:rbdId,
     relDes: currentBlock?.relDes || '',
     time: currentBlock?.time || " ",
     elementType: currentBlock?.elementType || 'REGULAR',
@@ -144,6 +144,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
         }
       });
 
+      
 
     Api.get(`/api/v1/mttrPrediction/${productId}`)
       .then((res) => {
@@ -202,6 +203,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
       productName: values.productName,
       fr: values.fr,
       // blockId:blockId,
+      rbdId : rbdId,
       productId: values.productId,
       fmecaId: values.fmecaId,
       fmDescription: values.fmDescription,

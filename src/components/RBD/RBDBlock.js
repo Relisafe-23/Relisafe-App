@@ -1,15 +1,30 @@
 // RBDBlock.jsx
-import React,{useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { KOfNBlock } from './KOfNBlock';
 
-export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData,width = 60, height = 70 }) => {
-   const [formData, setFormData] = useState({
+export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData, width = 60, height = 70 }) => {
+
+  console.log(blockData, 'blockData from RBD Block')
+  const [formData, setFormData] = useState({
     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
     k: blockData?.k || '2',
     n: blockData?.n || '3',
     mtbf: blockData?.mtbf || '1303617.9'
   });
-  if (type === 'K-out-of-N') {
+
+  useEffect(() => {
+    setFormData({
+      fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
+      k: blockData?.k ,
+      n: blockData?.n ,
+      mtbf: blockData?.mtbf 
+    })
+  }, [blockData])
+
+  console.log(formData, 'formData from RBDBlock')
+  console.log(blockData.elementType, 'blockData elementType from RBDBlock')
+
+  if (blockData.elementType === 'K-out-of-N') {
     return (
       <KOfNBlock
         id={id}
@@ -34,9 +49,9 @@ export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData,width = 6
     }
   };
 
-   const getBlockContent = () => {
-    switch (type) {
-      case 'Regular':
+  const getBlockContent = () => {
+    switch (blockData.elementType) {
+      case 'REGULAR' || 'Regular':
         return formData?.fr || 'Block';
       case 'K-out-of-N':
         const k = blockData?.k || '2';
@@ -50,12 +65,12 @@ export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData,width = 6
       case 'Parallel Branch':
         return 'Branch';
       default:
-        return 'Block';
+        return 'Block 123x';
     }
   };
   const getBlockColor = () => {
-    switch(type) {
-      case 'Regular':
+    switch (blockData.elementType) {
+      case 'Regular'||'REGULAR':
         return '#4CAF50';
       case 'SubRBD':
         return '#FF9800';
@@ -90,7 +105,7 @@ export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData,width = 6
         fontSize="10"
         fontWeight="bold"
       >
-       {getBlockContent()}
+        {getBlockContent()}
       </text>
       {blockData?.name && type !== 'Regular' && (
         <text
@@ -103,11 +118,11 @@ export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData,width = 6
           {blockData.name}
         </text>
       )}
-      
+
       {/* Shadow filter definition */}
       <defs>
         <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="1" dy="1" stdDeviation="1" floodOpacity="0.2"/>
+          <feDropShadow dx="1" dy="1" stdDeviation="1" floodOpacity="0.2" />
         </filter>
       </defs>
     </g>
