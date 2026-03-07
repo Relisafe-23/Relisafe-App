@@ -334,7 +334,6 @@ const useConnectionManagement = (projectId, productId) => {
     Object.keys(rowSourceValues).forEach(sourceField => {
       
       const sourceValue = rowSourceValues[sourceField];
-      
 
       if (sourceValue) {
         const connections = flattenedConnect?.filter(
@@ -505,10 +504,14 @@ export default function PMMRA(props) {
     // Get connected values for this field    
     const connectedValues = getConnectedValuesForField(fieldName, rowId);    
 
+
     // Get separate library data for this field
     const separateFilteredData = allSepareteData?.filter(
       (item) => item?.sourceName === fieldName
     ) || [];    
+
+    console.log(connectedValues, 'connectedValues')
+    console.log(separateFilteredData, 'separateFilteredData')
 
     // Combine options: connected values first, then separate values
 
