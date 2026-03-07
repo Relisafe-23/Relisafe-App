@@ -64,7 +64,7 @@ const MTTRPrediction = (props, active) => {
   const [levelOfRepair, setLevelOfRepair] = useState("");
   const [spare, setSpare] = useState("");
   const [show, setShow] = useState(false);
-    const [rowConnections, setRowConnections] = useState({});
+  const [rowConnections, setRowConnections] = useState({});
   const [partType, setPartType] = useState("");
   const [name, setName] = useState([]);
   const [reference, setReference] = useState([]);
@@ -141,7 +141,7 @@ const MTTRPrediction = (props, active) => {
   useEffect(() => {
     getAllSeprateLibraryData();
     getAllConnectedLibrary();
-    getAllConnect();
+    // Standalone getAllConnect call removed - now handled in [productId] dependency
   }, []);
 
   const productId = props?.location?.props?.data?.id
@@ -292,7 +292,7 @@ const MTTRPrediction = (props, active) => {
           time: row.time || "",
           skill: row.skill || "",
           tools: row.tools || "",
-           taskType: row.taskType || "",
+          taskType: row.taskType || "",
           totalLabour: row.totalLabour || "",
           partNo: row.partNo || "",
           toolType: row.toolType || "",
@@ -522,7 +522,10 @@ const MTTRPrediction = (props, active) => {
     propstoGetTreeData();
     getProcedureData();
     getMttrData();
-
+    // Fetch connections when product changes
+    if (productId) {
+      getAllConnect();
+    }
   }, [productId]);
 
   const propstoGetTreeData = () => {
@@ -582,124 +585,113 @@ const MTTRPrediction = (props, active) => {
   const [selectedSourceValues, setSelectedSourceValues] = useState({});
 
   const [flattenedConnect, setFlattenedConnect] = useState([]);
- 
 
-const getAllConnect = () => {
-  Api.get("api/v1/library/get/all/connect/value", {
-    params: {
-      projectId: projectId,
-    },
-  })
-    .then((res) => {
-      const filteredData = res.data.getData.filter(
-        (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
-      );
+  // State for source module data - used to check if source records exist
+  const [sourceModuleData, setSourceModuleData] = useState({});
 
-      // Properly flatten the data
-      const flattened = filteredData.flatMap((item) => {
-        const connections = [];
-        
-        // Check if there are destinationData entries
-        if (item.destinationData && Array.isArray(item.destinationData)) {
-          item.destinationData.forEach(d => {
-            if (d.destinationModuleName === "MTTR") {
-              connections.push({
-                sourceName: item.sourceName,
-                sourceValue: item.sourceValue,
-                destinationName: d.destinationName,
-                destinationValue: d.destinationValue,
-                destinationModuleName: d.destinationModuleName,
-              });
-            }
-          });
-        }
-        
-        // Also check direct connections
-        if (item.destinationModuleName === "MTTR" && item.destinationName) {
-          connections.push({
-            sourceName: item.sourceName,
-            sourceValue: item.sourceValue,
-            destinationName: item.destinationName,
-            destinationValue: item.destinationValue,
-            destinationModuleName: item.destinationModuleName,
-          });
-        }
-        
-        return connections;
+  // Module name to API endpoint mapping
+  const moduleApiMap = {
+    FMECA: "/api/v1/fmeca/product/list",
+    SAFETY: "/api/v1/safety/product/list",
+    MTTR: "/api/v1/mttrPrediction/details",
+  };
+
+  const getSourceModuleData = (moduleNames) => {
+    // Fetch data for each unique source module
+    const uniqueModules = [...new Set(moduleNames)];
+
+    uniqueModules.forEach((moduleName) => {
+      // Normalize module name for lookup (e.g., FMECA, SAFETY, MTTR)
+      const normalizedName = String(moduleName).toUpperCase();
+      const apiEndpoint = moduleApiMap[normalizedName];
+      if (!apiEndpoint) return;
+
+      Api.get(apiEndpoint, {
+        params: {
+          projectId: projectId,
+          productId: treeStructure || iniProductId, // Use treeStructure if available which is parentId
+          userId: localStorage.getItem("userId"),
+        },
+      }).then((res) => {
+        const data = res?.data?.data || [];
+        setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));
+      }).catch((error) => {
+        console.log(`Error fetching ${normalizedName} data for connected library check:`, error);
       });
+    });
+  };
 
-      console.log("Flattened connections:", flattened);
-      setFlattenedConnect(flattened);
-      setConnectData(flattened);
+
+  const getAllConnect = () => {
+    Api.get("api/v1/library/get/all/connect/value", {
+      params: {
+        projectId: projectId,
+      },
     })
-    .catch((err) => {
-      console.error("Error fetching connect data:", err);
-    });
-};
+      .then((res) => {
+        const filteredData = res.data.getData.filter(
+          (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
+        );
 
-// Fix the getConnectedValuesForField function
-const getConnectedValuesForField = (fieldName, rowData) => {
-  let connectedValues = [];
+        // Properly flatten the data
+        const flattened = filteredData.flatMap((item) => {
+          const connections = [];
 
-  Object.keys(rowData || {}).forEach(sourceField => {
-    const sourceValue = rowData[sourceField];
-    if (!sourceValue) return;
+          // Check if there are destinationData entries
+          if (item.destinationData && Array.isArray(item.destinationData)) {
+            item.destinationData.forEach(d => {
+              if (d.destinationModuleName === "MTTR") {
+                connections.push({
+                  sourceName: item.sourceName,
+                  sourceValue: item.sourceValue,
+                  sourceModuleName: item?.libraryId?.moduleName || "",
+                  destinationName: d.destinationName,
+                  destinationValue: d.destinationValue,
+                  destinationModuleName: d.destinationModuleName,
+                });
+              }
+            });
+          }
 
-    // Find connections where this field is the destination
-    const connections = flattenedConnect?.filter(
-      item =>
-        item.sourceName === sourceField &&
-        String(item.sourceValue) === String(sourceValue) &&
-        item.destinationName === fieldName
-    ) || [];
+          // Also check direct connections
+          if (item.destinationModuleName === "MTTR" && item.destinationName) {
+            connections.push({
+              sourceName: item.sourceName,
+              sourceValue: item.sourceValue,
+              sourceModuleName: item?.libraryId?.moduleName || "",
+              destinationName: item.destinationName,
+              destinationValue: item.destinationValue,
+              destinationModuleName: item.destinationModuleName,
+            });
+          }
 
-    // Add formatted connections
-    connections.forEach(conn => {
-      connectedValues.push({
-        destValue: conn.destinationValue,
-        isConnected: true,
-        sourceField: conn.sourceName,
-        sourceValue: conn.sourceValue
+          return connections;
+        });
+
+        console.log("Flattened connections:", flattened);
+        setFlattenedConnect(flattened);
+        setConnectData(flattened);
+
+        // Fetch source module data for all unique source modules in the connections
+        const sourceModules = [...new Set(flattened.map(f => f.sourceModuleName).filter(Boolean))];
+        if (sourceModules.length > 0) {
+          getSourceModuleData(sourceModules);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching connect data:", err);
       });
-    });
-  });
+  };
 
-  console.log(`Connected values for ${fieldName}:`, connectedValues);
-  return connectedValues;
-};
+  // Fix the getConnectedValuesForField function
+  const getConnectedValuesForField = (fieldName, rowData) => {
+    let connectedValues = [];
 
-// Fix the getDestinationFieldsForSource function
-const getDestinationFieldsForSource = (sourceField, sourceValue) => {
-  return flattenedConnect
-    ?.filter(item => 
-      item.sourceName === sourceField && 
-      String(item.sourceValue) === String(sourceValue)
-    )
-    .map(item => ({
-      field: item.destinationName,
-      value: item.destinationValue
-    })) || [];
-};
+    Object.keys(rowData || {}).forEach(sourceField => {
+      const sourceValue = rowData[sourceField];
+      if (!sourceValue) return;
 
-// Check if a field is a source field
-const isSourceField = (fieldName) => {
-  return flattenedConnect?.some(item => item.sourceName === fieldName) || false;
-};
-
-// Check if a field is a destination field
-const isDestinationField = (fieldName) => {
-  return flattenedConnect?.some(item => item.destinationName === fieldName) || false;
-};
-
-// Get destination values for a field based on selected sources
-const getDestinationValuesForField = (fieldName, rowId) => {
-  const rowSourceValues = selectedSourceValues[rowId] || {};
-  let destinationValues = [];
-
-  // Check all source fields that might have connections to this field
-  Object.keys(rowSourceValues).forEach(sourceField => {
-    const sourceValue = rowSourceValues[sourceField];
-    if (sourceValue) {
+      // Find connections where this field is the destination
       const connections = flattenedConnect?.filter(
         item =>
           item.sourceName === sourceField &&
@@ -707,14 +699,93 @@ const getDestinationValuesForField = (fieldName, rowId) => {
           item.destinationName === fieldName
       ) || [];
 
-      connections.forEach(item => {
-        destinationValues.push(item.destinationValue);
+      // Add formatted connections
+      connections.forEach(conn => {
+        connectedValues.push({
+          destValue: conn.destinationValue,
+          isConnected: true,
+          sourceField: conn.sourceName,
+          sourceValue: conn.sourceValue
+        });
+      });
+    });
+
+    console.log(`Connected values for ${fieldName}:`, connectedValues);
+
+    // Fallback: If no same-module connections found, check cross-module connections
+    if (connectedValues.length === 0) {
+      const allPossibleConnections = flattenedConnect?.filter(item => {
+        if (item.destinationName !== fieldName) return false;
+
+        // Check if a record with the source value exists in the source module
+        // Normalize comparison for safety
+        const normSourceModule = String(item.sourceModuleName).toUpperCase();
+        const moduleData = sourceModuleData[normSourceModule] || [];
+        return moduleData.some(
+          row => String(row[item.sourceName]) === String(item.sourceValue)
+        );
+      }) || [];
+
+      allPossibleConnections.forEach(conn => {
+        connectedValues.push({
+          destValue: conn.destinationValue,
+          isConnected: true,
+          sourceField: conn.sourceName,
+          sourceValue: conn.sourceValue
+        });
       });
     }
-  });
 
-  return [...new Set(destinationValues)]; // Remove duplicates
-};
+    return connectedValues;
+  };
+
+  // Fix the getDestinationFieldsForSource function
+  const getDestinationFieldsForSource = (sourceField, sourceValue) => {
+    return flattenedConnect
+      ?.filter(item =>
+        item.sourceName === sourceField &&
+        String(item.sourceValue) === String(sourceValue)
+      )
+      .map(item => ({
+        field: item.destinationName,
+        value: item.destinationValue
+      })) || [];
+  };
+
+  // Check if a field is a source field
+  const isSourceField = (fieldName) => {
+    return flattenedConnect?.some(item => item.sourceName === fieldName) || false;
+  };
+
+  // Check if a field is a destination field
+  const isDestinationField = (fieldName) => {
+    return flattenedConnect?.some(item => item.destinationName === fieldName) || false;
+  };
+
+  // Get destination values for a field based on selected sources
+  const getDestinationValuesForField = (fieldName, rowId) => {
+    const rowSourceValues = selectedSourceValues[rowId] || {};
+    let destinationValues = [];
+
+    // Check all source fields that might have connections to this field
+    Object.keys(rowSourceValues).forEach(sourceField => {
+      const sourceValue = rowSourceValues[sourceField];
+      if (sourceValue) {
+        const connections = flattenedConnect?.filter(
+          item =>
+            item.sourceName === sourceField &&
+            String(item.sourceValue) === String(sourceValue) &&
+            item.destinationName === fieldName
+        ) || [];
+
+        connections.forEach(item => {
+          destinationValues.push(item.destinationValue);
+        });
+      }
+    });
+
+    return [...new Set(destinationValues)]; // Remove duplicates
+  };
 
   // Function to handle source selection
   const handleSourceSelection = (fieldName, value, rowId) => {
@@ -726,190 +797,190 @@ const getDestinationValuesForField = (fieldName, rowId) => {
       }
     }));
   };
-const createEditComponent = (fieldName, label, required = false, validationRules = {}) => {
-  return {
-    title: required ? `${label} *` : label,
-    field: fieldName,
-    type: "string",
-    cellStyle: { minWidth: "150px" },
-    validate: (rowData) => {
-      if (required && (!rowData[fieldName] || rowData[fieldName].toString().trim() === "")) {
-        return `${label} is required`;
-      }
-
-      if (validationRules.isNumber && rowData[fieldName]) {
-        if (isNaN(rowData[fieldName])) {
-          return "Must be a number";
+  const createEditComponent = (fieldName, label, required = false, validationRules = {}) => {
+    return {
+      title: required ? `${label} *` : label,
+      field: fieldName,
+      type: "string",
+      cellStyle: { minWidth: "150px" },
+      validate: (rowData) => {
+        if (required && (!rowData[fieldName] || rowData[fieldName].toString().trim() === "")) {
+          return `${label} is required`;
         }
-        if (parseFloat(rowData[fieldName]) <= 0) {
-          return "Must be greater than 0";
+
+        if (validationRules.isNumber && rowData[fieldName]) {
+          if (isNaN(rowData[fieldName])) {
+            return "Must be a number";
+          }
+          if (parseFloat(rowData[fieldName]) <= 0) {
+            return "Must be greater than 0";
+          }
         }
-      }
 
-      return true;
-    },
-    editComponent: ({ value, onChange, rowData }) => {
-      const rowId = rowData?.tableData?.id;
+        return true;
+      },
+      editComponent: ({ value, onChange, rowData }) => {
+        const rowId = rowData?.tableData?.id;
 
-      // Get connected values for this field based on selected sources in this row
-      const connectedValues = getConnectedValuesForField(fieldName, rowData);
+        // Get connected values for this field based on selected sources in this row
+        const connectedValues = getConnectedValuesForField(fieldName, rowData);
 
-      // Check if this field is a destination field
-      const isDestination = isDestinationField(fieldName);
-      
-      // Get destination values if this is a destination field
-      let destinationOptions = [];
-      if (isDestination) {
-        destinationOptions = getDestinationValuesForField(fieldName, rowId);
-      }
+        // Check if this field is a destination field
+        const isDestination = isDestinationField(fieldName);
 
-      // Get separate library data
-      const separateFilteredData = allSepareteData
-        ?.filter((item) => item?.sourceName === fieldName) || [];
-
-      // Combine options: connected values first, then separate values
-      let options = [];
-
-      // Add connected/destination values
-      if (connectedValues.length > 0) {
-        // Format connected values from createSmartSelectField style
-        options = connectedValues.map(item => ({
-          value: String(item.destValue || item.value),
-          label: String(item.destValue || item.value),
-          isConnected: true
-        }));
-      } else if (destinationOptions.length > 0) {
-        // Format destination values from createEditComponent style
-        options = destinationOptions.map(opt => ({
-          value: String(opt),
-          label: String(opt),
-          isConnected: true
-        }));
-      }
-
-      // Add separate library values (avoid duplicates)
-      separateFilteredData.forEach(item => {
-        const itemValue = String(item.sourceValue || item.value);
-        if (!options.some(opt => opt.value === itemValue)) {
-          options.push({
-            value: itemValue,
-            label: itemValue,
-            isConnected: false
-          });
+        // Get destination values if this is a destination field
+        let destinationOptions = [];
+        if (isDestination) {
+          destinationOptions = getDestinationValuesForField(fieldName, rowId);
         }
-      });
 
-      const selectedOption =
-        options.find(opt => opt.value === String(value)) ||
-        (value ? { label: String(value), value: String(value) } : null);
+        // Get separate library data
+        const separateFilteredData = allSepareteData
+          ?.filter((item) => item?.sourceName === fieldName) || [];
 
-      const hasError = required && (!value || String(value)?.trim() === "");
+        // Combine options: connected values first, then separate values
+        let options = [];
 
-      // Show dropdown if we have options, otherwise show input field
-      if (options.length > 0) {
-        return (
-          <div style={{ position: "relative" }}>
-            <CreatableSelect
-              name={fieldName}
-              value={selectedOption}
-              options={options}
-              isClearable
-              onChange={(option) => {
-                const newValue = option?.value != null ? String(option.value) : "";
-                onChange(newValue);
+        // Add connected/destination values
+        if (connectedValues.length > 0) {
+          // Format connected values from createSmartSelectField style
+          options = connectedValues.map(item => ({
+            value: String(item.destValue || item.value),
+            label: String(item.destValue || item.value),
+            isConnected: true
+          }));
+        } else if (destinationOptions.length > 0) {
+          // Format destination values from createEditComponent style
+          options = destinationOptions.map(opt => ({
+            value: String(opt),
+            label: String(opt),
+            isConnected: true
+          }));
+        }
 
-                if (isSourceField(fieldName) && newValue) {
-                  const destinations = getDestinationFieldsForSource(fieldName, newValue);
-                  if (destinations.length === 1) {
-                    // Handle single destination selection if needed
+        // Add separate library values (avoid duplicates)
+        separateFilteredData.forEach(item => {
+          const itemValue = String(item.sourceValue || item.value);
+          if (!options.some(opt => opt.value === itemValue)) {
+            options.push({
+              value: itemValue,
+              label: itemValue,
+              isConnected: false
+            });
+          }
+        });
+
+        const selectedOption =
+          options.find(opt => opt.value === String(value)) ||
+          (value ? { label: String(value), value: String(value) } : null);
+
+        const hasError = required && (!value || String(value)?.trim() === "");
+
+        // Show dropdown if we have options, otherwise show input field
+        if (options.length > 0) {
+          return (
+            <div style={{ position: "relative" }}>
+              <CreatableSelect
+                name={fieldName}
+                value={selectedOption}
+                options={options}
+                isClearable
+                onChange={(option) => {
+                  const newValue = option?.value != null ? String(option.value) : "";
+                  onChange(newValue);
+
+                  if (isSourceField(fieldName) && newValue) {
+                    const destinations = getDestinationFieldsForSource(fieldName, newValue);
+                    if (destinations.length === 1) {
+                      // Handle single destination selection if needed
+                    }
                   }
-                }
-              }}
-              onCreateOption={(inputValue) => {
-                // Allow creating new options
-                const newOption = { value: inputValue, label: inputValue };
-                onChange(inputValue);
+                }}
+                onCreateOption={(inputValue) => {
+                  // Allow creating new options
+                  const newOption = { value: inputValue, label: inputValue };
+                  onChange(inputValue);
 
-                if (isSourceField(fieldName) && inputValue) {
-                  // handleSourceSelection(fieldName, inputValue, rowData);
-                }
-              }}
-              menuPortalTarget={document.body}
-              styles={{
-                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-                control: (base) => ({
-                  ...base,
-                  borderColor: hasError ? "#d32f2f" : base.borderColor,
-                  minHeight: "40px",
-                }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.data?.isConnected ? '#e8f4fd' : base.backgroundColor,
-                  fontWeight: state.data?.isConnected ? 'bold' : base.fontWeight,
-                }),
-              }}
-            />
-            {hasError && (
-              <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                {label} is required
-              </div>
-            )}
-            {(connectedValues.length > 0 || destinationOptions.length > 0) && (
-              <div style={{
-                position: "absolute",
-                top: "-18px",
-                right: "5px",
-                fontSize: "10px",
-                color: "#1976d2",
-                background: "#e8f4fd",
-                padding: "2px 5px",
-                borderRadius: "3px",
-              }}>
-                Connected
-              </div>
-            )}
-          </div>
-        );
-      } else {
-        // Show regular input field when no options
-        return (
-          <div style={{ position: "relative" }}>
-            <input
-              type="text"
-              name={fieldName}
-              value={value || ""}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                onChange(newValue);
+                  if (isSourceField(fieldName) && inputValue) {
+                    // handleSourceSelection(fieldName, inputValue, rowData);
+                  }
+                }}
+                menuPortalTarget={document.body}
+                styles={{
+                  menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  control: (base) => ({
+                    ...base,
+                    borderColor: hasError ? "#d32f2f" : base.borderColor,
+                    minHeight: "40px",
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.data?.isConnected ? '#e8f4fd' : base.backgroundColor,
+                    fontWeight: state.data?.isConnected ? 'bold' : base.fontWeight,
+                  }),
+                }}
+              />
+              {hasError && (
+                <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
+                  {label} is required
+                </div>
+              )}
+              {(connectedValues.length > 0 || destinationOptions.length > 0) && (
+                <div style={{
+                  position: "absolute",
+                  top: "-18px",
+                  right: "5px",
+                  fontSize: "10px",
+                  color: "#1976d2",
+                  background: "#e8f4fd",
+                  padding: "2px 5px",
+                  borderRadius: "3px",
+                }}>
+                  Connected
+                </div>
+              )}
+            </div>
+          );
+        } else {
+          // Show regular input field when no options
+          return (
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                name={fieldName}
+                value={value || ""}
+                onChange={(e) => {
+                  const newValue = e.target.value;
+                  onChange(newValue);
 
-                // If this is a source field, update the selected source value
-                if (isSourceField(fieldName)) {
-                  // handleSourceSelection(fieldName, newValue, rowData);
-                }
-              }}
-              placeholder={required ? `${label} *` : label}
-              style={{
-                height: "40px",
-                borderRadius: "4px",
-                width: "100%",
-                borderColor: hasError ? "#d32f2f" : "#ccc",
-                padding: "0 12px",
-                boxSizing: "border-box",
-              }}
-            />
-            {hasError && (
-              <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                {label} is required
-              </div>
-            )}
-          </div>
-        );
-      }
-    },
+                  // If this is a source field, update the selected source value
+                  if (isSourceField(fieldName)) {
+                    // handleSourceSelection(fieldName, newValue, rowData);
+                  }
+                }}
+                placeholder={required ? `${label} *` : label}
+                style={{
+                  height: "40px",
+                  borderRadius: "4px",
+                  width: "100%",
+                  borderColor: hasError ? "#d32f2f" : "#ccc",
+                  padding: "0 12px",
+                  boxSizing: "border-box",
+                }}
+              />
+              {hasError && (
+                <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
+                  {label} is required
+                </div>
+              )}
+            </div>
+          );
+        }
+      },
+    };
   };
-};
 
- 
+
   const columns = [
     {
       title: "S.No",
@@ -977,14 +1048,14 @@ const createEditComponent = (fieldName, label, required = false, validationRules
         const data = response?.data?.procedureData?.taskType;
         setValidateData(data);
         getProcedureData();
-              toast.success("Created Successfully", {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+        toast.success("Created Successfully", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
 
       })
       .catch((error) => {
@@ -1309,7 +1380,7 @@ const createEditComponent = (fieldName, label, required = false, validationRules
                     alignItems: "center",
                   }}
                 >
-              
+
 
                 </div>
                 <Form onSubmit={handleSubmit} onReset={handleReset}>
@@ -1323,82 +1394,82 @@ const createEditComponent = (fieldName, label, required = false, validationRules
                         : "disabled"
                     }
                   > */}
-             <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ width: "30%", marginRight: "20px" }}>
-          <Projectname projectId={projectId} />
-        </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div style={{ width: "30%", marginRight: "20px" }}>
+                      <Projectname projectId={projectId} />
+                    </div>
 
-        <div style={{ width: "100%", marginRight: "20px" }}>
-          <Dropdown
-            value={projectId}
-            productId={productId}
-            data={treeTableData}
-          />
-        </div>
+                    <div style={{ width: "100%", marginRight: "20px" }}>
+                      <Dropdown
+                        value={projectId}
+                        productId={productId}
+                        data={treeTableData}
+                      />
+                    </div>
 
-        {/* Conditionally show Import/Export buttons only if user has permission */}
-        {(writePermission === true ||
-          writePermission === "undefined" ||
-          role === "admin" ||
-          (isOwner === true && createdBy === userId)) && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              marginTop: "1px",
-              height: "40px",
-            }}
-          >
-            <Tooltip placement="right" title="Import">
-              <div style={{ marginRight: "8px" }}>
-                <label
-                  htmlFor="file-input"
-                  className="import-export-btn"
-                >
-                  <FontAwesomeIcon icon={faFileDownload} />
-                </label>
-                <input
-                  type="file"
-                  className="input-fields"
-                  id="file-input"
-                  onChange={importExcel}
-                  style={{ display: "none" }}
-                />
-              </div>
-            </Tooltip>
-            <Tooltip placement="left" title="Export">
-              <Button
-                className="import-export-btn"
-                style={{ marginLeft: "10px", borderStyle: "none", width: "40px", top: "-2px", minWidth: "38px", padding: "0px", }}
-                onClick={() => exportToExcel(values)}
-              >
-                <FontAwesomeIcon
-                  icon={faFileUpload}
-                  style={{ width: "12px" }}
-                />
-              </Button>
-            </Tooltip>
-          </div>
-        )}
-      </div>
+                    {/* Conditionally show Import/Export buttons only if user has permission */}
+                    {(writePermission === true ||
+                      writePermission === "undefined" ||
+                      role === "admin" ||
+                      (isOwner === true && createdBy === userId)) && (
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            alignItems: "center",
+                            marginTop: "1px",
+                            height: "40px",
+                          }}
+                        >
+                          <Tooltip placement="right" title="Import">
+                            <div style={{ marginRight: "8px" }}>
+                              <label
+                                htmlFor="file-input"
+                                className="import-export-btn"
+                              >
+                                <FontAwesomeIcon icon={faFileDownload} />
+                              </label>
+                              <input
+                                type="file"
+                                className="input-fields"
+                                id="file-input"
+                                onChange={importExcel}
+                                style={{ display: "none" }}
+                              />
+                            </div>
+                          </Tooltip>
+                          <Tooltip placement="left" title="Export">
+                            <Button
+                              className="import-export-btn"
+                              style={{ marginLeft: "10px", borderStyle: "none", width: "40px", top: "-2px", minWidth: "38px", padding: "0px", }}
+                              onClick={() => exportToExcel(values)}
+                            >
+                              <FontAwesomeIcon
+                                icon={faFileUpload}
+                                style={{ width: "12px" }}
+                              />
+                            </Button>
+                          </Tooltip>
+                        </div>
+                      )}
+                  </div>
 
-      {/* Keep the disabled fieldset only for the form inputs */}
-      <fieldset
-        disabled={
-          writePermission === true ||
-          writePermission === "undefined" ||
-          role === "admin" ||
-          (isOwner === true && createdBy === userId)
-            ? null
-            : "disabled"
-        }
-      >
+                  {/* Keep the disabled fieldset only for the form inputs */}
+                  <fieldset
+                    disabled={
+                      writePermission === true ||
+                        writePermission === "undefined" ||
+                        role === "admin" ||
+                        (isOwner === true && createdBy === userId)
+                        ? null
+                        : "disabled"
+                    }
+                  >
                     <Row className="d-flex">
                       <div className="mttr-sec mt-3">
                         <p className=" mb-0 para-tag">General Information</p>
@@ -1512,9 +1583,9 @@ const createEditComponent = (fieldName, label, required = false, validationRules
                                     name="category"
                                     onBlur={handleBlur}
                                     isDisabled
-                               
+
                                     className="mt-1"
-                                  
+
                                     options={[
                                       {
                                         value: "Electronic",
@@ -1551,7 +1622,7 @@ const createEditComponent = (fieldName, label, required = false, validationRules
                                         name="partType"
                                         onBlur={handleBlur}
                                         isDisabled
-                                   
+
                                         options={[
                                           category.value === "Electronic"
                                             ? {
@@ -1618,9 +1689,9 @@ const createEditComponent = (fieldName, label, required = false, validationRules
                                   value={values.environment}
                                   name="environment"
                                   isDisabled
-                              
+
                                   onBlur={handleBlur}
-                            
+
                                 />
                                 <ErrorMessage
                                   className="error text-danger"
@@ -2163,7 +2234,7 @@ const createEditComponent = (fieldName, label, required = false, validationRules
                                   new Promise((resolve, reject) => {
                                     // Check if any data has actually changed
                                     const hasChanges =
-                                     newRow.taskType !== oldData.taskType ||
+                                      newRow.taskType !== oldData.taskType ||
                                       newRow.time !== oldData.time ||
                                       newRow.totalLabour !== oldData.totalLabour ||
                                       newRow.skill !== oldData.skill ||
@@ -2180,7 +2251,7 @@ const createEditComponent = (fieldName, label, required = false, validationRules
                                     updateProcedureData(newRow);
                                     resolve();
                                   }),
-                             
+
                                 onRowDelete: (selectedRow) =>
                                   new Promise((resolve, reject) => {
                                     deleteProcedureData(selectedRow);
