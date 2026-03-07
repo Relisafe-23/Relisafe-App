@@ -205,7 +205,7 @@ const useConnectionManagement = (projectId, productId) => {
   const moduleApiMap = {
     FMECA: "/api/v1/fmeca/product/list",
     SAFETY: "/api/v1/safety/product/list",
-    MTTR: "/api/v1/mttrPrediction/details",
+    MTTR: "/api/v1/mttrPrediction/details/mil472",
   };
 
   const getSourceModuleData = (moduleNames) => {
@@ -224,7 +224,19 @@ const useConnectionManagement = (projectId, productId) => {
           userId: userId,
         },
       }).then((res) => {
-        const data = res?.data?.data || [];
+        let data = res?.data?.data || [];                
+
+        // Normalize MTTR data if needed (it often comes nested under mttrData)
+        if (normalizedName === "MTTR") {          
+          data = data.map(item => {            
+            if (item.mttrData) {
+              return { ...item, ...item.mttrData };
+            }
+            return item;
+          });
+          
+        }
+
         setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));
       }).catch((error) => {
         console.log(`Error fetching ${normalizedName} data for connected library check:`, error);
@@ -311,13 +323,18 @@ const useConnectionManagement = (projectId, productId) => {
 
   // Get connected values for a field based on selected source
   const getConnectedValuesForField = (fieldName, rowId) => {
+     
+    
     const rowSourceValues = selectedSourceValues[rowId] || {};
 
     let connectedValues = [];
+   
 
     // Check same-module connections based on user input
     Object.keys(rowSourceValues).forEach(sourceField => {
+      
       const sourceValue = rowSourceValues[sourceField];
+      
 
       if (sourceValue) {
         const connections = flattenedConnect?.filter(
@@ -351,7 +368,8 @@ const useConnectionManagement = (projectId, productId) => {
   };
 
   // Handle source selection and update connections
-  const handleSourceSelection = (fieldName, value, rowId) => {
+  const handleSourceSelection = (fieldName, value, rowId) => {    
+    
     // Update selected source values for this row
     setSelectedSourceValues(prev => ({
       ...prev,
@@ -484,17 +502,13 @@ export default function PMMRA(props) {
   const createSmartSelectField = (fieldName, label, values, setFieldValue, formId = "main") => {
     const rowId = formId; // For PMMRA form, we use "main" as the row ID
 
-    // Get connected values for this field
-    const connectedValues = getConnectedValuesForField(fieldName, rowId);
-
+    // Get connected values for this field    
+    const connectedValues = getConnectedValuesForField(fieldName, rowId);    
 
     // Get separate library data for this field
     const separateFilteredData = allSepareteData?.filter(
       (item) => item?.sourceName === fieldName
-    ) || [];
-
-    console.log(connectedValues, 'connectedValues')
-    console.log(separateFilteredData, 'separateFilteredData')
+    ) || [];    
 
     // Combine options: connected values first, then separate values
 
@@ -565,9 +579,7 @@ export default function PMMRA(props) {
             isConnected: false
           });
         }
-      });
-
-      console.log(connectedValues, 'connectedValues')
+      });      
 
       //   separateFilteredData.forEach(item => {
       //   if (!options.some(opt => opt.value === item.sourceValue)) {
@@ -654,6 +666,7 @@ export default function PMMRA(props) {
           }}
           placeholder={label}
         />
+
         {connectedValues.length > 0 && (
           <div
             style={{
@@ -1143,7 +1156,6 @@ export default function PMMRA(props) {
       },
     }).then((res) => {
       const data = res?.data?.data;
-      // console.log(data)
       setFmecaData(data);
     });
   };
@@ -1154,8 +1166,7 @@ export default function PMMRA(props) {
         productId: productId,
       },
     }).then((res) => {
-      const data = res?.data?.data;
-      console.log(data, 'fmeca data')
+      const data = res?.data?.data;      
       setFmecaData(data);
       const filteredData = data.filter((item) => item.failureMode === failureMode);
 
@@ -1274,7 +1285,6 @@ export default function PMMRA(props) {
   // Get PMMRA details
   const getpmmraDetails = () => {
     const companyId = localStorage.getItem("companyId");
-    console.log(fmecaModeId, "fmecaModeId of fmeca")
     Api.get("/api/v1/pmMra/details", {
       params: {
         projectId: projectId,
@@ -1286,8 +1296,7 @@ export default function PMMRA(props) {
     })
       .then((res) => {
         const pmmraData = res?.data?.data;
-        if (pmmraData != null) {
-          console.log(pmmraData, "pmmraData after changing mode");
+        if (pmmraData != null) {          
           setSeverity(pmmraData?.severity);
           setRepairable(pmmraData?.repairable);
           setLevelofRaplace(pmmraData?.levelOfReplace);
@@ -1369,8 +1378,7 @@ export default function PMMRA(props) {
   };
 
   // Submit function
-  const submit = (values) => {
-    console.log("Submit values:", values);
+  const submit = (values) => {    
     const companyId = localStorage.getItem("companyId");
 
 
@@ -1452,8 +1460,7 @@ export default function PMMRA(props) {
       productId: productId,
       userId: userId,
     })
-      .then((res) => {
-        console.log("Create response:", res);
+      .then((res) => {        
         const pmmraData = res?.data?.data?.createData;
 
         if (pmmraData) {
@@ -1483,8 +1490,7 @@ export default function PMMRA(props) {
   };
 
   // Update PMMRA details
-  const UpdatepmmraDetails = (values) => {
-    console.log(values)
+  const UpdatepmmraDetails = (values) => {    
     const companyId = localStorage.getItem("companyId");
     Api.patch("/api/v1/pmMra/update", {
       name: name,
@@ -1597,11 +1603,8 @@ export default function PMMRA(props) {
   };
 
   // Get FMECA filter data
-  const getFmecaFilterData = (value) => {
-    console.log("getFmecaFilterData", value)
-    const filteredData = fmecaData.filter((item) => item.failureMode === value);
-
-    console.log(filteredData, "filteredData")
+  const getFmecaFilterData = (value) => {    
+    const filteredData = fmecaData.filter((item) => item.failureMode === value);    
     setFmecaFillterData(filteredData[0]);
     // setFmecaModeId(filteredData[0]?.id)
     setpmmraId(filteredData[0]?.id);
@@ -1613,12 +1616,7 @@ export default function PMMRA(props) {
     value: item?.failureMode,
     label: item?.failureMode,
   }));
-
-
-  // console.log(pmmraData, "pmmraData")
-  // console.log(importExcelData, "importExcelData")
-
-
+    
   // Initial values for form
   const InitialValues = {
     projectname: projectname,
@@ -1836,13 +1834,10 @@ export default function PMMRA(props) {
               initialValues={InitialValues}
               validationSchema={Validation}
               onSubmit={(values, { resetForm }) => {
-                // Check if we have an existing PMMRA record to update
-                // console.log("Updating existing PMMRA", pmmraId, existingId, failureMode);
+                // Check if we have an existing PMMRA record to update                
                 if ((pmmraId == fmecaModeId) && failureMode) {
-                  console.log("Updating existing PMMRA", pmmraId, failureMode, "fmecaModeId - ", fmecaModeId);
                   UpdatepmmraDetails(values);
                 } else {
-                  console.log("Creating new PMMRA", values);
                   submit(values, { resetForm });
                 }
               }}
@@ -2058,8 +2053,7 @@ export default function PMMRA(props) {
                               <Form.Group className="mt-3">
                                 <Label notify={true}>
                                   Condition Monitoring Task
-                                </Label>
-                                {/* {console.log(values, "values")} */}
+                                </Label>                                
                                 {createSmartSelectField(
                                   "condition",
                                   "Condition Monitoring Task",
