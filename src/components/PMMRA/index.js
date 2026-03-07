@@ -200,11 +200,8 @@ const useConnectionManagement = (projectId, productId) => {
   const [flattenedConnect, setFlattenedConnect] = useState([]);
   const [selectedSourceValues, setSelectedSourceValues] = useState({});
   const [rowConnections, setRowConnections] = useState({});
-
-  // State for source module data - used to check if source records exist
   const [sourceModuleData, setSourceModuleData] = useState({});
 
-  // Module name to API endpoint mapping
   const moduleApiMap = {
     FMECA: "/api/v1/fmeca/product/list",
     SAFETY: "/api/v1/safety/product/list",
@@ -212,11 +209,10 @@ const useConnectionManagement = (projectId, productId) => {
   };
 
   const getSourceModuleData = (moduleNames) => {
-    // Fetch data for each unique source module
+    const userId = localStorage.getItem("userId");
     const uniqueModules = [...new Set(moduleNames)];
 
     uniqueModules.forEach((moduleName) => {
-      // Normalize module name for lookup (e.g., FMECA, SAFETY, MTTR)
       const normalizedName = String(moduleName).toUpperCase();
       const apiEndpoint = moduleApiMap[normalizedName];
       if (!apiEndpoint) return;
@@ -225,7 +221,7 @@ const useConnectionManagement = (projectId, productId) => {
         params: {
           projectId: projectId,
           productId: productId,
-          userId: localStorage.getItem("userId"),
+          userId: userId,
         },
       }).then((res) => {
         const data = res?.data?.data || [];
@@ -244,7 +240,6 @@ const useConnectionManagement = (projectId, productId) => {
         projectId: projectId,
       },
     }).then((res) => {
-      // console.log(res, "res seperate value")
       const filteredData = res?.data?.data.filter(
         (item) => item?.moduleName === "PMMRA"
       );
@@ -257,7 +252,6 @@ const useConnectionManagement = (projectId, productId) => {
     Api.get("api/v1/library/get/all/connect/value", {
       params: { projectId },
     }).then((res) => {
-      // console.log(res, "res connect value")
       const filteredData = res.data.getData.filter(
         (entry) =>
           entry?.libraryId?.moduleName === "PMMRA" ||
@@ -296,12 +290,23 @@ const useConnectionManagement = (projectId, productId) => {
 
   // Get destination fields for a source
   const getDestinationFieldsForSource = (sourceField, sourceValue) => {
-    return flattenedConnect
-      ?.filter(item => item.fieldName === sourceField && item.fieldValue === sourceValue)
-      .map(item => ({
-        field: item.destName,
-        value: item.destValue
-      })) || [];
+    return (
+      flattenedConnect
+        ?.filter(
+          item =>
+            item.fieldName?.toLowerCase() === sourceField?.toLowerCase() &&
+            item.fieldValue?.toLowerCase() === sourceValue?.toLowerCase()
+        )
+        .map(item => ({
+          field: item.destName,
+          value:
+            item.destValue?.toLowerCase() === "yes"
+              ? "Yes"
+              : item.destValue?.toLowerCase() === "no"
+                ? "No"
+                : item.destValue
+        })) || []
+    );
   };
 
   // Get connected values for a field based on selected source
@@ -310,31 +315,32 @@ const useConnectionManagement = (projectId, productId) => {
 
     let connectedValues = [];
 
+    // Check same-module connections based on user input
     Object.keys(rowSourceValues).forEach(sourceField => {
       const sourceValue = rowSourceValues[sourceField];
+
       if (sourceValue) {
         const connections = flattenedConnect?.filter(
           item =>
-            item.fieldName === sourceField &&
-            item.fieldValue === sourceValue &&
-            item.destName === fieldName
+            item.fieldName?.toLowerCase() === sourceField?.toLowerCase() &&
+            item.fieldValue?.toLowerCase() === sourceValue?.toLowerCase() &&
+            item.destName?.toLowerCase() === fieldName?.toLowerCase()
         ) || [];
 
         connectedValues = [...connectedValues, ...connections];
       }
     });
 
-    // Fallback: If no same-module connections found, check cross-module connections
+    // Fallback: Check cross-module connections based on existing data in other modules
     if (connectedValues.length === 0) {
       const allPossibleConnections = flattenedConnect?.filter(item => {
-        if (item.destName !== fieldName) return false;
+        if (item.destName?.toLowerCase() !== fieldName?.toLowerCase()) return false;
 
         // Check if a record with the source value exists in the source module
-        // Normalize comparison for safety
-        const normSourceModule = String(item.sourceModuleName).toUpperCase();
+        const normSourceModule = String(item.sourceModuleName || "").toUpperCase();
         const moduleData = sourceModuleData[normSourceModule] || [];
         return moduleData.some(
-          row => String(row[item.fieldName]) === String(item.fieldValue)
+          row => String(row[item.fieldName] || "").toLowerCase() === String(item.fieldValue || "").toLowerCase()
         );
       }) || [];
 
@@ -394,9 +400,8 @@ export default function PMMRA(props) {
     ? props?.location?.state?.projectId
     : props?.match?.params?.id;
 
-    const [initialProductId, setInitialProductId] = useState();
-
-      const productId = props?.location?.props?.data?.id
+  const [initialProductId, setInitialProductId] = useState();
+  const productId = props?.location?.props?.data?.id
     ? props?.location?.props?.data?.id
     : props?.location?.state?.productId
       ? props?.location?.state?.productId
@@ -445,8 +450,6 @@ export default function PMMRA(props) {
   const [partNumber, setPartNumber] = useState();
   const [quantity, setQuantity] = useState();
   const [isSpinning, setIsSpinning] = useState(true);
-  
-
   const [projectname, setProjectName] = useState();
   const [reference, setReference] = useState();
   const [pmmraData, setpmmraData] = useState([]);
@@ -474,10 +477,8 @@ export default function PMMRA(props) {
   // Initialize connections on component mount
   const [failureMode, setFailureMode] = useState();
   useEffect(() => {
-    if (productId) {
-      initializeConnections();
-    }
-  }, [productId]);
+    initializeConnections();
+  }, []);
 
   // Function to create a smart select field with connections
   const createSmartSelectField = (fieldName, label, values, setFieldValue, formId = "main") => {
@@ -486,59 +487,118 @@ export default function PMMRA(props) {
     // Get connected values for this field
     const connectedValues = getConnectedValuesForField(fieldName, rowId);
 
+
     // Get separate library data for this field
     const separateFilteredData = allSepareteData?.filter(
       (item) => item?.sourceName === fieldName
     ) || [];
 
+    console.log(connectedValues, 'connectedValues')
+    console.log(separateFilteredData, 'separateFilteredData')
+
     // Combine options: connected values first, then separate values
 
     let options;
 
-    // CORRECTED VERSION:
-    if (
-      fieldName.toLowerCase() === "evident1" ||
-      fieldName.toLowerCase() === "acceptable" ||
-      fieldName.toLowerCase() === "items" ||
-      fieldName.toLowerCase() === "condition" ||
-      fieldName.toLowerCase() === "failure" ||
-      fieldName.toLowerCase() === "redesign" ||
-      fieldName.toLowerCase() === "lubrication" ||
-      fieldName.toLowerCase() === "task" ||
-      fieldName.toLowerCase() === "combination" ||
-      fieldName.toLowerCase() === "rcmnotes"
-    ) {
-      // For these specific fields, start with Yes/No options
-      options = [
-        { value: "Yes", label: "Yes" },
-        { value: "No", label: "No" }
-      ];
+
+    const restrictedFields = [
+      "evident1",
+      "acceptable",
+      "items",
+      "condition",
+      "failure",
+      "redesign",
+      "lubrication",
+      "task",
+      "combination",
+      "rcmnotes"
+    ];
+
+    const fieldKey = fieldName.toLowerCase();
+
+    if (restrictedFields.includes(fieldKey)) {
+
+      if (separateFilteredData.length > 0) {
+        const backendValueRaw = separateFilteredData[0].sourceValue;
+
+        const backendValue =
+          backendValueRaw?.toLowerCase() === "yes"
+            ? "Yes"
+            : backendValueRaw?.toLowerCase() === "no"
+              ? "No"
+              : backendValueRaw;
+
+        options = [
+          { value: backendValue, label: backendValue }
+        ];
+
+      } else {
+        options = [
+          { value: "Yes", label: "Yes" },
+          { value: "No", label: "No" }
+        ];
+      }
+
     } else {
-      // For other fields, start with empty array
       options = [];
+
+      // ONLY here add connected & separate values
+      if (connectedValues.length > 0) {
+        const connectedOptions = connectedValues.map(item => ({
+          value: item.destValue,
+          label: item.destValue,
+          isConnected: true
+        }));
+
+        options = [...options, ...connectedOptions];
+      }
+
+      separateFilteredData.forEach(item => {
+        if (
+          !options.some(
+            opt => opt.value.toLowerCase() === item.sourceValue?.toLowerCase()
+          )
+        ) {
+          options.push({
+            value: item.sourceValue,
+            label: item.sourceValue,
+            isConnected: false
+          });
+        }
+      });
+
+      console.log(connectedValues, 'connectedValues')
+
+      //   separateFilteredData.forEach(item => {
+      //   if (!options.some(opt => opt.value === item.sourceValue)) {
+      //     options.push({
+      //       value: item.sourceValue,
+      //       label: item.sourceValue,
+      //       isConnected: false
+      //     });
+      //   }
+      // });
     }
 
 
     // Add connected values
-    if (connectedValues.length > 0) {
-      const connectedOptions = connectedValues.map(item => ({
-        value: item.destValue,
-        label: item.destValue,
-        isConnected: true
-      }));
-      options = [...options, ...connectedOptions];
-    }
+    // if (connectedValues.length > 0) {
+    //   const connectedOptions = connectedValues.map(item => ({
+    //     value: item.destValue,
+    //     label: item.destValue,
+    //     isConnected: true
+    //   }));
+
+    //   console.log(connectedOptions, 'connectedOptions')
+
+    //   options = [...options, ...connectedOptions];
+    // }
+
+    // console.log(options, 'options')
+    // console.log(connectedOptions, 'connectedOptions')
 
     // Add separate library values (avoid duplicates)
-    separateFilteredData.forEach(item => {
-      if (!options.some(opt => opt.value === item.sourceValue)) {
-        options.push({
-          value: item.sourceValue,
-          label: item.sourceValue,
-          isConnected: false
-        });
-      }
-    });
+
 
     // Get current value
     const currentValue = values[fieldName];
@@ -1221,7 +1281,7 @@ export default function PMMRA(props) {
         productId: productId,
         companyId: companyId,
         userId: userId,
-        fmecaModeId: fmecaModeId,
+        fmecaModeId: pmmraId,
       },
     })
       .then((res) => {
