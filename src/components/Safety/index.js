@@ -60,6 +60,42 @@ function Index(props) {
   const [rowConnections, setRowConnections] = useState({});
   const [selectedSourceValues, setSelectedSourceValues] = useState({});
 
+  // State for source module data - used to check if source records exist
+  // Map: { FMECA: [...], MTTR: [...], PMMRA: [...], SAFETY: [...] }
+  const [sourceModuleData, setSourceModuleData] = useState({});
+
+  // Module name to API endpoint mapping
+  const moduleApiMap = {
+    FMECA: "/api/v1/fmeca/product/list",
+    SAFETY: "/api/v1/safety/product/list",
+    MTTR: "/api/v1/mttrPrediction/details",
+  };
+
+  const getSourceModuleData = (moduleNames) => {
+    // Fetch data for each unique source module
+    const uniqueModules = [...new Set(moduleNames)];
+
+    uniqueModules.forEach((moduleName) => {
+      // Normalize module name for lookup (e.g., FMECA, SAFETY, MTTR)
+      const normalizedName = String(moduleName).toUpperCase();
+      const apiEndpoint = moduleApiMap[normalizedName];
+      if (!apiEndpoint) return;
+
+      Api.get(apiEndpoint, {
+        params: {
+          projectId: projectId,
+          productId: productId,
+          userId: userId,
+        },
+      }).then((res) => {
+        const data = res?.data?.data || [];
+        setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));
+      }).catch((error) => {
+        console.log(`Error fetching ${normalizedName} data for connected library check:`, error);
+      });
+    });
+  };
+
   const DownloadExcel = () => {
     if (!tableData || tableData.length === 0) {
       toast("Export Failed !! No Data Found", {
@@ -273,6 +309,23 @@ function Index(props) {
       connectedValues.push(...connections);
     });
 
+    // Fallback: If no row-based connections found (e.g., cross-module connection),
+    // show destination values ONLY if the source record exists in the source module
+    if (connectedValues.length === 0) {
+      const allPossibleConnections = flattenedConnect.filter(item => {
+        if (item.destinationName !== fieldName) return false;
+
+        // Check if a record with the source value exists in the source module
+        // Normalize comparison for safety
+        const normSourceModule = String(item.sourceModuleName).toUpperCase();
+        const moduleData = sourceModuleData[normSourceModule] || [];
+        return moduleData.some(
+          row => String(row[item.sourceName]) === String(item.sourceValue)
+        );
+      });
+      connectedValues.push(...allPossibleConnections);
+    }
+
     return connectedValues;
   };
 
@@ -362,6 +415,10 @@ function Index(props) {
   useEffect(() => {
     getTreeData();
     getProductData();
+    // Source module data and connections are fetched when productId is available
+    if (productId) {
+      getAllConnect();
+    }
   }, [productId]);
 
   const getProductData = () => {
@@ -469,6 +526,7 @@ function Index(props) {
           .map((d) => ({
             sourceName: item.sourceName,
             sourceValue: String(item.sourceValue),
+            sourceModuleName: item?.libraryId?.moduleName || "",
             destinationName: d.destinationName,
             destinationValue: String(d.destinationValue),
             destinationModule: d.destinationModuleName
@@ -477,12 +535,16 @@ function Index(props) {
 
       console.log("Flattened connections:", flattened);
       setFlattenedConnect(flattened);
+
+      // Fetch source module data for all unique source modules in the connections
+      const sourceModules = [...new Set(flattened.map(f => f.sourceModuleName).filter(Boolean))];
+      if (sourceModules.length > 0) {
+        getSourceModuleData(sourceModules);
+      }
     });
   };
 
-  useEffect(() => {
-    getAllConnect();
-  }, []);
+  // Removed standalone getAllConnect useEffect - now handled in [productId] dependency
 
   const validateField = (fieldName, value, isRequired) => {
     if (isRequired && (!value || value?.toString()?.trim() === '')) {
