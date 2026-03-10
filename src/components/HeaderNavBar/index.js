@@ -375,8 +375,17 @@ const HeaderNavBar = ({
 >
   Probability Calculations(MCS)
 </NavDropdown.Item>
-<NavDropdown.Item >Show Repeated Events</NavDropdown.Item>
-
+  <NavDropdown.Item 
+    onClick={() => {
+      if (window.showRepeatedEvents) {
+        window.showRepeatedEvents();
+      } else {
+        toast.warning("Please open a fault tree first");
+      }
+    }}
+  >
+    Show Repeated Events
+  </NavDropdown.Item>
 
                           </NavDropdown>
                         </Nav>

@@ -29,6 +29,8 @@ export default function RenderNode({
   setSelectedNodeId,
     calculationResults, // This is already here
   calculationMode,
+    repeatedEvents,      // ADD THIS
+  showRepeatedEvents, 
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newNode, setNewNode] = useState({});
@@ -60,13 +62,16 @@ export default function RenderNode({
     return calculationMode === "Unavailability at time t Q(t)";
   };
 
-
-  const nodeResult = calculationResults?.find(
+const nodeResult = calculationResults?.find(
   result => result.name === node?.name || result.name === `Gate ${node?.gateId}`
 );
 
-// Use the calculated value if available, otherwise use node.qn
 const displayValue = nodeResult?.calculatedValue || node?.qn;
+const isRepeatedEvent = () => {
+  if (!showRepeatedEvents || !node?.isEvent) return false;
+  return repeatedEvents?.includes(node?.gateId);
+};
+// Use the calculated value if available, otherwise use node.qn
 
   const [onChangeEventName, setOnChangeEventName] = useState();
   const [onChangeEventDescription, setOnChangeEventDescription] = useState();
@@ -576,47 +581,55 @@ const eventFields = [
   };
 
   // Function to get node styles based on type and highlight status
-  const getNodeStyles = () => {
-    const baseStyles = {
-      width: "100%",
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-    };
-
-    // Apply yellow highlight if needed
-    const backgroundColor = shouldHighlightYellow() ? "#ffff99" : "#fff";
-    
-    if (node?.isEvent) {
-      return {
-      //   ...baseStyles,
-      // backgroundColor: shouldHighlightYellow() ? "#ffff99" : "#ffffff",
-      //   border: "1px solid #00a9c9",
-      //    borderRadius: "0px",
-      //    marginBottom: "0.1px",
-      //   alignItems: "center",
-      //   justifyContent: "flex-start", 
-      //   padding: "5px"
-              border: "2px solid #00a9c9",
-              borderRadius: "5px",
-              marginBottom: "0.1px",
-      };
-    } else if (shouldShowGate()) {
-      return {
-        ...baseStyles,
-        backgroundColor,
-        border: "2px solid #00a9c9",
-        borderRadius: "5px",
-      };
-    } else {
-      return {
-        ...baseStyles,
-        backgroundColor,
-        border: "2px solid #00a9c9",
-        borderRadius: "5px",
-      };
-    }
+ // Update your getNodeStyles function to return complete styles
+const getNodeStyles = () => {
+  const baseStyles = {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: "#fff",
+    border: "2px solid #00a9c9",
+    borderRadius: "5px",
+    boxShadow: "none",
+    transition: "none",
   };
+
+  // Check if this is a repeated event
+  if (isRepeatedEvent()) {
+    return {
+      ...baseStyles,
+      backgroundColor: "#ffeb3b", // Bright yellow
+      border: "3px solid #f57c00", // Orange border
+      boxShadow: "0 0 10px rgba(255, 193, 7, 0.5)",
+      transition: "all 0.3s ease",
+    };
+  }
+
+  // Apply yellow highlight if needed
+  if (shouldHighlightYellow()) {
+    return {
+      ...baseStyles,
+      backgroundColor: "#ffff99",
+    };
+  }
+  
+  if (node?.isEvent) {
+    return {
+      ...baseStyles,
+      border: "2px solid #00a9c9",
+      borderRadius: "5px",
+      marginBottom: "0.1px",
+    };
+  } else if (shouldShowGate()) {
+    return {
+      ...baseStyles,
+      backgroundColor: shouldHighlightYellow() ? "#ffff99" : "#fff",
+    };
+  } else {
+    return baseStyles;
+  }
+};
 
   // Format Qn value for display
   const formatQnValue = () => {
@@ -676,8 +689,32 @@ const eventFields = [
                 fontWeight: "bold",
                  boxSizing: "border-box",
                  flexShrink: "100px",
+                  position: "relative",
               }}
             >
+  {isRepeatedEvent() && (
+    <div style={{
+      position: "absolute",
+      top: "-5px",
+      right: "-5px",
+      backgroundColor: "#f57c00",
+      color: "white",
+      borderRadius: "50%",
+      width: "20px",
+      height: "20px",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      fontSize: "10px",
+      fontWeight: "bold",
+      zIndex: 20,
+      boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+    }}>
+      R
+    </div>
+  )}
+  
+
                <p
     onClick={handleClick}
     style={{
@@ -988,8 +1025,9 @@ const eventFields = [
         position: "absolute",
         top: "30px",
         left: "54px",
-        backgroundColor: "#00ffff",
-        zIndex: 2,
+ backgroundColor: isRepeatedEvent() ? "#f57c00" : "#00ffff",
+         zIndex: 2,
+        boxShadow: isRepeatedEvent() ? "0 0 10px #f57c00" : "none",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",

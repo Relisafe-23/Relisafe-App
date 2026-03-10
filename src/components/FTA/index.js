@@ -102,7 +102,10 @@ export default function FTA(props) {
   const [probabilityCalcData, setProbabilityCalcData] = useState([]);
   const [currentMissionTime, setCurrentMissionTime] = useState("");
   const [isCutSetReportOpen, setIsCutSetReportOpen] = useState(false);
+// ... other useState declarations
 
+const [repeatedEvents, setRepeatedEvents] = useState([]);
+const [showRepeatedEvents, setShowRepeatedEvents] = useState(false);
   const history = useHistory();
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const formikRef = useRef(null);
@@ -145,375 +148,832 @@ export default function FTA(props) {
 
  
 
-  const calculateUnavailability = (values) => {
+//   const calculateUnavailability = (values) => {
 
-    console.log("Calculating unavailability with values:", values);
+//     console.log("Calculating unavailability with values:", values);
 
-    // Determine which calculation type was selected from the dropdown
-    const calculationType = values?.calcTypes?.value || values?.calcTypes;
-    const isUnavailabilityMode =
-      calculationType === "Unavailability at time t Q(t)";
-    const isSteadyStateMode =
-      calculationType === "Steady-state mean unavailability Q";
-    setCurrentCalculationMode(calculationType);
-    const extractProbabilityNodes = (node) => {
-      const nodes = [];
+//     // Determine which calculation type was selected from the dropdown
+//     const calculationType = values?.calcTypes?.value || values?.calcTypes;
+//     const isUnavailabilityMode =
+//       calculationType === "Unavailability at time t Q(t)";
+//     const isSteadyStateMode =
+//       calculationType === "Steady-state mean unavailability Q";
+//     setCurrentCalculationMode(calculationType);
+//     const extractProbabilityNodes = (node) => {
+//       const nodes = [];
 
-      if (node) {
-        const hasFailureData = node.fr || node.calcTypes || node.isEvent;
+//       if (node) {
+//         const hasFailureData = node.fr || node.calcTypes || node.isEvent;
 
-        if (hasFailureData) {
-          // Parse parameters
-          const lambda = parseFloat(node.fr) || 0; // Failure Rate λ
-          const t = parseFloat(values?.missionTime) || 0; // Mission time t (only used for Q(t) mode)
-          const q = parseFloat(node.isP) || 0; // Probability q
-          const mttr = parseFloat(node.mttr) || 0; // MTTR (hours)
-          const mu = mttr > 0 ? 1 / mttr : 0; // Repair rate μ = 1/MTTR
-          const T = parseFloat(node.isT) || 0; // Inspection interval T_i
-          const tm = parseFloat(node.eventMissionTime) || t; // Mission time for constant mission type
-          const n = 1; // Assuming n=1 for basic event
+//         if (hasFailureData) {
+//           // Parse parameters
+//           const lambda = parseFloat(node.fr) || 0; // Failure Rate λ
+//           const t = parseFloat(values?.missionTime) || 0; // Mission time t (only used for Q(t) mode)
+//           const q = parseFloat(node.isP) || 0; // Probability q
+//           const mttr = parseFloat(node.mttr) || 0; // MTTR (hours)
+//           const mu = mttr > 0 ? 1 / mttr : 0; // Repair rate μ = 1/MTTR
+//           const T = parseFloat(node.isT) || 0; // Inspection interval T_i
+//           const tm = parseFloat(node.eventMissionTime) || t; // Mission time for constant mission type
+//           const n = 1; // Assuming n=1 for basic event
 
-          let result = 0;
-          let formula = "";
-          let frequency = 0;
+//           let result = 0;
+//           let formula = "";
+//           let frequency = 0;
 
-          // Calculate based on event type and selected calculation mode
-          switch (node.calcTypes) {
-            // #1 Probability (from Table 1, row 1)
-            case "Probability":
-              if (isUnavailabilityMode) {
-                // Q(t) = q
-                result = q;
-                formula = `Q(t) = q = ${q}`;
-              } else if (isSteadyStateMode) {
-                // Mean Unavailability Qmean = q
-                result = q;
-                formula = `Q̄ = q = ${q}`;
+//           // Calculate based on event type and selected calculation mode
+//           switch (node.calcTypes) {
+//             // #1 Probability (from Table 1, row 1)
+//             case "Probability":
+//               if (isUnavailabilityMode) {
+//                 // Q(t) = q
+//                 result = q;
+//                 formula = `Q(t) = q = ${q}`;
+//               } else if (isSteadyStateMode) {
+//                 // Mean Unavailability Qmean = q
+//                 result = q;
+//                 formula = `Q̄ = q = ${q}`;
+//               }
+//               // Frequency w(t) = 0 (as per Table 1)
+//               frequency = 0;
+//               formula += ` | w(t) = 0`;
+//               break;
+
+//             // #2 Frequency (from Table 1, row 2)
+//             case "Frequency":
+//               if (isUnavailabilityMode) {
+//                 // Q(t) = 0
+//                 result = 0;
+//                 formula = `Q(t) = 0 (Frequency event)`;
+//               } else if (isSteadyStateMode) {
+//                 // Mean Unavailability Qmean = 0
+//                 result = 0;
+//                 formula = `Q̄ = 0 (Frequency event)`;
+//               }
+//               // Frequency w(t) = f (constant frequency) - as per Table 1
+//               frequency = lambda;
+//               formula += ` | w(t) = f = ${frequency.toExponential(4)}/h`;
+//               break;
+
+//             // #3 Constant mission time (from Table 1, row 3)
+//             case "Constant mission time":
+//               if (isUnavailabilityMode) {
+//                 // Q(t) = 1 - (1-q)^n * exp(-λ*Tm)
+//                 result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
+//                 formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
+//               } else if (isSteadyStateMode) {
+//                 // Mean Unavailability Qmean = 1 - (1-q)^n * exp(-λ*Tm)
+//                 result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
+//                 formula = `Q̄ = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
+//               }
+//               // Frequency w(t) = 0 (as per Table 1)
+//               frequency = 0;
+//               formula += ` | w(t) = 0`;
+//               break;
+
+//             // #4 Repairable (from Table 1, row 4)
+//             case "Repairable":
+//               const lambdaMu = lambda + mu;
+
+//               if (isUnavailabilityMode) {
+//                 // Q(t) = q^n·exp(-(λ+μ)t) + (λ/(λ+μ))^n·[1-exp(-(λ+μ)t)]
+//                 if (lambdaMu > 0) {
+//                   const expTerm = Math.exp(-lambdaMu * t);
+//                   result =
+//                     Math.pow(q, n) * expTerm +
+//                     Math.pow(lambda / lambdaMu, n) * (1 - expTerm);
+//                 } else {
+//                   result = Math.pow(q, n);
+//                 }
+//                 formula = `Q(t) = ${q}^${n}·e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t}) + (${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}))^${n}[1-e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t})] = ${result.toExponential(4)}`;
+//               } else if (isSteadyStateMode) {
+//                 // Mean Unavailability Qmean = λ/(λ+μ)
+//                 if (lambdaMu > 0) {
+//                   result = lambda / lambdaMu;
+//                 } else {
+//                   result = 0;
+//                 }
+//                 formula = `Q̄ = λ/(λ+μ) = ${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}) = ${result.toExponential(4)}`;
+//               }
+
+//               // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 4
+//               frequency = Math.pow(lambda, n) * (1 - result);
+//               formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+//               break;
+
+//             // #5 Unrepairable (from Table 1, row 5)
+//             case "Unrepairable":
+//               if (isUnavailabilityMode) {
+//                 // Q(t) = 1 - (1-q)^n·exp(-λt)
+//                 result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+//                 formula = `Q(t) = 1-(1-${q})^${n}·e^(-${lambda.toExponential(2)}·${t}) = ${result.toExponential(4)}`;
+//               } else if (isSteadyStateMode) {
+//                 // Mean Unavailability Qmean = 1 (as per Table 1, row 5)
+//                 result = 1;
+//                 formula = `Q̄ = 1 (Unrepairable element)`;
+//               }
+
+//               // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 5
+//               frequency = Math.pow(lambda, n) * (1 - result);
+//               formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+//               break;
+
+//             // #6 Periodical tests (from Table 1, row 6, with Table 2 for Q(t) and Table 3 for Qmean)
+//             case "Periodical tests":
+//               const Tf = node.timeToFirstTest || 0; // Time to first test
+
+//               if (isUnavailabilityMode) {
+//                 // Using Table 2 formulas
+//                 if (t < Tf) {
+//                   // Formula #1: t < Tf
+//                   result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+//                   formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [t < Tf] = ${result.toExponential(4)}`;
+//                 } else if (Math.abs(t - (Tf + n * T)) < 0.0001) {
+//                   // Formula #2: t = Tf + nT_i
+//                   result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * T);
+//                   formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${T}) [t = Tf + nT_i] = ${result.toExponential(4)}`;
+//                 } else if (t > Tf + n * T && t <= Tf + n * T + mttr) {
+//                   // Formula #3: Tf + nT_i < t <= Tf + nT_i + MTTR
+//                   const term1 = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * T);
+//                   const term2 =
+//                     Math.pow(1 - q, n) *
+//                     Math.exp(-lambda * T) *
+//                     (1 - Math.pow(1 - q, n) * Math.exp(-lambda * T));
+//                   result = term1 + term2;
+//                   formula = `Q(t) = ${term1.toExponential(4)} + ${term2.toExponential(4)} [Tf + nT_i < t <= Tf + nT_i + MTTR] = ${result.toExponential(4)}`;
+//                 } else if (t > Tf + n * T + mttr && t < Tf + n * T + T) {
+//                   // Formula #4: Tf + nT_i + MTTR < t < Tf + nT_i + T_i
+//                   result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * T);
+//                   formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${T}) [Tf + nT_i + MTTR < t < Tf + nT_i + T_i] = ${result.toExponential(4)}`;
+//                 } else {
+//                   result = 0;
+//                   formula = "Q(t) = 0 (No matching condition)";
+//                 }
+//               } else if (isSteadyStateMode) {
+//                 // Using Table 3 formula for Mean Unavailability
+//                 // Qmean = q + (1-q)^n·(1 - (1/(λT_i))^n·(1-exp(-λT_i))) + (q + (1-q)^n·(1-exp(-λT_i)))^n·(MTTR/T_i)
+
+//                 // Handle division by zero and edge cases
+//                 let termB = 0;
+//                 if (lambda * T > 0 && isFinite(1 / (lambda * T))) {
+//                   termB = Math.pow(1 - 1 / (lambda * T), n);
+//                 }
+
+//                 const termC = 1 - Math.exp(-lambda * T);
+//                 const termA = Math.pow(1 - q, n);
+//                 const termD = Math.pow(q + termA * (1 - termC), n);
+
+//                 result = q + termA * termB * termC + termD * (mttr / T);
+
+//                 // Handle NaN/Infinite
+//                 if (isNaN(result) || !isFinite(result)) {
+//                   result = (lambda * T) / 2; // Fallback to simplified
+//                   formula = `Q̄ ≈ λ·T/2 = ${result.toExponential(4)} (simplified)`;
+//                 } else {
+//                   formula = `Q̄ = ${q} + (1-${q})^${n}·(1-1/(${lambda.toExponential(2)}·${T}))^${n}·(1-e^(-${lambda.toExponential(2)}·${T})) + (${q}+(1-${q})^${n}·(1-e^(-${lambda.toExponential(2)}·${T})))^${n}·(${mttr}/${T}) = ${result.toExponential(4)}`;
+//                 }
+//               }
+
+//               // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 6
+//               frequency = Math.pow(lambda, n) * (1 - result);
+//               formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+//               break;
+
+//             // #7 Latent (from Table 1, row 7)
+//             case "Latent":
+//               if (isUnavailabilityMode) {
+//                 // Q(t) = 1 - (1-q)^t·exp(-λ·Ti)
+//                 result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
+//                 formula = `Q(t) = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
+//               } else if (isSteadyStateMode) {
+//                 // Mean Unavailability = 1 - (1-q)^t·exp(-λ·Ti)
+//                 result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
+//                 formula = `Q̄ = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
+//               }
+
+//               // Frequency w(t) = λ^t·(1-Q(t)) - as per Table 1, row 7
+//               frequency = Math.pow(lambda, 1) * (1 - result);
+//               formula += ` | w(t) = λ·(1-Q(t)) = ${lambda.toExponential(2)}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+//               break;
+
+//             // #8 Average probability per mission hour (from Table 1, row 8)
+//             case "Average probability per mission hour":
+//               if (isUnavailabilityMode) {
+//                 // Q(t) = 1 - (1-q)^t
+//                 result = 1 - Math.pow(1 - q, t);
+//                 formula = `Q(t) = 1-(1-${q})^${t} = ${result.toExponential(4)}`;
+//               } else if (isSteadyStateMode) {
+//                 // Mean Unavailability = 1 (as per Table 1, row 8)
+//                 result = 1;
+//                 formula = `Q̄ = 1`;
+//               }
+//               // Frequency w(t) = 0 (as per Table 1, row 8)
+//               frequency = 0;
+//               formula += ` | w(t) = 0`;
+//               break;
+
+//             // #9 Periodical Tests #2 (from Table 1, row 9)
+//             case "Periodical Tests #2":
+//               const Tf2 = node.timeToFirstTest || 0;
+
+//               if (isUnavailabilityMode) {
+//                 // Algorithm with different formulas for different cases
+//                 if (t < Tf2) {
+//                   result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+//                   formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [Phase 1] = ${result.toExponential(4)}`;
+//                 } else {
+//                   // For periodic tests after first test
+//                   const cycles = Math.floor((t - Tf2) / T);
+//                   const timeInCycle = (t - Tf2) % T;
+
+//                   if (timeInCycle < mttr) {
+//                     // In repair phase
+//                     result =
+//                       1 -
+//                       Math.pow(1 - q, n) *
+//                         Math.exp(-lambda * (Tf2 + cycles * T));
+//                     formula = `Q(t) ≈ ${result.toExponential(4)} [Repair phase]`;
+//                   } else {
+//                     // In operating phase
+//                     result =
+//                       1 -
+//                       Math.pow(1 - q, n) *
+//                         Math.exp(-lambda * (Tf2 + cycles * T));
+//                     formula = `Q(t) ≈ ${result.toExponential(4)} [Operating phase]`;
+//                   }
+//                 }
+//               } else if (isSteadyStateMode) {
+//                 // Algorithm for mean unavailability (simplified)
+//                 result = (lambda * T) / 2 + lambda * mttr;
+//                 formula = `Q̄ ≈ λ·T/2 + λ·MTTR = (${lambda.toExponential(2)}·${T})/2 + ${lambda.toExponential(2)}·${mttr} = ${result.toExponential(4)} (simplified)`;
+//               }
+
+//               // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 9
+//               frequency = Math.pow(lambda, n) * (1 - result);
+//               formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+//               break;
+
+//             // Backward compatibility cases
+//             case "Evident, P=λ*t":
+//               result = lambda * t;
+//               formula = `Q = λ·t = ${lambda.toExponential(2)}·${t} = ${result.toExponential(4)}`;
+//               frequency = lambda * (1 - result);
+//               formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+//               break;
+
+//             case "Const.mission time, P=λ*tm":
+//               result = lambda * tm;
+//               formula = `Q = λ·tm = ${lambda.toExponential(2)}·${tm} = ${result.toExponential(4)}`;
+//               frequency = 0;
+//               formula += ` | w(t) = 0`;
+//               break;
+
+//             case "Latent, P=λ*T":
+//               result = lambda * T;
+//               formula = `Q = λ·T = ${lambda.toExponential(2)}·${T} = ${result.toExponential(4)}`;
+//               frequency = lambda * (1 - result);
+//               formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+//               break;
+
+//             case "Latent, P=λ*T/2":
+//               result = (lambda * T) / 2;
+//               formula = `Q = λ·T/2 = (${lambda.toExponential(2)}·${T})/2 = ${result.toExponential(4)}`;
+//               frequency = lambda * (1 - result);
+//               formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+//               break;
+
+//             case "Latent,Life-time, P=1-e^(-λ*T)":
+//               result = 1 - Math.exp(-lambda * T);
+//               formula = `Q = 1-e^(-λ·T) = 1-e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
+//               frequency = lambda * (1 - result);
+//               formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+//               break;
+
+//             case "Latent repairable":
+//               const lambdaMu2 = lambda + mu;
+//               if (lambdaMu2 > 0) {
+//                 result = (lambda / lambdaMu2) * (1 - Math.exp(-lambdaMu2 * T));
+//               } else {
+//                 result = 0;
+//               }
+//               formula = `Q = (λ/(λ+μ))[1-e^(-(λ+μ)T)] = (${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}))[1-e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${T})] = ${result.toExponential(4)}`;
+//               frequency = lambda * (1 - result);
+//               formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+//               break;
+//           }
+
+//           // Handle NaN or infinite values
+//           if (isNaN(result) || !isFinite(result)) result = 0;
+//           if (isNaN(frequency) || !isFinite(frequency)) frequency = 0;
+
+//           // Store the node data with all calculated values
+//           nodes.push({
+//             name: node.name || node.code || `Gate ${node.gateId}`,
+//             description: node.description || "",
+//             failureRate: node.fr || "N/A",
+//             missionTime: t.toString(),
+//             mttr: node.mttr || "N/A",
+//             calcType: node.calcTypes || "N/A",
+//             q: node.isP || "N/A",
+//             T: node.isT || "N/A",
+//             timeToFirstTest: node.timeToFirstTest || "0",
+//             // Store the calculated value based on mode
+//             calculatedValue: result.toExponential(4),
+//             // Store appropriate values based on mode
+//             unavailability: isUnavailabilityMode
+//               ? result.toExponential(4)
+//               : "N/A",
+//             steadyState: isSteadyStateMode ? result.toExponential(4) : "N/A",
+//             frequency: frequency > 0 ? frequency.toExponential(4) : "0",
+//             formula: formula,
+//             calculationMode: isUnavailabilityMode ? "Q(t)" : "Q̄",
+//             rawValue: result,
+//           });
+//         }
+
+//         if (node.children && node.children.length > 0) {
+//           node.children.forEach((child) => {
+//             nodes.push(...extractProbabilityNodes(child));
+//           });
+//         }
+//       }
+
+//       return nodes;
+//     };
+
+//     // Add this function to handle showing repeated events
+
+
+// // Add this useEffect to expose the function to HeaderNavBar
+
+//     const calcData = extractProbabilityNodes(chartData);
+//     console.log("Calculation results:", calcData);
+//     setProbabilityCalcData(calcData);
+
+//     // Open the appropriate report modal based on selection
+//     if (isUnavailabilityMode) {
+//       setCurrentMissionTime(values?.missionTime);
+//       setIsUnavailabilityReportOpen(true);
+//     } else if (isSteadyStateMode) {
+//       setIsSteadyStateReportOpen(true);
+//     }
+//   };
+
+
+const calculateUnavailability = (values) => {
+  console.log("Calculating unavailability with values:", values);
+
+  // Determine which calculation type was selected from the dropdown
+  const calculationType = values?.calcTypes?.value || values?.calcTypes;
+  const isUnavailabilityMode = calculationType === "Unavailability at time t Q(t)";
+  const isSteadyStateMode = calculationType === "Steady-state mean unavailability Q";
+  setCurrentCalculationMode(calculationType);
+
+  // Function to recursively extract and calculate for ALL event nodes
+  const extractProbabilityNodes = (node) => {
+    const nodes = [];
+
+    if (node) {
+      // Check if this node has calculation data (it's an event node)
+      // Using isEvent flag to identify event nodes
+      if (node.isEvent === true) {
+        // Parse parameters with defaults
+        const lambda = parseFloat(node.fr) || 0; // Failure Rate λ
+        const t = parseFloat(values?.missionTime) || 0; // Mission time t (only used for Q(t) mode)
+        const q = parseFloat(node.isP) || 0; // Probability q
+        const mttr = parseFloat(node.mttr) || 0; // MTTR (hours)
+        const mu = mttr > 0 ? 1 / mttr : 0; // Repair rate μ = 1/MTTR
+        const T = parseFloat(node.isT) || 0; // Inspection interval T_i
+        const tm = parseFloat(node.eventMissionTime) || t; // Mission time for constant mission type
+        const n = 1; // Assuming n=1 for basic event
+
+        let result = 0;
+        let formula = "";
+        let frequency = 0;
+
+        // Calculate based on event type and selected calculation mode
+        switch (node.calcTypes) {
+          // #1 Probability (from Table 1, row 1)
+          case "Probability":
+            if (isUnavailabilityMode) {
+              // Q(t) = q
+              result = q;
+              formula = `Q(t) = q = ${q}`;
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability Qmean = q
+              result = q;
+              formula = `Q̄ = q = ${q}`;
+            }
+            // Frequency w(t) = 0 (as per Table 1)
+            frequency = 0;
+            formula += ` | w(t) = 0`;
+            break;
+
+          // #2 Frequency (from Table 1, row 2)
+          case "Frequency":
+            if (isUnavailabilityMode) {
+              // Q(t) = 0
+              result = 0;
+              formula = `Q(t) = 0 (Frequency event)`;
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability Qmean = 0
+              result = 0;
+              formula = `Q̄ = 0 (Frequency event)`;
+            }
+            // Frequency w(t) = f (constant frequency) - as per Table 1
+            frequency = lambda;
+            formula += ` | w(t) = f = ${frequency.toExponential(4)}/h`;
+            break;
+
+          // #3 Constant mission time (from Table 1, row 3)
+          case "Constant mission time":
+            if (isUnavailabilityMode) {
+              // Q(t) = 1 - (1-q)^n * exp(-λ*Tm)
+              result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
+              formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability Qmean = 1 - (1-q)^n * exp(-λ*Tm)
+              result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
+              formula = `Q̄ = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
+            }
+            // Frequency w(t) = 0 (as per Table 1)
+            frequency = 0;
+            formula += ` | w(t) = 0`;
+            break;
+
+          // #4 Repairable (from Table 1, row 4)
+          case "Repairable":
+            const lambdaMu = lambda + mu;
+
+            if (isUnavailabilityMode) {
+              // Q(t) = q^n·exp(-(λ+μ)t) + (λ/(λ+μ))^n·[1-exp(-(λ+μ)t)]
+              if (lambdaMu > 0) {
+                const expTerm = Math.exp(-lambdaMu * t);
+                result = Math.pow(q, n) * expTerm + Math.pow(lambda / lambdaMu, n) * (1 - expTerm);
+              } else {
+                result = Math.pow(q, n);
               }
-              // Frequency w(t) = 0 (as per Table 1)
-              frequency = 0;
-              formula += ` | w(t) = 0`;
-              break;
-
-            // #2 Frequency (from Table 1, row 2)
-            case "Frequency":
-              if (isUnavailabilityMode) {
-                // Q(t) = 0
-                result = 0;
-                formula = `Q(t) = 0 (Frequency event)`;
-              } else if (isSteadyStateMode) {
-                // Mean Unavailability Qmean = 0
-                result = 0;
-                formula = `Q̄ = 0 (Frequency event)`;
-              }
-              // Frequency w(t) = f (constant frequency) - as per Table 1
-              frequency = lambda;
-              formula += ` | w(t) = f = ${frequency.toExponential(4)}/h`;
-              break;
-
-            // #3 Constant mission time (from Table 1, row 3)
-            case "Constant mission time":
-              if (isUnavailabilityMode) {
-                // Q(t) = 1 - (1-q)^n * exp(-λ*Tm)
-                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
-                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
-              } else if (isSteadyStateMode) {
-                // Mean Unavailability Qmean = 1 - (1-q)^n * exp(-λ*Tm)
-                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
-                formula = `Q̄ = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
-              }
-              // Frequency w(t) = 0 (as per Table 1)
-              frequency = 0;
-              formula += ` | w(t) = 0`;
-              break;
-
-            // #4 Repairable (from Table 1, row 4)
-            case "Repairable":
-              const lambdaMu = lambda + mu;
-
-              if (isUnavailabilityMode) {
-                // Q(t) = q^n·exp(-(λ+μ)t) + (λ/(λ+μ))^n·[1-exp(-(λ+μ)t)]
-                if (lambdaMu > 0) {
-                  const expTerm = Math.exp(-lambdaMu * t);
-                  result =
-                    Math.pow(q, n) * expTerm +
-                    Math.pow(lambda / lambdaMu, n) * (1 - expTerm);
-                } else {
-                  result = Math.pow(q, n);
-                }
-                formula = `Q(t) = ${q}^${n}·e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t}) + (${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}))^${n}[1-e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t})] = ${result.toExponential(4)}`;
-              } else if (isSteadyStateMode) {
-                // Mean Unavailability Qmean = λ/(λ+μ)
-                if (lambdaMu > 0) {
-                  result = lambda / lambdaMu;
-                } else {
-                  result = 0;
-                }
-                formula = `Q̄ = λ/(λ+μ) = ${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}) = ${result.toExponential(4)}`;
-              }
-
-              // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 4
-              frequency = Math.pow(lambda, n) * (1 - result);
-              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
-              break;
-
-            // #5 Unrepairable (from Table 1, row 5)
-            case "Unrepairable":
-              if (isUnavailabilityMode) {
-                // Q(t) = 1 - (1-q)^n·exp(-λt)
-                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
-                formula = `Q(t) = 1-(1-${q})^${n}·e^(-${lambda.toExponential(2)}·${t}) = ${result.toExponential(4)}`;
-              } else if (isSteadyStateMode) {
-                // Mean Unavailability Qmean = 1 (as per Table 1, row 5)
-                result = 1;
-                formula = `Q̄ = 1 (Unrepairable element)`;
-              }
-
-              // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 5
-              frequency = Math.pow(lambda, n) * (1 - result);
-              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
-              break;
-
-            // #6 Periodical tests (from Table 1, row 6, with Table 2 for Q(t) and Table 3 for Qmean)
-            case "Periodical tests":
-              const Tf = node.timeToFirstTest || 0; // Time to first test
-
-              if (isUnavailabilityMode) {
-                // Using Table 2 formulas
-                if (t < Tf) {
-                  // Formula #1: t < Tf
-                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
-                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [t < Tf] = ${result.toExponential(4)}`;
-                } else if (Math.abs(t - (Tf + n * T)) < 0.0001) {
-                  // Formula #2: t = Tf + nT_i
-                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * T);
-                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${T}) [t = Tf + nT_i] = ${result.toExponential(4)}`;
-                } else if (t > Tf + n * T && t <= Tf + n * T + mttr) {
-                  // Formula #3: Tf + nT_i < t <= Tf + nT_i + MTTR
-                  const term1 = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * T);
-                  const term2 =
-                    Math.pow(1 - q, n) *
-                    Math.exp(-lambda * T) *
-                    (1 - Math.pow(1 - q, n) * Math.exp(-lambda * T));
-                  result = term1 + term2;
-                  formula = `Q(t) = ${term1.toExponential(4)} + ${term2.toExponential(4)} [Tf + nT_i < t <= Tf + nT_i + MTTR] = ${result.toExponential(4)}`;
-                } else if (t > Tf + n * T + mttr && t < Tf + n * T + T) {
-                  // Formula #4: Tf + nT_i + MTTR < t < Tf + nT_i + T_i
-                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * T);
-                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${T}) [Tf + nT_i + MTTR < t < Tf + nT_i + T_i] = ${result.toExponential(4)}`;
-                } else {
-                  result = 0;
-                  formula = "Q(t) = 0 (No matching condition)";
-                }
-              } else if (isSteadyStateMode) {
-                // Using Table 3 formula for Mean Unavailability
-                // Qmean = q + (1-q)^n·(1 - (1/(λT_i))^n·(1-exp(-λT_i))) + (q + (1-q)^n·(1-exp(-λT_i)))^n·(MTTR/T_i)
-
-                // Handle division by zero and edge cases
-                let termB = 0;
-                if (lambda * T > 0 && isFinite(1 / (lambda * T))) {
-                  termB = Math.pow(1 - 1 / (lambda * T), n);
-                }
-
-                const termC = 1 - Math.exp(-lambda * T);
-                const termA = Math.pow(1 - q, n);
-                const termD = Math.pow(q + termA * (1 - termC), n);
-
-                result = q + termA * termB * termC + termD * (mttr / T);
-
-                // Handle NaN/Infinite
-                if (isNaN(result) || !isFinite(result)) {
-                  result = (lambda * T) / 2; // Fallback to simplified
-                  formula = `Q̄ ≈ λ·T/2 = ${result.toExponential(4)} (simplified)`;
-                } else {
-                  formula = `Q̄ = ${q} + (1-${q})^${n}·(1-1/(${lambda.toExponential(2)}·${T}))^${n}·(1-e^(-${lambda.toExponential(2)}·${T})) + (${q}+(1-${q})^${n}·(1-e^(-${lambda.toExponential(2)}·${T})))^${n}·(${mttr}/${T}) = ${result.toExponential(4)}`;
-                }
-              }
-
-              // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 6
-              frequency = Math.pow(lambda, n) * (1 - result);
-              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
-              break;
-
-            // #7 Latent (from Table 1, row 7)
-            case "Latent":
-              if (isUnavailabilityMode) {
-                // Q(t) = 1 - (1-q)^t·exp(-λ·Ti)
-                result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
-                formula = `Q(t) = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
-              } else if (isSteadyStateMode) {
-                // Mean Unavailability = 1 - (1-q)^t·exp(-λ·Ti)
-                result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
-                formula = `Q̄ = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
-              }
-
-              // Frequency w(t) = λ^t·(1-Q(t)) - as per Table 1, row 7
-              frequency = Math.pow(lambda, 1) * (1 - result);
-              formula += ` | w(t) = λ·(1-Q(t)) = ${lambda.toExponential(2)}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
-              break;
-
-            // #8 Average probability per mission hour (from Table 1, row 8)
-            case "Average probability per mission hour":
-              if (isUnavailabilityMode) {
-                // Q(t) = 1 - (1-q)^t
-                result = 1 - Math.pow(1 - q, t);
-                formula = `Q(t) = 1-(1-${q})^${t} = ${result.toExponential(4)}`;
-              } else if (isSteadyStateMode) {
-                // Mean Unavailability = 1 (as per Table 1, row 8)
-                result = 1;
-                formula = `Q̄ = 1`;
-              }
-              // Frequency w(t) = 0 (as per Table 1, row 8)
-              frequency = 0;
-              formula += ` | w(t) = 0`;
-              break;
-
-            // #9 Periodical Tests #2 (from Table 1, row 9)
-            case "Periodical Tests #2":
-              const Tf2 = node.timeToFirstTest || 0;
-
-              if (isUnavailabilityMode) {
-                // Algorithm with different formulas for different cases
-                if (t < Tf2) {
-                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
-                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [Phase 1] = ${result.toExponential(4)}`;
-                } else {
-                  // For periodic tests after first test
-                  const cycles = Math.floor((t - Tf2) / T);
-                  const timeInCycle = (t - Tf2) % T;
-
-                  if (timeInCycle < mttr) {
-                    // In repair phase
-                    result =
-                      1 -
-                      Math.pow(1 - q, n) *
-                        Math.exp(-lambda * (Tf2 + cycles * T));
-                    formula = `Q(t) ≈ ${result.toExponential(4)} [Repair phase]`;
-                  } else {
-                    // In operating phase
-                    result =
-                      1 -
-                      Math.pow(1 - q, n) *
-                        Math.exp(-lambda * (Tf2 + cycles * T));
-                    formula = `Q(t) ≈ ${result.toExponential(4)} [Operating phase]`;
-                  }
-                }
-              } else if (isSteadyStateMode) {
-                // Algorithm for mean unavailability (simplified)
-                result = (lambda * T) / 2 + lambda * mttr;
-                formula = `Q̄ ≈ λ·T/2 + λ·MTTR = (${lambda.toExponential(2)}·${T})/2 + ${lambda.toExponential(2)}·${mttr} = ${result.toExponential(4)} (simplified)`;
-              }
-
-              // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 9
-              frequency = Math.pow(lambda, n) * (1 - result);
-              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
-              break;
-
-            // Backward compatibility cases
-            case "Evident, P=λ*t":
-              result = lambda * t;
-              formula = `Q = λ·t = ${lambda.toExponential(2)}·${t} = ${result.toExponential(4)}`;
-              frequency = lambda * (1 - result);
-              formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
-              break;
-
-            case "Const.mission time, P=λ*tm":
-              result = lambda * tm;
-              formula = `Q = λ·tm = ${lambda.toExponential(2)}·${tm} = ${result.toExponential(4)}`;
-              frequency = 0;
-              formula += ` | w(t) = 0`;
-              break;
-
-            case "Latent, P=λ*T":
-              result = lambda * T;
-              formula = `Q = λ·T = ${lambda.toExponential(2)}·${T} = ${result.toExponential(4)}`;
-              frequency = lambda * (1 - result);
-              formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
-              break;
-
-            case "Latent, P=λ*T/2":
-              result = (lambda * T) / 2;
-              formula = `Q = λ·T/2 = (${lambda.toExponential(2)}·${T})/2 = ${result.toExponential(4)}`;
-              frequency = lambda * (1 - result);
-              formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
-              break;
-
-            case "Latent,Life-time, P=1-e^(-λ*T)":
-              result = 1 - Math.exp(-lambda * T);
-              formula = `Q = 1-e^(-λ·T) = 1-e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
-              frequency = lambda * (1 - result);
-              formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
-              break;
-
-            case "Latent repairable":
-              const lambdaMu2 = lambda + mu;
-              if (lambdaMu2 > 0) {
-                result = (lambda / lambdaMu2) * (1 - Math.exp(-lambdaMu2 * T));
+              formula = `Q(t) = ${q}^${n}·e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t}) + (${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}))^${n}[1-e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t})] = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability Qmean = λ/(λ+μ)
+              if (lambdaMu > 0) {
+                result = lambda / lambdaMu;
               } else {
                 result = 0;
               }
-              formula = `Q = (λ/(λ+μ))[1-e^(-(λ+μ)T)] = (${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}))[1-e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${T})] = ${result.toExponential(4)}`;
-              frequency = lambda * (1 - result);
-              formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
-              break;
-          }
+              formula = `Q̄ = λ/(λ+μ) = ${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}) = ${result.toExponential(4)}`;
+            }
 
-          // Handle NaN or infinite values
-          if (isNaN(result) || !isFinite(result)) result = 0;
-          if (isNaN(frequency) || !isFinite(frequency)) frequency = 0;
+            // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 4
+            frequency = Math.pow(lambda, n) * (1 - result);
+            formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+            break;
 
-          // Store the node data with all calculated values
-          nodes.push({
-            name: node.name || node.code || `Gate ${node.gateId}`,
-            description: node.description || "",
-            failureRate: node.fr || "N/A",
-            missionTime: t.toString(),
-            mttr: node.mttr || "N/A",
-            calcType: node.calcTypes || "N/A",
-            q: node.isP || "N/A",
-            T: node.isT || "N/A",
-            timeToFirstTest: node.timeToFirstTest || "0",
-            // Store the calculated value based on mode
-            calculatedValue: result.toExponential(4),
-            // Store appropriate values based on mode
-            unavailability: isUnavailabilityMode
-              ? result.toExponential(4)
-              : "N/A",
-            steadyState: isSteadyStateMode ? result.toExponential(4) : "N/A",
-            frequency: frequency > 0 ? frequency.toExponential(4) : "0",
-            formula: formula,
-            calculationMode: isUnavailabilityMode ? "Q(t)" : "Q̄",
-            rawValue: result,
-          });
+          // #5 Unrepairable (from Table 1, row 5)
+          case "Unrepairable":
+            if (isUnavailabilityMode) {
+              // Q(t) = 1 - (1-q)^n·exp(-λt)
+              result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+              formula = `Q(t) = 1-(1-${q})^${n}·e^(-${lambda.toExponential(2)}·${t}) = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability Qmean = 1 (as per Table 1, row 5)
+              result = 1;
+              formula = `Q̄ = 1 (Unrepairable element)`;
+            }
+
+            // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 5
+            frequency = Math.pow(lambda, n) * (1 - result);
+            formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+            break;
+
+          // #6 Periodical tests (from Table 1, row 6, with Table 2 for Q(t) and Table 3 for Qmean)
+          case "Periodical tests":
+            const Tf = node.timeToFirstTest || 0; // Time to first test
+
+            if (isUnavailabilityMode) {
+              // Using Table 2 formulas
+              if (t < Tf) {
+                // Formula #1: t < Tf
+                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [t < Tf] = ${result.toExponential(4)}`;
+              } else if (Math.abs(t - (Tf + n * T)) < 0.0001) {
+                // Formula #2: t = Tf + nT_i
+                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * T);
+                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${T}) [t = Tf + nT_i] = ${result.toExponential(4)}`;
+              } else if (t > Tf + n * T && t <= Tf + n * T + mttr) {
+                // Formula #3: Tf + nT_i < t <= Tf + nT_i + MTTR
+                const term1 = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * T);
+                const term2 = Math.pow(1 - q, n) * Math.exp(-lambda * T) * (1 - Math.pow(1 - q, n) * Math.exp(-lambda * T));
+                result = term1 + term2;
+                formula = `Q(t) = ${term1.toExponential(4)} + ${term2.toExponential(4)} [Tf + nT_i < t <= Tf + nT_i + MTTR] = ${result.toExponential(4)}`;
+              } else if (t > Tf + n * T + mttr && t < Tf + n * T + T) {
+                // Formula #4: Tf + nT_i + MTTR < t < Tf + nT_i + T_i
+                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * T);
+                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${T}) [Tf + nT_i + MTTR < t < Tf + nT_i + T_i] = ${result.toExponential(4)}`;
+              } else {
+                result = 0;
+                formula = "Q(t) = 0 (No matching condition)";
+              }
+            } else if (isSteadyStateMode) {
+              // Using Table 3 formula for Mean Unavailability
+              // Handle division by zero and edge cases
+              let termB = 0;
+              if (lambda * T > 0 && isFinite(1 / (lambda * T))) {
+                termB = Math.pow(1 - 1 / (lambda * T), n);
+              }
+
+              const termC = 1 - Math.exp(-lambda * T);
+              const termA = Math.pow(1 - q, n);
+              const termD = Math.pow(q + termA * (1 - termC), n);
+
+              result = q + termA * termB * termC + termD * (mttr / T);
+
+              // Handle NaN/Infinite
+              if (isNaN(result) || !isFinite(result)) {
+                result = (lambda * T) / 2; // Fallback to simplified
+                formula = `Q̄ ≈ λ·T/2 = ${result.toExponential(4)} (simplified)`;
+              } else {
+                formula = `Q̄ = ${q} + (1-${q})^${n}·(1-1/(${lambda.toExponential(2)}·${T}))^${n}·(1-e^(-${lambda.toExponential(2)}·${T})) + (${q}+(1-${q})^${n}·(1-e^(-${lambda.toExponential(2)}·${T})))^${n}·(${mttr}/${T}) = ${result.toExponential(4)}`;
+              }
+            }
+
+            // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 6
+            frequency = Math.pow(lambda, n) * (1 - result);
+            formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+            break;
+
+          // #7 Latent (from Table 1, row 7)
+          case "Latent":
+            if (isUnavailabilityMode) {
+              // Q(t) = 1 - (1-q)^t·exp(-λ·Ti)
+              result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
+              formula = `Q(t) = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability = 1 - (1-q)^t·exp(-λ·Ti)
+              result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
+              formula = `Q̄ = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
+            }
+
+            // Frequency w(t) = λ^t·(1-Q(t)) - as per Table 1, row 7
+            frequency = Math.pow(lambda, 1) * (1 - result);
+            formula += ` | w(t) = λ·(1-Q(t)) = ${lambda.toExponential(2)}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+            break;
+
+          // #8 Average probability per mission hour (from Table 1, row 8)
+          case "Average probability per mission hour":
+            if (isUnavailabilityMode) {
+              // Q(t) = 1 - (1-q)^t
+              result = 1 - Math.pow(1 - q, t);
+              formula = `Q(t) = 1-(1-${q})^${t} = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              // Mean Unavailability = 1 (as per Table 1, row 8)
+              result = 1;
+              formula = `Q̄ = 1`;
+            }
+            // Frequency w(t) = 0 (as per Table 1, row 8)
+            frequency = 0;
+            formula += ` | w(t) = 0`;
+            break;
+
+          // #9 Periodical Tests #2 (from Table 1, row 9)
+          case "Periodical Tests #2":
+            const Tf2 = node.timeToFirstTest || 0;
+
+            if (isUnavailabilityMode) {
+              // Algorithm with different formulas for different cases
+              if (t < Tf2) {
+                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [Phase 1] = ${result.toExponential(4)}`;
+              } else {
+                // For periodic tests after first test
+                const cycles = Math.floor((t - Tf2) / T);
+                const timeInCycle = (t - Tf2) % T;
+
+                if (timeInCycle < mttr) {
+                  // In repair phase
+                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * (Tf2 + cycles * T));
+                  formula = `Q(t) ≈ ${result.toExponential(4)} [Repair phase]`;
+                } else {
+                  // In operating phase
+                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * (Tf2 + cycles * T));
+                  formula = `Q(t) ≈ ${result.toExponential(4)} [Operating phase]`;
+                }
+              }
+            } else if (isSteadyStateMode) {
+              // Algorithm for mean unavailability (simplified)
+              result = (lambda * T) / 2 + lambda * mttr;
+              formula = `Q̄ ≈ λ·T/2 + λ·MTTR = (${lambda.toExponential(2)}·${T})/2 + ${lambda.toExponential(2)}·${mttr} = ${result.toExponential(4)} (simplified)`;
+            }
+
+            // Frequency w(t) = λ^n·(1-Q(t)) - as per Table 1, row 9
+            frequency = Math.pow(lambda, n) * (1 - result);
+            formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+            break;
+
+          // Backward compatibility cases
+          case "Evident, P=λ*t":
+            result = lambda * t;
+            formula = `Q = λ·t = ${lambda.toExponential(2)}·${t} = ${result.toExponential(4)}`;
+            frequency = lambda * (1 - result);
+            formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+            break;
+
+          case "Const.mission time, P=λ*tm":
+            result = lambda * tm;
+            formula = `Q = λ·tm = ${lambda.toExponential(2)}·${tm} = ${result.toExponential(4)}`;
+            frequency = 0;
+            formula += ` | w(t) = 0`;
+            break;
+
+          case "Latent, P=λ*T":
+            result = lambda * T;
+            formula = `Q = λ·T = ${lambda.toExponential(2)}·${T} = ${result.toExponential(4)}`;
+            frequency = lambda * (1 - result);
+            formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+            break;
+
+          case "Latent, P=λ*T/2":
+            result = (lambda * T) / 2;
+            formula = `Q = λ·T/2 = (${lambda.toExponential(2)}·${T})/2 = ${result.toExponential(4)}`;
+            frequency = lambda * (1 - result);
+            formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+            break;
+
+          case "Latent,Life-time, P=1-e^(-λ*T)":
+            result = 1 - Math.exp(-lambda * T);
+            formula = `Q = 1-e^(-λ·T) = 1-e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
+            frequency = lambda * (1 - result);
+            formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+            break;
+
+          case "Latent repairable":
+            const lambdaMu2 = lambda + mu;
+            if (lambdaMu2 > 0) {
+              result = (lambda / lambdaMu2) * (1 - Math.exp(-lambdaMu2 * T));
+            } else {
+              result = 0;
+            }
+            formula = `Q = (λ/(λ+μ))[1-e^(-(λ+μ)T)] = (${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}))[1-e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${T})] = ${result.toExponential(4)}`;
+            frequency = lambda * (1 - result);
+            formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+            break;
+
+          default:
+            // If calcTypes doesn't match any case, skip this node
+            console.log("Unknown calculation type:", node.calcTypes);
+            break;
         }
 
-        if (node.children && node.children.length > 0) {
-          node.children.forEach((child) => {
-            nodes.push(...extractProbabilityNodes(child));
-          });
-        }
+        // Handle NaN or infinite values
+        if (isNaN(result) || !isFinite(result)) result = 0;
+        if (isNaN(frequency) || !isFinite(frequency)) frequency = 0;
+
+        // Store the node data with all calculated values
+        nodes.push({
+          id: node.id,
+          gateId: node.gateId,
+          name: node.name || node.code || `Gate ${node.gateId}`,
+          description: node.description || "",
+          failureRate: node.fr || "N/A",
+          missionTime: t.toString(),
+          mttr: node.mttr || "N/A",
+          calcType: node.calcTypes || "N/A",
+          q: node.isP || "N/A",
+          T: node.isT || "N/A",
+          timeToFirstTest: node.timeToFirstTest || "0",
+          // Store the calculated value based on mode
+          calculatedValue: result.toExponential(4),
+          // Store appropriate values based on mode
+          unavailability: isUnavailabilityMode ? result.toExponential(4) : "N/A",
+          steadyState: isSteadyStateMode ? result.toExponential(4) : "N/A",
+          frequency: frequency > 0 ? frequency.toExponential(4) : "0",
+          formula: formula,
+          calculationMode: isUnavailabilityMode ? "Q(t)" : "Q̄",
+          rawValue: result,
+        });
       }
 
-      return nodes;
-    };
-
-    const calcData = extractProbabilityNodes(chartData);
-    console.log("Calculation results:", calcData);
-    setProbabilityCalcData(calcData);
-
-    // Open the appropriate report modal based on selection
-    if (isUnavailabilityMode) {
-      setCurrentMissionTime(values?.missionTime);
-      setIsUnavailabilityReportOpen(true);
-    } else if (isSteadyStateMode) {
-      setIsSteadyStateReportOpen(true);
+      // IMPORTANT: Recursively process ALL children nodes
+      if (node.children && node.children.length > 0) {
+        node.children.forEach((child) => {
+          nodes.push(...extractProbabilityNodes(child));
+        });
+      }
     }
+
+    return nodes;
   };
+
+  // Extract and calculate for ALL nodes in the tree
+  const calcData = extractProbabilityNodes(chartData);
+  console.log("Calculation results for ALL event nodes:", calcData);
+  
+  // Update state with all calculation results
+  setProbabilityCalcData(calcData);
+
+  // Open the appropriate report modal based on selection
+  if (isUnavailabilityMode) {
+    setCurrentMissionTime(values?.missionTime);
+    setIsUnavailabilityReportOpen(true);
+  } else if (isSteadyStateMode) {
+    setIsSteadyStateReportOpen(true);
+  }
+};
+
   const submitProbabilityCalculation = (values) => {
     console.log("Submitting calculation:", values);
     calculateUnavailability(values);
     closeProbabilityModal();
   };
+
+  const detectRepeatedEvents = (treeData) => {
+  const lambdaTypeMap = new Map(); // Store lambda+type combinations
+  const repeated = [];
+
+  const traverse = (node) => {
+    if (node?.isEvent) {
+      // Get the lambda/failure rate value and calculation type
+      const lambda = node.fr || node.failureRate || "0";
+      const calcType = node.calcTypes || "unknown";
+      
+      // Create a combined key from lambda value and calculation type
+      const key = `${lambda}|${calcType}`;
+      
+      if (lambdaTypeMap.has(key)) {
+        // This lambda+type combination has been seen before
+        const existingIds = lambdaTypeMap.get(key);
+        
+        // Mark current node
+        if (!repeated.includes(node.gateId)) {
+          repeated.push(node.gateId);
+        }
+        
+        // Mark all previous occurrences with same lambda+type
+        existingIds.forEach(id => {
+          if (!repeated.includes(id)) {
+            repeated.push(id);
+          }
+        });
+        
+        // Add current node to the list
+        existingIds.push(node.gateId);
+        lambdaTypeMap.set(key, existingIds);
+      } else {
+        // First time seeing this lambda+type combination
+        lambdaTypeMap.set(key, [node.gateId]);
+      }
+    }
+    
+    if (node.children && node.children.length > 0) {
+      node.children.forEach(child => traverse(child));
+    }
+  };
+
+  traverse(treeData);
+  
+  // Log for debugging
+  console.log("Lambda+Type Map:", Array.from(lambdaTypeMap.entries()));
+  console.log("Found repeated events:", repeated);
+  
+  return repeated;
+};
+
+
+const handleShowRepeatedEvents = () => {
+  if (!chartData) {
+    toast.warning("No fault tree data available");
+    return;
+  }
+
+  // Toggle the show state
+  const newShowState = !showRepeatedEvents;
+  
+  if (newShowState) {
+    // Find events with same lambda values
+    const repeated = detectRepeatedEvents(chartData);
+    setRepeatedEvents(repeated);
+    
+    if (repeated.length > 0) {
+      toast.info(`Found ${repeated.length} event(s) with duplicate lambda values`);
+    } else {
+      toast.success("No duplicate lambda values found");
+    }
+  } else {
+    // Clear repeated events when turning off
+    setRepeatedEvents([]);
+  }
+  
+  setShowRepeatedEvents(newShowState);
+};
+
+  useEffect(() => {
+  window.showRepeatedEvents = () => {
+    handleShowRepeatedEvents();
+  };
+
+  return () => {
+    delete window.showRepeatedEvents;
+  };
+}, [chartData, showRepeatedEvents]);
 
   // const calculateUnavailability = (values) => {
   //   const extractProbabilityNodes = (node) => {
@@ -1101,6 +1561,8 @@ export default function FTA(props) {
                   calculationMode={currentCalculationMode}
                   setCurrentCalculationMode={setCurrentCalculationMode}
                   treeRenderCalculationMode={treeRenderCalculationMode}
+                  repeatedEvents={repeatedEvents}        // ADD THIS LINE
+  showRepeatedEvents={showRepeatedEvents} // ADD THIS LINE
                 />
               </Tree>
             </div>

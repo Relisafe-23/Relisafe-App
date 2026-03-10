@@ -15,6 +15,8 @@ const RenderTree = ({
   productData,
    calculationMode,
    setCurrentCalculationMode,
+showRepeatedEvents,
+repeatedEvents 
 }) => {
 
 console.log(calculationMode,'calculationMode in render tree')
@@ -34,6 +36,8 @@ console.log(calculationMode,'calculationMode in render tree')
           setSelectedNodeId={setSelectedNodeId} 
           calculationMode={calculationMode} 
           setCurrentCalculationMode={setCurrentCalculationMode}
+          showRepeatedEvents={showRepeatedEvents}
+          repeatedEvents={repeatedEvents}
         />
       }
     >
@@ -52,6 +56,8 @@ console.log(calculationMode,'calculationMode in render tree')
           setSelectedNodeId={setSelectedNodeId} 
            calculationMode={calculationMode}
            setCurrentCalculationMode={setCurrentCalculationMode}
+           showRepeatedEvents={showRepeatedEvents}
+           repeatedEvents={repeatedEvents}  
         />
       ))}
     </TreeNode>
