@@ -1,10 +1,65 @@
-// In FTAtable.js, replace with this complete component:
-
+// FTAtable.js with Material-UI
 import React from "react";
-import { Table, Button } from "react-bootstrap";
-import { FaEdit, FaTrash, FaEye, FaFileAlt } from "react-icons/fa";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableContainer, 
+  TableHead, 
+  TableRow, 
+  Paper,
+  Button,
+  IconButton,
+  Typography,
+  Box,
+  CircularProgress,
+  Tooltip
+} from "@mui/material";
+import { 
+  Visibility as VisibilityIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Add as AddIcon,
+  FilePresent as FileIcon
+} from "@mui/icons-material";
+import { styled } from "@mui/material/styles";
 import { useModal } from "../ModalContext";
 import { toast } from "react-toastify";
+
+// Styled components for custom styling
+const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
+  marginTop: theme.spacing(3),
+  borderRadius: theme.spacing(1),
+  boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
+}));
+
+const StyledTableHead = styled(TableHead)(({ theme }) => ({
+  backgroundColor: '#f5f5f5',
+  '& .MuiTableCell-head': {
+    fontWeight: 'bold',
+    color: theme.palette.text.primary,
+  },
+}));
+
+const ActionButton = styled(IconButton)(({ theme, color }) => ({
+  margin: theme.spacing(0.5),
+  '&:hover': {
+    backgroundColor: color === 'primary' ? '#e3f2fd' : 
+                    color === 'warning' ? '#fff3e0' : 
+                    '#ffebee',
+  },
+}));
+
+const CreateButton = styled(Button)(({ theme }) => ({
+  backgroundColor: "#00a9c9",
+  color: "#fff",
+  height: "40px",
+  minWidth: "160px",
+  borderRadius: "8px",
+  '&:hover': {
+    backgroundColor: "#0089a9",
+  },
+}));
 
 const FTAtable = ({
   trees,
@@ -17,12 +72,23 @@ const FTAtable = ({
 
   if (loading) {
     return (
-      <div style={{ padding: "20px", paddingTop: "80px", textAlign: "center" }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="mt-3">Loading trees...</p>
-      </div>
+      <Box 
+        sx={{ 
+          padding: "20px", 
+          paddingTop: "80px", 
+          textAlign: "center",
+          minHeight: "400px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center"
+        }}
+      >
+        <CircularProgress sx={{ color: "#00a9c9" }} />
+        <Typography variant="body1" sx={{ mt: 2, color: "#666" }}>
+          Loading trees...
+        </Typography>
+      </Box>
     );
   }
 
@@ -71,124 +137,167 @@ const FTAtable = ({
 
   if (!trees || trees.length === 0) {
     return (
-      <div style={{ padding: "20px", paddingTop: "80px" }}>
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h3>Fault Tree Analysis Trees</h3>
-          <Button
+      <Box sx={{ padding: "20px", paddingTop: "80px" }}>
+        <Box 
+          sx={{ 
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "center", 
+            mb: 4 
+          }}
+        >
+          <Typography variant="h5" sx={{ fontWeight: 500, color: "#333" }}>
+            Fault Tree Analysis Trees
+          </Typography>
+          <CreateButton
             onClick={onCreateNewTree}
-            style={{
-              backgroundColor: "#00a9c9",
-              border: "0px",
-              color: "#fff",
-              height: "35px",
-              width: "150px",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
+            startIcon={<AddIcon />}
+            variant="contained"
+            disableElevation
           >
-            + Create New Tree
-          </Button>
-        </div>
+            Create New Tree
+          </CreateButton>
+        </Box>
 
-        <div className="text-center py-5 border rounded bg-light">
-          <FaFileAlt size={48} className="text-muted mb-3" />
-          <h5>No Fault Trees Found</h5>
-          <p className="text-muted">Create your first fault tree analysis</p>
-          <Button
+        <Paper 
+          elevation={0}
+          sx={{ 
+            py: 8, 
+            px: 4, 
+            textAlign: "center",
+            border: "1px solid #e0e0e0",
+            borderRadius: 2,
+            backgroundColor: "#fafafa"
+          }}
+        >
+          <FileIcon sx={{ fontSize: 64, color: "#9e9e9e", mb: 2 }} />
+          <Typography variant="h6" sx={{ color: "#666", mb: 1 }}>
+            No Fault Trees Found
+          </Typography>
+          <Typography variant="body2" sx={{ color: "#999", mb: 3 }}>
+            Create your first fault tree analysis
+          </Typography>
+          <CreateButton
             onClick={onCreateNewTree}
-            style={{
-              backgroundColor: "#00a9c9",
-              border: "0px",
-              color: "#fff",
-            }}
+            startIcon={<AddIcon />}
+            variant="contained"
+            size="small"
+            disableElevation
           >
             Create First Tree
-          </Button>
-        </div>
-      </div>
+          </CreateButton>
+        </Paper>
+      </Box>
     );
   }
 
   return (
-    <div style={{ padding: "20px", paddingTop: "80px" }}>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3>Fault Tree Analysis Trees</h3>
-        <Button
+    <Box sx={{ padding: "20px", paddingTop: "80px" }}>
+      <Box 
+        sx={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center", 
+          mb: 4 
+        }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: 500, color: "#333" }}>
+          Fault Tree Analysis Trees
+        </Typography>
+        <CreateButton
           onClick={onCreateNewTree}
-          style={{
-            backgroundColor: "#00a9c9",
-            border: "0px",
-            color: "#fff",
-            height: "35px",
-            width: "150px",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
+          startIcon={<AddIcon />}
+          variant="contained"
+          disableElevation
         >
-          + Create New Tree
-        </Button>
-      </div>
+          Create New Tree
+        </CreateButton>
+      </Box>
 
-      <div className="table-responsive">
-        <Table striped bordered hover>
-          <thead>
-            <tr>
-              <th>S.No</th>
-              <th>Tree Name</th>
-              <th>Description</th>
-              <th>Calc Type</th>
-              <th>Mission Time</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+      <StyledTableContainer component={Paper}>
+        <Table sx={{ minWidth: 650 }} aria-label="fault trees table">
+          <StyledTableHead>
+            <TableRow>
+              <TableCell>S.No</TableCell>
+              <TableCell>Tree Name</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Calc Type</TableCell>
+              <TableCell>Mission Time</TableCell>
+              <TableCell align="center">Actions</TableCell>
+            </TableRow>
+          </StyledTableHead>
+          <TableBody>
             {trees.map((tree, index) => (
-              <tr key={tree.id || tree._id || index}>
-                <td>{index + 1}</td>
-                <td>
-                  <strong>{tree.treeStructure?.name || "Unnamed Tree"}</strong>
-                </td>
-                <td>{tree.treeStructure?.description || "-"}</td>
-                <td>{tree.treeStructure?.calcTypes || "-"}</td>
-                <td>
-                  {tree.treeStructure?.missionTime
-                    ? `${tree.treeStructure.missionTime} hours`
-                    : "-"}
-                </td>
-                <td>
-                  <div className="d-flex gap-2">
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      onClick={() => onViewTree(tree)}
-                      title="View Tree"
-                    >
-                      <FaEye />
-                    </Button>
-                    <Button
-                      variant="outline-warning"
-                      size="sm"
-                      onClick={() => onViewTree(tree)}
-                      title="Edit Tree"
-                    >
-                      <FaEdit />
-                    </Button>
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={(e) => handleDeleteClick(tree, e)}
-                      title="Delete Tree"
-                    >
-                      <FaTrash />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
+              <TableRow 
+                key={tree.id || tree._id || index}
+                sx={{ 
+                  '&:hover': { 
+                    backgroundColor: '#f8f9fa' 
+                  } 
+                }}
+              >
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                    {tree.treeStructure?.name || "Unnamed Tree"}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ color: '#666' }}>
+                    {tree.treeStructure?.description || "-"}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {tree.treeStructure?.calcTypes || "-"}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2">
+                    {tree.treeStructure?.missionTime
+                      ? `${tree.treeStructure.missionTime} hours`
+                      : "-"}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                    <Tooltip title="View Tree">
+                      <ActionButton
+                        color="primary"
+                        size="small"
+                        onClick={() => onViewTree(tree)}
+                      >
+                        <VisibilityIcon fontSize="small" />
+                      </ActionButton>
+                    </Tooltip>
+                    
+                    <Tooltip title="Edit Tree">
+                      <ActionButton
+                        color="warning"
+                        size="small"
+                        onClick={() => onViewTree(tree)}
+                      >
+                        <EditIcon fontSize="small" />
+                      </ActionButton>
+                    </Tooltip>
+                    
+                    <Tooltip title="Delete Tree">
+                      <ActionButton
+                        color="error"
+                        size="small"
+                        onClick={(e) => handleDeleteClick(tree, e)}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </ActionButton>
+                    </Tooltip>
+                  </Box>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
+          </TableBody>
         </Table>
-      </div>
-    </div>
+      </StyledTableContainer>
+    </Box>
   );
 };
 
