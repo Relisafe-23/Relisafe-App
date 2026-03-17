@@ -34,10 +34,16 @@ const UnavailabilityReportModal = ({
 
   // Function to format parameters
   const formatParameters = (item) => {
-    const params = [];
-    if (item.failureRate && item.failureRate !== 'N/A' && item.failureRate !== '0') {
+  const params = [];
+  if (item.failureRate && item.failureRate !== 'N/A' && item.failureRate !== '0') {
+    // Convert to number and show in exponential format
+    const lambdaNum = parseFloat(item.failureRate);
+    if (!isNaN(lambdaNum)) {
+      params.push(`λ=${lambdaNum.toExponential(4)}`); // Shows as 1.2345e-6
+    } else {
       params.push(`λ=${item.failureRate}`);
     }
+  }
     if (item.q && item.q !== 'N/A' && item.q !== '0') {
       params.push(`q=${item.q}`);
     }
