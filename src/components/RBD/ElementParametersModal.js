@@ -3,40 +3,50 @@ import { useParams } from 'react-router-dom';
 import Api from '../../Api';
 import CreatableSelect from 'react-select/creatable';
 
-const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitchConfig,rbdId, currentBlock }) => {
+const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock }) => {
 
   // console.log('currentBlock - :', currentBlock)
+  // console.log('parallelFoundBlock - :', parallelFoundBlock)
+  // console.log(elementModal, 'elementModal')
+
+  let modelBlock = null;
+
+  parallelFoundBlock ? modelBlock = parallelFoundBlock : modelBlock = currentBlock
+
+  // console.log(modelBlock, '-final modelData')
+
+  const mainId = modelBlock?.id || modelBlock?._id
 
   const [values, setValues] = useState({
-    rbdId:rbdId,
-    relDes: currentBlock?.relDes || '',
-    time: currentBlock?.time || " ",
-    elementType: currentBlock?.elementType || 'REGULAR',
-    partNumber: currentBlock?.partNumber || '',
-    fr: currentBlock?.fr || '',
-    repair: currentBlock?.repair || 'Full repair',
-    inspectionPeriod: currentBlock?.inspectionPeriod || '',
-    dutyCycle: currentBlock?.dutyCycle || '100',
-    color: currentBlock?.color || '#ffffff',
-    frDistribution: currentBlock?.frDistribution || '',
-    kOutOfN: currentBlock?.kOutOfN || false,
-    k: currentBlock?.k || '2',
-    n: currentBlock?.n || '3',
-    alpha: currentBlock?.alpha || '',
-    fmecaId: currentBlock?.fmecaId || '',
-    indexCount: currentBlock?.indexCount || '',
-    productName: currentBlock?.productName || '',
-    id: currentBlock?.id || '',
-    repairDistribution: currentBlock?.repairDistribution || 'Exponential',
-    mtbf: currentBlock?.mtbf || '1303617.9',
-    load: currentBlock?.load || '100',
-    mct: currentBlock?.mct || '',
-    productNumber: currentBlock?.productNumber || '',
-    productTreeItemID: currentBlock?.productTreeItemID || '',
-    fmNumber: currentBlock?.fmNumber || '',
-    description: currentBlock?.description || '',
-    remark: currentBlock?.remark || '',
-    fmDescription: currentBlock?.fmDescription || ''
+    rbdId: rbdId,
+    relDes: modelBlock?.relDes || '',
+    time: modelBlock?.time || " ",
+    elementType: modelBlock?.elementType || 'REGULAR',
+    partNumber: modelBlock?.partNumber || '',
+    fr: modelBlock?.fr || '',
+    repair: modelBlock?.repair || 'Full repair',
+    inspectionPeriod: modelBlock?.inspectionPeriod || '',
+    dutyCycle: modelBlock?.dutyCycle || '100',
+    color: modelBlock?.color || '#ffffff',
+    frDistribution: modelBlock?.frDistribution || '',
+    kOutOfN: modelBlock?.kOutOfN || false,
+    k: modelBlock?.k || '2',
+    n: modelBlock?.n || '3',
+    alpha: modelBlock?.alpha || '',
+    fmecaId: modelBlock?.fmecaId || '',
+    indexCount: modelBlock?.indexCount || '',
+    productName: modelBlock?.productName || '',
+    id: modelBlock?.id || '',
+    repairDistribution: modelBlock?.repairDistribution || 'Exponential',
+    mtbf: modelBlock?.mtbf || '1303617.9',
+    load: modelBlock?.load || '100',
+    mct: modelBlock?.mct || '',
+    productNumber: modelBlock?.productNumber || '',
+    productTreeItemID: modelBlock?.productTreeItemID || '',
+    fmNumber: modelBlock?.fmNumber || '',
+    description: modelBlock?.description || '',
+    remark: modelBlock?.remark || '',
+    fmDescription: modelBlock?.fmDescription || ''
   });
 
   // console.log('fr value is : ',values?.fr)
@@ -55,9 +65,9 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
 
 
 
-  useEffect(() => {
-    getElement()
-  }, [projectId])
+  // useEffect(() => {
+  //   getElement()
+  // }, [projectId])
 
   // const createRBD = () => {
   //   Api.post(`/api/v1/rbd/create`, {
@@ -144,8 +154,9 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
         }
       });
 
-      
 
+
+    // console.log(productId,'productId')
     Api.get(`/api/v1/mttrPrediction/${productId}`)
       .then((res) => {
         // console.log(res?.data?.data?.mct, 'response mttr')
@@ -203,7 +214,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
       productName: values.productName,
       fr: values.fr,
       // blockId:blockId,
-      rbdId : rbdId,
+      rbdId: rbdId,
       productId: values.productId,
       fmecaId: values.fmecaId,
       fmDescription: values.fmDescription,
@@ -230,17 +241,70 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
   };
 
 
-  const getElement = () => {
-    // console.log("Loadvchvghhv")
-    Api.get(`/api/v1/elementParametersRBD/get/all`, {
-      params: {
-        projectId: projectId,
-      }
-    })
-      .then((res) => {
-        // console.log("res12334", res)
-      })
+  // const handleUpdate = (e) => {
+  //   e.preventDefault();
+
+  //   if(parentItemId)
+  //   console.log('handleUpdate', values)
+  //   try{
+  //     Api.patch(`/api/v1/elementParametersRBD/updateRBD/${mainId}`,values)
+  //     .then((res)=>{
+  //       console.log(res)
+  //       if(res.data.success === true){
+  //         onClose()
+  //       }else{
+  //         console.log('error update')
+  //       }
+  //     })
+  //   }catch{
+  //     console.log('failed Api')
+  //   }
+  // }
+
+  const handleUpdate = (e) => {
+    e.preventDefault();
+
+    // console.log('handleUpdate', values);
+
+    // Determine the endpoint based on whether we have a parentItemId
+    let endpoint;
+    if (parentItemId) {
+      // For blocks inside parallel sections
+      endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${mainId}`;
+    } else {
+      // For regular top-level blocks
+      endpoint = `/api/v1/elementParametersRBD/updateRBD/${mainId}`;
+    }
+
+    try {
+      Api.patch(endpoint, values)
+        .then((res) => {
+          // console.log(res);
+          if (res.data.success === true) {
+            onClose();
+          } else {
+            console.log('error update');
+          }
+        })
+    } catch {
+      console.log('failed Api');
+    }
   }
+
+
+  // console.log(projectId,'projectId')
+
+  // const getElement = () => {
+  //   // console.log("Loadvchvghhv")
+  //   Api.get(`/api/v1/elementParametersRBD/get/all`, {
+  //     params: {
+  //       projectId: projectId,
+  //     }
+  //   })
+  //     .then((res) => {
+  //       // console.log("res12334", res)
+  //     })
+  // }
   const handleChange = (field, value) => {
     setValues(prev => ({
       ...prev,
@@ -252,7 +316,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
     onOpenSwitchConfig({
       n: values.n,
       k: values.k,
-      ...(currentBlock?.switchData || {})
+      ...(modelBlock?.switchData || {})
     });
   };
 
@@ -278,9 +342,10 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
         overflowY: 'auto'
       }}>
         <h2 style={{ marginBottom: '20px', color: '#333' }}><h2 style={{ marginBottom: '20px', color: '#333' }}>
-          {currentBlock ? "Edit Element Parameters" : "Add Element Parameters"}
+          {/* {currentBlock ? "Edit Element Parameters" : "Add Element Parameters"} */}
+          {elementModal?.mode === "edit" ? "Edit Element Parameters" : "Add Element Parameters"}
         </h2></h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={mainId ? handleUpdate : handleSubmit}>
           <div style={{ marginBottom: '20px' }}>
             <div style={{
               marginBottom: '20px',
@@ -317,6 +382,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, props, onOpenSwitch
                     }
                     options={options}
                     onChange={(option) => {
+                      // console.log(option, '<---- option')
                       if (option) {
                         handleChange("indexCount", option.value);
                         handleChange("partNumber", option.partNumber);

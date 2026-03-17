@@ -2,29 +2,33 @@
 import React, { useEffect, useState } from 'react';
 import { KOfNBlock } from './KOfNBlock';
 
-export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData, width = 60, height = 70 }) => {
+export const RBDBlock = ({ id, type, x, y, setParentItemId, onEdit, onDelete, blockData, width = 60, height = 70 }) => {
 
-  console.log(blockData, 'blockData from RBD Block')
+  // console.log(blockData, 'blockData from RBD Block')
+
   const [formData, setFormData] = useState({
     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
-    k: blockData?.k || '2',
-    n: blockData?.n || '3',
-    mtbf: blockData?.mtbf || '1303617.9'
+    // For K-out-of-N blocks, data might be nested or direct
+    k: blockData?.k || blockData?.data?.k || '2',
+    n: blockData?.n || blockData?.data?.n || '3',
+    mtbf: blockData?.mtbf || blockData?.data?.mtbf || '1303617.9'
   });
 
   useEffect(() => {
     setFormData({
       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
-      k: blockData?.k ,
-      n: blockData?.n ,
-      mtbf: blockData?.mtbf 
+      k: blockData?.k || blockData?.data?.k,
+      n: blockData?.n || blockData?.data?.n,
+      mtbf: blockData?.mtbf || blockData?.data?.mtbf
     })
-  }, [blockData])
+  }, [blockData]);
 
-  console.log(formData, 'formData from RBDBlock')
-  console.log(blockData.elementType, 'blockData elementType from RBDBlock')
+  // Check if this is a K-out-of-N block
+  const isKOfN = blockData?.type === 'K-out-of-N' ||
+    blockData?.elementType === 'K-out-of-N' ||
+    blockData?.data?.elementType === 'K-out-of-N';
 
-  if (blockData.elementType === 'K-out-of-N') {
+  if (isKOfN) {
     return (
       <KOfNBlock
         id={id}
@@ -50,41 +54,73 @@ export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData, width = 
   };
 
   const getBlockContent = () => {
-    switch (blockData.elementType) {
-      case 'REGULAR' || 'Regular':
-        return formData?.fr || 'Block';
+    const type = blockData?.type || blockData?.elementType;
+    // console.log(type, 'type to set value');
+
+    // Get values from either direct properties or nested data
+    const fr = blockData?.fr || blockData?.data?.fr;
+    const mtbf = blockData?.mtbf || blockData?.data?.mtbf;
+    const k = blockData?.k || blockData?.data?.k;
+    const n = blockData?.n || blockData?.data?.n;
+
+    switch (type) {
+      case 'Regular':
+      case 'REGULAR':
+        // Format FR value for display
+        if (fr) {
+          const frValue = typeof fr === 'number' ? fr.toFixed(6) : fr;
+          return `λ = ${frValue}`;
+        }
+        return 'Regular Block';
+
       case 'K-out-of-N':
-        const k = blockData?.k || '2';
-        const n = blockData?.n || '3';
-        const mtbf = blockData?.mtbf || '1303617.9';
-        return `Recover\n${mtbf}\n${k}/${n}`;
+        return `K/N\n${k || '2'}/${n || '3'}\nMTBF: ${mtbf || 'N/A'}`;
+
       case 'SubRBD':
         return 'Sub RBD';
+
       case 'Parallel Section':
-        return formData?.fr || 'Block';
+        return `Parallel\nSection`;
+
       case 'Parallel Branch':
-        return 'Branch';
+        return `Branch`;
+
       default:
-        return 'Block 123x';
-    }
-  };
-  const getBlockColor = () => {
-    switch (blockData.elementType) {
-      case 'Regular'||'REGULAR':
-        return '#4CAF50';
-      case 'SubRBD':
-        return '#FF9800';
-      case 'Parallel Section':
-        return '#9C27B0';
-      case 'Parallel Branch':
-        return '#2196F3';
-      default:
-        return '#9C27B0';
+        return 'Block';
     }
   };
 
+  const getBlockColor = () => {
+    const type = blockData?.type || blockData?.elementType;
+
+    switch (type) {
+      case 'Regular':
+      case 'REGULAR':
+        return '#4CAF50'; // Green
+      case 'SubRBD':
+        return '#FF9800'; // Orange
+      case 'Parallel Section':
+        return '#9C27B0'; // Purple
+      case 'Parallel Branch':
+        return '#2196F3'; // Blue
+      case 'K-out-of-N':
+        return '#FF5722'; // Deep Orange
+      default:
+        return '#9C27B0'; // Default Purple
+    }
+  };
+
+  const getBlockName = () => {
+    return blockData?.name || blockData?.data?.name || '';
+  };
+
   return (
-    <g onContextMenu={handleContextMenu} style={{ cursor: 'context-menu' }}>
+    <g onContextMenu={handleContextMenu} style={{ cursor: 'context-menu' }}
+      onClick={() => {
+        if (setParentItemId) {
+          setParentItemId(null);
+        }
+      }}>
       <rect
         x={x}
         y={y}
@@ -102,12 +138,12 @@ export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData, width = 
         textAnchor="middle"
         dominantBaseline="middle"
         fill="white"
-        fontSize="10"
+        fontSize="9"
         fontWeight="bold"
       >
         {getBlockContent()}
       </text>
-      {blockData?.name && type !== 'Regular' && (
+      {getBlockName() && (
         <text
           x={x + blockWidth / 2}
           y={y - 5}
@@ -115,7 +151,7 @@ export const RBDBlock = ({ id, type, x, y, onEdit, onDelete, blockData, width = 
           fontSize="8"
           fill="#666"
         >
-          {blockData.name}
+          {getBlockName()}
         </text>
       )}
 
