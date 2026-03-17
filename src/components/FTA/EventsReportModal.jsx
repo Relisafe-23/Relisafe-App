@@ -137,8 +137,23 @@ const { tableData, columns } = useMemo(() => {
     cols = [
       { title: 'Event Name', field: 'code', width: '20%' },
       { title: 'Description', field: 'description', width: '30%' },
-      { title: 'Failure Rate', field: 'failureRate', width: '15%' },
-      { title: 'Calc Type', field: 'calcType', width: '35%' }
+{ 
+  title: 'Failure Rate (λ)', 
+  field: 'failureRate', 
+  width: '15%',
+  render: rowData => {
+    if (rowData.type !== 'Event') return 'N/A';
+    
+    const value = rowData.failureRate;
+    if (!value || value === 'N/A' || value === '0') return value || 'N/A';
+    
+    const num = parseFloat(value);
+    if (!isNaN(num)) {
+      return num.toExponential(4);
+    }
+    return value;
+  }
+},      { title: 'Calc Type', field: 'calcType', width: '35%' }
     ];
   } else if (reportType === 'gates') {
     data = gatesData;
@@ -156,8 +171,23 @@ const { tableData, columns } = useMemo(() => {
       { title: 'Description', field: 'description', width: '25%' },
       { title: 'Type', field: 'type', width: '10%' },
       { title: 'Gate Type', field: 'gateType', width: '15%' },
-      { title: 'Failure Rate', field: 'failureRate', width: '15%' },
-      { title: 'Calc Type', field: 'calcType', width: '20%' }
+{ 
+  title: 'Failure Rate (λ)', 
+  field: 'failureRate', 
+  width: '15%',
+  render: rowData => {
+    if (rowData.type !== 'Event') return 'N/A';
+    
+    const value = rowData.failureRate;
+    if (!value || value === 'N/A' || value === '0') return value || 'N/A';
+    
+    const num = parseFloat(value);
+    if (!isNaN(num)) {
+      return num.toExponential(4);
+    }
+    return value;
+  }
+},      { title: 'Calc Type', field: 'calcType', width: '20%' }
     ];
   }
 

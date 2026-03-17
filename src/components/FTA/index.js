@@ -867,7 +867,7 @@ const handleShowRepeatedEvents = () => {
       })
       .catch((error) => {
         console.error("Error fetching trees:", error);
-        toast.error("Failed to load trees");
+        // toast.error("Failed to load trees");
         setLoading(false);
       });
   };
@@ -917,7 +917,7 @@ const handleShowRepeatedEvents = () => {
       getFullFTAdata(tree.treeStructure.parentId);
     }
 
-    toast.success(`Viewing tree: ${tree.name}`);
+    // toast.success(`Viewing tree: ${tree.name}`);
   };
 
   const handleCreateNewTree = () => {
