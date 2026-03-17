@@ -110,6 +110,7 @@ export const ModalProvider = ({ children }) => {
         okText: "Yes, Delete",
         cancelText: "Cancel",
         okButtonProps: { danger: true },
+        getContainer: false,
         onOk: () => {
           // Pass the deleteInfo directly to confirmDelete
           confirmDelete(deleteInfo);

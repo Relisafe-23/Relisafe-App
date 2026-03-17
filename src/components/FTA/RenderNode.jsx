@@ -455,25 +455,57 @@ const { openDeleteNode } = useModal();
     closeDeleteNode(sendDataToModalContext);
   };
 
-  const confirm = (event) => {
-    Modal.confirm({
-      title:
-        node?.indexCount === 1 ? (
-          <span>
-            Are you sure you want to <span style={{ color: "red" }}>Delete Parent</span>?
-          </span>
-        ) : (
-          "Are you sure you want to Delete"
-        ),
-      icon: <ExclamationCircleOutlined />,
-      okText: "Ok",
-      cancelText: "Cancel",
-      onOk: () => {
-        deleteFTAnodes(node);
-      },
-    });
-  };
+  // const confirm = (event) => {
+  //   Modal.confirm({
+  //     title:
+  //       node?.indexCount === 1 ? (
+  //         <span>
+  //           Are you sure you want to <span style={{ color: "red" }}>Delete Parent</span>?
+  //         </span>
+  //       ) : (
+  //         "Are you sure you want to Delete"
+  //       ),
+  //     icon: <ExclamationCircleOutlined />,
+  //     okText: "Ok",
+  //     cancelText: "Cancel",
+  //     onOk: () => {
+  //       deleteFTAnodes(node);
+  //     },
+  //   });
+  // };
 
+
+  const confirm = (event) => {
+  // Prevent event bubbling
+  if (event) {
+    event.stopPropagation();
+  }
+  
+  const deleteData = {
+    projId: projectId,
+    childId: node?.id,
+    tableParentId: node?.indexCount === 1 ? node?.parentId : null,
+    nodeActive: true,
+    indexCount: node?.indexCount,
+    treeName: node?.name || 'Unnamed Node'
+  };
+  
+  Modal.confirm({
+    title: node?.indexCount === 1 ? (
+      <span>
+        Are you sure you want to <span style={{ color: "red" }}>Delete Parent Tree</span>?
+      </span>
+    ) : (
+      "Are you sure you want to Delete this node?"
+    ),
+    icon: <ExclamationCircleOutlined />,
+    content: deleteData.treeName ? `Deleting: ${deleteData.treeName}` : null,
+    okText: "Yes, Delete",
+    cancelText: "Cancel",
+    okButtonProps: { danger: true },
+    onOk: () => deleteFTAnodes(deleteData),
+  });
+};
   const deleteFTAnodes = () => {
     const projId = projectId;
     const childId = node?.id;
@@ -2038,8 +2070,6 @@ const getNodeStyles = () => {
           className="custom-button"
           onClick={(e) => {
             setModal2Open(false);
-  handleDeleteClick(node, e);
-  console.log("Selected delete function:", selectDelete);
             confirm();
           }}
         >
