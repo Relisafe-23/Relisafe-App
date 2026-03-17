@@ -345,3 +345,40 @@ input[type="number"] {
 [class*="react-organizational-chart"] [class*="line"] {
   display: none !important;
 }
+
+
+
+
+/* Make modal body scrollable */
+.modal-body-scroll {
+  max-height: 60vh;   /* adjust height if needed */
+  overflow-y: auto;
+}
+
+/* Table horizontal scroll */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Table styling */
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;  /* horizontal scroll if screen small */
+}
+
+/* Sticky header */
+.custom-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 2;
+  border-bottom: 2px solid #dee2e6;
+  padding: 8px;
+}
+
+.custom-table td {
+  padding: 8px;
+  border-bottom: 1px solid #dee2e6;
+}

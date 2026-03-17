@@ -8,30 +8,37 @@ import { FiSettings, FiEdit2, FiSliders } from 'react-icons/fi';
 import { BiCog } from 'react-icons/bi';
 import { MdOutlineSettingsApplications } from 'react-icons/md';
 
-import {ElementParametersModal} from './ElementParametersModal';
+import { ElementParametersModal } from './ElementParametersModal';
 
 import SwitchConfigurationModal from './SwitchConfig';
 
 import RBDBlock from './RBDBlock';
 
+
+
+import { Modal, Button, Form } from "react-bootstrap";
+import { Formik } from "formik";
+import * as Yup from "yup";
+
+
 export const InsertionNode = ({ x, y, onOpenMenu }) => {
   return (
     <g>
-<circle
-  cx={x}
-  cy={y}
-  r="6"
-  fill="black"
-  stroke="black"
-  strokeWidth="1"
-  style={{ cursor: "pointer" }}
-  onMouseEnter={(e) => {
-    onOpenMenu(e.clientX, e.clientY);
-  }}
-  // onMouseLeave={() => {
-  //   onCloseMenu();   
-  // }}
-/>
+      <circle
+        cx={x}
+        cy={y}
+        r="6"
+        fill="black"
+        stroke="black"
+        strokeWidth="1"
+        style={{ cursor: "pointer" }}
+        onMouseEnter={(e) => {
+          onOpenMenu(e.clientX, e.clientY);
+        }}
+      // onMouseLeave={() => {
+      //   onCloseMenu();   
+      // }}
+      />
 
       <line
         x1={x - 3} y1={y}
@@ -420,6 +427,12 @@ export default function RBDButton() {
     initialData: null
   });
 
+  const [show, setShow] = useState(false);
+
+  const [rangeShow, setRangeShow] = useState(false);
+  const [rangeValue, setRangeValue] = useState("");
+  const [ranges, setRange] = useState([]);
+
   const openMenu = (x, y) => setMenu({ x, y });
 
   const handleNodeClick = (node) => {
@@ -507,7 +520,7 @@ export default function RBDButton() {
   );
 
 
-     
+
   const handleSwitchSubmit = (switchData) => {
     if (elementModal.blockId) {
       setBlocks(blocks.map(block =>
@@ -525,20 +538,20 @@ export default function RBDButton() {
 
     setSwitchModal({ open: false, blockId: null, initialData: null });
   };
-const [isModalOpen, setIsModalOpen] = useState(false);
-const [rbdConfig, setRbdConfig] = useState({
-  rbdTitle: "My RBD",
-  missionTime: 24,
-  displayUpper: "Part number",
-  displayLower: "MTBF",
-  printRemarks: "Yes"
-});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [rbdConfig, setRbdConfig] = useState({
+    rbdTitle: "My RBD",
+    missionTime: 24,
+    displayUpper: "Part number",
+    displayLower: "MTBF",
+    printRemarks: "Yes"
+  });
 
-const handleSaveConfig = (newConfig) => {
-  setRbdConfig(newConfig);
-  // You can also save to backend here
-  console.log("Saved config:", newConfig);
-};
+  const handleSaveConfig = (newConfig) => {
+    setRbdConfig(newConfig);
+    // You can also save to backend here
+    console.log("Saved config:", newConfig);
+  };
   const handleDeleteBlock = (id) => {
     setBlocks(blocks.filter(block => block.id !== id));
   };
@@ -578,12 +591,45 @@ const handleSaveConfig = (newConfig) => {
               type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR'
       });
     } else if (action === "Split K-out-of-N...") {
-      alert("Splitting K-out-of-N block");
+      setShow(true);
     }
 
     setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
   };
   const [listedRBDs, setListedRBDs] = useState([]);
+
+
+
+  const initialValues = {
+    frDistribution: "Exponential"
+  };
+
+  const validationSchema = Yup.object({
+    frDistribution: Yup.string().required("Distribution is required")
+  });
+
+  const handleClose = () => {
+    setShow(false);
+  }
+
+  const handleSubmit = (values) => {
+    console.log("Form Data:", values);
+    handleClose();
+  };
+
+
+
+  const rangehandleClose = () => {
+    setRangeShow(false);
+    setRangeValue("");
+  };
+
+  const rangehandleShow = () => setRangeShow(true);
+
+  const rangehandleOk = () => {
+    setRange([...ranges, rangeValue]);
+    rangehandleClose();
+  };
 
   return (
     <>
@@ -600,15 +646,15 @@ const handleSaveConfig = (newConfig) => {
             marginTop: "50px",
           }}
         >
-      Edit RBD Configuration
-        <SettingsButton1 />
-          
-      <EditRBDConfigurationModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveConfig}
-        initialConfig={rbdConfig}
-      />
+          Edit RBD Configuration
+          <SettingsButton1 />
+
+          <EditRBDConfigurationModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSaveConfig}
+            initialConfig={rbdConfig}
+          />
           {/* RBD Button */}
           <div style={{ margin: "40px 0" }}>
             <button
@@ -625,7 +671,7 @@ const handleSaveConfig = (newConfig) => {
               RBD
 
             </button>
-         
+
           </div>
 
           {/* RBD Diagram */}
@@ -696,6 +742,124 @@ const handleSaveConfig = (newConfig) => {
           currentSwitchData={switchModal.initialData}
         />
       </div>
+
+
+      {/* This form is Modal of Split K out of N ===> Created by SAKTHIVEL */}
+
+      <Formik
+        initialValues={initialValues}
+        onSubmit={handleSubmit}
+      >
+        {({ values, handleChange }) => (
+          <Modal show={show} onHide={handleClose} size="xl" centered>
+
+            <Form onSubmit={handleSubmit}>
+              <Modal.Header closeButton>
+                <Modal.Title>Split K-out-of-N</Modal.Title>
+              </Modal.Header>
+
+              {/* Added scroll class here */}
+              <Modal.Body className="modal-body-scroll">
+                <div className="table-container">
+                  <table className="custom-table">
+                    <thead>
+                      <tr>
+                        <th>Range</th>
+                        <th>FR Distribution</th>
+                        <th>FR Param1</th>
+                        <th>FR Param2</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {ranges.map((range, index) => (
+                        <tr key={index}>
+                          <td>{range}</td>
+
+                          <td>
+                            <select
+                              name={`frDistribution-${index}`}
+                              value={values.frDistribution}
+                              onChange={handleChange}
+                              className="custom-select"
+                            >
+                              <option value="Exponential">Exponential</option>
+                              <option value="Normal">Normal</option>
+                              <option value="Weibull">Weibull</option>
+                            </select>
+                          </td>
+
+                          <td>120742.000</td>
+                          <td>-----</td>
+                        </tr>
+                      ))}
+
+                      {/* Optional default row */}
+
+                      
+                      {ranges.length === 0 && (
+                        <tr>
+                          <td>No ranges added</td>
+                          <td colSpan="3">—</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </Modal.Body>
+
+              <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>
+                  Close
+                </Button>
+
+                <Button variant="warning" type="button" onClick={rangehandleShow}>
+                  Change Range
+                </Button>
+
+                <Button variant="primary" type="submit">
+                  Edit
+                </Button>
+              </Modal.Footer>
+            </Form>
+
+          </Modal>
+        )}
+      </Formik>
+
+      {/* This form is Modal of Enter Range ===> Created by SAKTHIVEL */}
+
+
+      <Modal show={rangeShow} onHide={rangehandleClose} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Enter Range</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <Form.Group>
+            <Form.Control
+              type="number"
+              value={rangeValue}
+              onChange={(e) => setRangeValue(e.target.value)}
+              placeholder="Enter number"
+            />
+          </Form.Group>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={rangehandleClose}>
+            Cancel
+          </Button>
+
+          <Button
+            variant="primary"
+            onClick={rangehandleOk}
+            disabled={!rangeValue}   // Disabled if empty
+          >
+            OK
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
     </>
 
