@@ -651,7 +651,8 @@ function PreventiveManitenance(props) {
                         </tr>
                       </thead>
                       {console.log(preventiveData, 'preventiveData')}
-                      <tbody>
+                      
+                      {/* <tbody>
                         {(() => {
                           let serialCounter = 1;
 
@@ -705,6 +706,92 @@ function PreventiveManitenance(props) {
                               );
                             });
                           });
+                        })()}
+                      </tbody> */}
+
+                      <tbody>
+                        {(() => {
+                          let serialCounter = 1;
+
+                          // If data is grouped by partType (like in PM_ComponentType)
+                          if (data && data.length > 0 && data[0].partType) {
+                            return data.flatMap((part, partIndex) => {
+                              return part.items.map((item, itemIndex) => {
+                                const currentSerial = serialCounter++;
+                                const productData = item.productId || {};
+                                const pmmraData = item.pmmraData || {};
+
+                                return (
+                                  <tr key={`${partIndex}-${itemIndex}`}>
+                                    {headers.map((header) => {
+                                      const key = headerKeyMapping[header];
+
+                                      // Handle S.No header with sequential numbering
+                                      if (header === "S.No") {
+                                        return (
+                                          <td key={header} style={{ textAlign: "center" }}>
+                                            {currentSerial}
+                                          </td>
+                                        );
+                                      }
+
+                                      // Get value - prioritize pmmraData, then productData
+                                      let value = pmmraData[key] !== undefined ? pmmraData[key] :
+                                        productData[key] !== undefined ? productData[key] : "-";
+
+                                      // Format FR values to 6 decimal places
+                                      if (header === "FR" && value !== "-" && !isNaN(parseFloat(value))) {
+                                        value = parseFloat(value).toFixed(6);
+                                      }
+
+                                      return (
+                                        <td key={header} style={{ textAlign: "center" }}>
+                                          {value}
+                                        </td>
+                                      );
+                                    })}
+                                  </tr>
+                                );
+                              });
+                            });
+                          }
+                          // If data is flat array (alternative structure)
+                          else {
+                            return preventiveData.map((row, rowIndex) => {
+                              const currentSerial = serialCounter++;
+                              const productData = row.productId || {};
+                              const pmmraData = row.pmmraData || {};
+
+                              return (
+                                <tr key={rowIndex}>
+                                  {headers.map((header) => {
+                                    const key = headerKeyMapping[header];
+
+                                    if (header === "S.No") {
+                                      return (
+                                        <td key={header} style={{ textAlign: "center" }}>
+                                          {currentSerial}
+                                        </td>
+                                      );
+                                    }
+
+                                    let value = pmmraData[key] !== undefined ? pmmraData[key] :
+                                      productData[key] !== undefined ? productData[key] : "-";
+
+                                    if (header === "FR" && value !== "-" && !isNaN(parseFloat(value))) {
+                                      value = parseFloat(value).toFixed(6);
+                                    }
+
+                                    return (
+                                      <td key={header} style={{ textAlign: "center" }}>
+                                        {value}
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              );
+                            });
+                          }
                         })()}
                       </tbody>
                     </table>
