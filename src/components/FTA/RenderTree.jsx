@@ -14,7 +14,7 @@ const RenderTree = ({
   setSelectedNodeId,
   productData,
 }) => {
-  
+
   return (
     <TreeNode
       label={
@@ -27,12 +27,11 @@ const RenderTree = ({
           projectId={projectId}
           getFTAData={getFTAData}
           productData={productData}
-          selectedNodeId={selectedNodeId} 
-          setSelectedNodeId={setSelectedNodeId} 
+          selectedNodeId={selectedNodeId}
+          setSelectedNodeId={setSelectedNodeId}
         />
       }
     >
-
       {data?.children?.map((child, index) => (
         <RenderTree
           key={index}
