@@ -8,7 +8,7 @@ const UnavailabilityReportModal = ({
   isOpen, 
   onClose, 
   calculationData = [],
-  missionTime 
+  missionTime ,
 }) => {
   
   // Function to get formula based on calc type
@@ -61,7 +61,8 @@ const UnavailabilityReportModal = ({
     { title: 'Formula', field: 'formula', width: '15%', render: rowData => getFormula(rowData.calcType) },
     { title: 'Parameters', field: 'parameters', width: '15%', render: rowData => formatParameters(rowData) },
     { title: 'Mission Time', field: 'missionTime', width: '5%' },
-    { title: 'CutSet Prob.', field: 'cutSetProb', width: '8%', render: rowData => rowData.unavailability || '0' },
+      { title: 'Q(t) Value', field: 'unavailability', width: '8%', render: rowData => rowData.unavailability || '0' }, // ← Add this
+    // { title: 'CutSet Prob.', field: 'cutSetProb', width: '8%', render: rowData => rowData.unavailability || '0' },
   ];
 
   const downloadCSV = () => {
@@ -74,6 +75,7 @@ const UnavailabilityReportModal = ({
       `"${getFormula(item.calcType)}"`,
       `"${formatParameters(item)}"`,
       `"${item.missionTime || missionTime || 'N/A'}"`,
+      `"${item.unavailability || '0'}"`,
      
     ]);
     

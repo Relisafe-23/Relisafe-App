@@ -28,7 +28,8 @@ export default function RenderNode({
   selectedNodeId,
   setSelectedNodeId,
     calculationResults, // This is already here
-  calculationMode,
+  calculationMode,     // ADD THIS
+  
     repeatedEvents,      // ADD THIS
   showRepeatedEvents, 
 }) {

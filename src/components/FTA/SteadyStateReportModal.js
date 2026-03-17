@@ -59,9 +59,8 @@ const SteadyStateReportModal = ({
     { title: 'Calc Type', field: 'calcType', width: '10%' },
     { title: 'Formula', field: 'formula', width: '15%', render: rowData => getFormula(rowData.calcType) },
     { title: 'Parameters', field: 'parameters', width: '15%', render: rowData => formatParameters(rowData) },
-    { title: 'CutSet Prob.', field: 'cutSetProb', width: '8%', render: rowData => rowData.steadyStateUnavailability || '0' },
+{ title: 'Q̄ Value', field: 'steadyStateUnavailability', width: '8%', render: rowData => rowData.steadyStateUnavailability || '0' }, //  ];
   ];
-
   const downloadCSV = () => {
     const headers = ['#', 'Component/Event', 'Description', 'Calc Type', 'Formula', 'Parameters', 'Failure Rate (λ)', 'q', 'T', 'MTTR', 'CutSet Prob.', 'Steady State Q̄'];
     const rows = calculationData.map((item, index) => [
@@ -71,8 +70,7 @@ const SteadyStateReportModal = ({
       `"${item.calcType || ''}"`,
       `"${getFormula(item.calcType)}"`,
       `"${formatParameters(item)}"`,
-      `"${item.steadyStateUnavailability || '0'}"`,
-      `"${item.steadyStateUnavailability || '0'}"`
+    `"${item.steadyStateUnavailability || '0'}"`,  
     ]);
     
     const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
