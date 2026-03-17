@@ -285,8 +285,11 @@ const FTAtable = ({
                       <ActionButton
                         color="error"
                         size="small"
-                        onClick={(e) => handleDeleteClick(tree, e)}
+                        onClick={(e) => handleDeleteClick(tree, e) 
+                        }
                       >
+                   {/* {console.log("Delete button clicked for tree:", tree)} */}
+
                         <DeleteIcon fontSize="small" />
                       </ActionButton>
                     </Tooltip>

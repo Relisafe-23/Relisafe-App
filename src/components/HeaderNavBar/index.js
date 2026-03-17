@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Nav, UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
 import { Avatar } from "@material-ui/core";
+import {  FaArrowLeft } from "react-icons/fa";
+
 import "../../css/HeaderNavBar.scss";
 import Tooltip from "@mui/material/Tooltip";
 import Relisafe from "../core/Images/Relisafe.png";
@@ -18,7 +20,8 @@ import {
   faCompress,
   faTh,
   faArrowsAlt,
-  faRedo
+  faRedo,
+
 } from "@fortawesome/free-solid-svg-icons";
 import Api from "../../Api.js";
 import "../../css/HeaderNavBar.scss";
@@ -42,7 +45,12 @@ const HeaderNavBar = ({
   onZoomOriginal,
   onToggleGrid,
   onOriginalLayout,
-  additionalButtons 
+  additionalButtons,
+  setViewMode,    
+    setChartData,
+  // setSelectedTreeId,            // ADD THIS LINE
+    isTreeView = false,        // ADD THIS LINE
+  onBackToTable              // ADD THIS LINE
 }) => { const sessionId = localStorage.getItem("sessionId");
   const [file, setFile] = useState(null);
   const {
@@ -83,6 +91,8 @@ const HeaderNavBar = ({
   const handleOpenChildEvent = () => {
     openChildEvent();
   };
+
+  
 
   const handelDelete = () => {
     openDeleteNode();
@@ -154,7 +164,7 @@ const HeaderNavBar = ({
             position: "top-right",
             autoClose: 5000,
             hideProgressBar: false,
-            closeOnClick: true,
+            closeOnClick: true,   
             pauseOnHover: true,
             draggable: true,
             progress: undefined,
@@ -190,6 +200,12 @@ const HeaderNavBar = ({
     }
   };
 
+    const handleBackToTable = () => {
+    setViewMode("table");
+    setChartData([]);
+    // setSelectedTreeId(null);
+  };
+
   return (
     <div>
       <input type="file" accept=".json" onChange={handleFileChange} ref={fileInputRef} style={{ display: "none" }} />
@@ -215,6 +231,29 @@ const HeaderNavBar = ({
       </Nav>
     </Navbar.Collapse>
     </Navbar> */}
+    {isTreeView && (
+         <div
+                  style={{
+                    padding: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    marginTop: "8px",
+                    // marginRight: "150px",
+                    // zIndex: -1,
+                  }}
+                >
+                  <Button
+                    variant="outline-secondary"
+                    onClick={handleBackToTable}
+                    title="Back to Trees List"
+                  >
+                    <FaArrowLeft />
+                  </Button>
+                </div>
+              )}
+{isTreeView && (
+
                     <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
                         <Nav>
@@ -232,7 +271,7 @@ const HeaderNavBar = ({
                             </NavDropdown.Item>
                             <NavDropdown.Item onClick={handleOpenPropertyModal}>
                               <FontAwesomeIcon icon={faPenToSquare} style={{ paddingRight: "10px" }} />
-                              Properties
+                              Properties     
                             </NavDropdown.Item>
                             <NavDropdown.Item onClick={handleDownloadFTA}>
                               <FontAwesomeIcon icon={faDownload} style={{ paddingRight: "10px" }} />
@@ -246,6 +285,9 @@ const HeaderNavBar = ({
                         </Nav>
                       </Navbar.Collapse>
                     </Navbar>
+)}
+{isTreeView && (
+
 
                     <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
@@ -266,6 +308,8 @@ const HeaderNavBar = ({
                         </Nav>
                       </Navbar.Collapse>
                     </Navbar>
+)}
+{isTreeView && (
 
       <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
@@ -320,7 +364,8 @@ const HeaderNavBar = ({
 </Nav>  
 </Navbar.Collapse>
 </Navbar>
-
+)}
+{isTreeView && (
 <Navbar variant="dark" expand="lg">
   <Navbar.Collapse id="navbar-dark-example">
     <Nav>
@@ -351,7 +396,9 @@ const HeaderNavBar = ({
       </NavDropdown>
     </Nav>
   </Navbar.Collapse>
-
+  </Navbar>
+)}
+{isTreeView && (
     <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
                         <Nav>
@@ -391,7 +438,7 @@ const HeaderNavBar = ({
                         </Nav>
                       </Navbar.Collapse>
                     </Navbar>
-                 </Navbar>
+                )}
 
 
 

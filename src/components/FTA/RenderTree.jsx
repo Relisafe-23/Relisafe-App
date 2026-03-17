@@ -16,6 +16,7 @@ const RenderTree = ({
    calculationMode,
    setCurrentCalculationMode,
 showRepeatedEvents,
+child,
 repeatedEvents 
 }) => {
 

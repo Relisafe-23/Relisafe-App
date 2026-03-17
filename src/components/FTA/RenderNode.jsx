@@ -43,6 +43,11 @@ export default function RenderNode({
   const [isFailureMode, setIsFailureMode] = useState(node?.isFailureMode);
   const [showFrRate, setShowFrRate] = useState(node?.fr);
   const [isFRtrigger, setIsFRtrigger] = useState(false);
+  const [selectDelete, setSelectDelete] = useState();
+// Add state for onChange
+const [onChangeEventTimeToFirstTest, setOnChangeEventTimeToFirstTest] = useState();
+// const [onChangeEventIsT, setOnChangeEventIsT] = useState(); 
+
   const [eventData, setEventData] = useState({
     name: node?.name,
     description: node?.description,
@@ -51,6 +56,7 @@ export default function RenderNode({
     fr: node?.fr,
     mttr: node?.mttr,
     isT: node?.isT,
+     timeToFirstTest: node?.timeToFirstTest, // This is Tf
     eventMissionTime: node?.eventMissionTime,
   });
   const isSteadyStateMode = () => {
@@ -108,13 +114,14 @@ const isRepeatedEvent = () => {
   const shouldShowGate = () => {
     return node?.children?.length > 0 && (node?.gateType === "AND" || node?.gateType === "OR");
   };
-
+const { openDeleteNode } = useModal();
   // Function to check if node should be highlighted in yellow
   const shouldHighlightYellow = () => {
     // Highlight nodes with specific gate IDs or based on your criteria
     const yellowGateIds = ["COMM-GF-1", "COMM-GF-2", "COMM-GF-1-1", "ALTERNATIVE TRANSMITTER FAILURE"];
     return yellowGateIds.includes(node?.gateId) || node?.highlightYellow;
   };
+
 
   const handleClick = () => {
     setSelectedNodeId(isActive ? null : node?.gateId);
@@ -304,6 +311,7 @@ const isRepeatedEvent = () => {
             values?.calcTypes?.value === "Repairable"
             ? null
             : values?.isT,
+              timeToFirstTest: values?.timeToFirstTest || "0", // Add Tf here
       }).then((res) => {
         setIsModalOpen(false);
         getFTAData();
@@ -326,6 +334,8 @@ const isRepeatedEvent = () => {
       });
     }
   };
+
+  
 
   const eventSubmit = (values, { resetForm }) => {
     const companyId = localStorage.getItem("companyId");
@@ -382,6 +392,7 @@ const isRepeatedEvent = () => {
           values.calcTypes.value === "Repairable"
           ? null
           : values.isT,
+          timeToFirstTest: values.timeToFirstTest || "0",
     }).then((res) => {
       setIsEventModal(false);
       closeEditGateModal();
@@ -580,6 +591,8 @@ const eventFields = [
     }
   };
 
+
+
   // Function to get node styles based on type and highlight status
  // Update your getNodeStyles function to return complete styles
 const getNodeStyles = () => {
@@ -637,6 +650,49 @@ const getNodeStyles = () => {
       return `Qn=${node.qn}`;
     }
     return "";
+  };
+
+      const handleDeleteClick = (tree, event) => {
+    event?.stopPropagation();
+    
+    console.log('Delete clicked for tree:', tree);
+    console.log('Project ID:', projectId);
+    
+    if (!projectId) {
+      console.error('Project ID is missing');
+      toast.error('Cannot delete: Project ID is missing');
+      return;
+    }
+
+    if (!tree) {
+      console.error('Tree data is missing');
+      toast.error('Cannot delete: Tree data is missing');
+      return;
+    }
+
+    // Get the correct IDs for deletion
+    const childId = tree.treeStructure?.id || tree.id || tree._id;
+    
+    if (!childId) {
+      console.error('Child ID is missing from tree:', tree);
+      toast.error('Cannot delete: Tree ID is missing');
+      return;
+    }
+    
+    // Prepare the data object that ModalContext expects
+    const deleteData = {
+      projId: projectId,
+      childId: childId,
+      tableParentId: tree.treeStructure?.parentId || childId,
+      nodeActive: true,
+      indexCount: 1,
+      treeName: tree.treeStructure?.name || tree.name || 'Unnamed Tree'
+    };
+    
+    console.log('Delete data prepared:', deleteData);
+    
+    // Call the context's delete modal
+    openDeleteNode(deleteData);
   };
 
   return (
@@ -856,25 +912,25 @@ const getNodeStyles = () => {
       </span>
     )}
     
-    {/* #6 Periodical tests */}
-    {node?.calcTypes === "Periodical tests" && (
-      <span>
-        {isSteadyStateMode()
-          ? `See Table 3, Ti=${node?.isT || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q̄)`
-          : `See Table 2, Ti=${node?.isT || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q(t))`
-        }
-      </span>
-    )}
-    
-    {/* #7 Latent */}
-    {node?.calcTypes === "Latent" && (
-      <span>
-        {isSteadyStateMode()
-          ? `Q̄ = 1-(1-${node?.isP || '0'})^t·e^(-λ·Ti), Ti=${node?.isT || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q̄)`
-          : `Q(t) = 1-(1-${node?.isP || '0'})^t·e^(-λ·Ti), Ti=${node?.isT || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q(t))`
-        }
-      </span>
-    )}
+{/* #6 Periodical tests */}
+{node?.calcTypes === "Periodical tests" && (
+  <span>
+    {isSteadyStateMode()
+      ? `Q̄ = λ·Ti/2 + λ·MTTR, Ti=${node?.isT || '0'}h, Tf=${node?.timeToFirstTest || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q̄)`
+      : `Q(t) per Table 2, Ti=${node?.isT || '0'}h, Tf=${node?.timeToFirstTest || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q(t))`
+    }
+  </span>
+)}
+
+{/* #9 Periodical Tests #2 */}
+{node?.calcTypes === "Periodical Tests #2" && (
+  <span>
+    {isSteadyStateMode()
+      ? `Algorithm for Q̄, Ti=${node?.isT || '0'}h, Tf=${node?.timeToFirstTest || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q̄)`
+      : `Algorithm for Q(t), Ti=${node?.isT || '0'}h, Tf=${node?.timeToFirstTest || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q(t))`
+    }
+  </span>
+)}
     
     {/* #8 Average probability per mission hour */}
     {node?.calcTypes === "Average probability per mission hour" && (
@@ -1320,7 +1376,7 @@ const getNodeStyles = () => {
                   <Form.Control
                     as="textarea"
                     rows={3}
-                    type="text"
+                    type="text" 
                     name="description"
                     placeholder="Description"
                     value={values.description}
@@ -1747,7 +1803,61 @@ const getNodeStyles = () => {
                   ) : values.calcTypes.value === "Latent repairable" ? (
                     <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>not in use</p>
                   ) : null}
-                </Form.Group>                                   
+{(values.calcTypes?.value === "Periodical tests" || 
+  values.calcTypes?.value === "Periodical Tests #2" || 
+  values.calcTypes?.value === "Latent" ||
+  values.calcTypes?.value === "Latent, P=λ*T" ||
+  values.calcTypes?.value === "Latent, P=λ*T/2" ||
+  values.calcTypes?.value === "Latent,Life-time, P=1-e^(-λ*T)" ||
+  values.calcTypes?.value === "Latent repairable") && (
+  <Form.Group className="mb-2" style={{ width: "95%" }}>
+    <Label notify={true}>Ti (Test Interval)</Label>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Form.Control
+        type="text"
+        name="isT"
+        placeholder="Test Interval"
+        value={values.isT}
+        onBlur={handleBlur}
+        onChange={(e) => {
+          setFieldValue("isT", e.target.value);
+          setOnChangeEventIsT(e?.target?.value);
+        }}
+      />
+      <p style={{ marginBottom: "0px", fontWeight: "bold", marginLeft: "20px" }}>(hours)</p>
+    </div>
+    <Form.Text className="text-muted">
+      Test interval - time between periodic tests (Ti in Table 2 and Table 3)
+    </Form.Text>
+    <ErrorMessage className="error text-danger" component="span" name="isT" />
+  </Form.Group>
+)}
+
+{/* Tf (Time to first test) input - Optional for periodic test models */}
+{(values.calcTypes?.value === "Periodical tests" || 
+  values.calcTypes?.value === "Periodical Tests #2") && (
+  <Form.Group className="mb-2" style={{ width: "95%" }}>
+    <Label>Tf (Time to first test)</Label>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Form.Control
+        type="text"
+        name="timeToFirstTest"
+        placeholder="0"
+        value={values.timeToFirstTest}
+        onBlur={handleBlur}
+        onChange={(e) => {
+          setFieldValue("timeToFirstTest", e.target.value);
+          setOnChangeEventTimeToFirstTest(e?.target?.value);
+        }}
+      />
+      <p style={{ marginBottom: "0px", fontWeight: "bold", marginLeft: "20px" }}>(hours)</p>
+    </div>
+    <Form.Text className="text-muted">
+      Time to first test. Used in Table 2 formulas for Q(t) calculation. If not specified, first test occurs at t = Ti.
+    </Form.Text>
+    <ErrorMessage className="error text-danger" component="span" name="timeToFirstTest" />
+  </Form.Group>
+)}                </Form.Group>                                   
 
                 {values.calcTypes.value === "Constant Probability" ? (
                   <Form.Group className="mb-2">
@@ -1861,7 +1971,7 @@ const getNodeStyles = () => {
                         })),
                       },
                     ]}
-                  />7
+                  />
                   <ErrorMessage className="error text-danger" component="span" name="isProducts" />
                 </Form.Group>
 
@@ -1926,8 +2036,10 @@ const getNodeStyles = () => {
           type="text"
           block
           className="custom-button"
-          onClick={() => {
+          onClick={(e) => {
             setModal2Open(false);
+  handleDeleteClick(node, e);
+  console.log("Selected delete function:", selectDelete);
             confirm();
           }}
         >
