@@ -303,7 +303,7 @@ const HeaderNavBar = ({
                             <NavDropdown.Item onClick={handleOpenEdit}>Edit Gate</NavDropdown.Item>
                             <NavDropdown.Item onClick={handleOpenChildCreate}>Add New Logical Gate</NavDropdown.Item>
                             <NavDropdown.Item onClick={handleOpenChildEvent}>Add New Event</NavDropdown.Item>
-                            <NavDropdown.Item onClick={handelDelete}>Delete</NavDropdown.Item>
+                            {/* <NavDropdown.Item onClick={handelDelete}>Delete</NavDropdown.Item> */}
                           </NavDropdown>
                         </Nav>
                       </Navbar.Collapse>
