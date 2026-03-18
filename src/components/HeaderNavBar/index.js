@@ -265,10 +265,10 @@ const HeaderNavBar = ({
                             }
                             id="basic-nav-dropdown"
                           >
-                            <NavDropdown.Item onClick={handleCreateNew}>
+                            {/* <NavDropdown.Item onClick={handleCreateNew}>
                               <FontAwesomeIcon icon={faFileLines} style={{ paddingRight: "10px" }} />
                               Create New
-                            </NavDropdown.Item>
+                            </NavDropdown.Item> */}
                             <NavDropdown.Item onClick={handleOpenPropertyModal}>
                               <FontAwesomeIcon icon={faPenToSquare} style={{ paddingRight: "10px" }} />
                               Properties     
