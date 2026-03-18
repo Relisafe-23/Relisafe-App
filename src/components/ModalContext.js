@@ -180,8 +180,10 @@ export const ModalProvider = ({ children }) => {
       return;
     }
 
+    console.log(dataToDelete,'dataToDelete')
+
     Api.delete(
-      `/api/v1/FTA/delete/${dataToDelete.projId}/${dataToDelete.childId}`,
+      `/api/v1/FTA/delete/${dataToDelete.tableParentId}/${dataToDelete.childId}`,
       {
         params: {
           tableParentId: dataToDelete.tableParentId,

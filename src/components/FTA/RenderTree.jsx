@@ -13,14 +13,14 @@ const RenderTree = ({
   selectedNodeId,
   setSelectedNodeId,
   productData,
-   calculationMode,
-   setCurrentCalculationMode,
-showRepeatedEvents,
-child,
-repeatedEvents 
+  calculationMode,
+  setCurrentCalculationMode,
+  showRepeatedEvents,
+  child,
+  repeatedEvents
 }) => {
 
-console.log(calculationMode,'calculationMode in render tree')
+  // console.log(calculationMode, 'calculationMode in render tree')
   return (
     <TreeNode
       label={
@@ -33,9 +33,9 @@ console.log(calculationMode,'calculationMode in render tree')
           projectId={projectId}
           getFTAData={getFTAData}
           productData={productData}
-          selectedNodeId={selectedNodeId} 
-          setSelectedNodeId={setSelectedNodeId} 
-          calculationMode={calculationMode} 
+          selectedNodeId={selectedNodeId}
+          setSelectedNodeId={setSelectedNodeId}
+          calculationMode={calculationMode}
           setCurrentCalculationMode={setCurrentCalculationMode}
           showRepeatedEvents={showRepeatedEvents}
           repeatedEvents={repeatedEvents}
@@ -44,22 +44,24 @@ console.log(calculationMode,'calculationMode in render tree')
     >
 
       {data?.children?.map((child, index) => (
-        <RenderTree
-          key={index}
-          data={child}
-          handleRemove={handleRemove}
-          handleAdd={handleAdd}
-          handleEdit={handleEdit}
-          projectId={projectId}
-          getFTAData={getFTAData}
-          productData={productData}
-          selectedNodeId={selectedNodeId} 
-          setSelectedNodeId={setSelectedNodeId} 
-           calculationMode={calculationMode}
-           setCurrentCalculationMode={setCurrentCalculationMode}
-           showRepeatedEvents={showRepeatedEvents}
-           repeatedEvents={repeatedEvents}  
-        />
+        <>
+          <RenderTree
+            key={index}
+            data={child}
+            handleRemove={handleRemove}
+            handleAdd={handleAdd}
+            handleEdit={handleEdit}
+            projectId={projectId}
+            getFTAData={getFTAData}
+            productData={productData}
+            selectedNodeId={selectedNodeId}
+            setSelectedNodeId={setSelectedNodeId}
+            calculationMode={calculationMode}
+            setCurrentCalculationMode={setCurrentCalculationMode}
+            showRepeatedEvents={showRepeatedEvents}
+            repeatedEvents={repeatedEvents}
+          />
+        </>
       ))}
     </TreeNode>
   );

@@ -103,10 +103,10 @@ export default function FTA(props) {
   const [probabilityCalcData, setProbabilityCalcData] = useState([]);
   const [currentMissionTime, setCurrentMissionTime] = useState("");
   const [isCutSetReportOpen, setIsCutSetReportOpen] = useState(false);
-// ... other useState declarations
+  // ... other useState declarations
 
-const [repeatedEvents, setRepeatedEvents] = useState([]);
-const [showRepeatedEvents, setShowRepeatedEvents] = useState(false);
+  const [repeatedEvents, setRepeatedEvents] = useState([]);
+  const [showRepeatedEvents, setShowRepeatedEvents] = useState(false);
   const history = useHistory();
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const formikRef = useRef(null);
@@ -142,288 +142,290 @@ const [showRepeatedEvents, setShowRepeatedEvents] = useState(false);
     setProbabilityParams(null);
   };
 
+  
 
-const calculateUnavailability = (values) => {
-  console.log("=== STARTING CALCULATION ===");
-  console.log("Values from form:", values);
-  console.log("Chart data:", chartData);
 
-  // Determine which calculation type was selected
-  const calculationType = values?.calcTypes?.value || values?.calcTypes;
-  const isUnavailabilityMode = calculationType === "Unavailability at time t Q(t)";
-  const isSteadyStateMode = calculationType === "Steady-state mean unavailability Q";
-  setCurrentCalculationMode(calculationType);
+  const calculateUnavailability = (values) => {
+    console.log("=== STARTING CALCULATION ===");
+    console.log("Values from form:", values);
+    console.log("Chart data:", chartData);
 
-  // Function to extract and calculate for all event nodes
-  const extractProbabilityNodes = (node) => {
-    const nodes = [];
+    // Determine which calculation type was selected
+    const calculationType = values?.calcTypes?.value || values?.calcTypes;
+    const isUnavailabilityMode = calculationType === "Unavailability at time t Q(t)";
+    const isSteadyStateMode = calculationType === "Steady-state mean unavailability Q";
+    setCurrentCalculationMode(calculationType);
 
-    if (node) {
-      // Check if this is an event node
-      console.log("Checking node:", node.name || node.gateId, "isEvent:", node.isEvent);
-      
-      if (node.isEvent === true) {
-        console.log("✅ FOUND EVENT NODE:", node.name || node.gateId);
-        console.log("Node data:", {
-          name: node.name,
-          calcTypes: node.calcTypes,
-          fr: node.fr,
-          isP: node.isP,
-          mttr: node.mttr,
-          isT: node.isT,
-          timeToFirstTest: node.timeToFirstTest
-        });
+    // Function to extract and calculate for all event nodes
+    const extractProbabilityNodes = (node) => {
+      const nodes = [];
 
-        // Parse parameters with defaults
-        const lambda = parseFloat(node.fr) || 0;
-        const t = parseFloat(values?.missionTime) || 0;
-        const q = parseFloat(node.isP) || 0;
-        const mttr = parseFloat(node.mttr) || 0;
-        const mu = mttr > 0 ? 1 / mttr : 0;
-        const T = parseFloat(node.isT) || 0;
-        const tm = parseFloat(node.eventMissionTime) || t;
-        const n = 1; // 👈 FIXED: n is defined here before any case uses it
+      if (node) {
+        // Check if this is an event node
+        console.log("Checking node:", node.name || node.gateId, "isEvent:", node.isEvent);
 
-        let result = 0;
-        let formula = "";
-        let frequency = 0;
+        if (node.isEvent === true) {
+          console.log("✅ FOUND EVENT NODE:", node.name || node.gateId);
+          console.log("Node data:", {
+            name: node.name,
+            calcTypes: node.calcTypes,
+            fr: node.fr,
+            isP: node.isP,
+            mttr: node.mttr,
+            isT: node.isT,
+            timeToFirstTest: node.timeToFirstTest
+          });
 
-        // Calculate based on event type and selected calculation mode
-        switch (node.calcTypes) {
-          // #1 Probability
-          case "Probability":
-            if (isUnavailabilityMode) {
-              result = q;
-              formula = `Q(t) = q = ${q}`;
-            } else if (isSteadyStateMode) {
-              result = q;
-              formula = `Q̄ = q = ${q}`;
-            }
-            frequency = 0;
-            formula += ` | w(t) = 0`;
-            break;
+          // Parse parameters with defaults
+          const lambda = parseFloat(node.fr) || 0;
+          const t = parseFloat(values?.missionTime) || 0;
+          const q = parseFloat(node.isP) || 0;
+          const mttr = parseFloat(node.mttr) || 0;
+          const mu = mttr > 0 ? 1 / mttr : 0;
+          const T = parseFloat(node.isT) || 0;
+          const tm = parseFloat(node.eventMissionTime) || t;
+          const n = 1; // 👈 FIXED: n is defined here before any case uses it
 
-          // #2 Frequency
-          case "Frequency":
-            if (isUnavailabilityMode) {
-              result = 0;
-              formula = `Q(t) = 0 (Frequency event)`;
-            } else if (isSteadyStateMode) {
-              result = 0;
-              formula = `Q̄ = 0 (Frequency event)`;
-            }
-            frequency = lambda;
-            formula += ` | w(t) = f = ${frequency.toExponential(4)}/h`;
-            break;
+          let result = 0;
+          let formula = "";
+          let frequency = 0;
 
-          // #3 Constant mission time
-          case "Constant mission time":
-            if (isUnavailabilityMode) {
-              result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
-              formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
-            } else if (isSteadyStateMode) {
-              result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
-              formula = `Q̄ = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
-            }
-            frequency = 0;
-            formula += ` | w(t) = 0`;
-            break;
-
-          // #4 Repairable
-          case "Repairable":
-            const lambdaMu = lambda + mu;
-            if (isUnavailabilityMode) {
-              if (lambdaMu > 0) {
-                const expTerm = Math.exp(-lambdaMu * t);
-                result = Math.pow(q, n) * expTerm + Math.pow(lambda / lambdaMu, n) * (1 - expTerm);
-              } else {
-                result = Math.pow(q, n);
+          // Calculate based on event type and selected calculation mode
+          switch (node.calcTypes) {
+            // #1 Probability
+            case "Probability":
+              if (isUnavailabilityMode) {
+                result = q;
+                formula = `Q(t) = q = ${q}`;
+              } else if (isSteadyStateMode) {
+                result = q;
+                formula = `Q̄ = q = ${q}`;
               }
-              formula = `Q(t) = ${q}^${n}·e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t}) + (${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}))^${n}[1-e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t})] = ${result.toExponential(4)}`;
-            } else if (isSteadyStateMode) {
-              if (lambdaMu > 0) {
-                result = lambda / lambdaMu;
-              } else {
+              frequency = 0;
+              formula += ` | w(t) = 0`;
+              break;
+
+            // #2 Frequency
+            case "Frequency":
+              if (isUnavailabilityMode) {
                 result = 0;
-              }
-              formula = `Q̄ = λ/(λ+μ) = ${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}) = ${result.toExponential(4)}`;
-            }
-            frequency = Math.pow(lambda, n) * (1 - result);
-            formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
-            break;
-
-          // #5 Unrepairable
-          case "Unrepairable":
-            if (isUnavailabilityMode) {
-              result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
-              formula = `Q(t) = 1-(1-${q})^${n}·e^(-${lambda.toExponential(2)}·${t}) = ${result.toExponential(4)}`;
-            } else if (isSteadyStateMode) {
-              result = 1;
-              formula = `Q̄ = 1 (Unrepairable element)`;
-            }
-            frequency = Math.pow(lambda, n) * (1 - result);
-            formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
-            break;
-
-          // #6 Periodical tests
-          case "Periodical tests":
-            const Ti = parseFloat(node.isT) || 0;
-            const Tf = parseFloat(node.timeToFirstTest) || 0;
-            
-            if (isUnavailabilityMode) {
-              if (t < Tf) {
-                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
-                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [t < Tf] = ${result.toExponential(4)}`;
-              } else if (Math.abs(t - (Tf + n * Ti)) < 0.0001) {
-                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * Ti);
-                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${Ti}) [t = Tf + nTi] = ${result.toExponential(4)}`;
-              } else if (t > Tf + n * Ti && t <= Tf + n * Ti + mttr) {
-                const t1 = t - (Tf + n * Ti);
-                const term1 = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * Ti);
-                const term2 = Math.pow(1 - q, n) * Math.exp(-lambda * Ti) * 
-                              (1 - Math.pow(1 - q, n) * Math.exp(-lambda * t1));
-                result = term1 + term2;
-                formula = `Q(t) = ${term1.toExponential(4)} + ${term2.toExponential(4)} [Tf + nTi < t <= Tf + nTi + MTTR] = ${result.toExponential(4)}`;
-              } else if (t > Tf + n * Ti + mttr && t < Tf + n * Ti + Ti) {
-                const t1 = t - (Tf + n * Ti);
-                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t1);
-                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t1}) [Tf + nTi + MTTR < t < Tf + nTi + Ti] = ${result.toExponential(4)}`;
-              } else {
+                formula = `Q(t) = 0 (Frequency event)`;
+              } else if (isSteadyStateMode) {
                 result = 0;
-                formula = "Q(t) = 0 (No matching condition)";
+                formula = `Q̄ = 0 (Frequency event)`;
               }
-            } else if (isSteadyStateMode) {
-              result = (lambda * Ti) / 2 + lambda * mttr;
-              formula = `Q̄ ≈ λ·Ti/2 + λ·MTTR = (${lambda.toExponential(2)}·${Ti})/2 + ${lambda.toExponential(2)}·${mttr} = ${result.toExponential(4)} (simplified)`;
-            }
-            frequency = Math.pow(lambda, n) * (1 - result);
-            formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
-            break;
+              frequency = lambda;
+              formula += ` | w(t) = f = ${frequency.toExponential(4)}/h`;
+              break;
 
-          // #7 Latent
-          case "Latent":
-            if (isUnavailabilityMode) {
-              result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
-              formula = `Q(t) = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
-            } else if (isSteadyStateMode) {
-              result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
-              formula = `Q̄ = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
-            }
-            frequency = Math.pow(lambda, 1) * (1 - result);
-            formula += ` | w(t) = λ·(1-Q(t)) = ${lambda.toExponential(2)}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
-            break;
+            // #3 Constant mission time
+            case "Constant mission time":
+              if (isUnavailabilityMode) {
+                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
+                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
+              } else if (isSteadyStateMode) {
+                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
+                formula = `Q̄ = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
+              }
+              frequency = 0;
+              formula += ` | w(t) = 0`;
+              break;
 
-          // #8 Average probability per mission hour
-          case "Average probability per mission hour":
-            if (isUnavailabilityMode) {
-              result = 1 - Math.pow(1 - q, t);
-              formula = `Q(t) = 1-(1-${q})^${t} = ${result.toExponential(4)}`;
-            } else if (isSteadyStateMode) {
-              result = 1;
-              formula = `Q̄ = 1`;
-            }
-            frequency = 0;
-            formula += ` | w(t) = 0`;
-            break;
-
-          // #9 Periodical Tests #2
-          case "Periodical Tests #2":
-            const Tf2 = parseFloat(node.timeToFirstTest) || 0;
-            if (isUnavailabilityMode) {
-              if (t < Tf2) {
-                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
-                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [Phase 1] = ${result.toExponential(4)}`;
-              } else {
-                const cycles = Math.floor((t - Tf2) / T);
-                const timeInCycle = (t - Tf2) % T;
-                if (timeInCycle < mttr) {
-                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * (Tf2 + cycles * T));
-                  formula = `Q(t) ≈ ${result.toExponential(4)} [Repair phase]`;
+            // #4 Repairable
+            case "Repairable":
+              const lambdaMu = lambda + mu;
+              if (isUnavailabilityMode) {
+                if (lambdaMu > 0) {
+                  const expTerm = Math.exp(-lambdaMu * t);
+                  result = Math.pow(q, n) * expTerm + Math.pow(lambda / lambdaMu, n) * (1 - expTerm);
                 } else {
-                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * (Tf2 + cycles * T));
-                  formula = `Q(t) ≈ ${result.toExponential(4)} [Operating phase]`;
+                  result = Math.pow(q, n);
                 }
+                formula = `Q(t) = ${q}^${n}·e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t}) + (${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}))^${n}[1-e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t})] = ${result.toExponential(4)}`;
+              } else if (isSteadyStateMode) {
+                if (lambdaMu > 0) {
+                  result = lambda / lambdaMu;
+                } else {
+                  result = 0;
+                }
+                formula = `Q̄ = λ/(λ+μ) = ${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}) = ${result.toExponential(4)}`;
               }
-            } else if (isSteadyStateMode) {
-              result = (lambda * T) / 2 + lambda * mttr;
-              formula = `Q̄ ≈ λ·T/2 + λ·MTTR = (${lambda.toExponential(2)}·${T})/2 + ${lambda.toExponential(2)}·${mttr} = ${result.toExponential(4)} (simplified)`;
-            }
-            frequency = Math.pow(lambda, n) * (1 - result);
-            formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
-            break;
+              frequency = Math.pow(lambda, n) * (1 - result);
+              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+              break;
 
-          default:
-            console.log("Unknown calculation type:", node.calcTypes);
-            // Use simple formula as fallback
-            if (isUnavailabilityMode) {
-              result = 1 - Math.exp(-lambda * t);
-              formula = `Q(t) = 1-e^(-λt) = ${result.toExponential(4)} (fallback)`;
-            } else {
-              result = lambda / (lambda + mu) || 0;
-              formula = `Q̄ = λ/(λ+μ) = ${result.toExponential(4)} (fallback)`;
-            }
-            frequency = lambda * (1 - result);
-            formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
-            break;
+            // #5 Unrepairable
+            case "Unrepairable":
+              if (isUnavailabilityMode) {
+                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+                formula = `Q(t) = 1-(1-${q})^${n}·e^(-${lambda.toExponential(2)}·${t}) = ${result.toExponential(4)}`;
+              } else if (isSteadyStateMode) {
+                result = 1;
+                formula = `Q̄ = 1 (Unrepairable element)`;
+              }
+              frequency = Math.pow(lambda, n) * (1 - result);
+              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+              break;
+
+            // #6 Periodical tests
+            case "Periodical tests":
+              const Ti = parseFloat(node.isT) || 0;
+              const Tf = parseFloat(node.timeToFirstTest) || 0;
+
+              if (isUnavailabilityMode) {
+                if (t < Tf) {
+                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [t < Tf] = ${result.toExponential(4)}`;
+                } else if (Math.abs(t - (Tf + n * Ti)) < 0.0001) {
+                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * Ti);
+                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${Ti}) [t = Tf + nTi] = ${result.toExponential(4)}`;
+                } else if (t > Tf + n * Ti && t <= Tf + n * Ti + mttr) {
+                  const t1 = t - (Tf + n * Ti);
+                  const term1 = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * Ti);
+                  const term2 = Math.pow(1 - q, n) * Math.exp(-lambda * Ti) *
+                    (1 - Math.pow(1 - q, n) * Math.exp(-lambda * t1));
+                  result = term1 + term2;
+                  formula = `Q(t) = ${term1.toExponential(4)} + ${term2.toExponential(4)} [Tf + nTi < t <= Tf + nTi + MTTR] = ${result.toExponential(4)}`;
+                } else if (t > Tf + n * Ti + mttr && t < Tf + n * Ti + Ti) {
+                  const t1 = t - (Tf + n * Ti);
+                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t1);
+                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t1}) [Tf + nTi + MTTR < t < Tf + nTi + Ti] = ${result.toExponential(4)}`;
+                } else {
+                  result = 0;
+                  formula = "Q(t) = 0 (No matching condition)";
+                }
+              } else if (isSteadyStateMode) {
+                result = (lambda * Ti) / 2 + lambda * mttr;
+                formula = `Q̄ ≈ λ·Ti/2 + λ·MTTR = (${lambda.toExponential(2)}·${Ti})/2 + ${lambda.toExponential(2)}·${mttr} = ${result.toExponential(4)} (simplified)`;
+              }
+              frequency = Math.pow(lambda, n) * (1 - result);
+              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+              break;
+
+            // #7 Latent
+            case "Latent":
+              if (isUnavailabilityMode) {
+                result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
+                formula = `Q(t) = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
+              } else if (isSteadyStateMode) {
+                result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
+                formula = `Q̄ = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
+              }
+              frequency = Math.pow(lambda, 1) * (1 - result);
+              formula += ` | w(t) = λ·(1-Q(t)) = ${lambda.toExponential(2)}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+              break;
+
+            // #8 Average probability per mission hour
+            case "Average probability per mission hour":
+              if (isUnavailabilityMode) {
+                result = 1 - Math.pow(1 - q, t);
+                formula = `Q(t) = 1-(1-${q})^${t} = ${result.toExponential(4)}`;
+              } else if (isSteadyStateMode) {
+                result = 1;
+                formula = `Q̄ = 1`;
+              }
+              frequency = 0;
+              formula += ` | w(t) = 0`;
+              break;
+
+            // #9 Periodical Tests #2
+            case "Periodical Tests #2":
+              const Tf2 = parseFloat(node.timeToFirstTest) || 0;
+              if (isUnavailabilityMode) {
+                if (t < Tf2) {
+                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [Phase 1] = ${result.toExponential(4)}`;
+                } else {
+                  const cycles = Math.floor((t - Tf2) / T);
+                  const timeInCycle = (t - Tf2) % T;
+                  if (timeInCycle < mttr) {
+                    result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * (Tf2 + cycles * T));
+                    formula = `Q(t) ≈ ${result.toExponential(4)} [Repair phase]`;
+                  } else {
+                    result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * (Tf2 + cycles * T));
+                    formula = `Q(t) ≈ ${result.toExponential(4)} [Operating phase]`;
+                  }
+                }
+              } else if (isSteadyStateMode) {
+                result = (lambda * T) / 2 + lambda * mttr;
+                formula = `Q̄ ≈ λ·T/2 + λ·MTTR = (${lambda.toExponential(2)}·${T})/2 + ${lambda.toExponential(2)}·${mttr} = ${result.toExponential(4)} (simplified)`;
+              }
+              frequency = Math.pow(lambda, n) * (1 - result);
+              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+              break;
+
+            default:
+              console.log("Unknown calculation type:", node.calcTypes);
+              // Use simple formula as fallback
+              if (isUnavailabilityMode) {
+                result = 1 - Math.exp(-lambda * t);
+                formula = `Q(t) = 1-e^(-λt) = ${result.toExponential(4)} (fallback)`;
+              } else {
+                result = lambda / (lambda + mu) || 0;
+                formula = `Q̄ = λ/(λ+μ) = ${result.toExponential(4)} (fallback)`;
+              }
+              frequency = lambda * (1 - result);
+              formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+              break;
+          }
+
+          // Handle NaN or infinite values
+          if (isNaN(result) || !isFinite(result)) result = 0;
+          if (isNaN(frequency) || !isFinite(frequency)) frequency = 0;
+
+          console.log(`Calculated value for ${node.name}:`, result);
+
+          // Push the data
+          nodes.push({
+            id: node.id,
+            gateId: node.gateId,
+            name: node.name || node.code || `Gate ${node.gateId}`,
+            description: node.description || "",
+            failureRate: node.fr || "N/A",
+            missionTime: t.toString(),
+            mttr: node.mttr || "N/A",
+            calcType: node.calcTypes || "N/A",
+            q: node.isP || "N/A",
+            T: node.isT || "N/A",
+            timeToFirstTest: node.timeToFirstTest || "0",
+            unavailability: isUnavailabilityMode ? result.toExponential(4) : "N/A",
+            steadyStateUnavailability: isSteadyStateMode ? result.toExponential(4) : "N/A",
+            frequency: frequency > 0 ? frequency.toExponential(4) : "0",
+            formula: formula,
+            calculationMode: isUnavailabilityMode ? "Q(t)" : "Q̄",
+            rawValue: result,
+          });
         }
 
-        // Handle NaN or infinite values
-        if (isNaN(result) || !isFinite(result)) result = 0;
-        if (isNaN(frequency) || !isFinite(frequency)) frequency = 0;
-
-        console.log(`Calculated value for ${node.name}:`, result);
-
-        // Push the data
-        nodes.push({
-          id: node.id,
-          gateId: node.gateId,
-          name: node.name || node.code || `Gate ${node.gateId}`,
-          description: node.description || "",
-          failureRate: node.fr || "N/A",
-          missionTime: t.toString(),
-          mttr: node.mttr || "N/A",
-          calcType: node.calcTypes || "N/A",
-          q: node.isP || "N/A",
-          T: node.isT || "N/A",
-          timeToFirstTest: node.timeToFirstTest || "0",
-          unavailability: isUnavailabilityMode ? result.toExponential(4) : "N/A",
-          steadyStateUnavailability: isSteadyStateMode ? result.toExponential(4) : "N/A",
-          frequency: frequency > 0 ? frequency.toExponential(4) : "0",
-          formula: formula,
-          calculationMode: isUnavailabilityMode ? "Q(t)" : "Q̄",
-          rawValue: result,
-        });
+        // Process children
+        if (node.children && node.children.length > 0) {
+          node.children.forEach((child) => {
+            nodes.push(...extractProbabilityNodes(child));
+          });
+        }
       }
 
-      // Process children
-      if (node.children && node.children.length > 0) {
-        node.children.forEach((child) => {
-          nodes.push(...extractProbabilityNodes(child));
-        });
-      }
+      return nodes;
+    };
+
+    // Run the calculation
+    const calcData = extractProbabilityNodes(chartData);
+    console.log("📊 FINAL CALCULATION RESULTS:", calcData);
+    console.log("Number of results found:", calcData.length);
+
+    // Update state
+    setProbabilityCalcData(calcData);
+
+    // Open the appropriate modal
+    if (isUnavailabilityMode) {
+      console.log("Opening Unavailability Report");
+      setCurrentMissionTime(values?.missionTime);
+      setIsUnavailabilityReportOpen(true);
+    } else if (isSteadyStateMode) {
+      console.log("Opening Steady State Report");
+      setIsSteadyStateReportOpen(true);
     }
-
-    return nodes;
   };
-
-  // Run the calculation
-  const calcData = extractProbabilityNodes(chartData);
-  console.log("📊 FINAL CALCULATION RESULTS:", calcData);
-  console.log("Number of results found:", calcData.length);
-
-  // Update state
-  setProbabilityCalcData(calcData);
-
-  // Open the appropriate modal
-  if (isUnavailabilityMode) {
-    console.log("Opening Unavailability Report");
-    setCurrentMissionTime(values?.missionTime);
-    setIsUnavailabilityReportOpen(true);
-  } else if (isSteadyStateMode) {
-    console.log("Opening Steady State Report");
-    setIsSteadyStateReportOpen(true);
-  }
-};
   const submitProbabilityCalculation = (values) => {
     console.log("Submitting calculation:", values);
     calculateUnavailability(values);
@@ -431,94 +433,94 @@ const calculateUnavailability = (values) => {
   };
 
   const detectRepeatedEvents = (treeData) => {
-  const lambdaTypeMap = new Map(); // Store lambda+type combinations
-  const repeated = [];
+    const lambdaTypeMap = new Map(); // Store lambda+type combinations
+    const repeated = [];
 
-  const traverse = (node) => {
-    if (node?.isEvent) {
-      // Get the lambda/failure rate value and calculation type
-      const lambda = node.fr || node.failureRate || "0";
-      const calcType = node.calcTypes || "unknown";
-      
-      // Create a combined key from lambda value and calculation type
-      const key = `${lambda}|${calcType}`;
-      
-      if (lambdaTypeMap.has(key)) {
-        // This lambda+type combination has been seen before
-        const existingIds = lambdaTypeMap.get(key);
-        
-        // Mark current node
-        if (!repeated.includes(node.gateId)) {
-          repeated.push(node.gateId);
-        }
-        
-        // Mark all previous occurrences with same lambda+type
-        existingIds.forEach(id => {
-          if (!repeated.includes(id)) {
-            repeated.push(id);
+    const traverse = (node) => {
+      if (node?.isEvent) {
+        // Get the lambda/failure rate value and calculation type
+        const lambda = node.fr || node.failureRate || "0";
+        const calcType = node.calcTypes || "unknown";
+
+        // Create a combined key from lambda value and calculation type
+        const key = `${lambda}|${calcType}`;
+
+        if (lambdaTypeMap.has(key)) {
+          // This lambda+type combination has been seen before
+          const existingIds = lambdaTypeMap.get(key);
+
+          // Mark current node
+          if (!repeated.includes(node.gateId)) {
+            repeated.push(node.gateId);
           }
-        });
-        
-        // Add current node to the list
-        existingIds.push(node.gateId);
-        lambdaTypeMap.set(key, existingIds);
-      } else {
-        // First time seeing this lambda+type combination
-        lambdaTypeMap.set(key, [node.gateId]);
+
+          // Mark all previous occurrences with same lambda+type
+          existingIds.forEach(id => {
+            if (!repeated.includes(id)) {
+              repeated.push(id);
+            }
+          });
+
+          // Add current node to the list
+          existingIds.push(node.gateId);
+          lambdaTypeMap.set(key, existingIds);
+        } else {
+          // First time seeing this lambda+type combination
+          lambdaTypeMap.set(key, [node.gateId]);
+        }
       }
-    }
-    
-    if (node.children && node.children.length > 0) {
-      node.children.forEach(child => traverse(child));
-    }
+
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(child => traverse(child));
+      }
+    };
+
+    traverse(treeData);
+
+    // Log for debugging
+    console.log("Lambda+Type Map:", Array.from(lambdaTypeMap.entries()));
+    console.log("Found repeated events:", repeated);
+
+    return repeated;
   };
 
-  traverse(treeData);
-  
-  // Log for debugging
-  console.log("Lambda+Type Map:", Array.from(lambdaTypeMap.entries()));
-  console.log("Found repeated events:", repeated);
-  
-  return repeated;
-};
 
-
-const handleShowRepeatedEvents = () => {
-  if (!chartData) {
-    toast.warning("No fault tree data available");
-    return;
-  }
-
-  // Toggle the show state
-  const newShowState = !showRepeatedEvents;
-  
-  if (newShowState) {
-    // Find events with same lambda values
-    const repeated = detectRepeatedEvents(chartData);
-    setRepeatedEvents(repeated);
-    
-    if (repeated.length > 0) {
-      toast.info(`Found ${repeated.length} event(s) with  lambda values`);
-    } else {
-      toast.success("No  lambda values found");
+  const handleShowRepeatedEvents = () => {
+    if (!chartData) {
+      toast.warning("No fault tree data available");
+      return;
     }
-  } else {
-    // Clear repeated events when turning off
-    setRepeatedEvents([]);
-  }
-  
-  setShowRepeatedEvents(newShowState);
-};
+
+    // Toggle the show state
+    const newShowState = !showRepeatedEvents;
+
+    if (newShowState) {
+      // Find events with same lambda values
+      const repeated = detectRepeatedEvents(chartData);
+      setRepeatedEvents(repeated);
+
+      if (repeated.length > 0) {
+        toast.info(`Found ${repeated.length} event(s) with  lambda values`);
+      } else {
+        toast.success("No  lambda values found");
+      }
+    } else {
+      // Clear repeated events when turning off
+      setRepeatedEvents([]);
+    }
+
+    setShowRepeatedEvents(newShowState);
+  };
 
   useEffect(() => {
-  window.showRepeatedEvents = () => {
-    handleShowRepeatedEvents();
-  };
+    window.showRepeatedEvents = () => {
+      handleShowRepeatedEvents();
+    };
 
-  return () => {
-    delete window.showRepeatedEvents;
-  };
-}, [chartData, showRepeatedEvents]);
+    return () => {
+      delete window.showRepeatedEvents;
+    };
+  }, [chartData, showRepeatedEvents]);
 
   // const calculateUnavailability = (values) => {
   //   const extractProbabilityNodes = (node) => {
@@ -1016,7 +1018,7 @@ const handleShowRepeatedEvents = () => {
   };
 
   const isSteadyStateMode = (values) => {
-    console.log(values,'from index od isSteady Ste')
+    console.log(values, 'from index od isSteady Ste')
     return calculationMode === "Steady-state mean unavailability Q";
   };
 
@@ -1024,23 +1026,24 @@ const handleShowRepeatedEvents = () => {
 
   return (
     <div>
- {viewMode === "chart" && (
-      <HeaderNavBar
-        // style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000 }}
-        selectedComponent="FTA"
-        onZoomToFit={handleZoomToFit}
-        onZoomOriginal={handleZoomOriginal}
-        onToggleGrid={handleToggleGrid}
-        onOriginalLayout={handleOriginalLayout}
-        isTreeView={viewMode === "chart"}
-        onBackToTable={handleBackToTable}
-        setViewMode={setViewMode}
-        setChartData={setChartData}
-        selectedTreeId={selectedTreeId}
-       
-        
-      />
-    )}
+      {viewMode === "chart" && (
+        <HeaderNavBar
+          // style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000 }}
+          selectedComponent="FTA"
+          onZoomToFit={handleZoomToFit}
+          onZoomOriginal={handleZoomOriginal}
+          onToggleGrid={handleToggleGrid}
+          onOriginalLayout={handleOriginalLayout}
+          isTreeView={viewMode === "chart"}
+          onBackToTable={handleBackToTable}
+          setViewMode={setViewMode}
+          setChartData={setChartData}
+          selectedTreeId={selectedTreeId}
+
+
+        />
+      )}
+      
       {viewMode === "table" ? (
         <FTAtable
           trees={trees}
@@ -1071,7 +1074,7 @@ const handleShowRepeatedEvents = () => {
               <FaArrowLeft />
             </Button>
           </div> */}
-          
+
           <div
             className="org-chart-container"
             style={{
@@ -1101,30 +1104,32 @@ const handleShowRepeatedEvents = () => {
                 zIndex: 7,
               }}
             >
-              <div style={{ display: "flex",
-               justifyContent: "center",
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
                 marginBottom: "10px",
-                 marginLeft: "9px", 
-              marginTop: "30px",
- }}>
-                   <RenderNode
-                        // node={data}
-                        // parNod={parNod}
-                    handleRemove={removeChartData}
+                marginLeft: "9px",
+                marginTop: "30px",
+              }}>
+                <RenderNode
+                  // node={data}
+                  // parNod={parNod}
+                  handleRemove={removeChartData}
                   handleAdd={addChartNode}
-                   handleEdit={editChartNode}
-                         node={chartData}
-                        projectId={projectId}
-                        getFTAData={getFTAData}
-                        productData={productData}
-                        selectedNodeId={selectedNodeId} 
-                        setSelectedNodeId={setSelectedNodeId} 
-   calculationResults={probabilityCalcData}  // Pass calculation results
-      calculationMode={currentCalculationMode}  
-                              setCurrentCalculationMode={setCurrentCalculationMode}
-                        showRepeatedEvents={showRepeatedEvents}
-                        repeatedEvents={repeatedEvents}
-                      />
+                  setViewMode={setViewMode}
+                  handleEdit={editChartNode}
+                  node={chartData}
+                  projectId={projectId}
+                  getFTAData={getFTAData}
+                  productData={productData}
+                  selectedNodeId={selectedNodeId}
+                  setSelectedNodeId={setSelectedNodeId}
+                  calculationResults={probabilityCalcData}  // Pass calculation results
+                  calculationMode={currentCalculationMode}
+                  setCurrentCalculationMode={setCurrentCalculationMode}
+                  showRepeatedEvents={showRepeatedEvents}
+                  repeatedEvents={repeatedEvents}
+                />
               </div>
               <Tree
                 lineWidth={"2px"}
@@ -1142,21 +1147,21 @@ const handleShowRepeatedEvents = () => {
                     key={index}
                     data={child}
                     handleRemove={removeChartData}
-                  handleAdd={addChartNode}
-                  handleEdit={editChartNode}
-                  projectId={projectId}
-                  getFTAData={getFTAData}
-                  productData={productData}
-                  selectedNodeId={selectedNodeId}
-                  calculationMode={currentCalculationMode} 
-                  setSelectedNodeId={setSelectedNodeId}
-                  calculationResults={probabilityCalcData}
-                  setCurrentCalculationMode={setCurrentCalculationMode}
-                  treeRenderCalculationMode={treeRenderCalculationMode}
-                  repeatedEvents={repeatedEvents}        // ADD THIS LINE
-  showRepeatedEvents={showRepeatedEvents} // ADD THIS LINE
-  
-                />
+                    handleAdd={addChartNode}
+                    handleEdit={editChartNode}
+                    projectId={projectId}
+                    getFTAData={getFTAData}
+                    productData={productData}
+                    selectedNodeId={selectedNodeId}
+                    calculationMode={currentCalculationMode}
+                    setSelectedNodeId={setSelectedNodeId}
+                    calculationResults={probabilityCalcData}
+                    setCurrentCalculationMode={setCurrentCalculationMode}
+                    treeRenderCalculationMode={treeRenderCalculationMode}
+                    repeatedEvents={repeatedEvents}        // ADD THIS LINE
+                    showRepeatedEvents={showRepeatedEvents} // ADD THIS LINE
+
+                  />
                 ))}
               </Tree>
 
@@ -1330,7 +1335,7 @@ const handleShowRepeatedEvents = () => {
                   className="me-2"
                   variant="outline-secondary"
                   onClick={closeProbabilityModal}
-                  
+
                 >
                   Cancel
                 </Button>
@@ -1479,35 +1484,35 @@ const handleShowRepeatedEvents = () => {
                 </Form.Group>
                 {values.calcTypes?.value ===
                   "Unavailability at time t Q(t)" && (
-                  <Form.Group className="mb-2">
-                    <Label notify={true}>Mission time t</Label>
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <Form.Control
-                        type="text"
+                    <Form.Group className="mb-2">
+                      <Label notify={true}>Mission time t</Label>
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <Form.Control
+                          type="text"
+                          name="missionTime"
+                          placeholder="Mission time t"
+                          value={values.missionTime}
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                          style={{ width: "80%" }}
+                        />
+                        <p
+                          style={{
+                            margin: "0px",
+                            fontWeight: "bold",
+                            marginLeft: "20px",
+                          }}
+                        >
+                          ( hours)
+                        </p>
+                      </div>
+                      <ErrorMessage
+                        className="error text-danger"
+                        component="span"
                         name="missionTime"
-                        placeholder="Mission time t"
-                        value={values.missionTime}
-                        onBlur={handleBlur}
-                        onChange={handleChange}
-                        style={{ width: "80%" }}
                       />
-                      <p
-                        style={{
-                          margin: "0px",
-                          fontWeight: "bold",
-                          marginLeft: "20px",
-                        }}
-                      >
-                        ( hours)
-                      </p>
-                    </div>
-                    <ErrorMessage
-                      className="error text-danger"
-                      component="span"
-                      name="missionTime"
-                    />
-                  </Form.Group>
-                )}
+                    </Form.Group>
+                  )}
 
                 <Form.Group className="mb-2">
                   <Label notify={true}>Gate Id</Label>
