@@ -994,8 +994,8 @@ export default function RenderNode({
                       {node?.calcTypes === "Periodical Tests #2" && (
                         <span>
                           {isSteadyStateMode()
-                            ? `Algorithm (see Table 1) for Q̄, Ti=${node?.isT || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q̄)`
-                            : `Algorithm (see Table 1) for Q(t), Ti=${node?.isT || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q(t))`
+                            ? ` Q̄, Ti=${node?.isT || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q̄)`
+                            : ` Q(t), Ti=${node?.isT || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q(t))`
                           }
                         </span>
                       )}
@@ -1239,8 +1239,8 @@ export default function RenderNode({
                         {/* #6 Periodical tests */}
                         {node?.calcTypes === "Periodical tests" && (
                           isSteadyStateMode()
-                            ? "See Table 3 for Q̄, w(t)=λ·(1-Q̄)"
-                            : "See Table 2 for Q(t), w(t)=λ·(1-Q(t))"
+                            ? " Q̄, w(t)=λ·(1-Q̄)"
+                            : " Q(t), w(t)=λ·(1-Q(t))"
                         )}
 
                         {/* #7 Latent */}
@@ -1260,8 +1260,8 @@ export default function RenderNode({
                         {/* #9 Periodical Tests #2 */}
                         {node?.calcTypes === "Periodical Tests #2" && (
                           isSteadyStateMode()
-                            ? "Algorithm (see Table 1) for Q̄, w(t)=λ·(1-Q̄)"
-                            : "Algorithm (see Table 1) for Q(t), w(t)=λ·(1-Q(t))"
+                            ? "Q̄, w(t)=λ·(1-Q̄)"
+                            : "Q(t), w(t)=λ·(1-Q(t))"
                         )}
 
                         {/* Backward compatibility cases */}
