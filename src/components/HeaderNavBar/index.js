@@ -48,6 +48,9 @@ const HeaderNavBar = ({
   additionalButtons,
   setViewMode,    
     setChartData,
+      showRepeatedEvents = false,
+  onToggleRepeatedEvents,
+  repeatedEventsCount = 0,
   // setSelectedTreeId,            // ADD THIS LINE
     isTreeView = false,        // ADD THIS LINE
   onBackToTable              // ADD THIS LINE
@@ -422,17 +425,49 @@ const HeaderNavBar = ({
 >
   Probability Calculations(MCS)
 </NavDropdown.Item>
-  <NavDropdown.Item 
-    onClick={() => {
-      if (window.showRepeatedEvents) {
-        window.showRepeatedEvents();
-      } else {
-        toast.warning("Please open a fault tree first");
-      }
-    }}
-  >
-    Show Repeated Events
-  </NavDropdown.Item>
+<NavDropdown.Item 
+  onClick={() => {
+    if (onToggleRepeatedEvents) {
+      onToggleRepeatedEvents();
+    } else if (window.showRepeatedEvents) {
+      window.showRepeatedEvents();
+    } else {
+      toast.warning("Please open a fault tree first");
+    }
+  }}
+  style={{
+    backgroundColor: showRepeatedEvents ? '#f6ffed' : 'transparent',
+    borderLeft: showRepeatedEvents ? '3px solid #52c41a' : 'none'
+  }}
+>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+    <span> Highlight Repeated Events</span>
+    <span
+      style={{
+        width: '40px',
+        height: '20px',
+        backgroundColor: showRepeatedEvents ? '#52c41a' : '#ccc',
+        borderRadius: '10px',
+        position: 'relative',
+        marginLeft: '10px',
+        transition: 'background-color 0.2s'
+      }}
+    >
+      <span
+        style={{
+          width: '16px',
+          height: '16px',
+          backgroundColor: 'white',
+          borderRadius: '50%',
+          position: 'absolute',
+          top: '2px',
+          left: showRepeatedEvents ? '22px' : '2px',
+          transition: 'left 0.2s'
+        }}
+      />
+    </span>
+  </div>
+</NavDropdown.Item>
 
                           </NavDropdown>
                         </Nav>

@@ -1039,6 +1039,8 @@ export default function FTA(props) {
           setViewMode={setViewMode}
           setChartData={setChartData}
           selectedTreeId={selectedTreeId}
+          showRepeatedEvents={showRepeatedEvents}
+       
 
 
         />
