@@ -1699,10 +1699,17 @@ export default function RenderNode({
               ? isEventModalOpen
               : isEventModal
         }
-        footer={null}
-        onCancel={handleCancel}
-        maskClosable={false}
-      >
+     footer={null}
+  onCancel={handleCancel}
+  maskClosable={false}
+  width={500}
+  style={{ top: 20 }}
+  bodyStyle={{
+    maxHeight: '70vh',
+    overflowY: 'auto',
+    // padding: '0 24px 24px 24px'
+  }}
+>
         <hr />
         <Formik
           enableReinitialize={true}

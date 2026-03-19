@@ -155,7 +155,7 @@ const FTAtable = ({
             variant="contained"
             disableElevation
           >
-            Create New Tree
+            Create FTA
           </CreateButton>
         </Box>
 
@@ -177,7 +177,7 @@ const FTAtable = ({
           <Typography variant="body2" sx={{ color: "#999", mb: 3 }}>
             Create your first fault tree analysis
           </Typography>
-          <CreateButton
+          {/* <CreateButton
             onClick={onCreateNewTree}
             startIcon={<AddIcon />}
             variant="contained"
@@ -185,7 +185,7 @@ const FTAtable = ({
             disableElevation
           >
             Create First Tree
-          </CreateButton>
+          </CreateButton> */}
         </Paper>
       </Box>
     );
@@ -210,7 +210,7 @@ const FTAtable = ({
           variant="contained"
           disableElevation
         >
-          Create New Tree
+          Create FTA
         </CreateButton>
       </Box>
 
@@ -261,7 +261,7 @@ const FTAtable = ({
                 </TableCell>
                 <TableCell align="center">
                   <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                    <Tooltip title="View Tree">
+                    {/* <Tooltip title="View Tree">
                       <ActionButton
                         color="primary"
                         size="small"
@@ -269,7 +269,7 @@ const FTAtable = ({
                       >
                         <VisibilityIcon fontSize="small" />
                       </ActionButton>
-                    </Tooltip>
+                    </Tooltip> */}
                     
                     <Tooltip title="Edit Tree">
                       <ActionButton
