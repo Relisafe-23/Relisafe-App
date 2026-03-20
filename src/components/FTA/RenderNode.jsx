@@ -965,7 +965,7 @@ export default function RenderNode({
                         <span>
                           {isSteadyStateMode()
                             ? `Q̄ = λ·Ti/2 + λ·MTTR, Ti=${node?.isT || '0'}h, Tf=${node?.timeToFirstTest || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q̄)`
-                            : `Q(t) per Table 2, Ti=${node?.isT || '0'}h, Tf=${node?.timeToFirstTest || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q(t))`
+                            : `Q(t)  Ti=${node?.isT || '0'}h, Tf=${node?.timeToFirstTest || '0'}h, λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, w(t)=λ·(1-Q(t))`
                           }
                         </span>
                       )}
