@@ -173,7 +173,8 @@ export default function FTA(props) {
             isP: node.isP,
             mttr: node.mttr,
             isT: node.isT,
-            timeToFirstTest: node.timeToFirstTest
+            timeToFirstTest: node.timeToFirstTest,
+             eventMissionTime: node.eventMissionTime 
           });
 
           // Parse parameters with defaults
@@ -219,17 +220,18 @@ export default function FTA(props) {
               break;
 
             // #3 Constant mission time
-            case "Constant mission time":
-              if (isUnavailabilityMode) {
-                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
-                formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
-              } else if (isSteadyStateMode) {
-                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
-                formula = `Q̄ = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
-              }
-              frequency = 0;
-              formula += ` | w(t) = 0`;
-              break;
+                  case "Constant mission time":
+            if (isUnavailabilityMode) {
+              // Use tm here instead of t
+              result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
+              formula = `Q(t) = 1-(1-${q})^${n}·e^(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
+              formula = `Q̄ = 1-(1-${q})^${n}·e^(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
+            }
+            frequency = 0;
+            formula += ` | w(t) = 0`;
+            break;
 
             // #4 Repairable
             case "Repairable":
@@ -392,6 +394,7 @@ export default function FTA(props) {
             steadyStateUnavailability: isSteadyStateMode ? result.toExponential(4) : "N/A",
             frequency: frequency > 0 ? frequency.toExponential(4) : "0",
             formula: formula,
+            eventMissionTime: node.eventMissionTime || "0",
             calculationMode: isUnavailabilityMode ? "Q(t)" : "Q̄",
             rawValue: result,
           });

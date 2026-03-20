@@ -187,6 +187,14 @@ export default function RenderNode({
     description: Yup.string().required("Description is Required"),
     calcTypes: Yup.object().required("Calc.Type is Required"),
     isProducts: Yup.object().required("Product is Required"),
+      isP: Yup.mixed().when('calcTypes', {
+    is: (calcTypes) => calcTypes?.value === "Probability" || calcTypes?.value === "Constant Probability",
+    then: Yup.number()
+      .typeError("Probability must be a number")
+      .max(1, "Probability cannot be greater than 1")
+      .required("Probability is required"),
+    otherwise: Yup.mixed().nullable()
+  }),
   });
 
   const handleCancel = () => {
@@ -241,6 +249,19 @@ export default function RenderNode({
   };
 
   const updateFTA = (values) => {
+      if ((values?.calcTypes?.value === "Probability" || values?.calcTypes?.value === "Constant Probability") && 
+      values?.isP) {
+    const probValue = parseFloat(values.isP);
+    if (isNaN(probValue)) {
+      toast.error("Probability must be a number");
+      return;
+    }
+    if (probValue > 1) {
+      toast.error("Probability cannot be greater than 1");
+      return;
+    }
+  }
+  
     if (node?.indexCount === 1) {
       Api.patch(`/api/v1/FTA/update/property/${node?.parentId}`, {
         productId: node?.id,
@@ -277,11 +298,11 @@ export default function RenderNode({
         gateId: values.gateId ? values.gateId : node?.gateId,
         calcTypes: values?.calcTypes?.value,
         isProducts: values?.isProducts,
-        fr: values?.calcTypes?.value === "Constant Probability" ? null : values?.fr,
+        fr: values?.calcTypes?.value === "Probability" ? null : values?.fr,
         eventMissionTime:
-          values?.calcTypes?.value === "Constant Probability" ||
+          values?.calcTypes?.value === "Probability" ||
             values?.calcTypes?.value === "Evident, P=λ*t" ||
-            values?.calcTypes?.value === "Unrepairable, P=1-(1-q)*exp(-λ*t)" ||
+            values?.calcTypes?.value === "Unrepairable" ||
             values?.calcTypes?.value === "Repairable" ||
             values?.calcTypes?.value === "Latent, P=λ*T" ||
             values?.calcTypes?.value === "Latent, P=λ*T/2" ||
@@ -290,10 +311,10 @@ export default function RenderNode({
             ? null
             : values?.eventMissionTime,
         mttr:
-          values?.calcTypes?.value === "Constant Probability" ||
+          values?.calcTypes?.value === "Probability" ||
             values?.calcTypes?.value === "Const.mission time, P=λ*tm" ||
             values?.calcTypes?.value === "Evident, P=λ*t" ||
-            values?.calcTypes?.value === "Unrepairable, P=1-(1-q)*exp(-λ*t)" ||
+            values?.calcTypes?.value === "Unrepairable" ||
             values?.calcTypes?.value === "Latent, P=λ*T" ||
             values?.calcTypes?.value === "Latent, P=λ*T/2" ||
             values?.calcTypes?.value === "Latent,Life-time, P=1-e^(-λ*T)"
@@ -302,7 +323,7 @@ export default function RenderNode({
         isP:
           values?.calcTypes?.value === "Const.mission time, P=λ*tm" ||
             values?.calcTypes?.value === "Evident, P=λ*t" ||
-            values?.calcTypes?.value === "Unrepairable, P=1-(1-q)*exp(-λ*t)" ||
+            values?.calcTypes?.value === "Unrepairable" ||
             values?.calcTypes?.value === "Repairable" ||
             values?.calcTypes?.value === "Latent, P=λ*T" ||
             values?.calcTypes?.value === "Latent, P=λ*T/2" ||
@@ -311,10 +332,10 @@ export default function RenderNode({
             ? null
             : values?.isP,
         isT:
-          values?.calcTypes?.value === "Constant Probability" ||
+          values?.calcTypes?.value === "Probability" ||
             values?.calcTypes?.value === "Const.mission time, P=λ*tm" ||
             values?.calcTypes?.value === "Evident, P=λ*t" ||
-            values?.calcTypes?.value === "Unrepairable, P=1-(1-q)*exp(-λ*t)" ||
+            values?.calcTypes?.value === "Unrepairable" ||
             values?.calcTypes?.value === "Repairable"
             ? null
             : values?.isT,
@@ -344,7 +365,18 @@ export default function RenderNode({
 
 
 
-  const eventSubmit = (values, { resetForm }) => {
+  const eventSubmit = (values, { resetForm , setErrors }) => {
+      if (values.calcTypes.value === "Probability" || values.calcTypes.value === "Constant Probability") {
+    const probValue = parseFloat(values.isP);
+    if (isNaN(probValue)) {
+      setErrors({ isP: "Probability must be a number" });
+      return;
+    }
+    if (probValue > 1) {
+      setErrors({ isP: "Probability cannot be greater than 1" });
+      return;
+    }
+  }
     const companyId = localStorage.getItem("companyId");
     Api.post("/api/v1/FTA/create/child/node", {
       companyId: companyId,
@@ -358,11 +390,11 @@ export default function RenderNode({
       calcTypes: values.calcTypes.value,
       isProducts: values.isProducts.label ? values.isProducts.label : isProductName.label,
       isEvent: true,
-      fr: values.calcTypes.value === "Constant Probability" ? null : values.fr,
+      fr: values.calcTypes.value === "Probability" ? null : values.fr,
       eventMissionTime:
-        values.calcTypes.value === "Constant Probability" ||
+        values.calcTypes.value === "Probability" ||
           values.calcTypes.value === "Evident, P=λ*t" ||
-          values.calcTypes.value === "Unrepairable, P=1-(1-q)*exp(-λ*t)" ||
+          values.calcTypes.value === "Unrepairable" ||
           values.calcTypes.value === "Repairable" ||
           values.calcTypes.value === "Latent, P=λ*T" ||
           values.calcTypes.value === "Latent, P=λ*T/2" ||
@@ -371,19 +403,19 @@ export default function RenderNode({
           ? null
           : values.eventMissionTime,
       mttr:
-        values.calcTypes.value === "Constant Probability" ||
-          values.calcTypes.value === "Const.mission time, P=λ*tm" ||
+        values.calcTypes.value === "Probability" ||
+          values.calcTypes.value === "Constant mission time" ||
           values.calcTypes.value === "Evident, P=λ*t" ||
-          values.calcTypes.value === "Unrepairable, P=1-(1-q)*exp(-λ*t)" ||
+          values.calcTypes.value === "Unrepairable" ||
           values.calcTypes.value === "Latent, P=λ*T" ||
           values.calcTypes.value === "Latent, P=λ*T/2" ||
           values.calcTypes.value === "Latent,Life-time, P=1-e^(-λ*T)"
           ? null
           : values.mttr,
       isP:
-        values.calcTypes.value === "Const.mission time, P=λ*tm" ||
+        values.calcTypes.value === "Constant mission time" ||
           values.calcTypes.value === "Evident, P=λ*t" ||
-          values.calcTypes.value === "Unrepairable, P=1-(1-q)*exp(-λ*t)" ||
+          values.calcTypes.value === "Unrepairable" ||
           values.calcTypes.value === "Repairable" ||
           values.calcTypes.value === "Latent, P=λ*T" ||
           values.calcTypes.value === "Latent, P=λ*T/2" ||
@@ -392,10 +424,10 @@ export default function RenderNode({
           ? null
           : values.isP,
       isT:
-        values.calcTypes.value === "Constant Probability" ||
-          values.calcTypes.value === "Const.mission time, P=λ*tm" ||
+        values.calcTypes.value === "Probability" ||
+          values.calcTypes.value === "Constant mission time" ||
           values.calcTypes.value === "Evident, P=λ*t" ||
-          values.calcTypes.value === "Unrepairable, P=1-(1-q)*exp(-λ*t)" ||
+          values.calcTypes.value === "Unrepairable" ||
           values.calcTypes.value === "Repairable"
           ? null
           : values.isT,
@@ -936,10 +968,15 @@ export default function RenderNode({
                       )}
 
                       {/* #3 Constant mission time */}
-                      {node?.calcTypes === "Constant mission time" && (
-                        <span>Q = 1-(1-{node?.isP || '0'})·e^(-λ·tm), λ={node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h</span>
-                      )}
-
+{/* #3 Constant mission time */}
+{node?.calcTypes === "Constant mission time" && (
+  <span>
+    {isSteadyStateMode()
+      ? `Q̄ = 1-(1-${node?.isP || '0'})·e^(-λ·tm), λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, tm=${node?.eventMissionTime || '0'}h`
+      : `Q(t) = 1-(1-${node?.isP || '0'})·e^(-λ·tm), λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, tm=${node?.eventMissionTime || '0'}h`
+    }
+  </span>
+)}
                       {/* #4 Repairable */}
                       {node?.calcTypes === "Repairable" && (
                         <span>
@@ -1216,12 +1253,12 @@ export default function RenderNode({
                         )}
 
                         {/* #3 Constant mission time */}
-                        {node?.calcTypes === "Constant mission time" && (
-                          isSteadyStateMode()
-                            ? "Q̄ = 1-(1-q)·e^(-λ·Tm), w(t) = 0"
-                            : "Q(t) = 1-(1-q)·e^(-λ·Tm), w(t) = 0"
-                        )}
-
+                    {/* #3 Constant mission time */}
+{node?.calcTypes === "Constant mission time" && (
+  isSteadyStateMode()
+    ? "Q̄ = 1-(1-q)·e^(-λ·tm), w(t) = 0"
+    : "Q(t) = 1-(1-q)·e^(-λ·tm), w(t) = 0"
+)}
                         {/* #4 Repairable */}
                         {node?.calcTypes === "Repairable" && (
                           isSteadyStateMode()
@@ -1303,32 +1340,33 @@ export default function RenderNode({
                       </div>
 
                       {/* PARAMETERS - Shows the actual numbers */}
-                      <div style={{ textAlign: "left", paddingLeft: "5px", marginTop: "2px" }}>
-                        {/* Failure Rate λ */}
-                        {node?.fr && node.fr !== "0" && node.fr !== "-" && (
-                          <div>λ = {parseFloat(node.fr).toExponential(2)}/h</div>
-                        )}
-
-                        {/* Probability q */}
-                        {node?.isP && node.isP !== "0" && node.isP !== "" && (
-                          <div>q = {node.isP}</div>
-                        )}
-
-                        {/* MTTR */}
-                        {node?.mttr && node.mttr !== "0" && (
-                          <div>MTTR = {node.mttr}h, μ = {node.mttr ? (1 / parseFloat(node.mttr)).toExponential(2) : '0'}/h</div>
-                        )}
-
-                        {/* Test Interval T/Ti */}
-                        {node?.isT && node.isT !== "0" && (
-                          <div>T = {node.isT}h</div>
-                        )}
-
-                        {/* Mission Time tm */}
-                        {node?.eventMissionTime && node.eventMissionTime !== "0" && (
-                          <div>tm = {node.eventMissionTime}h</div>
-                        )}
-                      </div>
+                {/* PARAMETERS - Shows the actual numbers */}
+<div style={{ textAlign: "left", paddingLeft: "5px", marginTop: "2px" }}>
+  {/* Failure Rate λ */}
+  {node?.fr && node.fr !== "0" && node.fr !== "-" && (
+    <div>λ = {parseFloat(node.fr).toExponential(2)}/h</div>
+  )}
+  
+  {/* Probability q */}
+  {node?.isP && node.isP !== "0" && node.isP !== "" && (
+    <div>q = {node.isP}</div>
+  )}
+  
+  {/* MTTR */}
+  {node?.mttr && node.mttr !== "0" && (
+    <div>MTTR = {node.mttr}h, μ = {node.mttr ? (1 / parseFloat(node.mttr)).toExponential(2) : '0'}/h</div>
+  )}
+  
+  {/* Test Interval T/Ti */}
+  {node?.isT && node.isT !== "0" && (
+    <div>T = {node.isT}h</div>
+  )}
+  
+  {/* Mission Time tm - ADD THIS SECTION */}
+  {node?.eventMissionTime && node.eventMissionTime !== "0" && (
+    <div>tm = {node.eventMissionTime}h</div>
+  )}
+</div>
                     </>
                   )}
                 </div>
@@ -1818,7 +1856,7 @@ export default function RenderNode({
                     options={eventFields}
                   />
                   <ErrorMessage className="error text-danger" component="span" name="calcTypes" />
-                  {values.calcTypes.value === "Constant Probability" ? (
+                  {values.calcTypes.value === "Probability" ? (
                     <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
                       The reliability data represents the probability that the component is not able to perform its
                       function upon request.
@@ -1827,12 +1865,12 @@ export default function RenderNode({
                     <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
                       Calculation by equation P=λ*t, where λ – failure rate (1/hour); t – failure exposure time (hours)
                     </p>
-                  ) : values.calcTypes.value === "Const.mission time, P=λ*tm" ? (
+                  ) : values.calcTypes.value === "Constant mission time" ? (
                     <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
                       Calculation by equation P=λ*tm, where λ – failure rate (1/hour); tm – failure exposure time
                       (hours)
                     </p>
-                  ) : values.calcTypes.value === "Unrepairable, P=1-(1-q)*exp(-λ*t)" ? (
+                  ) : values.calcTypes.value === "Unrepairable" ? (
                     <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
                       Calculation by equation P(t) = 1-(1-q)*exp(-λ*t), where λ – failure rate (1/hour); t – failure
                       exposure time (hours)
@@ -1914,22 +1952,25 @@ export default function RenderNode({
                       </Form.Group>
                     )}                </Form.Group>
 
-                {values.calcTypes.value === "Constant Probability" ? (
-                  <Form.Group className="mb-2">
-                    <Label>p</Label>
-                    <Form.Control
-                      type="text"
-                      name="isP"
-                      placeholder="0"
-                      value={values.isP}
-                      onBlur={handleBlur}
-                      onChange={(e) => setOnChangeEventIsP(e?.target?.value)}
-                    />
-                    <ErrorMessage className="error text-danger" component="span" name="isP" />
-                  </Form.Group>
-                ) : (values.calcTypes.value !== undefined && values.calcTypes.value !== "Constant Probability") ||
+               {values.calcTypes.value === "Probability" ? (
+  <Form.Group className="mb-2">
+    <Label>p (Probability)</Label>
+    <Form.Control
+      type="text"
+      name="isP"
+      placeholder="Enter probability value"
+      value={values.isP}
+      onBlur={handleBlur}
+      onChange={(e) => setOnChangeEventIsP(e?.target?.value)}
+    />
+    <ErrorMessage className="error text-danger" component="span" name="isP" />
+    <Form.Text className="text-muted">
+      Probability value cannot exceed 1
+    </Form.Text>
+  </Form.Group>
+                ) : (values.calcTypes.value !== undefined && values.calcTypes.value !== "Probability") ||
                   (values.calcTypes.value !== undefined &&
-                    values.calcTypes.value !== "Unrepairable, P=1-(1-q)*exp(-λ*t)") ? (
+                    values.calcTypes.value !== "Unrepairable") ? (
                   <Form.Group className="mb-2" style={{ width: "95%" }}>
                     <Label>FR</Label>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1940,7 +1981,7 @@ export default function RenderNode({
                         placeholder={
                           values.calcTypes.value === "Evident, P=λ*t" ||
                             values.calcTypes.value === "Const.mission time, P=λ*tm" ||
-                            values.calcTypes.value === "Unrepairable, P=1-(1-q)*exp(-λ*t)"
+                            values.calcTypes.value === "Unrepairable"
                             ? "FR"
                             : "Code"
                         }
@@ -1953,7 +1994,7 @@ export default function RenderNode({
                     <ErrorMessage className="error text-danger" component="span" name="fr" />
                   </Form.Group>
                 ) : null}
-                {values.calcTypes.value === "Const.mission time, P=λ*tm" ? (
+                {values.calcTypes.value === "Constant mission time" ? (
                   <Form.Group className="mb-2" style={{ width: "95%" }}>
                     <Label>tm</Label>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
