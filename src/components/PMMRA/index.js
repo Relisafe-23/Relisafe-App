@@ -224,17 +224,22 @@ const useConnectionManagement = (projectId, productId) => {
           userId: userId,
         },
       }).then((res) => {
-        let data = res?.data?.data || [];                
+        let data = res?.data?.data || [];
+
+        // Handle object response (MTTR details returns an object, not an array)
+        if (data && !Array.isArray(data)) {
+          data = [data];
+        }
 
         // Normalize MTTR data if needed (it often comes nested under mttrData)
-        if (normalizedName === "MTTR") {          
-          data = data.map(item => {            
-            if (item.mttrData) {
+        if (normalizedName === "MTTR") {
+          data = data.map(item => {
+            if (item && item.mttrData) {
               return { ...item, ...item.mttrData };
             }
             return item;
           });
-          
+
         }
 
         setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));

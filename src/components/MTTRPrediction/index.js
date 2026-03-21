@@ -593,7 +593,7 @@ const MTTRPrediction = (props, active) => {
   const moduleApiMap = {
     FMECA: "/api/v1/fmeca/product/list",
     SAFETY: "/api/v1/safety/product/list",
-    MTTR: "/api/v1/mttrPrediction/details",
+    MTTR: "/api/v1/mttrPrediction/details/mil472",
   };
 
   const getSourceModuleData = (moduleNames) => {
@@ -609,11 +609,27 @@ const MTTRPrediction = (props, active) => {
       Api.get(apiEndpoint, {
         params: {
           projectId: projectId,
-          productId: treeStructure || iniProductId, // Use treeStructure if available which is parentId
+          productId: productId,
           userId: localStorage.getItem("userId"),
         },
       }).then((res) => {
-        const data = res?.data?.data || [];
+        let data = res?.data?.data || [];
+
+        // Handle object response (MTTR details returns an object, not an array)
+        if (data && !Array.isArray(data)) {
+          data = [data];
+        }
+
+        // Normalize MTTR data if needed
+        if (normalizedName === "MTTR") {
+          data = data.map(item => {
+            if (item && item.mttrData) {
+              return { ...item, ...item.mttrData };
+            }
+            return item;
+          });
+        }
+
         setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));
       }).catch((error) => {
         console.log(`Error fetching ${normalizedName} data for connected library check:`, error);
@@ -694,9 +710,9 @@ const MTTRPrediction = (props, active) => {
       // Find connections where this field is the destination
       const connections = flattenedConnect?.filter(
         item =>
-          item.sourceName === sourceField &&
-          String(item.sourceValue) === String(sourceValue) &&
-          item.destinationName === fieldName
+          item.sourceName?.toLowerCase() === sourceField?.toLowerCase() &&
+          String(item.sourceValue)?.toLowerCase() === String(sourceValue)?.toLowerCase() &&
+          item.destinationName?.toLowerCase() === fieldName?.toLowerCase()
       ) || [];
 
       // Add formatted connections
@@ -715,14 +731,14 @@ const MTTRPrediction = (props, active) => {
     // Fallback: If no same-module connections found, check cross-module connections
     if (connectedValues.length === 0) {
       const allPossibleConnections = flattenedConnect?.filter(item => {
-        if (item.destinationName !== fieldName) return false;
+        if (item.destinationName?.toLowerCase() !== fieldName?.toLowerCase()) return false;
 
         // Check if a record with the source value exists in the source module
         // Normalize comparison for safety
         const normSourceModule = String(item.sourceModuleName).toUpperCase();
         const moduleData = sourceModuleData[normSourceModule] || [];
         return moduleData.some(
-          row => String(row[item.sourceName]) === String(item.sourceValue)
+          row => String(row[item.sourceName])?.toLowerCase() === String(item.sourceValue)?.toLowerCase()
         );
       }) || [];
 
@@ -743,8 +759,8 @@ const MTTRPrediction = (props, active) => {
   const getDestinationFieldsForSource = (sourceField, sourceValue) => {
     return flattenedConnect
       ?.filter(item =>
-        item.sourceName === sourceField &&
-        String(item.sourceValue) === String(sourceValue)
+        item.sourceName?.toLowerCase() === sourceField?.toLowerCase() &&
+        String(item.sourceValue)?.toLowerCase() === String(sourceValue)?.toLowerCase()
       )
       .map(item => ({
         field: item.destinationName,
@@ -754,12 +770,12 @@ const MTTRPrediction = (props, active) => {
 
   // Check if a field is a source field
   const isSourceField = (fieldName) => {
-    return flattenedConnect?.some(item => item.sourceName === fieldName) || false;
+    return flattenedConnect?.some(item => item.sourceName?.toLowerCase() === fieldName?.toLowerCase()) || false;
   };
 
   // Check if a field is a destination field
   const isDestinationField = (fieldName) => {
-    return flattenedConnect?.some(item => item.destinationName === fieldName) || false;
+    return flattenedConnect?.some(item => item.destinationName?.toLowerCase() === fieldName?.toLowerCase()) || false;
   };
 
   // Get destination values for a field based on selected sources
@@ -773,9 +789,9 @@ const MTTRPrediction = (props, active) => {
       if (sourceValue) {
         const connections = flattenedConnect?.filter(
           item =>
-            item.sourceName === sourceField &&
-            String(item.sourceValue) === String(sourceValue) &&
-            item.destinationName === fieldName
+            item.sourceName?.toLowerCase() === sourceField?.toLowerCase() &&
+            String(item.sourceValue)?.toLowerCase() === String(sourceValue)?.toLowerCase() &&
+            item.destinationName?.toLowerCase() === fieldName?.toLowerCase()
         ) || [];
 
         connections.forEach(item => {
@@ -1014,8 +1030,8 @@ const MTTRPrediction = (props, active) => {
         ? null
         : Yup.object().required("Level of repair is required"),
     spare: Yup.object().required("Spare is required"),
-    mct: Yup.string().required("MCT is required"),
-    mlh: Yup.string().required("MLH is required"),
+    // mct: Yup.string().required("MCT is required"),
+    // mlh: Yup.string().required("MLH is required"),
     remarks: Yup.string().min(3, 'Minimum 3 characters required')
       .max(200, 'Maximum 200 characters allowed')
     // labourHour: Yup.string().required("Labour hour is required"),
