@@ -665,7 +665,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
 
               {/* Column 3 */}
               <div>
-                <div style={{ marginBottom: '15px' }}>
+                {/* <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
                     FR distribution:
                   </label>
@@ -733,7 +733,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                       </div>
                     </div>
                   )}
-                </div>
+                </div> */}
 
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
@@ -783,7 +783,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                         placeholder="445089"
                       />
                     </div>
-                    <div>
+                    {/* <div>
                       <label style={{ fontSize: '11px', marginRight: '5px' }}>Load:</label>
                       <input
                         type="text"
@@ -798,7 +798,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                         }}
                         placeholder="100"
                       />
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 

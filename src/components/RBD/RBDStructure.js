@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SplitKofN from './SplitKofN';
 import Api from "../../Api";
+import CaseSelectionModal from './CaseSelectionModal.js';
 import EditRBDConfigurationModal from './EditRBDConfigurationModal';
 import { useParams, useLocation } from 'react-router-dom';
 import CreatableSelect from "react-select/creatable";
@@ -222,9 +223,8 @@ export const BiDirectionalSymbol = ({ onNodeClick, setParentItem, setParentItemI
   };
 
 
-  const renderParallelSection = (item) => {
-    console.log(item, 'item')
-    const { x, y, width, branches, id, blockData } = item;
+const renderParallelSection = (item) => {
+  const { x, y, width, branches, id, blockData } = item;
 
     if (!branches || branches.length === 0) return null;
 
@@ -260,11 +260,8 @@ export const BiDirectionalSymbol = ({ onNodeClick, setParentItem, setParentItemI
     const bottomY = startY + sectionHeight - 20;
 
 
-    return (
-      <g
-        key={id}
-
-      >
+  return (
+    <g key={id}>
 
         <line
           x1={x}
@@ -285,38 +282,38 @@ export const BiDirectionalSymbol = ({ onNodeClick, setParentItem, setParentItemI
           strokeWidth="2"
         />
 
-        {/* Left vertical rail */}
-        <line
-          x1={leftRailX - 30}
-          y1={topY - 70}
-          x2={leftRailX - 30}
-          y2={bottomY - 130}
-          stroke="black"
-          strokeWidth="2"
-        />
+      {/* Left vertical rail */}
+      <line
+        x1={leftRailX - 30}
+        y1={topY -70}
+        x2={leftRailX - 30}
+        y2={bottomY - 130}
+        stroke="black"
+        strokeWidth="2"
+      />
 
-        {/* Right vertical rail */}
-        <line
-          x1={rightRailX - 100}
-          y1={topY - 70}
-          x2={rightRailX - 100}
-          y2={bottomY - 130}
-          stroke="black"
-          strokeWidth="2"
-        />
+      {/* Right vertical rail */}
+      <line
+        x1={rightRailX}
+        y1={topY - 70}
+        x2={rightRailX}
+        y2={bottomY - 130}
+        stroke="black"
+        strokeWidth="2"
+      />
 
-        {/* K:N label */}
-        <text
-          x={x + dynamicWidth / 2}
-          y={startY - 88}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fontSize="10"
-          fontWeight="bold"
-          fill="#333"
-        >
-          K={blockData?.k || 1}:N={branches.length}
-        </text>
+      {/* K:N label */}
+      <text
+        x={x + dynamicWidth / 2}
+        y={startY - 88}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize="10"
+        fontWeight="bold"
+        fill="#333"
+      >
+        K={blockData?.k || 1}:N={branches.length}
+      </text>
 
         {branches?.map((branch, index) => {
           const branchY = startY + 20 + index * (branchHeight + branchSpacing);
@@ -907,6 +904,7 @@ export default function RBDButton() {
 
   const [kOfNModal, setKOfNModal] = useState({
     open: false,
+    
     blockId: null,
     initialData: null,
     mode: 'add',
@@ -944,35 +942,8 @@ export default function RBDButton() {
     if (state) {
     }
   }, [location]);
-
-  useEffect(() => {
-    getBlock();
-  }, [rbdId, projectId, elementModal?.open, loadChange])
-
-  // Get API for current the blocks 
-  const getBlock = () => {
-    try {
-      Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
-        .then((res) => {
-          // console.log(res, 'data got from db ')
-          let dataLength = res.data.data.length
-          if (dataLength > 0) {
-            setShowSymbol(true);
-          } else {
-            setShowSymbol(false);
-          }
-          setBlocks(res.data.data)
-
-        })
-    } catch (error) {
-      console.log(error, "error")
-    }
-  }
-
-
-  const createParallelBranch = (startNode, endNode) => {
-    // console.log("Creating parallel branch from", startNode, "to", endNode);
-    // console.log(blocks, 'blocks')
+const createParallelBranch = (startNode, endNode) => {
+  console.log("Creating parallel branch from", startNode, "to", endNode);
 
     // Parse node indices to find their positions
     const parseNodeIndex = (nodeIndex) => {
@@ -1313,8 +1284,8 @@ export default function RBDButton() {
       setBlocks(newBlocks);
     }
 
-    setNextId(prevId => prevId + 1);
-  };
+  setNextId(prevId => prevId + 1);
+};
 
 
 
@@ -1332,20 +1303,6 @@ export default function RBDButton() {
     setBlocks(newBlocks);
     setNextId(prevId => prevId + newBlocksArray.length);
   };
-
-
-  const submitParallelSection = (value) => {
-    // console.log(value, 'subit paralel value')
-    try {
-      Api.post(`/api/v1/elementParametersRBD/create/parallelsection/${rbdId}/${projectId}`, value)
-        .then((res) => {
-          toast.success('Successfully Created')
-          getBlock();
-        })
-    } catch (error) {
-      console.log(error)
-    }
-  }
 
   const handleParallelModalSubmit = () => {
 
@@ -1506,23 +1463,23 @@ export default function RBDButton() {
       return;
     }
 
-    if (action === "Add K-out-of-N") {
-      setKOfNModal({
-        open: true,
-        mode: 'add',
-        blockId: nextId,
-        nodeIndex: clickedNodeInfo.index,
-        initialData: {
-          k: 2,
-          n: 3,
-          lambda: 0.001,
-          mu: 1000,
-          formula: 'standard',
-          name: 'K-out-of-N Block'
-        }
-      });
-      return;
-    }
+  if (action === "Add K-out-of-N") {
+    setKOfNModal({
+      open: true,
+      mode: 'add',
+      blockId: nextId,
+      nodeIndex: clickedNodeInfo.index,
+      initialData: {
+        k: 2,
+        n: 3,
+        lambda: 0.001,
+        mu: 1000,
+        formula: 'standard',
+        name: 'K-out-of-N Block'
+      }
+    });
+    return;
+  }
 
     if (action === "Add Regular" || action === "Add SubRBD") {
       const type = action.replace("Add ", "");
@@ -1750,28 +1707,27 @@ export default function RBDButton() {
     )
   }
 
-  {/* Highlight the start node */ }
-  {
-    parallelBranchMode.active && parallelBranchMode.startNode && (
-      <div style={{
-        position: 'fixed',
-        left: clickedNodeInfo.x,
-        top: clickedNodeInfo.y - 20,
-        transform: 'translateX(-50%)',
-        backgroundColor: '#0078d4',
-        color: 'white',
-        padding: '2px 6px',
-        borderRadius: '4px',
-        fontSize: '12px',
-        zIndex: 1500
-      }}>
-        Start
-      </div>
-    )
-  }
+{/* Highlight the start node */}
+{parallelBranchMode.active && parallelBranchMode.startNode && (
+  <div style={{
+    position: 'fixed',
+    left: clickedNodeInfo.x,
+    top: clickedNodeInfo.y - 20,
+    transform: 'translateX(-50%)',
+    backgroundColor: '#0078d4',
+    color: 'white',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    fontSize: '12px',
+    zIndex: 1500
+  }}>
+    Start
+  </div>
+)}
   const handleBlockMenuSelect = (action) => {
+    console.log("Block menu action received:", action);
 
-
+  const handleBlockMenuSelect = (action) => {
     if (!blockMenu.blockId) return;
 
     if (action === "Add Parallel Section") {
@@ -1882,7 +1838,12 @@ export default function RBDButton() {
 
     setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
   };
-
+const handleClose = () => {
+  setKOfNModal(prev => ({
+    ...prev,
+    open: false
+  }));
+};
   const SettingsButton1 = () => (
     <button
       onClick={() => setIsModalOpen(true)}
@@ -1907,7 +1868,8 @@ export default function RBDButton() {
       <span>RBD Configuration</span>
     </button>
   );
-
+  const [open, setOpen] = useState(false);
+  const [selectedCase, setSelectedCase] = useState(null);
   return (
     <>
       <div style={{ minHeight: "100vh", padding: "20px", overflowX: "auto" }}>
@@ -2020,12 +1982,7 @@ export default function RBDButton() {
         {kOfNModal.open && (
           <KOfNConfigModal
             isOpen={kOfNModal.open}
-            onClose={() => {
-              setParentItem(null)
-              setKOfNModal({ open: false, blockId: null, initialData: null, mode: 'add', nodeIndex: null })
-
-            }
-            }
+            onClose={() => setKOfNModal({ open: false, blockId: null, initialData: null, mode: 'add', nodeIndex: null })}
             onSubmit={handleKOfNSubmit}
             initialData={kOfNModal.initialData}
             mode={kOfNModal.mode}

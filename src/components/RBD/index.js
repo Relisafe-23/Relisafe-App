@@ -481,16 +481,11 @@ export default function RBDButton() {
       }
     })
       .then((res) => {
-        // console.log(res.data.data, 'res')
-        // console.log(res, 'response')
+     
         setRbdlistData(res.data.data)
-        const rbdIds = res.data.data.map((item) => item.id);
-        // console.log("RBD IDs:", res);
+        const rbdIds = res.data.data.map((item) => item.id); 
         setRbdId(rbdIds);
-        // console.log("rbdId", rbdId)
-        // console.log("RBD Config Response:", res.data.data.filter((item) => item.id).map((item) => item.id))
         const rbdName = res.data.data.filter((item) => item.rbdTitle).map((item) => item.rbdTitle)
-        // console.log(rbdName, "rbdName")
         const rbdDescription = res.data.data.filter((item) => item.description).map((item) => item.description)
         setDescription(rbdDescription)
         // console.log("descriptio.....n",rbdDescription)
@@ -525,12 +520,6 @@ export default function RBDButton() {
     // console.log("Edit clicked for:", title, "at index:", index);
   };
   const handleViewClick = (item, index) => {
-    // console.log("View clicked for:", title, "at index:", index);
-
-    // const selectedRbdId = rbdId[index];
-    // console.log("Selected RBD ID:", selectedRbdId);
-    // console.log(item,'item?.projectId')
-
     let rbdId = item?.id;
     let id = item?.projectId
 
