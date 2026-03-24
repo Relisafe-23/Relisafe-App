@@ -931,8 +931,43 @@ export default function RBDButton() {
     displayLower: "MTBF",
     printRemarks: "Yes"
   });
+  
+  const submitParallelSection = (value) => {
+    // console.log(value, 'subit paralel value')
+    try {
+      Api.post(`/api/v1/elementParametersRBD/create/parallelsection/${rbdId}/${projectId}`, value)
+        .then((res) => {
+          toast.success('Successfully Created')
+          getBlock();
+        })
+    } catch (error) {
+      console.log(error)
+    }
+  }
   const [listedRBDs, setListedRBDs] = useState([]);
+  useEffect(() => {
+    getBlock();
+  }, [rbdId, projectId, elementModal?.open, loadChange])
 
+  // Get API for current the blocks 
+  const getBlock = () => {
+    try {
+      Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
+        .then((res) => {
+          // console.log(res, 'data got from db ')
+          let dataLength = res.data.data.length
+          if (dataLength > 0) {
+            setShowSymbol(true);
+          } else {
+            setShowSymbol(false);
+          }
+          setBlocks(res.data.data)
+
+        })
+    } catch (error) {
+      console.log(error, "error")
+    }
+  }
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const rbdTitle = queryParams.get('title');
