@@ -77,17 +77,7 @@ const handleCaseSelect = (item) => {
   }
     
 />
-          {/* <KOfNConfigModal
-            isOpen={kOfNModal.open}
-        //     onClose={() => {
-        //     setParentItem(null)
-        //     setKOfNModal({ open: false, blockId: null, initialData: null, mode: 'add', nodeIndex: null })
-        //     }
-        //    }
-        //    onSubmit={handleKOfNSubmit}
-        //   initialData={kOfNModal.initialData}
-        //     mode={kOfNModal.mode}
-          />  */}
+     
       </div>
     </div>
   );

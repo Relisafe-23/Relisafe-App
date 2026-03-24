@@ -2012,15 +2012,19 @@ const handleClose = () => {
           />
         )}
 
-        {kOfNModal.open && (
-          <KOfNConfigModal
-            isOpen={kOfNModal.open}
-            onClose={() => setKOfNModal({ open: false, blockId: null, initialData: null, mode: 'add', nodeIndex: null })}
-            onSubmit={handleKOfNSubmit}
-            initialData={kOfNModal.initialData}
-            mode={kOfNModal.mode}
-          />
-        )}
+             {kOfNModal.open && (
+          <>
+        <CaseSelectionModal
+  isOpen={kOfNModal.open}  
+  handleClose={handleClose}
+  onSelect={(item) => {
+    console.log(item);
+    handleClose();
+  }}
+
+/>
+  </>
+             )}
 
         {showParallelModal && (
           <div style={{
