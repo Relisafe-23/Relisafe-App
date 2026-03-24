@@ -7,13 +7,14 @@ import CreatableSelect from 'react-select/creatable';
 export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode = 'add', currentBlock }) => {
   const [k, setK] = useState(2);
   const [n, setN] = useState(3);
-  const [selectedProduct, setSelectedProduct] = useState("")
-  const [mu, setMu] = useState(1000);
+
+  const [mu, setMu] = useState(0);
   const [formula, setFormula] = useState('standard');
   const { id, rbdId } = useParams();
   const [missionTime, setMissionTime] = useState("");
   const [selectedProductId, setSelectedProductId] = useState([]);
   const projectId = id;
+
   const [values, setValues] = useState({
     relDes: currentBlock?.relDes || '',
     time: currentBlock?.time || " ",
@@ -40,11 +41,12 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     productTreeItemID: currentBlock?.productTreeItemID || '',
     productId: currentBlock?.productId || '',
   });
+  const [mttr, setMttr] = useState(values?.mttr || "");
   const [unavailability, setUnavailability] = useState(0);
   const [systemUnavailability, setSystemUnavailability] = useState(0);
-  const [Reliability,setReliability] = useState(0)
+  const [Reliability, setReliability] = useState(0)
   const [lambda, setLambda] = useState(0);
-  const [mttrValue, setMttrValue] = useState(values?.mttr || "");
+
   const [options, setOptions] = useState([])
 
   useEffect(() => {
@@ -57,24 +59,24 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     }
   }, [initialData]);
 
-  
-  useEffect(() => {
-    if (mttrValue && parseFloat(mttrValue) > 0) {
-      const calculatedMu = 1 / parseFloat(mttrValue);
-      setMu(calculatedMu);
-    } else {
-      setMu(0);
-    }
-  }, [mttrValue]);
 
-  useEffect(() => {
-    if (values?.productId) {
-      fetchMttr(values.productId);
-    } else {
-      setMttrValue("");
-      setValues(prev => ({ ...prev, mttr: "" }));
-    }
-  }, [values.productId]);
+  // useEffect(() => {
+  //   if (mttrValue && parseFloat(mttrValue) > 0) {
+  //     const calculatedMu = 1 / parseFloat(mttrValue);
+  //     setMu(calculatedMu);
+  //   } else {
+  //     setMu(0);
+  //   }
+  // }, [mttrValue]);
+
+  // useEffect(() => {
+  //   if (values?.productId) {
+  //     fetchMttr(values.productId);
+  //   } else {
+  //     setMttrValue("");
+  //     setValues(prev => ({ ...prev, mttr: "" }));
+  //   }
+  // }, [values.productId]);
 
   useEffect(() => {
     const fr = Number(values?.fr);
@@ -96,30 +98,30 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
       [field]: value
     }));
   };
-useEffect(() => {
-  if (lambda > 0 && mu > 0) {
-    const u = lambda / (lambda + mu);
-    setUnavailability(u);
-  } else {
-    setUnavailability(0);
-  }
-}, [lambda, mu]);
-
-
-useEffect(() => {
-  if (unavailability > 0 && k > 0 && n > 0) {
-    const minFailures = k ;
-    let ua_s = 0;
-    
-   
-    for (let i = minFailures; i <= n; i++) {
-      ua_s += combination(n, i) * Math.pow(unavailability, i) * Math.pow(1 - unavailability, n - i);
+  useEffect(() => {
+    if (lambda > 0 && mu > 0) {
+      const u = lambda / (lambda + mu);
+      setUnavailability(u);
+    } else {
+      setUnavailability(0);
     }
-    
-    setSystemUnavailability(ua_s);
-    setReliability(1 - ua_s);
-  }
-}, [unavailability, k, n]);
+  }, [lambda, mu]);
+
+
+  useEffect(() => {
+    if (unavailability > 0 && k > 0 && n > 0) {
+      const minFailures = k;
+      let ua_s = 0;
+
+
+      for (let i = minFailures; i <= n; i++) {
+        ua_s += combination(n, i) * Math.pow(unavailability, i) * Math.pow(1 - unavailability, n - i);
+      }
+
+      setSystemUnavailability(ua_s);
+      setReliability(1 - ua_s);
+    }
+  }, [unavailability, k, n]);
   const getProductName = () => {
     const sessionId = localStorage.getItem("sessionId");
     const userId = localStorage.getItem("userId");
@@ -140,46 +142,18 @@ useEffect(() => {
             productName: item.productName,
             productId: item.productId,
             fr: item.fr,
-            id: item.id
+            id: item.id,
+            mttr: item.mttr,
           }));
         setOptions(options);
-        console.log("options",res)
+        console.log("options", res.data.data.filter(item => item.mttr).map(item => item.mttr))
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
       });
   };
 
-  const fetchMttr = (productId) => {
-    if (!productId) {
-      setMttrValue("");
-      setValues(prev => ({ ...prev, mttr: "" }));
-      return;
-    }
-    
-    Api.get(`/api/v1/mttrPrediction/${productId}`)
-      .then((res) => {
-        console.log("re1234",res.data)
-        console.log("ProductId",productId)
-        const mttr = res?.data?.data?.mttr;
-       console.log("mttr........",mttr)
-        const mttrValueToSet = mttr || "";
-        setMttrValue(mttrValueToSet);
-        setValues(prev => ({
-          ...prev,
-          mttr: mttrValueToSet
-        }));
-      })
-      .catch((error) => {
-        if (error?.response?.status === 401) {
-          console.error("Unauthorized access");
-        } else {
-          // Handle case where product has no MTTR data
-          setMttrValue("");
-          setValues(prev => ({ ...prev, mttr: "" }));
-        }
-      });
-  };
+
 
   const getRbdConfig = () => {
     Api.get("/api/v1/EditConfigRBD/", {
@@ -202,7 +176,7 @@ useEffect(() => {
     if (!lambda || !missionTime) return 0;
     return Math.exp(-(lambda * missionTime));
   };
-  
+
   const combination = (n, r) => {
     const fact = (x) => (x <= 1 ? 1 : x * fact(x - 1));
     return fact(n) / (fact(r) * fact(n - r));
@@ -216,7 +190,7 @@ useEffect(() => {
     }
     return result;
   };
-  
+
   const systemReliability = getKofN_2of3(k, n, getReliability);
 
   const handleSubmit = () => {
@@ -224,8 +198,8 @@ useEffect(() => {
       k,
       n,
       lambda: parseFloat(lambda) || 0,
-      mu: mu, 
-      mttr: mttrValue,
+      mu,
+      // mttr: mttr,
       formula,
       ...values
     };
@@ -278,7 +252,7 @@ useEffect(() => {
         }}>
           {mode === 'add' ? 'Add K-out-of-N Block' : 'Edit K-out-of-N Block'}
         </h3>
-        
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr 1fr',
@@ -308,6 +282,7 @@ useEffect(() => {
                   handleChange("fr", option.fr);
                   handleChange("productId", option.productId);
                   handleChange("id", option.id);
+                  handleChange("mttr", option.mttr)
                 } else {
                   handleChange("productName", "");
                   handleChange("partNumber", "");
@@ -316,6 +291,7 @@ useEffect(() => {
                   handleChange("productId", "");
                   handleChange("id", "");
                   handleChange("fmecaId", "");
+                  handleChange("mttr", "");
                 }
               }}
               styles={{
@@ -327,7 +303,7 @@ useEffect(() => {
               }}
             />
           </div>
-          
+
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
               Ref Des:
@@ -345,7 +321,7 @@ useEffect(() => {
               }}
             />
           </div>
-          
+
           <div>
             <label style={{
               display: "block",
@@ -396,7 +372,7 @@ useEffect(() => {
                 }}
               />
             </div>
-            
+
             <div>
               <label style={{
                 display: "block",
@@ -420,7 +396,7 @@ useEffect(() => {
                 }}
               />
             </div>
-            
+
             <div>
               <label style={{
                 display: "block",
@@ -434,12 +410,8 @@ useEffect(() => {
                 type="number"
                 step="0.1"
                 min="0"
-                value={mttrValue}
-                onChange={(e) => {
-                  const newMttrValue = e.target.value;
-                  setMttrValue(newMttrValue);
-                  setValues(prev => ({ ...prev, mttr: newMttrValue }));
-                }}
+                value={values?.mttr || ""}
+                onChange={(e) => handleChange('mttr', e.target.value)}
                 placeholder="MTTR value will auto-populate"
                 style={{
                   width: "120px",
@@ -462,8 +434,10 @@ useEffect(() => {
           <div style={{ fontWeight: "bold", marginBottom: "8px" }}>Calculated Values:</div>
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
             <span>Failure Rate (λ): {lambda || 'N/A'}</span>
-            <span>MTTR: {mttrValue ? `${mttrValue} hrs` : 'Not Available'}</span>
-            <span>Repair Rate (μ = 1/MTTR): {mu ? mu.toFixed(6) : 'N/A'}</span>
+            {/* <span>MTTR: {mttr ? `${mttr} hrs` : 'Not Available'}</span> */}
+            <span>
+              Repair Rate (μ = 1/MTTR): {values?.mttr ? (1 / values?.mttr)?.toFixed(6) : 'N/A'}
+            </span>
             <span>Reliability: {systemReliability?.toFixed(6)}</span>
           </div>
         </div>
