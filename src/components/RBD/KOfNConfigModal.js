@@ -115,11 +115,24 @@ useEffect(() => {
     for (let i = minFailures; i <= n; i++) {
       ua_s += combination(n, i) * Math.pow(unavailability, i) * Math.pow(1 - unavailability, n - i);
     }
-    
-    setSystemUnavailability(ua_s);
-    setReliability(1 - ua_s);
   }
-}, [unavailability, k, n]);
+  }, [lambda, mu]);
+
+
+  useEffect(() => {
+    if (unavailability > 0 && k > 0 && n > 0) {
+      const minFailures = k;
+      let ua_s = 0;
+
+
+      for (let i = minFailures; i <= n; i++) {
+        ua_s += combination(n, i) * Math.pow(unavailability, i) * Math.pow(1 - unavailability, n - i);
+      }
+    
+      setSystemUnavailability(ua_s);
+      setReliability(1 - ua_s);
+    }
+  }, [unavailability, k, n]);
   const getProductName = () => {
     const sessionId = localStorage.getItem("sessionId");
     const userId = localStorage.getItem("userId");

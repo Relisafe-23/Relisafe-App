@@ -1724,9 +1724,7 @@ const createParallelBranch = (startNode, endNode) => {
     Start
   </div>
 )}
-  const handleBlockMenuSelect = (action) => {
-    console.log("Block menu action received:", action);
-
+ 
   const handleBlockMenuSelect = (action) => {
     if (!blockMenu.blockId) return;
 
