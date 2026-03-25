@@ -300,10 +300,31 @@ function PreventiveManitenance(props) {
       });
   };
 
-  const preventiveData = data?.map((item) => ({
-    productId: item?.productId || {},
-    pmmraData: item?.pmmraData || {},
-  }));
+  // const preventiveData = data?.map((item) => ({
+  //   productId: item?.productId || {},
+  //   pmmraData: item?.pmmraData || {},
+  // }));
+
+  const preventiveData = (() => {
+    if (!data || data.length === 0) return [];
+
+    // ✅ If grouped structure (has partType)
+    if (data[0]?.partType && Array.isArray(data[0]?.items)) {
+      return data.flatMap((part) =>
+        (part.items || []).map((item) => ({
+          productId: item?.productId || {},
+          pmmraData: item?.pmmraData || {},
+        }))
+      );
+    }
+
+    // ✅ If already flat structure
+    return data.map((item) => ({
+      productId: item?.productId || {},
+      pmmraData: item?.pmmraData || {},
+    }));
+  })();
+
   // Sort the data array using the custom sort function
 
   const exportToExcel = () => {
@@ -651,7 +672,10 @@ function PreventiveManitenance(props) {
                         </tr>
                       </thead>
                       {console.log(preventiveData, 'preventiveData')}
-                      <tbody>
+                      {console.log(data, 'Data')}
+
+
+                      {/* <tbody>
                         {(() => {
                           let serialCounter = 1;
 
@@ -706,6 +730,53 @@ function PreventiveManitenance(props) {
                             });
                           });
                         })()}
+                      </tbody> */}
+
+                      <tbody>
+                        {preventiveData.map((row, rowIndex) => {
+                          const productData = row.productId || {};
+                          const pmmraData = row.pmmraData || {};
+
+                          return (
+                            <tr key={rowIndex}>
+                              {headers.map((header, colIndex) => {
+                                const key = headerKeyMapping[header];
+
+                                // ✅ Serial Number
+                                if (header === "S.No") {
+                                  return (
+                                    <td key={colIndex} style={{ textAlign: "center" }}>
+                                      {rowIndex + 1}
+                                    </td>
+                                  );
+                                }
+
+                                // ✅ Value priority: pmmraData > productData > "-"
+                                let value =
+                                  pmmraData[key] !== undefined
+                                    ? pmmraData[key]
+                                    : productData[key] !== undefined
+                                      ? productData[key]
+                                      : "-";
+
+                                // ✅ Format FR column
+                                if (
+                                  header === "FR" &&
+                                  value !== "-" &&
+                                  !isNaN(parseFloat(value))
+                                ) {
+                                  value = parseFloat(value).toFixed(6);
+                                }
+
+                                return (
+                                  <td key={colIndex} style={{ textAlign: "center" }}>
+                                    {value}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

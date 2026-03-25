@@ -206,6 +206,7 @@ const useConnectionManagement = (projectId, productId) => {
     FMECA: "/api/v1/fmeca/product/list",
     SAFETY: "/api/v1/safety/product/list",
     MTTR: "/api/v1/mttrPrediction/details/mil472",
+    PMMRA: "/api/v1/pmMra/details",
   };
 
   const getSourceModuleData = (moduleNames) => {
@@ -224,17 +225,22 @@ const useConnectionManagement = (projectId, productId) => {
           userId: userId,
         },
       }).then((res) => {
-        let data = res?.data?.data || [];                
+        let data = res?.data?.data || [];
+
+        // Handle object response (MTTR details returns an object, not an array)
+        if (data && !Array.isArray(data)) {
+          data = [data];
+        }
 
         // Normalize MTTR data if needed (it often comes nested under mttrData)
-        if (normalizedName === "MTTR") {          
-          data = data.map(item => {            
-            if (item.mttrData) {
+        if (normalizedName === "MTTR") {
+          data = data.map(item => {
+            if (item && item.mttrData) {
               return { ...item, ...item.mttrData };
             }
             return item;
           });
-          
+
         }
 
         setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));
@@ -267,23 +273,45 @@ const useConnectionManagement = (projectId, productId) => {
       const filteredData = res.data.getData.filter(
         (entry) =>
           entry?.libraryId?.moduleName === "PMMRA" ||
-          entry?.destinationModuleName === "PMMRA"
+          entry?.destinationModuleName === "PMMRA" ||
+          entry?.destinationModule === "PMMRA"
       );
 
-      const flattened = filteredData.flatMap((item) =>
-        (item.destinationData || [])
-          .filter(
-            (d) => d.destinationModuleName === "PMMRA"
-          )
-          .map((d) => ({
+      const flattened = filteredData.flatMap((item) => {
+        const connections = [];
+
+        // Check for destinationData entries (Multiple destinations)
+        if (item.destinationData && Array.isArray(item.destinationData)) {
+          item.destinationData.forEach(d => {
+            const destMod = d.destinationModuleName || d.destinationModule;
+            if (destMod === "PMMRA") {
+              connections.push({
+                fieldName: item.sourceName,
+                fieldValue: item.sourceValue,
+                sourceModuleName: item?.libraryId?.moduleName || "",
+                destName: d.destinationName,
+                destValue: d.destinationValue,
+                destModule: destMod,
+              });
+            }
+          });
+        }
+
+        // Also check direct connections (Single destination directly on item)
+        const itemDestMod = item.destinationModuleName || item.destinationModule;
+        if (itemDestMod === "PMMRA" && item.destinationName) {
+          connections.push({
             fieldName: item.sourceName,
             fieldValue: item.sourceValue,
             sourceModuleName: item?.libraryId?.moduleName || "",
-            destName: d.destinationName,
-            destValue: d.destinationValue,
-            destModule: d.destinationModuleName,
-          }))
-      );
+            destName: item.destinationName,
+            destValue: item.destinationValue,
+            destModule: itemDestMod,
+          });
+        }
+
+        return connections;
+      });
 
       setFlattenedConnect(flattened);
 
@@ -494,8 +522,10 @@ export default function PMMRA(props) {
   // Initialize connections on component mount
   const [failureMode, setFailureMode] = useState();
   useEffect(() => {
-    initializeConnections();
-  }, []);
+    if (projectId && productId) {
+      initializeConnections();
+    }
+  }, [projectId, productId]);
 
   // Function to create a smart select field with connections
   const createSmartSelectField = (fieldName, label, values, setFieldValue, formId = "main") => {

@@ -694,9 +694,10 @@ function Index(props) {
 
   // Module name to API endpoint mapping
   const moduleApiMap = {
-    FMECA: "/api/v1/fmeca/product/list",
+    FMECA: "/api/v1/FMECA/product/list",
     SAFETY: "/api/v1/safety/product/list",
-    MTTR: "/api/v1/mttrPrediction/details",
+    MTTR: "/api/v1/mttrPrediction/details/mil472",
+    PMMRA: "/api/v1/pmMra/product/list",
   };
 
   const getSourceModuleData = (moduleNames) => {
@@ -716,7 +717,23 @@ function Index(props) {
           userId: userId,
         },
       }).then((res) => {
-        const data = res?.data?.data || [];
+        let data = res?.data?.data || [];
+
+        // Handle object response (MTTR details returns an object, not an array)
+        if (data && !Array.isArray(data)) {
+          data = [data];
+        }
+
+        // Normalize MTTR data if needed
+        if (normalizedName === "MTTR") {
+          data = data.map(item => {
+            if (item && item.mttrData) {
+              return { ...item, ...item.mttrData };
+            }
+            return item;
+          });
+        }
+
         setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));
       }).catch((error) => {
         console.log(`Error fetching ${normalizedName} data for connected library check:`, error);
@@ -742,10 +759,11 @@ function Index(props) {
       const connections =
         flattenedConnect?.filter(
           item =>
-            item.fieldName === sourceField &&
-            String(item.fieldValue) === String(sourceValue) &&
-            item.destName === fieldName
+            item.fieldName?.toLowerCase() === sourceField?.toLowerCase() &&
+            String(item.fieldValue)?.toLowerCase() === String(sourceValue)?.toLowerCase() &&
+            item.destName?.toLowerCase() === fieldName?.toLowerCase()
         ) || [];
+        console.log("connections..@@....",connections)
 
       connectedValues.push(...connections);
     });
@@ -753,16 +771,24 @@ function Index(props) {
     // Fallback: If no same-module connections found, check cross-module connections
     if (connectedValues.length === 0) {
       const allPossibleConnections = flattenedConnect?.filter(item => {
-        if (item.destName !== fieldName) return false;
+        if (item.destName?.toLowerCase() !== fieldName?.toLowerCase()) return false;
 
         // Check if a record with the source value exists in the source module
         // Normalize comparison for safety
         const normSourceModule = String(item.sourceModuleName).toUpperCase();
         const moduleData = sourceModuleData[normSourceModule] || [];
-        return moduleData.some(
-          row => String(row[item.fieldName]) === String(item.fieldValue)
-        );
+        return moduleData.some(row => {
+          // Find the actual key in the row data that case-insensitively matches the item.fieldName
+          const actualKey = Object.keys(row || {}).find(
+            key => key.toLowerCase() === item.fieldName?.toLowerCase()
+          );
+          
+          if (!actualKey) return false;
+          
+          return String(row[actualKey])?.toLowerCase() === String(item.fieldValue)?.toLowerCase();
+        });
       }) || [];
+
 
       connectedValues = [...connectedValues, ...allPossibleConnections];
     }

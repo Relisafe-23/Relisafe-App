@@ -593,7 +593,8 @@ const MTTRPrediction = (props, active) => {
   const moduleApiMap = {
     FMECA: "/api/v1/fmeca/product/list",
     SAFETY: "/api/v1/safety/product/list",
-    MTTR: "/api/v1/mttrPrediction/details",
+    MTTR: "/api/v1/mttrPrediction/details/mil472",
+    PMMRA: "/api/v1/pmmra/product/list",
   };
 
   const getSourceModuleData = (moduleNames) => {
@@ -609,11 +610,27 @@ const MTTRPrediction = (props, active) => {
       Api.get(apiEndpoint, {
         params: {
           projectId: projectId,
-          productId: treeStructure || iniProductId, // Use treeStructure if available which is parentId
+          productId: productId,
           userId: localStorage.getItem("userId"),
         },
       }).then((res) => {
-        const data = res?.data?.data || [];
+        let data = res?.data?.data || [];
+
+        // Handle object response (MTTR details returns an object, not an array)
+        if (data && !Array.isArray(data)) {
+          data = [data];
+        }
+
+        // Normalize MTTR data if needed
+        if (normalizedName === "MTTR") {
+          data = data.map(item => {
+            if (item && item.mttrData) {
+              return { ...item, ...item.mttrData };
+            }
+            return item;
+          });
+        }
+
         setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));
       }).catch((error) => {
         console.log(`Error fetching ${normalizedName} data for connected library check:`, error);
@@ -630,7 +647,10 @@ const MTTRPrediction = (props, active) => {
     })
       .then((res) => {
         const filteredData = res.data.getData.filter(
-          (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
+          (entry) =>
+            entry?.libraryId?.moduleName === "MTTR" ||
+            entry?.destinationModuleName === "MTTR" ||
+            entry?.destinationModule === "MTTR"
         );
 
         // Properly flatten the data
@@ -640,28 +660,30 @@ const MTTRPrediction = (props, active) => {
           // Check if there are destinationData entries
           if (item.destinationData && Array.isArray(item.destinationData)) {
             item.destinationData.forEach(d => {
-              if (d.destinationModuleName === "MTTR") {
+              const destMod = d.destinationModuleName || d.destinationModule;
+              if (destMod === "MTTR") {
                 connections.push({
                   sourceName: item.sourceName,
                   sourceValue: item.sourceValue,
                   sourceModuleName: item?.libraryId?.moduleName || "",
                   destinationName: d.destinationName,
                   destinationValue: d.destinationValue,
-                  destinationModuleName: d.destinationModuleName,
+                  destinationModuleName: destMod,
                 });
               }
             });
           }
 
           // Also check direct connections
-          if (item.destinationModuleName === "MTTR" && item.destinationName) {
+          const itemDestMod = item.destinationModuleName || item.destinationModule;
+          if (itemDestMod === "MTTR" && item.destinationName) {
             connections.push({
               sourceName: item.sourceName,
               sourceValue: item.sourceValue,
               sourceModuleName: item?.libraryId?.moduleName || "",
               destinationName: item.destinationName,
               destinationValue: item.destinationValue,
-              destinationModuleName: item.destinationModuleName,
+              destinationModuleName: itemDestMod,
             });
           }
 
@@ -694,9 +716,9 @@ const MTTRPrediction = (props, active) => {
       // Find connections where this field is the destination
       const connections = flattenedConnect?.filter(
         item =>
-          item.sourceName === sourceField &&
-          String(item.sourceValue) === String(sourceValue) &&
-          item.destinationName === fieldName
+          item.sourceName?.toLowerCase() === sourceField?.toLowerCase() &&
+          String(item.sourceValue)?.toLowerCase() === String(sourceValue)?.toLowerCase() &&
+          item.destinationName?.toLowerCase() === fieldName?.toLowerCase()
       ) || [];
 
       // Add formatted connections
@@ -715,15 +737,22 @@ const MTTRPrediction = (props, active) => {
     // Fallback: If no same-module connections found, check cross-module connections
     if (connectedValues.length === 0) {
       const allPossibleConnections = flattenedConnect?.filter(item => {
-        if (item.destinationName !== fieldName) return false;
+        if (item.destinationName?.toLowerCase() !== fieldName?.toLowerCase()) return false;
 
         // Check if a record with the source value exists in the source module
         // Normalize comparison for safety
         const normSourceModule = String(item.sourceModuleName).toUpperCase();
         const moduleData = sourceModuleData[normSourceModule] || [];
-        return moduleData.some(
-          row => String(row[item.sourceName]) === String(item.sourceValue)
-        );
+        return moduleData.some(row => {
+          // Find the actual key in the row data that case-insensitively matches the item.sourceName
+          const actualKey = Object.keys(row || {}).find(
+            key => key.toLowerCase() === item.sourceName?.toLowerCase()
+          );
+          
+          if (!actualKey) return false;
+          
+          return String(row[actualKey])?.toLowerCase() === String(item.sourceValue)?.toLowerCase();
+        });
       }) || [];
 
       allPossibleConnections.forEach(conn => {
@@ -743,8 +772,8 @@ const MTTRPrediction = (props, active) => {
   const getDestinationFieldsForSource = (sourceField, sourceValue) => {
     return flattenedConnect
       ?.filter(item =>
-        item.sourceName === sourceField &&
-        String(item.sourceValue) === String(sourceValue)
+        item.sourceName?.toLowerCase() === sourceField?.toLowerCase() &&
+        String(item.sourceValue)?.toLowerCase() === String(sourceValue)?.toLowerCase()
       )
       .map(item => ({
         field: item.destinationName,
@@ -754,12 +783,12 @@ const MTTRPrediction = (props, active) => {
 
   // Check if a field is a source field
   const isSourceField = (fieldName) => {
-    return flattenedConnect?.some(item => item.sourceName === fieldName) || false;
+    return flattenedConnect?.some(item => item.sourceName?.toLowerCase() === fieldName?.toLowerCase()) || false;
   };
 
   // Check if a field is a destination field
   const isDestinationField = (fieldName) => {
-    return flattenedConnect?.some(item => item.destinationName === fieldName) || false;
+    return flattenedConnect?.some(item => item.destinationName?.toLowerCase() === fieldName?.toLowerCase()) || false;
   };
 
   // Get destination values for a field based on selected sources
@@ -773,9 +802,9 @@ const MTTRPrediction = (props, active) => {
       if (sourceValue) {
         const connections = flattenedConnect?.filter(
           item =>
-            item.sourceName === sourceField &&
-            String(item.sourceValue) === String(sourceValue) &&
-            item.destinationName === fieldName
+            item.sourceName?.toLowerCase() === sourceField?.toLowerCase() &&
+            String(item.sourceValue)?.toLowerCase() === String(sourceValue)?.toLowerCase() &&
+            item.destinationName?.toLowerCase() === fieldName?.toLowerCase()
         ) || [];
 
         connections.forEach(item => {
@@ -874,7 +903,22 @@ const MTTRPrediction = (props, active) => {
           options.find(opt => opt.value === String(value)) ||
           (value ? { label: String(value), value: String(value) } : null);
 
-        const hasError = required && (!value || String(value)?.trim() === "");
+        const getValidationError = (val) => {
+          if (required && (!val || String(val).trim() === "")) {
+            return `${label} is required`;
+          }
+          if (validationRules.isNumber && val) {
+            if (isNaN(val)) {
+              return "Must be a number";
+            }
+            if (parseFloat(val) <= 0) {
+              return "Must be greater than 0";
+            }
+          }
+          return null;
+        };
+
+        const errorMsg = getValidationError(value);
 
         // Show dropdown if we have options, otherwise show input field
         if (options.length > 0) {
@@ -910,7 +954,7 @@ const MTTRPrediction = (props, active) => {
                   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                   control: (base) => ({
                     ...base,
-                    borderColor: hasError ? "#d32f2f" : base.borderColor,
+                    borderColor: errorMsg ? "#d32f2f" : base.borderColor,
                     minHeight: "40px",
                   }),
                   option: (base, state) => ({
@@ -920,9 +964,9 @@ const MTTRPrediction = (props, active) => {
                   }),
                 }}
               />
-              {hasError && (
+              {errorMsg && (
                 <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                  {label} is required
+                  {errorMsg}
                 </div>
               )}
               {(connectedValues.length > 0 || destinationOptions.length > 0) && (
@@ -963,14 +1007,14 @@ const MTTRPrediction = (props, active) => {
                   height: "40px",
                   borderRadius: "4px",
                   width: "100%",
-                  borderColor: hasError ? "#d32f2f" : "#ccc",
+                  borderColor: errorMsg ? "#d32f2f" : "#ccc",
                   padding: "0 12px",
                   boxSizing: "border-box",
                 }}
               />
-              {hasError && (
+              {errorMsg && (
                 <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                  {label} is required
+                  {errorMsg}
                 </div>
               )}
             </div>
@@ -1014,8 +1058,8 @@ const MTTRPrediction = (props, active) => {
         ? null
         : Yup.object().required("Level of repair is required"),
     spare: Yup.object().required("Spare is required"),
-    mct: Yup.string().required("MCT is required"),
-    mlh: Yup.string().required("MLH is required"),
+    // mct: Yup.string().required("MCT is required"),
+    // mlh: Yup.string().required("MLH is required"),
     remarks: Yup.string().min(3, 'Minimum 3 characters required')
       .max(200, 'Maximum 200 characters allowed')
     // labourHour: Yup.string().required("Labour hour is required"),
@@ -2211,16 +2255,16 @@ const MTTRPrediction = (props, active) => {
                                     new Promise((resolve, reject) => {
                                       // Check if any required fields are filled
                                       const hasData =
-                                        newRow.taskType?.trim() ||
-                                        newRow.time?.trim() ||
-                                        newRow.totalLabour?.trim() ||
-                                        newRow.skill?.trim() ||
-                                        newRow.tools?.trim() ||
-                                        newRow.partNo?.trim() ||
-                                        newRow.toolType?.trim();
+                                        String(newRow.taskType || "").trim() ||
+                                        String(newRow.time || "").trim() ||
+                                        String(newRow.totalLabour || "").trim() ||
+                                        String(newRow.skill || "").trim() ||
+                                        String(newRow.tools || "").trim() ||
+                                        String(newRow.partNo || "").trim() ||
+                                        String(newRow.toolType || "").trim();
 
                                       if (!hasData) {
-                                        toast.error("Please fill at least one field before saving");
+                                        toast.error("Please fill all required fields before saving");
                                         reject();
                                         return;
                                       }

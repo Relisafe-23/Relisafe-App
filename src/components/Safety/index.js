@@ -68,7 +68,8 @@ function Index(props) {
   const moduleApiMap = {
     FMECA: "/api/v1/fmeca/product/list",
     SAFETY: "/api/v1/safety/product/list",
-    MTTR: "/api/v1/mttrPrediction/details",
+    MTTR: "/api/v1/mttrPrediction/details/mil472",
+    PMMRA: "/api/v1/pmMra/product/list",
   };
 
   const getSourceModuleData = (moduleNames) => {
@@ -88,7 +89,23 @@ function Index(props) {
           userId: userId,
         },
       }).then((res) => {
-        const data = res?.data?.data || [];
+        let data = res?.data?.data || [];
+
+        // Handle object response (MTTR details returns an object, not an array)
+        if (data && !Array.isArray(data)) {
+          data = [data];
+        }
+
+        // Normalize MTTR data if needed
+        if (normalizedName === "MTTR") {
+          data = data.map(item => {
+            if (item && item.mttrData) {
+              return { ...item, ...item.mttrData };
+            }
+            return item;
+          });
+        }
+
         setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));
       }).catch((error) => {
         console.log(`Error fetching ${normalizedName} data for connected library check:`, error);
@@ -301,9 +318,9 @@ function Index(props) {
       // Find connections where this source field/value connects to our target field
       const connections = flattenedConnect.filter(
         item =>
-          item.sourceName === sourceField &&
-          String(item.sourceValue) === String(sourceValue) &&
-          item.destinationName === fieldName
+          item.sourceName?.toLowerCase() === sourceField?.toLowerCase() &&
+          String(item.sourceValue)?.toLowerCase() === String(sourceValue)?.toLowerCase() &&
+          item.destinationName?.toLowerCase() === fieldName?.toLowerCase()
       );
 
       connectedValues.push(...connections);
@@ -313,15 +330,22 @@ function Index(props) {
     // show destination values ONLY if the source record exists in the source module
     if (connectedValues.length === 0) {
       const allPossibleConnections = flattenedConnect.filter(item => {
-        if (item.destinationName !== fieldName) return false;
+        if (item.destinationName?.toLowerCase() !== fieldName?.toLowerCase()) return false;
 
         // Check if a record with the source value exists in the source module
         // Normalize comparison for safety
         const normSourceModule = String(item.sourceModuleName).toUpperCase();
         const moduleData = sourceModuleData[normSourceModule] || [];
-        return moduleData.some(
-          row => String(row[item.sourceName]) === String(item.sourceValue)
-        );
+        return moduleData.some(row => {
+          // Find the actual key in the row data that case-insensitively matches the item.sourceName
+          const actualKey = Object.keys(row || {}).find(
+            key => key.toLowerCase() === item.sourceName?.toLowerCase()
+          );
+          
+          if (!actualKey) return false;
+          
+          return String(row[actualKey])?.toLowerCase() === String(item.sourceValue)?.toLowerCase();
+        });
       });
       connectedValues.push(...allPossibleConnections);
     }
@@ -333,8 +357,8 @@ function Index(props) {
   const getDestinationFieldsForSource = (sourceField, sourceValue) => {
     return flattenedConnect
       .filter(item =>
-        item.sourceName === sourceField &&
-        String(item.sourceValue) === String(sourceValue)
+        item.sourceName?.toLowerCase() === sourceField?.toLowerCase() &&
+        String(item.sourceValue)?.toLowerCase() === String(sourceValue)?.toLowerCase()
       )
       .map(item => ({
         field: item.destinationName,
@@ -515,23 +539,47 @@ function Index(props) {
       const filteredData = res.data.getData.filter(
         (entry) =>
           entry?.libraryId?.moduleName === "SAFETY" ||
-          entry?.destinationModuleName === "SAFETY"
+          entry?.destinationModuleName === "SAFETY" ||
+          entry?.destinationModule === "SAFETY"
       );
       console.log("res", res)
       console.log("res.data.getData", res.data.getData)
       // Flatten the connection data for easier querying
-      const flattened = filteredData.flatMap((item) =>
-        (item.destinationData || [])
-          .filter(d => d.destinationModuleName === "SAFETY")
-          .map((d) => ({
+      const flattened = filteredData.flatMap((item) => {
+        const connections = [];
+
+        // 1. Handle "direct" (flat) connections directly on the item
+        const itemDestMod = item.destinationModuleName || item.destinationModule;
+        if (itemDestMod === "SAFETY") {
+          connections.push({
             sourceName: item.sourceName,
             sourceValue: String(item.sourceValue),
             sourceModuleName: item?.libraryId?.moduleName || "",
-            destinationName: d.destinationName,
-            destinationValue: String(d.destinationValue),
-            destinationModule: d.destinationModuleName
-          }))
-      );
+            destinationName: item.destinationName,
+            destinationValue: String(item.destinationValue),
+            destinationModule: itemDestMod
+          });
+        }
+
+        // 2. Handle connections in the destinationData array
+        if (item.destinationData && Array.isArray(item.destinationData)) {
+          item.destinationData.forEach((d) => {
+            const destMod = d.destinationModuleName || d.destinationModule;
+            if (destMod === "SAFETY") {
+              connections.push({
+                sourceName: item.sourceName,
+                sourceValue: String(item.sourceValue),
+                sourceModuleName: item?.libraryId?.moduleName || "",
+                destinationName: d.destinationName,
+                destinationValue: String(d.destinationValue),
+                destinationModule: destMod
+              });
+            }
+          });
+        }
+
+        return connections;
+      });
 
       console.log("Flattened connections:", flattened);
       setFlattenedConnect(flattened);
@@ -602,12 +650,12 @@ function Index(props) {
   };
 
   const isSourceField = (fieldName) => {
-    return flattenedConnect.some(item => item.sourceName === fieldName);
+    return flattenedConnect.some(item => item.sourceName?.toLowerCase() === fieldName?.toLowerCase());
   };
 
   // Check if a field is a destination field (has incoming connections)
   const isDestinationField = (fieldName) => {
-    return flattenedConnect.some(item => item.destinationName === fieldName);
+    return flattenedConnect.some(item => item.destinationName?.toLowerCase() === fieldName?.toLowerCase());
   };
 
   const createEditComponent = (fieldName, title, isRequired = false) => {
