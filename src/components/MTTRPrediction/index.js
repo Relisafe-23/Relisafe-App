@@ -890,7 +890,22 @@ const MTTRPrediction = (props, active) => {
           options.find(opt => opt.value === String(value)) ||
           (value ? { label: String(value), value: String(value) } : null);
 
-        const hasError = required && (!value || String(value)?.trim() === "");
+        const getValidationError = (val) => {
+          if (required && (!val || String(val).trim() === "")) {
+            return `${label} is required`;
+          }
+          if (validationRules.isNumber && val) {
+            if (isNaN(val)) {
+              return "Must be a number";
+            }
+            if (parseFloat(val) <= 0) {
+              return "Must be greater than 0";
+            }
+          }
+          return null;
+        };
+
+        const errorMsg = getValidationError(value);
 
         // Show dropdown if we have options, otherwise show input field
         if (options.length > 0) {
@@ -926,7 +941,7 @@ const MTTRPrediction = (props, active) => {
                   menuPortal: (base) => ({ ...base, zIndex: 9999 }),
                   control: (base) => ({
                     ...base,
-                    borderColor: hasError ? "#d32f2f" : base.borderColor,
+                    borderColor: errorMsg ? "#d32f2f" : base.borderColor,
                     minHeight: "40px",
                   }),
                   option: (base, state) => ({
@@ -936,9 +951,9 @@ const MTTRPrediction = (props, active) => {
                   }),
                 }}
               />
-              {hasError && (
+              {errorMsg && (
                 <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                  {label} is required
+                  {errorMsg}
                 </div>
               )}
               {(connectedValues.length > 0 || destinationOptions.length > 0) && (
@@ -979,14 +994,14 @@ const MTTRPrediction = (props, active) => {
                   height: "40px",
                   borderRadius: "4px",
                   width: "100%",
-                  borderColor: hasError ? "#d32f2f" : "#ccc",
+                  borderColor: errorMsg ? "#d32f2f" : "#ccc",
                   padding: "0 12px",
                   boxSizing: "border-box",
                 }}
               />
-              {hasError && (
+              {errorMsg && (
                 <div style={{ color: "#d32f2f", fontSize: "12px", marginTop: "2px" }}>
-                  {label} is required
+                  {errorMsg}
                 </div>
               )}
             </div>
@@ -2227,16 +2242,16 @@ const MTTRPrediction = (props, active) => {
                                     new Promise((resolve, reject) => {
                                       // Check if any required fields are filled
                                       const hasData =
-                                        newRow.taskType?.trim() ||
-                                        newRow.time?.trim() ||
-                                        newRow.totalLabour?.trim() ||
-                                        newRow.skill?.trim() ||
-                                        newRow.tools?.trim() ||
-                                        newRow.partNo?.trim() ||
-                                        newRow.toolType?.trim();
+                                        String(newRow.taskType || "").trim() ||
+                                        String(newRow.time || "").trim() ||
+                                        String(newRow.totalLabour || "").trim() ||
+                                        String(newRow.skill || "").trim() ||
+                                        String(newRow.tools || "").trim() ||
+                                        String(newRow.partNo || "").trim() ||
+                                        String(newRow.toolType || "").trim();
 
                                       if (!hasData) {
-                                        toast.error("Please fill at least one field before saving");
+                                        toast.error("Please fill all required fields before saving");
                                         reject();
                                         return;
                                       }
