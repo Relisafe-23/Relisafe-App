@@ -41,6 +41,9 @@ export const InsertionNode = ({ index, x, y, onOpenMenu }) => {
   );
 };
 
+
+
+
 export const BiDirectionalSymbol = ({ onNodeClick, setParentItem, setParentItemId, onOpenMenu, blocks, onDeleteBlock, onEditBlock, selectedNode }) => {
   const boxWidth = 60;
   const boxHeight = 60;
@@ -882,10 +885,13 @@ export default function RBDButton() {
   });
   const [showSymbol, setShowSymbol] = useState(false);
   const [menu, setMenu] = useState(null);
+
+  const [rbdList, setRbdList] = useState([]);
   const [blockMenu, setBlockMenu] = useState({ open: false, parentId: null, blockId: null, x: 0, y: 0 });
   const [blocks, setBlocks] = useState([]);
   const [nextId, setNextId] = useState(1);
   const [selectedNode, setSelectedNode] = useState(null);
+  // const [RbdList, setRbdList] = useState(false);
   const [clickedNodeInfo, setClickedNodeInfo] = useState({
     index: null,
     x: 0,
@@ -910,6 +916,14 @@ export default function RBDButton() {
     mode: 'add',
     nodeIndex: null
   });
+  // Add this new state for RBD list modal
+const [rbdListModal, setRbdListModal] = useState({
+  open: false,
+  nodeIndex: null,
+  blockId: null,
+  mode: 'add',
+  selectedRbd: null
+});
 
   const [showParallelModal, setShowParallelModal] = useState(false);
   const [branchCount, setBranchCount] = useState(3);
@@ -931,6 +945,8 @@ export default function RBDButton() {
     displayLower: "MTBF",
     printRemarks: "Yes"
   });
+
+
   
   const submitParallelSection = (value) => {
     // console.log(value, 'subit paralel value')
@@ -948,6 +964,24 @@ export default function RBDButton() {
   useEffect(() => {
     getBlock();
   }, [rbdId, projectId, elementModal?.open, loadChange])
+
+
+// Fetch RBD list for SubRBD selection
+useEffect(() => {
+  if (projectId) {
+    Api.get("/api/v1/EditConfigRBD/", {
+      params: {
+        projectId: projectId,
+      }
+    })
+      .then((res) => {
+        setRbdList(res.data.data || []);
+      })
+      .catch((error) => {
+        console.error("Error fetching RBD list:", error);
+      });
+  }
+}, [projectId]);
 
   // Get API for current the blocks 
   const getBlock = () => {
@@ -1516,7 +1550,7 @@ const createParallelBranch = (startNode, endNode) => {
     return;
   }
 
-    if (action === "Add Regular" || action === "Add SubRBD") {
+    if (action === "Add Regular") {
       const type = action.replace("Add ", "");
 
       setElementModal({
@@ -1529,8 +1563,22 @@ const createParallelBranch = (startNode, endNode) => {
       return;
     }
 
+if (action === "Add SubRBD") {
+  // Open RBD list modal instead of element parameters modal
+  setRbdListModal({
+    open: true,
+    mode: 'add',
+    blockId: nextId,
+    nodeIndex: clickedNodeInfo.index,
+    selectedRbd: null
+  });
+  return;
+}
+
     console.log("Unhandled action:", action);
   };
+
+
 
   const handleKOfNSubmit = (data) => {
     // console.log("handleKOfNSubmit called with data:", data);
@@ -1760,112 +1808,121 @@ const createParallelBranch = (startNode, endNode) => {
   </div>
 )}
  
-  const handleBlockMenuSelect = (action) => {
-    if (!blockMenu.blockId) return;
+  
+const handleBlockMenuSelect = (action) => {
+  if (!blockMenu.blockId) return;
 
-    if (action === "Add Parallel Section") {
-      handleOpenParallelModal('block');
-      return;
-    }
+  if (action === "Add Parallel Section") {
+    handleOpenParallelModal('block');
+    return;
+  }
 
-    if (action === "Edit...") {
-      // console.log(parentItem, 'parentItem to chekc')
-      if (parentItem?.type === 'parallel-section') {
-        setParentItemId(parentItem?.id)
-        // Find the block inside the branches
-        let foundBlock = null;
-        // Loop through all branches
-        parentItem.branches?.forEach(branch => {
-          // Loop through blocks in each branch
-          branch.blocks?.forEach(block => {
-            // console.log(block, 'block')
-            if (block._id === blockMenu.blockId || block._id === blockMenu.blockId) {
-              foundBlock = block;
-            }
-          });
-        });
-        // console.log(foundBlock, 'foundBlock')
-        setParallelFoundBlock(foundBlock)
-        if (foundBlock) {
-          setParallelFoundBlock(foundBlock)
-          if (foundBlock.type === 'K-out-of-N') {
-            setKOfNModal({
-              open: true,
-              mode: 'edit',
-              blockId: blockMenu.blockId,
-              nodeIndex: null,
-              initialData: foundBlock.data || foundBlock
-            });
-          } else {
-            // Handle other block types
-            setElementModal({
-              open: true,
-              mode: 'edit',
-              blockId: blockMenu.blockId,
-              blockType: foundBlock.type === 'K-out-of-N' ? 'K_OUT_OF_N' :
-                foundBlock.type === 'SubRBD' ? 'SUBRBD' :
-                  foundBlock.type === 'Regular' ? 'REGULAR' : 'REGULAR',
-              nodeIndex: null
-            });
-            setParallelFoundBlock(foundBlock)
+  if (action === "Edit...") {
+    // Find the block that was clicked
+    let foundBlock = null;
+    
+    // Check if it's inside a parallel section
+    if (parentItem?.type === 'parallel-section') {
+      setParentItemId(parentItem?.id);
+      // Find the block inside the branches
+      parentItem.branches?.forEach(branch => {
+        branch.blocks?.forEach(block => {
+          if (block.id === blockMenu.blockId || block._id === blockMenu.blockId) {
+            foundBlock = block;
           }
-        }
-      } else {
-        // console.log(blockMenu.blockId, 'blockMenu.blockId')
-        const block = blocks.find(b => b.id === blockMenu.blockId);
-        // console.log(block, 'block...')
-
-        if (block?.type === 'K-out-of-N') {
-          setKOfNModal({
-            open: true,
-            mode: 'edit',
-            blockId: blockMenu.blockId,
-            nodeIndex: null,
-            initialData: block.data
-          });
-        } else {
-          setElementModal({
-            open: true,
-            mode: 'edit',
-            blockId: blockMenu.blockId,
-            blockType: block?.type === 'K-out-of-N' ? 'K_OUT_OF_N' :
-              block?.type === 'SubRBD' ? 'SUBRBD' :
-                block?.type === 'Parallel Section' ? 'PARALLEL_SECTION' :
-                  block?.type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR',
-            nodeIndex: null
-          });
-        }
+        });
+      });
+    } else {
+      // Find top-level block
+      foundBlock = blocks.find(b => b.id === blockMenu.blockId);
+    }
+    
+    // Now check what type of block we found
+    if (foundBlock) {
+      // Check if it's a SubRBD block
+      if (foundBlock.type === 'SubRBD') {
+        // ✅ FOR SUBRBD: Open RBD List Modal in EDIT mode
+        console.log("Editing SubRBD block:", foundBlock);
+        
+        setRbdListModal({
+          open: true,
+          mode: 'edit',  // Important: Set mode to 'edit'
+          blockId: blockMenu.blockId,
+          nodeIndex: null,
+          selectedRbd: foundBlock.data?.rbdData || foundBlock.rbdData || null
+        });
       }
-    } else if (action === "Delete...") {
-      handleDeleteBlock(blockMenu.blockId);
-    } else if (action === "Add K-out-of-N") {
-      setKOfNModal({
-        open: true,
-        mode: 'add',
-        blockId: nextId,
-        nodeIndex: clickedNodeInfo.index,
-        initialData: {
-          k: 2,
-          n: 3,
-          lambda: 0.001,
-          mu: 1000,
-          formula: 'standard',
-          name: 'K-out-of-N Block'
-        }
-      });
-    } else if (action.startsWith("Add ")) {
-      const type = action.replace("Add ", "");
-      setElementModal({
-        open: true,
-        mode: 'add',
-        blockId: nextId,
-        blockType: type === 'K-out-of-N' ? 'K_OUT_OF_N' :
-          type === 'SubRBD' ? 'SUBRBD' :
-            type === 'Parallel Section' ? 'PARALLEL_SECTION' :
-              type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR',
-        nodeIndex: clickedNodeInfo.index
-      });
-    } else if (action === "Split K-out-of-N...") {
+      else if (foundBlock.type === 'K-out-of-N') {
+        // For K-out-of-N blocks
+        setKOfNModal({
+          open: true,
+          mode: 'edit',
+          blockId: blockMenu.blockId,
+          nodeIndex: null,
+          initialData: foundBlock.data || foundBlock
+        });
+      }
+      else {
+        // For Regular blocks - open ElementParametersModal
+        setElementModal({
+          open: true,
+          mode: 'edit',
+          blockId: blockMenu.blockId,
+          blockType: foundBlock.type === 'Regular' ? 'REGULAR' : 
+                     foundBlock.type === 'Parallel Section' ? 'PARALLEL_SECTION' :
+                     foundBlock.type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR',
+          nodeIndex: null
+        });
+      }
+    }
+    
+    setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+    return;
+  } 
+  else if (action === "Delete...") {
+    handleDeleteBlock(blockMenu.blockId);
+    setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+    return;
+  } 
+  else if (action === "Add K-out-of-N") {
+    setKOfNModal({
+      open: true,
+      mode: 'add',
+      blockId: nextId,
+      nodeIndex: clickedNodeInfo.index,
+      initialData: {
+        k: 2,
+        n: 3,
+        lambda: 0.001,
+        mu: 1000,
+        formula: 'standard',
+        name: 'K-out-of-N Block'
+      }
+    });
+    setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+    return;
+  } else if (action === "Add SubRBD") {
+  // Open RBD list modal
+  setRbdListModal({
+    open: true,
+    mode: 'add',
+    blockId: nextId,
+    nodeIndex: clickedNodeInfo.index,
+    selectedRbd: null
+  });
+} else if (action.startsWith("Add ")) {
+  const type = action.replace("Add ", "");
+  setElementModal({
+    open: true,
+    mode: 'add',
+    blockId: nextId,
+    blockType: type === 'K-out-of-N' ? 'K_OUT_OF_N' :
+      type === 'SubRBD' ? 'SUBRBD' :
+        type === 'Parallel Section' ? 'PARALLEL_SECTION' :
+          type === 'Parallel Branch' ? 'PARALLEL_BRANCH' : 'REGULAR',
+    nodeIndex: clickedNodeInfo.index
+  });
+} else if (action === "Split K-out-of-N...") {
       alert("Splitting K-out-of-N block");
     }
 
@@ -2012,6 +2069,215 @@ const handleClose = () => {
           />
         )}
 
+        {/* RBD List Modal for SubRBD */}
+{/* RBD List Modal for SubRBD */}
+{rbdListModal.open && (
+  <div style={{
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2000
+  }}>
+    <div style={{
+      backgroundColor: "#f0f0f0",
+      padding: "20px",
+      borderRadius: "8px",
+      minWidth: "450px",
+      maxWidth: "600px",
+      maxHeight: "80vh",
+      overflowY: "auto",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+      border: "1px solid #999"
+    }}>
+      <h3 style={{
+        marginTop: 0,
+        marginBottom: "20px",
+        fontSize: "16px",
+        fontWeight: "bold",
+        color: "#333"
+      }}>
+        {rbdListModal.mode === 'edit' ? 'Edit SubRBD' : 'Select RBD for SubRBD'}
+      </h3>
+
+      <div style={{ marginBottom: "20px" }}>
+        <label style={{
+          display: "block",
+          marginBottom: "8px",
+          fontSize: "12px",
+          fontWeight: "bold",
+          color: "#333"
+        }}>
+          Available RBDs:
+        </label>
+        <select
+          style={{
+            width: "100%",
+            padding: "8px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            fontSize: "12px",
+            marginBottom: "15px"
+          }}
+          value={rbdListModal.selectedRbd ? JSON.stringify(rbdListModal.selectedRbd) : ""}
+          onChange={(e) => {
+            if (e.target.value) {
+              const selectedRbd = JSON.parse(e.target.value);
+              setRbdListModal(prev => ({
+                ...prev,
+                selectedRbd: selectedRbd
+              }));
+            } else {
+              setRbdListModal(prev => ({
+                ...prev,
+                selectedRbd: null
+              }));
+            }
+          }}
+        >
+          <option value="">-- Select an RBD --</option>
+          {rbdList && rbdList.map((rbd) => (
+            <option key={rbd.id} value={JSON.stringify(rbd)}>
+              {rbd.rbdTitle || `RBD ${rbd.id}`} - {rbd.description || "No description"}
+            </option>
+          ))}
+        </select>
+
+        {rbdListModal.selectedRbd && (
+          <div style={{
+            backgroundColor: "white",
+            padding: "10px",
+            borderRadius: "4px",
+            fontSize: "12px",
+            border: "1px solid #ddd",
+            marginTop: "10px"
+          }}>
+            <div><strong>Selected RBD:</strong> {rbdListModal.selectedRbd.rbdTitle || `RBD ${rbdListModal.selectedRbd.id}`}</div>
+            <div><strong>Description:</strong> {rbdListModal.selectedRbd.description || "No description"}</div>
+            <div><strong>Mission Time:</strong> {rbdListModal.selectedRbd.missionTime || "N/A"} hours</div>
+           <div><strong >Reliability:</strong> {rbdListModal.selectedRbd.reliability || "N/A"}
+            <div><strong>Unavailability:</strong> {rbdListModal.selectedRbd.unavailability ? `${rbdListModal.selectedRbd.unavailability || "N/A"}%` : "N/A"}</div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{
+        display: "flex",
+        gap: "8px",
+        justifyContent: "flex-end",
+        marginTop: "20px"
+      }}>
+        <button
+          onClick={() => {
+            if (rbdListModal.selectedRbd) {
+              if (rbdListModal.mode === 'edit') {
+                // 📝 EDIT MODE: Update existing SubRBD block
+                setBlocks(blocks.map(block => {
+                  if (block.id === rbdListModal.blockId) {
+                    return {
+                      ...block,
+                      type: 'SubRBD',
+                      data: {
+                        ...block.data,
+                        elementType: 'SubRBD',
+                        name: rbdListModal.selectedRbd.rbdTitle || `SubRBD`,
+                        rbdId: rbdListModal.selectedRbd.id,
+                        rbdData: rbdListModal.selectedRbd,
+                        reliabilityData: null
+                      }
+                    };
+                  }
+                  return block;
+                }));
+              } else {
+                // ✨ ADD MODE: Create new SubRBD block
+                const newBlock = {
+                  id: rbdListModal.blockId,
+                  type: 'SubRBD',
+                  data: {
+                    elementType: 'SubRBD',
+                    name: rbdListModal.selectedRbd.rbdTitle || `SubRBD`,
+                    rbdId: rbdListModal.selectedRbd.id,
+                    rbdData: rbdListModal.selectedRbd,
+                    reliabilityData: null
+                  }
+                };
+                
+                const nodeIndexToUse = rbdListModal.nodeIndex;
+                if (nodeIndexToUse !== null && nodeIndexToUse !== undefined) {
+                  insertBlockAtPosition(newBlock, nodeIndexToUse);
+                } else {
+                  setBlocks([...blocks, newBlock]);
+                  setNextId(nextId + 1);
+                }
+              }
+              
+              // Close modal
+              setRbdListModal({ 
+                open: false, 
+                nodeIndex: null, 
+                blockId: null, 
+                mode: 'add', 
+                selectedRbd: null 
+              });
+              
+              // Close context menu if open
+              setMenu(null);
+            } else {
+              alert("Please select an RBD");
+            }
+          }}
+          style={{
+            padding: "6px 20px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "3px",
+            cursor: "pointer",
+            fontSize: "13px",
+            minWidth: "70px"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
+        >
+          {rbdListModal.mode === 'edit' ? 'Update' : 'OK'}
+        </button>
+        <button
+          onClick={() => {
+            setRbdListModal({ 
+              open: false, 
+              nodeIndex: null, 
+              blockId: null, 
+              mode: 'add', 
+              selectedRbd: null 
+            });
+          }}
+          style={{
+            padding: "6px 20px",
+            backgroundColor: "#e1e1e1",
+            color: "#333",
+            border: "1px solid #999",
+            borderRadius: "3px",
+            cursor: "pointer",
+            fontSize: "13px",
+            minWidth: "70px"
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#d1d1d1"}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#e1e1e1"}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
              {kOfNModal.open && (
           <>
         <CaseSelectionModal
@@ -2144,6 +2410,7 @@ const handleClose = () => {
           </div>
         )}
 
+       
         <SwitchConfigurationModal
           isOpen={switchModal.open}
           onClose={() => {
