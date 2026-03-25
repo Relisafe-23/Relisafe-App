@@ -372,7 +372,6 @@ export const RBDContextMenu = ({ x, y, onSelect, onClose }) => (
   </div>
 );
 
-// BlockContextMenu Component
 export const BlockContextMenu = ({ x, y, onSelect, onClose }) => (
   <div
     style={{
@@ -420,7 +419,7 @@ export const BlockContextMenu = ({ x, y, onSelect, onClose }) => (
   </div>
 );
 
-// Styled Components
+
 const StyledTableContainer = styled(TableContainer)({
   boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
   borderRadius: '12px',

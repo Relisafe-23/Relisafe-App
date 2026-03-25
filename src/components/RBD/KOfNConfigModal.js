@@ -5,16 +5,13 @@ import { useParams, useLocation } from 'react-router-dom';
 import CreatableSelect from 'react-select/creatable';
 
 export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode = 'add', currentBlock }) => {
-  const [k, setK] = useState(2);
-  const [n, setN] = useState(3);
-
-  const [mu, setMu] = useState(0);
+  const [k, setK] = useState(null);
+  const [n, setN] = useState(null);
   const [formula, setFormula] = useState('standard');
   const { id, rbdId } = useParams();
   const [missionTime, setMissionTime] = useState("");
-  const [selectedProductId, setSelectedProductId] = useState([]);
   const projectId = id;
-
+  const[systemUnavailability, setSystemUnavailability]=useState("");
   const [values, setValues] = useState({
     relDes: currentBlock?.relDes || '',
     time: currentBlock?.time || " ",
@@ -26,8 +23,8 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     color: currentBlock?.color || '#ffffff',
     frDistribution: currentBlock?.frDistribution || '',
     kOutOfN: currentBlock?.kOutOfN || false,
-    k: currentBlock?.k || '2',
-    n: currentBlock?.n || '3',
+    k: currentBlock?.k || '',
+    n: currentBlock?.n || '',
     alpha: currentBlock?.alpha || '',
     fmecaId: currentBlock?.fmecaId || '',
     indexCount: currentBlock?.indexCount || '',
@@ -36,60 +33,56 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     repairDistribution: currentBlock?.repairDistribution || 'Exponential',
     mtbf: currentBlock?.mtbf || '1303617.9',
     load: currentBlock?.load || '100',
+  
     mttr: currentBlock?.mttr || '',
     productNumber: currentBlock?.productNumber || '',
     productTreeItemID: currentBlock?.productTreeItemID || '',
     productId: currentBlock?.productId || '',
   });
-  const [mttr, setMttr] = useState(values?.mttr || "");
-  const [unavailability, setUnavailability] = useState(0);
-  const [systemUnavailability, setSystemUnavailability] = useState(0);
-  const [Reliability, setReliability] = useState(0)
+
   const [lambda, setLambda] = useState(0);
+  const [isLambdaEdited,setIsLambdaEdited] = useState(false);
 
   const [options, setOptions] = useState([])
-
+  const [mu, setMu] = useState(0);
+  console.log("mu",values?.mttr)
   useEffect(() => {
     if (initialData) {
-      setK(initialData.k || 2);
-      setN(initialData.n || 3);
-      setLambda(initialData.lambda || 0.001);
-      setMu(initialData.mu || 1000);
+      setK(initialData.k || "");
+      setN(initialData.n || "");
+      setLambda(initialData.lambda || "");
+      setMu(initialData.mu || "");
       setFormula(initialData.formula || 'standard');
     }
   }, [initialData]);
 
 
-  // useEffect(() => {
-  //   if (mttrValue && parseFloat(mttrValue) > 0) {
-  //     const calculatedMu = 1 / parseFloat(mttrValue);
-  //     setMu(calculatedMu);
-  //   } else {
-  //     setMu(0);
-  //   }
-  // }, [mttrValue]);
-
-  // useEffect(() => {
-  //   if (values?.productId) {
-  //     fetchMttr(values.productId);
-  //   } else {
-  //     setMttrValue("");
-  //     setValues(prev => ({ ...prev, mttr: "" }));
-  //   }
-  // }, [values.productId]);
+  useEffect(() => {
+    if (parseFloat(values?.mttr) > 0) {
+      const calculatedMu = 1 / parseFloat(values?.mttr);
+      setMu(calculatedMu);
+    } else {
+      setMu(0);
+    }
+  }, [values?.mttr]);
 
   useEffect(() => {
     const fr = Number(values?.fr);
-    if (fr > 0) {
+    if
+    (!isLambdaEdited){
+ if (fr > 0) {
       setLambda((1 / fr)?.toFixed(6));
     } else {
       setLambda("");
     }
-  }, [values?.fr]);
+    }
+   
+  }, [values?.fr,isLambdaEdited]);
 
   useEffect(() => {
     getRbdConfig();
     getProductName();
+  
   }, [projectId]);
 
   const handleChange = (field, value) => {
@@ -98,29 +91,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
       [field]: value
     }));
   };
-  useEffect(() => {
-    if (lambda > 0 && mu > 0) {
-      const u = lambda / (lambda + mu);
-      setUnavailability(u);
-    } else {
-      setUnavailability(0);
-    }
-  }, [lambda, mu]);
 
-
-  useEffect(() => {
-    if (unavailability > 0 && k > 0 && n > 0) {
-      const minFailures = k;
-      let ua_s = 0;
-
-
-      for (let i = minFailures; i <= n; i++) {
-        ua_s += combination(n, i) * Math.pow(unavailability, i) * Math.pow(1 - unavailability, n - i);
-      }
-      setSystemUnavailability(ua_s);
-      setReliability(1 - ua_s);
-    }
-  }, [unavailability, k, n]);
   const getProductName = () => {
     const sessionId = localStorage.getItem("sessionId");
     const userId = localStorage.getItem("userId");
@@ -151,9 +122,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
         console.error("Error fetching products:", error);
       });
   };
-
-
-
+ 
   const getRbdConfig = () => {
     Api.get("/api/v1/EditConfigRBD/", {
       params: {
@@ -168,8 +137,56 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
         console.error("Error fetching RBD config:", error);
       });
   };
+ 
+const unAvailabilityFn = (lambda, mu) => {
+  if ((lambda + mu) === 0) return 0;
+  return lambda / (lambda + mu);
+};
 
-  if (!isOpen) return null;
+const factorial = (num) => {
+  let result = 1;
+  for (let i = 2; i <= num; i++) {
+    result *= i;
+  }
+  return result;
+};
+
+const combination1 = (n, i) => {
+  return factorial(n) / (factorial(i) * factorial(n - i));
+};
+const unAvailabilityValue= (k, n, lambda, mu) => {
+  const u = unAvailabilityFn(lambda, mu);
+  let result = 0;
+
+  for (let i = k; i <= n; i++) {
+    result += combination1(n, i) * Math.pow(u, i) * Math.pow(1 - u, n - i);
+  }
+  return result;
+};
+useEffect(() => {
+  const kVal = Number(k);
+  const nVal = Number(n);
+  const lambdaVal = Number(lambda);
+  const muVal = Number(mu);
+  if (
+    !isNaN(kVal) &&
+    !isNaN(nVal) &&
+    !isNaN(lambdaVal) &&
+    !isNaN(muVal)
+  ) {
+    const result = unAvailabilityValue(kVal, nVal, lambdaVal, muVal);
+
+    setSystemUnavailability(
+      Number(result?.toFixed(6)) || 0
+    );
+  } else {
+    setSystemUnavailability(0); 
+  }
+}, [k, n, lambda, mu]);
+  useEffect(()=>{
+    setIsLambdaEdited(false);
+   },[values?.productId]);
+
 
   const getReliability = (productId) => {
     if (!lambda || !missionTime) return 0;
@@ -190,19 +207,19 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     return result;
   };
 
-  const systemReliability = getKofN_2of3(k, n, getReliability);
 
+  const systemReliability = getKofN_2of3(k, n, getReliability);
+ 
   const handleSubmit = () => {
     const data = {
-      k,
-      n,
+      
       lambda: parseFloat(lambda) || 0,
       mu,
       // mttr: mttr,
       formula,
       ...values
     };
-
+   console.log("databbjkk",data)
     Api.post(
       `/api/v1/elementParametersRBD/create/KOfN/${rbdId}/${projectId}`,
       data
@@ -218,7 +235,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
       });
     onClose();
   };
-
+  if (!isOpen) return null;
   return (
     <div style={{
       position: "fixed",
@@ -335,7 +352,8 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
               step="0.0001"
               min="0"
               value={lambda}
-              onChange={(e) => setLambda(parseFloat(e.target.value) || 0)}
+              onChange={(e) =>{ setLambda(parseFloat(e.target.value) || 0);
+                setIsLambdaEdited(true)}}
               style={{
                 width: "100%",
                 padding: "6px",
@@ -433,11 +451,14 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
           <div style={{ fontWeight: "bold", marginBottom: "8px" }}>Calculated Values:</div>
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
             <span>Failure Rate (λ): {lambda || 'N/A'}</span>
-            {/* <span>MTTR: {mttr ? `${mttr} hrs` : 'Not Available'}</span> */}
-            <span>
-              Repair Rate (μ = 1/MTTR): {values?.mttr ? (1 / values?.mttr)?.toFixed(6) : 'N/A'}
+    
+               <span>
+              Repair Rate (μ = 1/MTTR): {mu?.toFixed(6)}
             </span>
             <span>Reliability: {systemReliability?.toFixed(6)}</span>
+            <span>
+              unavailability:{systemUnavailability}
+            </span>
           </div>
         </div>
 
