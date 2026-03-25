@@ -694,9 +694,10 @@ function Index(props) {
 
   // Module name to API endpoint mapping
   const moduleApiMap = {
-    FMECA: "/api/v1/fmeca/product/list",
+    FMECA: "/api/v1/FMECA/product/list",
     SAFETY: "/api/v1/safety/product/list",
     MTTR: "/api/v1/mttrPrediction/details/mil472",
+    PMMRA: "/api/v1/pmMra/product/list",
   };
 
   const getSourceModuleData = (moduleNames) => {
@@ -762,6 +763,7 @@ function Index(props) {
             String(item.fieldValue)?.toLowerCase() === String(sourceValue)?.toLowerCase() &&
             item.destName?.toLowerCase() === fieldName?.toLowerCase()
         ) || [];
+        console.log("connections..@@....",connections)
 
       connectedValues.push(...connections);
     });
@@ -775,10 +777,18 @@ function Index(props) {
         // Normalize comparison for safety
         const normSourceModule = String(item.sourceModuleName).toUpperCase();
         const moduleData = sourceModuleData[normSourceModule] || [];
-        return moduleData.some(
-          row => String(row[item.fieldName])?.toLowerCase() === String(item.fieldValue)?.toLowerCase()
-        );
+        return moduleData.some(row => {
+          // Find the actual key in the row data that case-insensitively matches the item.fieldName
+          const actualKey = Object.keys(row || {}).find(
+            key => key.toLowerCase() === item.fieldName?.toLowerCase()
+          );
+          
+          if (!actualKey) return false;
+          
+          return String(row[actualKey])?.toLowerCase() === String(item.fieldValue)?.toLowerCase();
+        });
       }) || [];
+
 
       connectedValues = [...connectedValues, ...allPossibleConnections];
     }

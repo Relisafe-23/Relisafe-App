@@ -594,6 +594,7 @@ const MTTRPrediction = (props, active) => {
     FMECA: "/api/v1/fmeca/product/list",
     SAFETY: "/api/v1/safety/product/list",
     MTTR: "/api/v1/mttrPrediction/details/mil472",
+    PMMRA: "/api/v1/pmmra/product/list",
   };
 
   const getSourceModuleData = (moduleNames) => {
@@ -646,7 +647,10 @@ const MTTRPrediction = (props, active) => {
     })
       .then((res) => {
         const filteredData = res.data.getData.filter(
-          (entry) => entry?.libraryId?.moduleName === "MTTR" || entry?.destinationModuleName === "MTTR"
+          (entry) =>
+            entry?.libraryId?.moduleName === "MTTR" ||
+            entry?.destinationModuleName === "MTTR" ||
+            entry?.destinationModule === "MTTR"
         );
 
         // Properly flatten the data
@@ -656,28 +660,30 @@ const MTTRPrediction = (props, active) => {
           // Check if there are destinationData entries
           if (item.destinationData && Array.isArray(item.destinationData)) {
             item.destinationData.forEach(d => {
-              if (d.destinationModuleName === "MTTR") {
+              const destMod = d.destinationModuleName || d.destinationModule;
+              if (destMod === "MTTR") {
                 connections.push({
                   sourceName: item.sourceName,
                   sourceValue: item.sourceValue,
                   sourceModuleName: item?.libraryId?.moduleName || "",
                   destinationName: d.destinationName,
                   destinationValue: d.destinationValue,
-                  destinationModuleName: d.destinationModuleName,
+                  destinationModuleName: destMod,
                 });
               }
             });
           }
 
           // Also check direct connections
-          if (item.destinationModuleName === "MTTR" && item.destinationName) {
+          const itemDestMod = item.destinationModuleName || item.destinationModule;
+          if (itemDestMod === "MTTR" && item.destinationName) {
             connections.push({
               sourceName: item.sourceName,
               sourceValue: item.sourceValue,
               sourceModuleName: item?.libraryId?.moduleName || "",
               destinationName: item.destinationName,
               destinationValue: item.destinationValue,
-              destinationModuleName: item.destinationModuleName,
+              destinationModuleName: itemDestMod,
             });
           }
 
@@ -737,9 +743,16 @@ const MTTRPrediction = (props, active) => {
         // Normalize comparison for safety
         const normSourceModule = String(item.sourceModuleName).toUpperCase();
         const moduleData = sourceModuleData[normSourceModule] || [];
-        return moduleData.some(
-          row => String(row[item.sourceName])?.toLowerCase() === String(item.sourceValue)?.toLowerCase()
-        );
+        return moduleData.some(row => {
+          // Find the actual key in the row data that case-insensitively matches the item.sourceName
+          const actualKey = Object.keys(row || {}).find(
+            key => key.toLowerCase() === item.sourceName?.toLowerCase()
+          );
+          
+          if (!actualKey) return false;
+          
+          return String(row[actualKey])?.toLowerCase() === String(item.sourceValue)?.toLowerCase();
+        });
       }) || [];
 
       allPossibleConnections.forEach(conn => {

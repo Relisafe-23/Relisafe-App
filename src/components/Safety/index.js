@@ -69,6 +69,7 @@ function Index(props) {
     FMECA: "/api/v1/fmeca/product/list",
     SAFETY: "/api/v1/safety/product/list",
     MTTR: "/api/v1/mttrPrediction/details/mil472",
+    PMMRA: "/api/v1/pmMra/product/list",
   };
 
   const getSourceModuleData = (moduleNames) => {
@@ -335,9 +336,16 @@ function Index(props) {
         // Normalize comparison for safety
         const normSourceModule = String(item.sourceModuleName).toUpperCase();
         const moduleData = sourceModuleData[normSourceModule] || [];
-        return moduleData.some(
-          row => String(row[item.sourceName])?.toLowerCase() === String(item.sourceValue)?.toLowerCase()
-        );
+        return moduleData.some(row => {
+          // Find the actual key in the row data that case-insensitively matches the item.sourceName
+          const actualKey = Object.keys(row || {}).find(
+            key => key.toLowerCase() === item.sourceName?.toLowerCase()
+          );
+          
+          if (!actualKey) return false;
+          
+          return String(row[actualKey])?.toLowerCase() === String(item.sourceValue)?.toLowerCase();
+        });
       });
       connectedValues.push(...allPossibleConnections);
     }
@@ -531,23 +539,47 @@ function Index(props) {
       const filteredData = res.data.getData.filter(
         (entry) =>
           entry?.libraryId?.moduleName === "SAFETY" ||
-          entry?.destinationModuleName === "SAFETY"
+          entry?.destinationModuleName === "SAFETY" ||
+          entry?.destinationModule === "SAFETY"
       );
       console.log("res", res)
       console.log("res.data.getData", res.data.getData)
       // Flatten the connection data for easier querying
-      const flattened = filteredData.flatMap((item) =>
-        (item.destinationData || [])
-          .filter(d => d.destinationModuleName === "SAFETY")
-          .map((d) => ({
+      const flattened = filteredData.flatMap((item) => {
+        const connections = [];
+
+        // 1. Handle "direct" (flat) connections directly on the item
+        const itemDestMod = item.destinationModuleName || item.destinationModule;
+        if (itemDestMod === "SAFETY") {
+          connections.push({
             sourceName: item.sourceName,
             sourceValue: String(item.sourceValue),
             sourceModuleName: item?.libraryId?.moduleName || "",
-            destinationName: d.destinationName,
-            destinationValue: String(d.destinationValue),
-            destinationModule: d.destinationModuleName
-          }))
-      );
+            destinationName: item.destinationName,
+            destinationValue: String(item.destinationValue),
+            destinationModule: itemDestMod
+          });
+        }
+
+        // 2. Handle connections in the destinationData array
+        if (item.destinationData && Array.isArray(item.destinationData)) {
+          item.destinationData.forEach((d) => {
+            const destMod = d.destinationModuleName || d.destinationModule;
+            if (destMod === "SAFETY") {
+              connections.push({
+                sourceName: item.sourceName,
+                sourceValue: String(item.sourceValue),
+                sourceModuleName: item?.libraryId?.moduleName || "",
+                destinationName: d.destinationName,
+                destinationValue: String(d.destinationValue),
+                destinationModule: destMod
+              });
+            }
+          });
+        }
+
+        return connections;
+      });
 
       console.log("Flattened connections:", flattened);
       setFlattenedConnect(flattened);

@@ -273,7 +273,8 @@ const useConnectionManagement = (projectId, productId) => {
       const filteredData = res.data.getData.filter(
         (entry) =>
           entry?.libraryId?.moduleName === "PMMRA" ||
-          entry?.destinationModuleName === "PMMRA"
+          entry?.destinationModuleName === "PMMRA" ||
+          entry?.destinationModule === "PMMRA"
       );
 
       const flattened = filteredData.flatMap((item) => {
@@ -282,28 +283,30 @@ const useConnectionManagement = (projectId, productId) => {
         // Check for destinationData entries (Multiple destinations)
         if (item.destinationData && Array.isArray(item.destinationData)) {
           item.destinationData.forEach(d => {
-            if (d.destinationModuleName === "PMMRA") {
+            const destMod = d.destinationModuleName || d.destinationModule;
+            if (destMod === "PMMRA") {
               connections.push({
                 fieldName: item.sourceName,
                 fieldValue: item.sourceValue,
                 sourceModuleName: item?.libraryId?.moduleName || "",
                 destName: d.destinationName,
                 destValue: d.destinationValue,
-                destModule: d.destinationModuleName,
+                destModule: destMod,
               });
             }
           });
         }
 
         // Also check direct connections (Single destination directly on item)
-        if (item.destinationModuleName === "PMMRA" && item.destinationName) {
+        const itemDestMod = item.destinationModuleName || item.destinationModule;
+        if (itemDestMod === "PMMRA" && item.destinationName) {
           connections.push({
             fieldName: item.sourceName,
             fieldValue: item.sourceValue,
             sourceModuleName: item?.libraryId?.moduleName || "",
             destName: item.destinationName,
             destValue: item.destinationValue,
-            destModule: item.destinationModuleName,
+            destModule: itemDestMod,
           });
         }
 
