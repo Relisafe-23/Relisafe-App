@@ -356,36 +356,60 @@ useEffect(() => {
     return result;
   };
 
-  useEffect(() => {
-    let reliability = 0;
-    let unavailability = 0;
-    
-    if (selectedLabel === "Non-Identical") {
-      const kVal = Number(k);
-      const nVal = Number(n);
-      
-      if (!isNaN(kVal) && !isNaN(nVal) && nonIdenticalComponents.length === nVal) {
+useEffect(() => {
+  let reliability = 0;
+  let unavailability = 0;
+
+  if (selectedLabel === "Non-Identical") {
+    const kVal = Number(k);
+    const nVal = Number(n);
+
+    if (!isNaN(kVal) && !isNaN(nVal) && nonIdenticalComponents.length === nVal) {
+
+      // Apply specific formula for 2-out-of-3
+      if (kVal === 2 && nVal === 3) {
+        const [A, B, C] = nonIdenticalComponents;
+
+        const RA = Number(A.reliability);
+        const RB = Number(B.reliability);
+        const RC = Number(C.reliability);
+
+        const QA = 1 - RA;
+        const QB = 1 - RB;
+        const QC = 1 - RC;
+
+        reliability =
+          (RA * RB * RC) +
+          (RA * RB * QC) +
+          (RA * QB * RC) +
+          (QA * RB * RC);
+
+        unavailability = 1 - reliability;
+      } else {
+        // fallback to your generic function
         reliability = getKofNReliabilityNonIdentical(kVal, nVal, nonIdenticalComponents);
         unavailability = unAvailabilityValueNonIdentical(kVal, nVal, nonIdenticalComponents);
       }
-    } else {
-      const kVal = Number(k);
-      const nVal = Number(n);
-      const lambdaVal = Number(lambda);
-      const muVal = Number(mu);
-      
-      if (!isNaN(kVal) && !isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(muVal)) {
-        reliability = getKofNReliabilityIdentical(kVal, nVal, lambdaVal);
-        unavailability = unAvailabilityValueIdentical(kVal, nVal, lambdaVal, muVal);
-      }
     }
-    
-    setSystemReliability(Number(reliability?.toFixed(6)) || 0);
-    setSystemUnavailability(Number(unavailability?.toFixed(6)) || 0);
-    
-    console.log("System Reliability:", reliability);
-    console.log("System Unavailability:", unavailability);
-  }, [k, n, lambda, mu, nonIdenticalComponents, selectedLabel, missionTime]);
+  } else {
+    const kVal = Number(k);
+    const nVal = Number(n);
+    const lambdaVal = Number(lambda);
+    const muVal = Number(mu);
+
+    if (!isNaN(kVal) && !isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(muVal)) {
+      reliability = getKofNReliabilityIdentical(kVal, nVal, lambdaVal);
+      unavailability = unAvailabilityValueIdentical(kVal, nVal, lambdaVal, muVal);
+    }
+  }
+
+  setSystemReliability(Number(reliability?.toFixed(6)) || 0);
+  setSystemUnavailability(Number(unavailability?.toFixed(6)) || 0);
+
+  console.log("System Reliability:", reliability);
+  console.log("System Unavailability:", unavailability);
+
+}, [k, n, lambda, mu, nonIdenticalComponents, selectedLabel, missionTime]);
 
   const handleComponentChange = (index, field, value, selectedOption = null) => {
     const updatedComponents = [...nonIdenticalComponents];
