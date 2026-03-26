@@ -13,14 +13,16 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
   const [missionTime, setMissionTime] = useState("");
   const projectId = id;
   
+  const [systemUnavailability, setSystemUnavailability] = useState(0);
+  
   console.log("selectedCase", selectedCase);
   console.log("selectedLabel", selectedLabel);
+  console.log("id", id)
   
   // State declarations
   const [lambda, setLambda] = useState(0);
   const [isLambdaEdited, setIsLambdaEdited] = useState(false);
-  const [systemUnavailability, setSystemUnavailability] = useState("");
-  
+
   const [values, setValues] = useState({
     relDes: currentBlock?.relDes || '',
     time: currentBlock?.time || " ",
@@ -37,17 +39,17 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     productId: currentBlock?.productId || '',
     indexCount: currentBlock?.indexCount || '',
   });
-  
+
   // State for Non-Identical components
   const [nonIdenticalComponents, setNonIdenticalComponents] = useState([]);
   const [options, setOptions] = useState([]);
   const [mu, setMu] = useState(0);
-  
+
   const isPlaceholderSelected = values?.indexCount === "Select from the product";
   const isProductSelected = !!values?.indexCount;
-  
+
   console.log("mu", values?.mttr);
-  
+
   useEffect(() => {
     if (initialData) {
       setK(initialData.k || "");
@@ -55,7 +57,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
       setLambda(initialData.lambda || 0);
       setMu(initialData.mu || 0);
       setFormula(initialData.formula || 'standard');
-      
+
       // If initialData has components for non-identical, load them
       if (initialData.components && initialData.components.length > 0) {
         setNonIdenticalComponents(initialData.components);
@@ -72,7 +74,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     }
   }, [values?.mttr]);
 
-  useEffect(() => { 
+  useEffect(() => {
     const fr = Number(values?.fr);
     if (!isLambdaEdited) {
       if (fr > 0) {
@@ -88,32 +90,91 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     getProductName();
   }, [projectId]);
 
-  // Effect to manage non-identical components when n changes
-  useEffect(() => {
-    if (selectedLabel === "Non-Identical" && n && n > 0) {
-      const currentLength = nonIdenticalComponents.length;
-      if (currentLength < n) {
-        // Add new components with proper initialization
-        const newComponents = [...nonIdenticalComponents];
-        for (let i = currentLength; i < n; i++) {
-          newComponents.push({
-            id: `comp_${Date.now()}_${i}`,
-            lambda: 0,
-            mu: 0,
-            mttr: '',
-            productId: null,
-            productName: '',
-            isManual: false,
-            selectedOption: null
-          });
-        }
-        setNonIdenticalComponents(newComponents);
-      } else if (currentLength > n) {
-        // Remove excess components
-        setNonIdenticalComponents(nonIdenticalComponents.slice(0, n));
+
+// Add these state declarations at the top with your other states
+const [systemReliability, setSystemReliability] = useState(0);
+
+// Replace your existing useEffect for non-identical components with these two:
+
+// Effect 1: Handle component count changes
+useEffect(() => {
+  if (selectedLabel === "Non-Identical" && n && n > 0) {
+    const currentLength = nonIdenticalComponents.length;
+    
+    if (currentLength < n) {
+      // Add new components
+      const newComponents = [...nonIdenticalComponents];
+      for (let i = currentLength; i < n; i++) {
+        newComponents.push({
+          id: `comp_${Date.now()}_${i}_${Math.random()}`,
+          lambda: 0,
+          mu: 0,
+          mttr: '',
+          productId: null,
+          productName: '',
+          isManual: false,
+          selectedOption: null
+        });
       }
+      setNonIdenticalComponents(newComponents);
+    } else if (currentLength > n) {
+      // Remove excess components
+      setNonIdenticalComponents(nonIdenticalComponents.slice(0, n));
     }
-  }, [n, selectedLabel]);
+  }
+}, [n, selectedLabel]);
+
+// Effect 2: Initialize when switching to Non-Identical mode
+useEffect(() => {
+  if (selectedLabel === "Non-Identical" && n && n > 0 && nonIdenticalComponents.length === 0) {
+    const initialComponents = [];
+    for (let i = 0; i < n; i++) {
+      initialComponents.push({
+        id: `comp_${Date.now()}_${i}_${Math.random()}`,
+        lambda: 0,
+        mu: 0,
+        mttr: '',
+        productId: null,
+        productName: '',
+        isManual: false,
+        selectedOption: null
+      });
+    }
+    setNonIdenticalComponents(initialComponents);
+  }
+}, [selectedLabel, n]);
+
+
+useEffect(() => {
+  let reliability = 0;
+  let unavailability = 0;
+  
+  if (selectedLabel === "Non-Identical") {
+    const kVal = Number(k);
+    const nVal = Number(n);
+    
+    if (!isNaN(kVal) && !isNaN(nVal) && nonIdenticalComponents.length === nVal) {
+      reliability = getKofNReliabilityNonIdentical(kVal, nVal, nonIdenticalComponents);
+      unavailability = unAvailabilityValueNonIdentical(kVal, nVal, nonIdenticalComponents);
+    }
+  } else {
+    const kVal = Number(k);
+    const nVal = Number(n);
+    const lambdaVal = Number(lambda);
+    const muVal = Number(mu);
+    
+    if (!isNaN(kVal) && !isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(muVal)) {
+      reliability = getKofNReliabilityIdentical(kVal, nVal, lambdaVal);
+      unavailability = unAvailabilityValueIdentical(kVal, nVal, lambdaVal, muVal);
+    }
+  }
+  
+  setSystemReliability(Number(reliability?.toFixed(6)) || 0);
+  setSystemUnavailability(Number(unavailability?.toFixed(6)) || 0);
+  
+  console.log("System Reliability:", reliability);
+  console.log("System Unavailability:", unavailability);
+}, [k, n, lambda, mu, nonIdenticalComponents, selectedLabel, missionTime]);
 
   const handleChange = (field, value) => {
     setValues(prev => ({
@@ -153,25 +214,34 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
         console.error("Error fetching products:", error);
       });
   };
- 
+
   const getRbdConfig = () => {
     Api.get("/api/v1/EditConfigRBD/", {
       params: {
         projectId: projectId,
+        rbdId: rbdId
       }
     })
       .then((res) => {
-        const Time = res?.data?.data.filter(item => item.missionTime).map(item => item.missionTime)[0];
-        setMissionTime(Time);
+        console.log("rbdId", rbdId)
+        console.log("res....", res)
+        const rbdData = res.data.data.find(item => item.id === rbdId);
+        if (rbdData) {
+          setMissionTime(rbdData.missionTime)
+        } else {
+          setMissionTime(null)
+        }
       })
       .catch((error) => {
         console.error("Error fetching RBD config:", error);
       });
   };
- 
+
   const unAvailabilityFn = (lambdaVal, muVal) => {
     if (!lambdaVal || !muVal || (lambdaVal + muVal) === 0) return 0;
-    return lambdaVal / (lambdaVal + muVal);
+    const unavailability = lambdaVal / (lambdaVal + muVal)
+    console.log("Unavailability...",unavailability)
+    return unavailability;
   };
 
   const factorial = (num) => {
@@ -185,23 +255,23 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
   const combination1 = (nVal, i) => {
     return factorial(nVal) / (factorial(i) * factorial(nVal - i));
   };
-  
+
   // Updated unavailability calculation for non-identical components with error handling
   const unAvailabilityValueNonIdentical = (kVal, nVal, components) => {
     if (!components || components.length === 0) return 0;
-    
+
     let result = 0;
     // Filter out components without lambda and ensure lambda is a number
     const validComponents = components.filter(comp => comp && typeof comp.lambda === 'number');
     if (validComponents.length !== nVal) return 0;
-    
+
     const unavailabilityList = validComponents.map(comp => unAvailabilityFn(comp.lambda, comp.mu || 0));
-    
+
     const totalCombinations = Math.pow(2, nVal);
     for (let mask = 0; mask < totalCombinations; mask++) {
       let failedCount = 0;
       let prob = 1;
-      
+
       for (let i = 0; i < nVal; i++) {
         const isFailed = (mask >> i) & 1;
         if (isFailed) {
@@ -211,15 +281,15 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
           prob *= (1 - unavailabilityList[i]);
         }
       }
-      
+
       if (failedCount >= kVal) {
         result += prob;
       }
     }
-    
+
     return result;
   };
-  
+
   // For identical components
   const unAvailabilityValueIdentical = (kVal, nVal, lambdaVal, muVal) => {
     const u = unAvailabilityFn(lambdaVal, muVal);
@@ -229,36 +299,13 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     }
     return result;
   };
-  
-  useEffect(() => {
-    if (selectedLabel === "Non-Identical") {
-      const kVal = Number(k);
-      const nVal = Number(n);
-      
-      if (!isNaN(kVal) && !isNaN(nVal) && nonIdenticalComponents.length === nVal) {
-        const result = unAvailabilityValueNonIdentical(kVal, nVal, nonIdenticalComponents);
-        setSystemUnavailability(Number(result?.toFixed(6)) || 0);
-      } else {
-        setSystemUnavailability(0);
-      }
-    } else {
-      const kVal = Number(k);
-      const nVal = Number(n);
-      const lambdaVal = Number(lambda);
-      const muVal = Number(mu);
-      
-      if (!isNaN(kVal) && !isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(muVal)) {
-        const result = unAvailabilityValueIdentical(kVal, nVal, lambdaVal, muVal);
-        setSystemUnavailability(Number(result?.toFixed(6)) || 0);
-      } else {
-        setSystemUnavailability(0);
-      }
-    }
-  }, [k, n, lambda, mu, nonIdenticalComponents, selectedLabel]);
 
   const getReliability = (lambdaValue, missionTimeValue) => {
+    console.log("missionTime...", missionTimeValue)
     if (!lambdaValue || !missionTimeValue) return 0;
-    return Math.exp(-(lambdaValue * missionTimeValue));
+    const reliability = Math.exp(-(lambdaValue * missionTimeValue));
+    console.log("Calculated Reliability:", reliability);
+    return reliability;
   };
 
   const combination = (nVal, r) => {
@@ -266,25 +313,24 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     return fact(nVal) / (fact(r) * fact(nVal - r));
   };
 
-  // Updated reliability calculation for non-identical components with error handling
   const getKofNReliabilityNonIdentical = (kVal, nVal, components) => {
     if (!components || components.length === 0) return 0;
-    
+
     let result = 0;
-    // Filter out components without lambda
+ 
     const validComponents = components.filter(comp => comp && typeof comp.lambda === 'number');
     if (validComponents.length !== nVal) return 0;
-    
+
     const totalCombinations = Math.pow(2, nVal);
-    
+
     for (let mask = 0; mask < totalCombinations; mask++) {
       let workingCount = 0;
       let prob = 1;
-      
+
       for (let i = 0; i < nVal; i++) {
         const isWorking = !((mask >> i) & 1);
         const reliability = getReliability(validComponents[i].lambda, missionTime);
-        
+
         if (isWorking) {
           workingCount++;
           prob *= reliability;
@@ -292,12 +338,12 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
           prob *= (1 - reliability);
         }
       }
-      
+
       if (workingCount >= kVal) {
         result += prob;
       }
     }
-    
+
     return result;
   };
 
@@ -310,21 +356,47 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     return result;
   };
 
-  const systemReliability = selectedLabel === "Non-Identical" 
-    ? getKofNReliabilityNonIdentical(k, n, nonIdenticalComponents)
-    : getKofNReliabilityIdentical(k, n, lambda);
-  
-  // Handle component change for non-identical with better initialization
+  useEffect(() => {
+    let reliability = 0;
+    let unavailability = 0;
+    
+    if (selectedLabel === "Non-Identical") {
+      const kVal = Number(k);
+      const nVal = Number(n);
+      
+      if (!isNaN(kVal) && !isNaN(nVal) && nonIdenticalComponents.length === nVal) {
+        reliability = getKofNReliabilityNonIdentical(kVal, nVal, nonIdenticalComponents);
+        unavailability = unAvailabilityValueNonIdentical(kVal, nVal, nonIdenticalComponents);
+      }
+    } else {
+      const kVal = Number(k);
+      const nVal = Number(n);
+      const lambdaVal = Number(lambda);
+      const muVal = Number(mu);
+      
+      if (!isNaN(kVal) && !isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(muVal)) {
+        reliability = getKofNReliabilityIdentical(kVal, nVal, lambdaVal);
+        unavailability = unAvailabilityValueIdentical(kVal, nVal, lambdaVal, muVal);
+      }
+    }
+    
+    setSystemReliability(Number(reliability?.toFixed(6)) || 0);
+    setSystemUnavailability(Number(unavailability?.toFixed(6)) || 0);
+    
+    console.log("System Reliability:", reliability);
+    console.log("System Unavailability:", unavailability);
+  }, [k, n, lambda, mu, nonIdenticalComponents, selectedLabel, missionTime]);
+
   const handleComponentChange = (index, field, value, selectedOption = null) => {
     const updatedComponents = [...nonIdenticalComponents];
-    
+
     if (field === 'product') {
       if (selectedOption && selectedOption.value !== "Select from the product" && selectedOption.value) {
         // Ensure lambda is properly set as a number
         const lambdaValue = selectedOption.lambda !== undefined ? parseFloat(selectedOption.lambda) : 0;
         const mttrValue = selectedOption.mttr || '';
         const muValue = mttrValue ? 1 / parseFloat(mttrValue) : 0;
-        
+
         updatedComponents[index] = {
           ...updatedComponents[index],
           lambda: lambdaValue,
@@ -357,7 +429,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     } else if (field === 'mttr') {
       const mttrValue = value;
       const muValue = mttrValue ? 1 / parseFloat(mttrValue) : 0;
-      
+
       updatedComponents[index] = {
         ...updatedComponents[index],
         mttr: mttrValue,
@@ -365,7 +437,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
         isManual: true
       };
     }
-    
+
     setNonIdenticalComponents(updatedComponents);
   };
 
@@ -380,9 +452,11 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
       k,
       n,
       formula,
+      reliability: systemReliability,
+      unavailability: systemUnavailability,
       ...values
     };
-    
+
     if (selectedLabel === "Non-Identical") {
       data.components = nonIdenticalComponents.map(comp => ({
         lambda: comp.lambda || 0,
@@ -393,9 +467,9 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
         isManual: comp.isManual
       }));
     }
-    
+
     console.log("databbjkk", data);
-    
+
     Api.post(
       `/api/v1/elementParametersRBD/create/KOfN/${rbdId}/${projectId}`,
       data
@@ -411,9 +485,9 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
       });
     onClose();
   };
-  
+
   if (!isOpen) return null;
-  
+
   return (
     <div style={{
       position: "fixed",
@@ -524,7 +598,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
                   }}
                 />
               </div>
-           <div>
+              <div>
                 <label style={{
                   display: "block",
                   marginBottom: "5px",
@@ -552,9 +626,8 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
               </div>
             </div>
           )}
-                     
         </div>
-         
+
         <div style={{ marginBottom: "20px" }} className="mt-3">
           <div style={{ display: "flex", gap: "30px", marginBottom: "20px" }}>
             <div>
@@ -577,69 +650,68 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
                   padding: "6px",
                   border: "1px solid #7f9db9",
                   borderRadius: "3px",
-                
+
                 }}
               />
             </div>
-<div >
-  <label
-    style={{
-      display: "block",
-      marginBottom: "5px",
-      fontSize: "13px",
-      fontWeight: "500"
-    }}
-  >
-    n (total items):
-  </label>
-
-  <input
-    type="number"
-    min={k}
-    max="10"
-    value={n}
-    onChange={(e) => setN(parseInt(e.target.value) || 1)}
-    style={{
-      width: "100%",   
-      padding: "6px",
-      border: "1px solid #7f9db9",
-      borderRadius: "3px",
-      boxSizing: "border-box"
-    }}
-  />
-</div>
-              {selectedLabel !== "Non-Identical" && (
-                  <div>
-              <label style={{
-                display: "block",
-                marginBottom: "5px",
-                fontSize: "13px",
-                fontWeight: "500"
-              }}>
-                System MTTR (hours):
+            <div >
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontSize: "13px",
+                  fontWeight: "500"
+                }}
+              >
+                n (total items):
               </label>
+
               <input
                 type="number"
-                step="0.1"
-                min="0"
-                value={values?.mttr || ""}
-                onChange={(e) => handleChange('mttr', e.target.value)}
-                placeholder="MTTR value will auto-populate"
+                min={k}
+                max="10"
+                value={n}
+                onChange={(e) => setN(parseInt(e.target.value) || 1)}
                 style={{
                   width: "100%",
                   padding: "6px",
                   border: "1px solid #7f9db9",
-                  borderRadius: "3px",     
+                  borderRadius: "3px",
+                  boxSizing: "border-box"
                 }}
               />
             </div>
-                        )}
-        
+            {selectedLabel !== "Non-Identical" && (
+              <div>
+                <label style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontSize: "13px",
+                  fontWeight: "500"
+                }}>
+                  System MTTR (hours):
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={values?.mttr || ""}
+                  onChange={(e) => handleChange('mttr', e.target.value)}
+                  placeholder="MTTR value will auto-populate"
+                  style={{
+                    width: "100%",
+                    padding: "6px",
+                    border: "1px solid #7f9db9",
+                    borderRadius: "3px",
+                  }}
+                />
+              </div>
+            )}
+
           </div>
-          
-          {/* Non-Identical Components Section */}
+
           {selectedLabel === "Non-Identical" && n > 0 && (
-            <div style={{ 
+            <div style={{
               marginTop: "20px",
               borderTop: "1px solid #ccc",
               paddingTop: "15px"
@@ -653,7 +725,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
               }}>
                 Component Details (Non-Identical):
               </label>
-              
+
               <div style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
@@ -675,7 +747,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
                     }}>
                       Component {index + 1}:
                     </label>
-                    
+
                     <div style={{ marginBottom: "10px" }}>
                       <CreatableSelect
                         value={component.selectedOption}
@@ -698,7 +770,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
                         }}
                       />
                     </div>
-                    
+
                     <div style={{ marginBottom: "10px" }}>
                       <label style={{
                         display: "block",
@@ -724,7 +796,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
                         }}
                       />
                     </div>
-                    
+
                     <div>
                       <label style={{
                         display: "block",
@@ -750,7 +822,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
                         }}
                       />
                     </div>
-                    
+
                     {component.mu > 0 && (
                       <div style={{
                         marginTop: "8px",
@@ -834,5 +906,5 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
         </div>
       </div>
     </div>
-  );  
+  );
 };
