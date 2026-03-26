@@ -3,17 +3,17 @@ import { useParams } from 'react-router-dom';
 import Api from '../../Api';
 import CreatableSelect from 'react-select/creatable';
 
-const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock }) => {
+const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock, getBlock }) => {
 
-  // console.log('currentBlock - :', currentBlock)
-  // console.log('parallelFoundBlock - :', parallelFoundBlock)
-  // console.log(elementModal, 'elementModal')
+  console.log('currentBlock - :', currentBlock)
+  console.log('parallelFoundBlock - :', parallelFoundBlock)
+  console.log(elementModal, 'elementModal')
 
   let modelBlock = null;
 
   parallelFoundBlock ? modelBlock = parallelFoundBlock : modelBlock = currentBlock
 
-  // console.log(modelBlock, '-final modelData')
+  console.log(modelBlock, '-final modelData')
 
   const mainId = modelBlock?.id || modelBlock?._id
 
@@ -232,12 +232,13 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
       mct: values.mct,
       projectId: projectId,
       companyId: companyId,
+      idforApi: elementModal?.idforApi,
     }).then((res) => {
-
-      // console.log("res", res)
+      getBlock();
     })
     onSubmit(values);
     onClose();
+    
   };
 
 
