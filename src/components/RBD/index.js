@@ -294,7 +294,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
         </text>
       </g>
 
-      {/* {console.log('item',items)} */}
+      {console.log('item',items)}
 
       {items.map((item) => {
         if (item.type === 'node') {
@@ -527,10 +527,18 @@ export default function RBDButton() {
   const handleViewClick = (item, index) => {
     // console.log("View clicked for:", title, "at index:", index);
 
-    const selectedRbdId = rbdId[index];
+    // const selectedRbdId = rbdId[index];
     // console.log("Selected RBD ID:", selectedRbdId);
+    // console.log(item,'item?.projectId')
 
-    history.push(`/project/${item?.projectId}/rbd/structure/${selectedRbdId}`);
+    let rbdId = item?.id;
+    let id = item?.projectId
+
+    console.log(projectId,'from sending projectId')
+    console.log(rbdId,'from sending rbdId')
+
+
+    history.push(`/project/${id}/rbd/structure/${rbdId}`);
   }
 
   const handleDeleteClick = async (item) => {
