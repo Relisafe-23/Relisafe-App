@@ -4,58 +4,64 @@ import Api from "../../Api";
 import { useParams, useLocation } from 'react-router-dom';
 import CreatableSelect from 'react-select/creatable';
 
-export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode = 'add', currentBlock }) => {
+export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode = 'add', currentBlock, selectedLabel, selectedCase }) => {
+  // Core state declarations
   const [k, setK] = useState(null);
   const [n, setN] = useState(null);
   const [formula, setFormula] = useState('standard');
   const { id, rbdId } = useParams();
   const [missionTime, setMissionTime] = useState("");
   const projectId = id;
-  const[systemUnavailability, setSystemUnavailability]=useState("");
+  
+  console.log("selectedCase", selectedCase);
+  console.log("selectedLabel", selectedLabel);
+  
+  // State declarations
+  const [lambda, setLambda] = useState(0);
+  const [isLambdaEdited, setIsLambdaEdited] = useState(false);
+  const [systemUnavailability, setSystemUnavailability] = useState("");
+  
   const [values, setValues] = useState({
     relDes: currentBlock?.relDes || '',
     time: currentBlock?.time || " ",
     elementType: currentBlock?.elementType || 'REGULAR',
     partNumber: currentBlock?.partNumber || '',
     fr: currentBlock?.fr || '',
-    inspectionPeriod: currentBlock?.inspectionPeriod || '',
-    dutyCycle: currentBlock?.dutyCycle || '100',
     color: currentBlock?.color || '#ffffff',
-    frDistribution: currentBlock?.frDistribution || '',
-    kOutOfN: currentBlock?.kOutOfN || false,
-    k: currentBlock?.k || '',
-    n: currentBlock?.n || '',
-    alpha: currentBlock?.alpha || '',
-    fmecaId: currentBlock?.fmecaId || '',
-    indexCount: currentBlock?.indexCount || '',
     productName: currentBlock?.productName || '',
     id: currentBlock?.id || '',
-    repairDistribution: currentBlock?.repairDistribution || 'Exponential',
-    mtbf: currentBlock?.mtbf || '1303617.9',
     load: currentBlock?.load || '100',
-  
     mttr: currentBlock?.mttr || '',
     productNumber: currentBlock?.productNumber || '',
     productTreeItemID: currentBlock?.productTreeItemID || '',
     productId: currentBlock?.productId || '',
+    indexCount: currentBlock?.indexCount || '',
   });
-
-  const [lambda, setLambda] = useState(0);
-  const [isLambdaEdited,setIsLambdaEdited] = useState(false);
-
-  const [options, setOptions] = useState([])
+  
+  // State for Non-Identical components
+  const [nonIdenticalComponents, setNonIdenticalComponents] = useState([]);
+  const [options, setOptions] = useState([]);
   const [mu, setMu] = useState(0);
-  console.log("mu",values?.mttr)
+  
+  const isPlaceholderSelected = values?.indexCount === "Select from the product";
+  const isProductSelected = !!values?.indexCount;
+  
+  console.log("mu", values?.mttr);
+  
   useEffect(() => {
     if (initialData) {
       setK(initialData.k || "");
       setN(initialData.n || "");
-      setLambda(initialData.lambda || "");
-      setMu(initialData.mu || "");
+      setLambda(initialData.lambda || 0);
+      setMu(initialData.mu || 0);
       setFormula(initialData.formula || 'standard');
+      
+      // If initialData has components for non-identical, load them
+      if (initialData.components && initialData.components.length > 0) {
+        setNonIdenticalComponents(initialData.components);
+      }
     }
   }, [initialData]);
-
 
   useEffect(() => {
     if (parseFloat(values?.mttr) > 0) {
@@ -66,24 +72,48 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     }
   }, [values?.mttr]);
 
-  useEffect(() => {
+  useEffect(() => { 
     const fr = Number(values?.fr);
-    if
-    (!isLambdaEdited){
- if (fr > 0) {
-      setLambda((1 / fr)?.toFixed(6));
-    } else {
-      setLambda("");
+    if (!isLambdaEdited) {
+      if (fr > 0) {
+        setLambda((1 / fr)?.toFixed(6));
+      } else {
+        setLambda("");
+      }
     }
-    }
-   
-  }, [values?.fr,isLambdaEdited]);
+  }, [values?.fr, isLambdaEdited]);
 
   useEffect(() => {
     getRbdConfig();
     getProductName();
-  
   }, [projectId]);
+
+  // Effect to manage non-identical components when n changes
+  useEffect(() => {
+    if (selectedLabel === "Non-Identical" && n && n > 0) {
+      const currentLength = nonIdenticalComponents.length;
+      if (currentLength < n) {
+        // Add new components with proper initialization
+        const newComponents = [...nonIdenticalComponents];
+        for (let i = currentLength; i < n; i++) {
+          newComponents.push({
+            id: `comp_${Date.now()}_${i}`,
+            lambda: 0,
+            mu: 0,
+            mttr: '',
+            productId: null,
+            productName: '',
+            isManual: false,
+            selectedOption: null
+          });
+        }
+        setNonIdenticalComponents(newComponents);
+      } else if (currentLength > n) {
+        // Remove excess components
+        setNonIdenticalComponents(nonIdenticalComponents.slice(0, n));
+      }
+    }
+  }, [n, selectedLabel]);
 
   const handleChange = (field, value) => {
     setValues(prev => ({
@@ -113,10 +143,11 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
             productId: item.productId,
             fr: item.fr,
             id: item.id,
-            mttr: item.mttr,
+            mttr: item.mttr || '',
+            lambda: item.fr ? (1 / parseFloat(item.fr)) : 0
           }));
         setOptions(options);
-        console.log("options", res.data.data.filter(item => item.mttr).map(item => item.mttr))
+        console.log("options", res.data.data.filter(item => item.mttr).map(item => item.mttr));
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
@@ -138,88 +169,233 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
       });
   };
  
-const unAvailabilityFn = (lambda, mu) => {
-  if ((lambda + mu) === 0) return 0;
-  return lambda / (lambda + mu);
-};
-
-const factorial = (num) => {
-  let result = 1;
-  for (let i = 2; i <= num; i++) {
-    result *= i;
-  }
-  return result;
-};
-
-const combination1 = (n, i) => {
-  return factorial(n) / (factorial(i) * factorial(n - i));
-};
-const unAvailabilityValue= (k, n, lambda, mu) => {
-  const u = unAvailabilityFn(lambda, mu);
-  let result = 0;
-
-  for (let i = k; i <= n; i++) {
-    result += combination1(n, i) * Math.pow(u, i) * Math.pow(1 - u, n - i);
-  }
-  return result;
-};
-useEffect(() => {
-  const kVal = Number(k);
-  const nVal = Number(n);
-  const lambdaVal = Number(lambda);
-  const muVal = Number(mu);
-  if (
-    !isNaN(kVal) &&
-    !isNaN(nVal) &&
-    !isNaN(lambdaVal) &&
-    !isNaN(muVal)
-  ) {
-    const result = unAvailabilityValue(kVal, nVal, lambdaVal, muVal);
-
-    setSystemUnavailability(
-      Number(result?.toFixed(6)) || 0
-    );
-  } else {
-    setSystemUnavailability(0); 
-  }
-}, [k, n, lambda, mu]);
-  useEffect(()=>{
-    setIsLambdaEdited(false);
-   },[values?.productId]);
-
-
-  const getReliability = (productId) => {
-    if (!lambda || !missionTime) return 0;
-    return Math.exp(-(lambda * missionTime));
+  const unAvailabilityFn = (lambdaVal, muVal) => {
+    if (!lambdaVal || !muVal || (lambdaVal + muVal) === 0) return 0;
+    return lambdaVal / (lambdaVal + muVal);
   };
 
-  const combination = (n, r) => {
-    const fact = (x) => (x <= 1 ? 1 : x * fact(x - 1));
-    return fact(n) / (fact(r) * fact(n - r));
-  };
-
-  const getKofN_2of3 = (k, n, reliabilityFn) => {
-    const R = reliabilityFn();
-    let result = 0;
-    for (let r = k; r <= n; r++) {
-      result += combination(n, r) * Math.pow(R, r) * Math.pow(1 - R, n - r);
+  const factorial = (num) => {
+    let result = 1;
+    for (let i = 2; i <= num; i++) {
+      result *= i;
     }
     return result;
   };
 
+  const combination1 = (nVal, i) => {
+    return factorial(nVal) / (factorial(i) * factorial(nVal - i));
+  };
+  
+  // Updated unavailability calculation for non-identical components with error handling
+  const unAvailabilityValueNonIdentical = (kVal, nVal, components) => {
+    if (!components || components.length === 0) return 0;
+    
+    let result = 0;
+    // Filter out components without lambda and ensure lambda is a number
+    const validComponents = components.filter(comp => comp && typeof comp.lambda === 'number');
+    if (validComponents.length !== nVal) return 0;
+    
+    const unavailabilityList = validComponents.map(comp => unAvailabilityFn(comp.lambda, comp.mu || 0));
+    
+    const totalCombinations = Math.pow(2, nVal);
+    for (let mask = 0; mask < totalCombinations; mask++) {
+      let failedCount = 0;
+      let prob = 1;
+      
+      for (let i = 0; i < nVal; i++) {
+        const isFailed = (mask >> i) & 1;
+        if (isFailed) {
+          failedCount++;
+          prob *= unavailabilityList[i];
+        } else {
+          prob *= (1 - unavailabilityList[i]);
+        }
+      }
+      
+      if (failedCount >= kVal) {
+        result += prob;
+      }
+    }
+    
+    return result;
+  };
+  
+  // For identical components
+  const unAvailabilityValueIdentical = (kVal, nVal, lambdaVal, muVal) => {
+    const u = unAvailabilityFn(lambdaVal, muVal);
+    let result = 0;
+    for (let i = kVal; i <= nVal; i++) {
+      result += combination1(nVal, i) * Math.pow(u, i) * Math.pow(1 - u, nVal - i);
+    }
+    return result;
+  };
+  
+  useEffect(() => {
+    if (selectedLabel === "Non-Identical") {
+      const kVal = Number(k);
+      const nVal = Number(n);
+      
+      if (!isNaN(kVal) && !isNaN(nVal) && nonIdenticalComponents.length === nVal) {
+        const result = unAvailabilityValueNonIdentical(kVal, nVal, nonIdenticalComponents);
+        setSystemUnavailability(Number(result?.toFixed(6)) || 0);
+      } else {
+        setSystemUnavailability(0);
+      }
+    } else {
+      const kVal = Number(k);
+      const nVal = Number(n);
+      const lambdaVal = Number(lambda);
+      const muVal = Number(mu);
+      
+      if (!isNaN(kVal) && !isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(muVal)) {
+        const result = unAvailabilityValueIdentical(kVal, nVal, lambdaVal, muVal);
+        setSystemUnavailability(Number(result?.toFixed(6)) || 0);
+      } else {
+        setSystemUnavailability(0);
+      }
+    }
+  }, [k, n, lambda, mu, nonIdenticalComponents, selectedLabel]);
 
-  const systemReliability = getKofN_2of3(k, n, getReliability);
- 
+  const getReliability = (lambdaValue, missionTimeValue) => {
+    if (!lambdaValue || !missionTimeValue) return 0;
+    return Math.exp(-(lambdaValue * missionTimeValue));
+  };
+
+  const combination = (nVal, r) => {
+    const fact = (x) => (x <= 1 ? 1 : x * fact(x - 1));
+    return fact(nVal) / (fact(r) * fact(nVal - r));
+  };
+
+  // Updated reliability calculation for non-identical components with error handling
+  const getKofNReliabilityNonIdentical = (kVal, nVal, components) => {
+    if (!components || components.length === 0) return 0;
+    
+    let result = 0;
+    // Filter out components without lambda
+    const validComponents = components.filter(comp => comp && typeof comp.lambda === 'number');
+    if (validComponents.length !== nVal) return 0;
+    
+    const totalCombinations = Math.pow(2, nVal);
+    
+    for (let mask = 0; mask < totalCombinations; mask++) {
+      let workingCount = 0;
+      let prob = 1;
+      
+      for (let i = 0; i < nVal; i++) {
+        const isWorking = !((mask >> i) & 1);
+        const reliability = getReliability(validComponents[i].lambda, missionTime);
+        
+        if (isWorking) {
+          workingCount++;
+          prob *= reliability;
+        } else {
+          prob *= (1 - reliability);
+        }
+      }
+      
+      if (workingCount >= kVal) {
+        result += prob;
+      }
+    }
+    
+    return result;
+  };
+
+  const getKofNReliabilityIdentical = (kVal, nVal, lambdaValue) => {
+    const R = getReliability(lambdaValue, missionTime);
+    let result = 0;
+    for (let r = kVal; r <= nVal; r++) {
+      result += combination(nVal, r) * Math.pow(R, r) * Math.pow(1 - R, nVal - r);
+    }
+    return result;
+  };
+
+  const systemReliability = selectedLabel === "Non-Identical" 
+    ? getKofNReliabilityNonIdentical(k, n, nonIdenticalComponents)
+    : getKofNReliabilityIdentical(k, n, lambda);
+  
+  // Handle component change for non-identical with better initialization
+  const handleComponentChange = (index, field, value, selectedOption = null) => {
+    const updatedComponents = [...nonIdenticalComponents];
+    
+    if (field === 'product') {
+      if (selectedOption && selectedOption.value !== "Select from the product" && selectedOption.value) {
+        // Ensure lambda is properly set as a number
+        const lambdaValue = selectedOption.lambda !== undefined ? parseFloat(selectedOption.lambda) : 0;
+        const mttrValue = selectedOption.mttr || '';
+        const muValue = mttrValue ? 1 / parseFloat(mttrValue) : 0;
+        
+        updatedComponents[index] = {
+          ...updatedComponents[index],
+          lambda: lambdaValue,
+          mu: muValue,
+          mttr: mttrValue,
+          productId: selectedOption.productId,
+          productName: selectedOption.productName,
+          selectedOption: selectedOption,
+          isManual: false
+        };
+      } else if (selectedOption && selectedOption.value === "Select from the product") {
+        updatedComponents[index] = {
+          ...updatedComponents[index],
+          lambda: 0,
+          mu: 0,
+          mttr: '',
+          selectedOption: selectedOption,
+          isManual: false,
+          productId: null,
+          productName: ''
+        };
+      }
+    } else if (field === 'lambda') {
+      updatedComponents[index] = {
+        ...updatedComponents[index],
+        lambda: parseFloat(value) || 0,
+        isManual: true,
+        selectedOption: null
+      };
+    } else if (field === 'mttr') {
+      const mttrValue = value;
+      const muValue = mttrValue ? 1 / parseFloat(mttrValue) : 0;
+      
+      updatedComponents[index] = {
+        ...updatedComponents[index],
+        mttr: mttrValue,
+        mu: muValue,
+        isManual: true
+      };
+    }
+    
+    setNonIdenticalComponents(updatedComponents);
+  };
+
+  useEffect(() => {
+    setIsLambdaEdited(false);
+  }, [values?.productId]);
+
   const handleSubmit = () => {
     const data = {
-      
       lambda: parseFloat(lambda) || 0,
       mu,
-      // mttr: mttr,
+      k,
+      n,
       formula,
       ...values
     };
-   console.log("databbjkk",data)
+    
+    if (selectedLabel === "Non-Identical") {
+      data.components = nonIdenticalComponents.map(comp => ({
+        lambda: comp.lambda || 0,
+        mu: comp.mu || 0,
+        mttr: comp.mttr || '',
+        productId: comp.productId,
+        productName: comp.productName,
+        isManual: comp.isManual
+      }));
+    }
+    
+    console.log("databbjkk", data);
+    
     Api.post(
       `/api/v1/elementParametersRBD/create/KOfN/${rbdId}/${projectId}`,
       data
@@ -235,7 +411,9 @@ useEffect(() => {
       });
     onClose();
   };
+  
   if (!isOpen) return null;
+  
   return (
     <div style={{
       position: "fixed",
@@ -254,9 +432,11 @@ useEffect(() => {
         padding: "25px",
         borderRadius: "8px",
         minWidth: "450px",
-        maxWidth: "550px",
+        maxWidth: "850px",
         border: "1px solid #999",
-        boxShadow: "0 4px 15px rgba(0,0,0,0.2)"
+        boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
+        maxHeight: "90vh",
+        overflowY: "auto"
       }}>
         <h3 style={{
           marginTop: 0,
@@ -266,105 +446,116 @@ useEffect(() => {
           borderBottom: "1px solid #ccc",
           paddingBottom: "10px"
         }}>
-          {mode === 'add' ? 'Add K-out-of-N Block' : 'Edit K-out-of-N Block'}
+          {selectedLabel === "Identical" && (
+            mode === "add" ? "Add K-out-of-N Block - (Identical)" : "Edit K-out-of-N Block - (Identical)"
+          )}
+          {selectedLabel === "Non-Identical" && (
+            mode === "add" ? "Add K-out-of-N Block - (Non-Identical)" : "Edit K-out-of-N Block - (Non-Identical)"
+          )}
+          {selectedLabel === "Identical (Load Sharing)" && (
+            mode === "add" ? "Add K-out-of-N Block - (Identical (Load Sharing))" : "Edit K-out-of-N Block - (Identical (Load Sharing))"
+          )}
         </h3>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1fr',
-          gap: '15px'
-        }}>
-          <div>
-            <label style={{
-              fontSize: '11px',
-              display: 'block',
-              marginBottom: '5px',
-              fontWeight: 'bold'
+        <div>
+          {selectedLabel !== "Non-Identical" && (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: "15px",
+              alignItems: "end"
             }}>
-              Product Tree Item ID:
-            </label>
-            <CreatableSelect
-              value={
-                values?.indexCount
-                  ? { label: values.indexCount, value: values.indexCount }
-                  : null
-              }
-              options={options}
-              onChange={(option) => {
-                if (option) {
-                  handleChange("indexCount", option.value);
-                  handleChange("partNumber", option.partNumber);
-                  handleChange("productName", option.productName);
-                  handleChange("fr", option.fr);
-                  handleChange("productId", option.productId);
-                  handleChange("id", option.id);
-                  handleChange("mttr", option.mttr)
-                } else {
-                  handleChange("productName", "");
-                  handleChange("partNumber", "");
-                  handleChange("indexCount", "");
-                  handleChange("fr", "");
-                  handleChange("productId", "");
-                  handleChange("id", "");
-                  handleChange("fmecaId", "");
-                  handleChange("mttr", "");
-                }
-              }}
-              styles={{
-                control: (base) => ({
-                  ...base,
-                  fontSize: '15px',
-                  minHeight: '30px'
-                })
-              }}
-            />
-          </div>
+              <div>
+                <label style={{
+                  fontSize: "11px",
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "bold"
+                }}>
+                  Product Tree Item ID:
+                </label>
+                <CreatableSelect
+                  value={
+                    values?.indexCount
+                      ? { label: values.indexCount, value: values.indexCount }
+                      : null
+                  }
+                  options={options}
+                  onChange={(option) => {
+                    if (option) {
+                      handleChange("indexCount", option.value);
+                      handleChange("partNumber", option.partNumber);
+                      handleChange("productName", option.productName);
+                      handleChange("fr", option.fr);
+                      handleChange("productId", option.productId);
+                      handleChange("id", option.id);
+                      handleChange("mttr", option.mttr);
+                    }
+                  }}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      fontSize: "15px",
+                      minHeight: "30px"
+                    })
+                  }}
+                />
+              </div>
 
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
-              Ref Des:
-            </label>
-            <input
-              type="text"
-              value={values?.productName || ""}
-              onChange={(e) => handleChange('productName', e.target.value)}
-              placeholder="Transmitter"
-              style={{
-                width: "100%",
-                padding: "6px",
-                border: "1px solid #7f9db9",
-                borderRadius: "3px"
-              }}
-            />
-          </div>
-
-          <div>
-            <label style={{
-              display: "block",
-              marginBottom: "5px",
-              fontSize: "13px",
-              fontWeight: "500"
-            }}>
-              Failure Rate (λ):
-            </label>
-            <input
-              type="number"
-              step="0.0001"
-              min="0"
-              value={lambda}
-              onChange={(e) =>{ setLambda(parseFloat(e.target.value) || 0);
-                setIsLambdaEdited(true)}}
-              style={{
-                width: "100%",
-                padding: "6px",
-                border: "1px solid #7f9db9",
-                borderRadius: "3px"
-              }}
-            />
-          </div>
+              <div>
+                <label style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontSize: "12px",
+                  fontWeight: "bold"
+                }}>
+                  Ref Des:
+                </label>
+                <input
+                  type="text"
+                  value={values?.productName || ""}
+                  onChange={(e) => handleChange("productName", e.target.value)}
+                  placeholder="Transmitter"
+                  style={{
+                    width: "90%",
+                    padding: "6px",
+                    border: "1px solid #7f9db9",
+                    borderRadius: "3px"
+                  }}
+                />
+              </div>
+           <div>
+                <label style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontSize: "13px",
+                  fontWeight: "500"
+                }}>
+                  Failure Rate (λ):
+                </label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  min="0"
+                  value={lambda}
+                  onChange={(e) => {
+                    setLambda(parseFloat(e.target.value) || 0);
+                    setIsLambdaEdited(true);
+                  }}
+                  style={{
+                    width: "90%",
+                    padding: "6px",
+                    border: "1px solid #7f9db9",
+                    borderRadius: "3px"
+                  }}
+                />
+              </div>
+            </div>
+          )}
+                     
         </div>
-
-        <div style={{ marginBottom: "20px" }}>
+         
+        <div style={{ marginBottom: "20px" }} className="mt-3">
           <div style={{ display: "flex", gap: "30px", marginBottom: "20px" }}>
             <div>
               <label style={{
@@ -382,46 +573,50 @@ useEffect(() => {
                 value={k}
                 onChange={(e) => setK(parseInt(e.target.value) || 1)}
                 style={{
-                  width: "100px",
+                  width: "100%",
                   padding: "6px",
                   border: "1px solid #7f9db9",
-                  borderRadius: "3px"
+                  borderRadius: "3px",
+                
                 }}
               />
             </div>
+<div >
+  <label
+    style={{
+      display: "block",
+      marginBottom: "5px",
+      fontSize: "13px",
+      fontWeight: "500"
+    }}
+  >
+    n (total items):
+  </label>
 
-            <div>
+  <input
+    type="number"
+    min={k}
+    max="10"
+    value={n}
+    onChange={(e) => setN(parseInt(e.target.value) || 1)}
+    style={{
+      width: "100%",   
+      padding: "6px",
+      border: "1px solid #7f9db9",
+      borderRadius: "3px",
+      boxSizing: "border-box"
+    }}
+  />
+</div>
+              {selectedLabel !== "Non-Identical" && (
+                  <div>
               <label style={{
                 display: "block",
                 marginBottom: "5px",
                 fontSize: "13px",
                 fontWeight: "500"
               }}>
-                n (total items):
-              </label>
-              <input
-                type="number"
-                min={k}
-                max="10"
-                value={n}
-                onChange={(e) => setN(parseInt(e.target.value) || k)}
-                style={{
-                  width: "100px",
-                  padding: "6px",
-                  border: "1px solid #7f9db9",
-                  borderRadius: "3px"
-                }}
-              />
-            </div>
-
-            <div>
-              <label style={{
-                display: "block",
-                marginBottom: "5px",
-                fontSize: "13px",
-                fontWeight: "500"
-              }}>
-                MTTR (hours):
+                System MTTR (hours):
               </label>
               <input
                 type="number"
@@ -431,14 +626,148 @@ useEffect(() => {
                 onChange={(e) => handleChange('mttr', e.target.value)}
                 placeholder="MTTR value will auto-populate"
                 style={{
-                  width: "120px",
+                  width: "100%",
                   padding: "6px",
                   border: "1px solid #7f9db9",
-                  borderRadius: "3px"
+                  borderRadius: "3px",     
                 }}
               />
             </div>
+                        )}
+        
           </div>
+          
+          {/* Non-Identical Components Section */}
+          {selectedLabel === "Non-Identical" && n > 0 && (
+            <div style={{ 
+              marginTop: "20px",
+              borderTop: "1px solid #ccc",
+              paddingTop: "15px"
+            }}>
+              <label style={{
+                display: "block",
+                marginBottom: "15px",
+                fontSize: "14px",
+                fontWeight: "bold",
+                color: "#333"
+              }}>
+                Component Details (Non-Identical):
+              </label>
+              
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))",
+                gap: "15px"
+              }}>
+                {nonIdenticalComponents.map((component, index) => (
+                  <div key={component.id} style={{
+                    padding: "12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    backgroundColor: "#fff"
+                  }}>
+                    <label style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      color: "#555"
+                    }}>
+                      Component {index + 1}:
+                    </label>
+                    
+                    <div style={{ marginBottom: "10px" }}>
+                      <CreatableSelect
+                        value={component.selectedOption}
+                        options={[
+                          { label: "Select from the product", value: "Select from the product" },
+                          ...options
+                        ]}
+                        onChange={(option) => {
+                          if (option) {
+                            handleComponentChange(index, 'product', option.value, option);
+                          }
+                        }}
+                        placeholder="Select product or enter manually..."
+                        styles={{
+                          control: (base) => ({
+                            ...base,
+                            fontSize: "13px",
+                            minHeight: "32px"
+                          })
+                        }}
+                      />
+                    </div>
+                    
+                    <div style={{ marginBottom: "10px" }}>
+                      <label style={{
+                        display: "block",
+                        marginBottom: "5px",
+                        fontSize: "11px",
+                        color: "#666"
+                      }}>
+                        Failure Rate λ (1/hour):
+                      </label>
+                      <input
+                        type="number"
+                        step="0.0001"
+                        min="0"
+                        value={component.lambda || 0}
+                        onChange={(e) => handleComponentChange(index, 'lambda', e.target.value)}
+                        placeholder="Enter failure rate"
+                        style={{
+                          width: "100%",
+                          padding: "5px",
+                          border: "1px solid #7f9db9",
+                          borderRadius: "3px",
+                          fontSize: "12px"
+                        }}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label style={{
+                        display: "block",
+                        marginBottom: "5px",
+                        fontSize: "11px",
+                        color: "#666"
+                      }}>
+                        MTTR (hours):
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        value={component.mttr || ""}
+                        onChange={(e) => handleComponentChange(index, 'mttr', e.target.value)}
+                        placeholder="Enter MTTR"
+                        style={{
+                          width: "100%",
+                          padding: "5px",
+                          border: "1px solid #7f9db9",
+                          borderRadius: "3px",
+                          fontSize: "12px"
+                        }}
+                      />
+                    </div>
+                    
+                    {component.mu > 0 && (
+                      <div style={{
+                        marginTop: "8px",
+                        fontSize: "11px",
+                        color: "#4CAF50",
+                        padding: "4px",
+                        backgroundColor: "#e8f5e9",
+                        borderRadius: "3px"
+                      }}>
+                        Repair Rate (μ): {component.mu.toFixed(6)} /hour
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div style={{
@@ -450,15 +779,14 @@ useEffect(() => {
         }}>
           <div style={{ fontWeight: "bold", marginBottom: "8px" }}>Calculated Values:</div>
           <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
-            <span>Failure Rate (λ): {lambda || 'N/A'}</span>
-    
-               <span>
-              Repair Rate (μ = 1/MTTR): {mu?.toFixed(6)}
-            </span>
-            <span>Reliability: {systemReliability?.toFixed(6)}</span>
-            <span>
-              unavailability:{systemUnavailability}
-            </span>
+            {selectedLabel !== "Non-Identical" && (
+              <span>Failure Rate (λ): {lambda || 'N/A'}</span>
+            )}
+            {selectedLabel !== "Non-Identical" && (
+              <span>Repair Rate (μ = 1/MTTR): {mu?.toFixed(6)}</span>
+            )}
+            <span>System Reliability: {systemReliability?.toFixed(6)}</span>
+            <span>System Unavailability: {systemUnavailability?.toFixed(6)}</span>
           </div>
         </div>
 
@@ -506,5 +834,5 @@ useEffect(() => {
         </div>
       </div>
     </div>
-  );
+  );  
 };
