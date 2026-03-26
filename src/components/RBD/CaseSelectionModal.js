@@ -13,17 +13,19 @@ const CaseSelectionModal = ({ isOpen, handleClose, onSelect }) => {
   });
     if (!isOpen) return null;
   const options = [
+    { id: "case3", label: "Identical" },
     { id: "case4", label: "Non-Identical" },
     { id: "case5", label: "Identical (Load Sharing)" }
   ];
 const handleCaseSelect = (item) => {
-  if (item.label === "Identical (Load Sharing)") {
+  // if (item.label === "Identical") {
     setKOfNModal(prev => ({
       ...prev,
       open: true,
-      selectedCase: item.id
+      selectedCase: item.id,
+      selectedLabel:item.label
     }));
-  }
+  // }
 };
 // const handleCaseSelect = (item) => {
 //   setSelected(item.id);
@@ -67,6 +69,7 @@ const handleCaseSelect = (item) => {
         <KOfNConfigModal
   isOpen={kOfNModal.open}
   selectedCase={kOfNModal.selectedCase}
+  selectedLabel={kOfNModal.selectedLabel}
   onClose={()=>
     setKOfNModal(prev=>({
         ...prev,
