@@ -18,6 +18,7 @@ import { toast } from 'react-toastify';
 import { RBDSvgRenderer } from './RBDSvgRenderer';
 
 
+
 const C = {
   TERMINAL_W: 60,
   TERMINAL_H: 40,
@@ -915,6 +916,154 @@ useEffect(() => {
     return after ? blocks.findIndex(b => b.id === after.id) : blocks.length;
   };
 
+  // Handle SubRBD confirmation from modal
+const handleSubRBDConfirm = async (selectedRbd, mode, blockId, nodeIndex) => {
+  try {
+    if (mode === 'edit') {
+      // UPDATE existing SubRBD block
+      const updateData = {
+        name: selectedRbd.rbdTitle,
+        subRbdId: selectedRbd.id,
+        subRbdData: {
+          id: selectedRbd.id,
+          rbdTitle: selectedRbd.rbdTitle,
+          description: selectedRbd.description,
+          missionTime: selectedRbd.missionTime,
+          reliability: selectedRbd.reliability,
+          unavailability: selectedRbd.unavailability
+        }
+      };
+
+// Fetch RBD list for SubRBD selection
+
+
+      // Call API to update the block
+      const response = await Api.patch(`/api/v1/elementParametersRBD/updateRBD/${blockId}`, updateData);
+      
+      if (response.data.success) {
+        // Update local state
+        setBlocks(prevBlocks => prevBlocks.map(block => {
+          if (block.id === blockId || block._id === blockId) {
+            return {
+              ...block,
+              type: 'SubRBD',
+              elementType: 'SubRBD',
+              name: selectedRbd.rbdTitle,
+              subRbdId: selectedRbd.id,
+              subRbdData: updateData.subRbdData,
+              isSubRBD: true,
+              data: {
+                ...block.data,
+                rbdData: updateData.subRbdData,
+                rbdId: selectedRbd.id,
+                name: selectedRbd.rbdTitle
+              }
+            };
+          }
+          return block;
+        }));
+        
+        toast.success('SubRBD updated successfully');
+      }
+    } else {
+      // ADD new SubRBD block
+      
+      // Prepare the block data for API
+      const newBlockData = {
+        rbdId: rbdId,  // Parent RBD ID from URL params
+        projectId: projectId,
+        companyId: localStorage.getItem("companyId"),
+        elementType: 'SubRBD',
+        type: 'SubRBD',
+        name: selectedRbd.rbdTitle,
+        subRbdId: selectedRbd.id,
+        subRbdData: {
+          id: selectedRbd.id,
+          rbdTitle: selectedRbd.rbdTitle,
+          description: selectedRbd.description,
+          missionTime: selectedRbd.missionTime,
+          reliability: selectedRbd.reliability,
+          unavailability: selectedRbd.unavailability
+        },
+        isSubRBD: true,
+        // You can add other fields as needed
+        partNumber: selectedRbd.partNumber || '',
+        productName: selectedRbd.productName || '',
+        mtbf: selectedRbd.mtbf || null,
+        fr: selectedRbd.fr || null
+      };
+
+      // Call API to create the block
+      const response = await Api.post('/api/v1/elementParametersRBD/create', newBlockData);
+      
+      if (response.data.success) {
+        const createdBlock = response.data.data;
+        
+        // Create the block object for local state
+        const newBlock = {
+          id: createdBlock._id || createdBlock.id,
+          _id: createdBlock._id,
+          type: 'SubRBD',
+          elementType: 'SubRBD',
+          name: selectedRbd.rbdTitle,
+          subRbdId: selectedRbd.id,
+          subRbdData: newBlockData.subRbdData,
+          isSubRBD: true,
+          data: {
+            rbdData: newBlockData.subRbdData,
+            rbdId: selectedRbd.id,
+            name: selectedRbd.rbdTitle
+          }
+        };
+        
+        // Insert the block at the specified position
+        if (nodeIndex !== null && nodeIndex !== undefined) {
+          insertBlockAtPosition(newBlock, nodeIndex);
+        } else {
+          setBlocks(prevBlocks => [...prevBlocks, newBlock]);
+          setNextId(prevId => prevId + 1);
+        }
+        
+        toast.success('SubRBD block created successfully');
+        
+        // Refresh blocks from database to ensure consistency
+        getBlock();
+      }
+    }
+    
+    // Close the modal
+    setRbdListModal({ 
+      open: false, 
+      nodeIndex: null, 
+      blockId: null, 
+      mode: 'add', 
+      selectedRbd: null 
+    });
+    
+  } catch (error) {
+    console.error('Error in SubRBD operation:', error);
+    toast.error(error.response?.data?.message || 'Failed to process SubRBD');
+  }
+};
+
+useEffect(() => {
+  if (projectId) {
+    console.log("Fetching RBD list for project:", projectId);
+    Api.get("/api/v1/EditConfigRBD/", {  // Make sure the endpoint is correct
+      params: {
+        projectId: projectId,
+      }
+    })
+      .then((res) => {
+        console.log("RBD list response:", res.data);
+        setRbdList(res.data.data || []);
+      })
+      .catch((error) => {
+        console.error("Error fetching RBD list:", error);
+        toast.error("Failed to load RBD list");
+      });
+  }
+}, [projectId]);
   const insertBlockAtPosition = (newBlock, nodeIndex) => {
     const info = findInsertionIndex(nodeIndex);
     const next = JSON.parse(JSON.stringify(blocks));
@@ -1183,8 +1332,7 @@ useEffect(() => {
         // idforApi: idforApi
       });
     }
-    if (action === "Add SubRBD") {
-  // Open RBD list modal instead of element parameters modal
+if (action === "Add SubRBD") {
   setRbdListModal({
     open: true,
     mode: 'add',
@@ -1276,18 +1424,33 @@ useEffect(() => {
       if (!foundBlock) { setBlockMenu({ open: false, blockId: null, x: 0, y: 0 }); return; }
   if (foundBlock) {
       // Check if it's a SubRBD block
-      if (foundBlock.type === 'SubRBD') {
-        // ✅ FOR SUBRBD: Open RBD List Modal in EDIT mode
-        console.log("Editing SubRBD block:", foundBlock);
-        
-        setRbdListModal({
-          open: true,
-          mode: 'edit',  // Important: Set mode to 'edit'
-          blockId: blockMenu.blockId,
-          nodeIndex: null,
-          selectedRbd: foundBlock.data?.rbdData || foundBlock.rbdData || null
-        });
+   if (foundBlock.type === 'SubRBD' || foundBlock.elementType === 'SubRBD') {
+      console.log("Editing SubRBD block:", foundBlock);
+      
+      // Get the selected RBD data
+      let selectedRbd = null;
+      
+      // Try to get from data.rbdData first
+      if (foundBlock.data?.rbdData) {
+        selectedRbd = foundBlock.data.rbdData;
+      } 
+      // Try from subRbdData
+      else if (foundBlock.subRbdData) {
+        selectedRbd = foundBlock.subRbdData;
       }
+      // Try from rbdData directly
+      else if (foundBlock.rbdData) {
+        selectedRbd = foundBlock.rbdData;
+      }
+      
+      setRbdListModal({
+        open: true,
+        mode: 'edit',
+        blockId: blockMenu.blockId,
+        nodeIndex: null,
+        selectedRbd: selectedRbd
+      });
+    }
       else
         if (foundBlock.type === 'K-out-of-N') {
         setKOfNModal({ open: true, mode: 'edit', blockId: blockMenu.blockId, nodeIndex: null, initialData: foundBlock.data || foundBlock });
@@ -1450,6 +1613,11 @@ const handleClose = () => {
     show={rbdListModal.open}
     onHide={() => setRbdListModal({ ...rbdListModal, open: false })}
     rbdData={rbdListModal.selectedRbd}
+    mode={rbdListModal.mode}
+    blockId={rbdListModal.blockId}
+    nodeIndex={rbdListModal.nodeIndex}
+    onConfirm={handleSubRBDConfirm}  // Add this callback
+    rbdList={rbdList} 
   />
 )}
 

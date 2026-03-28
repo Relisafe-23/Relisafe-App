@@ -1,9 +1,6 @@
-import { Modal, Button } from "react-bootstrap";
-import { useParams, useLocation } from 'react-router-dom';
-import { calculateRBD } from "./RBDStructure";
+import React from 'react';
+import { toast } from 'react-toastify';
 import Api from "../../Api";
-import React, { useState, useEffect } from 'react';
-// In SubRBDModal.js, update the component to receive and use callbacks:
 
 const SubRBDModal = ({ 
   show, 
@@ -12,31 +9,14 @@ const SubRBDModal = ({
   mode = 'add',
   blockId = null,
   nodeIndex = null,
-  onConfirm  // New callback prop
+  onConfirm,  // Callback to parent
+  rbdList = [] // Receive rbdList from parent
 }) => {
-        const { id } = useParams();
-  const [rbdList, setRbdList] = useState([]);
-  const [selectedRbd, setSelectedRbd] = useState(rbdData || null);
-  const [projectId] = useState(() => {
-    return id;
-  });
+  const [selectedRbd, setSelectedRbd] = React.useState(rbdData || null);
 
-  // Fetch RBD list for SubRBD selection
-  useEffect(() => {
-    if (projectId && show) {
-      Api.get("/api/v1/EditConfigRBD/", {
-        params: {
-          projectId: projectId,
-        }
-      })
-        .then((res) => {
-          setRbdList(res.data.data || []);
-        })
-        .catch((error) => {
-          console.error("Error fetching RBD list:", error);
-        });
-    }
-  }, [projectId, show]);
+
+
+  
 
   const handleConfirm = () => {
     if (!selectedRbd) {
@@ -121,11 +101,15 @@ const SubRBDModal = ({
             }}
           >
             <option value="">-- Select an RBD --</option>
-            {rbdList && rbdList.map((rbd) => (
-              <option key={rbd.id} value={JSON.stringify(rbd)}>
-                {rbd.rbdTitle || `RBD ${rbd.id}`} - {rbd.description || "No description"}
-              </option>
-            ))}
+            {rbdList && rbdList.length > 0 ? (
+              rbdList.map((rbd) => (
+                <option key={rbd.id || rbd._id} value={JSON.stringify(rbd)}>
+                  {rbd.rbdTitle || `RBD ${rbd.id || rbd._id}`} - {rbd.description || "No description"}
+                </option>
+              ))
+            ) : (
+              <option disabled>No RBDs available</option>
+            )}
           </select>
 
           {selectedRbd && (
@@ -137,7 +121,7 @@ const SubRBDModal = ({
               border: "1px solid #ddd",
               marginTop: "10px"
             }}>
-              <div><strong>Selected RBD:</strong> {selectedRbd.rbdTitle || `RBD ${selectedRbd.id}`}</div>
+              <div><strong>Selected RBD:</strong> {selectedRbd.rbdTitle || `RBD ${selectedRbd.id || selectedRbd._id}`}</div>
               <div><strong>Description:</strong> {selectedRbd.description || "No description"}</div>
               <div><strong>Mission Time:</strong> {selectedRbd.missionTime || "N/A"} hours</div>
               <div><strong>Reliability:</strong> {selectedRbd.reliability || "N/A"}</div>
