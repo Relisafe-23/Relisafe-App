@@ -594,6 +594,7 @@ function Index(props) {
       },
     })
       .then((res) => {
+        console.log("FMECA Product Data:", res.data);
         setTableData(res?.data?.data);
         getProjectDetails();
       })
@@ -613,6 +614,7 @@ function Index(props) {
       },
     })
       .then((res) => {
+       
         const initialProductID = res?.data?.data[0]?.treeStructure?.id;
         const treeData = res?.data?.data;
         setTreeTabledata(treeData, projectId);
@@ -680,7 +682,7 @@ function Index(props) {
           logout();
         }
       });
-  };
+  };  
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [rowToDelete, setRowToDelete] = useState(null);
