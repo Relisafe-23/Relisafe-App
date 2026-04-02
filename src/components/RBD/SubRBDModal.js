@@ -1,5 +1,6 @@
-import React from 'react';
 import { toast } from 'react-toastify';
+import React, { useState, useEffect } from 'react';
+
 import Api from "../../Api";
 
 const SubRBDModal = ({ 
@@ -9,23 +10,42 @@ const SubRBDModal = ({
   mode = 'add',
   blockId = null,
   nodeIndex = null,
-  onConfirm,  // Callback to parent
-  rbdList = [] // Receive rbdList from parent
+  onConfirm,
+  rbdList = []
 }) => {
-  const [selectedRbd, setSelectedRbd] = React.useState(rbdData || null);
+  const [selectedRbd, setSelectedRbd] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(false);
 
+ useEffect(() => {
+    if (rbdData) {
+      setSelectedRbd(rbdData);
+    } else {
+      setSelectedRbd(null);
+    }
+  }, [rbdData]);
 
+  // Reset when modal closes
+  useEffect(() => {
+    if (!show) {
+      setSelectedRbd(null);
+    }
+  }, [show]);
 
-  
-
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedRbd) {
       alert("Please select an RBD");
       return;
     }
     
-    if (onConfirm) {
-      onConfirm(selectedRbd, mode, blockId, nodeIndex);
+    setIsLoading(true);
+    try {
+      if (onConfirm) {
+        await onConfirm(selectedRbd, mode, blockId, nodeIndex);
+      }
+    } catch (error) {
+      console.error('Error in handleConfirm:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -99,6 +119,7 @@ const SubRBDModal = ({
                 setSelectedRbd(null);
               }
             }}
+            disabled={mode === 'edit'}
           >
             <option value="">-- Select an RBD --</option>
             {rbdList && rbdList.length > 0 ? (
@@ -138,35 +159,39 @@ const SubRBDModal = ({
         }}>
           <button
             onClick={handleConfirm}
+            disabled={isLoading}
             style={{
               padding: "6px 20px",
               backgroundColor: "#007bff",
               color: "white",
               border: "none",
               borderRadius: "3px",
-              cursor: "pointer",
+              cursor: isLoading ? "not-allowed" : "pointer",
               fontSize: "13px",
-              minWidth: "70px"
+              minWidth: "70px",
+              opacity: isLoading ? 0.7 : 1
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#0056b3"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#007bff"}
+            onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = "#0056b3")}
+            onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = "#007bff")}
           >
-            {mode === 'edit' ? 'Update' : 'OK'}
+            {isLoading ? 'Processing...' : (mode === 'edit' ? 'Update' : 'OK')}
           </button>
           <button
             onClick={handleCancel}
+            disabled={isLoading}
             style={{
               padding: "6px 20px",
               backgroundColor: "#e1e1e1",
               color: "#333",
               border: "1px solid #999",
               borderRadius: "3px",
-              cursor: "pointer",
+              cursor: isLoading ? "not-allowed" : "pointer",
               fontSize: "13px",
-              minWidth: "70px"
+              minWidth: "70px",
+              opacity: isLoading ? 0.7 : 1
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#d1d1d1"}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#e1e1e1"}
+            onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = "#d1d1d1")}
+            onMouseLeave={(e) => !isLoading && (e.currentTarget.style.backgroundColor = "#e1e1e1")}
           >
             Cancel
           </button>

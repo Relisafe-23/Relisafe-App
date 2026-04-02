@@ -730,6 +730,7 @@ export const BlockContextMenu = ({ x, y, setParallelFoundBlock, onSelect, onClos
           style={{ padding: '8px', cursor: 'pointer' }}
           onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f0f0f0'}
           onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+   
         >{item}</div>
       ))}
   </div>
@@ -763,6 +764,7 @@ export default function RBDButton() {
   mode: 'add',
   selectedRbd: null
 });
+const [selectedRbd, setSelectedRbd] = useState(null);
   const [clickedNodeInfo, setClickedNodeInfo] = useState({ index: null, x: 0, y: 0 });
   const [loadChange, setLoadChange] = useState(false);
   const [parentItem, setParentItem] = useState(null);
@@ -1423,7 +1425,6 @@ if (action === "Add SubRBD") {
       }
       if (!foundBlock) { setBlockMenu({ open: false, blockId: null, x: 0, y: 0 }); return; }
   if (foundBlock) {
-      // Check if it's a SubRBD block
    if (foundBlock.type === 'SubRBD' || foundBlock.elementType === 'SubRBD') {
       console.log("Editing SubRBD block:", foundBlock);
       
