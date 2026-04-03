@@ -13,7 +13,14 @@ const RenderTree = ({
   selectedNodeId,
   setSelectedNodeId,
   productData,
+  calculationMode,
+  setCurrentCalculationMode,
+  showRepeatedEvents,
+  child,
+  repeatedEvents
 }) => {
+
+  // console.log(calculationMode, 'calculationMode in render tree')
   return (
     <TreeNode
       label={
@@ -26,25 +33,35 @@ const RenderTree = ({
           projectId={projectId}
           getFTAData={getFTAData}
           productData={productData}
-          selectedNodeId={selectedNodeId} 
-          setSelectedNodeId={setSelectedNodeId} 
+          selectedNodeId={selectedNodeId}
+          setSelectedNodeId={setSelectedNodeId}
+          calculationMode={calculationMode}
+          setCurrentCalculationMode={setCurrentCalculationMode}
+          showRepeatedEvents={showRepeatedEvents}
+          repeatedEvents={repeatedEvents}
         />
       }
     >
 
       {data?.children?.map((child, index) => (
-        <RenderTree
-          key={index}
-          data={child}
-          handleRemove={handleRemove}
-          handleAdd={handleAdd}
-          handleEdit={handleEdit}
-          projectId={projectId}
-          getFTAData={getFTAData}
-          productData={productData}
-          selectedNodeId={selectedNodeId} 
-          setSelectedNodeId={setSelectedNodeId} 
-        />
+        <>
+          <RenderTree
+            key={index}
+            data={child}
+            handleRemove={handleRemove}
+            handleAdd={handleAdd}
+            handleEdit={handleEdit}
+            projectId={projectId}
+            getFTAData={getFTAData}
+            productData={productData}
+            selectedNodeId={selectedNodeId}
+            setSelectedNodeId={setSelectedNodeId}
+            calculationMode={calculationMode}
+            setCurrentCalculationMode={setCurrentCalculationMode}
+            showRepeatedEvents={showRepeatedEvents}
+            repeatedEvents={repeatedEvents}
+          />
+        </>
       ))}
     </TreeNode>
   );

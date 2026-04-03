@@ -2,6 +2,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Nav, UncontrolledDropdown, DropdownToggle, DropdownMenu, DropdownItem } from "reactstrap";
 import { Avatar } from "@material-ui/core";
+import {  FaArrowLeft } from "react-icons/fa";
+import * as XLSX from 'xlsx';
 import "../../css/HeaderNavBar.scss";
 import Tooltip from "@mui/material/Tooltip";
 import Relisafe from "../core/Images/Relisafe.png";
@@ -18,7 +20,8 @@ import {
   faCompress,
   faTh,
   faArrowsAlt,
-  faRedo
+  faRedo,
+
 } from "@fortawesome/free-solid-svg-icons";
 import Api from "../../Api.js";
 import "../../css/HeaderNavBar.scss";
@@ -41,7 +44,16 @@ const HeaderNavBar = ({
   onZoomToFit,
   onZoomOriginal,
   onToggleGrid,
-  onOriginalLayout 
+  onOriginalLayout,
+  additionalButtons,
+  setViewMode,    
+    setChartData,
+      showRepeatedEvents = false,
+  onToggleRepeatedEvents,
+  repeatedEventsCount = 0,
+  // setSelectedTreeId,            // ADD THIS LINE
+    isTreeView = false,        // ADD THIS LINE
+  onBackToTable              // ADD THIS LINE
 }) => { const sessionId = localStorage.getItem("sessionId");
   const [file, setFile] = useState(null);
   const {
@@ -82,6 +94,8 @@ const HeaderNavBar = ({
   const handleOpenChildEvent = () => {
     openChildEvent();
   };
+
+  
 
   const handelDelete = () => {
     openDeleteNode();
@@ -141,57 +155,321 @@ const HeaderNavBar = ({
 
   const fileInputRef = useRef(null);
 
-  const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
-    if (event.target.files[0]) {
-      const formData = new FormData();
-      formData.append("jsonFile", event.target.files[0]);
+// HeaderNavBar.js - Improved handleFileChange
 
-      Api.post("/api/v1/FTAjson/upload", formData).then((res) => {
-        if (res.status === 201) {
-          toast("File uploaded successfully!", {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light",
-            type: "success",
-          });
-          triggerReload();
-          if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-          }
-        } else {
-          toast("File not uploaded!", {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light",
-            type: "error",
-          });
+const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  console.log("Selected file:", file.name, file.type);
+  
+  const fileExtension = file.name.split('.').pop().toLowerCase();
+  
+  if (fileExtension === 'json') {
+    // Handle JSON file
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const jsonData = JSON.parse(e.target.result);
+        console.log("JSON data parsed:", jsonData);
+        
+        // Check if the JSON has the expected structure
+        let dataToSend = jsonData;
+        if (!jsonData.treeStructure && jsonData.id) {
+          // If it's just a node, wrap it
+          dataToSend = { treeStructure: jsonData };
         }
-      }).catch((error) => {
-        console.error("Error uploading JSON data", error);
-      });
+        
+        const formData = new FormData();
+        const jsonBlob = new Blob([JSON.stringify(dataToSend)], { type: 'application/json' });
+        formData.append('jsonFile', jsonBlob, file.name);
+        
+        Api.post("/api/v1/FTAjson/upload", formData)
+          .then((res) => {
+            console.log("Upload response:", res);
+            if (res.status === 201 || res.status === 200) {
+              toast.success("File uploaded successfully!", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+              });
+              triggerReload();
+            } else {
+              toast.error("Upload failed with status: " + res.status);
+            }
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+          })
+          .catch((error) => {
+            console.error("Error uploading JSON data", error);
+            console.error("Error response:", error.response?.data);
+            toast.error(error.response?.data?.message || "Failed to upload file! Please check the file format.", {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "light",
+            });
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+          });
+      } catch (error) {
+        console.error("JSON parse error:", error);
+        toast.error("Invalid JSON file format!", {
+          position: "top-right",
+          autoClose: 5000,
+        });
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsText(file);
+  } 
+  else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+    // Handle Excel file
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const excelData = XLSX.utils.sheet_to_json(firstSheet);
+        
+        console.log("Excel data parsed:", excelData);
+        
+        if (!excelData || excelData.length === 0) {
+          toast.error("Excel file is empty!", {
+            position: "top-right",
+            autoClose: 5000,
+          });
+          return;
+        }
+        
+        // Convert Excel data back to tree structure
+        const treeStructure = convertExcelToTreeStructure(excelData);
+        
+        if (!treeStructure) {
+          toast.error("Could not parse Excel structure! Please ensure the Excel file was exported from this application.", {
+            position: "top-right",
+            autoClose: 5000,
+          });
+          return;
+        }
+        
+        console.log("Converted tree structure:", treeStructure);
+        
+        // Prepare data for API
+        const uploadData = { treeStructure: treeStructure };
+        const formData = new FormData();
+        const jsonBlob = new Blob([JSON.stringify(uploadData)], { type: 'application/json' });
+        formData.append('jsonFile', jsonBlob, file.name.replace(/\.(xlsx|xls)$/, '.json'));
+        
+        Api.post("/api/v1/FTAjson/upload", formData)
+          .then((res) => {
+            console.log("Upload response:", res);
+            if (res.status === 201 || res.status === 200) {
+              toast.success("Excel file uploaded and converted successfully!", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+              });
+              triggerReload();
+            } else {
+              toast.error("Upload failed with status: " + res.status);
+            }
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+          })
+          .catch((error) => {
+            console.error("Error uploading Excel data", error);
+            console.error("Error response:", error.response?.data);
+            toast.error(error.response?.data?.message || "Failed to upload Excel file! Please check the file format.", {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "light",
+            });
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+          });
+      } catch (error) {
+        console.error("Error parsing Excel:", error);
+        toast.error("Failed to parse Excel file: " + error.message, {
+          position: "top-right",
+          autoClose: 5000,
+        });
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+  else {
+    toast.error("Please upload JSON or Excel (.xlsx, .xls) files only!", {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
-  };
+  }
+};
 
+// Improved convertExcelToTreeStructure function
+const convertExcelToTreeStructure = (excelData) => {
+  if (!excelData || excelData.length === 0) return null;
+  
+  console.log("Converting Excel data to tree structure...");
+  
+  // Create a map of all nodes by Gate ID
+  const nodeMap = new Map();
+  
+  // First pass: Create all nodes
+  excelData.forEach(row => {
+    const gateId = row['Gate ID'];
+    if (gateId) {
+      const node = {
+        gateId: gateId,
+        name: row['Name'] || '',
+        description: row['Description'] || '',
+        isEvent: row['Type'] === 'Event',
+        gateType: row['Gate Type'] !== 'N/A' ? row['Gate Type'] : undefined,
+        calcTypes: row['Calculation Type'] !== 'N/A' ? row['Calculation Type'] : undefined,
+        fr: row['Failure Rate (λ)'] !== 'N/A' ? row['Failure Rate (λ)'] : undefined,
+        isP: row['Probability (q)'] !== 'N/A' ? row['Probability (q)'] : undefined,
+        mttr: row['MTTR'] !== 'N/A' ? row['MTTR'] : undefined,
+        isT: row['Test Interval (Ti)'] !== 'N/A' ? row['Test Interval (Ti)'] : undefined,
+        timeToFirstTest: row['Time to First Test (Tf)'] !== '0' ? row['Time to First Test (Tf)'] : undefined,
+        eventMissionTime: row['Mission Time (tm)'] !== 'N/A' ? row['Mission Time (tm)'] : undefined,
+        indexCount: row['Index Count'] !== 'N/A' ? parseInt(row['Index Count']) : undefined,
+        isProducts: row['Product'] !== 'N/A' ? row['Product'] : undefined,
+        isFailureMode: row['Failure Mode'] !== 'N/A' ? row['Failure Mode'] : undefined,
+        children: []
+      };
+      nodeMap.set(gateId, node);
+    }
+  });
+  
+  // Second pass: Build parent-child relationships
+  excelData.forEach(row => {
+    const gateId = row['Gate ID'];
+    const parentId = row['Parent ID'];
+    const node = nodeMap.get(gateId);
+    
+    if (node && parentId && parentId !== 'N/A') {
+      const parentNode = nodeMap.get(parentId);
+      if (parentNode && !parentNode.children.find(child => child.gateId === gateId)) {
+        parentNode.children.push(node);
+      }
+    }
+  });
+  
+  // Find root node (no parent or parent not found)
+  let rootNode = null;
+  for (let [id, node] of nodeMap) {
+    const hasParent = excelData.some(row => row['Gate ID'] === id && row['Parent ID'] !== 'N/A' && row['Parent ID'] !== id);
+    if (!hasParent) {
+      rootNode = node;
+      break;
+    }
+  }
+  
+  // If no root found, use the first node
+  if (!rootNode && nodeMap.size > 0) {
+    rootNode = Array.from(nodeMap.values())[0];
+  }
+  
+  console.log("Root node found:", rootNode?.gateId);
+  return rootNode;
+};
+
+// Helper function to convert Excel data back to tree structure
+// const convertExcelToTreeStructure = (excelData) => {
+//   if (!excelData || excelData.length === 0) return null;
+  
+//   // Find root node (parent is null or N/A)
+//   const rootData = excelData.find(row => row['Parent ID'] === 'N/A' || !row['Parent ID']);
+//   if (!rootData) return null;
+  
+//   const buildTree = (nodeData) => {
+//     const node = {
+//       gateId: nodeData['Gate ID'],
+//       name: nodeData['Name'],
+//       description: nodeData['Description'],
+//       isEvent: nodeData['Type'] === 'Event',
+//       gateType: nodeData['Gate Type'] !== 'N/A' ? nodeData['Gate Type'] : undefined,
+//       calcTypes: nodeData['Calculation Type'] !== 'N/A' ? nodeData['Calculation Type'] : undefined,
+//       fr: nodeData['Failure Rate (λ)'] !== 'N/A' ? nodeData['Failure Rate (λ)'] : undefined,
+//       isP: nodeData['Probability (q)'] !== 'N/A' ? nodeData['Probability (q)'] : undefined,
+//       mttr: nodeData['MTTR'] !== 'N/A' ? nodeData['MTTR'] : undefined,
+//       isT: nodeData['Test Interval (Ti)'] !== 'N/A' ? nodeData['Test Interval (Ti)'] : undefined,
+//       timeToFirstTest: nodeData['Time to First Test (Tf)'] !== '0' ? nodeData['Time to First Test (Tf)'] : undefined,
+//       eventMissionTime: nodeData['Mission Time (tm)'] !== 'N/A' ? nodeData['Mission Time (tm)'] : undefined,
+//       indexCount: nodeData['Index Count'] !== 'N/A' ? parseInt(nodeData['Index Count']) : undefined,
+//       children: []
+//     };
+    
+//     // Find children
+//     const children = excelData.filter(row => row['Parent ID'] === nodeData['Gate ID']);
+//     children.forEach(child => {
+//       node.children.push(buildTree(child));
+//     });
+    
+//     return node;
+//   };
+  
+//   return buildTree(rootData);
+// };
   const handleUpload = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
+    const handleBackToTable = () => {
+    setViewMode("table");
+    setChartData([]);
+    // setSelectedTreeId(null);
+  };
+
   return (
     <div>
-      <input type="file" accept=".json" onChange={handleFileChange} ref={fileInputRef} style={{ display: "none" }} />
+<input 
+  type="file" 
+  accept=".json,.xlsx,.xls" 
+  onChange={handleFileChange} 
+  ref={fileInputRef} 
+  style={{ display: "none" }} 
+/>
       {sessionId ? (
         <div className={active ? "nav-head-main-action" : "nav-head-main"}>
           <div className={active ? "avatar-div" : "avatar-div-action"}>
@@ -207,6 +485,36 @@ const HeaderNavBar = ({
                       height: "100%",
                     }}
                   >
+                      {/* <Navbar variant="dark" style={{color:"black"}} expand="lg">
+    <Navbar.Collapse id="navbar-dark-example">
+      <Nav>
+        Back
+      </Nav>
+    </Navbar.Collapse>
+    </Navbar> */}
+    {isTreeView && (
+         <div
+                  style={{
+                    padding: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    marginTop: "8px",
+                    // marginRight: "150px",
+                    // zIndex: -1,
+                  }}
+                >
+                  <Button
+                    variant="outline-secondary"
+                    onClick={handleBackToTable}
+                    title="Back to Trees List"
+                  >
+                    <FaArrowLeft />
+                  </Button>
+                </div>
+              )}
+{isTreeView && (
+
                     <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
                         <Nav>
@@ -218,26 +526,29 @@ const HeaderNavBar = ({
                             }
                             id="basic-nav-dropdown"
                           >
-                            <NavDropdown.Item onClick={handleCreateNew}>
+                            {/* <NavDropdown.Item onClick={handleCreateNew}>
                               <FontAwesomeIcon icon={faFileLines} style={{ paddingRight: "10px" }} />
                               Create New
-                            </NavDropdown.Item>
+                            </NavDropdown.Item> */}
                             <NavDropdown.Item onClick={handleOpenPropertyModal}>
                               <FontAwesomeIcon icon={faPenToSquare} style={{ paddingRight: "10px" }} />
-                              Properties
+                              Properties     
                             </NavDropdown.Item>
-                            <NavDropdown.Item onClick={handleDownloadFTA}>
-                              <FontAwesomeIcon icon={faDownload} style={{ paddingRight: "10px" }} />
-                              Save to File
-                            </NavDropdown.Item>
-                            <NavDropdown.Item onClick={handleUpload}>
-                              <FontAwesomeIcon icon={faUpload} style={{ paddingRight: "10px" }} />
-                              Load from File
-                            </NavDropdown.Item>
+                           <NavDropdown.Item onClick={handleDownloadFTA}>
+  <FontAwesomeIcon icon={faDownload} style={{ paddingRight: "10px" }} />
+  Export to Excel
+</NavDropdown.Item>
+<NavDropdown.Item onClick={handleUpload}>
+  <FontAwesomeIcon icon={faUpload} style={{ paddingRight: "10px" }} />
+  Import from File 
+</NavDropdown.Item>
                           </NavDropdown>
                         </Nav>
                       </Navbar.Collapse>
                     </Navbar>
+)}
+{isTreeView && (
+
 
                     <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
@@ -253,11 +564,13 @@ const HeaderNavBar = ({
                             <NavDropdown.Item onClick={handleOpenEdit}>Edit Gate</NavDropdown.Item>
                             <NavDropdown.Item onClick={handleOpenChildCreate}>Add New Logical Gate</NavDropdown.Item>
                             <NavDropdown.Item onClick={handleOpenChildEvent}>Add New Event</NavDropdown.Item>
-                            <NavDropdown.Item onClick={handelDelete}>Delete</NavDropdown.Item>
+                            {/* <NavDropdown.Item onClick={handelDelete}>Delete</NavDropdown.Item> */}
                           </NavDropdown>
                         </Nav>
                       </Navbar.Collapse>
                     </Navbar>
+)}
+{isTreeView && (
 
       <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
@@ -271,23 +584,49 @@ const HeaderNavBar = ({
   }
   id="basic-nav-dropdown"
 >
-  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('all')}>
+  {/* <NavDropdown.Item 
+    onClick={() => {
+      if (window.generateFTAReport) {
+        window.generateFTAReport('all');
+      } else {
+        toast.warning("Please open a fault tree first");
+      }
+    }}
+  >
     <FontAwesomeIcon icon={faFileAlt} style={{ paddingRight: "10px" }} />
     All Nodes Report
-  </NavDropdown.Item>
-  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('events')}>
+  </NavDropdown.Item> */}
+  <NavDropdown.Item 
+    onClick={() => {
+      if (window.generateFTAReport) {
+        window.generateFTAReport('events');
+      } else {
+        toast.warning("Please open a fault tree first");
+      }
+    }}
+  >
     <FontAwesomeIcon icon={faFileCsv} style={{ paddingRight: "10px" }} />
     List of Events
   </NavDropdown.Item>
-  <NavDropdown.Item onClick={() => onGenerateReport && onGenerateReport('gates')}>
+  <NavDropdown.Item 
+    onClick={() => {
+      if (window.generateFTAReport) {
+        window.generateFTAReport('gates');
+      } else {
+        toast.warning("Please open a fault tree first");
+      }
+    }}
+  >
     <FontAwesomeIcon icon={faFilePdf} style={{ paddingRight: "10px" }} />
     List of Gates
   </NavDropdown.Item>
 </NavDropdown>
+
 </Nav>  
 </Navbar.Collapse>
 </Navbar>
-
+)}
+{isTreeView && (
 <Navbar variant="dark" expand="lg">
   <Navbar.Collapse id="navbar-dark-example">
     <Nav>
@@ -318,6 +657,9 @@ const HeaderNavBar = ({
       </NavDropdown>
     </Nav>
   </Navbar.Collapse>
+  </Navbar>
+)}
+{isTreeView && (
     <Navbar variant="dark" expand="lg">
                       <Navbar.Collapse id="navbar-dark-example">
                         <Nav>
@@ -329,13 +671,67 @@ const HeaderNavBar = ({
                             }
                             id="basic-nav-dropdown"
                           >
-                            <NavDropdown.Item onClick={() => setOpenProbCal(true)}>Probability Calculations(MCS)</NavDropdown.Item>
-                            <NavDropdown.Item >Show Repeated Events</NavDropdown.Item>
+<NavDropdown.Item 
+  onClick={() => {
+    // Check if we're in FTA view and have chart data
+    if (window.openProbabilityModal) {
+      window.openProbabilityModal();
+    } else {
+      toast.warning("Please open a fault tree first");
+    }
+  }}
+>
+  Probability Calculations(MCS)
+</NavDropdown.Item>
+<NavDropdown.Item 
+  onClick={() => {
+    if (onToggleRepeatedEvents) {
+      onToggleRepeatedEvents();
+    } else if (window.showRepeatedEvents) {
+      window.showRepeatedEvents();
+    } else {
+      toast.warning("Please open a fault tree first");
+    }
+  }}
+  style={{
+    backgroundColor: showRepeatedEvents ? '#f6ffed' : 'transparent',
+    borderLeft: showRepeatedEvents ? '3px solid #52c41a' : 'none'
+  }}
+>
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+    <span> Highlight Repeated Events</span>
+    <span
+      style={{
+        width: '40px',
+        height: '20px',
+        backgroundColor: showRepeatedEvents ? '#52c41a' : '#ccc',
+        borderRadius: '10px',
+        position: 'relative',
+        marginLeft: '10px',
+        transition: 'background-color 0.2s'
+      }}
+    >
+      <span
+        style={{
+          width: '16px',
+          height: '16px',
+          backgroundColor: 'white',
+          borderRadius: '50%',
+          position: 'absolute',
+          top: '2px',
+          left: showRepeatedEvents ? '22px' : '2px',
+          transition: 'left 0.2s'
+        }}
+      />
+    </span>
+  </div>
+</NavDropdown.Item>
+
                           </NavDropdown>
                         </Nav>
                       </Navbar.Collapse>
-                    </Navbar>\
-</Navbar>
+                    </Navbar>
+                )}
 
 
 
@@ -520,6 +916,11 @@ const HeaderNavBar = ({
           )}
         </Formik>
       </Modal>
+         {additionalButtons && (
+        <div className="additional-buttons">
+          {additionalButtons}
+        </div>
+      )}
     </div>
   );
 };

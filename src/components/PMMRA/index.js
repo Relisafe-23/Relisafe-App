@@ -986,6 +986,7 @@ export default function PMMRA(props) {
     setIsLoading(true);
 
     Api.post("/api/v1/pmMra/", {
+      failureMode: values.failureMode,
       endEffect: values.endeffect,
       safetyImpact: values.safetyimpact,
       reliabilityImpact: values.reliability,
@@ -1323,6 +1324,7 @@ export default function PMMRA(props) {
         projectId: projectId,
         productId: productId,
         companyId: companyId,
+        failureMode: failureMode,
         userId: userId,
         fmecaModeId: pmmraId,
       },
@@ -1413,6 +1415,7 @@ export default function PMMRA(props) {
   // Submit function
   const submit = (values) => {    
     const companyId = localStorage.getItem("companyId");
+ 
 
 
     Api.post("/api/v1/pmMra/", {
