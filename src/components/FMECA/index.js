@@ -563,6 +563,10 @@ function Index(props) {
   useEffect(() => {
     getTreeData();
     getProductData();
+    // Fetch connections when product changes
+    if (productId) {
+      getAllConnect();
+    }
   }, [productId]);
 
   const logout = () => {
@@ -685,6 +689,58 @@ function Index(props) {
   const [modalInfo, setModalInfo] = useState({ title: "", message: "" });
   const [connectData, setConnectData] = useState([]);
 
+  // State for source module data - used to check if source records exist
+  const [sourceModuleData, setSourceModuleData] = useState({});
+
+  // Module name to API endpoint mapping
+  const moduleApiMap = {
+    FMECA: "/api/v1/FMECA/product/list",
+    SAFETY: "/api/v1/safety/product/list",
+    MTTR: "/api/v1/mttrPrediction/details/mil472",
+    PMMRA: "/api/v1/pmMra/product/list",
+  };
+
+  const getSourceModuleData = (moduleNames) => {
+    // Fetch data for each unique source module
+    const uniqueModules = [...new Set(moduleNames)];
+
+    uniqueModules.forEach((moduleName) => {
+      // Normalize module name for lookup (e.g., FMECA, SAFETY, MTTR)
+      const normalizedName = String(moduleName).toUpperCase();
+      const apiEndpoint = moduleApiMap[normalizedName];
+      if (!apiEndpoint) return;
+
+      Api.get(apiEndpoint, {
+        params: {
+          projectId: projectId,
+          productId: productId,
+          userId: userId,
+        },
+      }).then((res) => {
+        let data = res?.data?.data || [];
+
+        // Handle object response (MTTR details returns an object, not an array)
+        if (data && !Array.isArray(data)) {
+          data = [data];
+        }
+
+        // Normalize MTTR data if needed
+        if (normalizedName === "MTTR") {
+          data = data.map(item => {
+            if (item && item.mttrData) {
+              return { ...item, ...item.mttrData };
+            }
+            return item;
+          });
+        }
+
+        setSourceModuleData(prev => ({ ...prev, [normalizedName]: data }));
+      }).catch((error) => {
+        console.log(`Error fetching ${normalizedName} data for connected library check:`, error);
+      });
+    });
+  };
+
   const handleDropdownChange = (selectedValue) => {
     const selectedItem = treeTableData.find(
       (item) => item.productId === selectedValue
@@ -703,13 +759,39 @@ function Index(props) {
       const connections =
         flattenedConnect?.filter(
           item =>
-            item.fieldName === sourceField &&
-            String(item.fieldValue) === String(sourceValue) &&
-            item.destName === fieldName
+            item.fieldName?.toLowerCase() === sourceField?.toLowerCase() &&
+            String(item.fieldValue)?.toLowerCase() === String(sourceValue)?.toLowerCase() &&
+            item.destName?.toLowerCase() === fieldName?.toLowerCase()
         ) || [];
+        console.log("connections..@@....",connections)
 
       connectedValues.push(...connections);
     });
+
+    // Fallback: If no same-module connections found, check cross-module connections
+    if (connectedValues.length === 0) {
+      const allPossibleConnections = flattenedConnect?.filter(item => {
+        if (item.destName?.toLowerCase() !== fieldName?.toLowerCase()) return false;
+
+        // Check if a record with the source value exists in the source module
+        // Normalize comparison for safety
+        const normSourceModule = String(item.sourceModuleName).toUpperCase();
+        const moduleData = sourceModuleData[normSourceModule] || [];
+        return moduleData.some(row => {
+          // Find the actual key in the row data that case-insensitively matches the item.fieldName
+          const actualKey = Object.keys(row || {}).find(
+            key => key.toLowerCase() === item.fieldName?.toLowerCase()
+          );
+          
+          if (!actualKey) return false;
+          
+          return String(row[actualKey])?.toLowerCase() === String(item.fieldValue)?.toLowerCase();
+        });
+      }) || [];
+
+
+      connectedValues = [...connectedValues, ...allPossibleConnections];
+    }
 
     return connectedValues;
   };
@@ -761,13 +843,12 @@ function Index(props) {
       const flattened = filteredData.flatMap((item) =>
         (item.destinationData || [])
           .filter(
-            (d) =>
-              d.destinationModuleName === "FMECA" &&
-              d.destinationModuleName === item.libraryId.moduleName
+            (d) => d.destinationModuleName === "FMECA"
           )
           .map((d) => ({
             fieldName: item.sourceName,
             fieldValue: item.sourceValue,
+            sourceModuleName: item?.libraryId?.moduleName || "",
             destName: d.destinationName,
             destValue: d.destinationValue,
             destModule: d.destinationModuleName,
@@ -776,12 +857,16 @@ function Index(props) {
 
       setFlattenedConnect(flattened);
       setConnectData(filteredData);
+
+      // Fetch source module data for all unique source modules in the connections
+      const sourceModules = [...new Set(flattened.map(f => f.sourceModuleName).filter(Boolean))];
+      if (sourceModules.length > 0) {
+        getSourceModuleData(sourceModules);
+      }
     });
   };
 
-  useEffect(() => {
-    getAllConnect();
-  }, []);
+  // Removed standalone getAllConnect useEffect - now handled in getProductData or dependency effect
 
   const handleCustomDelete = (rowData) => {
     setRowToDelete(rowData);
