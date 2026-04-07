@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import {KOfNConfigModal} from "./KOfNConfigModal"
 const CaseSelectionModal = ({ isOpen, handleClose, onSelect }) => {
   const [selected, setSelected] = useState(null);
-
+  const [receivedData,setReceivedData] = useState(null);
 
   const [kOfNModal, setKOfNModal] = useState({
     open: false, 
@@ -11,7 +11,8 @@ const CaseSelectionModal = ({ isOpen, handleClose, onSelect }) => {
     mode: 'add',
     nodeIndex: null
   });
-    if (!isOpen) return null;
+
+   
   const options = [
     { id: "case3", label: "Identical" },
     { id: "case4", label: "Non-Identical" },
@@ -27,6 +28,7 @@ const handleCaseSelect = (item) => {
     }));
   // }
 };
+
 // const handleCaseSelect = (item) => {
 //   setSelected(item.id);
 //   handleClose();
@@ -38,6 +40,7 @@ const handleCaseSelect = (item) => {
 //     }));
 //   }, 0); // small delay ensures proper render
 // };
+ if (!isOpen) return null;
   return (
     <div style={styles.overlay}>
       <div style={styles.modal}>
@@ -70,6 +73,7 @@ const handleCaseSelect = (item) => {
   isOpen={kOfNModal.open}
   selectedCase={kOfNModal.selectedCase}
   selectedLabel={kOfNModal.selectedLabel}
+ 
   onClose={()=>
     setKOfNModal(prev=>({
         ...prev,
