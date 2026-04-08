@@ -83,4 +83,4 @@ export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
   );
 };
 
-export default KOfNBlock;
+export default KOfNBlock;    

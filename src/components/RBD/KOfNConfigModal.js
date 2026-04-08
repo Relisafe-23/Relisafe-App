@@ -4,22 +4,22 @@ import Api from "../../Api";
 import { useParams, useLocation } from 'react-router-dom';
 import CreatableSelect from 'react-select/creatable';
 
-export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode = 'add', currentBlock, selectedLabel, selectedCase }) => {
-  // Core state declarations
+export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode = 'add', currentBlock,selectedLabel, selectedCase }) => {
+
   const [k, setK] = useState(null);
   const [n, setN] = useState(null);
   const [formula, setFormula] = useState('standard');
   const { id, rbdId } = useParams();
   const [missionTime, setMissionTime] = useState("");
   const projectId = id;
-  
+  const [load,setLoad]= useState(null)
   const [systemUnavailability, setSystemUnavailability] = useState(0);
-  
-  console.log("selectedCase", selectedCase);
-  console.log("selectedLabel", selectedLabel);
-  console.log("id", id)
-  
-  // State declarations
+
+  // console.log("selectedCase", selectedCase);
+  // console.log("selectedLabel", selectedLabel);
+  // console.log("id", id)
+
+
   const [lambda, setLambda] = useState(0);
   const [isLambdaEdited, setIsLambdaEdited] = useState(false);
 
@@ -40,7 +40,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     indexCount: currentBlock?.indexCount || '',
   });
 
-  // State for Non-Identical components
+
   const [nonIdenticalComponents, setNonIdenticalComponents] = useState([]);
   const [options, setOptions] = useState([]);
   const [mu, setMu] = useState(0);
@@ -48,7 +48,6 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
   const isPlaceholderSelected = values?.indexCount === "Select from the product";
   const isProductSelected = !!values?.indexCount;
 
-  console.log("mu", values?.mttr);
 
   useEffect(() => {
     if (initialData) {
@@ -58,7 +57,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
       setMu(initialData.mu || 0);
       setFormula(initialData.formula || 'standard');
 
-      // If initialData has components for non-identical, load them
+
       if (initialData.components && initialData.components.length > 0) {
         setNonIdenticalComponents(initialData.components);
       }
@@ -88,24 +87,45 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
   useEffect(() => {
     getRbdConfig();
     getProductName();
+
   }, [projectId]);
 
 
-// Add these state declarations at the top with your other states
-const [systemReliability, setSystemReliability] = useState(0);
+  const [systemReliability, setSystemReliability] = useState(0);
 
-// Replace your existing useEffect for non-identical components with these two:
+  useEffect(() => {
+    if (selectedLabel === "Non-Identical" && n && n > 0) {
+      const currentLength = nonIdenticalComponents.length;
 
-// Effect 1: Handle component count changes
-useEffect(() => {
-  if (selectedLabel === "Non-Identical" && n && n > 0) {
-    const currentLength = nonIdenticalComponents.length;
-    
-    if (currentLength < n) {
-      // Add new components
-      const newComponents = [...nonIdenticalComponents];
-      for (let i = currentLength; i < n; i++) {
-        newComponents.push({
+      if (currentLength < n) {
+        // Add new components
+        const newComponents = [...nonIdenticalComponents];
+        for (let i = currentLength; i < n; i++) {
+          newComponents.push({
+            id: `comp_${Date.now()}_${i}_${Math.random()}`,
+            lambda: 0,
+            mu: 0,
+            mttr: '',
+            productId: null,
+            productName: '',
+            isManual: false,
+            selectedOption: null
+          });
+        }
+        setNonIdenticalComponents(newComponents);
+      } else if (currentLength > n) {
+        // Remove excess components
+        setNonIdenticalComponents(nonIdenticalComponents.slice(0, n));
+      }
+    }
+  }, [n, selectedLabel]);
+
+  // Effect 2: Initialize when switching to Non-Identical mode
+  useEffect(() => {
+    if (selectedLabel === "Non-Identical" && n && n > 0 && nonIdenticalComponents.length === 0) {
+      const initialComponents = [];
+      for (let i = 0; i < n; i++) {
+        initialComponents.push({
           id: `comp_${Date.now()}_${i}_${Math.random()}`,
           lambda: 0,
           mu: 0,
@@ -116,66 +136,180 @@ useEffect(() => {
           selectedOption: null
         });
       }
-      setNonIdenticalComponents(newComponents);
-    } else if (currentLength > n) {
-      // Remove excess components
-      setNonIdenticalComponents(nonIdenticalComponents.slice(0, n));
+      setNonIdenticalComponents(initialComponents);
     }
-  }
-}, [n, selectedLabel]);
+  }, [selectedLabel, n]);
+  const getKofN_Unavailability = (k, components, missionTime) => {
+    const n = components.length;
 
-// Effect 2: Initialize when switching to Non-Identical mode
-useEffect(() => {
-  if (selectedLabel === "Non-Identical" && n && n > 0 && nonIdenticalComponents.length === 0) {
-    const initialComponents = [];
-    for (let i = 0; i < n; i++) {
-      initialComponents.push({
-        id: `comp_${Date.now()}_${i}_${Math.random()}`,
-        lambda: 0,
-        mu: 0,
-        mttr: '',
-        productId: null,
-        productName: '',
-        isManual: false,
-        selectedOption: null
-      });
-    }
-    setNonIdenticalComponents(initialComponents);
-  }
-}, [selectedLabel, n]);
+    if (k > n) return 0;
 
+    // Calculate U and A arrays
+    const U = components.map(c =>
+      c.lambda / (c.lambda + c.mu)
+    );
+
+    const A = components.map(c =>
+      Math.exp(-(c.lambda * missionTime))
+    );
+
+    // Combination function
+    const combine = (arr, k) => {
+      if (k === 0) return [[]];
+      if (arr.length === 0) return [];
+
+      const [first, ...rest] = arr;
+
+      return [
+        ...combine(rest, k - 1).map(c => [first, ...c]),
+        ...combine(rest, k)
+      ];
+    };
+
+    const indices = [...Array(n).keys()];
+    const combos = combine(indices, k);
+
+    let result = 0;
+
+    combos.forEach(combo => {
+      let term = 1;
+
+      for (let i = 0; i < n; i++) {
+        if (combo.includes(i)) {
+          term *= U[i]; // failed
+        } else {
+          term *= A[i]; // working
+        }
+      }
+
+      result += term;
+    });
+
+    return result;
+  };
 
 useEffect(() => {
   let reliability = 0;
   let unavailability = 0;
-  
+
   if (selectedLabel === "Non-Identical") {
     const kVal = Number(k);
     const nVal = Number(n);
-    
+
     if (!isNaN(kVal) && !isNaN(nVal) && nonIdenticalComponents.length === nVal) {
       reliability = getKofNReliabilityNonIdentical(kVal, nVal, nonIdenticalComponents);
-      unavailability = unAvailabilityValueNonIdentical(kVal, nVal, nonIdenticalComponents);
+      unavailability = unAvailabilityValueNonIdentical(kVal, nVal, nonIdenticalComponents, missionTime);
     }
-  } else {
+  } else if (selectedLabel === "Identical (Load Sharing)") {
+  const nVal = Number(n);
+  const lambdaVal = Number(lambda);
+  const loadValue = getLoadValue(); // must return a numeric load factor
+  const t = missionTime;
+ console.log("nVal",nVal)
+ console.log("lambdaVal",lambdaVal)
+ console.log("loadValue",loadValue)
+  if (!isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(loadValue) && !isNaN(t)) {
+
+    // Effective failure rate under load
+    const lambdaEff = lambdaVal * loadValue;
+
+    // ===== System Reliability (Case 5 formula) =====
+    // R(t) = exp( - (n * lambdaEff) * t )
+    reliability = Math.exp(-nVal * lambdaEff * t);
+
+    // ===== Component Reliability =====
+    const componentReliability = Math.exp(-lambdaEff * t);
+
+    // ===== Component Unavailability =====
+    const componentUnavailability = 1 - componentReliability;
+
+    // ===== System Unavailability (approximation) =====
+    // U ≈ n * u_i  (capped at 1)
+    unavailability = Math.min(nVal * componentUnavailability, 1);
+
+    console.log(`Case 5: Identical Load Sharing`, {
+      lambdaEff,
+      componentReliability,
+      componentUnavailability,
+      systemReliability: reliability,
+      systemUnavailability: unavailability
+    });
+  }
+} else {
+    // Original Identical case (without load sharing)
     const kVal = Number(k);
     const nVal = Number(n);
     const lambdaVal = Number(lambda);
     const muVal = Number(mu);
-    
+
     if (!isNaN(kVal) && !isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(muVal)) {
       reliability = getKofNReliabilityIdentical(kVal, nVal, lambdaVal);
       unavailability = unAvailabilityValueIdentical(kVal, nVal, lambdaVal, muVal);
     }
   }
-  
+
   setSystemReliability(Number(reliability?.toFixed(6)) || 0);
   setSystemUnavailability(Number(unavailability?.toFixed(6)) || 0);
+}, [k, n, lambda, mu, nonIdenticalComponents, selectedLabel, missionTime, load]);
+ // Add load to dependencies
+const getLoadValue = () => {
+  // Option 1: From state
+  if (load !== undefined && load !== null) {
+    return Number(load);
+  }
   
-  console.log("System Reliability:", reliability);
-  console.log("System Unavailability:", unavailability);
-}, [k, n, lambda, mu, nonIdenticalComponents, selectedLabel, missionTime]);
+  // Option 2: From nonIdenticalComponents if available
+  if (nonIdenticalComponents && nonIdenticalComponents.length > 0) {
+    // You might calculate average load from components
+    const loads = nonIdenticalComponents.map(comp => comp.load || 1);
+    return loads.reduce((sum, l) => sum + l, 0) / loads.length;
+  }
+  
+  // Option 3: Default value
+  return 1;
+};
 
+const getLoadSharingReliability = (kVal, nVal, lambdaVal, loadFactor, missionTime) => {
+  
+  
+  let reliability = 0;
+  const totalCombinations = 1 << nVal;
+  
+  for (let mask = 0; mask < totalCombinations; mask++) {
+    let workingCount = 0;
+    let failedCount = 0;
+    let term = 1;
+    let currentTime = missionTime;
+    
+    // Count working components
+    for (let i = 0; i < nVal; i++) {
+      if (!((mask >> i) & 1)) {
+        workingCount++;
+      } else {
+        failedCount++;
+      }
+    }
+    
+  
+    if (workingCount >= kVal) {
+  
+      let cumulativeHazard = 0;
+      let remainingComponents = nVal;
+      
+   
+      for (let i = 0; i < failedCount; i++) {
+        const currentLoad = loadFactor * (remainingComponents);
+        const failureRate = lambdaVal * currentLoad;
+        cumulativeHazard += failureRate * (missionTime / failedCount);
+        remainingComponents--;
+      }
+      
+      reliability += Math.exp(-cumulativeHazard);
+    }
+  }
+  
+  return Math.min(reliability, 1);
+};
   const handleChange = (field, value) => {
     setValues(prev => ({
       ...prev,
@@ -208,7 +342,7 @@ useEffect(() => {
             lambda: item.fr ? (1 / parseFloat(item.fr)) : 0
           }));
         setOptions(options);
-        console.log("options", res.data.data.filter(item => item.mttr).map(item => item.mttr));
+
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
@@ -223,8 +357,6 @@ useEffect(() => {
       }
     })
       .then((res) => {
-        console.log("rbdId", rbdId)
-        console.log("res....", res)
         const rbdData = res.data.data.find(item => item.id === rbdId);
         if (rbdData) {
           setMissionTime(rbdData.missionTime)
@@ -240,7 +372,7 @@ useEffect(() => {
   const unAvailabilityFn = (lambdaVal, muVal) => {
     if (!lambdaVal || !muVal || (lambdaVal + muVal) === 0) return 0;
     const unavailability = lambdaVal / (lambdaVal + muVal)
-    console.log("Unavailability...",unavailability)
+    // console.log("Unavailability...",unavailability)
     return unavailability;
   };
 
@@ -256,41 +388,51 @@ useEffect(() => {
     return factorial(nVal) / (factorial(i) * factorial(nVal - i));
   };
 
-  // Updated unavailability calculation for non-identical components with error handling
-  const unAvailabilityValueNonIdentical = (kVal, nVal, components) => {
-    if (!components || components.length === 0) return 0;
 
-    let result = 0;
-    // Filter out components without lambda and ensure lambda is a number
-    const validComponents = components.filter(comp => comp && typeof comp.lambda === 'number');
-    if (validComponents.length !== nVal) return 0;
+const unAvailabilityValueNonIdentical = (kVal, nVal, components, missionTime) => {
+  if (!components || components.length === 0) return 0;
 
-    const unavailabilityList = validComponents.map(comp => unAvailabilityFn(comp.lambda, comp.mu || 0));
+  const validComponents = components.filter(
+    comp =>
+      comp &&
+      Number.isFinite(Number(comp.lambda))
+  );
 
-    const totalCombinations = Math.pow(2, nVal);
-    for (let mask = 0; mask < totalCombinations; mask++) {
-      let failedCount = 0;
-      let prob = 1;
+  if (validComponents.length !== nVal) return 0;
 
-      for (let i = 0; i < nVal; i++) {
-        const isFailed = (mask >> i) & 1;
-        if (isFailed) {
-          failedCount++;
-          prob *= unavailabilityList[i];
-        } else {
-          prob *= (1 - unavailabilityList[i]);
-        }
-      }
+  // Compute component unavailability (time-dependent)
+  const uList = validComponents.map(comp => 1 - Math.exp(-Number(comp.lambda) * missionTime));
+  const AList = uList.map(u => 1 - u); // availability
 
-      if (failedCount >= kVal) {
-        result += prob;
-      }
+  console.log("kVal", kVal);
+  console.log("nVal", nVal);
+  console.log("uList", uList);
+  console.log("AList", AList);
+
+  let result = 0;
+
+  // Minimum failures for system to fail
+  const minFailures = nVal - kVal + 1;
+
+  // Recursive function to sum combinations
+  const combine = (index, failedCount, term) => {
+    if (index === nVal) {
+      if (failedCount >= minFailures) result += term;
+      return;
     }
-
-    return result;
+    // Case 1: component fails
+    combine(index + 1, failedCount + 1, term * uList[index]);
+    // Case 2: component works
+    combine(index + 1, failedCount, term * AList[index]);
   };
 
-  // For identical components
+  combine(0, 0, 1);
+
+  console.log("Final Unavailability Result:", result);
+  return result;
+};
+
+
   const unAvailabilityValueIdentical = (kVal, nVal, lambdaVal, muVal) => {
     const u = unAvailabilityFn(lambdaVal, muVal);
     let result = 0;
@@ -301,10 +443,8 @@ useEffect(() => {
   };
 
   const getReliability = (lambdaValue, missionTimeValue) => {
-    console.log("missionTime...", missionTimeValue)
     if (!lambdaValue || !missionTimeValue) return 0;
     const reliability = Math.exp(-(lambdaValue * missionTimeValue));
-    console.log("Calculated Reliability:", reliability);
     return reliability;
   };
 
@@ -317,7 +457,7 @@ useEffect(() => {
     if (!components || components.length === 0) return 0;
 
     let result = 0;
- 
+
     const validComponents = components.filter(comp => comp && typeof comp.lambda === 'number');
     if (validComponents.length !== nVal) return 0;
 
@@ -355,37 +495,6 @@ useEffect(() => {
     }
     return result;
   };
-
-  useEffect(() => {
-    let reliability = 0;
-    let unavailability = 0;
-    
-    if (selectedLabel === "Non-Identical") {
-      const kVal = Number(k);
-      const nVal = Number(n);
-      
-      if (!isNaN(kVal) && !isNaN(nVal) && nonIdenticalComponents.length === nVal) {
-        reliability = getKofNReliabilityNonIdentical(kVal, nVal, nonIdenticalComponents);
-        unavailability = unAvailabilityValueNonIdentical(kVal, nVal, nonIdenticalComponents);
-      }
-    } else {
-      const kVal = Number(k);
-      const nVal = Number(n);
-      const lambdaVal = Number(lambda);
-      const muVal = Number(mu);
-      
-      if (!isNaN(kVal) && !isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(muVal)) {
-        reliability = getKofNReliabilityIdentical(kVal, nVal, lambdaVal);
-        unavailability = unAvailabilityValueIdentical(kVal, nVal, lambdaVal, muVal);
-      }
-    }
-    
-    setSystemReliability(Number(reliability?.toFixed(6)) || 0);
-    setSystemUnavailability(Number(unavailability?.toFixed(6)) || 0);
-    
-    console.log("System Reliability:", reliability);
-    console.log("System Unavailability:", unavailability);
-  }, [k, n, lambda, mu, nonIdenticalComponents, selectedLabel, missionTime]);
 
   const handleComponentChange = (index, field, value, selectedOption = null) => {
     const updatedComponents = [...nonIdenticalComponents];
@@ -681,6 +790,38 @@ useEffect(() => {
                 }}
               />
             </div>
+            {selectedLabel === "Identical (Load Sharing)" && (
+              <div style={{ marginBottom: "20px" }} >
+                <div style={{ display: "flex", gap: "30px", marginBottom: "20px" }}>
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "5px",
+                        fontSize: "13px",
+                        fontWeight: "500"
+                      }}
+                    >Load:</label>
+                    <input
+                      type="number"
+                       step="0.1"
+                      value={load}
+                           min="0"
+                     onChange={(e) => setLoad(e.target.value)}  
+                      style={{
+                        width: "100%",
+                        padding: "6px",
+                        border: "1px solid #7f9db9",
+                        borderRadius: "3px",
+                        boxSizing: "border-box"
+                      }}
+                      placeholder="100"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {selectedLabel !== "Non-Identical" && (
               <div>
                 <label style={{
@@ -835,7 +976,35 @@ useEffect(() => {
                         Repair Rate (μ): {component.mu.toFixed(6)} /hour
                       </div>
                     )}
+                    <div>
+
+                      <span>
+                        U {index + 1}: {
+                          (() => {
+                            const lambda = Number(component?.lambda);
+                            const mu = Number(component?.mu);
+
+                            if (!Number.isFinite(lambda) || !Number.isFinite(mu) || (lambda + mu) === 0) {
+                              return "0.000000";
+                            }
+
+                            return (lambda / (lambda + mu)).toFixed(6);
+                          })()
+                        }
+                      </span>
+
+                    </div>
+                    <div>
+                      <span>
+                        Reliability {index + 1}: {Math.exp(-(component.lambda * missionTime))?.toFixed(6)}
+
+                      </span>
+                    </div>
+                    <span className='mt-2'>
+                      Q {index + 1} : {1 - Math.exp(-(component.lambda * missionTime))?.toFixed(6)}
+                    </span>
                   </div>
+
                 ))}
               </div>
             </div>
