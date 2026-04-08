@@ -4,7 +4,7 @@ import Api from "../../Api";
 import { useParams, useLocation } from 'react-router-dom';
 import CreatableSelect from 'react-select/creatable';
 
-export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode = 'add', currentBlock,sendData, selectedLabel, selectedCase }) => {
+export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode = 'add', currentBlock,selectedLabel, selectedCase }) => {
 
   const [k, setK] = useState(null);
   const [n, setN] = useState(null);
@@ -576,7 +576,7 @@ const unAvailabilityValueNonIdentical = (kVal, nVal, components, missionTime) =>
         isManual: comp.isManual
       }));
     }
-  sendData(data);
+
     console.log("databbjkk", data);
 
     Api.post(
