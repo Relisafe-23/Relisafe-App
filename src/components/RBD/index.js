@@ -3,7 +3,7 @@ import EditRBDConfigurationModal from './EditRBDConfigurationModal'
 import { FiSettings, FiEdit2, FiEye, FiTrash2, FiMoreVertical } from 'react-icons/fi';
 import { RBDBlock } from './RBDBlock';
 import Api from "../../Api";
-import RBDStructure from "../../components/RBD/RBDStructure"
+
 import { useHistory, useParams, useLocation } from "react-router-dom";
 
 // MUI imports
@@ -315,6 +315,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
               x={item.x}
               y={item.y}
               onEdit={onEditBlock}
+           
               onDelete={onDeleteBlock}
               blockData={item.blockData}
             />
@@ -419,7 +420,6 @@ export const BlockContextMenu = ({ x, y, onSelect, onClose }) => (
   </div>
 );
 
-
 const StyledTableContainer = styled(TableContainer)({
   boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
   borderRadius: '12px',
@@ -467,7 +467,7 @@ export default function RBDButton() {
     displayLower: "MTBF",
     printRemarks: "Yes"
   });
-
+console.log("Mission",mission)
   useEffect(() => {
     getRbdConfig()
   }, [projectId])
@@ -480,7 +480,7 @@ export default function RBDButton() {
       }
     })
       .then((res) => {
-     
+     console.log("Resjkhjh",res)
         setRbdlistData(res.data.data)
         const rbdIds = res.data.data.map((item) => item.id); 
         setRbdId(rbdIds);

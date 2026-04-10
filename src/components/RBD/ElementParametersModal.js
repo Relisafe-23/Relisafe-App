@@ -38,8 +38,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     productName: modelBlock?.productName || '',
     id: modelBlock?.id || '',
     repairDistribution: modelBlock?.repairDistribution || 'Exponential',
-    mtbf: modelBlock?.mtbf || '1303617.9',
-    load: modelBlock?.load || '100',
+    mtbf: modelBlock?.mtbf || '',
+    load: modelBlock?.load || '',
     mct: modelBlock?.mct || '',
     productNumber: modelBlock?.productNumber || '',
     productTreeItemID: modelBlock?.productTreeItemID || '',
@@ -49,7 +49,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     fmDescription: modelBlock?.fmDescription || ''
   });
 
-  // console.log('fr value is : ',values?.fr)
+  console.log('mtbf value is : ',values?.mtbf)
 
   const { id } = useParams();
   const [options, setOptions] = useState([]);
@@ -229,6 +229,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
       n: values.n,
       repairDistribution: values.repairDistribution,
       load: values.load,
+      mtbf:values.mtbf,
       mct: values.mct,
       projectId: projectId,
       companyId: companyId,
@@ -238,29 +239,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     })
     onSubmit(values);
     onClose();
-    
+
   };
-
-
-  // const handleUpdate = (e) => {
-  //   e.preventDefault();
-
-  //   if(parentItemId)
-  //   console.log('handleUpdate', values)
-  //   try{
-  //     Api.patch(`/api/v1/elementParametersRBD/updateRBD/${mainId}`,values)
-  //     .then((res)=>{
-  //       console.log(res)
-  //       if(res.data.success === true){
-  //         onClose()
-  //       }else{
-  //         console.log('error update')
-  //       }
-  //     })
-  //   }catch{
-  //     console.log('failed Api')
-  //   }
-  // }
 
   const handleUpdate = (e) => {
     e.preventDefault();
@@ -292,25 +272,26 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     }
   }
 
-
-  // console.log(projectId,'projectId')
-
-  // const getElement = () => {
-  //   // console.log("Loadvchvghhv")
-  //   Api.get(`/api/v1/elementParametersRBD/get/all`, {
-  //     params: {
-  //       projectId: projectId,
-  //     }
-  //   })
-  //     .then((res) => {
-  //       // console.log("res12334", res)
-  //     })
-  // }
   const handleChange = (field, value) => {
-    setValues(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setValues(prev => {
+      const newValues = { ...prev, [field]: value };
+      if (field === 'fr') {
+        if (value && !isNaN(parseFloat(value)) && parseFloat(value) !== 0) {
+          newValues.mtbf = (1 / parseFloat(value)).toFixed(6);
+        } else {
+          newValues.mtbf = '';
+        }
+      }
+      else if (field === 'mtbf') {
+        if (value && !isNaN(parseFloat(value)) && parseFloat(value) !== 0) {
+          newValues.fr = (1 / parseFloat(value)).toFixed(6);
+        } else {
+          newValues.fr = '';
+        }
+      }
+
+      return newValues;
+    });
   };
 
   const handleSwitchClick = () => {
@@ -772,8 +753,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                       <label style={{ fontSize: '11px', marginRight: '5px' }}>MTBF [hours]:</label>
                       <input
                         type="text"
-                        value={values?.fr ? (1 / parseFloat(values.fr)).toFixed(2) : ""}
-                        onChange={(e) => handleChange('fr', e.target.value)}
+                        value={values?.mtbf}
+                        onChange={(e) => handleChange('mtbf', e.target.value)}
                         style={{
                           width: '100px',
                           padding: '4px',
@@ -783,7 +764,10 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                         }}
                         placeholder="445089"
                       />
+
                     </div>
+                 
+                 
                     {/* <div>
                       <label style={{ fontSize: '11px', marginRight: '5px' }}>Load:</label>
                       <input
@@ -801,6 +785,10 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                       />
                     </div> */}
                   </div>
+                     <div>
+                      {!values?.fr && (
+                        <span style={{ color: "red", fontSize: '11px' }}>Give the MTBF value</span>
+                      )}</div>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
@@ -811,7 +799,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                     <label style={{ fontSize: '11px', marginRight: '5px' }}>MCT [hours]:</label>
                     <input
                       type="text"
-                      value={values.mct}
+                      value={!isNaN(values.mct) && values.mct !== null && values.mct !== undefined ? values.mct : ""}
                       onChange={(e) => handleChange('mct', e.target.value)}
                       style={{
                         width: '100px',
@@ -852,18 +840,21 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
             </button>
             <button
               type="submit"
+              disabled={!values?.fr || values?.fr <= 0}
               style={{
                 padding: '8px 16px',
                 border: 'none',
                 borderRadius: '3px',
-                background: '#007bff',
+                background: !values?.fr || values?.fr <= 0 ? '#ccc' : '#007bff',
                 color: 'white',
-                cursor: 'pointer',
+                cursor: !values?.fr || values?.fr <= 0 ? 'not-allowed' : 'pointer',
                 fontSize: '12px'
               }}
             >
               OK
+
             </button>
+
           </div>
         </form>
       </div>

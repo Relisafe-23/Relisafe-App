@@ -227,7 +227,7 @@ export const RBDBlock = ({
     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
     k: blockData?.k || blockData?.data?.k || '2',
     n: blockData?.n || blockData?.data?.n || '3',
-    mtbf: blockData?.mtbf || blockData?.data?.mtbf || '1303617.9'
+    mtbf: blockData?.mtbf || blockData?.data?.mtbf || ''
   });
 
   useEffect(() => {
@@ -534,7 +534,7 @@ export const RBDBlock = ({
 
     const getBlockContent = () => {
       const t = blockData?.type || blockData?.elementType;
-      const fr = blockData?.fr || blockData?.data?.fr;
+      // const fr = blockData?.fr || blockData?.data?.fr;
       const mtbf = blockData?.mtbf || blockData?.data?.mtbf;
       const k = blockData?.k || blockData?.data?.k;
       const n = blockData?.n || blockData?.data?.n;
@@ -542,7 +542,7 @@ export const RBDBlock = ({
       switch (t) {
         case 'Regular':
         case 'REGULAR':
-          if (fr) return (typeof fr === 'number' ? fr.toFixed(6) : fr);
+          // if (fr) return (typeof fr === 'number' ? fr.toFixed(6) : fr);
           if (mtbf) return String(mtbf);
           return 'Regular';
         case 'K-out-of-N':

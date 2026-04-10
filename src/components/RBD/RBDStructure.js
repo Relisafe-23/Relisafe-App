@@ -601,9 +601,6 @@ export const BiDirectionalSymbol = ({
   const layout = calculateLayout();
   const { items, startX, rightBoxX, canvasH, svgW } = layout;
   const wireLines = buildWireLines(items, rightBoxX);
-
-  console.log(wireLines,'wireLines')
-
   const leftArrow = [
     [C.TERMINAL_LEFT_X + C.TERMINAL_W, C.CENTER_Y - C.ARROW_H / 2],
     [C.TERMINAL_LEFT_X + C.TERMINAL_W - C.ARROW_W, C.CENTER_Y],
@@ -744,7 +741,7 @@ export default function RBDButton() {
   const [parallelBranchMode, setParallelBranchMode] = useState({ active: false, startNode: null, endNode: null });
   const [showSymbol, setShowSymbol] = useState(false);
   const [menu, setMenu] = useState(null);
-
+  const[missionTime,setMissionTime]=("");
   const [rbdList, setRbdList] = useState([]);
   const [blockMenu, setBlockMenu] = useState({ open: false, parentId: null, blockId: null, x: 0, y: 0 });
   const [blocks, setBlocks] = useState([]);
@@ -776,10 +773,6 @@ export default function RBDButton() {
   const [switchModal, setSwitchModal] = useState({ open: false, blockId: null, initialData: null });
   const [isModalOpen, setIsModalOpen] = useState(false);
  
-
-
-  
-
   const [listedRBDs, setListedRBDs] = useState([]);
   useEffect(() => {
     getBlock();
@@ -812,9 +805,11 @@ useEffect(() => {
   const getBlock = () => {
     Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
       .then((res) => {
+        console.log("Res....",res.data)
         const data = res.data.data;
         setShowSymbol(data.length > 0);
         setBlocks(data);
+        console.log("block",blocks)
       })
       .catch(err => console.log(err, 'error'));
   };
@@ -1055,7 +1050,16 @@ useEffect(() => {
       }
     })
       .then((res) => {
-        console.log("RBD list response:", res.data);
+            console.log("RBD list responsen 134:", res.data.data.find(item => item.id===rbdId));
+
+                const rbdData = res.data.data.find(item => item.id === rbdId);
+                console.log("rbdDataaaaa",rbdData.missionTime)
+                  if (rbdData) {
+          setMissionTime(rbdData.missionTime)
+                      console.log("MissionTime jhjioknji", missionTime)
+        } else {
+          setMissionTime(null)
+        }
         setRbdList(res.data.data || []);
       })
       .catch((error) => {
@@ -1064,6 +1068,11 @@ useEffect(() => {
       });
   }
 }, [projectId]);
+
+
+useEffect (()=>{
+console.log("MissionTime 777777",missionTime)
+},[missionTime])
   const insertBlockAtPosition = (newBlock, nodeIndex) => {
     const info = findInsertionIndex(nodeIndex);
     const next = JSON.parse(JSON.stringify(blocks));
