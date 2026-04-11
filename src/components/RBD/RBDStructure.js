@@ -18,8 +18,8 @@ import SwitchConfigurationModal from './SwitchConfig.js';
 import { RBDBlock } from './RBDBlock';
 import { KOfNBlock } from './KOfNBlock';
 import { toast } from 'react-toastify';
-import { RBDSvgRenderer } from './RBDSvgRenderer';
-import ReactFlowD from './ReactFlow/ReactFlowD.jsx';
+// import { RBDSvgRenderer } from './RBDSvgRenderer';
+// import ReactFlowD from './ReactFlow/ReactFlowD.jsx';
 
 
 const C = {
@@ -1567,7 +1567,7 @@ export default function RBDButton() {
         </div> */}
 
 
-        {/* {showSymbol && (
+        {showSymbol && (
           <div style={{ width: '100%', overflowX: 'auto' }}>
             <BiDirectionalSymbol
               onNodeClick={handleNodeClick}
@@ -1802,8 +1802,8 @@ export default function RBDButton() {
               onSave={handleSaveConfig}
               initialConfig={rbdConfig}
             />
-          {/* </div> */}
-
+          </div>
+        )}
         {menu && (
           <RBDContextMenu
             x={menu.x}
