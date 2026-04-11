@@ -140,12 +140,47 @@ export const BiDirectionalSymbol = ({
   onNodeClick, setParentItem, setParentItemId,
   onOpenMenu, blocks, onDeleteBlock, onEditBlock, selectedNode, setIdforApi
 }) => {
+    const location = useLocation();
 
+  const missionTime = location.state?.missionTime;
+ const [mission,setMission] = useState('');
+  const[rbdList, setRbdList] = useState([]);
+   const { id, rbdId } = useParams();
+  const projectId = id;
   // top-level blocks only (excludes nested parallel branches)
   const topLevel = blocks.filter(b => b.type === 'Parallel Section' || !b.data?.parentSection);
 
-  // ── layout ─────────────────────────────────────────────────────────────────
+//  if (projectId) {
+//     console.log("Fetching RBD list for project:", projectId);
+// useEffect (()=>{
+//   if (projectId) {
+//  Api.get("/api/v1/EditConfigRBD/", { 
+//       params: {
+//         projectId: projectId,
+//       }
+//     })
+//       .then((res) => {
+//             console.log("RBD list responsen 134:", res.data.data.find(item => item.id===rbdId));
 
+//                 const rbdData = res.data.data.find(item => item.id === rbdId);
+//                 console.log("rbdDataaaaa",rbdData.missionTime)
+//                   if (rbdData) {
+//           setMission(rbdData.missionTime)
+//                       console.log("MissionTime jhjioknji", mission)
+//         } else {
+//           setMission(null)
+//         }
+//         setRbdList(res.data.data || []);
+//       })
+//     }
+// },[projectId])
+   
+      // .catch((error) => {
+      //   console.error("Error fetching RBD list:", error);
+      //   toast.error("Failed to load RBD list");
+      // });
+  // }
+  console.log("Mission Data",missionTime)
   const calculateLayout = () => {
   if (topLevel.length === 0) {
     const cx = (C.TERMINAL_LEFT_X + C.TERMINAL_W + C.BASE_RIGHT_X) / 2;
@@ -666,6 +701,7 @@ export const BiDirectionalSymbol = ({
               onEdit={onEditBlock}
               onDelete={onDeleteBlock}
               blockData={item.blockData}
+              mission={missionTime}
               width={C.BLOCK_W}
               height={C.BLOCK_H}
             />
@@ -1049,17 +1085,7 @@ useEffect(() => {
         projectId: projectId,
       }
     })
-      .then((res) => {
-            console.log("RBD list responsen 134:", res.data.data.find(item => item.id===rbdId));
-
-                const rbdData = res.data.data.find(item => item.id === rbdId);
-                console.log("rbdDataaaaa",rbdData.missionTime)
-                  if (rbdData) {
-          setMissionTime(rbdData.missionTime)
-                      console.log("MissionTime jhjioknji", missionTime)
-        } else {
-          setMissionTime(null)
-        }
+      .then((res) => {      
         setRbdList(res.data.data || []);
       })
       .catch((error) => {
@@ -1070,9 +1096,7 @@ useEffect(() => {
 }, [projectId]);
 
 
-useEffect (()=>{
-console.log("MissionTime 777777",missionTime)
-},[missionTime])
+
   const insertBlockAtPosition = (newBlock, nodeIndex) => {
     const info = findInsertionIndex(nodeIndex);
     const next = JSON.parse(JSON.stringify(blocks));
@@ -1549,7 +1573,6 @@ const handleClose = () => {
 
         {showSymbol && (
           <div style={{ width: '100%', overflowX: 'auto' }}>
-            {console.log(showSymbol, ' - is showSymbol')}
             <BiDirectionalSymbol
               onNodeClick={handleNodeClick}
               onOpenMenu={openMenu}

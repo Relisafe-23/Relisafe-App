@@ -5,10 +5,6 @@ import CreatableSelect from 'react-select/creatable';
 
 const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock, getBlock }) => {
 
-  console.log('currentBlock - :', currentBlock)
-  console.log('parallelFoundBlock - :', parallelFoundBlock)
-  console.log(elementModal, 'elementModal')
-
   let modelBlock = null;
 
   parallelFoundBlock ? modelBlock = parallelFoundBlock : modelBlock = currentBlock
@@ -32,6 +28,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     kOutOfN: modelBlock?.kOutOfN || false,
     k: modelBlock?.k || '2',
     n: modelBlock?.n || '3',
+    mttr:modelBlock?.mttr || '',
     alpha: modelBlock?.alpha || '',
     fmecaId: modelBlock?.fmecaId || '',
     indexCount: modelBlock?.indexCount || '',
@@ -100,11 +97,12 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
             productName: item.productName,
             productId: item.productId,
             fr: item.fr,
+            mttr:item.mttr,
             id: item.id
           }));
 
         const productIdst = res.data.data.filter(item => item?.productId).map(item => item.productId);
-        // console.log("Options", options);
+        console.log("Options", options);
         setProductIds(productIdst);
         setOptions(options);
       });
@@ -230,18 +228,21 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
       repairDistribution: values.repairDistribution,
       load: values.load,
       mtbf:values.mtbf,
+      mttr:values.mttr,
       mct: values.mct,
       projectId: projectId,
       companyId: companyId,
       idforApi: elementModal?.idforApi,
     }).then((res) => {
+      console.log("res..123",res)
       getBlock();
     })
+    console.log("Values....",values)
     onSubmit(values);
     onClose();
 
   };
-
+console.log("values.mttr",values.mttr)
   const handleUpdate = (e) => {
     e.preventDefault();
 
@@ -372,6 +373,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                         handleChange("fr", option.fr);
                         handleChange("productId", option.productId);
                         handleChange("id", option.id);
+                        handleChange("mttr",option.mttr)
                       } else {
                         handleChange("productName", "");
                         handleChange("partNumber", "");
@@ -380,6 +382,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                         handleChange("productId", "");
                         handleChange("id", "");
                         handleChange("fmecaId", "");
+                        handleChange("mttr","")
                       }
                     }}
                     styles={{
@@ -768,11 +771,11 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                     </div>
                  
                  
-                    {/* <div>
-                      <label style={{ fontSize: '11px', marginRight: '5px' }}>Load:</label>
+                    <div>
+                      <label style={{ fontSize: '11px', marginRight: '5px' }}>Mttr:</label>
                       <input
                         type="text"
-                        value={values.load}
+                        value={values.mttr}
                         onChange={(e) => handleChange('load', e.target.value)}
                         style={{
                           width: '60px',
@@ -783,7 +786,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                         }}
                         placeholder="100"
                       />
-                    </div> */}
+                    </div>
                   </div>
                      <div>
                       {!values?.fr && (

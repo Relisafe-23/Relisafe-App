@@ -459,7 +459,7 @@ export default function RBDButton() {
   const [description, setDescription] = useState([])
   const [rbdId, setRbdId] = useState("")
   const [rbdlistData, setRbdlistData] = useState([])
-
+  const [missionData,setMissionData]= useState('')
   const [rbdConfig, setRbdConfig] = useState({
     rbdTitle: "My RBD",
     missionTime: 24,
@@ -467,6 +467,9 @@ export default function RBDButton() {
     displayLower: "MTBF",
     printRemarks: "Yes"
   });
+  useEffect(() => {
+  console.log("Updated MissionTime:", missionData);
+}, [missionData]);
 console.log("Mission",mission)
   useEffect(() => {
     getRbdConfig()
@@ -489,9 +492,11 @@ console.log("Mission",mission)
         setDescription(rbdDescription)
         // console.log("descriptio.....n",rbdDescription)
         const rbdMission = res.data.data.filter((item) => item.missionTime).map((item) => item.missionTime)
+    
         setMission(rbdMission)
         setRBDTitle(rbdName)
         setRbdList(res.data.data)
+       
         // Update state with fetched data if needed
         // setRbdConfig(res.data.data);
       })
@@ -499,7 +504,28 @@ console.log("Mission",mission)
         console.error("Error fetching RBD config:", error);
       });
   }
+// useEffect (()=>{
+//   if (projectId) {
+//  Api.get("/api/v1/EditConfigRBD/", { 
+//       params: {
+//         projectId: projectId,
+//       }
+//     })
+//       .then((res) => {
+//             console.log("RBD list responsen 134:", res.data.data.find(item => item.id===rbdId));
 
+//                 const rbdData = res.data.data.find(item => item.id === rbdId);
+//                 console.log("rbdDataaaaa",rbdData.missionTime)
+//                   if (rbdData) {
+//           setMission(rbdData.missionTime)
+//                       console.log("MissionTime jhjioknji", mission)
+//         } else {
+//           setMission(null)
+//         }
+//         setRbdList(res.data.data || []);
+//       })
+//     }
+// },[projectId])
   const handleSaveConfig = (newConfig) => {
     setRbdConfig(newConfig);
     // console.log("Saved config:", newConfig);
@@ -520,15 +546,20 @@ console.log("Mission",mission)
   };
   const handleViewClick = (item, index) => {
     let rbdId = item?.id;
-    let id = item?.projectId
-
+    let id = item?.projectId;
+        
+const rbdData = item?.missionTime; 
+console.log("Tpihj",rbdData)
+        
     console.log(projectId,'from sending projectId')
     console.log(rbdId,'from sending rbdId')
 
 
-    history.push(`/project/${id}/rbd/structure/${rbdId}`);
+     history.push({
+    pathname: `/project/${id}/rbd/structure/${rbdId}`,
+    state: { missionTime: rbdData }   
+  });
   }
-
   const handleDeleteClick = async (item) => {
     const isConfirmed = window.confirm(
       `Are you sure you want to delete "${item?.rbdTitle}"?`

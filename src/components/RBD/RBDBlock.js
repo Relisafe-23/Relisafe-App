@@ -203,6 +203,7 @@ export const RBDBlock = ({
   blockData,
   width = 60,
   height = 40,
+  mission,
   // Props for nested rendering
   onOpenMenu,
   setParentItem,
@@ -229,7 +230,7 @@ export const RBDBlock = ({
     n: blockData?.n || blockData?.data?.n || '3',
     mtbf: blockData?.mtbf || blockData?.data?.mtbf || ''
   });
-
+console.log("mission123...",mission)
   useEffect(() => {
     setFormData({
       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
@@ -538,12 +539,30 @@ export const RBDBlock = ({
       const mtbf = blockData?.mtbf || blockData?.data?.mtbf;
       const k = blockData?.k || blockData?.data?.k;
       const n = blockData?.n || blockData?.data?.n;
+// Get MTBF from your data source
 
+
+// Define mission time (t) - same time unit as MTBF
+const missionTime = mission; 
+
+// Calculate reliability R(t)
+let reliability = null;
+
+// if (mtbf && mtbf > 0 && missionTime >= 0) {
+  // R(t) = e^(-t / MTBF)
+  reliability = Math.exp(-missionTime / mtbf)?.toFixed(4);
+  console.log("remkkkjk",reliability)
+// }
+
+// Example usage
+console.log(`MTBF: ${mtbf} hours`);
+console.log(`Mission Time: ${missionTime} hours`);
+console.log(`Reliability: ${(reliability * 100).toFixed(2)}%`);
       switch (t) {
         case 'Regular':
         case 'REGULAR':
           // if (fr) return (typeof fr === 'number' ? fr.toFixed(6) : fr);
-          if (mtbf) return String(mtbf);
+          if (reliability) return String(reliability);
           return 'Regular';
         case 'K-out-of-N':
           return `${k || 2}/${n || 3}`;
