@@ -554,46 +554,79 @@ const unAvailabilityValueNonIdentical = (kVal, nVal, components, missionTime) =>
     setIsLambdaEdited(false);
   }, [values?.productId]);
 
-  const handleSubmit = () => {
-    const data = {
-      lambda: parseFloat(lambda) || 0,
-      mu,
-      k,
-      n,
-      formula,
-      reliability: systemReliability,
-      unavailability: systemUnavailability,
-      ...values
-    };
-
-    if (selectedLabel === "Non-Identical") {
-      data.components = nonIdenticalComponents.map(comp => ({
-        lambda: comp.lambda || 0,
-        mu: comp.mu || 0,
-        mttr: comp.mttr || '',
-        productId: comp.productId,
-        productName: comp.productName,
-        isManual: comp.isManual
-      }));
-    }
-
-    console.log("databbjkk", data);
-
-    Api.post(
-      `/api/v1/elementParametersRBD/create/KOfN/${rbdId}/${projectId}`,
-      data
-    )
-      .then((response) => {
-        console.log("API Response:", response.data);
-        if (response?.data?.success) {
-          onSubmit(data);
-        }
-      })
-      .catch((error) => {
-        console.error("Error creating KOfN:", error);
-      });
-    onClose();
+const handleSubmit = () => {
+  // Prepare the base data
+  const data = {
+    lambda: parseFloat(lambda) || 0,
+    mu: mu || 0,
+    k: parseInt(k),
+    n: parseInt(n),
+    formula,
+    reliability: systemReliability,
+    unavailability: systemUnavailability,
+    type: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
+    elementType: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
+    kOfNType: selectedLabel,  // 'Identical', 'Non-Identical', or 'Load Sharing'
+    ...values
   };
+
+  // Create the complete payload for API
+  const newKOfNData = {
+    projectId: projectId,
+    rbdId: rbdId,
+    k: parseInt(k),
+    n: parseInt(n),
+    formula,
+    lambda: parseFloat(lambda) || 0,
+    mu: mu || 0,
+    reliability: systemReliability,
+    unavailability: systemUnavailability,
+    type: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
+    elementType: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
+    kOfNType: selectedLabel,  // 'Identical', 'Non-Identical', or 'Load Sharing'
+    ...values
+  };
+
+  // Handle Non-Identical components
+  if (selectedLabel === "Non-Identical") {
+    newKOfNData.components = nonIdenticalComponents.map(comp => ({
+      lambda: comp.lambda || 0,
+      mu: comp.mu || 0,
+      mttr: comp.mttr || '',
+      productId: comp.productId,
+      productName: comp.productName,
+      isManual: comp.isManual,
+      reliability: getReliability(comp.lambda, missionTime),
+      unavailability: unAvailabilityFn(comp.lambda, comp.mu || 0),
+      type: 'K-out-of-N',  // ✅ For components too
+      elementType: 'K-out-of-N',  // ✅ For components too
+    }));
+  }
+  
+  // Handle Load Sharing specific data (if needed)
+  if (selectedLabel === "Identical (Load Sharing)") {
+    newKOfNData.loadSharingConfig = {
+      enabled: true,
+      loadDistribution: formula || 'standard',
+    };
+  }
+
+  console.log("Sending to API with type:", selectedLabel);
+  console.log("Payload:", newKOfNData);
+
+  // Make the API call
+  Api.post("/api/v1/elementParametersRBD/create", newKOfNData)
+    .then((response) => {
+      console.log("API Response:", response.data);
+      if (response?.data?.success) {
+        onSubmit(data);
+        onClose();
+      }
+    })
+    .catch((error) => {
+      console.error("Error creating KOfN:", error);
+    });
+};
 
   if (!isOpen) return null;
 
