@@ -1,174 +1,4 @@
-// // RBDBlock.jsx
-// import React, { useEffect, useState } from 'react';
-// import { KOfNBlock } from './KOfNBlock';
 
-// export const RBDBlock = ({ id, rightRailX, rightNodeId, leftRailX, wireY, selectedNode, leftNodeId, type, setIdforApi, x, y, setParentItemId, onEdit, onDelete, blockData, width = 60, height = 40 }) => {
-
-//   const [formData, setFormData] = useState({
-//     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
-//     k: blockData?.k || blockData?.data?.k || '2',
-//     n: blockData?.n || blockData?.data?.n || '3',
-//     mtbf: blockData?.mtbf || blockData?.data?.mtbf || '1303617.9'
-//   });
-
-//   useEffect(() => {
-//     setFormData({
-//       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
-//       k: blockData?.k || blockData?.data?.k,
-//       n: blockData?.n || blockData?.data?.n,
-//       mtbf: blockData?.mtbf || blockData?.data?.mtbf
-//     });
-//   }, [blockData]);
-
-//   const isKOfN = blockData?.type === 'K-out-of-N' ||
-//     blockData?.elementType === 'K-out-of-N' ||
-//     blockData?.data?.elementType === 'K-out-of-N';
-
-//   if (isKOfN) {
-//     return (
-//       <KOfNBlock
-//         id={id}
-//         x={x}
-//         y={y}
-//         onEdit={onEdit}
-//         onDelete={onDelete}
-//         blockData={blockData}
-//       />
-//     );
-//   }
-
-//   // ── fixed dimensions matching the image ─────────────────────────────────────
-//   const BLOCK_W = 60;
-//   const BLOCK_H = 40;
-
-//   const handleContextMenu = (e) => {
-//     e.preventDefault();
-//     e.stopPropagation();
-//     if (onEdit) onEdit(e, id, blockData);
-//   };
-
-//   const getBlockContent = () => {
-//     const t = blockData?.type || blockData?.elementType;
-//     const fr = blockData?.fr || blockData?.data?.fr;
-//     const mtbf = blockData?.mtbf || blockData?.data?.mtbf;
-//     const k = blockData?.k || blockData?.data?.k;
-//     const n = blockData?.n || blockData?.data?.n;
-
-//     switch (t) {
-//       case 'Regular':
-//       case 'REGULAR':
-//         if (fr) return (typeof fr === 'number' ? fr.toFixed(6) : fr);
-//         if (mtbf) return String(mtbf);
-//         return 'Regular';
-//       case 'K-out-of-N':
-//         return `${k || 2}/${n || 3}`;
-//       case 'SubRBD':
-//         return 'Sub RBD';
-//       default:
-//         return 'Block';
-//     }
-//   };
-
-//   const getBlockColor = () => {
-//     const t = blockData?.type || blockData?.elementType;
-//     switch (t) {
-//       case 'Regular':
-//       case 'REGULAR': return '#4CAF50';
-//       case 'SubRBD': return '#FF9800';
-//       case 'K-out-of-N': return '#FF5722';
-//       default: return '#4CAF50';
-//     }
-//   };
-
-//   const getBlockName = () => blockData?.name || blockData?.data?.name || '';
-
-//   return (
-//     <g
-//       onContextMenu={handleContextMenu}
-//       style={{ cursor: 'context-menu' }}
-//       onClick={() => { if (setParentItemId) setParentItemId(null); }}
-//     >
-//       {/* name label above block */}
-//       {getBlockName() && (
-//         <text
-//           x={x + BLOCK_W / 2}
-//           y={y - 4}
-//           textAnchor="middle"
-//           fontSize="8"
-//           fontWeight="bold"
-//           fill="#333"
-//         >
-//           {getBlockName()}
-//         </text>
-//       )}
-
-//       <rect
-//         x={x}
-//         y={y}
-//         width={BLOCK_W}
-//         height={BLOCK_H}
-//         fill={getBlockColor()}
-//         stroke="#2a7a2a"
-//         strokeWidth="1"
-//         rx="2"
-//       />
-
-//       {/* main value line */}
-//       <text
-//         x={x + BLOCK_W / 2}
-//         y={y + BLOCK_H / 2}
-//         textAnchor="middle"
-//         dominantBaseline="middle"
-//         fill="white"
-//         fontSize="8"
-//         fontWeight="bold"
-//       >
-//         {getBlockContent()}
-//       </text>
-
-//       {/* <circle
-//         cx={leftRailX}
-//         cy={wireY}
-//         r={4}
-//         fill={selectedNode === leftNodeId ? "#0078d4" : "black"}
-//         style={{ cursor: "pointer" }}
-//       onClick={(e) => {
-//         e.stopPropagation();
-//         onOpenMenu(e.clientX, e.clientY, branch?.index);
-//         setIdforApi({
-//           branchId: branch?._id,
-//           branchIndex: branch?.index,
-//           ItemId: item?.id,
-//           location: `branch-${branch?.index}-left`
-//         });
-//       }}
-//       /> */}
-
-//       {/* <circle
-//         cx={rightRailX}
-//         cy={wireY}
-//         r={4}
-//         fill={selectedNode === rightNodeId ? "#0078d4" : "black"}
-//         style={{ cursor: "pointer" }}
-//       onClick={(e) => {
-//         e.stopPropagation();
-//          setIdforApi({
-//           branchId: branch?._id,
-//           branchIndex: branch?.index,
-//           ItemId: item?.id,
-//           location: `branch-${branch.index}-right`
-//         });
-//       }}
-//       /> */}
-
-//     </g>
-//   );
-// };
-
-
-
-
-// RBDBlock.jsx
 import React, { useEffect, useState } from 'react';
 import { KOfNBlock } from './KOfNBlock';
 
@@ -204,7 +34,7 @@ export const RBDBlock = ({
   width = 60,
   height = 40,
   mission,
-  // Props for nested rendering
+
   onOpenMenu,
   setParentItem,
   onEditBlock,
@@ -228,7 +58,8 @@ export const RBDBlock = ({
     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
     k: blockData?.k || blockData?.data?.k || '2',
     n: blockData?.n || blockData?.data?.n || '3',
-    mtbf: blockData?.mtbf || blockData?.data?.mtbf || ''
+    mtbf: blockData?.mtbf || blockData?.data?.mtbf || '',
+    mttr:blockData?.mttr || blockData?.data?.mttr||''
   });
 console.log("mission123...",mission)
   useEffect(() => {
@@ -236,7 +67,8 @@ console.log("mission123...",mission)
       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
       k: blockData?.k || blockData?.data?.k,
       n: blockData?.n || blockData?.data?.n,
-      mtbf: blockData?.mtbf || blockData?.data?.mtbf
+      mtbf: blockData?.mtbf || blockData?.data?.mtbf,
+      mttr:blockData?.mttr || blockData?.data?.mttr||''
     });
   }, [blockData]);
 
@@ -536,23 +368,24 @@ console.log("mission123...",mission)
     const getBlockContent = () => {
       const t = blockData?.type || blockData?.elementType;
       // const fr = blockData?.fr || blockData?.data?.fr;
+      const mttr = blockData?.mttr || blockData?.data?.mttr;
       const mtbf = blockData?.mtbf || blockData?.data?.mtbf;
       const k = blockData?.k || blockData?.data?.k;
       const n = blockData?.n || blockData?.data?.n;
-// Get MTBF from your data source
 
-
-// Define mission time (t) - same time unit as MTBF
 const missionTime = mission; 
 
 // Calculate reliability R(t)
-let reliability = null;
+// let reliability = null;
 
 // if (mtbf && mtbf > 0 && missionTime >= 0) {
   // R(t) = e^(-t / MTBF)
-  reliability = Math.exp(-missionTime / mtbf)?.toFixed(4);
-  console.log("remkkkjk",reliability)
-// }
+const reliabilityValue = Math.exp(-missionTime / mtbf);
+
+const reliability =
+  reliabilityValue < 1e-4
+    ? reliabilityValue.toExponential(4) // OR use toMathFormat()
+    : reliabilityValue.toFixed(4);
 
 // Example usage
 console.log(`MTBF: ${mtbf} hours`);
