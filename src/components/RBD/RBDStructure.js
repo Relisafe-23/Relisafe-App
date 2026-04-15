@@ -269,6 +269,8 @@ export const BiDirectionalSymbol = ({
     return lines;
   };
 
+
+
   // ── render parallel section ─────────────────────────────────────────────────
   //
   //  • blocks are RIGHT-ANCHORED to (rightRailX - INNER_PAD_X)
@@ -819,6 +821,14 @@ useEffect(() => {
       .catch(err => console.log(err, 'error'));
   };
 
+    const handleKOfNSelect = (data) => {
+  console.log("K-of-N created successfully:", data);
+  // Refresh the blocks
+  getBlock();
+  // Close any open modals
+  setKOfNModal({ open: false, blockId: null, initialData: null, mode: 'add', nodeIndex: null });
+};
+
   // ── parallel branch creation ───────────────────────────────────────────────
   const createParallelBranch = (startNode, endNode) => {
     const parseNode = (n) => typeof n === 'string' && n.startsWith('branch-')
@@ -1344,7 +1354,7 @@ if (action === "Add SubRBD") {
 }
   }  
 
-  // ── element modal submit ───────────────────────────────────────────────────
+  // ── element modal submit ───────────────────────
   const handleModalSubmit = (formData) => {
     const ni = elementModal.nodeIndex;
 
@@ -1621,19 +1631,9 @@ const handleClose = () => {
   />
 )}
 
-             {kOfNModal.open && (
-          <>
-        <CaseSelectionModal
-  isOpen={kOfNModal.open}  
-  handleClose={handleClose}
-  onSelect={(item) => {
-    console.log(item);
-    handleClose();
-  }}
 
-/>
-  </>
-             )}
+
+        
 
         {showParallelModal && (
           <div style={{
@@ -1813,19 +1813,15 @@ const handleClose = () => {
           currentBlock={blocks.find(b => b.id === elementModal.blockId)}
         />
       )}
-
-      {kOfNModal.open && (
-            <CaseSelectionModal
-  isOpen={kOfNModal.open}  
-  handleClose={handleClose}
-  onSelect={(item) => {
-    console.log(item);
-    handleClose();
-  }}
-
-/>
+  {kOfNModal.open && (
+        <CaseSelectionModal
+          isOpen={kOfNModal.open}
+          handleClose={() => {
+            setKOfNModal({ open: false, blockId: null, initialData: null, mode: 'add', nodeIndex: null });
+          }}
+          onSelect={handleKOfNSelect}
+        />
       )}
-
       {showParallelModal && (
         <div style={{
           position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Api from "../../Api";
 import { useParams, useLocation } from 'react-router-dom';
 import CreatableSelect from 'react-select/creatable';
-
+import { toast } from 'react-toastify';
 export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode = 'add', currentBlock,selectedLabel, selectedCase }) => {
 
   const [k, setK] = useState(null);
@@ -14,6 +14,8 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
   const projectId = id;
   const [load,setLoad]= useState(null)
   const [systemUnavailability, setSystemUnavailability] = useState(0);
+  const [blocks, setBlocks] = useState([]);
+  const [showSymbol, setShowSymbol] = useState(false);
 
   // console.log("selectedCase", selectedCase);
   // console.log("selectedLabel", selectedLabel);
@@ -26,7 +28,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
   const [values, setValues] = useState({
     relDes: currentBlock?.relDes || '',
     time: currentBlock?.time || " ",
-    elementType: currentBlock?.elementType || 'REGULAR',
+    elementType: currentBlock?.elementType || 'K-out-of-N',
     partNumber: currentBlock?.partNumber || '',
     fr: currentBlock?.fr || '',
     color: currentBlock?.color || '#ffffff',
@@ -50,6 +52,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
 
 
   useEffect(() => {
+     console.log("initialData.components@@@@", initialData);
     if (initialData) {
       setK(initialData.k || "");
       setN(initialData.n || "");
@@ -59,6 +62,7 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
 
 
       if (initialData.components && initialData.components.length > 0) {
+        console.log("initialData.components", initialData.components);
         setNonIdenticalComponents(initialData.components);
       }
     }
@@ -554,81 +558,149 @@ const unAvailabilityValueNonIdentical = (kVal, nVal, components, missionTime) =>
     setIsLambdaEdited(false);
   }, [values?.productId]);
 
-const handleSubmit = () => {
-  // Prepare the base data
-  const data = {
-    lambda: parseFloat(lambda) || 0,
-    mu: mu || 0,
-    k: parseInt(k),
-    n: parseInt(n),
-    formula,
-    reliability: systemReliability,
-    unavailability: systemUnavailability,
-    type: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
-    elementType: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
-    kOfNType: selectedLabel,  // 'Identical', 'Non-Identical', or 'Load Sharing'
-    ...values
-  };
+// const handleSubmit = () => {
+//   // Prepare the base data
+//   const data = {
+//     lambda: parseFloat(lambda) || 0,
+//     mu: mu || 0,
+//     k: parseInt(k),
+//     n: parseInt(n),
+//     formula,
+//     reliability: systemReliability,
+//     unavailability: systemUnavailability,
+//     type: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
+//     elementType: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
+//     kOfNType: selectedLabel,  // 'Identical', 'Non-Identical', or 'Load Sharing'
+//     ...values
+//   };
 
-  // Create the complete payload for API
+//   // Create the complete payload for API
+//   const newKOfNData = {
+//     projectId: projectId,
+//     rbdId: rbdId,
+//     k: parseInt(k),
+//     n: parseInt(n),
+//     formula,
+//     lambda: parseFloat(lambda) || 0,
+//     mu: mu || 0,
+//     reliability: systemReliability,
+//     unavailability: systemUnavailability,
+//     type: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
+//     elementType: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
+//     kOfNType: selectedLabel,  // 'Identical', 'Non-Identical', or 'Load Sharing'
+//     ...values
+//   };
+
+//   // Handle Non-Identical components
+//   if (selectedLabel === "Non-Identical") {
+//     newKOfNData.components = nonIdenticalComponents.map(comp => ({
+//       lambda: comp.lambda || 0,
+//       mu: comp.mu || 0,
+//       mttr: comp.mttr || '',
+//       productId: comp.productId,
+//       productName: comp.productName,
+//       isManual: comp.isManual,
+//       reliability: getReliability(comp.lambda, missionTime),
+//       unavailability: unAvailabilityFn(comp.lambda, comp.mu || 0),
+//       type: 'K-out-of-N',  // ✅ For components too
+//       elementType: 'K-out-of-N',  // ✅ For components too
+//     }));
+//   }
+  
+//   // Handle Load Sharing specific data (if needed)
+//   if (selectedLabel === "Identical (Load Sharing)") {
+//     newKOfNData.loadSharingConfig = {
+//       enabled: true,
+//       loadDistribution: formula || 'standard',
+//     };
+//   }
+
+//   console.log("Sending to API with type:", selectedLabel);
+//   console.log("Payload:", newKOfNData);
+
+//   // Make the API call
+//   Api.post("/api/v1/elementParametersRBD/create", newKOfNData)
+//     .then((response) => {
+//       console.log("API Response:", response.data);
+//       if (response?.data?.success) {
+//         onSubmit(data);
+//         onClose();
+//           getBlock();
+//       }
+//     })
+//     .catch((error) => {
+//       console.error("Error creating KOfN:", error);
+//     });
+// };
+const handleSubmit = () => {
+  // Prepare the data for API
   const newKOfNData = {
     projectId: projectId,
+        productId: values.productId,
     rbdId: rbdId,
     k: parseInt(k),
     n: parseInt(n),
-    formula,
+    formula: formula,
     lambda: parseFloat(lambda) || 0,
     mu: mu || 0,
     reliability: systemReliability,
     unavailability: systemUnavailability,
-    type: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
-    elementType: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
-    kOfNType: selectedLabel,  // 'Identical', 'Non-Identical', or 'Load Sharing'
-    ...values
+    type: 'K-out-of-N',
+    elementType: 'K-out-of-N',
+    kOfNType: selectedLabel,
+    name: values.productName || `${selectedLabel} K-out-of-N Block`,
+    mttr: values.mttr,
+    indexCount: values.indexCount,
+    partNumber: values.partNumber,
+    productName: values.productName,
+    color: values.color,
+    load: selectedLabel === "Identical (Load Sharing)" ? load : values.load,
   };
 
   // Handle Non-Identical components
   if (selectedLabel === "Non-Identical") {
+    console.log("nonIdenticalComponents.....1...",nonIdenticalComponents);
+    console.log("values.productId.....1...",currentBlock);
     newKOfNData.components = nonIdenticalComponents.map(comp => ({
+     productId: values.productId,
       lambda: comp.lambda || 0,
       mu: comp.mu || 0,
       mttr: comp.mttr || '',
-      productId: comp.productId,
       productName: comp.productName,
       isManual: comp.isManual,
       reliability: getReliability(comp.lambda, missionTime),
-      unavailability: unAvailabilityFn(comp.lambda, comp.mu || 0),
-      type: 'K-out-of-N',  // ✅ For components too
-      elementType: 'K-out-of-N',  // ✅ For components too
+      unavailability: unAvailabilityFn(comp.lambda, comp.mu || 0)
     }));
   }
-  
-  // Handle Load Sharing specific data (if needed)
-  if (selectedLabel === "Identical (Load Sharing)") {
-    newKOfNData.loadSharingConfig = {
-      enabled: true,
-      loadDistribution: formula || 'standard',
-    };
-  }
 
-  console.log("Sending to API with type:", selectedLabel);
-  console.log("Payload:", newKOfNData);
+  console.log("Sending K-of-N data:", newKOfNData);
 
   // Make the API call
   Api.post("/api/v1/elementParametersRBD/create", newKOfNData)
     .then((response) => {
       console.log("API Response:", response.data);
       if (response?.data?.success) {
-        onSubmit(data);
+        onSubmit(newKOfNData);
         onClose();
       }
     })
     .catch((error) => {
       console.error("Error creating KOfN:", error);
+      toast?.error?.("Failed to create K-out-of-N block") || alert("Failed to create K-out-of-N block");
     });
 };
+  const getBlock = () => {
+    Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
+      .then((res) => {
+        const data = res.data.data;
+        setShowSymbol(data.length > 0);
+        setBlocks(data);
+      })
+      .catch(err => console.log(err, 'error'));
+  };
 
   if (!isOpen) return null;
+
 
   return (
     <div style={{
