@@ -8,6 +8,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   console.log('currentBlock - :', currentBlock)
   console.log('parallelFoundBlock - :', parallelFoundBlock)
   console.log(elementModal, 'elementModal')
+  // console.log(targetId, 'targetId inside model')
+
 
   let modelBlock = null;
 
@@ -62,7 +64,6 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   const productId = values?.id || values?.productId || "";
   const productName = values?.productName || "";
   const [alpha, setAlpha] = useState([]);
-
 
 
   // useEffect(() => {
@@ -208,6 +209,10 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   const handleSubmit = (e) => {
     e.preventDefault();
     const companyId = localStorage.getItem("companyId");
+
+    console.log('=== BEFORE API CALL ===');
+    console.log('targetId prop value:', elementModal?.idforApi?.targetId);
+
     Api.post("/api/v1/elementParametersRBD/create", {
       indexCount: values.indexCount,
       partNumber: values.partNumber,
@@ -233,12 +238,15 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
       projectId: projectId,
       companyId: companyId,
       idforApi: elementModal?.idforApi,
+      datata: 'adfuebcweb',
+      targetId: elementModal?.idforApi?.targetId,
+
     }).then((res) => {
       getBlock();
     })
     onSubmit(values);
     onClose();
-    
+
   };
 
 
@@ -530,22 +538,22 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                 </div>
 
                 {/* <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
-                    Machine Time [hours] (t):
-                  </label>
-                  <input
-                    type="text"
-                    value={values?.time || ""}
-                    onChange={(e) => handleChange("time", e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "6px",
-                      border: "1px solid #ccc",
-                      borderRadius: "3px",
-                      fontSize: "12px"
-                    }}
-                  />
-                </div> */}
+                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                      Machine Time [hours] (t):
+                    </label>
+                    <input
+                      type="text"
+                      value={values?.time || ""}
+                      onChange={(e) => handleChange("time", e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "6px",
+                        border: "1px solid #ccc",
+                        borderRadius: "3px",
+                        fontSize: "12px"
+                      }}
+                    />
+                  </div> */}
 
 
                 {values.elementType === 'K_OUT_OF_N' && (
@@ -667,74 +675,74 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
               {/* Column 3 */}
               <div>
                 {/* <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
-                    FR distribution:
-                  </label>
-                  <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
-                    <div>
-                      <input
-                        type="radio"
-                        id="frDefault"
-                        name="frDistribution"
-                        value="default"
-                        checked={values.frDistribution === "default"}
-                        onChange={(e) => handleChange("frDistribution", e.target.value)}
-                      />
-                      <label htmlFor="frDefault" style={{ marginLeft: "5px", fontSize: "12px" }}>
-                        Default
-                      </label>
-                    </div>
-
-                    <div>
-                      <input
-                        type="radio"
-                        id="frKOutOfN"
-                        name="frDistribution"
-                        value="kOutOfN"
-                        checked={values.frDistribution === "kOutOfN"}
-                        onChange={(e) => handleChange("frDistribution", e.target.value)}
-                      />
-                      <label htmlFor="frKOutOfN" style={{ marginLeft: "5px", fontSize: "12px" }}>
-                        K out of N
-                      </label>
-                    </div>
-                  </div>
-
-                  {values?.frDistribution === "kOutOfN" && (
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                      FR distribution:
+                    </label>
+                    <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
                       <div>
-                        <label style={{ fontSize: '11px', marginRight: '5px' }}>K:</label>
                         <input
-                          type="text"
-                          value={values.k}
-                          onChange={(e) => handleChange('k', e.target.value)}
-                          style={{
-                            width: '60px',
-                            padding: '4px',
-                            border: '1px solid #ccc',
-                            borderRadius: '3px',
-                            fontSize: '11px'
-                          }}
+                          type="radio"
+                          id="frDefault"
+                          name="frDistribution"
+                          value="default"
+                          checked={values.frDistribution === "default"}
+                          onChange={(e) => handleChange("frDistribution", e.target.value)}
                         />
+                        <label htmlFor="frDefault" style={{ marginLeft: "5px", fontSize: "12px" }}>
+                          Default
+                        </label>
                       </div>
+
                       <div>
-                        <label style={{ fontSize: '11px', marginRight: '5px' }}>N:</label>
                         <input
-                          type="text"
-                          value={values.n}
-                          onChange={(e) => handleChange('n', e.target.value)}
-                          style={{
-                            width: '60px',
-                            padding: '4px',
-                            border: '1px solid #ccc',
-                            borderRadius: '3px',
-                            fontSize: '11px'
-                          }}
+                          type="radio"
+                          id="frKOutOfN"
+                          name="frDistribution"
+                          value="kOutOfN"
+                          checked={values.frDistribution === "kOutOfN"}
+                          onChange={(e) => handleChange("frDistribution", e.target.value)}
                         />
+                        <label htmlFor="frKOutOfN" style={{ marginLeft: "5px", fontSize: "12px" }}>
+                          K out of N
+                        </label>
                       </div>
                     </div>
-                  )}
-                </div> */}
+
+                    {values?.frDistribution === "kOutOfN" && (
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                        <div>
+                          <label style={{ fontSize: '11px', marginRight: '5px' }}>K:</label>
+                          <input
+                            type="text"
+                            value={values.k}
+                            onChange={(e) => handleChange('k', e.target.value)}
+                            style={{
+                              width: '60px',
+                              padding: '4px',
+                              border: '1px solid #ccc',
+                              borderRadius: '3px',
+                              fontSize: '11px'
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', marginRight: '5px' }}>N:</label>
+                          <input
+                            type="text"
+                            value={values.n}
+                            onChange={(e) => handleChange('n', e.target.value)}
+                            style={{
+                              width: '60px',
+                              padding: '4px',
+                              border: '1px solid #ccc',
+                              borderRadius: '3px',
+                              fontSize: '11px'
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div> */}
 
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
@@ -785,21 +793,21 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                       />
                     </div>
                     {/* <div>
-                      <label style={{ fontSize: '11px', marginRight: '5px' }}>Load:</label>
-                      <input
-                        type="text"
-                        value={values.load}
-                        onChange={(e) => handleChange('load', e.target.value)}
-                        style={{
-                          width: '60px',
-                          padding: '4px',
-                          border: '1px solid #ccc',
-                          borderRadius: '3px',
-                          fontSize: '11px'
-                        }}
-                        placeholder="100"
-                      />
-                    </div> */}
+                        <label style={{ fontSize: '11px', marginRight: '5px' }}>Load:</label>
+                        <input
+                          type="text"
+                          value={values.load}
+                          onChange={(e) => handleChange('load', e.target.value)}
+                          style={{
+                            width: '60px',
+                            padding: '4px',
+                            border: '1px solid #ccc',
+                            borderRadius: '3px',
+                            fontSize: '11px'
+                          }}
+                          placeholder="100"
+                        />
+                      </div> */}
                   </div>
                 </div>
 
