@@ -192,119 +192,124 @@ export const RBDBlock = ({
       <line x1={nestedRightRailX} y1={railTop} x2={nestedRightRailX} y2={railBottom}
         stroke="black" strokeWidth="1.5" />
 
-      {branches.map((branch, branchIdx) => {
-        const branchWireY = nestedSectionY + branchYOffsets[branchIdx];
+   {branches.map((branch, branchIdx) => {
+          const branchWireY = nestedSectionY + branchYOffsets[branchIdx];
+          const blockY = branchWireY - BH / 2;
+          const branchBlocks = branch.blocks || [];
+          const isMainBranch = branchIdx === 0;
+          const dash = isMainBranch ? undefined : '5,3';
 
-        const branchKey = branch._id ?? branch.id ?? branchIdx;
-        const leftNodeId = `nested-branch-${branchKey}-left`;
-        const rightNodeId = `nested-branch-${branchKey}-right`;
-        const midNodeId = (bIdx) => `nested-branch-${branchKey}-mid-${bIdx}`;
+          const branchKey = branch._id ?? branch.id ?? branchIdx;
+          const leftNodeId = `nested-branch-${branchKey}-left`;
+          const rightNodeId = `nested-branch-${branchKey}-right`;
+          const midNodeId = (bIdx) => `nested-branch-${branchKey}-mid-${bIdx}`;
+          const blockRowLeftX = nestedLeftRailX + INNER_PAD;
 
-        return (
-          <g key={branchKey}>
-            {/* Left rail node */}
-            <circle
-              cx={nestedLeftRailX} cy={branchWireY} r={4}
-              fill={selectedNode === leftNodeId ? "#0078d4" : "black"}
-              style={{ cursor: "pointer" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenMenu(e.clientX, e.clientY, leftNodeId);
-                setParentItemId(item?.id);
-                setIdforApi?.({
-                  branchId: branch._id, branchIndex: branch.index,
-                  ItemId: id, location: leftNodeId,
-                });
-              }}
-            />
+          return (
+            <g key={branchKey}>
+              {/* Left rail node */}
+              <circle
+                cx={nestedLeftRailX} cy={branchWireY} r={4}
+                fill={selectedNode === leftNodeId ? "#0078D4" : "black"}
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenMenu(e.clientX, e.clientY, leftNodeId);
+                  setParentItemId(item?.id);
+                  setIdforApi?.({
+                    branchId: branch._id, branchIndex: branch.index,
+                    ItemId: id, location: leftNodeId,
+                  });
+                }}
+              />
 
-            {branchBlocks.length === 0 ? (
-              <line x1={nestedLeftRailX} y1={branchWireY} x2={nestedRightRailX} y2={branchWireY}
-                stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
-            ) : (
-              <>
-                <line x1={nestedLeftRailX} y1={branchWireY} x2={blockRowLeftX} y2={branchWireY}
-                  stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+              {branchBlocks.length === 0 ? (
+                <line x1={nestedLeftRailX} y1={branchWireY} x2={nestedRightRailX} y2={branchWireY}
+                  stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+              ) : (
+                <>
+                  <line x1={nestedLeftRailX} y1={branchWireY} x2={blockRowLeftX} y2={branchWireY}
+                    stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
 
-                {branchBlocks.map((block, blockIdx) => {
-                  const bx = blockRowLeftX + blockIdx * (BW + GAP);
-                  const isLast = blockIdx === branchBlocks.length - 1;
+                  {branchBlocks.map((block, blockIdx) => {
+                    const bx = blockRowLeftX + blockIdx * (BW + GAP);
+                    const isLast = blockIdx === branchBlocks.length - 1;
 
-                  return (
-                    <g key={block._id ?? block.id ?? blockIdx}>
-                      <RBDBlock
-                        id={block._id ?? block.id}
-                        type={block.type}
-                        x={bx} y={blockY} wireY={branchWireY}
-                        onEdit={onEditBlock || onEdit}
-                        onDelete={onDeleteBlock || onDelete}
-                        setIdforApi={setIdforApi}
-                        blockData={block}
-                        width={BW} height={BH}
-                        onOpenMenu={onOpenMenu}
-                        setParentItem={setParentItem}
-                        setParentItemId={setParentItemId}
-                        onEditBlock={onEditBlock}
-                        onDeleteBlock={onDeleteBlock}
-                        selectedNode={selectedNode}
-                        isNested={true}
-                        item={item}
-                        setTargetBranchId={setTargetBranchId}
-                      />
+                    return (
+                      <g key={block._id ?? block.id ?? blockIdx}>
+                        <RBDBlock
+                          id={block._id ?? block.id}
+                          type={block.type}
+                          x={bx} y={blockY} wireY={branchWireY}
+                          onEdit={onEditBlock || onEdit}
+                          onDelete={onDeleteBlock || onDelete}
+                          setIdforApi={setIdforApi}
+                          blockData={block}
+                          width={BW} height={BH}
+                          onOpenMenu={onOpenMenu}
+                          setParentItem={setParentItem}
+                          setParentItemId={setParentItemId}
+                          onEditBlock={onEditBlock}
+                          onDeleteBlock={onDeleteBlock}
+                          selectedNode={selectedNode}
+                          isNested={true}
+                          item={item}
+                          setTargetBranchId={setTargetBranchId}
+                        />
 
-                      {!isLast && (
-                        <>
-                          <line x1={bx + BW} y1={branchWireY}
-                            x2={bx + BW + GAP} y2={branchWireY}
-                            stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
-                          <circle
-                            cx={bx + BW + GAP / 2} cy={branchWireY} r={4}
-                            fill={selectedNode === midNodeId(blockIdx) ? "#0078d4" : "black"}
-                            style={{ cursor: "pointer" }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onOpenMenu(e.clientX, e.clientY, midNodeId(blockIdx));
-                              setParentItemId(item?.id);
-                              setIdforApi?.({
-                                branchId: branch._id, branchIndex: branch.index,
-                                ItemId: item?.id, location: midNodeId(blockIdx),
-                              });
-                            }}
-                          />
-                        </>
-                      )}
+                        {!isLast && (
+                          <>
+                            <line x1={bx + BW} y1={branchWireY}
+                              x2={bx + BW + GAP} y2={branchWireY}
+                              stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+                            <circle
+                              cx={bx + BW + GAP / 2} cy={branchWireY} r={4}
+                              fill={selectedNode === midNodeId(blockIdx) ? "#0078D4" : "black"}
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenMenu(e.clientX, e.clientY, midNodeId(blockIdx));
+                                setParentItemId(item?.id);
+                                setIdforApi?.({
+                                  branchId: branch._id, branchIndex: branch.index,
+                                  ItemId: item?.id, location: midNodeId(blockIdx),
+                                });
+                              }}
+                            />
+                          </>
+                        )}
 
-                      {isLast && (
-                        <line x1={bx + BW} y1={branchWireY}
-                          x2={nestedRightRailX} y2={branchWireY}
-                          stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
-                      )}
-                    </g>
-                  );
-                })}
-              </>
-            )}
+                        {isLast && (
+                          <line x1={bx + BW} y1={branchWireY}
+                            x2={nestedRightRailX} y2={branchWireY}
+                            stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+                        )}
+                      </g>
+                    );
+                  })}
+                </>
+              )}
 
-            {/* Right rail node */}
-            <circle
-              cx={nestedRightRailX} cy={branchWireY} r={4}
-              fill={selectedNode === rightNodeId ? "#0078d4" : "black"}
-              style={{ cursor: "pointer" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
-                setParentItemId(item?.id);
-                setTargetBranchId(branch?._id);
-                setIdforApi({
-                  branchId: branch?._id, branchIndex: branch?.index,
-                  ItemId: item?.id, location: rightNodeId,
-                  nested: true, targetId: branch?.blocks[0]?._id,
-                });
-              }}
-            />
-          </g>
-        );
-      })}
+              {/* Right rail node */}
+              <circle
+                cx={nestedRightRailX} cy={branchWireY} r={4}
+                fill={selectedNode === rightNodeId ? "#0078D4" : "black"}
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
+                  setParentItemId(item?.id);
+                  setTargetBranchId(branch?._id);
+                  setIdforApi({
+                    branchId: branch?._id, branchIndex: branch?.index,
+                    ItemId: item?.id, location: rightNodeId,
+                    nested: true, targetId: branch?.blocks[0]?._id,
+                  });
+                }}
+              />
+            </g>
+          );
+        })}
     </g>
   );
 }
