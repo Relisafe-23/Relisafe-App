@@ -51,22 +51,34 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
   const isProductSelected = !!values?.indexCount;
 
 
-  useEffect(() => {
-     console.log("initialData.components@@@@", initialData);
-    if (initialData) {
-      setK(initialData.k || "");
-      setN(initialData.n || "");
-      setLambda(initialData.lambda || 0);
-      setMu(initialData.mu || 0);
-      setFormula(initialData.formula || 'standard');
+useEffect(() => {
+  console.log("initialData.components@@@@", initialData);
+  if (initialData) {
+    setK(initialData.k || "");
+    setN(initialData.n || "");
+    setLambda(initialData.lambda || 0);
+    setMu(initialData.mu || 0);
+    setFormula(initialData.formula || 'standard');
 
-
-      if (initialData.components && initialData.components.length > 0) {
-        console.log("initialData.components", initialData.components);
-        setNonIdenticalComponents(initialData.components);
-      }
+    if (initialData.components && initialData.components.length > 0) {
+      console.log("initialData.components", initialData.components);
+      // Ensure each component has productId properly set
+      const componentsWithIds = initialData.components.map(comp => ({
+        ...comp,
+        productId: comp.productId || null, // Ensure productId exists
+        selectedOption: comp.productId ? {
+          label: comp.productName || `Component ${comp.id}`,
+          value: comp.productId,
+          productId: comp.productId,
+          productName: comp.productName,
+          lambda: comp.lambda,
+          mttr: comp.mttr
+        } : null
+      }));
+      setNonIdenticalComponents(componentsWithIds);
     }
-  }, [initialData]);
+  }
+}, [initialData]);
 
   useEffect(() => {
     if (parseFloat(values?.mttr) > 0) {
@@ -662,8 +674,8 @@ const handleSubmit = () => {
     console.log("nonIdenticalComponents.....1...",nonIdenticalComponents);
     console.log("values.productId.....1...",currentBlock);
     newKOfNData.components = nonIdenticalComponents.map(comp => ({
-     productId: values.productId,
-      lambda: comp.lambda || 0,
+      productId: comp.productId, 
+       lambda: comp.lambda || 0,
       mu: comp.mu || 0,
       mttr: comp.mttr || '',
       productName: comp.productName,
