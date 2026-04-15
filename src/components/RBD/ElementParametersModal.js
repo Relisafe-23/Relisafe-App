@@ -28,7 +28,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     kOutOfN: modelBlock?.kOutOfN || false,
     k: modelBlock?.k || '2',
     n: modelBlock?.n || '3',
-    mttr:modelBlock?.mttr || '',
+    mttr: modelBlock?.mttr || '',
     alpha: modelBlock?.alpha || '',
     fmecaId: modelBlock?.fmecaId || '',
     indexCount: modelBlock?.indexCount || '',
@@ -46,8 +46,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     fmDescription: modelBlock?.fmDescription || ''
   });
 
-  console.log('mtbf value is : ',values?.mct)
-const [blink, setBlink] = useState(false);
+  console.log('mtbf value is : ', values?.mct)
+  const [blink, setBlink] = useState(false);
   const { id } = useParams();
   const [options, setOptions] = useState([]);
   const projectId = id || props?.match?.params?.id;
@@ -97,8 +97,8 @@ const [blink, setBlink] = useState(false);
             productName: item.productName,
             productId: item.productId,
             fr: item.fr,
-            mct:item.mct || "",
-            mttr:item.mttr || "",
+            mct: item.mct || "",
+            mttr: item.mttr || "",
             id: item.id
           }));
 
@@ -203,61 +203,61 @@ const [blink, setBlink] = useState(false);
   }, [projectId, productId]); // Added proper dependencies
 
   if (!isOpen) return null;
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  console.log("##############################@@@@@@@@@")
-  try {
-    const companyId = localStorage.getItem("companyId");
-    
-    // Validation
-    if (!companyId || !rbdId || !projectId) {
-      throw new Error("Missing required IDs");
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log("##############################@@@@@@@@@")
+    try {
+      const companyId = localStorage.getItem("companyId");
+
+      // Validation
+      if (!companyId || !rbdId || !projectId) {
+        throw new Error("Missing required IDs");
+      }
       console.log("#########%%%%%%%%%%%@@@@@@@@@")
-    const payload = {
-      indexCount: values.indexCount,
-      partNumber: values.partNumber,
-      productName: values.productName,
-      fr: values.fr,
-      rbdId: rbdId,
-      productId: values.productId,
-      fmecaId: values.fmecaId,
-      fmDescription: values.fmDescription,
-      elementType: values.elementType,
-      // time: values.time,
-      repair: values.repair,
-      inspectionPeriod: values.inspectionPeriod,
-      dutyCycle: values.dutyCycle,
-      color: values.color,
-      frDistribution: values.frDistribution,
-      k: values.k,
-      n: values.n,
-      repairDistribution: values.repairDistribution,
-      load: values.load,
-      mtbf: values.mtbf,
-      mct: values.mct,
-      mttr:values.mttr,
-      projectId: projectId,
-      companyId: companyId,
-      idforApi: elementModal?.idforApi,
-    };
-    console.log("Payload",payload)
-    const response = await Api.post("/api/v1/elementParametersRBD/create", payload);
-    console.log("Success:", response);
+      const payload = {
+        indexCount: values.indexCount,
+        partNumber: values.partNumber,
+        productName: values.productName,
+        fr: values.fr,
+        rbdId: rbdId,
+        productId: values.productId,
+        fmecaId: values.fmecaId,
+        fmDescription: values.fmDescription,
+        elementType: values.elementType,
+        // time: values.time,
+        repair: values.repair,
+        inspectionPeriod: values.inspectionPeriod,
+        dutyCycle: values.dutyCycle,
+        color: values.color,
+        frDistribution: values.frDistribution,
+        k: values.k,
+        n: values.n,
+        repairDistribution: values.repairDistribution,
+        load: values.load,
+        mtbf: values.mtbf,
+        mct: values.mct,
+        mttr: values.mttr,
+        projectId: projectId,
+        companyId: companyId,
+        idforApi: elementModal?.idforApi,
+      };
+      console.log("Payload", payload)
+      const response = await Api.post("/api/v1/elementParametersRBD/create", payload);
+      console.log("Success:", response);
       console.log("#######!!!!!!!!!!!!%%%%%%%%%%@@@@@@@@@")
-    await getBlock();
-    onSubmit(values);
-    
-  } catch (error) {
-    console.error("Submission failed:", error);
-    // Show error message to user
-    return; // Don't close on error
-  }
-  
-  // Always close after successful execution
-  onClose();
-};
-console.log("values.mttr",values.mttr)
+      await getBlock();
+      onSubmit(values);
+
+    } catch (error) {
+      console.error("Submission failed:", error);
+      // Show error message to user
+      return; // Don't close on error
+    }
+
+    // Always close after successful execution
+    onClose();
+  };
+  console.log("values.mttr", values.mttr)
   const handleUpdate = (e) => {
     e.preventDefault();
 
@@ -388,8 +388,8 @@ console.log("values.mttr",values.mttr)
                         handleChange("fr", option.fr);
                         handleChange("productId", option.productId);
                         handleChange("id", option.id);
-                        handleChange("mttr",option.mttr);
-                        handleChange("mct",option.mct)
+                        handleChange("mttr", option.mttr);
+                        handleChange("mct", option.mct)
                       } else {
                         handleChange("productName", "");
                         handleChange("partNumber", "");
@@ -398,8 +398,8 @@ console.log("values.mttr",values.mttr)
                         handleChange("productId", "");
                         handleChange("id", "");
                         handleChange("fmecaId", "");
-                        handleChange("mttr","");
-                        handleChange("mct","")
+                        handleChange("mttr", "");
+                        handleChange("mct", "")
                       }
                     }}
                     styles={{
@@ -786,14 +786,14 @@ console.log("values.mttr",values.mttr)
                       />
 
                     </div>
-                 
-                 
+
+
                     <div>
                       <label style={{ fontSize: '11px', marginRight: '5px' }}>Mttr:</label>
                       <input
                         type="text"
                         value={values.mttr}
-                        onChange={(e) => handleChange('load', e.target.value)}
+                        onChange={(e) => handleChange('mttr', e.target.value)}
                         style={{
                           width: '60px',
                           padding: '4px',
@@ -805,10 +805,10 @@ console.log("values.mttr",values.mttr)
                       />
                     </div>
                   </div>
-                     <div>
-                      {!values?.fr && (
-                        <span style={{ color: "red", fontSize: '11px' }}>Give the MTBF value</span>
-                      )}</div>
+                  <div>
+                    {!values?.fr && (
+                      <span style={{ color: "red", fontSize: '11px' }}>Give the MTBF value</span>
+                    )}</div>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
@@ -817,20 +817,20 @@ console.log("values.mttr",values.mttr)
                   </label>
                   <div>
                     <label style={{ fontSize: '11px', marginRight: '5px' }}>MCT [hours]:</label>
-                <input
-  type="text"
-  value={values.mct}
-  // value={values.mct !== null && values.mct !== undefined && !isNaN(values.mct) && values.mct !== "" ? values.mct : "0"}
-  onChange={(e) => handleChange('mct', e.target.value)}
-  style={{
-    width: '100px',
-    padding: '4px',
-    border: '1px solid #ccc',
-    borderRadius: '3px',
-    fontSize: '11px'
-  }}
-  placeholder="0127333"
-/>
+                    <input
+                      type="text"
+                      value={values.mct}
+                      // value={values.mct !== null && values.mct !== undefined && !isNaN(values.mct) && values.mct !== "" ? values.mct : "0"}
+                      onChange={(e) => handleChange('mct', e.target.value)}
+                      style={{
+                        width: '100px',
+                        padding: '4px',
+                        border: '1px solid #ccc',
+                        borderRadius: '3px',
+                        fontSize: '11px'
+                      }}
+                      placeholder="0127333"
+                    />
                   </div>
                 </div>
               </div>
@@ -859,22 +859,22 @@ console.log("values.mttr",values.mttr)
             >
               Cancel
             </button>
-<button
-  type="submit"
-  disabled={!values?.fr || values?.fr <= 0}
-  style={{
-    padding: '8px 16px',
-    border: 'none',
-    borderRadius: '3px',
-    background: (!values?.fr || values?.fr <= 0) ? '#ccc' : '#007bff',
-    color: 'white',
-    cursor: (!values?.fr || values?.fr <= 0) ? 'not-allowed' : 'pointer',
-    fontSize: '12px',
-    animation: blink ? 'blink 0.3s ease-in-out 2' : 'none'
-  }}
->
-  OK
-</button>
+            <button
+              type="submit"
+              disabled={!values?.fr || values?.fr <= 0}
+              style={{
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '3px',
+                background: (!values?.fr || values?.fr <= 0) ? '#ccc' : '#007bff',
+                color: 'white',
+                cursor: (!values?.fr || values?.fr <= 0) ? 'not-allowed' : 'pointer',
+                fontSize: '12px',
+                animation: blink ? 'blink 0.3s ease-in-out 2' : 'none'
+              }}
+            >
+              OK
+            </button>
 
           </div>
         </form>

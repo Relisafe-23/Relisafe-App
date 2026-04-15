@@ -59,16 +59,16 @@ export const RBDBlock = ({
     k: blockData?.k || blockData?.data?.k || '2',
     n: blockData?.n || blockData?.data?.n || '3',
     mtbf: blockData?.mtbf || blockData?.data?.mtbf || '',
-    mttr:blockData?.mttr || blockData?.data?.mttr||''
+    mttr: blockData?.mttr || blockData?.data?.mttr || ''
   });
-console.log("mission123...",mission)
+  console.log("mission123...", mission)
   useEffect(() => {
     setFormData({
       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
       k: blockData?.k || blockData?.data?.k,
       n: blockData?.n || blockData?.data?.n,
       mtbf: blockData?.mtbf || blockData?.data?.mtbf,
-      mttr:blockData?.mttr || blockData?.data?.mttr||''
+      mttr: blockData?.mttr || blockData?.data?.mttr || ''
     });
   }, [blockData]);
 
@@ -136,7 +136,7 @@ console.log("mission123...",mission)
     const containerH = totalBranchHeight + BH * 2 + CONTAINER_PADDING * 3;
 
     // ── Position the nested section ─────────────────────────────────────────────
-    const nestedSectionX = x-60;
+    const nestedSectionX = x - 60;
 
     // console.log(nestedSectionX,'nestedSectionX')
     // Center on the wire, but ensure it doesn't overflow
@@ -149,7 +149,7 @@ console.log("mission123...",mission)
 
 
     // ── Rail X positions ────────────────────────────────────────────────────────
-    const leftRailX = nestedSectionX + RAIL_PAD + CONTAINER_PADDING ;
+    const leftRailX = nestedSectionX + RAIL_PAD + CONTAINER_PADDING;
     const rightRailX = nestedSectionX + containerW - RAIL_PAD - CONTAINER_PADDING;
 
     // ── Calculate branch wire Y positions with proper spacing ───────────────────
@@ -157,7 +157,7 @@ console.log("mission123...",mission)
     const getWireY = (idx) => startY + idx * ROW_STEP;
 
     const railTop = getWireY(0);
-    const railBottom = getWireY(branches.length - 1); 
+    const railBottom = getWireY(branches.length - 1);
 
     return (
       <g>
@@ -373,30 +373,59 @@ console.log("mission123...",mission)
       const k = blockData?.k || blockData?.data?.k;
       const n = blockData?.n || blockData?.data?.n;
 
-const missionTime = mission; 
+      const missionTime = mission;
+const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+  const MTBF = Number(mtbf || 0);
+  const MTTR = Number(mttr || 0);
+  const t = Number(missionTime || 0);
 
-// Calculate reliability R(t)
-// let reliability = null;
+  // Default values
+  let unavailability = 0;
+  let reliability = "0";
 
-// if (mtbf && mtbf > 0 && missionTime >= 0) {
-  // R(t) = e^(-t / MTBF)
-const reliabilityValue = Math.exp(-missionTime / mtbf);
+  // ✅ Unavailability
+  if (!(MTBF === 0 && MTTR === 0)) {
+    const u = MTTR / (MTBF + MTTR);
+    unavailability = Number(u.toFixed(4));
+  }
 
-const reliability =
-  reliabilityValue < 1e-4
-    ? reliabilityValue.toExponential(4) // OR use toMathFormat()
-    : reliabilityValue.toFixed(4);
+  // ✅ Reliability
+  if (MTBF > 0 && t >= 0) {
+    const r = Math.exp(-t / MTBF);
 
-// Example usage
-console.log(`MTBF: ${mtbf} hours`);
-console.log(`Mission Time: ${missionTime} hours`);
-console.log(`Reliability: ${(reliability * 100).toFixed(2)}%`);
+    reliability =
+      r < 1e-4
+        ? r.toExponential(2)
+        : r.toFixed(2);
+  }
+
+  return {
+    reliability,
+    unavailability
+  };
+};
+
+   
       switch (t) {
-        case 'Regular':
-        case 'REGULAR':
-          // if (fr) return (typeof fr === 'number' ? fr.toFixed(6) : fr);
-          if (reliability) return String(reliability);
-          return 'Regular';
+case 'Regular':
+case 'REGULAR': {
+  const { reliability, unavailability } = calculateMetrics({
+    mtbf,
+    mttr,
+    missionTime
+  });
+
+  return (
+    <>
+      <tspan x={x + BLOCK_W / 2} dy="-4">
+        R: {reliability}
+      </tspan>
+      <tspan x={x + BLOCK_W / 2} dy="10">
+        U: {unavailability}
+      </tspan>
+    </>
+  );
+}
         case 'K-out-of-N':
           return `${k || 2}/${n || 3}`;
         case 'SubRBD':
