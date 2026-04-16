@@ -101,7 +101,7 @@ console.log("MissionTime.................12",missionTime)
             mttr: item.mttr || "",
             id: item.id
           }));
-
+       
         const productIdst = res.data.data.filter(item => item?.productId).map(item => item.productId);
         console.log("Options", options);
         setProductIds(productIdst);
@@ -236,7 +236,7 @@ console.log("MissionTime................333",missionTime)
     reliability =
       r < 1e-4
         ? r.toExponential(2)
-        : r.toFixed(2);
+        : r.toFixed(4);
   }
 
   return {
@@ -260,7 +260,7 @@ console.log("MissionTime................333",missionTime)
         fmecaId: values.fmecaId,
         fmDescription: values.fmDescription,
         elementType: values.elementType,
-        // time: values.time,
+        time: missionTime,
         repair: values.repair,
         inspectionPeriod: values.inspectionPeriod,
         dutyCycle: values.dutyCycle,
@@ -280,6 +280,7 @@ console.log("MissionTime................333",missionTime)
         unavailability: unavailability
       };
       console.log("Payload", payload)
+      console.log("Missssionime",missionTime)
       const response = await Api.post("/api/v1/elementParametersRBD/create", payload);
       console.log("Success:", response);
       await getBlock();

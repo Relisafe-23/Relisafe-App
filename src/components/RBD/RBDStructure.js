@@ -1013,17 +1013,30 @@ export default function RBDButton() {
 
   useEffect(() => { getBlock(); }, [rbdId, projectId, loadChange]);
 
-  const getBlock = () => {
-    Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
-      .then((res) => {
-        console.log("Res....",res.data)
-        const data = res.data.data;
-        setShowSymbol(data.length > 0);
-        setBlocks(data);
-        console.log("block",blocks)
-      })
-      .catch(err => console.log(err, 'error'));
-  };
+const getBlock = () => {
+  Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
+    .then((res) => {
+      console.log("Res....", res.data);
+
+      const data = res.data.data;
+      setShowSymbol(data.length > 0);
+      setBlocks(data);
+
+      // Extract reliability values (ignore null/undefined)
+      const reliabilities = data
+        .map(item => Number(item.reliability))
+        .filter(r => !isNaN(r));
+         console.log("responsibili...........",reliabilities)
+      // Apply series formula: R = R1 * R2 * R3 ...
+      const totalReliability = reliabilities.reduce(
+        (acc, val) => acc * val,
+        1
+      );
+
+      console.log("Series Reliability:", totalReliability);
+    })
+    .catch(err => console.log(err, 'error'));
+};
 
   // ── parallel branch creation ───────────────────────────────────────────────
   const createParallelBranch = (startNode, endNode) => {

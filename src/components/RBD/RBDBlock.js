@@ -364,7 +364,7 @@ const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
     reliability =
       r < 1e-4
         ? r.toExponential(2)
-        : r.toFixed(2);
+        : r.toFixed(4);
 
     console.log("rrrrrrrrrrr..final.",reliability)
   
