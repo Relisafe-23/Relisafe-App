@@ -3,7 +3,7 @@ import EditRBDConfigurationModal from './EditRBDConfigurationModal'
 import { FiSettings, FiEdit2, FiEye, FiTrash2, FiMoreVertical } from 'react-icons/fi';
 import { RBDBlock } from './RBDBlock';
 import Api from "../../Api";
-import RBDStructure from "../../components/RBD/RBDStructure"
+
 import { useHistory, useParams, useLocation } from "react-router-dom";
 
 // MUI imports
@@ -315,6 +315,7 @@ export const BiDirectionalSymbol = ({ onNodeClick, onOpenMenu, blocks, onDeleteB
               x={item.x}
               y={item.y}
               onEdit={onEditBlock}
+           
               onDelete={onDeleteBlock}
               blockData={item.blockData}
             />
@@ -419,7 +420,6 @@ export const BlockContextMenu = ({ x, y, onSelect, onClose }) => (
   </div>
 );
 
-
 const StyledTableContainer = styled(TableContainer)({
   boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
   borderRadius: '12px',
@@ -459,7 +459,7 @@ export default function RBDButton() {
   const [description, setDescription] = useState([])
   const [rbdId, setRbdId] = useState("")
   const [rbdlistData, setRbdlistData] = useState([])
-
+  const [missionData,setMissionData]= useState('')
   const [rbdConfig, setRbdConfig] = useState({
     rbdTitle: "My RBD",
     missionTime: 24,
@@ -467,7 +467,10 @@ export default function RBDButton() {
     displayLower: "MTBF",
     printRemarks: "Yes"
   });
-
+  useEffect(() => {
+  console.log("Updated MissionTime:", missionData);
+}, [missionData]);
+console.log("Mission",mission)
   useEffect(() => {
     getRbdConfig()
   }, [projectId])
@@ -480,7 +483,7 @@ export default function RBDButton() {
       }
     })
       .then((res) => {
-     
+     console.log("Resjkhjh",res)
         setRbdlistData(res.data.data)
         const rbdIds = res.data.data.map((item) => item.id); 
         setRbdId(rbdIds);
@@ -489,9 +492,11 @@ export default function RBDButton() {
         setDescription(rbdDescription)
         // console.log("descriptio.....n",rbdDescription)
         const rbdMission = res.data.data.filter((item) => item.missionTime).map((item) => item.missionTime)
+    
         setMission(rbdMission)
         setRBDTitle(rbdName)
         setRbdList(res.data.data)
+       
         // Update state with fetched data if needed
         // setRbdConfig(res.data.data);
       })
@@ -499,7 +504,28 @@ export default function RBDButton() {
         console.error("Error fetching RBD config:", error);
       });
   }
+// useEffect (()=>{
+//   if (projectId) {
+//  Api.get("/api/v1/EditConfigRBD/", { 
+//       params: {
+//         projectId: projectId,
+//       }
+//     })
+//       .then((res) => {
+//             console.log("RBD list responsen 134:", res.data.data.find(item => item.id===rbdId));
 
+//                 const rbdData = res.data.data.find(item => item.id === rbdId);
+//                 console.log("rbdDataaaaa",rbdData.missionTime)
+//                   if (rbdData) {
+//           setMission(rbdData.missionTime)
+//                       console.log("MissionTime jhjioknji", mission)
+//         } else {
+//           setMission(null)
+//         }
+//         setRbdList(res.data.data || []);
+//       })
+//     }
+// },[projectId])
   const handleSaveConfig = (newConfig) => {
     setRbdConfig(newConfig);
     // console.log("Saved config:", newConfig);
@@ -520,15 +546,20 @@ export default function RBDButton() {
   };
   const handleViewClick = (item, index) => {
     let rbdId = item?.id;
-    let id = item?.projectId
-
+    let id = item?.projectId;
+        
+const rbdData = item?.missionTime; 
+console.log("Tpihj",rbdData)
+        
     console.log(projectId,'from sending projectId')
     console.log(rbdId,'from sending rbdId')
 
 
-    history.push(`/project/${id}/rbd/structure/${rbdId}`);
+     history.push({
+    pathname: `/project/${id}/rbd/structure/${rbdId}`,
+    state: { missionTime: rbdData }   
+  });
   }
-
   const handleDeleteClick = async (item) => {
     const isConfirmed = window.confirm(
       `Are you sure you want to delete "${item?.rbdTitle}"?`

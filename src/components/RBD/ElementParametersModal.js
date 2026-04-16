@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams,useLocation } from 'react-router-dom';
 import Api from '../../Api';
 import CreatableSelect from 'react-select/creatable';
 
 const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock, getBlock, targetId }) => {
-
-  console.log('currentBlock - :', currentBlock)
-  console.log('parallelFoundBlock - :', parallelFoundBlock)
-  console.log(elementModal, 'elementModal')
-  console.log(targetId, 'targetId inside model')
-
 
   let modelBlock = null;
 
@@ -18,7 +12,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   console.log(modelBlock, '-final modelData')
 
   const mainId = modelBlock?.id || modelBlock?._id
-
+ const location = useLocation();
   const [values, setValues] = useState({
     rbdId: rbdId,
     relDes: modelBlock?.relDes || '',
@@ -34,14 +28,15 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     kOutOfN: modelBlock?.kOutOfN || false,
     k: modelBlock?.k || '2',
     n: modelBlock?.n || '3',
+    mttr: modelBlock?.mttr || '',
     alpha: modelBlock?.alpha || '',
     fmecaId: modelBlock?.fmecaId || '',
     indexCount: modelBlock?.indexCount || '',
     productName: modelBlock?.productName || '',
     id: modelBlock?.id || '',
     repairDistribution: modelBlock?.repairDistribution || 'Exponential',
-    mtbf: modelBlock?.mtbf || '1303617.9',
-    load: modelBlock?.load || '100',
+    mtbf: modelBlock?.mtbf || '',
+    load: modelBlock?.load || '',
     mct: modelBlock?.mct || '',
     productNumber: modelBlock?.productNumber || '',
     productTreeItemID: modelBlock?.productTreeItemID || '',
@@ -50,9 +45,10 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     remark: modelBlock?.remark || '',
     fmDescription: modelBlock?.fmDescription || ''
   });
-
-  // console.log('fr value is : ',values?.fr)
-
+  const missionTime = location.state?.missionTime;
+ const [mission,setMission] = useState('');
+  console.log('mtbf value is : ', values?.mct)
+  const [blink, setBlink] = useState(false);
   const { id } = useParams();
   const [options, setOptions] = useState([]);
   const projectId = id || props?.match?.params?.id;
@@ -65,7 +61,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   const productName = values?.productName || "";
   const [alpha, setAlpha] = useState([]);
 
-
+console.log("MissionTime.................12",missionTime)
   // useEffect(() => {
   //   getElement()
   // }, [projectId])
@@ -101,11 +97,13 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
             productName: item.productName,
             productId: item.productId,
             fr: item.fr,
+            mct: item.mct || "",
+            mttr: item.mttr || "",
             id: item.id
           }));
 
         const productIdst = res.data.data.filter(item => item?.productId).map(item => item.productId);
-        // console.log("Options", options);
+        console.log("Options", options);
         setProductIds(productIdst);
         setOptions(options);
       });
@@ -157,24 +155,24 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
 
 
 
-    // console.log(productId,'productId')
-    Api.get(`/api/v1/mttrPrediction/${productId}`)
-      .then((res) => {
-        // console.log(res?.data?.data?.mct, 'response mttr')
-        let mct = res?.data?.data?.mct
+    // // console.log(productId,'productId')
+    // Api.get(`/api/v1/mttrPrediction/${productId}`)
+    //   .then((res) => {
+    //     // console.log(res?.data?.data?.mct, 'response mttr')
+    //     let mct = res?.data?.data?.mct
 
-        setValues(prev => ({
-          ...prev,
-          mct: mct
-        }));
-      })
-      .catch((error) => {
-        const errorStatus = error?.response?.status;
-        if (errorStatus === 401) {
-          // Handle unauthorized
-          console.error("Unauthorized access");
-        }
-      });
+    //     setValues(prev => ({
+    //       ...prev,
+    //       mct: mct
+    //     }));
+    //   })
+    //   .catch((error) => {
+    //     const errorStatus = error?.response?.status;
+    //     if (errorStatus === 401) {
+    //       // Handle unauthorized
+    //       console.error("Unauthorized access");
+    //     }
+    //   });
 
 
   };
@@ -205,71 +203,97 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   }, [projectId, productId]); // Added proper dependencies
 
   if (!isOpen) return null;
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const companyId = localStorage.getItem("companyId");
 
-    console.log('=== BEFORE API CALL ===');
-    console.log('targetId prop value:', elementModal?.nodeIndex);
+    try {
+      const companyId = localStorage.getItem("companyId");
 
-    Api.post("/api/v1/elementParametersRBD/create", {
-      indexCount: values.indexCount,
-      partNumber: values.partNumber,
-      productName: values.productName,
-      fr: values.fr,
-      // blockId:blockId,
-      rbdId: rbdId,
-      productId: values.productId,
-      fmecaId: values.fmecaId,
-      fmDescription: values.fmDescription,
-      elementType: values.elementType,
-      time: values.time,
-      repair: values.repair,
-      inspectionPeriod: values.inspectionPeriod,
-      dutyCycle: values.dutyCycle,
-      color: values.color,
-      frDistribution: values.frDistribution,
-      k: values.k,
-      n: values.n,
-      repairDistribution: values.repairDistribution,
-      load: values.load,
-      mct: values.mct,
-      projectId: projectId,
-      companyId: companyId,
-      idforApi: elementModal?.idforApi,
-      datata: 'adfuebcweb',
-      targetId: elementModal?.idforApi?.targetId || elementModal?.nodeIndex,
+      // Validation
+      if (!companyId || !rbdId || !projectId) {
+        throw new Error("Missing required IDs");
+      }
+        //  const missionTime = mission;
+  const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+  const MTBF = Number(mtbf || 0);
+  const MTTR = Number(mttr || 0);
+  const t = Number(missionTime || 0);
 
-    }).then((res) => {
-      getBlock();
-    })
-    onSubmit(values);
-    onClose();
+console.log("MissionTime................333",missionTime)
+  let unavailability = 0;
+  let reliability = "0";
 
+  // ✅ Unavailability
+  if (!(MTBF === 0 && MTTR === 0)) {
+    const u = MTTR / (MTBF + MTTR);
+    unavailability = Number(u.toFixed(4));
+  }
+
+  // ✅ Reliability
+  if (MTBF > 0 && t >= 0) {
+    const r = Math.exp(-t / MTBF);
+
+    reliability =
+      r < 1e-4
+        ? r.toExponential(2)
+        : r.toFixed(2);
+  }
+
+  return {
+    reliability,
+    unavailability
   };
+};
+  const { reliability, unavailability } = calculateMetrics({
+      mtbf: values.mtbf,
+      mttr: values.mttr,
+      missionTime
+    });
+    console.log("reliability,unavailability",reliability,unavailability)
+      const payload = {
+        indexCount: values.indexCount,
+        partNumber: values.partNumber,
+        productName: values.productName,
+        fr: values.fr,
+        rbdId: rbdId,
+        productId: values.productId,
+        fmecaId: values.fmecaId,
+        fmDescription: values.fmDescription,
+        elementType: values.elementType,
+        // time: values.time,
+        repair: values.repair,
+        inspectionPeriod: values.inspectionPeriod,
+        dutyCycle: values.dutyCycle,
+        color: values.color,
+        frDistribution: values.frDistribution,
+        k: values.k,
+        n: values.n,
+        repairDistribution: values.repairDistribution,
+        load: values.load,
+        mtbf: values.mtbf,
+        mct: values.mct,
+        mttr: values.mttr,
+        projectId: projectId,
+        companyId: companyId,
+        idforApi: elementModal?.idforApi,
+        reliability: reliability,
+        unavailability: unavailability
+      };
+      console.log("Payload", payload)
+      const response = await Api.post("/api/v1/elementParametersRBD/create", payload);
+      console.log("Success:", response);
+      await getBlock();
 
+      onSubmit(values);
+      onClose();
+    } catch (error) {
+      console.error("Submission failed:", error);
+    
+    }
 
-  // const handleUpdate = (e) => {
-  //   e.preventDefault();
-
-  //   if(parentItemId)
-  //   console.log('handleUpdate', values)
-  //   try{
-  //     Api.patch(`/api/v1/elementParametersRBD/updateRBD/${mainId}`,values)
-  //     .then((res)=>{
-  //       console.log(res)
-  //       if(res.data.success === true){
-  //         onClose()
-  //       }else{
-  //         console.log('error update')
-  //       }
-  //     })
-  //   }catch{
-  //     console.log('failed Api')
-  //   }
-  // }
-
+  
+  };
+  console.log("values.mttr", values.mttr)
   const handleUpdate = (e) => {
     e.preventDefault();
 
@@ -300,25 +324,26 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     }
   }
 
-
-  // console.log(projectId,'projectId')
-
-  // const getElement = () => {
-  //   // console.log("Loadvchvghhv")
-  //   Api.get(`/api/v1/elementParametersRBD/get/all`, {
-  //     params: {
-  //       projectId: projectId,
-  //     }
-  //   })
-  //     .then((res) => {
-  //       // console.log("res12334", res)
-  //     })
-  // }
   const handleChange = (field, value) => {
-    setValues(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setValues(prev => {
+      const newValues = { ...prev, [field]: value };
+      if (field === 'fr') {
+        if (value && !isNaN(parseFloat(value)) && parseFloat(value) !== 0) {
+          newValues.mtbf = (1 / parseFloat(value)).toFixed(6);
+        } else {
+          newValues.mtbf = '';
+        }
+      }
+      else if (field === 'mtbf') {
+        if (value && !isNaN(parseFloat(value)) && parseFloat(value) !== 0) {
+          newValues.fr = (1 / parseFloat(value)).toFixed(6);
+        } else {
+          newValues.fr = '';
+        }
+      }
+
+      return newValues;
+    });
   };
 
   const handleSwitchClick = () => {
@@ -399,6 +424,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                         handleChange("fr", option.fr);
                         handleChange("productId", option.productId);
                         handleChange("id", option.id);
+                        handleChange("mttr", option.mttr);
+                        handleChange("mct", option.mct)
                       } else {
                         handleChange("productName", "");
                         handleChange("partNumber", "");
@@ -407,6 +434,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                         handleChange("productId", "");
                         handleChange("id", "");
                         handleChange("fmecaId", "");
+                        handleChange("mttr", "");
+                        handleChange("mct", "")
                       }
                     }}
                     styles={{
@@ -780,8 +809,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                       <label style={{ fontSize: '11px', marginRight: '5px' }}>MTBF [hours]:</label>
                       <input
                         type="text"
-                        value={values?.fr ? (1 / parseFloat(values.fr)).toFixed(2) : ""}
-                        onChange={(e) => handleChange('fr', e.target.value)}
+                        value={values?.mtbf}
+                        onChange={(e) => handleChange('mtbf', e.target.value)}
                         style={{
                           width: '100px',
                           padding: '4px',
@@ -791,24 +820,31 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                         }}
                         placeholder="445089"
                       />
+
                     </div>
-                    {/* <div>
-                        <label style={{ fontSize: '11px', marginRight: '5px' }}>Load:</label>
-                        <input
-                          type="text"
-                          value={values.load}
-                          onChange={(e) => handleChange('load', e.target.value)}
-                          style={{
-                            width: '60px',
-                            padding: '4px',
-                            border: '1px solid #ccc',
-                            borderRadius: '3px',
-                            fontSize: '11px'
-                          }}
-                          placeholder="100"
-                        />
-                      </div> */}
+
+
+                    <div>
+                      <label style={{ fontSize: '11px', marginRight: '5px' }}>Mttr:</label>
+                      <input
+                        type="text"
+                        value={values.mttr}
+                        onChange={(e) => handleChange('mttr', e.target.value)}
+                        style={{
+                          width: '60px',
+                          padding: '4px',
+                          border: '1px solid #ccc',
+                          borderRadius: '3px',
+                          fontSize: '11px'
+                        }}
+                        placeholder="100"
+                      />
+                    </div>
                   </div>
+                  <div>
+                    {!values?.fr && (
+                      <span style={{ color: "red", fontSize: '11px' }}>Give the MTBF value</span>
+                    )}</div>
                 </div>
 
                 <div style={{ marginBottom: '15px' }}>
@@ -820,6 +856,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                     <input
                       type="text"
                       value={values.mct}
+                      // value={values.mct !== null && values.mct !== undefined && !isNaN(values.mct) && values.mct !== "" ? values.mct : "0"}
                       onChange={(e) => handleChange('mct', e.target.value)}
                       style={{
                         width: '100px',
@@ -860,18 +897,21 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
             </button>
             <button
               type="submit"
+              disabled={!values?.fr || values?.fr <= 0}
               style={{
                 padding: '8px 16px',
                 border: 'none',
                 borderRadius: '3px',
-                background: '#007bff',
+                background: (!values?.fr || values?.fr <= 0) ? '#ccc' : '#007bff',
                 color: 'white',
-                cursor: 'pointer',
-                fontSize: '12px'
+                cursor: (!values?.fr || values?.fr <= 0) ? 'not-allowed' : 'pointer',
+                fontSize: '12px',
+                animation: blink ? 'blink 0.3s ease-in-out 2' : 'none'
               }}
             >
               OK
             </button>
+
           </div>
         </form>
       </div>

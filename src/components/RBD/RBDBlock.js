@@ -1,174 +1,4 @@
-// // RBDBlock.jsx
-// import React, { useEffect, useState } from 'react';
-// import { KOfNBlock } from './KOfNBlock';
 
-// export const RBDBlock = ({ id, rightRailX, rightNodeId, leftRailX, wireY, selectedNode, leftNodeId, type, setIdforApi, x, y, setParentItemId, onEdit, onDelete, blockData, width = 60, height = 40 }) => {
-
-//   const [formData, setFormData] = useState({
-//     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
-//     k: blockData?.k || blockData?.data?.k || '2',
-//     n: blockData?.n || blockData?.data?.n || '3',
-//     mtbf: blockData?.mtbf || blockData?.data?.mtbf || '1303617.9'
-//   });
-
-//   useEffect(() => {
-//     setFormData({
-//       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
-//       k: blockData?.k || blockData?.data?.k,
-//       n: blockData?.n || blockData?.data?.n,
-//       mtbf: blockData?.mtbf || blockData?.data?.mtbf
-//     });
-//   }, [blockData]);
-
-//   const isKOfN = blockData?.type === 'K-out-of-N' ||
-//     blockData?.elementType === 'K-out-of-N' ||
-//     blockData?.data?.elementType === 'K-out-of-N';
-
-//   if (isKOfN) {
-//     return (
-//       <KOfNBlock
-//         id={id}
-//         x={x}
-//         y={y}
-//         onEdit={onEdit}
-//         onDelete={onDelete}
-//         blockData={blockData}
-//       />
-//     );
-//   }
-
-//   // ── fixed dimensions matching the image ─────────────────────────────────────
-//   const BLOCK_W = 60;
-//   const BLOCK_H = 40;
-
-//   const handleContextMenu = (e) => {
-//     e.preventDefault();
-//     e.stopPropagation();
-//     if (onEdit) onEdit(e, id, blockData);
-//   };
-
-//   const getBlockContent = () => {
-//     const t = blockData?.type || blockData?.elementType;
-//     const fr = blockData?.fr || blockData?.data?.fr;
-//     const mtbf = blockData?.mtbf || blockData?.data?.mtbf;
-//     const k = blockData?.k || blockData?.data?.k;
-//     const n = blockData?.n || blockData?.data?.n;
-
-//     switch (t) {
-//       case 'Regular':
-//       case 'REGULAR':
-//         if (fr) return (typeof fr === 'number' ? fr.toFixed(6) : fr);
-//         if (mtbf) return String(mtbf);
-//         return 'Regular';
-//       case 'K-out-of-N':
-//         return `${k || 2}/${n || 3}`;
-//       case 'SubRBD':
-//         return 'Sub RBD';
-//       default:
-//         return 'Block';
-//     }
-//   };
-
-//   const getBlockColor = () => {
-//     const t = blockData?.type || blockData?.elementType;
-//     switch (t) {
-//       case 'Regular':
-//       case 'REGULAR': return '#4CAF50';
-//       case 'SubRBD': return '#FF9800';
-//       case 'K-out-of-N': return '#FF5722';
-//       default: return '#4CAF50';
-//     }
-//   };
-
-//   const getBlockName = () => blockData?.name || blockData?.data?.name || '';
-
-//   return (
-//     <g
-//       onContextMenu={handleContextMenu}
-//       style={{ cursor: 'context-menu' }}
-//       onClick={() => { if (setParentItemId) setParentItemId(null); }}
-//     >
-//       {/* name label above block */}
-//       {getBlockName() && (
-//         <text
-//           x={x + BLOCK_W / 2}
-//           y={y - 4}
-//           textAnchor="middle"
-//           fontSize="8"
-//           fontWeight="bold"
-//           fill="#333"
-//         >
-//           {getBlockName()}
-//         </text>
-//       )}
-
-//       <rect
-//         x={x}
-//         y={y}
-//         width={BLOCK_W}
-//         height={BLOCK_H}
-//         fill={getBlockColor()}
-//         stroke="#2a7a2a"
-//         strokeWidth="1"
-//         rx="2"
-//       />
-
-//       {/* main value line */}
-//       <text
-//         x={x + BLOCK_W / 2}
-//         y={y + BLOCK_H / 2}
-//         textAnchor="middle"
-//         dominantBaseline="middle"
-//         fill="white"
-//         fontSize="8"
-//         fontWeight="bold"
-//       >
-//         {getBlockContent()}
-//       </text>
-
-//       {/* <circle
-//         cx={leftRailX}
-//         cy={wireY}
-//         r={4}
-//         fill={selectedNode === leftNodeId ? "#0078d4" : "black"}
-//         style={{ cursor: "pointer" }}
-//       onClick={(e) => {
-//         e.stopPropagation();
-//         onOpenMenu(e.clientX, e.clientY, branch?.index);
-//         setIdforApi({
-//           branchId: branch?._id,
-//           branchIndex: branch?.index,
-//           ItemId: item?.id,
-//           location: `branch-${branch?.index}-left`
-//         });
-//       }}
-//       /> */}
-
-//       {/* <circle
-//         cx={rightRailX}
-//         cy={wireY}
-//         r={4}
-//         fill={selectedNode === rightNodeId ? "#0078d4" : "black"}
-//         style={{ cursor: "pointer" }}
-//       onClick={(e) => {
-//         e.stopPropagation();
-//          setIdforApi({
-//           branchId: branch?._id,
-//           branchIndex: branch?.index,
-//           ItemId: item?.id,
-//           location: `branch-${branch.index}-right`
-//         });
-//       }}
-//       /> */}
-
-//     </g>
-//   );
-// };
-
-
-
-
-// RBDBlock.jsx
 import React, { useEffect, useState } from 'react';
 import { KOfNBlock } from './KOfNBlock';
 
@@ -203,7 +33,8 @@ export const RBDBlock = ({
   blockData,
   width = 60,
   height = 40,
-  // Props for nested rendering
+  mission,
+
   onOpenMenu,
   setParentItem,
   onEditBlock,
@@ -225,20 +56,24 @@ export const RBDBlock = ({
 }) => {
 
   
-
+ console.log("blockData 5555",blockData)
   const [formData, setFormData] = useState({
     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
     k: blockData?.k || blockData?.data?.k || '2',
     n: blockData?.n || blockData?.data?.n || '3',
-    mtbf: blockData?.mtbf || blockData?.data?.mtbf || '1303617.9'
+    mtbf: blockData?.mtbf || blockData?.data?.mtbf || '',
+    mttr: blockData?.mttr || blockData?.data?.mttr || ''
   });
+    //  console.log("mtbf............",sormData),
 
   useEffect(() => {
     setFormData({
       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
       k: blockData?.k || blockData?.data?.k,
       n: blockData?.n || blockData?.data?.n,
-      mtbf: blockData?.mtbf || blockData?.data?.mtbf
+      mtbf: blockData?.mtbf || blockData?.data?.mtbf,
+    
+      mttr: blockData?.mttr || blockData?.data?.mttr || ''
     });
   }, [blockData]);
 
@@ -359,124 +194,124 @@ export const RBDBlock = ({
       <line x1={nestedRightRailX} y1={railTop} x2={nestedRightRailX} y2={railBottom}
         stroke="black" strokeWidth="1.5" />
 
-      {branches.map((branch, branchIdx) => {
-        const branchWireY = nestedSectionY + branchYOffsets[branchIdx];
-        const blockY = branchWireY - BH / 2;
-        const branchBlocks = branch.blocks || [];
-        const isMainBranch = branchIdx === 0;
-        const dash = isMainBranch ? undefined : '5,3';
+   {branches.map((branch, branchIdx) => {
+          const branchWireY = nestedSectionY + branchYOffsets[branchIdx];
+          const blockY = branchWireY - BH / 2;
+          const branchBlocks = branch.blocks || [];
+          const isMainBranch = branchIdx === 0;
+          const dash = isMainBranch ? undefined : '5,3';
 
-        const branchKey = branch._id ?? branch.id ?? branchIdx;
-        const leftNodeId = `nested-branch-${branchKey}-left`;
-        const rightNodeId = `nested-branch-${branchKey}-right`;
-        const midNodeId = (bIdx) => `nested-branch-${branchKey}-mid-${bIdx}`;
-        const blockRowLeftX = nestedLeftRailX + INNER_PAD;
+          const branchKey = branch._id ?? branch.id ?? branchIdx;
+          const leftNodeId = `nested-branch-${branchKey}-left`;
+          const rightNodeId = `nested-branch-${branchKey}-right`;
+          const midNodeId = (bIdx) => `nested-branch-${branchKey}-mid-${bIdx}`;
+          const blockRowLeftX = nestedLeftRailX + INNER_PAD;
 
-        return (
-          <g key={branchKey}>
-            {/* Left rail node */}
-            <circle
-              cx={nestedLeftRailX} cy={branchWireY} r={4}
-              fill={selectedNode === leftNodeId ? "#0078d4" : "black"}
-              style={{ cursor: "pointer" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenMenu(e.clientX, e.clientY, leftNodeId);
-                setParentItemId(item?.id);
-                setIdforApi?.({
-                  branchId: branch._id, branchIndex: branch.index,
-                  ItemId: id, location: leftNodeId,
-                });
-              }}
-            />
+          return (
+            <g key={branchKey}>
+              {/* Left rail node */}
+              <circle
+                cx={nestedLeftRailX} cy={branchWireY} r={4}
+                fill={selectedNode === leftNodeId ? "#0078D4" : "black"}
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenMenu(e.clientX, e.clientY, leftNodeId);
+                  setParentItemId(item?.id);
+                  setIdforApi?.({
+                    branchId: branch._id, branchIndex: branch.index,
+                    ItemId: id, location: leftNodeId,
+                  });
+                }}
+              />
 
-            {branchBlocks.length === 0 ? (
-              <line x1={nestedLeftRailX} y1={branchWireY} x2={nestedRightRailX} y2={branchWireY}
-                stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
-            ) : (
-              <>
-                <line x1={nestedLeftRailX} y1={branchWireY} x2={blockRowLeftX} y2={branchWireY}
-                  stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+              {branchBlocks.length === 0 ? (
+                <line x1={nestedLeftRailX} y1={branchWireY} x2={nestedRightRailX} y2={branchWireY}
+                  stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+              ) : (
+                <>
+                  <line x1={nestedLeftRailX} y1={branchWireY} x2={blockRowLeftX} y2={branchWireY}
+                    stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
 
-                {branchBlocks.map((block, blockIdx) => {
-                  const bx = blockRowLeftX + blockIdx * (BW + GAP);
-                  const isLast = blockIdx === branchBlocks.length - 1;
+                  {branchBlocks.map((block, blockIdx) => {
+                    const bx = blockRowLeftX + blockIdx * (BW + GAP);
+                    const isLast = blockIdx === branchBlocks.length - 1;
 
-                  return (
-                    <g key={block._id ?? block.id ?? blockIdx}>
-                      <RBDBlock
-                        id={block._id ?? block.id}
-                        type={block.type}
-                        x={bx} y={blockY} wireY={branchWireY}
-                        onEdit={onEditBlock || onEdit}
-                        onDelete={onDeleteBlock || onDelete}
-                        setIdforApi={setIdforApi}
-                        blockData={block}
-                        width={BW} height={BH}
-                        onOpenMenu={onOpenMenu}
-                        setParentItem={setParentItem}
-                        setParentItemId={setParentItemId}
-                        onEditBlock={onEditBlock}
-                        onDeleteBlock={onDeleteBlock}
-                        selectedNode={selectedNode}
-                        isNested={true}
-                        item={item}
-                        setTargetBranchId={setTargetBranchId}
-                      />
+                    return (
+                      <g key={block._id ?? block.id ?? blockIdx}>
+                        <RBDBlock
+                          id={block._id ?? block.id}
+                          type={block.type}
+                          x={bx} y={blockY} wireY={branchWireY}
+                          onEdit={onEditBlock || onEdit}
+                          onDelete={onDeleteBlock || onDelete}
+                          setIdforApi={setIdforApi}
+                          blockData={block}
+                          width={BW} height={BH}
+                          onOpenMenu={onOpenMenu}
+                          setParentItem={setParentItem}
+                          setParentItemId={setParentItemId}
+                          onEditBlock={onEditBlock}
+                          onDeleteBlock={onDeleteBlock}
+                          selectedNode={selectedNode}
+                          isNested={true}
+                          item={item}
+                          setTargetBranchId={setTargetBranchId}
+                        />
 
-                      {!isLast && (
-                        <>
-                          <line x1={bx + BW} y1={branchWireY}
-                            x2={bx + BW + GAP} y2={branchWireY}
-                            stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
-                          <circle
-                            cx={bx + BW + GAP / 2} cy={branchWireY} r={4}
-                            fill={selectedNode === midNodeId(blockIdx) ? "#0078d4" : "black"}
-                            style={{ cursor: "pointer" }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onOpenMenu(e.clientX, e.clientY, midNodeId(blockIdx));
-                              setParentItemId(item?.id);
-                              setIdforApi?.({
-                                branchId: branch._id, branchIndex: branch.index,
-                                ItemId: item?.id, location: midNodeId(blockIdx),
-                              });
-                            }}
-                          />
-                        </>
-                      )}
+                        {!isLast && (
+                          <>
+                            <line x1={bx + BW} y1={branchWireY}
+                              x2={bx + BW + GAP} y2={branchWireY}
+                              stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+                            <circle
+                              cx={bx + BW + GAP / 2} cy={branchWireY} r={4}
+                              fill={selectedNode === midNodeId(blockIdx) ? "#0078D4" : "black"}
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenMenu(e.clientX, e.clientY, midNodeId(blockIdx));
+                                setParentItemId(item?.id);
+                                setIdforApi?.({
+                                  branchId: branch._id, branchIndex: branch.index,
+                                  ItemId: item?.id, location: midNodeId(blockIdx),
+                                });
+                              }}
+                            />
+                          </>
+                        )}
 
-                      {isLast && (
-                        <line x1={bx + BW} y1={branchWireY}
-                          x2={nestedRightRailX} y2={branchWireY}
-                          stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
-                      )}
-                    </g>
-                  );
-                })}
-              </>
-            )}
+                        {isLast && (
+                          <line x1={bx + BW} y1={branchWireY}
+                            x2={nestedRightRailX} y2={branchWireY}
+                            stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+                        )}
+                      </g>
+                    );
+                  })}
+                </>
+              )}
 
-            {/* Right rail node */}
-            <circle
-              cx={nestedRightRailX} cy={branchWireY} r={4}
-              fill={selectedNode === rightNodeId ? "#0078d4" : "black"}
-              style={{ cursor: "pointer" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
-                setParentItemId(item?.id);
-                setTargetBranchId(branch?._id);
-                setIdforApi({
-                  branchId: branch?._id, branchIndex: branch?.index,
-                  ItemId: item?.id, location: rightNodeId,
-                  nested: true, targetId: branch?.blocks[0]?._id,
-                });
-              }}
-            />
-          </g>
-        );
-      })}
+              {/* Right rail node */}
+              <circle
+                cx={nestedRightRailX} cy={branchWireY} r={4}
+                fill={selectedNode === rightNodeId ? "#0078D4" : "black"}
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
+                  setParentItemId(item?.id);
+                  setTargetBranchId(branch?._id);
+                  setIdforApi({
+                    branchId: branch?._id, branchIndex: branch?.index,
+                    ItemId: item?.id, location: rightNodeId,
+                    nested: true, targetId: branch?.blocks[0]?._id,
+                  });
+                }}
+              />
+            </g>
+          );
+        })}
     </g>
   );
 }
@@ -496,17 +331,71 @@ export const RBDBlock = ({
 
     const getBlockContent = () => {
       const t = blockData?.type || blockData?.elementType;
-      const fr = blockData?.fr || blockData?.data?.fr;
+      // const fr = blockData?.fr || blockData?.data?.fr;
+      const mttr = blockData?.mttr || blockData?.data?.mttr;
       const mtbf = blockData?.mtbf || blockData?.data?.mtbf;
       const k = blockData?.k || blockData?.data?.k;
       const n = blockData?.n || blockData?.data?.n;
+      console.log("mtbf ....2333",mtbf)
+      const missionTime = mission;
+const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+  const MTBF = Number(mtbf || 0);
+  const MTTR = Number(mttr || 0);
+  const t = Number(missionTime || 0);
 
+  // Default values
+  let unavailability = '';
+  let reliability = "";
+     console.log("MTBF..............",MTBF)
+     console.log("MTTR.....",MTTR)
+     console.log("t",t)
+  // ✅ Unavailability
+  
+    const u = MTTR / (MTBF + MTTR);
+    console.log("uuuuuu....123",u)
+     unavailability = Number(u.toFixed(4));
+   console.log("uuuuuu..final..222@@",unavailability)
+
+
+ 
+    const r = Math.exp(-t / MTBF);
+    console.log("rrrrrrrrrrr...",r)
+
+    reliability =
+      r < 1e-4
+        ? r.toExponential(2)
+        : r.toFixed(2);
+
+    console.log("rrrrrrrrrrr..final.",reliability)
+  
+
+  return {
+    reliability,
+    unavailability
+  };
+};
+
+   
       switch (t) {
-        case 'Regular':
-        case 'REGULAR':
-          if (fr) return (typeof fr === 'number' ? fr.toFixed(6) : fr);
-          if (mtbf) return String(mtbf);
-          return 'Regular';
+case 'Regular':
+case 'REGULAR': {
+  const { reliability, unavailability } = calculateMetrics({
+    mtbf,
+    mttr,
+    missionTime
+  });
+
+  return (
+    <>
+      <tspan x={x + BLOCK_W / 2} dy="-4">
+        R: {reliability}
+      </tspan>
+      <tspan x={x + BLOCK_W / 2} dy="10">
+        U: {unavailability}
+      </tspan>
+    </>
+  );
+}
         case 'K-out-of-N':
           return `${k || 2}/${n || 3}`;
         case 'SubRBD':
