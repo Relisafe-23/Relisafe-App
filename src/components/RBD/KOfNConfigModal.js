@@ -529,7 +529,7 @@ const unAvailabilityValueNonIdentical = (kVal, nVal, components, missionTime) =>
           lambda: lambdaValue,
           mu: muValue,
           mttr: mttrValue,
-          productId: selectedOption.productId,
+        productId: selectedOption.productId && selectedOption.productId !== "" ? selectedOption.productId : null, // ✅ Fix
           productName: selectedOption.productName,
           selectedOption: selectedOption,
           isManual: false
@@ -650,7 +650,7 @@ const handleSubmit = () => {
   // Prepare the data for API
   const newKOfNData = {
     projectId: projectId,
-        productId: values.productId,
+    productId: values.productId && values.productId !== "" ? values.productId : null, // ✅ Fix: Convert empty string to null
     rbdId: rbdId,
     k: parseInt(k),
     n: parseInt(n),
@@ -676,7 +676,7 @@ const handleSubmit = () => {
     console.log("nonIdenticalComponents.....1...",nonIdenticalComponents);
     console.log("values.productId.....1...",currentBlock);
     newKOfNData.components = nonIdenticalComponents.map(comp => ({
-      productId: comp.productId, 
+      productId: comp.productId && comp.productId !== "" ? comp.productId : null, // ✅ Fix: Convert empty string to null
        lambda: comp.lambda || 0,
       mu: comp.mu || 0,
       mttr: comp.mttr || '',
