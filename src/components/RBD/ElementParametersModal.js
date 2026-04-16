@@ -3,12 +3,12 @@ import { useParams } from 'react-router-dom';
 import Api from '../../Api';
 import CreatableSelect from 'react-select/creatable';
 
-const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock, getBlock }) => {
+const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock, getBlock, targetId }) => {
 
   console.log('currentBlock - :', currentBlock)
   console.log('parallelFoundBlock - :', parallelFoundBlock)
   console.log(elementModal, 'elementModal')
-  // console.log(targetId, 'targetId inside model')
+  console.log(targetId, 'targetId inside model')
 
 
   let modelBlock = null;
@@ -211,7 +211,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     const companyId = localStorage.getItem("companyId");
 
     console.log('=== BEFORE API CALL ===');
-    console.log('targetId prop value:', elementModal?.idforApi?.targetId);
+    console.log('targetId prop value:', elementModal?.nodeIndex);
 
     Api.post("/api/v1/elementParametersRBD/create", {
       indexCount: values.indexCount,
@@ -239,7 +239,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
       companyId: companyId,
       idforApi: elementModal?.idforApi,
       datata: 'adfuebcweb',
-      targetId: elementModal?.idforApi?.targetId,
+      targetId: elementModal?.idforApi?.targetId || elementModal?.nodeIndex,
 
     }).then((res) => {
       getBlock();
