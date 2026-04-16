@@ -441,6 +441,10 @@ case 'REGULAR': {
           </text>
         )} */}
 
+         <circle cx={x} cy={y} 
+          fill="none" stroke="#0078d4" strokeWidth="2" strokeDasharray="4 2" />
+     
+
         <rect
           x={x}
           y={y}
