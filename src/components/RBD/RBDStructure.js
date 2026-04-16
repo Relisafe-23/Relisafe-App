@@ -231,10 +231,11 @@ const branchCenterY = (branches, idx, secTopY) => {
 };
 
 // ─── InsertionNode (dot with + cross) ─────────────────────────────────────────
-const InsertNode = ({ cx, cy, nodeId, selectedNode, onOpenMenu, r = C.NODE_R }) => {
+const InsertNode = ({ cx, cy, nodeId, selectedNode, onOpenMenu, r = C.NODE_R, id }) => {
   const isSel = selectedNode === nodeId;
   // console.log(isSel, ' 1 Sel')
-  // console.log(nodeId, ' nodeId')
+
+
 
   return (
     <g>
@@ -246,7 +247,11 @@ const InsertNode = ({ cx, cy, nodeId, selectedNode, onOpenMenu, r = C.NODE_R }) 
         cx={cx} cy={cy} r={r}
         fill={isSel ? '#0078d4' : 'black'}
         style={{ cursor: 'pointer' }}
-        onClick={(e) => { e.stopPropagation(); onOpenMenu(e.clientX, e.clientY, nodeId); }}
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          onOpenMenu(e.clientX, e.clientY, id); 
+          console.log('hello id ', id)
+        }}
       />
       <line x1={cx - 3} y1={cy} x2={cx + 3} y2={cy} stroke="white" strokeWidth="1.5" />
       <line x1={cx} y1={cy - 3} x2={cx} y2={cy + 3} stroke="white" strokeWidth="1.5" />
@@ -346,6 +351,7 @@ export const BiDirectionalSymbol = ({
       items.push({
         type: 'node',
         id: `node-${block.id}`,
+        RelateId: `${block.id}`,
         x: curX,
         y: C.CENTER_Y,
         nodeIndex: nodeIdx++
@@ -589,6 +595,7 @@ export const BiDirectionalSymbol = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             onOpenMenu(e.clientX, e.clientY, branch?._id);
+                            console.log('aniel arun', block._id)
                             setIdforApi({
                               branchId: branch?._id,
                               branchIndex: branch?.index,
@@ -787,8 +794,10 @@ export const BiDirectionalSymbol = ({
         if (item.type === 'node') {
           return (
             <>
+              {console.log(item,'item')}
               <InsertNode
                 key={item.id}
+                id = {item.RelateId}
                 cx={item.x} cy={item.y}
                 nodeId={item.nodeIndex}
                 selectedNode={selectedNode}
@@ -1041,6 +1050,7 @@ export default function RBDButton() {
       return;
     }
     setMenu({ x, y, index });
+    console.log(index,'index from open menu')
     setTargetId(index)
     setSelectedNode(index);
     setClickedNodeInfo({ index, x, y });
