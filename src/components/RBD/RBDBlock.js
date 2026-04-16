@@ -56,7 +56,7 @@ export const RBDBlock = ({
 }) => {
 
   
-
+ console.log("blockData 5555",blockData)
   const [formData, setFormData] = useState({
     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
     k: blockData?.k || blockData?.data?.k || '2',
@@ -64,13 +64,15 @@ export const RBDBlock = ({
     mtbf: blockData?.mtbf || blockData?.data?.mtbf || '',
     mttr: blockData?.mttr || blockData?.data?.mttr || ''
   });
-  console.log("mission123...", mission)
+    //  console.log("mtbf............",sormData),
+
   useEffect(() => {
     setFormData({
       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
       k: blockData?.k || blockData?.data?.k,
       n: blockData?.n || blockData?.data?.n,
       mtbf: blockData?.mtbf || blockData?.data?.mtbf,
+    
       mttr: blockData?.mttr || blockData?.data?.mttr || ''
     });
   }, [blockData]);
@@ -334,7 +336,7 @@ export const RBDBlock = ({
       const mtbf = blockData?.mtbf || blockData?.data?.mtbf;
       const k = blockData?.k || blockData?.data?.k;
       const n = blockData?.n || blockData?.data?.n;
-
+      console.log("mtbf ....2333",mtbf)
       const missionTime = mission;
 const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
   const MTBF = Number(mtbf || 0);
@@ -342,24 +344,30 @@ const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
   const t = Number(missionTime || 0);
 
   // Default values
-  let unavailability = 0;
-  let reliability = "0";
-
+  let unavailability = '';
+  let reliability = "";
+     console.log("MTBF..............",MTBF)
+     console.log("MTTR.....",MTTR)
+     console.log("t",t)
   // ✅ Unavailability
-  if (!(MTBF === 0 && MTTR === 0)) {
+  
     const u = MTTR / (MTBF + MTTR);
-    unavailability = Number(u.toFixed(4));
-  }
+    console.log("uuuuuu....123",u)
+     unavailability = Number(u.toFixed(4));
+   console.log("uuuuuu..final..222@@",unavailability)
 
-  // ✅ Reliability
-  if (MTBF > 0 && t >= 0) {
+
+ 
     const r = Math.exp(-t / MTBF);
+    console.log("rrrrrrrrrrr...",r)
 
     reliability =
       r < 1e-4
         ? r.toExponential(2)
         : r.toFixed(2);
-  }
+
+    console.log("rrrrrrrrrrr..final.",reliability)
+  
 
   return {
     reliability,

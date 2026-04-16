@@ -1761,12 +1761,7 @@ useEffect(() => {
             <FiSettings size={18} /> RBD Configuration
           </button> */}
         </div>
-        {/* <h1>Hello</h1>
-        <div style={{ height: '500px', width: '1000px' }}>
-          <ReactFlowD />
-        </div> */}
-
-
+     
         {showSymbol && (
           <div style={{ width: '100%', overflowX: 'auto' }}>
             <BiDirectionalSymbol

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams,useLocation } from 'react-router-dom';
 import Api from '../../Api';
 import CreatableSelect from 'react-select/creatable';
 
@@ -12,7 +12,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   console.log(modelBlock, '-final modelData')
 
   const mainId = modelBlock?.id || modelBlock?._id
-
+ const location = useLocation();
   const [values, setValues] = useState({
     rbdId: rbdId,
     relDes: modelBlock?.relDes || '',
@@ -45,7 +45,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     remark: modelBlock?.remark || '',
     fmDescription: modelBlock?.fmDescription || ''
   });
-
+  const missionTime = location.state?.missionTime;
+ const [mission,setMission] = useState('');
   console.log('mtbf value is : ', values?.mct)
   const [blink, setBlink] = useState(false);
   const { id } = useParams();
@@ -60,7 +61,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   const productName = values?.productName || "";
   const [alpha, setAlpha] = useState([]);
 
-
+console.log("MissionTime.................12",missionTime)
   // useEffect(() => {
   //   getElement()
   // }, [projectId])
@@ -204,7 +205,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   if (!isOpen) return null;
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("##############################@@@@@@@@@")
+
     try {
       const companyId = localStorage.getItem("companyId");
 
@@ -212,7 +213,43 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
       if (!companyId || !rbdId || !projectId) {
         throw new Error("Missing required IDs");
       }
-      console.log("#########%%%%%%%%%%%@@@@@@@@@")
+        //  const missionTime = mission;
+  const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+  const MTBF = Number(mtbf || 0);
+  const MTTR = Number(mttr || 0);
+  const t = Number(missionTime || 0);
+
+console.log("MissionTime................333",missionTime)
+  let unavailability = 0;
+  let reliability = "0";
+
+  // ✅ Unavailability
+  if (!(MTBF === 0 && MTTR === 0)) {
+    const u = MTTR / (MTBF + MTTR);
+    unavailability = Number(u.toFixed(4));
+  }
+
+  // ✅ Reliability
+  if (MTBF > 0 && t >= 0) {
+    const r = Math.exp(-t / MTBF);
+
+    reliability =
+      r < 1e-4
+        ? r.toExponential(2)
+        : r.toFixed(2);
+  }
+
+  return {
+    reliability,
+    unavailability
+  };
+};
+  const { reliability, unavailability } = calculateMetrics({
+      mtbf: values.mtbf,
+      mttr: values.mttr,
+      missionTime
+    });
+    console.log("reliability,unavailability",reliability,unavailability)
       const payload = {
         indexCount: values.indexCount,
         partNumber: values.partNumber,
@@ -239,22 +276,22 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
         projectId: projectId,
         companyId: companyId,
         idforApi: elementModal?.idforApi,
+        reliability: reliability,
+        unavailability: unavailability
       };
       console.log("Payload", payload)
       const response = await Api.post("/api/v1/elementParametersRBD/create", payload);
       console.log("Success:", response);
-      console.log("#######!!!!!!!!!!!!%%%%%%%%%%@@@@@@@@@")
       await getBlock();
-      onSubmit(values);
 
+      onSubmit(values);
+      onClose();
     } catch (error) {
       console.error("Submission failed:", error);
-      // Show error message to user
-      return; // Don't close on error
+    
     }
 
-    // Always close after successful execution
-    onClose();
+  
   };
   console.log("values.mttr", values.mttr)
   const handleUpdate = (e) => {
