@@ -29,6 +29,8 @@ export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode =
     relDes: currentBlock?.relDes || '',
     time: currentBlock?.time || " ",
     elementType: currentBlock?.elementType || 'K-out-of-N',
+    reliability: currentBlock?.systemReliability || 0,
+    unavailability: currentBlock?.systemUnavailability || 0,
     partNumber: currentBlock?.partNumber || '',
     fr: currentBlock?.fr || '',
     color: currentBlock?.color || '#ffffff',
@@ -655,14 +657,14 @@ const handleSubmit = () => {
     formula: formula,
     lambda: parseFloat(lambda) || 0,
     mu: mu || 0,
-    reliability: systemReliability,
-    unavailability: systemUnavailability,
     type: 'K-out-of-N',
     elementType: 'K-out-of-N',
     kOfNType: selectedLabel,
     name: values.productName || `${selectedLabel} K-out-of-N Block`,
     mttr: values.mttr,
     indexCount: values.indexCount,
+        reliability: systemReliability,
+    unavailability: systemUnavailability,
     partNumber: values.partNumber,
     productName: values.productName,
     color: values.color,
@@ -680,8 +682,8 @@ const handleSubmit = () => {
       mttr: comp.mttr || '',
       productName: comp.productName,
       isManual: comp.isManual,
-      reliability: getReliability(comp.lambda, missionTime),
-      unavailability: unAvailabilityFn(comp.lambda, comp.mu || 0)
+      reliability: systemReliability,
+      unavailability: systemUnavailability
     }));
   }
 
@@ -939,7 +941,7 @@ const handleSubmit = () => {
               </div>
             )}
 
-            {selectedLabel !== "Non-Identical" && (
+            {/* {selectedLabel !== "Non-Identical" && (
               <div>
                 <label style={{
                   display: "block",
@@ -964,7 +966,7 @@ const handleSubmit = () => {
                   }}
                 />
               </div>
-            )}
+            )} */}
 
           </div>
 
