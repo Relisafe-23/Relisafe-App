@@ -299,7 +299,7 @@ const ElementParametersModal = ({
         projectId: projectId,
         companyId: companyId,
         idforApi: elementModal?.idforApi,
-        targetId: elementModel?.idforApi?.targetId || elementModel?.nodeIndex,
+        targetId: elementModal?.idforApi?.targetId || elementModal?.nodeIndex,
         reliability: reliability,
         unavailability: unavailability
       };
