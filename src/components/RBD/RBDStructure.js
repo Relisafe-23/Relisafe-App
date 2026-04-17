@@ -258,7 +258,6 @@ const InsertNode = ({
   id,
 }) => {
   const isSel = selectedNode === nodeId;
-  // console.log(isSel, ' 1 Sel')
 
   return (
     <g>
@@ -282,7 +281,6 @@ const InsertNode = ({
         onClick={(e) => {
           e.stopPropagation();
           onOpenMenu(e.clientX, e.clientY, id);
-          console.log("hello id ", id);
         }}
       />
       <line
@@ -444,8 +442,6 @@ export const BiDirectionalSymbol = ({
   };
   // ── wire segments ───────────────────────────────────────────────────────────
   const buildWireLines = (items, rightBoxX) => {
-    // console.log(items,'items')
-    // console.log(rightBoxX,'rightBoxX')
 
     const lines = [];
     if (items.length === 0) {
@@ -491,7 +487,6 @@ export const BiDirectionalSymbol = ({
     return lines;
   };
   const renderParallelSection = (item) => {
-    // console.log(item, 'item')
 
     const { x, rightX, branches, id, blockData, width: dynW, secTopY } = item;
     if (!branches || branches.length === 0) return null;
@@ -674,7 +669,6 @@ export const BiDirectionalSymbol = ({
 
                   {branchBlocks.map((block, bIdx) => {
                     const bx = blockRowLeftX + bIdx * (C.BLOCK_W + C.BLOCK_GAP);
-                    // console.log(branchBlocks,'branchBlocks')
                     const isLast = bIdx === branchBlocks.length - 1;
 
                     return (
@@ -703,7 +697,6 @@ export const BiDirectionalSymbol = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             onOpenMenu(e.clientX, e.clientY, branch?._id);
-                            console.log("aniel arun", block._id);
                             setIdforApi({
                               branchId: branch?._id,
                               branchIndex: branch?.index,
@@ -711,7 +704,6 @@ export const BiDirectionalSymbol = ({
                               location: `branch-${branch?.index}-left`,
                             });
 
-                            // console.log(branch?._id, branch?.index, item?.id, `branch-${branch?.index}-left`)
                           }}
                         />
                         <RBDBlock
@@ -800,9 +792,7 @@ export const BiDirectionalSymbol = ({
                               // console.log(branch?.index, '2')
                               // console.log(item?.id, '3')
                               // console.log(`branch-${branch?.index}-right`, '4')
-                              console.log(branch?._id, "branch?.index");
                               setParentItemId(item?.id);
-                              console.log(item?.id, "item?.id");
                               setIdforApi({
                                 branchId: branch?._id,
                                 branchIndex: branch?.index,
@@ -866,7 +856,6 @@ export const BiDirectionalSymbol = ({
       {/* main wire */}
       {wireLines.map((seg, i) => (
         <>
-          {/* {console.log(seg, '<=')} */}
           <line
             key={`w${i}`}
             x1={seg.x1}
@@ -930,7 +919,6 @@ export const BiDirectionalSymbol = ({
         if (item.type === "node") {
           return (
             <>
-              {console.log(item, "item")}
               <InsertNode
                 key={item.id}
                 id={item.RelateId}
@@ -1206,11 +1194,9 @@ export default function RBDButton() {
   const getBlock = () => {
     Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
       .then((res) => {
-        console.log("Res....", res.data)
         const data = res.data.data;
         setShowSymbol(data.length > 0);
         setBlocks(data);
-        console.log("block", blocks)
       })
       .catch((err) => console.log(err, "error"));
   };
@@ -1474,6 +1460,7 @@ export default function RBDButton() {
           productName: selectedRbd.productName || "",
           mtbf: selectedRbd.mtbf || null,
           fr: selectedRbd.fr || null,
+          targetId : targetId,
         };
 
         // Call API to create the block
@@ -2285,6 +2272,7 @@ export default function RBDButton() {
             {rbdListModal.open && (
               <SubRBDModal
                 show={rbdListModal.open}
+                targetId={targetId}
                 onHide={() => setRbdListModal({ ...rbdListModal, open: false })}
                 rbdData={rbdListModal.selectedRbd}
                 mode={rbdListModal.mode}
@@ -2299,9 +2287,10 @@ export default function RBDButton() {
               <>
                 <CaseSelectionModal
                   isOpen={kOfNModal.open}
+                  targetId={targetId}
                   handleClose={handleClose}
                   onSelect={(item) => {
-                    console.log(item);
+                    // console.log(item);
                     handleClose();
                   }}
                 />
@@ -2532,7 +2521,7 @@ export default function RBDButton() {
             isOpen={kOfNModal.open}
             handleClose={handleClose}
             onSelect={(item) => {
-              console.log(item);
+              // console.log(item);
               handleClose();
             }}
           />

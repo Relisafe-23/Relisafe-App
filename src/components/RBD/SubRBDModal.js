@@ -6,6 +6,7 @@ const SubRBDModal = ({
   show, 
   onHide, 
   rbdData,
+  targetId,
   mode = 'add',
   blockId = null,
   nodeIndex = null,
@@ -14,7 +15,7 @@ const SubRBDModal = ({
 }) => {
   const [selectedRbd, setSelectedRbd] = React.useState(rbdData || null);
 
-
+console.log(targetId,'targetId from Sub rbd')
 
   
 
