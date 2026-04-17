@@ -1038,6 +1038,14 @@ const getBlock = () => {
     .catch(err => console.log(err, 'error'));
 };
 
+    const handleKOfNSelect = (data) => {
+  console.log("K-of-N created successfully:", data);
+  // Refresh the blocks
+  getBlock();
+  // Close any open modals
+  setKOfNModal({ open: false, blockId: null, initialData: null, mode: 'add', nodeIndex: null });
+};
+
   // ── parallel branch creation ───────────────────────────────────────────────
   const createParallelBranch = (startNode, endNode) => {
     const parseNode = (n) => typeof n === 'string' && n.startsWith('branch-')
@@ -1582,7 +1590,7 @@ useEffect(() => {
     }
   }
 
-  // ── element modal submit ───────────────────────────────────────────────────
+  // ── element modal submit ───────────────────────
   const handleModalSubmit = (formData) => {
     const ni = elementModal.nodeIndex;
 
@@ -1856,14 +1864,7 @@ useEffect(() => {
 
             {/* RBD List Modal for SubRBD */}
             {/* RBD List Modal for SubRBD */}
-            {/* {rbdListModal.open && (
-              <SubRBDModal
-                show={rbdListModal.open}
-                onHide={() => setRbdListModal({ ...rbdListModal, open: false })}
-                rbdData={rbdListModal.selectedRbd}
-              />
-            )} */}
-{rbdListModal.open && (
+      {rbdListModal.open && (
   <SubRBDModal
     show={rbdListModal.open}
     onHide={() => setRbdListModal({ ...rbdListModal, open: false })}
@@ -2138,6 +2139,104 @@ useEffect(() => {
           initialConfig={rbdConfig}
         />
       </div>
+        
+      {menu && (
+        <RBDContextMenu x={menu.x} y={menu.y} onSelect={handleSelect}
+          onClose={() => { setMenu(null); setParentItem(null); }} />
+      )}
+
+      {blockMenu.open && (
+        <BlockContextMenu
+          x={blockMenu.x} y={blockMenu.y}
+          setParallelFoundBlock={setParallelFoundBlock}
+          onSelect={handleBlockMenuSelect}
+          onClose={() => { setBlockMenu({ open: false, blockId: null, x: 0, y: 0 }); setParentItem(null); }}
+        />
+      )}
+
+      {elementModal.open && (
+        <ElementParametersModal
+          key={elementModal.blockId}
+          isOpen
+          elementModal={elementModal}
+          onClose={() => {
+            setElementModal({ open: false, mode: 'add', blockId: null, blockType: '', nodeIndex: null, idforApi: null, });
+            setParentItem(null);
+          }}
+          setLoadChange={setLoadChange}
+          onSubmit={handleModalSubmit}
+          onOpenSwitchConfig={(data) => setSwitchModal({ open: true, blockId: elementModal.blockId, initialData: data })}
+          rbdId={rbdId}
+          projectId={id}
+          parallelFoundBlock={parallelFoundBlock}
+          parentItemId={parentItemId}
+          getBlock={getBlock}
+          currentBlock={blocks.find(b => b.id === elementModal.blockId)}
+        />
+      )}
+  {kOfNModal.open && (
+        <CaseSelectionModal
+          isOpen={kOfNModal.open}
+          handleClose={() => {
+            setKOfNModal({ open: false, blockId: null, initialData: null, mode: 'add', nodeIndex: null });
+          }}
+          onSelect={handleKOfNSelect}
+        />
+      )}
+      {showParallelModal && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000
+        }}>
+          <div style={{
+            backgroundColor: '#f0f0f0', padding: 20, borderRadius: 8,
+            minWidth: 350, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #999'
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: 20, fontSize: 14, fontWeight: 'normal', color: '#333' }}>
+              Add Parallel Section
+            </h3>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', marginBottom: 5, fontSize: 13, color: '#333' }}>Number of branches:</label>
+              <input type="number" min="2" max="20" value={branchCount}
+                onChange={(e) => setBranchCount(parseInt(e.target.value) || 2)}
+                style={{ width: '100%', padding: 6, border: '1px solid #7f9db9', borderRadius: 3, fontSize: 13, backgroundColor: 'white' }}
+                autoFocus
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              {[['OK', handleParallelModalSubmit],
+              ['Cancel', () => { setShowParallelModal(false); setBranchCount(3); setPendingAction(null); }]
+              ].map(([label, fn]) => (
+                <button key={label} onClick={fn}
+                  style={{
+                    padding: '4px 20px', backgroundColor: '#e1e1e1', color: '#333',
+                    border: '1px solid #999', borderRadius: 3, cursor: 'pointer', fontSize: 13, minWidth: 70
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#d1d1d1')}
+                  onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#e1e1e1')}
+                >{label}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <SwitchConfigurationModal
+        isOpen={switchModal.open}
+        onClose={() => setSwitchModal({ open: false, blockId: null, initialData: null })}
+        onSubmit={(data) => {
+          setBlocks(prev => prev.map(b => b.id === elementModal.blockId ? { ...b, data: { ...b.data, switchData: data } } : b));
+          setSwitchModal({ open: false, blockId: null, initialData: null });
+        }}
+        currentSwitchData={switchModal.initialData}
+      />
+
+      <EditRBDConfigurationModal
+        isOpen={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setParentItem(null); }}
+        onSave={setRbdConfig}
+        initialConfig={rbdConfig}
+      />
     </div>
   );
 }
