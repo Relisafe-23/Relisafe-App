@@ -55,8 +55,7 @@ export const RBDBlock = ({
   setTargetBranchId,
 }) => {
 
-  
- console.log("blockData 5555",blockData)
+
   const [formData, setFormData] = useState({
     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
     k: blockData?.k || blockData?.data?.k || '2',
@@ -64,7 +63,6 @@ export const RBDBlock = ({
     mtbf: blockData?.mtbf || blockData?.data?.mtbf || '',
     mttr: blockData?.mttr || blockData?.data?.mttr || ''
   });
-    //  console.log("mtbf............",sormData),
 
   useEffect(() => {
     setFormData({
@@ -72,7 +70,7 @@ export const RBDBlock = ({
       k: blockData?.k || blockData?.data?.k,
       n: blockData?.n || blockData?.data?.n,
       mtbf: blockData?.mtbf || blockData?.data?.mtbf,
-    
+
       mttr: blockData?.mttr || blockData?.data?.mttr || ''
     });
   }, [blockData]);
@@ -112,209 +110,209 @@ export const RBDBlock = ({
   // Nested Parallel Section Renderer
   // ──────────────────────────────────────────────────────────────────────────
   function renderNestedParallelSection() {
-  const branches = blockData.branches || [];
+    const branches = blockData.branches || [];
 
-  const BW = 60, BH = 40, GAP = 12;
-  const RAIL_PAD = 20, INNER_PAD = 14;
-  const CONTAINER_PADDING = 20, BRANCH_SPACING = 20;
+    const BW = 60, BH = 40, GAP = 12;
+    const RAIL_PAD = 20, INNER_PAD = 14;
+    const CONTAINER_PADDING = 20, BRANCH_SPACING = 20;
 
-  // ── Same recursive helpers as BiDirectionalSymbol ──────────────────────
-  const getBranchHeight = (branch) => {
-    const branchBlocks = branch.blocks || [];
-    let maxNestedH = 0;
-    branchBlocks.forEach(block => {
-      if (
-        (block.type === 'Parallel Section' || block.elementType === 'Parallel Section') &&
-        block.branches?.length > 0
-      ) {
-        const nestedH = block.branches.reduce((sum, nb) => {
-          return sum + getBranchHeight(nb) + BRANCH_SPACING;
-        }, 0) + BH + CONTAINER_PADDING * 2;
-        maxNestedH = Math.max(maxNestedH, nestedH);
-      }
+    // ── Same recursive helpers as BiDirectionalSymbol ──────────────────────
+    const getBranchHeight = (branch) => {
+      const branchBlocks = branch.blocks || [];
+      let maxNestedH = 0;
+      branchBlocks.forEach(block => {
+        if (
+          (block.type === 'Parallel Section' || block.elementType === 'Parallel Section') &&
+          block.branches?.length > 0
+        ) {
+          const nestedH = block.branches.reduce((sum, nb) => {
+            return sum + getBranchHeight(nb) + BRANCH_SPACING;
+          }, 0) + BH + CONTAINER_PADDING * 2;
+          maxNestedH = Math.max(maxNestedH, nestedH);
+        }
+      });
+      return maxNestedH > 0 ? maxNestedH : BH + 40;
+    };
+
+    const getBranchWidth = (branch) => {
+      const branchBlocks = branch.blocks || [];
+      let totalW = 0;
+      branchBlocks.forEach((block, idx) => {
+        if (
+          (block.type === 'Parallel Section' || block.elementType === 'Parallel Section') &&
+          block.branches?.length > 0
+        ) {
+          const nestedMaxBlocks = Math.max(...block.branches.map(b => (b.blocks || []).length));
+          const nestedInnerW = INNER_PAD + nestedMaxBlocks * BW + (nestedMaxBlocks - 1) * GAP + INNER_PAD;
+          const nestedW = RAIL_PAD * 2 + nestedInnerW + CONTAINER_PADDING * 2;
+          totalW += nestedW + (idx > 0 ? GAP : 0);
+        } else {
+          totalW += BW + (idx > 0 ? GAP : 0);
+        }
+      });
+      return Math.max(totalW, BW);
+    };
+
+    // ── Compute Y offsets per branch (same formula as BiDirectionalSymbol) ──
+    const branchHeights = branches.map(b => getBranchHeight(b));
+    const branchYOffsets = [];
+    let runningY = CONTAINER_PADDING + BH / 2;
+    branchHeights.forEach(h => {
+      branchYOffsets.push(runningY + h / 2);
+      runningY += h + BRANCH_SPACING;
     });
-    return maxNestedH > 0 ? maxNestedH : BH + 40;
-  };
 
-  const getBranchWidth = (branch) => {
-    const branchBlocks = branch.blocks || [];
-    let totalW = 0;
-    branchBlocks.forEach((block, idx) => {
-      if (
-        (block.type === 'Parallel Section' || block.elementType === 'Parallel Section') &&
-        block.branches?.length > 0
-      ) {
-        const nestedMaxBlocks = Math.max(...block.branches.map(b => (b.blocks || []).length));
-        const nestedInnerW = INNER_PAD + nestedMaxBlocks * BW + (nestedMaxBlocks - 1) * GAP + INNER_PAD;
-        const nestedW = RAIL_PAD * 2 + nestedInnerW + CONTAINER_PADDING * 2;
-        totalW += nestedW + (idx > 0 ? GAP : 0);
-      } else {
-        totalW += BW + (idx > 0 ? GAP : 0);
-      }
-    });
-    return Math.max(totalW, BW);
-  };
+    const containerH = runningY + BH / 2 + CONTAINER_PADDING;
 
-  // ── Compute Y offsets per branch (same formula as BiDirectionalSymbol) ──
-  const branchHeights = branches.map(b => getBranchHeight(b));
-  const branchYOffsets = [];
-  let runningY = CONTAINER_PADDING + BH / 2;
-  branchHeights.forEach(h => {
-    branchYOffsets.push(runningY + h / 2);
-    runningY += h + BRANCH_SPACING;
-  });
+    // ── Container width ──────────────────────────────────────────────────────
+    const maxBranchW = Math.max(...branches.map(b => getBranchWidth(b)));
+    const innerW = INNER_PAD + maxBranchW + INNER_PAD;
+    const containerW = Math.max(BW * 3, RAIL_PAD * 2 + innerW + CONTAINER_PADDING * 2);
 
-  const containerH = runningY + BH / 2 + CONTAINER_PADDING;
+    // ── Position: center on wireY ────────────────────────────────────────────
+    const nestedSectionX = x - CONTAINER_PADDING;
+    const nestedSectionY = wireY - containerH / 2;
 
-  // ── Container width ──────────────────────────────────────────────────────
-  const maxBranchW = Math.max(...branches.map(b => getBranchWidth(b)));
-  const innerW = INNER_PAD + maxBranchW + INNER_PAD;
-  const containerW = Math.max(BW * 3, RAIL_PAD * 2 + innerW + CONTAINER_PADDING * 2);
+    const nestedLeftRailX = nestedSectionX + RAIL_PAD + CONTAINER_PADDING;
+    const nestedRightRailX = nestedSectionX + containerW - RAIL_PAD - CONTAINER_PADDING;
 
-  // ── Position: center on wireY ────────────────────────────────────────────
-  const nestedSectionX = x - CONTAINER_PADDING;
-  const nestedSectionY = wireY - containerH / 2;
+    const railTop = nestedSectionY + branchYOffsets[0];
+    const railBottom = nestedSectionY + branchYOffsets[branches.length - 1];
 
-  const nestedLeftRailX = nestedSectionX + RAIL_PAD + CONTAINER_PADDING;
-  const nestedRightRailX = nestedSectionX + containerW - RAIL_PAD - CONTAINER_PADDING;
+    return (
+      <g>
+        <rect
+          x={nestedSectionX} y={nestedSectionY}
+          width={containerW} height={containerH}
+          fill="none" stroke="none" pointerEvents="none"
+        />
 
-  const railTop = nestedSectionY + branchYOffsets[0];
-  const railBottom = nestedSectionY + branchYOffsets[branches.length - 1];
+        <line x1={nestedLeftRailX} y1={railTop} x2={nestedLeftRailX} y2={railBottom}
+          stroke="black" strokeWidth="1.5" />
+        <line x1={nestedRightRailX} y1={railTop} x2={nestedRightRailX} y2={railBottom}
+          stroke="black" strokeWidth="1.5" />
 
-  return (
-    <g>
-      <rect
-        x={nestedSectionX} y={nestedSectionY}
-        width={containerW} height={containerH}
-        fill="none" stroke="none" pointerEvents="none"
-      />
+        {branches.map((branch, branchIdx) => {
+          const branchWireY = nestedSectionY + branchYOffsets[branchIdx];
+          const blockY = branchWireY - BH / 2;
+          const branchBlocks = branch.blocks || [];
+          const isMainBranch = branchIdx === 0;
+          const dash = isMainBranch ? undefined : '5,3';
 
-      <line x1={nestedLeftRailX} y1={railTop} x2={nestedLeftRailX} y2={railBottom}
-        stroke="black" strokeWidth="1.5" />
-      <line x1={nestedRightRailX} y1={railTop} x2={nestedRightRailX} y2={railBottom}
-        stroke="black" strokeWidth="1.5" />
+          const branchKey = branch._id ?? branch.id ?? branchIdx;
+          const leftNodeId = `nested-branch-${branchKey}-left`;
+          const rightNodeId = `nested-branch-${branchKey}-right`;
+          const midNodeId = (bIdx) => `nested-branch-${branchKey}-mid-${bIdx}`;
+          const blockRowLeftX = nestedLeftRailX + INNER_PAD;
 
-   {branches.map((branch, branchIdx) => {
-          const branchWireY = nestedSectionY + branchYOffsets[branchIdx];
-          const blockY = branchWireY - BH / 2;
-          const branchBlocks = branch.blocks || [];
-          const isMainBranch = branchIdx === 0;
-          const dash = isMainBranch ? undefined : '5,3';
+          return (
+            <g key={branchKey}>
+              {/* Left rail node */}
+              <circle
+                cx={nestedLeftRailX} cy={branchWireY} r={4}
+                fill={selectedNode === leftNodeId ? "#0078D4" : "black"}
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenMenu(e.clientX, e.clientY, leftNodeId);
+                  setParentItemId(item?.id);
+                  setIdforApi?.({
+                    branchId: branch._id, branchIndex: branch.index,
+                    ItemId: id, location: leftNodeId,
+                  });
+                }}
+              />
 
-          const branchKey = branch._id ?? branch.id ?? branchIdx;
-          const leftNodeId = `nested-branch-${branchKey}-left`;
-          const rightNodeId = `nested-branch-${branchKey}-right`;
-          const midNodeId = (bIdx) => `nested-branch-${branchKey}-mid-${bIdx}`;
-          const blockRowLeftX = nestedLeftRailX + INNER_PAD;
+              {branchBlocks.length === 0 ? (
+                <line x1={nestedLeftRailX} y1={branchWireY} x2={nestedRightRailX} y2={branchWireY}
+                  stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+              ) : (
+                <>
+                  <line x1={nestedLeftRailX} y1={branchWireY} x2={blockRowLeftX} y2={branchWireY}
+                    stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
 
-          return (
-            <g key={branchKey}>
-              {/* Left rail node */}
-              <circle
-                cx={nestedLeftRailX} cy={branchWireY} r={4}
-                fill={selectedNode === leftNodeId ? "#0078D4" : "black"}
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenMenu(e.clientX, e.clientY, leftNodeId);
-                  setParentItemId(item?.id);
-                  setIdforApi?.({
-                    branchId: branch._id, branchIndex: branch.index,
-                    ItemId: id, location: leftNodeId,
-                  });
-                }}
-              />
+                  {branchBlocks.map((block, blockIdx) => {
+                    const bx = blockRowLeftX + blockIdx * (BW + GAP);
+                    const isLast = blockIdx === branchBlocks.length - 1;
 
-              {branchBlocks.length === 0 ? (
-                <line x1={nestedLeftRailX} y1={branchWireY} x2={nestedRightRailX} y2={branchWireY}
-                  stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
-              ) : (
-                <>
-                  <line x1={nestedLeftRailX} y1={branchWireY} x2={blockRowLeftX} y2={branchWireY}
-                    stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+                    return (
+                      <g key={block._id ?? block.id ?? blockIdx}>
+                        <RBDBlock
+                          id={block._id ?? block.id}
+                          type={block.type}
+                          x={bx} y={blockY} wireY={branchWireY}
+                          onEdit={onEditBlock || onEdit}
+                          onDelete={onDeleteBlock || onDelete}
+                          setIdforApi={setIdforApi}
+                          blockData={block}
+                          width={BW} height={BH}
+                          onOpenMenu={onOpenMenu}
+                          setParentItem={setParentItem}
+                          setParentItemId={setParentItemId}
+                          onEditBlock={onEditBlock}
+                          onDeleteBlock={onDeleteBlock}
+                          selectedNode={selectedNode}
+                          isNested={true}
+                          item={item}
+                          setTargetBranchId={setTargetBranchId}
+                        />
 
-                  {branchBlocks.map((block, blockIdx) => {
-                    const bx = blockRowLeftX + blockIdx * (BW + GAP);
-                    const isLast = blockIdx === branchBlocks.length - 1;
+                        {!isLast && (
+                          <>
+                            <line x1={bx + BW} y1={branchWireY}
+                              x2={bx + BW + GAP} y2={branchWireY}
+                              stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+                            <circle
+                              cx={bx + BW + GAP / 2} cy={branchWireY} r={4}
+                              fill={selectedNode === midNodeId(blockIdx) ? "#0078D4" : "black"}
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenMenu(e.clientX, e.clientY, midNodeId(blockIdx));
+                                setParentItemId(item?.id);
+                                setIdforApi?.({
+                                  branchId: branch._id, branchIndex: branch.index,
+                                  ItemId: item?.id, location: midNodeId(blockIdx),
+                                });
+                              }}
+                            />
+                          </>
+                        )}
 
-                    return (
-                      <g key={block._id ?? block.id ?? blockIdx}>
-                        <RBDBlock
-                          id={block._id ?? block.id}
-                          type={block.type}
-                          x={bx} y={blockY} wireY={branchWireY}
-                          onEdit={onEditBlock || onEdit}
-                          onDelete={onDeleteBlock || onDelete}
-                          setIdforApi={setIdforApi}
-                          blockData={block}
-                          width={BW} height={BH}
-                          onOpenMenu={onOpenMenu}
-                          setParentItem={setParentItem}
-                          setParentItemId={setParentItemId}
-                          onEditBlock={onEditBlock}
-                          onDeleteBlock={onDeleteBlock}
-                          selectedNode={selectedNode}
-                          isNested={true}
-                          item={item}
-                          setTargetBranchId={setTargetBranchId}
-                        />
+                        {isLast && (
+                          <line x1={bx + BW} y1={branchWireY}
+                            x2={nestedRightRailX} y2={branchWireY}
+                            stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
+                        )}
+                      </g>
+                    );
+                  })}
+                </>
+              )}
 
-                        {!isLast && (
-                          <>
-                            <line x1={bx + BW} y1={branchWireY}
-                              x2={bx + BW + GAP} y2={branchWireY}
-                              stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
-                            <circle
-                              cx={bx + BW + GAP / 2} cy={branchWireY} r={4}
-                              fill={selectedNode === midNodeId(blockIdx) ? "#0078D4" : "black"}
-                              style={{ cursor: "pointer" }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onOpenMenu(e.clientX, e.clientY, midNodeId(blockIdx));
-                                setParentItemId(item?.id);
-                                setIdforApi?.({
-                                  branchId: branch._id, branchIndex: branch.index,
-                                  ItemId: item?.id, location: midNodeId(blockIdx),
-                                });
-                              }}
-                            />
-                          </>
-                        )}
-
-                        {isLast && (
-                          <line x1={bx + BW} y1={branchWireY}
-                            x2={nestedRightRailX} y2={branchWireY}
-                            stroke="black" strokeWidth="1.5" strokeDasharray={dash} />
-                        )}
-                      </g>
-                    );
-                  })}
-                </>
-              )}
-
-              {/* Right rail node */}
-              <circle
-                cx={nestedRightRailX} cy={branchWireY} r={4}
-                fill={selectedNode === rightNodeId ? "#0078D4" : "black"}
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
-                  setParentItemId(item?.id);
-                  setTargetBranchId(branch?._id);
-                  setIdforApi({
-                    branchId: branch?._id, branchIndex: branch?.index,
-                    ItemId: item?.id, location: rightNodeId,
-                    nested: true, targetId: branch?.blocks[0]?._id,
-                  });
-                }}
-              />
-            </g>
-          );
-        })}
-    </g>
-  );
-}
+              {/* Right rail node */}
+              <circle
+                cx={nestedRightRailX} cy={branchWireY} r={4}
+                fill={selectedNode === rightNodeId ? "#0078D4" : "black"}
+                style={{ cursor: "pointer" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
+                  setParentItemId(item?.id);
+                  setTargetBranchId(branch?._id);
+                  setIdforApi({
+                    branchId: branch?._id, branchIndex: branch?.index,
+                    ItemId: item?.id, location: rightNodeId,
+                    nested: true, targetId: branch?.blocks[0]?._id,
+                  });
+                }}
+              />
+            </g>
+          );
+        })}
+      </g>
+    );
+  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // Regular Block Renderer
@@ -336,66 +334,57 @@ export const RBDBlock = ({
       const mtbf = blockData?.mtbf || blockData?.data?.mtbf;
       const k = blockData?.k || blockData?.data?.k;
       const n = blockData?.n || blockData?.data?.n;
-      console.log("mtbf ....2333",mtbf)
       const missionTime = mission;
-const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
-  const MTBF = Number(mtbf || 0);
-  const MTTR = Number(mttr || 0);
-  const t = Number(missionTime || 0);
+      const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+        const MTBF = Number(mtbf || 0);
+        const MTTR = Number(mttr || 0);
+        const t = Number(missionTime || 0);
 
-  // Default values
-  let unavailability = '';
-  let reliability = "";
-     console.log("MTBF..............",MTBF)
-     console.log("MTTR.....",MTTR)
-     console.log("t",t)
-  // ✅ Unavailability
-  
-    const u = MTTR / (MTBF + MTTR);
-    console.log("uuuuuu....123",u)
-     unavailability = Number(u.toFixed(4));
-   console.log("uuuuuu..final..222@@",unavailability)
+        // Default values
+        let unavailability = '';
+        let reliability = "";
+
+        const u = MTTR / (MTBF + MTTR);
+        unavailability = Number(u.toFixed(4));
 
 
- 
-    const r = Math.exp(-t / MTBF);
-    console.log("rrrrrrrrrrr...",r)
 
-    reliability =
-      r < 1e-4
-        ? r.toExponential(2)
-        : r.toFixed(2);
+        const r = Math.exp(-t / MTBF);
 
-    console.log("rrrrrrrrrrr..final.",reliability)
-  
+        reliability =
+          r < 1e-4
+            ? r.toExponential(2)
+            : r.toFixed(2);
 
-  return {
-    reliability,
-    unavailability
-  };
-};
 
-   
+
+        return {
+          reliability,
+          unavailability
+        };
+      };
+
+
       switch (t) {
-case 'Regular':
-case 'REGULAR': {
-  const { reliability, unavailability } = calculateMetrics({
-    mtbf,
-    mttr,
-    missionTime
-  });
+        case 'Regular':
+        case 'REGULAR': {
+          const { reliability, unavailability } = calculateMetrics({
+            mtbf,
+            mttr,
+            missionTime
+          });
 
-  return (
-    <>
-      <tspan x={x + BLOCK_W / 2} dy="-4">
-        R: {reliability}
-      </tspan>
-      <tspan x={x + BLOCK_W / 2} dy="10">
-        U: {unavailability}
-      </tspan>
-    </>
-  );
-}
+          return (
+            <>
+              <tspan x={x + BLOCK_W / 2} dy="-4">
+                R: {reliability}
+              </tspan>
+              <tspan x={x + BLOCK_W / 2} dy="10">
+                U: {unavailability}
+              </tspan>
+            </>
+          );
+        }
         case 'K-out-of-N':
           return `${k || 2}/${n || 3}`;
         case 'SubRBD':
@@ -441,9 +430,9 @@ case 'REGULAR': {
           </text>
         )} */}
 
-         <circle cx={x} cy={y} 
+        <circle cx={x} cy={y}
           fill="none" stroke="#0078d4" strokeWidth="2" strokeDasharray="4 2" />
-     
+
 
         <rect
           x={x}
