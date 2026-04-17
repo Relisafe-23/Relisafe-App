@@ -3,7 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import Api from '../../Api';
 import CreatableSelect from 'react-select/creatable';
 
-const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock, getBlock, targetId }) => {
+const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, elementModel, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock, getBlock, targetId }) => {
 
   let modelBlock = null;
 
@@ -11,6 +11,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
 
   console.log(modelBlock, '-final modelData')
   console.log(targetId, 'targetId inside model')
+  console.log(elementModel)
 
 
   const mainId = modelBlock?.id || modelBlock?._id
@@ -271,7 +272,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
         projectId: projectId,
         companyId: companyId,
         idforApi: elementModal?.idforApi,
-        targetId: targetId,
+        targetId: elementModel?.idforApi?.targetId || elementModel?.nodeIndex,
         reliability: reliability,
         unavailability: unavailability
       };
