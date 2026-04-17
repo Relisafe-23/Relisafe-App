@@ -1,53 +1,73 @@
-import React, { useState, useEffect } from 'react';
-import { useParams,useLocation } from 'react-router-dom';
-import Api from '../../Api';
-import CreatableSelect from 'react-select/creatable';
+import React, { useState, useEffect } from "react";
+import { useLocation, useParams } from "react-router-dom";
+import Api from "../../Api";
+import CreatableSelect from "react-select/creatable";
 
-const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock, getBlock, targetId }) => {
+const ElementParametersModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  setLoadChange,
+  parentItemId,
+  props,
+  onOpenSwitchConfig,
+  rbdId,
+  parallelFoundBlock,
+  elementModal,
+  currentBlock,
+  getBlock,
+  targetId,
+}) => {
+  console.log("currentBlock - :", currentBlock);
+  console.log("parallelFoundBlock - :", parallelFoundBlock);
+  console.log(elementModal, "elementModal");
+  console.log(targetId, "targetId inside model");
 
   let modelBlock = null;
 
-  parallelFoundBlock ? modelBlock = parallelFoundBlock : modelBlock = currentBlock
+  parallelFoundBlock
+    ? (modelBlock = parallelFoundBlock)
+    : (modelBlock = currentBlock);
 
-  console.log(modelBlock, '-final modelData')
+  console.log(modelBlock, "-final modelData");
 
-  const mainId = modelBlock?.id || modelBlock?._id
- const location = useLocation();
+  const mainId = modelBlock?.id || modelBlock?._id;
+  const location = useLocation();
+
   const [values, setValues] = useState({
     rbdId: rbdId,
-    relDes: modelBlock?.relDes || '',
+    relDes: modelBlock?.relDes || "",
     time: modelBlock?.time || " ",
-    elementType: modelBlock?.elementType || 'REGULAR',
-    partNumber: modelBlock?.partNumber || '',
-    fr: modelBlock?.fr || '',
-    repair: modelBlock?.repair || 'Full repair',
-    inspectionPeriod: modelBlock?.inspectionPeriod || '',
-    dutyCycle: modelBlock?.dutyCycle || '100',
-    color: modelBlock?.color || '#ffffff',
-    frDistribution: modelBlock?.frDistribution || '',
+    elementType: modelBlock?.elementType || "REGULAR",
+    partNumber: modelBlock?.partNumber || "",
+    fr: modelBlock?.fr || "",
+    repair: modelBlock?.repair || "Full repair",
+    inspectionPeriod: modelBlock?.inspectionPeriod || "",
+    dutyCycle: modelBlock?.dutyCycle || "100",
+    color: modelBlock?.color || "#ffffff",
+    frDistribution: modelBlock?.frDistribution || "",
     kOutOfN: modelBlock?.kOutOfN || false,
-    k: modelBlock?.k || '2',
-    n: modelBlock?.n || '3',
+    k: modelBlock?.k || "2",
+    n: modelBlock?.n || "3",
     mttr: modelBlock?.mttr || '',
-    alpha: modelBlock?.alpha || '',
-    fmecaId: modelBlock?.fmecaId || '',
-    indexCount: modelBlock?.indexCount || '',
-    productName: modelBlock?.productName || '',
-    id: modelBlock?.id || '',
-    repairDistribution: modelBlock?.repairDistribution || 'Exponential',
-    mtbf: modelBlock?.mtbf || '',
-    load: modelBlock?.load || '',
-    mct: modelBlock?.mct || '',
-    productNumber: modelBlock?.productNumber || '',
-    productTreeItemID: modelBlock?.productTreeItemID || '',
-    fmNumber: modelBlock?.fmNumber || '',
-    description: modelBlock?.description || '',
-    remark: modelBlock?.remark || '',
-    fmDescription: modelBlock?.fmDescription || ''
+    alpha: modelBlock?.alpha || "",
+    fmecaId: modelBlock?.fmecaId || "",
+    indexCount: modelBlock?.indexCount || "",
+    productName: modelBlock?.productName || "",
+    id: modelBlock?.id || "",
+    repairDistribution: modelBlock?.repairDistribution || "Exponential",
+    mtbf: modelBlock?.mtbf || "1303617.9",
+    load: modelBlock?.load || "100",
+    mct: modelBlock?.mct || "",
+    productNumber: modelBlock?.productNumber || "",
+    productTreeItemID: modelBlock?.productTreeItemID || "",
+    fmNumber: modelBlock?.fmNumber || "",
+    description: modelBlock?.description || "",
+    remark: modelBlock?.remark || "",
+    fmDescription: modelBlock?.fmDescription || "",
   });
   const missionTime = location.state?.missionTime;
- const [mission,setMission] = useState('');
-  console.log('mtbf value is : ', values?.mct)
+  const [mission, setMission] = useState('');
   const [blink, setBlink] = useState(false);
   const { id } = useParams();
   const [options, setOptions] = useState([]);
@@ -61,7 +81,6 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   const productName = values?.productName || "";
   const [alpha, setAlpha] = useState([]);
 
-console.log("MissionTime.................12",missionTime)
   // useEffect(() => {
   //   getElement()
   // }, [projectId])
@@ -84,8 +103,19 @@ console.log("MissionTime.................12",missionTime)
         userId: userId,
         token: sessionId,
       },
-    })
-      .then((res) => {
+    }).then((res) => {
+      // console.log(res.data,'pbs')
+      // const options = res.data.data
+      //   .filter((item) => item?.indexCount && item?.partNumber)
+      //   .map((item) => ({
+      //     label: item.indexCount,
+      //     value: item.indexCount,
+      //     partNumber: item.partNumber,
+      //     productName: item.productName,
+      //     productId: item.productId,
+      //     fr: item.fr,
+      //     id: item.id,
+      //   }));
 
         // console.log(res.data,'pbs')
         const options = res.data.data
@@ -123,14 +153,14 @@ console.log("MissionTime.................12",missionTime)
         // console.log("FMECA Product Data:", res.data.data);
 
         const failureAlphas = res.data.data
-          .filter(item => item.failureModeRatioAlpha)
-          .map(item => item.failureModeRatioAlpha);
+          .filter((item) => item.failureModeRatioAlpha)
+          .map((item) => item.failureModeRatioAlpha);
 
         setAlpha(failureAlphas);
 
         const fmecaIds = res.data.data
-          .filter(item => item.fmecaId)
-          .map(item => item.fmecaId);
+          .filter((item) => item.fmecaId)
+          .map((item) => item.fmecaId);
 
         setSelectedProductId(fmecaIds);
         // console.log("selectedProductId", fmecaIds);
@@ -141,7 +171,7 @@ console.log("MissionTime.................12",missionTime)
         if (data && data.length > 0) {
           setValues((prev) => ({
             ...prev,
-            productId: data[0].productId
+            productId: data[0].productId,
           }));
         }
       })
@@ -153,28 +183,24 @@ console.log("MissionTime.................12",missionTime)
         }
       });
 
+    // console.log(productId,'productId')
+    Api.get(`/api/v1/mttrPrediction/${productId}`)
+      .then((res) => {
+        // console.log(res?.data?.data?.mct, 'response mttr')
+        let mct = res?.data?.data?.mct;
 
-
-    // // console.log(productId,'productId')
-    // Api.get(`/api/v1/mttrPrediction/${productId}`)
-    //   .then((res) => {
-    //     // console.log(res?.data?.data?.mct, 'response mttr')
-    //     let mct = res?.data?.data?.mct
-
-    //     setValues(prev => ({
-    //       ...prev,
-    //       mct: mct
-    //     }));
-    //   })
-    //   .catch((error) => {
-    //     const errorStatus = error?.response?.status;
-    //     if (errorStatus === 401) {
-    //       // Handle unauthorized
-    //       console.error("Unauthorized access");
-    //     }
-    //   });
-
-
+        setValues((prev) => ({
+          ...prev,
+          mct: mct,
+        }));
+      })
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          // Handle unauthorized
+          console.error("Unauthorized access");
+        }
+      });
   };
 
   const getProductFRPData = () => {
@@ -188,11 +214,13 @@ console.log("MissionTime.................12",missionTime)
         productId,
         userId: userId,
       },
-    }).then((res) => {
-      // console.log("FRP Data:", res.data);
-    }).catch((error) => {
-      console.error("Error fetching FRP data:", error);
-    });
+    })
+      .then((res) => {
+        // console.log("FRP Data:", res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching FRP data:", error);
+      });
   };
 
   useEffect(() => {
@@ -209,29 +237,18 @@ console.log("MissionTime.................12",missionTime)
     try {
       const companyId = localStorage.getItem("companyId");
 
-      // Validation
       if (!companyId || !rbdId || !projectId) {
         throw new Error("Missing required IDs");
       }
-        //  const missionTime = mission;
-  const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
-  const MTBF = Number(mtbf || 0);
-  const MTTR = Number(mttr || 0);
-  const t = Number(missionTime || 0);
 
-console.log("MissionTime................333",missionTime)
-  let unavailability = 0;
-  let reliability = "0";
+      const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+        const MTBF = Number(mtbf || 0);
+        const MTTR = Number(mttr || 0);
+        const t = Number(missionTime || 0);
 
-  // ✅ Unavailability
-  if (!(MTBF === 0 && MTTR === 0)) {
-    const u = MTTR / (MTBF + MTTR);
-    unavailability = Number(u.toFixed(4));
-  }
+        let unavailability = 0;
+        let reliability = "0";
 
-  // ✅ Reliability
-  if (MTBF > 0 && t >= 0) {
-    const r = Math.exp(-t / MTBF);
 
     reliability =
       r < 1e-4
@@ -239,17 +256,25 @@ console.log("MissionTime................333",missionTime)
         : r.toFixed(4);
   }
 
-  return {
-    reliability,
-    unavailability
-  };
-};
-  const { reliability, unavailability } = calculateMetrics({
-      mtbf: values.mtbf,
-      mttr: values.mttr,
-      missionTime
-    });
-    console.log("reliability,unavailability",reliability,unavailability)
+        if (MTBF > 0 && t >= 0) {
+          const r = Math.exp(-t / MTBF);
+
+          reliability =
+            r < 1e-4
+              ? r.toExponential(2)
+              : r.toFixed(2);
+        }
+
+        return {
+          reliability,
+          unavailability
+        };
+  
+      const { reliability, unavailability } = calculateMetrics({
+        mtbf: values.mtbf,
+        mttr: values.mttr,
+        missionTime
+      });
       const payload = {
         indexCount: values.indexCount,
         partNumber: values.partNumber,
@@ -276,25 +301,23 @@ console.log("MissionTime................333",missionTime)
         projectId: projectId,
         companyId: companyId,
         idforApi: elementModal?.idforApi,
+        targetId: elementModal?.idforApi?.targetId || elementModal?.nodeIndex,
         reliability: reliability,
         unavailability: unavailability
       };
-      console.log("Payload", payload)
-      console.log("Missssionime",missionTime)
+      
       const response = await Api.post("/api/v1/elementParametersRBD/create", payload);
-      console.log("Success:", response);
       await getBlock();
 
       onSubmit(values);
       onClose();
     } catch (error) {
       console.error("Submission failed:", error);
-    
+
     }
+  }
 
   
-  };
-  console.log("values.mttr", values.mttr)
   const handleUpdate = (e) => {
     e.preventDefault();
 
@@ -311,17 +334,16 @@ console.log("MissionTime................333",missionTime)
     }
 
     try {
-      Api.patch(endpoint, values)
-        .then((res) => {
-          // console.log(res);
-          if (res.data.success === true) {
-            onClose();
-          } else {
-            console.log('error update');
-          }
-        })
+      Api.patch(endpoint, values).then((res) => {
+        // console.log(res);
+        if (res.data.success === true) {
+          onClose();
+        } else {
+          console.log("error update");
+        }
+      });
     } catch {
-      console.log('failed Api');
+      console.log("failed Api");
     }
   }
 
@@ -351,59 +373,78 @@ console.log("MissionTime................333",missionTime)
     onOpenSwitchConfig({
       n: values.n,
       k: values.k,
-      ...(modelBlock?.switchData || {})
+      ...(modelBlock?.switchData || {}),
     });
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1002
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '4px',
-        width: '1000px',
-        maxHeight: '90vh',
-        overflowY: 'auto'
-      }}>
-        <h2 style={{ marginBottom: '20px', color: '#333' }}><h2 style={{ marginBottom: '20px', color: '#333' }}>
-          {/* {currentBlock ? "Edit Element Parameters" : "Add Element Parameters"} */}
-          {elementModal?.mode === "edit" ? "Edit Element Parameters" : "Add Element Parameters"}
-        </h2></h2>
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1002,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "white",
+          padding: "20px",
+          borderRadius: "4px",
+          width: "1000px",
+          maxHeight: "90vh",
+          overflowY: "auto",
+        }}
+      >
+        <h2 style={{ marginBottom: "20px", color: "#333" }}>
+          <h2 style={{ marginBottom: "20px", color: "#333" }}>
+            {/* {currentBlock ? "Edit Element Parameters" : "Add Element Parameters"} */}
+            {elementModal?.mode === "edit"
+              ? "Edit Element Parameters"
+              : "Add Element Parameters"}
+          </h2>
+        </h2>
         <form onSubmit={mainId ? handleUpdate : handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{
-              marginBottom: '20px',
-              padding: '15px',
-              border: '1px solid #e0e0e0',
-              borderRadius: '4px',
-              backgroundColor: '#f9f9f9'
-            }}>
-              <h4 style={{ fontSize: '12px', marginBottom: '15px', color: '#666', fontWeight: 'bold' }}>
+          <div style={{ marginBottom: "20px" }}>
+            <div
+              style={{
+                marginBottom: "20px",
+                padding: "15px",
+                border: "1px solid #e0e0e0",
+                borderRadius: "4px",
+                backgroundColor: "#f9f9f9",
+              }}
+            >
+              <h4
+                style={{
+                  fontSize: "12px",
+                  marginBottom: "15px",
+                  color: "#666",
+                  fontWeight: "bold",
+                }}
+              >
                 Connection with Product Tree / FMECA
               </h4>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '15px'
-              }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: "15px",
+                }}
+              >
                 <div>
                   <label
                     style={{
-                      fontSize: '11px',
-                      display: 'block',
-                      marginBottom: '5px',
-                      fontWeight: 'bold'
+                      fontSize: "11px",
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "bold",
                     }}
                   >
                     Product Tree Item ID:
@@ -442,24 +483,28 @@ console.log("MissionTime................333",missionTime)
                     styles={{
                       control: (base) => ({
                         ...base,
-                        fontSize: '11px',
-                        minHeight: '30px'
-                      })
+                        fontSize: "11px",
+                        minHeight: "30px",
+                      }),
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{
-                    fontSize: '11px',
-                    display: 'block',
-                    marginBottom: '5px',
-                    fontWeight: 'bold'
-                  }}>FM Number</label>
+                  <label
+                    style={{
+                      fontSize: "11px",
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    FM Number
+                  </label>
                   <select
                     value={values?.fmecaId || ""}
                     onChange={(e) => handleChange("fmecaId", e.target.value)}
                     style={{
-                      width: '100%',
+                      width: "100%",
                       padding: "6px",
                       border: "1px solid #ccc",
                       borderRadius: "3px",
@@ -477,20 +522,29 @@ console.log("MissionTime................333",missionTime)
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '11px', display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  <label
+                    style={{
+                      fontSize: "11px",
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     FM description:
                   </label>
                   <textarea
                     value={values?.fmDescription || ""}
-                    onChange={(e) => handleChange('fmDescription', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("fmDescription", e.target.value)
+                    }
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '11px',
-                      minHeight: '50px',
-                      resize: 'vertical'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "11px",
+                      minHeight: "50px",
+                      resize: "vertical",
                     }}
                   />
                 </div>
@@ -498,47 +552,67 @@ console.log("MissionTime................333",missionTime)
             </div>
 
             {/* Main 3-column grid for the form sections */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              gap: '20px',
-              marginBottom: '20px'
-            }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: "20px",
+                marginBottom: "20px",
+              }}
+            >
               {/* Column 1 */}
               <div>
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Ref Des:
                   </label>
                   <input
                     type="text"
                     value={values?.productName || ""}
-                    onChange={(e) => handleChange('productName', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("productName", e.target.value)
+                    }
                     placeholder="Transmitter"
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
                     }}
                   />
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Element Type:
                   </label>
                   <select
                     value={values?.elementType}
-                    onChange={(e) => handleChange('elementType', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("elementType", e.target.value)
+                    }
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      backgroundColor: '#f9f9f9'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
+                      backgroundColor: "#f9f9f9",
                     }}
                   >
                     <option value="REGULAR">REGULAR</option>
@@ -549,8 +623,15 @@ console.log("MissionTime................333",missionTime)
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Part Number:
                   </label>
                   <input
@@ -562,7 +643,7 @@ console.log("MissionTime................333",missionTime)
                       padding: "6px",
                       border: "1px solid #ccc",
                       borderRadius: "3px",
-                      fontSize: "12px"
+                      fontSize: "12px",
                     }}
                   />
                 </div>
@@ -585,26 +666,32 @@ console.log("MissionTime................333",missionTime)
                     />
                   </div> */}
 
-
-                {values.elementType === 'K_OUT_OF_N' && (
-                  <div style={{ marginBottom: '15px' }}>
+                {values.elementType === "K_OUT_OF_N" && (
+                  <div style={{ marginBottom: "15px" }}>
                     <button
                       type="button"
                       onClick={handleSwitchClick}
                       style={{
-                        padding: '8px 16px',
-                        border: '1px solid #007bff',
-                        borderRadius: '3px',
-                        background: 'white',
-                        color: '#007bff',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
+                        padding: "8px 16px",
+                        border: "1px solid #007bff",
+                        borderRadius: "3px",
+                        background: "white",
+                        color: "#007bff",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
                       }}
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#007bff" strokeWidth="2">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#007bff"
+                        strokeWidth="2"
+                      >
                         <path d="M18 6L6 18" />
                         <path d="M6 6L18 18" />
                       </svg>
@@ -616,20 +703,27 @@ console.log("MissionTime................333",missionTime)
 
               {/* Column 2 */}
               <div>
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Repair:
                   </label>
                   <select
                     value={values.repair}
-                    onChange={(e) => handleChange('repair', e.target.value)}
+                    onChange={(e) => handleChange("repair", e.target.value)}
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      backgroundColor: '#f9f9f9'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
+                      backgroundColor: "#f9f9f9",
                     }}
                   >
                     <option value="Full repair">Full repair</option>
@@ -638,65 +732,94 @@ console.log("MissionTime................333",missionTime)
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     <input
                       type="checkbox"
-                      checked={values.inspectionPeriod !== ''}
-                      onChange={(e) => handleChange('inspectionPeriod', e.target.checked ? '--' : '')}
-                      style={{ marginRight: '5px' }}
+                      checked={values.inspectionPeriod !== ""}
+                      onChange={(e) =>
+                        handleChange(
+                          "inspectionPeriod",
+                          e.target.checked ? "--" : "",
+                        )
+                      }
+                      style={{ marginRight: "5px" }}
                     />
                     Inspection period:
                   </label>
                   <input
                     type="text"
                     value={values.inspectionPeriod}
-                    onChange={(e) => handleChange('inspectionPeriod', e.target.value)}
-                    disabled={values.inspectionPeriod === ''}
+                    onChange={(e) =>
+                      handleChange("inspectionPeriod", e.target.value)
+                    }
+                    disabled={values.inspectionPeriod === ""}
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      backgroundColor: values.inspectionPeriod === '' ? '#f0f0f0' : 'white'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
+                      backgroundColor:
+                        values.inspectionPeriod === "" ? "#f0f0f0" : "white",
                     }}
                     placeholder="--"
                   />
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Duty cycle [%]:
                   </label>
                   <input
                     type="text"
                     value={values.dutyCycle}
-                    onChange={(e) => handleChange('dutyCycle', e.target.value)}
+                    onChange={(e) => handleChange("dutyCycle", e.target.value)}
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
                     }}
                   />
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Color:
                   </label>
                   <input
                     type="color"
                     value={values.color}
-                    onChange={(e) => handleChange('color', e.target.value)}
+                    onChange={(e) => handleChange("color", e.target.value)}
                     style={{
-                      width: '100%',
-                      height: '30px',
-                      padding: '0',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px'
+                      width: "100%",
+                      height: "30px",
+                      padding: "0",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
                     }}
                   />
                 </div>
@@ -774,20 +897,29 @@ console.log("MissionTime................333",missionTime)
                     )}
                   </div> */}
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Repair distribution:
                   </label>
                   <select
                     value={values.repairDistribution}
-                    onChange={(e) => handleChange('repairDistribution', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("repairDistribution", e.target.value)
+                    }
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      backgroundColor: '#f9f9f9'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
+                      backgroundColor: "#f9f9f9",
                     }}
                   >
                     <option value="Exponential">Exponential</option>
@@ -801,23 +933,39 @@ console.log("MissionTime................333",missionTime)
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '10px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "10px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     FR distribution parameters:
                   </label>
-                  <div style={{ display: 'flex', gap: '10px', marginBottom: '5px', flexWrap: 'wrap' }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      marginBottom: "5px",
+                      flexWrap: "wrap",
+                    }}
+                  >
                     <div>
-                      <label style={{ fontSize: '11px', marginRight: '5px' }}>MTBF [hours]:</label>
+                      <label style={{ fontSize: "11px", marginRight: "5px" }}>
+                        MTBF [hours]:
+                      </label>
                       <input
                         type="text"
                         value={values?.mtbf}
                         onChange={(e) => handleChange('mtbf', e.target.value)}
                         style={{
-                          width: '100px',
-                          padding: '4px',
-                          border: '1px solid #ccc',
-                          borderRadius: '3px',
-                          fontSize: '11px'
+                          width: "100px",
+                          padding: "4px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          fontSize: "11px",
                         }}
                         placeholder="445089"
                       />
@@ -848,23 +996,32 @@ console.log("MissionTime................333",missionTime)
                     )}</div>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '10px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "10px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Repair distribution parameters:
                   </label>
                   <div>
-                    <label style={{ fontSize: '11px', marginRight: '5px' }}>MCT [hours]:</label>
+                    <label style={{ fontSize: "11px", marginRight: "5px" }}>
+                      MCT [hours]:
+                    </label>
                     <input
                       type="text"
                       value={values.mct}
                       // value={values.mct !== null && values.mct !== undefined && !isNaN(values.mct) && values.mct !== "" ? values.mct : "0"}
                       onChange={(e) => handleChange('mct', e.target.value)}
                       style={{
-                        width: '100px',
-                        padding: '4px',
-                        border: '1px solid #ccc',
-                        borderRadius: '3px',
-                        fontSize: '11px'
+                        width: "100px",
+                        padding: "4px",
+                        border: "1px solid #ccc",
+                        borderRadius: "3px",
+                        fontSize: "11px",
                       }}
                       placeholder="0127333"
                     />
@@ -875,23 +1032,25 @@ console.log("MissionTime................333",missionTime)
           </div>
 
           {/* Buttons */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '10px',
-            paddingTop: '20px',
-            borderTop: '1px solid #eee'
-          }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "10px",
+              paddingTop: "20px",
+              borderTop: "1px solid #eee",
+            }}
+          >
             <button
               type="button"
               onClick={onClose}
               style={{
-                padding: '8px 16px',
-                border: '1px solid #ccc',
-                borderRadius: '3px',
-                background: '#f5f5f5',
-                cursor: 'pointer',
-                fontSize: '12px'
+                padding: "8px 16px",
+                border: "1px solid #ccc",
+                borderRadius: "3px",
+                background: "#f5f5f5",
+                cursor: "pointer",
+                fontSize: "12px",
               }}
             >
               Cancel
