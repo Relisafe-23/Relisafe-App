@@ -1,54 +1,68 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import Api from '../../Api';
-import CreatableSelect from 'react-select/creatable';
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import Api from "../../Api";
+import CreatableSelect from "react-select/creatable";
 
-const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, parentItemId, props, onOpenSwitchConfig, rbdId, parallelFoundBlock, elementModal, currentBlock, getBlock, targetId }) => {
-
-  console.log('currentBlock - :', currentBlock)
-  console.log('parallelFoundBlock - :', parallelFoundBlock)
-  console.log(elementModal, 'elementModal')
-  console.log(targetId, 'targetId inside model')
-
+const ElementParametersModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  setLoadChange,
+  parentItemId,
+  props,
+  onOpenSwitchConfig,
+  rbdId,
+  parallelFoundBlock,
+  elementModal,
+  currentBlock,
+  getBlock,
+  targetId,
+}) => {
+  console.log("currentBlock - :", currentBlock);
+  console.log("parallelFoundBlock - :", parallelFoundBlock);
+  console.log(elementModal, "elementModal");
+  console.log(targetId, "targetId inside model");
 
   let modelBlock = null;
 
-  parallelFoundBlock ? modelBlock = parallelFoundBlock : modelBlock = currentBlock
+  parallelFoundBlock
+    ? (modelBlock = parallelFoundBlock)
+    : (modelBlock = currentBlock);
 
-  console.log(modelBlock, '-final modelData')
+  console.log(modelBlock, "-final modelData");
 
-  const mainId = modelBlock?.id || modelBlock?._id
+  const mainId = modelBlock?.id || modelBlock?._id;
 
   const [values, setValues] = useState({
     rbdId: rbdId,
-    relDes: modelBlock?.relDes || '',
+    relDes: modelBlock?.relDes || "",
     time: modelBlock?.time || " ",
-    elementType: modelBlock?.elementType || 'REGULAR',
-    partNumber: modelBlock?.partNumber || '',
-    fr: modelBlock?.fr || '',
-    repair: modelBlock?.repair || 'Full repair',
-    inspectionPeriod: modelBlock?.inspectionPeriod || '',
-    dutyCycle: modelBlock?.dutyCycle || '100',
-    color: modelBlock?.color || '#ffffff',
-    frDistribution: modelBlock?.frDistribution || '',
+    elementType: modelBlock?.elementType || "REGULAR",
+    partNumber: modelBlock?.partNumber || "",
+    fr: modelBlock?.fr || "",
+    repair: modelBlock?.repair || "Full repair",
+    inspectionPeriod: modelBlock?.inspectionPeriod || "",
+    dutyCycle: modelBlock?.dutyCycle || "100",
+    color: modelBlock?.color || "#ffffff",
+    frDistribution: modelBlock?.frDistribution || "",
     kOutOfN: modelBlock?.kOutOfN || false,
-    k: modelBlock?.k || '2',
-    n: modelBlock?.n || '3',
-    alpha: modelBlock?.alpha || '',
-    fmecaId: modelBlock?.fmecaId || '',
-    indexCount: modelBlock?.indexCount || '',
-    productName: modelBlock?.productName || '',
-    id: modelBlock?.id || '',
-    repairDistribution: modelBlock?.repairDistribution || 'Exponential',
-    mtbf: modelBlock?.mtbf || '1303617.9',
-    load: modelBlock?.load || '100',
-    mct: modelBlock?.mct || '',
-    productNumber: modelBlock?.productNumber || '',
-    productTreeItemID: modelBlock?.productTreeItemID || '',
-    fmNumber: modelBlock?.fmNumber || '',
-    description: modelBlock?.description || '',
-    remark: modelBlock?.remark || '',
-    fmDescription: modelBlock?.fmDescription || ''
+    k: modelBlock?.k || "2",
+    n: modelBlock?.n || "3",
+    alpha: modelBlock?.alpha || "",
+    fmecaId: modelBlock?.fmecaId || "",
+    indexCount: modelBlock?.indexCount || "",
+    productName: modelBlock?.productName || "",
+    id: modelBlock?.id || "",
+    repairDistribution: modelBlock?.repairDistribution || "Exponential",
+    mtbf: modelBlock?.mtbf || "1303617.9",
+    load: modelBlock?.load || "100",
+    mct: modelBlock?.mct || "",
+    productNumber: modelBlock?.productNumber || "",
+    productTreeItemID: modelBlock?.productTreeItemID || "",
+    fmNumber: modelBlock?.fmNumber || "",
+    description: modelBlock?.description || "",
+    remark: modelBlock?.remark || "",
+    fmDescription: modelBlock?.fmDescription || "",
   });
 
   // console.log('fr value is : ',values?.fr)
@@ -64,7 +78,6 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   const productId = values?.id || values?.productId || "";
   const productName = values?.productName || "";
   const [alpha, setAlpha] = useState([]);
-
 
   // useEffect(() => {
   //   getElement()
@@ -88,27 +101,27 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
         userId: userId,
         token: sessionId,
       },
-    })
-      .then((res) => {
+    }).then((res) => {
+      // console.log(res.data,'pbs')
+      const options = res.data.data
+        .filter((item) => item?.indexCount && item?.partNumber)
+        .map((item) => ({
+          label: item.indexCount,
+          value: item.indexCount,
+          partNumber: item.partNumber,
+          productName: item.productName,
+          productId: item.productId,
+          fr: item.fr,
+          id: item.id,
+        }));
 
-        // console.log(res.data,'pbs')
-        const options = res.data.data
-          .filter(item => item?.indexCount && item?.partNumber)
-          .map(item => ({
-            label: item.indexCount,
-            value: item.indexCount,
-            partNumber: item.partNumber,
-            productName: item.productName,
-            productId: item.productId,
-            fr: item.fr,
-            id: item.id
-          }));
-
-        const productIdst = res.data.data.filter(item => item?.productId).map(item => item.productId);
-        // console.log("Options", options);
-        setProductIds(productIdst);
-        setOptions(options);
-      });
+      const productIdst = res.data.data
+        .filter((item) => item?.productId)
+        .map((item) => item.productId);
+      // console.log("Options", options);
+      setProductIds(productIdst);
+      setOptions(options);
+    });
   };
 
   const getProductData = () => {
@@ -125,14 +138,14 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
         // console.log("FMECA Product Data:", res.data.data);
 
         const failureAlphas = res.data.data
-          .filter(item => item.failureModeRatioAlpha)
-          .map(item => item.failureModeRatioAlpha);
+          .filter((item) => item.failureModeRatioAlpha)
+          .map((item) => item.failureModeRatioAlpha);
 
         setAlpha(failureAlphas);
 
         const fmecaIds = res.data.data
-          .filter(item => item.fmecaId)
-          .map(item => item.fmecaId);
+          .filter((item) => item.fmecaId)
+          .map((item) => item.fmecaId);
 
         setSelectedProductId(fmecaIds);
         // console.log("selectedProductId", fmecaIds);
@@ -143,7 +156,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
         if (data && data.length > 0) {
           setValues((prev) => ({
             ...prev,
-            productId: data[0].productId
+            productId: data[0].productId,
           }));
         }
       })
@@ -155,17 +168,15 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
         }
       });
 
-
-
     // console.log(productId,'productId')
     Api.get(`/api/v1/mttrPrediction/${productId}`)
       .then((res) => {
         // console.log(res?.data?.data?.mct, 'response mttr')
-        let mct = res?.data?.data?.mct
+        let mct = res?.data?.data?.mct;
 
-        setValues(prev => ({
+        setValues((prev) => ({
           ...prev,
-          mct: mct
+          mct: mct,
         }));
       })
       .catch((error) => {
@@ -175,8 +186,6 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
           console.error("Unauthorized access");
         }
       });
-
-
   };
 
   const getProductFRPData = () => {
@@ -190,11 +199,13 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
         productId,
         userId: userId,
       },
-    }).then((res) => {
-      // console.log("FRP Data:", res.data);
-    }).catch((error) => {
-      console.error("Error fetching FRP data:", error);
-    });
+    })
+      .then((res) => {
+        // console.log("FRP Data:", res.data);
+      })
+      .catch((error) => {
+        console.error("Error fetching FRP data:", error);
+      });
   };
 
   useEffect(() => {
@@ -210,8 +221,8 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     e.preventDefault();
     const companyId = localStorage.getItem("companyId");
 
-    console.log('=== BEFORE API CALL ===');
-    console.log('targetId prop value:', elementModal?.nodeIndex);
+    console.log("=== BEFORE API CALL ===");
+    console.log("targetId prop value:", elementModal?.nodeIndex);
 
     Api.post("/api/v1/elementParametersRBD/create", {
       indexCount: values.indexCount,
@@ -238,17 +249,14 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
       projectId: projectId,
       companyId: companyId,
       idforApi: elementModal?.idforApi,
-      datata: 'adfuebcweb',
+      datata: "adfuebcweb",
       targetId: elementModal?.idforApi?.targetId || elementModal?.nodeIndex,
-
     }).then((res) => {
       getBlock();
-    })
+    });
     onSubmit(values);
     onClose();
-
   };
-
 
   // const handleUpdate = (e) => {
   //   e.preventDefault();
@@ -286,20 +294,18 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     }
 
     try {
-      Api.patch(endpoint, values)
-        .then((res) => {
-          // console.log(res);
-          if (res.data.success === true) {
-            onClose();
-          } else {
-            console.log('error update');
-          }
-        })
+      Api.patch(endpoint, values).then((res) => {
+        // console.log(res);
+        if (res.data.success === true) {
+          onClose();
+        } else {
+          console.log("error update");
+        }
+      });
     } catch {
-      console.log('failed Api');
+      console.log("failed Api");
     }
-  }
-
+  };
 
   // console.log(projectId,'projectId')
 
@@ -315,9 +321,9 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
   //     })
   // }
   const handleChange = (field, value) => {
-    setValues(prev => ({
+    setValues((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -325,59 +331,78 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
     onOpenSwitchConfig({
       n: values.n,
       k: values.k,
-      ...(modelBlock?.switchData || {})
+      ...(modelBlock?.switchData || {}),
     });
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1002
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '20px',
-        borderRadius: '4px',
-        width: '1000px',
-        maxHeight: '90vh',
-        overflowY: 'auto'
-      }}>
-        <h2 style={{ marginBottom: '20px', color: '#333' }}><h2 style={{ marginBottom: '20px', color: '#333' }}>
-          {/* {currentBlock ? "Edit Element Parameters" : "Add Element Parameters"} */}
-          {elementModal?.mode === "edit" ? "Edit Element Parameters" : "Add Element Parameters"}
-        </h2></h2>
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1002,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "white",
+          padding: "20px",
+          borderRadius: "4px",
+          width: "1000px",
+          maxHeight: "90vh",
+          overflowY: "auto",
+        }}
+      >
+        <h2 style={{ marginBottom: "20px", color: "#333" }}>
+          <h2 style={{ marginBottom: "20px", color: "#333" }}>
+            {/* {currentBlock ? "Edit Element Parameters" : "Add Element Parameters"} */}
+            {elementModal?.mode === "edit"
+              ? "Edit Element Parameters"
+              : "Add Element Parameters"}
+          </h2>
+        </h2>
         <form onSubmit={mainId ? handleUpdate : handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <div style={{
-              marginBottom: '20px',
-              padding: '15px',
-              border: '1px solid #e0e0e0',
-              borderRadius: '4px',
-              backgroundColor: '#f9f9f9'
-            }}>
-              <h4 style={{ fontSize: '12px', marginBottom: '15px', color: '#666', fontWeight: 'bold' }}>
+          <div style={{ marginBottom: "20px" }}>
+            <div
+              style={{
+                marginBottom: "20px",
+                padding: "15px",
+                border: "1px solid #e0e0e0",
+                borderRadius: "4px",
+                backgroundColor: "#f9f9f9",
+              }}
+            >
+              <h4
+                style={{
+                  fontSize: "12px",
+                  marginBottom: "15px",
+                  color: "#666",
+                  fontWeight: "bold",
+                }}
+              >
                 Connection with Product Tree / FMECA
               </h4>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '15px'
-              }}>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr 1fr",
+                  gap: "15px",
+                }}
+              >
                 <div>
                   <label
                     style={{
-                      fontSize: '11px',
-                      display: 'block',
-                      marginBottom: '5px',
-                      fontWeight: 'bold'
+                      fontSize: "11px",
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "bold",
                     }}
                   >
                     Product Tree Item ID:
@@ -412,24 +437,28 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                     styles={{
                       control: (base) => ({
                         ...base,
-                        fontSize: '11px',
-                        minHeight: '30px'
-                      })
+                        fontSize: "11px",
+                        minHeight: "30px",
+                      }),
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{
-                    fontSize: '11px',
-                    display: 'block',
-                    marginBottom: '5px',
-                    fontWeight: 'bold'
-                  }}>FM Number</label>
+                  <label
+                    style={{
+                      fontSize: "11px",
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    FM Number
+                  </label>
                   <select
                     value={values?.fmecaId || ""}
                     onChange={(e) => handleChange("fmecaId", e.target.value)}
                     style={{
-                      width: '100%',
+                      width: "100%",
                       padding: "6px",
                       border: "1px solid #ccc",
                       borderRadius: "3px",
@@ -447,20 +476,29 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '11px', display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  <label
+                    style={{
+                      fontSize: "11px",
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     FM description:
                   </label>
                   <textarea
                     value={values?.fmDescription || ""}
-                    onChange={(e) => handleChange('fmDescription', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("fmDescription", e.target.value)
+                    }
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '11px',
-                      minHeight: '50px',
-                      resize: 'vertical'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "11px",
+                      minHeight: "50px",
+                      resize: "vertical",
                     }}
                   />
                 </div>
@@ -468,47 +506,67 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
             </div>
 
             {/* Main 3-column grid for the form sections */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr',
-              gap: '20px',
-              marginBottom: '20px'
-            }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: "20px",
+                marginBottom: "20px",
+              }}
+            >
               {/* Column 1 */}
               <div>
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Ref Des:
                   </label>
                   <input
                     type="text"
                     value={values?.productName || ""}
-                    onChange={(e) => handleChange('productName', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("productName", e.target.value)
+                    }
                     placeholder="Transmitter"
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
                     }}
                   />
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Element Type:
                   </label>
                   <select
                     value={values?.elementType}
-                    onChange={(e) => handleChange('elementType', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("elementType", e.target.value)
+                    }
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      backgroundColor: '#f9f9f9'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
+                      backgroundColor: "#f9f9f9",
                     }}
                   >
                     <option value="REGULAR">REGULAR</option>
@@ -519,8 +577,15 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Part Number:
                   </label>
                   <input
@@ -532,7 +597,7 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                       padding: "6px",
                       border: "1px solid #ccc",
                       borderRadius: "3px",
-                      fontSize: "12px"
+                      fontSize: "12px",
                     }}
                   />
                 </div>
@@ -555,26 +620,32 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                     />
                   </div> */}
 
-
-                {values.elementType === 'K_OUT_OF_N' && (
-                  <div style={{ marginBottom: '15px' }}>
+                {values.elementType === "K_OUT_OF_N" && (
+                  <div style={{ marginBottom: "15px" }}>
                     <button
                       type="button"
                       onClick={handleSwitchClick}
                       style={{
-                        padding: '8px 16px',
-                        border: '1px solid #007bff',
-                        borderRadius: '3px',
-                        background: 'white',
-                        color: '#007bff',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
+                        padding: "8px 16px",
+                        border: "1px solid #007bff",
+                        borderRadius: "3px",
+                        background: "white",
+                        color: "#007bff",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
                       }}
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#007bff" strokeWidth="2">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#007bff"
+                        strokeWidth="2"
+                      >
                         <path d="M18 6L6 18" />
                         <path d="M6 6L18 18" />
                       </svg>
@@ -586,20 +657,27 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
 
               {/* Column 2 */}
               <div>
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Repair:
                   </label>
                   <select
                     value={values.repair}
-                    onChange={(e) => handleChange('repair', e.target.value)}
+                    onChange={(e) => handleChange("repair", e.target.value)}
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      backgroundColor: '#f9f9f9'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
+                      backgroundColor: "#f9f9f9",
                     }}
                   >
                     <option value="Full repair">Full repair</option>
@@ -608,65 +686,94 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     <input
                       type="checkbox"
-                      checked={values.inspectionPeriod !== ''}
-                      onChange={(e) => handleChange('inspectionPeriod', e.target.checked ? '--' : '')}
-                      style={{ marginRight: '5px' }}
+                      checked={values.inspectionPeriod !== ""}
+                      onChange={(e) =>
+                        handleChange(
+                          "inspectionPeriod",
+                          e.target.checked ? "--" : "",
+                        )
+                      }
+                      style={{ marginRight: "5px" }}
                     />
                     Inspection period:
                   </label>
                   <input
                     type="text"
                     value={values.inspectionPeriod}
-                    onChange={(e) => handleChange('inspectionPeriod', e.target.value)}
-                    disabled={values.inspectionPeriod === ''}
+                    onChange={(e) =>
+                      handleChange("inspectionPeriod", e.target.value)
+                    }
+                    disabled={values.inspectionPeriod === ""}
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      backgroundColor: values.inspectionPeriod === '' ? '#f0f0f0' : 'white'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
+                      backgroundColor:
+                        values.inspectionPeriod === "" ? "#f0f0f0" : "white",
                     }}
                     placeholder="--"
                   />
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Duty cycle [%]:
                   </label>
                   <input
                     type="text"
                     value={values.dutyCycle}
-                    onChange={(e) => handleChange('dutyCycle', e.target.value)}
+                    onChange={(e) => handleChange("dutyCycle", e.target.value)}
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
                     }}
                   />
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Color:
                   </label>
                   <input
                     type="color"
                     value={values.color}
-                    onChange={(e) => handleChange('color', e.target.value)}
+                    onChange={(e) => handleChange("color", e.target.value)}
                     style={{
-                      width: '100%',
-                      height: '30px',
-                      padding: '0',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px'
+                      width: "100%",
+                      height: "30px",
+                      padding: "0",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
                     }}
                   />
                 </div>
@@ -744,20 +851,29 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                     )}
                   </div> */}
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Repair distribution:
                   </label>
                   <select
                     value={values.repairDistribution}
-                    onChange={(e) => handleChange('repairDistribution', e.target.value)}
+                    onChange={(e) =>
+                      handleChange("repairDistribution", e.target.value)
+                    }
                     style={{
-                      width: '100%',
-                      padding: '6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      backgroundColor: '#f9f9f9'
+                      width: "100%",
+                      padding: "6px",
+                      border: "1px solid #ccc",
+                      borderRadius: "3px",
+                      fontSize: "12px",
+                      backgroundColor: "#f9f9f9",
                     }}
                   >
                     <option value="Exponential">Exponential</option>
@@ -771,23 +887,43 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                   </select>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '10px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "10px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     FR distribution parameters:
                   </label>
-                  <div style={{ display: 'flex', gap: '10px', marginBottom: '5px', flexWrap: 'wrap' }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      marginBottom: "5px",
+                      flexWrap: "wrap",
+                    }}
+                  >
                     <div>
-                      <label style={{ fontSize: '11px', marginRight: '5px' }}>MTBF [hours]:</label>
+                      <label style={{ fontSize: "11px", marginRight: "5px" }}>
+                        MTBF [hours]:
+                      </label>
                       <input
                         type="text"
-                        value={values?.fr ? (1 / parseFloat(values.fr)).toFixed(2) : ""}
-                        onChange={(e) => handleChange('fr', e.target.value)}
+                        value={
+                          values?.fr
+                            ? (1 / parseFloat(values.fr)).toFixed(2)
+                            : ""
+                        }
+                        onChange={(e) => handleChange("fr", e.target.value)}
                         style={{
-                          width: '100px',
-                          padding: '4px',
-                          border: '1px solid #ccc',
-                          borderRadius: '3px',
-                          fontSize: '11px'
+                          width: "100px",
+                          padding: "4px",
+                          border: "1px solid #ccc",
+                          borderRadius: "3px",
+                          fontSize: "11px",
                         }}
                         placeholder="445089"
                       />
@@ -811,22 +947,31 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '15px' }}>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '10px', fontWeight: 'bold' }}>
+                <div style={{ marginBottom: "15px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontSize: "10px",
+                      fontWeight: "bold",
+                    }}
+                  >
                     Repair distribution parameters:
                   </label>
                   <div>
-                    <label style={{ fontSize: '11px', marginRight: '5px' }}>MCT [hours]:</label>
+                    <label style={{ fontSize: "11px", marginRight: "5px" }}>
+                      MCT [hours]:
+                    </label>
                     <input
                       type="text"
                       value={values.mct}
-                      onChange={(e) => handleChange('mct', e.target.value)}
+                      onChange={(e) => handleChange("mct", e.target.value)}
                       style={{
-                        width: '100px',
-                        padding: '4px',
-                        border: '1px solid #ccc',
-                        borderRadius: '3px',
-                        fontSize: '11px'
+                        width: "100px",
+                        padding: "4px",
+                        border: "1px solid #ccc",
+                        borderRadius: "3px",
+                        fontSize: "11px",
                       }}
                       placeholder="0127333"
                     />
@@ -837,23 +982,25 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
           </div>
 
           {/* Buttons */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '10px',
-            paddingTop: '20px',
-            borderTop: '1px solid #eee'
-          }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "10px",
+              paddingTop: "20px",
+              borderTop: "1px solid #eee",
+            }}
+          >
             <button
               type="button"
               onClick={onClose}
               style={{
-                padding: '8px 16px',
-                border: '1px solid #ccc',
-                borderRadius: '3px',
-                background: '#f5f5f5',
-                cursor: 'pointer',
-                fontSize: '12px'
+                padding: "8px 16px",
+                border: "1px solid #ccc",
+                borderRadius: "3px",
+                background: "#f5f5f5",
+                cursor: "pointer",
+                fontSize: "12px",
               }}
             >
               Cancel
@@ -861,13 +1008,13 @@ const ElementParametersModal = ({ isOpen, onClose, onSubmit, setLoadChange, pare
             <button
               type="submit"
               style={{
-                padding: '8px 16px',
-                border: 'none',
-                borderRadius: '3px',
-                background: '#007bff',
-                color: 'white',
-                cursor: 'pointer',
-                fontSize: '12px'
+                padding: "8px 16px",
+                border: "none",
+                borderRadius: "3px",
+                background: "#007bff",
+                color: "white",
+                cursor: "pointer",
+                fontSize: "12px",
               }}
             >
               OK
