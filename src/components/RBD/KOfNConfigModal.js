@@ -144,6 +144,20 @@ export const KOfNConfigModal = ({
     }
   }, [n, selectedLabel]);
 
+
+useEffect(() => {
+  console.log("initialData.components@@@@", initialData);
+  if (initialData) {
+    setK(initialData.k || "");
+    setN(initialData.n || "");
+    setLambda(initialData.lambda || 0);
+    setMu(initialData.mu || 0);
+    setFormula(initialData.formula || "standard");
+    // ... rest of the code
+  }
+}, [initialData]);
+
+
   // Effect 2: Initialize when switching to Non-Identical mode
   useEffect(() => {
     if (
