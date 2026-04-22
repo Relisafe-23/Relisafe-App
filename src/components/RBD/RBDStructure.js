@@ -2230,8 +2230,8 @@ export default function RBDButton() {
       console.log(menu, "menu 123456789");
       console.log(idforApi?.index, "idforApi?.location");
       console.log(innerTargetId, 'innerTargetId Add regular')
-      if (innerTargetId && innerTargetId.includes("parallel")) {
-        const innerIdMatch = innerTargetId.match(/^([a-f0-9]+)/);
+      const innerIdMatch = innerTargetId?.match(/^([a-f0-9]+)/);
+      if (innerTargetId && innerTargetId?.includes("parallel")) {
 
         if (innerIdMatch && innerIdMatch[1]) {
           console.log(innerIdMatch[1], 'innerIdMatch[1]');
@@ -2245,7 +2245,7 @@ export default function RBDButton() {
         mode: "add",
         blockId: nextId,
         blockType: action.replace("Add ", ""),
-        nodeIndex: clickedNodeInfo.index,
+        nodeIndex: (innerIdMatch && innerIdMatch[1]) ? innerIdMatch[1] : clickedNodeInfo.index,
         idforApi:
           menu?.index == idforApi?.branchIndex
             ? idforApi
