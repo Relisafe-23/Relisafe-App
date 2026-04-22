@@ -226,31 +226,24 @@ const ElementParametersModal = ({
     getProductData();
   }, [projectId, productId]); // Added proper dependencies
 
-     const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
-        const MTBF = Number(mtbf || 0);
-        const MTTR = Number(mttr || 0);
-        const t = Number(missionTime || 0);
+    const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+  const MTBF = Number(mtbf || 0);
+  const MTTR = Number(mttr || 0);
+  const t = Number(missionTime || 0);
 
-        let unavailability = 0;
-        let reliability = 0;
+  let reliability = 0;
+  let unavailability = 0;
 
-console.log("@@@@@@@@")
+  if (MTBF > 0 && t >= 0) {
+    const r = Math.exp(-t / MTBF);
+    const u = 1 - r;
 
+    reliability = r < 1e-4 ? r.toExponential(2) : r.toFixed(7);
+    unavailability = u < 1e-4 ? u.toExponential(2) : u.toFixed(7);
+  }
 
-        if (MTBF > 0 && t >= 0) {
-          const r = Math.exp(-t / MTBF);
-
-          reliability =
-            r < 1e-4
-              ? r.toExponential(2)
-              : r.toFixed(7);
-        }
-
-        return {
-          reliability,
-          unavailability
-        };
-      }
+  return { reliability, unavailability };
+};
   
   if (!isOpen) return null;
 
@@ -268,8 +261,8 @@ console.log("@@@@@@@@")
         mttr: values.mttr,
         missionTime
       });
-   
-    console.log("reliability,availability")
+          
+    console.log("reliability1,availability2", reliability, unavailability)
       const payload = {
         indexCount: values.indexCount,
         partNumber: values.partNumber,
@@ -305,7 +298,12 @@ console.log("@@@@@@@@")
       console.log("responseeeeeeeeee",response)
       await getBlock();
 
-      onSubmit(values);
+     onSubmit({
+  ...values,
+  reliability,
+  unavailability,
+  targetId: elementModal?.idforApi?.targetId || elementModal?.nodeIndex
+});
       onClose();
     } catch (error) {
       console.error("Submission failed:", error);

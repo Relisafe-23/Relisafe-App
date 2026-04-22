@@ -326,7 +326,7 @@ console.log("mission",missionTime)
 
   // ──────────────────────────────────────────────────────────────────────────
   // Regular Block Renderer
-  // ──────────────────────────────────────────────────────────────────────────
+  // ────────────────────────────────────────────────────────────────────────
   function renderRegularBlock() {
     const BLOCK_W = CONSTANTS.BLOCK_W;
     const BLOCK_H = CONSTANTS.BLOCK_H;
@@ -347,36 +347,24 @@ console.log("mission",missionTime)
       // const missionTime = missionTime;
    
       console.log("MissionTime",missionTime)
-      const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+       const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+  const MTBF = Number(mtbf || 0);
+  const MTTR = Number(mttr || 0);
+  const t = Number(missionTime || 0);
 
-        const MTBF = Number(mtbf || 0);
-        const MTTR = Number(mttr || 0);
-        const t = Number(missionTime || 0);
-       console.log("MTTR",MTTR)
-       console.log("MTBF",MTBF)
-       console.log("t",t)
-        // Default values
-        let unavailability = '';
-        let reliability = "";
+  let reliability = 0;
+  let unavailability = 0;
 
-        const u = MTTR / (MTBF + MTTR);
-        unavailability = Number(u.toFixed(4));
+  if (MTBF > 0 && t >= 0) {
+    const r = Math.exp(-t / MTBF);
+    const u = 1 - r;
 
+    reliability = r < 1e-4 ? r.toExponential(2) : r.toFixed(7);
+    unavailability = u < 1e-4 ? u.toExponential(2) : u.toFixed(7);
+  }
 
-
-        const r = Math.exp(-t / MTBF);
-             console.log("r",r)
-        reliability =
-          r < 1e-4
-            ? r.toExponential(2)
-            : r.toFixed(7);
-
-      console.log("ReliaBility",reliability);
-        return {
-          reliability,
-          unavailability
-        };
-      };
+  return { reliability, unavailability };
+};
 
 
       switch (t) {
@@ -387,7 +375,7 @@ console.log("mission",missionTime)
             mttr,
             missionTime
           });
-        console.log("reliability1234555",reliability)
+        // console.log("reliability1234555",reliability)
           return (
             <>
               <tspan x={x + BLOCK_W / 2} dy="-4">

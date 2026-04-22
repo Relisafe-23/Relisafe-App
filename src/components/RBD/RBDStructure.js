@@ -1069,6 +1069,7 @@ export const BlockContextMenu = ({
 export default function RBDButton() {
   const { id, rbdId } = useParams();
   const projectId = id;
+      
 
   const [parallelBranchMode, setParallelBranchMode] = useState({
     active: false,
@@ -1194,47 +1195,198 @@ export default function RBDButton() {
     getBlock();
   }, [rbdId, projectId, loadChange]);
 
+// const getBlock = () => {
+//   Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
+//     .then((res) => {
+
+//       const data = res.data.data;
+//       setShowSymbol(data.length > 0);
+//       setBlocks(data);
+
+//   console.log("res----",res.data.data)
+//       const unavailabilities = data
+//         .map(item => Number(item.reliability)) // your field actually stores U
+//         .filter(u => !isNaN(u));
+// const horizontalBranches = data
+//   .filter(item => item.arrangement === 'horizontal')
+//   .map(item => item.branches.blocks)
+//   // .map(item=>item.blocks);
+
+// console.log("Horizontal", horizontalBranches);
+
+//       // Convert to reliability
+//       const reliabilities = unavailabilities.map(u => 1 - u);
+
+//       console.log("Reliabilities:", reliabilities);
+
+//       // Multiply (Series system)
+//       const totalReliability = reliabilities.reduce(
+//         (acc, val) => acc * val,
+//         1
+//       );
+
+//       // Final system unavailability
+//       const totalUnavailability = 1 - totalReliability;
+
+//       console.log("Total Reliability:", totalReliability);
+//       console.log("Total Unavailability:", totalUnavailability);
+//       setTotalUnavailability(totalUnavailability);
+//       setTotalReliability(totalReliability);
+//     })
+//     .catch(err => console.log(err, 'error'));
+// };
 const getBlock = () => {
   Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
     .then((res) => {
-
       const data = res.data.data;
+
+      console.log("API Response:", data);
+
       setShowSymbol(data.length > 0);
       setBlocks(data);
 
-  console.log("res----",res.data.data)
-      const unavailabilities = data
-        .map(item => Number(item.reliability)) // your field actually stores U
-        .filter(u => !isNaN(u));
-const horizontalBranches = data
-  .filter(item => item.arrangement === 'horizontal')
-  .map(item => item.branches.blocks)
-  // .map(item=>item.blocks);
+      // Function to compute reliability
+      const computeGroupReliability = (blocks, arrangement) => {
+        console.log("====================================");
+        console.log("computeGroupReliability called");
+        console.log("Arrangement:", arrangement);
+        console.log("Blocks received:", blocks);
 
-console.log("Horizontal", horizontalBranches);
+        const reliabilities = blocks
+          .map((item, index) => {
+            const r = Number(item.reliability);
 
-      // Convert to reliability
-      const reliabilities = unavailabilities.map(u => 1 - u);
+            console.log(`Block ${index + 1}:`, item);
+            console.log(`Block ${index + 1} Reliability:`, r);
 
-      console.log("Reliabilities:", reliabilities);
+            return isNaN(r) ? null : r;
+          })
+          .filter((r) => r !== null);
 
-      // Multiply (Series system)
-      const totalReliability = reliabilities.reduce(
-        (acc, val) => acc * val,
-        1
-      );
+        console.log("Valid Reliabilities:", reliabilities);
 
-      // Final system unavailability
+        if (reliabilities.length === 0) {
+          console.log("No valid reliabilities found. Returning 1");
+          return 1;
+        }
+
+        if (arrangement === "horizontal") {
+          console.log("Parallel formula applied");
+
+          const productOfUnavailabilities = reliabilities.reduce(
+            (acc, r, i) => {
+              console.log(
+                `Step ${i + 1}: acc=${acc}, (1-${r})=${1 - r}, result=${
+                  acc * (1 - r)
+                }`
+              );
+              return acc * (1 - r);
+            },
+            1
+          );
+
+          console.log(
+            "Product of Unavailabilities:",
+            productOfUnavailabilities
+          );
+
+          const parallelReliability = 1 - productOfUnavailabilities;
+
+          console.log("Parallel Reliability:", parallelReliability);
+
+          return parallelReliability;
+        } else {
+          console.log("Series formula applied");
+
+          const seriesReliability = reliabilities.reduce((acc, r, i) => {
+            console.log(
+              `Step ${i + 1}: acc=${acc}, r=${r}, result=${acc * r}`
+            );
+            return acc * r;
+          }, 1);
+
+          console.log("Series Reliability:", seriesReliability);
+
+          return seriesReliability;
+        }
+      };
+
+      // Top level reliability mapping
+      const topLevelReliabilities = data.map((item, index) => {
+        console.log("====================================");
+console.log(
+  `Top Level Item ${index + 1}:`,
+  item.branches
+    ?.filter(branch => branch.blocks)
+    ?.map(branch =>
+      branch.blocks.map(block => ({
+        reliability: block.reliability,
+        unavailability: 1 - Number(block.reliability)
+      }))
+    )
+);
+
+        const hasBranches =
+          item.arrangement === "horizontal" &&
+          Array.isArray(item.branches?.blocks) &&
+          item.branches.blocks.length > 0;
+
+        console.log("item.arrangement:", item.arrangement);
+        console.log(
+          "item.arrangement === 'horizontal':",
+          item.arrangement === "horizontal"
+        );
+        console.log("item.branches?.blocks:", item.branches?.blocks);
+        console.log(
+          "Array.isArray(item.branches?.blocks):",
+          Array.isArray(item.branches?.blocks)
+        );
+        console.log(
+          "item.branches.blocks.length:",
+          item.branches?.blocks?.length
+        );
+        console.log("hasBranches:", hasBranches);
+
+        if (hasBranches) {
+          const parallelR = computeGroupReliability(
+            item.branches.blocks,
+            "horizontal"
+          );
+
+          console.log("Parallel Section Reliability:", parallelR);
+
+          return parallelR;
+        } else {
+          const r = Number(item.reliability);
+
+          console.log("Single Block Reliability:", r);
+
+          return isNaN(r) ? 1 : r;
+        }
+      });
+
+      console.log("====================================");
+      console.log("Top Level Reliabilities:", topLevelReliabilities);
+
+      // Final system reliability (series)
+      const totalReliability = topLevelReliabilities.reduce((acc, r, i) => {
+        console.log(
+          `Final Step ${i + 1}: acc=${acc}, r=${r}, result=${acc * r}`
+        );
+        return acc * r;
+      }, 1);
+
       const totalUnavailability = 1 - totalReliability;
 
+      console.log("====================================");
       console.log("Total Reliability:", totalReliability);
       console.log("Total Unavailability:", totalUnavailability);
-      setTotalUnavailability(totalUnavailability);
-      setTotalReliability(totalReliability);
-    })
-    .catch(err => console.log(err, 'error'));
-};
 
+      setTotalReliability(totalReliability);
+      setTotalUnavailability(totalUnavailability);
+    })
+    .catch((err) => console.log(err, "error"));
+};
   const handleKOfNSelect = (data) => {
     console.log("K-of-N created successfully:", data);
     // Refresh the blocks
@@ -2206,8 +2358,8 @@ console.log("Horizontal", horizontalBranches);
           marginTop: "50px",
         }}
       >
- <div className="card shadow d-flex flex-column justify-content-center align-items-center p-3">
-
+ {/* <div className="card shadow d-flex flex-column justify-content-center align-items-center p-3"> */}
+<div>
   <div>
     <button
       onClick={() => setShowSymbol(true)}
@@ -2217,8 +2369,8 @@ console.log("Horizontal", horizontalBranches);
     </button>
   </div>
 
-  {/* Bottom content */}
-  <div className="mt-3">
+  {/* Bottom content
+  <div className="mt-1">
     <div>
       <b>Reliability: </b>{totalReliability}
     </div>
@@ -2226,7 +2378,7 @@ console.log("Horizontal", horizontalBranches);
     <div>
       <b>Unavailability: </b>{totalUnavailability}
     </div>
-  </div>
+  </div> */}
 
 </div>
    
