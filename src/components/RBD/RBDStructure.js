@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ReactFlow, Background, Controls } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import SplitKofN from "./SplitKofN";
@@ -95,24 +95,24 @@ const getNestedParallelSectionWidth = (block) => {
   const maxBranchW =
     branches.length > 0
       ? Math.max(
-          ...branches.map((br) => {
-            const branchBlocks = br.blocks || [];
-            let totalW = 0;
-            branchBlocks.forEach((b, idx) => {
-              if (
-                (b.type === "Parallel Section" ||
-                  b.elementType === "Parallel Section") &&
-                b.branches?.length > 0
-              ) {
-                totalW +=
-                  getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
-              } else {
-                totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
-              }
-            });
-            return Math.max(totalW, NESTED.BW);
-          }),
-        )
+        ...branches.map((br) => {
+          const branchBlocks = br.blocks || [];
+          let totalW = 0;
+          branchBlocks.forEach((b, idx) => {
+            if (
+              (b.type === "Parallel Section" ||
+                b.elementType === "Parallel Section") &&
+              b.branches?.length > 0
+            ) {
+              totalW +=
+                getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
+            } else {
+              totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
+            }
+          });
+          return Math.max(totalW, NESTED.BW);
+        }),
+      )
       : NESTED.BW;
 
   const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD;
@@ -781,7 +781,7 @@ export const BiDirectionalSymbol = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               const id = midNodeId(bIdx);
-                              onOpenMenu(e.clientX, e.clientY, branch?._id);
+                              onOpenMenu(e.clientX, e.clientY, branch?._id, `${branch.blocks[0]._id} ,parallel`);
                               // setIdforApi({
                               //   branchId: branch?._id,
                               //   branchIndex: branch?.index,
@@ -1065,7 +1065,11 @@ export const BlockContextMenu = ({
 
 // ─── RBDButton ────────────────────────────────────────────────────────────────
 
+
 export default function RBDButton() {
+
+
+
   const { id, rbdId } = useParams();
   const projectId = id;
 
@@ -1074,9 +1078,15 @@ export default function RBDButton() {
     startNode: null,
     endNode: null,
   });
+
+  const parallelBranchModeRef = useRef(parallelBranchMode);
+
+
+
   const [showSymbol, setShowSymbol] = useState(false);
   const [menu, setMenu] = useState(null);
   const [targetId, setTargetId] = useState(null);
+  const [innerTargetId, setInnerTargetId] = useState(null)
   const [targtBranchId, setTargetBranchId] = useState(null);
 
   // setTargetBranchId()
@@ -1216,124 +1226,456 @@ export default function RBDButton() {
   };
 
   // ── parallel branch creation ───────────────────────────────────────────────
-  const createParallelBranch = (startNode, endNode) => {
-    const parseNode = (n) =>
-      typeof n === "string" && n.startsWith("branch-")
-        ? {
-            type: "branch",
-            branchId: parseInt(n.split("-")[1]),
-            position: n.split("-")[2],
-          }
-        : { type: "top-level", nodeIndex: parseInt(n) };
+  // const createParallelBranch = (startNode, endNode) => {
+  //   console.log(startNode, 'startNode')
+  //   console.log(endNode, 'endNode')
 
-    const start = parseNode(startNode);
-    const end = parseNode(endNode);
+
+  //   // const parseNode = (n) =>
+  //   // typeof n === "string" && n.startsWith("branch-")
+  //   //   ? {
+  //   //       type: "branch",
+  //   //       branchId: parseInt(n.split("-")[1]),
+  //   //       position: n.split("-")[2],
+  //   //     }
+  //   //   : { type: "top-level", nodeIndex: parseInt(n) };
+
+  //   const parseNode = (n) =>
+  //     typeof n === "string" && n.startsWith("branch-")
+  //       ? {
+  //         type: "branch",
+  //         branchId: n.split("-")[1],
+  //         position: n.split("-")[2],
+  //       }
+  //       : {
+  //         type: "top-level",
+  //         id: n,
+  //       };
+
+  //   const start = parseNode(startNode);
+  //   const end = parseNode(endNode);
+
+
+  //   console.log(start, 'start')
+  //   console.log(end, 'end')
+
+
+  //   const topLevel = blocks.filter(
+  //     (b) => b.type === "Parallel Section" || !b.data?.parentSection,
+  //   );
+
+  //   console.log(start.type, 'start.type')
+  //   console.log(topLevel, 'topLevel')
+
+  //   if (start.type !== "top-level" || end.type !== "top-level") return;
+  //   // const si = start.nodeIndex,
+  //   //   ei = end.nodeIndex;
+
+  //   const si = topLevel.findIndex((b) => b.id === start.id);
+  //   const ei = topLevel.findIndex((b) => b.id === end.id);
+  //   if (si < 0 || ei < 0 || si >= ei) {
+  //     alert("Invalid start/end nodes");
+  //     return;
+  //   }
+
+  //   const mainBlocks = topLevel.slice(si, ei);
+  //   if (!mainBlocks.length) {
+  //     alert("No blocks between nodes");
+  //     return;
+  //   }
+
+  //   const sectionId = nextId;
+  //   const section = {
+  //     id: sectionId,
+  //     type: "Parallel Section",
+  //     data: {
+  //       elementType: "Parallel Section",
+  //       name: "Parallel Section",
+  //       branchCount: 2,
+  //       sectionId,
+  //       isParallel: true,
+  //       arrangement: "horizontal",
+  //       k: 1,
+  //       n: 2,
+  //     },
+  //     branches: [],
+  //   };
+  //   const mainBranch = {
+  //     id: sectionId + 1,
+  //     type: "Parallel Branch",
+  //     data: {
+  //       elementType: "Parallel Branch",
+  //       name: "Main Branch",
+  //       branchIndex: 0,
+  //       parentSection: sectionId,
+  //       isParallelBranch: true,
+  //       isMainBranch: true,
+  //     },
+  //     blocks: mainBlocks.map((b) => ({
+  //       id: b.id,
+  //       type: b.type,
+  //       data: { ...b.data, parentSection: sectionId },
+  //     })),
+  //   };
+  //   const bypassBranch = {
+  //     id: sectionId + 2,
+  //     type: "Parallel Branch",
+  //     data: {
+  //       elementType: "Parallel Branch",
+  //       name: "Bypass Branch",
+  //       branchIndex: 1,
+  //       parentSection: sectionId,
+  //       isParallelBranch: true,
+  //       isBypassBranch: true,
+  //     },
+  //     blocks: [
+  //       {
+  //         id: sectionId + 3,
+  //         type: "Regular",
+  //         data: {
+  //           elementType: "Regular",
+  //           name: "Bypass Block",
+  //           parentSection: sectionId,
+  //         },
+  //       },
+  //     ],
+  //   };
+
+  //   const toRemove = new Set(mainBlocks.map((b) => b.id));
+  //   const remaining = blocks.filter((b) => !toRemove.has(b.id));
+  //   const insertAt = remaining.findIndex((b) => b.id === mainBlocks[0].id);
+  //   const next = [...remaining];
+  //   insertAt !== -1
+  //     ? next.splice(insertAt, 0, section, mainBranch, bypassBranch)
+  //     : next.push(section, mainBranch, bypassBranch);
+  //   setBlocks(next);
+  //   setNextId((id) => id + 4);
+  // };
+
+  // const createParallelBranch = (startNode, endNode) => {
+  //   const parseNode = (n) =>
+  //     typeof n === "string" && n.startsWith("branch-")
+  //       ? { type: "branch", branchId: n.split("-")[1], position: n.split("-")[2] }
+  //       : { type: "top-level", id: n };
+
+  //   const start = parseNode(startNode);
+  //   const end = parseNode(endNode);
+
+  //   if (start.type !== "top-level" || end.type !== "top-level") return;
+
+  //   const topLevel = blocks.filter(
+  //     (b) => b.type === "Parallel Section" || !b.data?.parentSection,
+  //   );
+
+  //   // ✅ FIX: compare against both _id and id since API returns MongoDB _id
+  //   const getId = (b) => String(b._id ?? b.id ?? "");
+
+  //   const si = topLevel.findIndex((b) => getId(b) === String(start.id));
+  //   const ei = topLevel.findIndex((b) => getId(b) === String(end.id));
+
+  //   console.log("si:", si, "ei:", ei);
+
+  //   if (si < 0 || ei < 0 || si >= ei) {
+  //     toast.error("Please select a start node and an end node with blocks between them");
+  //     return;
+  //   }
+
+  //   // slice from si up to (not including) ei — these are the blocks to wrap
+  //   const mainBlocks = topLevel.slice(si, ei);
+  //   if (!mainBlocks.length) {
+  //     toast.error("No blocks between the selected nodes");
+  //     return;
+  //   }
+
+  //   const sectionId = nextId;
+
+  //   const section = {
+  //     id: sectionId,
+  //     type: "Parallel Section",
+  //     k: 1,
+  //     n: 2,
+  //     isParallel: true,
+  //     branches: [
+  //       {
+  //         id: sectionId + 1,
+  //         _id: sectionId + 1,
+  //         index: 0,
+  //         name: "Main Branch",
+  //         type: "Parallel Branch",
+  //         isParallelBranch: true,
+  //         isMainBranch: true,
+  //         blocks: mainBlocks.map((b) => ({
+  //           ...b,
+  //           parentSection: sectionId,
+  //         })),
+  //       },
+  //       {
+  //         id: sectionId + 2,
+  //         _id: sectionId + 2,
+  //         index: 1,
+  //         name: "Bypass Branch",
+  //         type: "Parallel Branch",
+  //         isParallelBranch: true,
+  //         isBypassBranch: true,
+  //         blocks: [
+  //           {
+  //             id: sectionId + 3,
+  //             type: "Regular",
+  //             name: "Bypass Block",
+  //             parentSection: sectionId,
+  //           },
+  //         ],
+  //       },
+  //     ],
+  //     data: {
+  //       elementType: "Parallel Section",
+  //       name: "Parallel Section",
+  //       k: 1,
+  //       n: 2,
+  //       isParallel: true,
+  //     },
+  //   };
+
+  //   // ✅ FIX: remove mainBlocks from the flat blocks array using _id OR id
+  //   const toRemove = new Set(mainBlocks.map((b) => getId(b)));
+  //   const remaining = blocks.filter((b) => !toRemove.has(getId(b)));
+
+  //   // ✅ FIX: insert at the position where the FIRST mainBlock was
+  //   const insertAt = blocks.findIndex((b) => getId(b) === getId(mainBlocks[0]));
+  //   const next = [...remaining];
+
+  //   // Calculate correct insert position in the remaining array
+  //   // (some blocks before insertAt may have been removed, so recompute)
+  //   const insertInRemaining = remaining.findIndex(
+  //     (b) => {
+  //       // insert before the first block that came AFTER all removed blocks
+  //       const origIdx = blocks.findIndex((ob) => getId(ob) === getId(b));
+  //       return origIdx > insertAt + mainBlocks.length - 1;
+  //     }
+  //   );
+
+  //   if (insertInRemaining !== -1) {
+  //     next.splice(insertInRemaining, 0, section);
+  //   } else {
+  //     next.push(section);
+  //   }
+
+  //   setBlocks(next);
+  //   setNextId((id) => id + 4);
+  // };
+
+  // const createParallelBranch = (startNode, endNode) => {
+  //   const getId = (b) => String(b._id ?? b.id ?? "");
+
+  //   const topLevel = blocks.filter(
+  //     (b) => b.type === "Parallel Section" || !b.data?.parentSection,
+  //   );
+
+  //   // Each node's RelateId = the block immediately to its LEFT
+  //   // startNode's RelateId = block[si], so we wrap blocks AFTER si (starting at si+1)
+  //   // endNode's RelateId   = block[ei], so we wrap blocks UP TO AND INCLUDING ei
+
+  //   const si = startNode == null
+  //     ? -1  // first node (before all blocks) has no RelateId
+  //     : topLevel.findIndex((b) => getId(b) === String(startNode));
+
+  //   const ei = endNode == null
+  //     ? topLevel.length - 1
+  //     : topLevel.findIndex((b) => getId(b) === String(endNode));
+
+  //   console.log("si:", si, "ei:", ei);
+
+  //   // blocks to wrap = topLevel[si+1 .. ei] inclusive
+  //   const wrapStart = si + 1;
+  //   const wrapEnd = ei + 1; // slice end is exclusive
+
+  //   if (wrapStart >= wrapEnd) {
+  //     toast.error("Please select nodes with at least one block between them");
+  //     return;
+  //   }
+
+  //   const mainBlocks = topLevel.slice(wrapStart, wrapEnd);
+  //   if (!mainBlocks.length) {
+  //     toast.error("No blocks between the selected nodes");
+  //     return;
+  //   }
+
+  //   console.log("wrapping blocks:", mainBlocks.map(b => getId(b)));
+
+  //   const sectionId = nextId;
+
+  //   const section = {
+  //     id: sectionId,
+  //     type: "Parallel Section",
+  //     k: 1,
+  //     n: 2,
+  //     isParallel: true,
+  //     branches: [
+  //       {
+  //         id: sectionId + 1,
+  //         _id: sectionId + 1,
+  //         index: 0,
+  //         name: "Main Branch",
+  //         type: "Parallel Branch",
+  //         isParallelBranch: true,
+  //         isMainBranch: true,
+  //         blocks: mainBlocks.map((b) => ({ ...b, parentSection: sectionId })),
+  //       },
+  //       {
+  //         id: sectionId + 2,
+  //         _id: sectionId + 2,
+  //         index: 1,
+  //         name: "Bypass Branch",
+  //         type: "Parallel Branch",
+  //         isParallelBranch: true,
+  //         isBypassBranch: true,
+  //         blocks: [
+  //           {
+  //             id: sectionId + 3,
+  //             type: "Regular",
+  //             name: "Bypass Block",
+  //             parentSection: sectionId,
+  //           },
+  //         ],
+  //       },
+  //     ],
+  //     data: {
+  //       elementType: "Parallel Section",
+  //       name: "Parallel Section",
+  //       k: 1,
+  //       n: 2,
+  //       isParallel: true,
+  //     },
+  //   };
+
+  //   // Remove mainBlocks from flat array, insert section where they were
+  //   const toRemove = new Set(mainBlocks.map((b) => getId(b)));
+
+  //   // Find insertion point in original blocks array (before removal)
+  //   const insertAt = blocks.findIndex((b) => getId(b) === getId(mainBlocks[0]));
+
+  //   const remaining = blocks.filter((b) => !toRemove.has(getId(b)));
+
+  //   // After removal, the insertion point shifts — find where to insert
+  //   // by locating the first block in remaining that originally came after insertAt
+  //   let insertInRemaining = remaining.findIndex(
+  //     (b) => blocks.findIndex((ob) => getId(ob) === getId(b)) > insertAt + mainBlocks.length - 1
+  //   );
+  //   if (insertInRemaining === -1) insertInRemaining = remaining.length;
+
+  //   const next = [...remaining];
+  //   next.splice(insertInRemaining, 0, section);
+
+  //   setBlocks(next);
+  //   setNextId((id) => id + 4);
+  // };
+
+  const createParallelBranch = async (startNode, endNode) => {
+    const getId = (b) => String(b._id ?? b.id ?? "");
+
     const topLevel = blocks.filter(
       (b) => b.type === "Parallel Section" || !b.data?.parentSection,
     );
 
-    if (start.type !== "top-level" || end.type !== "top-level") return;
-    const si = start.nodeIndex,
-      ei = end.nodeIndex;
-    if (si < 0 || ei < 0 || si >= ei) {
-      alert("Invalid start/end nodes");
+    const si = startNode == null
+      ? -1
+      : topLevel.findIndex((b) => getId(b) === String(startNode));
+
+    const ei = endNode == null
+      ? topLevel.length - 1
+      : topLevel.findIndex((b) => getId(b) === String(endNode));
+
+    const wrapStart = si + 1;
+    const wrapEnd = ei + 1;
+
+    if (wrapStart >= wrapEnd) {
+      toast.error("Please select nodes with at least one block between them");
       return;
     }
 
-    const mainBlocks = topLevel.slice(si, ei);
+    const mainBlocks = topLevel.slice(wrapStart, wrapEnd);
     if (!mainBlocks.length) {
-      alert("No blocks between nodes");
+      toast.error("No blocks between the selected nodes");
       return;
     }
 
-    const sectionId = nextId;
-    const section = {
-      id: sectionId,
-      type: "Parallel Section",
-      data: {
-        elementType: "Parallel Section",
-        name: "Parallel Section",
-        branchCount: 2,
-        sectionId,
-        isParallel: true,
-        arrangement: "horizontal",
-        k: 1,
-        n: 2,
-      },
-      branches: [],
-    };
-    const mainBranch = {
-      id: sectionId + 1,
+    const payload = {
+      rbdId,
+      projectId,
+      companyId: localStorage.getItem("companyId"),
+      elementType: "Parallel Branch",
       type: "Parallel Branch",
-      data: {
-        elementType: "Parallel Branch",
-        name: "Main Branch",
-        branchIndex: 0,
-        parentSection: sectionId,
-        isParallelBranch: true,
-        isMainBranch: true,
+      isParallel: true,
+      isParallelBranch: true,
+      range: {
+        startBlockId: getId(topLevel[si]) ?? null,  // block to the LEFT of start node (null if first node)
+        endBlockId: getId(topLevel[ei]),           // block to the RIGHT of end node
+        blockIds: mainBlocks.map((b) => getId(b)),  // all blocks being wrapped
       },
-      blocks: mainBlocks.map((b) => ({
-        id: b.id,
-        type: b.type,
-        data: { ...b.data, parentSection: sectionId },
-      })),
-    };
-    const bypassBranch = {
-      id: sectionId + 2,
-      type: "Parallel Branch",
-      data: {
-        elementType: "Parallel Branch",
-        name: "Bypass Branch",
-        branchIndex: 1,
-        parentSection: sectionId,
-        isParallelBranch: true,
-        isBypassBranch: true,
-      },
-      blocks: [
-        {
-          id: sectionId + 3,
-          type: "Regular",
-          data: {
-            elementType: "Regular",
-            name: "Bypass Block",
-            parentSection: sectionId,
-          },
-        },
-      ],
+      k: 1,
+      n: 2,
+      branchCount: 2,
     };
 
-    const toRemove = new Set(mainBlocks.map((b) => b.id));
-    const remaining = blocks.filter((b) => !toRemove.has(b.id));
-    const insertAt = remaining.findIndex((b) => b.id === mainBlocks[0].id);
-    const next = [...remaining];
-    insertAt !== -1
-      ? next.splice(insertAt, 0, section, mainBranch, bypassBranch)
-      : next.push(section, mainBranch, bypassBranch);
-    setBlocks(next);
-    setNextId((id) => id + 4);
+    try {
+      await Api.post("/api/v1/elementParametersRBD/create", payload);
+      toast.success("Parallel branch created successfully");
+      getBlock(); // re-fetch so the diagram redraws with the new range
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to create parallel branch");
+    }
   };
 
-  // ── menu open ──────────────────────────────────────────────────────────────
-  const openMenu = (x, y, index) => {
-    console.log("called", x, y, index);
+  console.log(blocks, 'after parallel branch')
 
-    if (parallelBranchMode.active) {
-      if (!parallelBranchMode.startNode) {
-        setParallelBranchMode({
-          active: false,
-          startNode: null,
-          endNode: null,
-        });
+
+  useEffect(() => {
+    parallelBranchModeRef.current = parallelBranchMode;
+  }, [parallelBranchMode]);
+
+
+  // ── menu open ──────────────────────────────────────────────────────────────
+  // const openMenu = (x, y, index) => {
+  //   console.log("called", x, y, index);
+
+  //   if (parallelBranchMode.active) {
+  //     console.log(parallelBranchMode.startNode, 'startnode');
+  //     if (!parallelBranchMode.startNode) {
+  //       setParallelBranchMode({
+  //         active: false,
+  //         startNode: null,
+  //         endNode: null,
+  //       });
+  //       return;
+  //     }
+  //     createParallelBranch(parallelBranchMode.startNode, index);
+  //     setParallelBranchMode({ active: false, startNode: null, endNode: null });
+  //     return;
+  //   }
+  //   setMenu({ x, y, index });
+  //   console.log(index, "index from open menu");
+  //   setTargetId(index);
+  //   setSelectedNode(index);
+  //   setClickedNodeInfo({ index, x, y });
+  // };
+
+  const openMenu = (x, y, index, innerBlock) => {
+    const mode = parallelBranchModeRef.current; // ← avoids stale closure
+
+    if (mode.active) {
+      if (!mode.startNode && mode.startNode !== null) {
+        setParallelBranchMode({ active: false, startNode: null, endNode: null });
         return;
       }
-      createParallelBranch(parallelBranchMode.startNode, index);
+      createParallelBranch(mode.startNode, index);
       setParallelBranchMode({ active: false, startNode: null, endNode: null });
       return;
     }
+    console.log(innerBlock, 'innerBlock')
     setMenu({ x, y, index });
-    console.log(index, "index from open menu");
     setTargetId(index);
+    setInnerTargetId(innerBlock)
     setSelectedNode(index);
     setClickedNodeInfo({ index, x, y });
   };
@@ -1460,7 +1802,7 @@ export default function RBDButton() {
           productName: selectedRbd.productName || "",
           mtbf: selectedRbd.mtbf || null,
           fr: selectedRbd.fr || null,
-          targetId : targetId,
+          targetId: targetId,
         };
 
         // Call API to create the block
@@ -1747,12 +2089,12 @@ export default function RBDButton() {
         blocks.map((block) =>
           block.id === elementModal.blockId
             ? {
-                ...block,
-                data: {
-                  ...block.data,
-                  switchData: switchData,
-                },
-              }
+              ...block,
+              data: {
+                ...block.data,
+                switchData: switchData,
+              },
+            }
             : block,
         ),
       );
@@ -1809,6 +2151,8 @@ export default function RBDButton() {
     );
   }
 
+  { console.log(parallelBranchMode, 'parallelBranchMode') }
+
   {
     /* Highlight the start node */
   }
@@ -1837,19 +2181,32 @@ export default function RBDButton() {
 
   // ── node menu ──────────────────────────────────────────────────────────────
   const handleSelect = (action) => {
+
+    console.log(action, 'action from handle select')
     if (action === "Add Parallel Section") {
       setPendingAction({ type: "parallel", nodeIndex: clickedNodeInfo.index });
       setShowParallelModal(true);
       return;
     }
+    // if (action === "Add Parallel Branch") {
+    //   setParallelBranchMode({
+    //     active: true,
+    //     startNode: clickedNodeInfo.index,
+    //     endNode: null,
+    //   });
+    //   setMenu(null);
+    //   alert("Select the end node for the parallel branch");
+    //   return;
+    // }
+    // In handleSelect, change "Add Parallel Branch":
     if (action === "Add Parallel Branch") {
       setParallelBranchMode({
         active: true,
-        startNode: clickedNodeInfo.index,
+        startNode: targetId,  // ← targetId is the RelateId (block's _id), same as what openMenu passes for end node
         endNode: null,
       });
       setMenu(null);
-      alert("Select the end node for the parallel branch");
+      // Remove alert() — causes stale state issue
       return;
     }
     if (action === "Add K-out-of-N") {
@@ -1872,7 +2229,17 @@ export default function RBDButton() {
     if (action === "Add Regular") {
       console.log(menu, "menu 123456789");
       console.log(idforApi?.index, "idforApi?.location");
+      console.log(innerTargetId, 'innerTargetId Add regular')
+      if (innerTargetId && innerTargetId.includes("parallel")) {
+        const innerIdMatch = innerTargetId.match(/^([a-f0-9]+)/);
 
+        if (innerIdMatch && innerIdMatch[1]) {
+          console.log(innerIdMatch[1], 'innerIdMatch[1]');
+          setTargetId(innerIdMatch[1]);
+        } else {
+          console.log('No valid inner ID found in:', innerTargetId);
+        }
+      }
       setElementModal({
         open: true,
         mode: "add",
@@ -2001,31 +2368,229 @@ export default function RBDButton() {
   // ── block menu ─────────────────────────────────────────────────────────────
   const handleBlockMenuSelect = (action) => {
     console.log("blockMenu - ", blockMenu);
+    console.log("action - ", action);
+
 
     if (!blockMenu.blockId) return;
     if (action === "Delete...") {
       handleDeleteBlock(blockMenu.blockId);
     }
 
+    // if (action === "Edit...") {
+    //   let foundBlock = null;
+    //   if (parentItem?.type === "parallel-section") {
+    //     setParentItemId(parentItem?.id);
+    //     console.log(parentItem?.id, "parentItem?.id");
+    //     console.log(blockMenu.blockId, "blockMenu.blockId");
+    //     console.log(parentItem.branches, "blockMenu.blockId");
+
+
+    //     parentItem.branches?.forEach((br) =>
+    //       br.blocks?.forEach((bl) => {
+    //         if (bl._id === blockMenu.blockId || bl.id === blockMenu.blockId)
+    //           foundBlock = bl;
+    //       }),
+    //     );
+
+    //     console.log(foundBlock,'foundBlock')
+    //     setParallelFoundBlock(foundBlock);
+    //   } else {
+    //     foundBlock = blocks.find((b) => b.id === blockMenu.blockId);
+    //   }
+    //   if (!foundBlock) {
+    //     setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+    //     return;
+    //   }
+    //   if (foundBlock) {
+    //     // Check if it's a SubRBD block
+    //     if (
+    //       foundBlock.type === "SubRBD" ||
+    //       foundBlock.elementType === "SubRBD"
+    //     ) {
+    //       console.log("Editing SubRBD block:", foundBlock);
+
+    //       // Get the selected RBD data
+    //       let selectedRbd = null;
+
+    //       // Try to get from data.rbdData first
+    //       if (foundBlock.data?.rbdData) {
+    //         selectedRbd = foundBlock.data.rbdData;
+    //       }
+    //       // Try from subRbdData
+    //       else if (foundBlock.subRbdData) {
+    //         selectedRbd = foundBlock.subRbdData;
+    //       }
+    //       // Try from rbdData directly
+    //       else if (foundBlock.rbdData) {
+    //         selectedRbd = foundBlock.rbdData;
+    //       }
+
+    //       setRbdListModal({
+    //         open: true,
+    //         mode: "edit",
+    //         blockId: blockMenu.blockId,
+    //         nodeIndex: null,
+    //         selectedRbd: selectedRbd,
+    //       });
+    //     } else if (foundBlock.type === "K-out-of-N") {
+    //       setKOfNModal({
+    //         open: true,
+    //         mode: "edit",
+    //         blockId: blockMenu.blockId,
+    //         nodeIndex: null,
+    //         initialData: foundBlock.data || foundBlock,
+    //       });
+    //     } else {
+    //       const bmap = {
+    //         "K-out-of-N": "K_OUT_OF_N",
+    //         SubRBD: "SUBRBD",
+    //         "Parallel Section": "PARALLEL_SECTION",
+    //         "Parallel Branch": "PARALLEL_BRANCH",
+    //       };
+    //       setElementModal({
+    //         open: true,
+    //         mode: "edit",
+    //         blockId: blockMenu.blockId,
+    //         blockType: bmap[foundBlock.type] || "REGULAR",
+    //         nodeIndex: null,
+    //       });
+    //     }
+    //   } else if (action === "Delete...") {
+    //     handleDeleteBlock(blockMenu.blockId);
+    //   } else if (action === "Add K-out-of-N") {
+    //     setKOfNModal({
+    //       open: true,
+    //       mode: "add",
+    //       blockId: nextId,
+    //       nodeIndex: clickedNodeInfo.index,
+    //       initialData: {
+    //         k: 2,
+    //         n: 3,
+    //         lambda: 0.001,
+    //         mu: 1000,
+    //         formula: "standard",
+    //         name: "K-out-of-N Block",
+    //       },
+    //     });
+    //   } else if (action === "Add SubRBD") {
+    //     // Open RBD list modal
+    //     setRbdListModal({
+    //       open: true,
+    //       mode: "add",
+    //       blockId: nextId,
+    //       nodeIndex: clickedNodeInfo.index,
+    //       selectedRbd: null,
+    //     });
+    //   } else if (action === "Add Parallel Section") {
+    //     setPendingAction({
+    //       type: "parallel",
+    //       nodeIndex: clickedNodeInfo.index,
+    //     });
+    //     setShowParallelModal(true);
+    //   } else if (action.startsWith("Add ")) {
+    //     const amap = {
+    //       "Add K-out-of-N": "K_OUT_OF_N",
+    //       "Add SubRBD": "SUBRBD",
+    //       "Add Parallel Section": "PARALLEL_SECTION",
+    //       "Add Parallel Branch": "PARALLEL_BRANCH",
+    //     };
+    //     setElementModal({
+    //       open: true,
+    //       mode: "add",
+    //       blockId: nextId,
+    //       blockType: amap[action] || "REGULAR",
+    //       nodeIndex: clickedNodeInfo.index,
+    //     });
+    //   }
+
+    //   setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+    // }
+
     if (action === "Edit...") {
       let foundBlock = null;
+
+      // Recursive function to search for block in nested parallel structures
+      const findBlockRecursively = (container, targetId) => {
+        if (!container) return null;
+
+        // Check current container
+        if (container._id === targetId || container.id === targetId) {
+          return container;
+        }
+
+        // Check branches (for parallel-section)
+        if (container.branches && Array.isArray(container.branches)) {
+          for (const branch of container.branches) {
+            // Check the branch itself
+            if (branch._id === targetId || branch.id === targetId) {
+              return branch;
+            }
+
+            // Check blocks inside branch
+            if (branch.blocks && Array.isArray(branch.blocks)) {
+              for (const block of branch.blocks) {
+                const found = findBlockRecursively(block, targetId);
+                if (found) return found;
+              }
+            }
+          }
+        }
+
+        // Check blocks array (for parallel-branch or other containers)
+        if (container.blocks && Array.isArray(container.blocks)) {
+          for (const block of container.blocks) {
+            const found = findBlockRecursively(block, targetId);
+            if (found) return found;
+          }
+        }
+
+        // Check nested parallel sections inside data
+        if (container.data?.parallelSection) {
+          const found = findBlockRecursively(container.data.parallelSection, targetId);
+          if (found) return found;
+        }
+
+        // Check nested branches in data
+        if (container.data?.branches && Array.isArray(container.data.branches)) {
+          for (const branch of container.data.branches) {
+            const found = findBlockRecursively(branch, targetId);
+            if (found) return found;
+          }
+        }
+
+        return null;
+      };
+
+      // Check if we're in a parallel-section context
       if (parentItem?.type === "parallel-section") {
         setParentItemId(parentItem?.id);
         console.log(parentItem?.id, "parentItem?.id");
-        parentItem.branches?.forEach((br) =>
-          br.blocks?.forEach((bl) => {
-            if (bl._id === blockMenu.blockId || bl.id === blockMenu.blockId)
-              foundBlock = bl;
-          }),
-        );
+        console.log(blockMenu.blockId, "blockMenu.blockId");
+        console.log(parentItem.branches, "parentItem.branches");
+
+        // Use recursive search instead of just one level
+        foundBlock = findBlockRecursively(parentItem, blockMenu.blockId);
+
+        console.log(foundBlock, 'foundBlock (recursive search)');
         setParallelFoundBlock(foundBlock);
       } else {
-        foundBlock = blocks.find((b) => b.id === blockMenu.blockId);
+        // Search in main blocks array (also recursive if blocks contain nested structures)
+        const searchInMainBlocks = () => {
+          for (const block of blocks) {
+            const found = findBlockRecursively(block, blockMenu.blockId);
+            if (found) return found;
+          }
+          return null;
+        };
+        foundBlock = searchInMainBlocks();
       }
+
       if (!foundBlock) {
+        console.log('Block not found:', blockMenu.blockId);
         setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
         return;
       }
+
       if (foundBlock) {
         // Check if it's a SubRBD block
         if (
@@ -2057,7 +2622,8 @@ export default function RBDButton() {
             nodeIndex: null,
             selectedRbd: selectedRbd,
           });
-        } else if (foundBlock.type === "K-out-of-N") {
+        }
+        else if (foundBlock.type === "K-out-of-N") {
           setKOfNModal({
             open: true,
             mode: "edit",
@@ -2065,7 +2631,30 @@ export default function RBDButton() {
             nodeIndex: null,
             initialData: foundBlock.data || foundBlock,
           });
-        } else {
+        }
+        else if (foundBlock.type === "parallel-section" || foundBlock.type === "Parallel Section") {
+          console.log("Editing Parallel Section:", foundBlock);
+          // Open parallel modal for editing
+          setPendingAction({
+            type: "edit",
+            nodeIndex: null,
+            blockData: foundBlock,
+            blockId: blockMenu.blockId
+          });
+          setShowParallelModal(true);
+        }
+        else if (foundBlock.type === "parallel-branch" || foundBlock.type === "Parallel Branch") {
+          console.log("Editing Parallel Branch:", foundBlock);
+          // Open parallel modal for editing branch
+          setPendingAction({
+            type: "edit",
+            nodeIndex: null,
+            blockData: foundBlock,
+            blockId: blockMenu.blockId
+          });
+          setShowParallelModal(true);
+        }
+        else {
           const bmap = {
             "K-out-of-N": "K_OUT_OF_N",
             SubRBD: "SUBRBD",
@@ -2080,52 +2669,6 @@ export default function RBDButton() {
             nodeIndex: null,
           });
         }
-      } else if (action === "Delete...") {
-        handleDeleteBlock(blockMenu.blockId);
-      } else if (action === "Add K-out-of-N") {
-        setKOfNModal({
-          open: true,
-          mode: "add",
-          blockId: nextId,
-          nodeIndex: clickedNodeInfo.index,
-          initialData: {
-            k: 2,
-            n: 3,
-            lambda: 0.001,
-            mu: 1000,
-            formula: "standard",
-            name: "K-out-of-N Block",
-          },
-        });
-      } else if (action === "Add SubRBD") {
-        // Open RBD list modal
-        setRbdListModal({
-          open: true,
-          mode: "add",
-          blockId: nextId,
-          nodeIndex: clickedNodeInfo.index,
-          selectedRbd: null,
-        });
-      } else if (action === "Add Parallel Section") {
-        setPendingAction({
-          type: "parallel",
-          nodeIndex: clickedNodeInfo.index,
-        });
-        setShowParallelModal(true);
-      } else if (action.startsWith("Add ")) {
-        const amap = {
-          "Add K-out-of-N": "K_OUT_OF_N",
-          "Add SubRBD": "SUBRBD",
-          "Add Parallel Section": "PARALLEL_SECTION",
-          "Add Parallel Branch": "PARALLEL_BRANCH",
-        };
-        setElementModal({
-          open: true,
-          mode: "add",
-          blockId: nextId,
-          blockType: amap[action] || "REGULAR",
-          nodeIndex: clickedNodeInfo.index,
-        });
       }
 
       setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });

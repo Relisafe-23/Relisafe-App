@@ -300,6 +300,7 @@ export const RBDBlock = ({
                   onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
                   setParentItemId(item?.id);
                   setTargetBranchId(branch?._id);
+                  console.log(branch,'branch console')
                   setIdforApi({
                     branchId: branch?._id, branchIndex: branch?.index,
                     ItemId: item?.id, location: rightNodeId,

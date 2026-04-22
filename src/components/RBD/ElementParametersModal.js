@@ -322,6 +322,7 @@ const ElementParametersModal = ({
 
     // Determine the endpoint based on whether we have a parentItemId
     let endpoint;
+    console.log(parentItemId,'parentItemId')
     if (parentItemId) {
       // For blocks inside parallel sections
       endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${mainId}`;
