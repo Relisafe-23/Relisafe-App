@@ -2358,8 +2358,8 @@ console.log(
           marginTop: "50px",
         }}
       >
- {/* <div className="card shadow d-flex flex-column justify-content-center align-items-center p-3"> */}
-<div>
+ <div className="card shadow d-flex flex-column justify-content-center align-items-center p-3">
+
   <div>
     <button
       onClick={() => setShowSymbol(true)}
@@ -2369,7 +2369,7 @@ console.log(
     </button>
   </div>
 
-  {/* Bottom content
+  {/* Bottom content */}
   <div className="mt-1">
     <div>
       <b>Reliability: </b>{totalReliability}
@@ -2378,7 +2378,7 @@ console.log(
     <div>
       <b>Unavailability: </b>{totalUnavailability}
     </div>
-  </div> */}
+  </div>
 
 </div>
    
