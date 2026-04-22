@@ -15,6 +15,7 @@ import SwitchConfigurationModal from "./SwitchConfig.js";
 import { RBDBlock } from "./RBDBlock";
 import { KOfNBlock } from "./KOfNBlock";
 import { toast } from "react-toastify";
+import "../../css/RBD.scss";
 // import { RBDSvgRenderer } from './RBDSvgRenderer';
 // import ReactFlowD from './ReactFlow/ReactFlowD.jsx';
 
@@ -1130,6 +1131,8 @@ export default function RBDButton() {
     mode: "add",
     nodeIndex: null,
   });
+  const [totalUnavailability,setTotalUnavailability] = useState(0);
+  const [totalReliability, setTotalReliability] = useState(0);
   const [showParallelModal, setShowParallelModal] = useState(false);
   const [branchCount, setBranchCount] = useState(3);
   const [pendingAction, setPendingAction] = useState(null);
@@ -1194,24 +1197,40 @@ export default function RBDButton() {
 const getBlock = () => {
   Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
     .then((res) => {
-      console.log("Res....", res.data);
 
       const data = res.data.data;
       setShowSymbol(data.length > 0);
       setBlocks(data);
 
-      // Extract reliability values (ignore null/undefined)
-      const reliabilities = data
-        .map(item => Number(item.reliability))
-        .filter(r => !isNaN(r));
-         console.log("responsibili...........",reliabilities)
-      // Apply series formula: R = R1 * R2 * R3 ...
+  console.log("res----",res.data.data)
+      const unavailabilities = data
+        .map(item => Number(item.reliability)) // your field actually stores U
+        .filter(u => !isNaN(u));
+const horizontalBranches = data
+  .filter(item => item.arrangement === 'horizontal')
+  .map(item => item.branches.blocks)
+  // .map(item=>item.blocks);
+
+console.log("Horizontal", horizontalBranches);
+
+      // Convert to reliability
+      const reliabilities = unavailabilities.map(u => 1 - u);
+
+      console.log("Reliabilities:", reliabilities);
+
+      // Multiply (Series system)
       const totalReliability = reliabilities.reduce(
         (acc, val) => acc * val,
         1
       );
 
-      console.log("Series Reliability:", totalReliability);
+      // Final system unavailability
+      const totalUnavailability = 1 - totalReliability;
+
+      console.log("Total Reliability:", totalReliability);
+      console.log("Total Unavailability:", totalUnavailability);
+      setTotalUnavailability(totalUnavailability);
+      setTotalReliability(totalReliability);
     })
     .catch(err => console.log(err, 'error'));
 };
@@ -1824,9 +1843,7 @@ const getBlock = () => {
     );
   }
 
-  {
-    /* Highlight the start node */
-  }
+
   {
     parallelBranchMode.active && parallelBranchMode.startNode && (
       <div
@@ -2189,20 +2206,30 @@ const getBlock = () => {
           marginTop: "50px",
         }}
       >
-        <div style={{ margin: "40px 0", display: "flex", gap: 12 }}>
-          <button
-            onClick={() => setShowSymbol(true)}
-            style={{
-              backgroundColor: "green",
-              color: "white",
-              padding: "8px 16px",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-          >
-            RBD
-          </button>
+ <div className="card shadow d-flex flex-column justify-content-center align-items-center p-3">
+
+  <div>
+    <button
+      onClick={() => setShowSymbol(true)}
+      className="rbd-btn"
+    >
+      RBD
+    </button>
+  </div>
+
+  {/* Bottom content */}
+  <div className="mt-3">
+    <div>
+      <b>Reliability: </b>{totalReliability}
+    </div>
+ 
+    <div>
+      <b>Unavailability: </b>{totalUnavailability}
+    </div>
+  </div>
+
+</div>
+   
           {/* <button
             onClick={() => setIsModalOpen(true)}
             style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px',
@@ -2211,7 +2238,7 @@ const getBlock = () => {
           >
             <FiSettings size={18} /> RBD Configuration
           </button> */}
-        </div>
+        {/* </div> */}
         {/* <h1>Hello</h1>
         <div style={{ height: '500px', width: '1000px' }}>
           <ReactFlowD />

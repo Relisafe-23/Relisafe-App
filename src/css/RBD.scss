@@ -1,0 +1,22 @@
+.rbd-btn {
+  background-color: green;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+}
+
+/* Hover effect */
+.rbd-btn:hover {
+  background-color: darkgreen;
+  transform: scale(1.05);
+}
+
+/* Click (press) effect */
+.rbd-btn:active {
+  transform: scale(0.95);
+  background-color: #0b5d0b;
+}

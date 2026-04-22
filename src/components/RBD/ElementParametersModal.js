@@ -18,18 +18,14 @@ const ElementParametersModal = ({
   getBlock,
   targetId,
 }) => {
-  console.log("currentBlock - :", currentBlock);
-  console.log("parallelFoundBlock - :", parallelFoundBlock);
-  console.log(elementModal, "elementModal");
-  console.log(targetId, "targetId inside model");
+
 
   let modelBlock = null;
-
   parallelFoundBlock
     ? (modelBlock = parallelFoundBlock)
     : (modelBlock = currentBlock);
 
-  console.log(modelBlock, "-final modelData");
+
 
   const mainId = modelBlock?.id || modelBlock?._id;
   const location = useLocation();
@@ -37,7 +33,7 @@ const ElementParametersModal = ({
   const [values, setValues] = useState({
     rbdId: rbdId,
     relDes: modelBlock?.relDes || "",
-    time: modelBlock?.time || " ",
+    time: modelBlock?.missionTime || " ",
     elementType: modelBlock?.elementType || "REGULAR",
     partNumber: modelBlock?.partNumber || "",
     fr: modelBlock?.fr || "",
@@ -230,31 +226,16 @@ const ElementParametersModal = ({
     getProductData();
   }, [projectId, productId]); // Added proper dependencies
 
-  if (!isOpen) return null;
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      const companyId = localStorage.getItem("companyId");
-
-      if (!companyId || !rbdId || !projectId) {
-        throw new Error("Missing required IDs");
-      }
-
-      const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+     const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
         const MTBF = Number(mtbf || 0);
         const MTTR = Number(mttr || 0);
         const t = Number(missionTime || 0);
 
         let unavailability = 0;
-        let reliability = "0";
+        let reliability = 0;
 
+console.log("@@@@@@@@")
 
-    reliability =
-      r < 1e-4
-        ? r.toExponential(2)
-        : r.toFixed(4);
-  }
 
         if (MTBF > 0 && t >= 0) {
           const r = Math.exp(-t / MTBF);
@@ -262,19 +243,33 @@ const ElementParametersModal = ({
           reliability =
             r < 1e-4
               ? r.toExponential(2)
-              : r.toFixed(2);
+              : r.toFixed(7);
         }
 
         return {
           reliability,
           unavailability
         };
+      }
   
-      const { reliability, unavailability } = calculateMetrics({
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const companyId = localStorage.getItem("companyId");
+      if (!companyId || !rbdId || !projectId) {
+        throw new Error("Missing required IDs");
+      }
+     
+          const { reliability, unavailability } = calculateMetrics({
         mtbf: values.mtbf,
         mttr: values.mttr,
         missionTime
       });
+   
+    console.log("reliability,availability")
       const payload = {
         indexCount: values.indexCount,
         partNumber: values.partNumber,
@@ -305,8 +300,9 @@ const ElementParametersModal = ({
         reliability: reliability,
         unavailability: unavailability
       };
-      
+      console.log("Paylooooooad",payload);
       const response = await Api.post("/api/v1/elementParametersRBD/create", payload);
+      console.log("responseeeeeeeeee",response)
       await getBlock();
 
       onSubmit(values);
@@ -315,37 +311,50 @@ const ElementParametersModal = ({
       console.error("Submission failed:", error);
 
     }
+   
   }
 
   
-  const handleUpdate = (e) => {
-    e.preventDefault();
+const handleUpdate = async (e) => {
+  e.preventDefault();
+  console.log("33333333333");
 
-    // console.log('handleUpdate', values);
+  let endpoint;
 
-    // Determine the endpoint based on whether we have a parentItemId
-    let endpoint;
-    if (parentItemId) {
-      // For blocks inside parallel sections
-      endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${mainId}`;
-    } else {
-      // For regular top-level blocks
-      endpoint = `/api/v1/elementParametersRBD/updateRBD/${mainId}`;
-    }
-
-    try {
-      Api.patch(endpoint, values).then((res) => {
-        // console.log(res);
-        if (res.data.success === true) {
-          onClose();
-        } else {
-          console.log("error update");
-        }
-      });
-    } catch {
-      console.log("failed Api");
-    }
+  if (parentItemId) {
+    endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${mainId}`;
+  } else {
+    endpoint = `/api/v1/elementParametersRBD/updateRBD/${mainId}`;
   }
+
+  try {
+    // console.log("444444.....");
+    const { reliability, unavailability } = calculateMetrics({
+      mtbf: values.mtbf,
+      mttr: values.mttr,
+      missionTime
+    });
+
+  console.log("444444.....",reliability);
+    // OPTIONAL: include in payload
+    const payload = {
+      ...values,
+      reliability,
+      unavailability
+    };
+    console.log("Paylooooooad",payload);
+    const res = await Api.patch(endpoint, payload);
+      console.log("res....",res)
+    if (res.data.success === true) {
+      onClose();
+    } else {
+      console.log("error update");
+    }
+
+  } catch (error) {
+    console.log("failed Api", error);
+  }
+};
 
   const handleChange = (field, value) => {
     setValues(prev => {

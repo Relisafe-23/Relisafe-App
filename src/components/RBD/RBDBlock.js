@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { KOfNBlock } from './KOfNBlock';
-
+import { useLocation, useParams,useHistory } from "react-router-dom";
 // Constants for layout
 const CONSTANTS = {
   BLOCK_W: 60,
@@ -34,7 +34,6 @@ export const RBDBlock = ({
   width = 60,
   height = 40,
   mission,
-
   onOpenMenu,
   setParentItem,
   onEditBlock,
@@ -54,8 +53,21 @@ export const RBDBlock = ({
   blockRowLeftX,
   setTargetBranchId,
 }) => {
+const [selectedId, setSelectedId] = useState(null);
+const [isSelected, setIsSelected] = useState(false);
 
+const handleSelect = (clickedId) => {
+  if (selectedId === clickedId) {
+    setSelectedId(null);
+    setIsSelected(false);
+  } else {
+    setSelectedId(clickedId);
+    setIsSelected(true);
+  }
+};
+  const location = useLocation();
 
+const [selectedBlock, setSelectedBlock] = useState(null);
   const [formData, setFormData] = useState({
     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
     k: blockData?.k || blockData?.data?.k || '2',
@@ -63,7 +75,8 @@ export const RBDBlock = ({
     mtbf: blockData?.mtbf || blockData?.data?.mtbf || '',
     mttr: blockData?.mttr || blockData?.data?.mttr || ''
   });
-
+    const missionTime = location.state?.missionTime;
+console.log("mission",missionTime)
   useEffect(() => {
     setFormData({
       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
@@ -80,7 +93,7 @@ export const RBDBlock = ({
     blockData?.elementType === 'Parallel Section') &&
     blockData?.branches &&
     blockData?.branches.length > 0;
-
+  
   // If it's a nested parallel section, render it recursively
   if (isNestedParallel) {
     return renderNestedParallelSection();
@@ -103,12 +116,9 @@ export const RBDBlock = ({
     );
   }
 
-  // Regular block rendering
+
   return renderRegularBlock();
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // Nested Parallel Section Renderer
-  // ──────────────────────────────────────────────────────────────────────────
   function renderNestedParallelSection() {
     const branches = blockData.branches || [];
 
@@ -116,7 +126,7 @@ export const RBDBlock = ({
     const RAIL_PAD = 20, INNER_PAD = 14;
     const CONTAINER_PADDING = 20, BRANCH_SPACING = 20;
 
-    // ── Same recursive helpers as BiDirectionalSymbol ──────────────────────
+
     const getBranchHeight = (branch) => {
       const branchBlocks = branch.blocks || [];
       let maxNestedH = 0;
@@ -334,12 +344,17 @@ export const RBDBlock = ({
       const mtbf = blockData?.mtbf || blockData?.data?.mtbf;
       const k = blockData?.k || blockData?.data?.k;
       const n = blockData?.n || blockData?.data?.n;
-      const missionTime = mission;
+      // const missionTime = missionTime;
+   
+      console.log("MissionTime",missionTime)
       const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+
         const MTBF = Number(mtbf || 0);
         const MTTR = Number(mttr || 0);
         const t = Number(missionTime || 0);
-
+       console.log("MTTR",MTTR)
+       console.log("MTBF",MTBF)
+       console.log("t",t)
         // Default values
         let unavailability = '';
         let reliability = "";
@@ -350,14 +365,13 @@ export const RBDBlock = ({
 
 
         const r = Math.exp(-t / MTBF);
-
+             console.log("r",r)
         reliability =
           r < 1e-4
             ? r.toExponential(2)
-            : r.toFixed(4);
+            : r.toFixed(7);
 
-
-
+      console.log("ReliaBility",reliability);
         return {
           reliability,
           unavailability
@@ -373,11 +387,12 @@ export const RBDBlock = ({
             mttr,
             missionTime
           });
-
+        console.log("reliability1234555",reliability)
           return (
             <>
               <tspan x={x + BLOCK_W / 2} dy="-4">
                 R: {reliability}
+              
               </tspan>
               <tspan x={x + BLOCK_W / 2} dy="10">
                 U: {unavailability}
@@ -408,13 +423,23 @@ export const RBDBlock = ({
     const getBlockName = () => blockData?.name || blockData?.data?.name || '';
 
     return (
+      <svg
+  onClick={(e) => {
+    // only reset if clicked directly on svg (not on child elements)
+    if (e.target === e.currentTarget) {
+      setSelectedId(null);
+    }
+  }}
+>
       <g
         onContextMenu={handleContextMenu}
         style={{ cursor: 'context-menu' }}
         onClick={() => {
           if (setParentItemId) setParentItemId(null);
+    handleSelect(id);
 
         }}
+        
       >
         {/* name label above block */}
         {/* {getBlockName() && (
@@ -440,7 +465,7 @@ export const RBDBlock = ({
           width={BLOCK_W}
           height={BLOCK_H}
           fill={getBlockColor()}
-          stroke="#2a7a2a"
+        stroke={selectedId === id ? "#0078d4" : "#2a7a2a"}
           strokeWidth="1"
           rx="2"
         />
@@ -458,6 +483,7 @@ export const RBDBlock = ({
           {getBlockContent()}
         </text>
       </g>
+      </svg>
     );
   }
 };
