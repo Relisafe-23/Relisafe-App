@@ -18,18 +18,14 @@ const ElementParametersModal = ({
   getBlock,
   targetId,
 }) => {
-  console.log("currentBlock - :", currentBlock);
-  console.log("parallelFoundBlock - :", parallelFoundBlock);
-  console.log(elementModal, "elementModal");
-  console.log(targetId, "targetId inside model");
+
 
   let modelBlock = null;
-
   parallelFoundBlock
     ? (modelBlock = parallelFoundBlock)
     : (modelBlock = currentBlock);
 
-  console.log(modelBlock, "-final modelData");
+
 
   const mainId = modelBlock?.id || modelBlock?._id;
   const location = useLocation();
@@ -37,7 +33,7 @@ const ElementParametersModal = ({
   const [values, setValues] = useState({
     rbdId: rbdId,
     relDes: modelBlock?.relDes || "",
-    time: modelBlock?.time || " ",
+    time: modelBlock?.missionTime || " ",
     elementType: modelBlock?.elementType || "REGULAR",
     partNumber: modelBlock?.partNumber || "",
     fr: modelBlock?.fr || "",
@@ -56,7 +52,7 @@ const ElementParametersModal = ({
     productName: modelBlock?.productName || "",
     id: modelBlock?.id || "",
     repairDistribution: modelBlock?.repairDistribution || "Exponential",
-    mtbf: modelBlock?.mtbf || "1303617.9",
+    mtbf: modelBlock?.mtbf || "",
     load: modelBlock?.load || "100",
     mct: modelBlock?.mct || "",
     productNumber: modelBlock?.productNumber || "",
@@ -117,25 +113,26 @@ const ElementParametersModal = ({
       //     id: item.id,
       //   }));
 
-      // console.log(res.data,'pbs')
-      const options = res.data.data
-        .filter(item => item?.indexCount && item?.partNumber)
-        .map(item => ({
-          label: item.indexCount,
-          value: item.indexCount,
-          partNumber: item.partNumber,
-          productName: item.productName,
-          productId: item.productId,
-          fr: item.fr,
-          mct: item.mct || "",
-          mttr: item.mttr || "",
-          id: item.id
-        }));
-
-      const productIdst = res.data.data.filter(item => item?.productId).map(item => item.productId);
-      setProductIds(productIdst);
-      setOptions(options);
-    });
+        // console.log(res.data,'pbs')
+        const options = res.data.data
+          .filter(item => item?.indexCount && item?.partNumber)
+          .map(item => ({
+            label: item.indexCount,
+            value: item.indexCount,
+            partNumber: item.partNumber,
+            productName: item.productName,
+            productId: item.productId,
+            fr: item.fr,
+            mct: item.mct || "",
+            mttr: item.mttr || "",
+            id: item.id
+          }));
+       
+        const productIdst = res.data.data.filter(item => item?.productId).map(item => item.productId);
+        console.log("Options", options);
+        setProductIds(productIdst);
+        setOptions(options);
+      });
   };
 
   const getProductData = () => {
@@ -229,50 +226,43 @@ const ElementParametersModal = ({
     getProductData();
   }, [projectId, productId]); // Added proper dependencies
 
+    const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+  const MTBF = Number(mtbf || 0);
+  const MTTR = Number(mttr || 0);
+  const t = Number(missionTime || 0);
+
+  let reliability = 0;
+  let unavailability = 0;
+
+  if (MTBF > 0 && t >= 0) {
+    const r = Math.exp(-t / MTBF);
+    const u = 1 - r;
+
+    reliability = r < 1e-4 ? r.toExponential(2) : r.toFixed(7);
+    unavailability = u < 1e-4 ? u.toExponential(2) : u.toFixed(7);
+  }
+
+  return { reliability, unavailability };
+};
+  
   if (!isOpen) return null;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       const companyId = localStorage.getItem("companyId");
-
       if (!companyId || !rbdId || !projectId) {
         throw new Error("Missing required IDs");
       }
-
-      const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
-        const MTBF = Number(mtbf || 0);
-        const MTTR = Number(mttr || 0);
-        const t = Number(missionTime || 0);
-
-        let unavailability = 0;
-        let reliability = "0";
-
-
-        if (!(MTBF === 0 && MTTR === 0)) {
-          const u = MTTR / (MTBF + MTTR);
-          unavailability = Number(u.toFixed(4));
-        }
-
-        if (MTBF > 0 && t >= 0) {
-          const r = Math.exp(-t / MTBF);
-
-          reliability =
-            r < 1e-4
-              ? r.toExponential(2)
-              : r.toFixed(2);
-        }
-
-        return {
-          reliability,
-          unavailability
-        };
-      };
-      const { reliability, unavailability } = calculateMetrics({
+     
+          const { reliability, unavailability } = calculateMetrics({
         mtbf: values.mtbf,
         mttr: values.mttr,
         missionTime
       });
+          
+    console.log("reliability1,availability2", reliability, unavailability)
       const payload = {
         indexCount: values.indexCount,
         partNumber: values.partNumber,
@@ -283,7 +273,7 @@ const ElementParametersModal = ({
         fmecaId: values.fmecaId,
         fmDescription: values.fmDescription,
         elementType: values.elementType,
-        // time: values.time,
+        time: missionTime,
         repair: values.repair,
         inspectionPeriod: values.inspectionPeriod,
         dutyCycle: values.dutyCycle,
@@ -303,47 +293,66 @@ const ElementParametersModal = ({
         reliability: reliability,
         unavailability: unavailability
       };
+      console.log("Paylooooooad",payload);
       const response = await Api.post("/api/v1/elementParametersRBD/create", payload);
+      console.log("responseeeeeeeeee",response)
       await getBlock();
 
-      onSubmit(values);
+     onSubmit({
+  ...values,
+  reliability,
+  unavailability,
+  targetId: elementModal?.idforApi?.targetId || elementModal?.nodeIndex
+});
       onClose();
     } catch (error) {
       console.error("Submission failed:", error);
 
     }
-
-
-  };
-  const handleUpdate = (e) => {
-    e.preventDefault();
-
-    // console.log('handleUpdate', values);
-
-    // Determine the endpoint based on whether we have a parentItemId
-    let endpoint;
-    console.log(parentItemId,'parentItemId')
-    if (parentItemId) {
-      // For blocks inside parallel sections
-      endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${mainId}`;
-    } else {
-      // For regular top-level blocks
-      endpoint = `/api/v1/elementParametersRBD/updateRBD/${mainId}`;
-    }
-
-    try {
-      Api.patch(endpoint, values).then((res) => {
-        // console.log(res);
-        if (res.data.success === true) {
-          onClose();
-        } else {
-          console.log("error update");
-        }
-      });
-    } catch {
-      console.log("failed Api");
-    }
+   
   }
+
+  
+const handleUpdate = async (e) => {
+  e.preventDefault();
+  console.log("33333333333");
+
+  let endpoint;
+
+  if (parentItemId) {
+    endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${mainId}`;
+  } else {
+    endpoint = `/api/v1/elementParametersRBD/updateRBD/${mainId}`;
+  }
+
+  try {
+    // console.log("444444.....");
+    const { reliability, unavailability } = calculateMetrics({
+      mtbf: values.mtbf,
+      mttr: values.mttr,
+      missionTime
+    });
+
+  console.log("444444.....",reliability);
+    // OPTIONAL: include in payload
+    const payload = {
+      ...values,
+      reliability,
+      unavailability
+    };
+    console.log("Paylooooooad",payload);
+    const res = await Api.patch(endpoint, payload);
+      console.log("res....",res)
+    if (res.data.success === true) {
+      onClose();
+    } else {
+      console.log("error update");
+    }
+
+  } catch (error) {
+    console.log("failed Api", error);
+  }
+};
 
   const handleChange = (field, value) => {
     setValues(prev => {
