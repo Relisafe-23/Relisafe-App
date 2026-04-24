@@ -1,9 +1,10 @@
 // KOfNConfigModal.jsx
 import React, { useState, useEffect } from "react";
 import Api from "../../Api";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
+
 export const KOfNConfigModal = ({
   isOpen,
   onClose,
@@ -24,13 +25,12 @@ export const KOfNConfigModal = ({
   const [systemUnavailability, setSystemUnavailability] = useState(0);
   const [blocks, setBlocks] = useState([]);
   const [showSymbol, setShowSymbol] = useState(false);
-
-  // console.log("selectedCase", selectedCase);
-  // console.log("selectedLabel", selectedLabel);
-  // console.log("id", id)
-
   const [lambda, setLambda] = useState(0);
   const [isLambdaEdited, setIsLambdaEdited] = useState(false);
+  const [mu, setMu] = useState(0);
+  const [nonIdenticalComponents, setNonIdenticalComponents] = useState([]);
+  const [options, setOptions] = useState([]);
+  const [systemReliability, setSystemReliability] = useState(0);
 
   const [values, setValues] = useState({
     relDes: currentBlock?.relDes || "",
@@ -51,29 +51,20 @@ export const KOfNConfigModal = ({
     indexCount: currentBlock?.indexCount || "",
   });
 
-  const [nonIdenticalComponents, setNonIdenticalComponents] = useState([]);
-  const [options, setOptions] = useState([]);
-  const [mu, setMu] = useState(0);
-
-  const isPlaceholderSelected =
-    values?.indexCount === "Select from the product";
-  const isProductSelected = !!values?.indexCount;
-
+  // Initialize from initialData
   useEffect(() => {
-    console.log("initialData.components@@@@", initialData);
     if (initialData) {
       setK(initialData.k || "");
       setN(initialData.n || "");
       setLambda(initialData.lambda || 0);
       setMu(initialData.mu || 0);
       setFormula(initialData.formula || "standard");
+      setLoad(initialData.load || "100");
 
       if (initialData.components && initialData.components.length > 0) {
-        console.log("initialData.components", initialData.components);
-        // Ensure each component has productId properly set
         const componentsWithIds = initialData.components.map((comp) => ({
           ...comp,
-          productId: comp.productId || null, // Ensure productId exists
+          productId: comp.productId || null,
           selectedOption: comp.productId
             ? {
                 label: comp.productName || `Component ${comp.id}`,
@@ -90,39 +81,36 @@ export const KOfNConfigModal = ({
     }
   }, [initialData]);
 
+  // Calculate mu from mttr
   useEffect(() => {
     if (parseFloat(values?.mttr) > 0) {
       const calculatedMu = 1 / parseFloat(values?.mttr);
       setMu(calculatedMu);
-    } else {
-      setMu(0);
     }
   }, [values?.mttr]);
 
+  // Calculate lambda from fr
   useEffect(() => {
     const fr = Number(values?.fr);
     if (!isLambdaEdited) {
       if (fr > 0) {
         setLambda((1 / fr)?.toFixed(6));
-      } else {
-        setLambda("");
       }
     }
   }, [values?.fr, isLambdaEdited]);
 
+  // Fetch data
   useEffect(() => {
     getRbdConfig();
     getProductName();
   }, [projectId]);
 
-  const [systemReliability, setSystemReliability] = useState(0);
-
+  // Initialize components for Non-Identical mode
   useEffect(() => {
     if (selectedLabel === "Non-Identical" && n && n > 0) {
       const currentLength = nonIdenticalComponents.length;
 
       if (currentLength < n) {
-        // Add new components
         const newComponents = [...nonIdenticalComponents];
         for (let i = currentLength; i < n; i++) {
           newComponents.push({
@@ -138,95 +126,12 @@ export const KOfNConfigModal = ({
         }
         setNonIdenticalComponents(newComponents);
       } else if (currentLength > n) {
-        // Remove excess components
         setNonIdenticalComponents(nonIdenticalComponents.slice(0, n));
       }
     }
   }, [n, selectedLabel]);
 
-
-useEffect(() => {
-  console.log("initialData.components@@@@", initialData);
-  if (initialData) {
-    setK(initialData.k || "");
-    setN(initialData.n || "");
-    setLambda(initialData.lambda || 0);
-    setMu(initialData.mu || 0);
-    setFormula(initialData.formula || "standard");
-    // ... rest of the code
-  }
-}, [initialData]);
-
-
-  // Effect 2: Initialize when switching to Non-Identical mode
-  useEffect(() => {
-    if (
-      selectedLabel === "Non-Identical" &&
-      n &&
-      n > 0 &&
-      nonIdenticalComponents.length === 0
-    ) {
-      const initialComponents = [];
-      for (let i = 0; i < n; i++) {
-        initialComponents.push({
-          id: `comp_${Date.now()}_${i}_${Math.random()}`,
-          lambda: 0,
-          mu: 0,
-          mttr: "",
-          productId: null,
-          productName: "",
-          isManual: false,
-          selectedOption: null,
-        });
-      }
-      setNonIdenticalComponents(initialComponents);
-    }
-  }, [selectedLabel, n]);
-  const getKofN_Unavailability = (k, components, missionTime) => {
-    const n = components.length;
-
-    if (k > n) return 0;
-
-    // Calculate U and A arrays
-    const U = components.map((c) => c.lambda / (c.lambda + c.mu));
-
-    const A = components.map((c) => Math.exp(-(c.lambda * missionTime)));
-
-    // Combination function
-    const combine = (arr, k) => {
-      if (k === 0) return [[]];
-      if (arr.length === 0) return [];
-
-      const [first, ...rest] = arr;
-
-      return [
-        ...combine(rest, k - 1).map((c) => [first, ...c]),
-        ...combine(rest, k),
-      ];
-    };
-
-    const indices = [...Array(n).keys()];
-    const combos = combine(indices, k);
-
-    let result = 0;
-
-    combos.forEach((combo) => {
-      let term = 1;
-
-      for (let i = 0; i < n; i++) {
-        if (combo.includes(i)) {
-          term *= U[i]; // failed
-        } else {
-          term *= A[i]; // working
-        }
-      }
-
-      result += term;
-    });
-
-    return result;
-  };
-
+  // Calculate reliability and unavailability
   useEffect(() => {
     let reliability = 0;
     let unavailability = 0;
@@ -235,59 +140,23 @@ useEffect(() => {
       const kVal = Number(k);
       const nVal = Number(n);
 
-      if (
-        !isNaN(kVal) &&
-        !isNaN(nVal) &&
-        nonIdenticalComponents.length === nVal
-      ) {
-        reliability = getKofNReliabilityNonIdentical(
-          kVal,
-          nVal,
-          nonIdenticalComponents,
-        );
-        unavailability = unAvailabilityValueNonIdentical(
-          kVal,
-          nVal,
-          nonIdenticalComponents,
-          missionTime,
-        );
+      if (!isNaN(kVal) && !isNaN(nVal) && nonIdenticalComponents.length === nVal) {
+        reliability = getKofNReliabilityNonIdentical(kVal, nVal, nonIdenticalComponents);
+        unavailability = unAvailabilityValueNonIdentical(kVal, nVal, nonIdenticalComponents, missionTime);
       }
     } else if (selectedLabel === "Identical (Load Sharing)") {
       const nVal = Number(n);
       const lambdaVal = Number(lambda);
-      const loadValue = getLoadValue(); // must return a numeric load factor
+      const loadValue = getLoadValue();
       const t = missionTime;
-      console.log("nVal", nVal);
-      console.log("lambdaVal", lambdaVal);
-      console.log("loadValue", loadValue);
+      
       if (!isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(loadValue) && !isNaN(t)) {
-        // Effective failure rate under load
         const lambdaEff = lambdaVal * loadValue;
-
-        // ===== System Reliability (Case 5 formula) =====
-        // R(t) = exp( - (n * lambdaEff) * t )
         reliability = Math.exp(-nVal * lambdaEff * t);
-
-        // ===== Component Reliability =====
-        const componentReliability = Math.exp(-lambdaEff * t);
-
-        // ===== Component Unavailability =====
-        const componentUnavailability = 1 - componentReliability;
-
-        // ===== System Unavailability (approximation) =====
-        // U ≈ n * u_i  (capped at 1)
+        const componentUnavailability = 1 - Math.exp(-lambdaEff * t);
         unavailability = Math.min(nVal * componentUnavailability, 1);
-
-        console.log(`Case 5: Identical Load Sharing`, {
-          lambdaEff,
-          componentReliability,
-          componentUnavailability,
-          systemReliability: reliability,
-          systemUnavailability: unavailability,
-        });
       }
     } else {
-      // Original Identical case (without load sharing)
       const kVal = Number(k);
       const nVal = Number(n);
       const lambdaVal = Number(lambda);
@@ -295,87 +164,21 @@ useEffect(() => {
 
       if (!isNaN(kVal) && !isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(muVal)) {
         reliability = getKofNReliabilityIdentical(kVal, nVal, lambdaVal);
-        unavailability = unAvailabilityValueIdentical(
-          kVal,
-          nVal,
-          lambdaVal,
-          muVal,
-        );
+        unavailability = unAvailabilityValueIdentical(kVal, nVal, lambdaVal, muVal);
       }
     }
 
     setSystemReliability(Number(reliability?.toFixed(6)) || 0);
     setSystemUnavailability(Number(unavailability?.toFixed(6)) || 0);
-  }, [
-    k,
-    n,
-    lambda,
-    mu,
-    nonIdenticalComponents,
-    selectedLabel,
-    missionTime,
-    load,
-  ]);
-  // Add load to dependencies
+  }, [k, n, lambda, mu, nonIdenticalComponents, selectedLabel, missionTime, load]);
+
   const getLoadValue = () => {
-    // Option 1: From state
     if (load !== undefined && load !== null) {
       return Number(load);
     }
-
-    // Option 2: From nonIdenticalComponents if available
-    if (nonIdenticalComponents && nonIdenticalComponents.length > 0) {
-      // You might calculate average load from components
-      const loads = nonIdenticalComponents.map((comp) => comp.load || 1);
-      return loads.reduce((sum, l) => sum + l, 0) / loads.length;
-    }
-
-    // Option 3: Default value
     return 1;
   };
 
-  const getLoadSharingReliability = (
-    kVal,
-    nVal,
-    lambdaVal,
-    loadFactor,
-    missionTime,
-  ) => {
-    let reliability = 0;
-    const totalCombinations = 1 << nVal;
-
-    for (let mask = 0; mask < totalCombinations; mask++) {
-      let workingCount = 0;
-      let failedCount = 0;
-      let term = 1;
-      let currentTime = missionTime;
-
-      // Count working components
-      for (let i = 0; i < nVal; i++) {
-        if (!((mask >> i) & 1)) {
-          workingCount++;
-        } else {
-          failedCount++;
-        }
-      }
-
-      if (workingCount >= kVal) {
-        let cumulativeHazard = 0;
-        let remainingComponents = nVal;
-
-        for (let i = 0; i < failedCount; i++) {
-          const currentLoad = loadFactor * remainingComponents;
-          const failureRate = lambdaVal * currentLoad;
-          cumulativeHazard += failureRate * (missionTime / failedCount);
-          remainingComponents--;
-        }
-
-        reliability += Math.exp(-cumulativeHazard);
-      }
-    }
-
-    return Math.min(reliability, 1);
-  };
   const handleChange = (field, value) => {
     setValues((prev) => ({
       ...prev,
@@ -394,7 +197,7 @@ useEffect(() => {
       },
     })
       .then((res) => {
-        const options = res.data.data
+        const opts = res.data.data
           .filter((item) => item?.indexCount && item?.partNumber)
           .map((item) => ({
             label: item.indexCount,
@@ -407,7 +210,7 @@ useEffect(() => {
             mttr: item.mttr || "",
             lambda: item.fr ? 1 / parseFloat(item.fr) : 0,
           }));
-        setOptions(options);
+        setOptions(opts);
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
@@ -425,20 +228,11 @@ useEffect(() => {
         const rbdData = res.data.data.find((item) => item.id === rbdId);
         if (rbdData) {
           setMissionTime(rbdData.missionTime);
-        } else {
-          setMissionTime(null);
         }
       })
       .catch((error) => {
         console.error("Error fetching RBD config:", error);
       });
-  };
-
-  const unAvailabilityFn = (lambdaVal, muVal) => {
-    if (!lambdaVal || !muVal || lambdaVal + muVal === 0) return 0;
-    const unavailability = lambdaVal / (lambdaVal + muVal);
-    // console.log("Unavailability...",unavailability)
-    return unavailability;
   };
 
   const factorial = (num) => {
@@ -449,55 +243,47 @@ useEffect(() => {
     return result;
   };
 
-  const combination1 = (nVal, i) => {
-    return factorial(nVal) / (factorial(i) * factorial(nVal - i));
+  const combination = (nVal, r) => {
+    return factorial(nVal) / (factorial(r) * factorial(nVal - r));
   };
 
-  const unAvailabilityValueNonIdentical = (
-    kVal,
-    nVal,
-    components,
-    missionTime,
-  ) => {
+  const getReliability = (lambdaValue, missionTimeValue) => {
+    if (!lambdaValue || !missionTimeValue) return 0;
+    return Math.exp(-(lambdaValue * missionTimeValue));
+  };
+
+  const unAvailabilityFn = (lambdaVal, muVal) => {
+    if (!lambdaVal || !muVal || lambdaVal + muVal === 0) return 0;
+    return lambdaVal / (lambdaVal + muVal);
+  };
+
+  const unAvailabilityValueNonIdentical = (kVal, nVal, components, missionTimeValue) => {
     if (!components || components.length === 0) return 0;
 
     const validComponents = components.filter(
-      (comp) => comp && Number.isFinite(Number(comp.lambda)),
+      (comp) => comp && Number.isFinite(Number(comp.lambda))
     );
 
     if (validComponents.length !== nVal) return 0;
 
-    // Compute component unavailability (time-dependent)
     const uList = validComponents.map(
-      (comp) => 1 - Math.exp(-Number(comp.lambda) * missionTime),
+      (comp) => 1 - Math.exp(-Number(comp.lambda) * missionTimeValue)
     );
-    const AList = uList.map((u) => 1 - u); // availability
-
-    console.log("kVal", kVal);
-    console.log("nVal", nVal);
-    console.log("uList", uList);
-    console.log("AList", AList);
+    const AList = uList.map((u) => 1 - u);
 
     let result = 0;
-
-    // Minimum failures for system to fail
     const minFailures = nVal - kVal + 1;
 
-    // Recursive function to sum combinations
-    const combine = (index, failedCount, term) => {
+    const combineRecursive = (index, failedCount, term) => {
       if (index === nVal) {
         if (failedCount >= minFailures) result += term;
         return;
       }
-      // Case 1: component fails
-      combine(index + 1, failedCount + 1, term * uList[index]);
-      // Case 2: component works
-      combine(index + 1, failedCount, term * AList[index]);
+      combineRecursive(index + 1, failedCount + 1, term * uList[index]);
+      combineRecursive(index + 1, failedCount, term * AList[index]);
     };
 
-    combine(0, 0, 1);
-
-    console.log("Final Unavailability Result:", result);
+    combineRecursive(0, 0, 1);
     return result;
   };
 
@@ -505,31 +291,19 @@ useEffect(() => {
     const u = unAvailabilityFn(lambdaVal, muVal);
     let result = 0;
     for (let i = kVal; i <= nVal; i++) {
-      result +=
-        combination1(nVal, i) * Math.pow(u, i) * Math.pow(1 - u, nVal - i);
+      result += combination(nVal, i) * Math.pow(u, i) * Math.pow(1 - u, nVal - i);
     }
     return result;
-  };
-
-  const getReliability = (lambdaValue, missionTimeValue) => {
-    if (!lambdaValue || !missionTimeValue) return 0;
-    const reliability = Math.exp(-(lambdaValue * missionTimeValue));
-    return reliability;
-  };
-
-  const combination = (nVal, r) => {
-    const fact = (x) => (x <= 1 ? 1 : x * fact(x - 1));
-    return fact(nVal) / (fact(r) * fact(nVal - r));
   };
 
   const getKofNReliabilityNonIdentical = (kVal, nVal, components) => {
     if (!components || components.length === 0) return 0;
 
     let result = 0;
-
     const validComponents = components.filter(
-      (comp) => comp && typeof comp.lambda === "number",
+      (comp) => comp && typeof comp.lambda === "number"
     );
+    
     if (validComponents.length !== nVal) return 0;
 
     const totalCombinations = Math.pow(2, nVal);
@@ -540,10 +314,7 @@ useEffect(() => {
 
       for (let i = 0; i < nVal; i++) {
         const isWorking = !((mask >> i) & 1);
-        const reliability = getReliability(
-          validComponents[i].lambda,
-          missionTime,
-        );
+        const reliability = getReliability(validComponents[i].lambda, missionTime);
 
         if (isWorking) {
           workingCount++;
@@ -565,31 +336,17 @@ useEffect(() => {
     const R = getReliability(lambdaValue, missionTime);
     let result = 0;
     for (let r = kVal; r <= nVal; r++) {
-      result +=
-        combination(nVal, r) * Math.pow(R, r) * Math.pow(1 - R, nVal - r);
+      result += combination(nVal, r) * Math.pow(R, r) * Math.pow(1 - R, nVal - r);
     }
     return result;
   };
 
-  const handleComponentChange = (
-    index,
-    field,
-    value,
-    selectedOption = null,
-  ) => {
+  const handleComponentChange = (index, field, value, selectedOption = null) => {
     const updatedComponents = [...nonIdenticalComponents];
 
     if (field === "product") {
-      if (
-        selectedOption &&
-        selectedOption.value !== "Select from the product" &&
-        selectedOption.value
-      ) {
-        // Ensure lambda is properly set as a number
-        const lambdaValue =
-          selectedOption.lambda !== undefined
-            ? parseFloat(selectedOption.lambda)
-            : 0;
+      if (selectedOption && selectedOption.value !== "Select from the product" && selectedOption.value) {
+        const lambdaValue = selectedOption.lambda !== undefined ? parseFloat(selectedOption.lambda) : 0;
         const mttrValue = selectedOption.mttr || "";
         const muValue = mttrValue ? 1 / parseFloat(mttrValue) : 0;
 
@@ -598,18 +355,12 @@ useEffect(() => {
           lambda: lambdaValue,
           mu: muValue,
           mttr: mttrValue,
-          productId:
-            selectedOption.productId && selectedOption.productId !== ""
-              ? selectedOption.productId
-              : null, // ✅ Fix
+          productId: selectedOption.productId && selectedOption.productId !== "" ? selectedOption.productId : null,
           productName: selectedOption.productName,
           selectedOption: selectedOption,
           isManual: false,
         };
-      } else if (
-        selectedOption &&
-        selectedOption.value === "Select from the product"
-      ) {
+      } else if (selectedOption && selectedOption.value === "Select from the product") {
         updatedComponents[index] = {
           ...updatedComponents[index],
           lambda: 0,
@@ -643,90 +394,10 @@ useEffect(() => {
     setNonIdenticalComponents(updatedComponents);
   };
 
-  useEffect(() => {
-    setIsLambdaEdited(false);
-  }, [values?.productId]);
-
-  // const handleSubmit = () => {
-  //   // Prepare the base data
-  //   const data = {
-  //     lambda: parseFloat(lambda) || 0,
-  //     mu: mu || 0,
-  //     k: parseInt(k),
-  //     n: parseInt(n),
-  //     formula,
-  //     reliability: systemReliability,
-  //     unavailability: systemUnavailability,
-  //     type: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
-  //     elementType: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
-  //     kOfNType: selectedLabel,  // 'Identical', 'Non-Identical', or 'Load Sharing'
-  //     ...values
-  //   };
-
-  //   // Create the complete payload for API
-  //   const newKOfNData = {
-  //     projectId: projectId,
-  //     rbdId: rbdId,
-  //     k: parseInt(k),
-  //     n: parseInt(n),
-  //     formula,
-  //     lambda: parseFloat(lambda) || 0,
-  //     mu: mu || 0,
-  //     reliability: systemReliability,
-  //     unavailability: systemUnavailability,
-  //     type: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
-  //     elementType: 'K-out-of-N',  // ✅ Must be 'K-out-of-N'
-  //     kOfNType: selectedLabel,  // 'Identical', 'Non-Identical', or 'Load Sharing'
-  //     ...values
-  //   };
-
-  //   // Handle Non-Identical components
-  //   if (selectedLabel === "Non-Identical") {
-  //     newKOfNData.components = nonIdenticalComponents.map(comp => ({
-  //       lambda: comp.lambda || 0,
-  //       mu: comp.mu || 0,
-  //       mttr: comp.mttr || '',
-  //       productId: comp.productId,
-  //       productName: comp.productName,
-  //       isManual: comp.isManual,
-  //       reliability: getReliability(comp.lambda, missionTime),
-  //       unavailability: unAvailabilityFn(comp.lambda, comp.mu || 0),
-  //       type: 'K-out-of-N',  // ✅ For components too
-  //       elementType: 'K-out-of-N',  // ✅ For components too
-  //     }));
-  //   }
-
-  //   // Handle Load Sharing specific data (if needed)
-  //   if (selectedLabel === "Identical (Load Sharing)") {
-  //     newKOfNData.loadSharingConfig = {
-  //       enabled: true,
-  //       loadDistribution: formula || 'standard',
-  //     };
-  //   }
-
-  //   console.log("Sending to API with type:", selectedLabel);
-  //   console.log("Payload:", newKOfNData);
-
-  //   // Make the API call
-  //   Api.post("/api/v1/elementParametersRBD/create", newKOfNData)
-  //     .then((response) => {
-  //       console.log("API Response:", response.data);
-  //       if (response?.data?.success) {
-  //         onSubmit(data);
-  //         onClose();
-  //           getBlock();
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error creating KOfN:", error);
-  //     });
-  // };
-  const handleSubmit = () => {
-    // Prepare the data for API
+  const handleCreate = () => {
     const newKOfNData = {
       projectId: projectId,
-      productId:
-        values.productId && values.productId !== "" ? values.productId : null, // ✅ Fix: Convert empty string to null
+      productId: values.productId && values.productId !== "" ? values.productId : null,
       rbdId: rbdId,
       k: parseInt(k),
       n: parseInt(n),
@@ -747,69 +418,46 @@ useEffect(() => {
       load: selectedLabel === "Identical (Load Sharing)" ? load : values.load,
     };
 
-    // Handle Non-Identical components
     if (selectedLabel === "Non-Identical") {
-      console.log("nonIdenticalComponents.....1...", nonIdenticalComponents);
-      console.log("values.productId.....1...", currentBlock);
       newKOfNData.components = nonIdenticalComponents.map((comp) => ({
-        productId:
-          comp.productId && comp.productId !== "" ? comp.productId : null, // ✅ Fix: Convert empty string to null
+        productId: comp.productId && comp.productId !== "" ? comp.productId : null,
         lambda: comp.lambda || 0,
         mu: comp.mu || 0,
         mttr: comp.mttr || "",
         productName: comp.productName,
         isManual: comp.isManual,
-        reliability: systemReliability,
-        unavailability: systemUnavailability,
       }));
     }
 
-    console.log("Sending K-of-N data:", newKOfNData);
-
-    // Make the API call
     Api.post("/api/v1/elementParametersRBD/create", newKOfNData)
       .then((response) => {
-        console.log("API Response:", response.data);
         if (response?.data?.success) {
-          onSubmit(newKOfNData);
+          toast.success("K-out-of-N block created successfully");
+          onSubmit(newKOfNData, "add");
           onClose();
         }
       })
       .catch((error) => {
         console.error("Error creating KOfN:", error);
-        toast?.error?.("Failed to create K-out-of-N block") ||
-          alert("Failed to create K-out-of-N block");
+        toast.error("Failed to create K-out-of-N block");
       });
   };
-  const getBlock = () => {
-    Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
-      .then((res) => {
-        const data = res.data.data;
-        setShowSymbol(data.length > 0);
-        setBlocks(data);
-      })
-      .catch((err) => console.log(err, "error"));
-  };
 
-  if (!isOpen) return null;
-
-  // Update API function
   const handleUpdate = () => {
-    // Get the block ID from initialData or currentBlock
     const blockId = initialData?.id || currentBlock?.id || values?.id;
 
     if (!blockId) {
       console.error("No block ID found for update");
-      toast?.error?.("Cannot update: Block ID not found");
+      toast.error("Cannot update: Block ID not found");
       return;
     }
 
-    // Prepare the update data
     const updateData = {
       projectId: projectId,
-      productId:
-        values.productId && values.productId !== "" ? values.productId : null,
+      productId: values.productId && values.productId !== "" ? values.productId : null,
       rbdId: rbdId,
+      productTreeItemID: values.indexCount || null,
+      relDes: values.relDes,
       k: parseInt(k),
       n: parseInt(n),
       formula: formula,
@@ -829,43 +477,45 @@ useEffect(() => {
       load: selectedLabel === "Identical (Load Sharing)" ? load : values.load,
     };
 
-    // Handle Non-Identical components
     if (selectedLabel === "Non-Identical") {
       updateData.components = nonIdenticalComponents.map((comp) => ({
-        productId:
-          comp.productId && comp.productId !== "" ? comp.productId : null,
+        productTreeItemID: comp.indexCount || null,
+        relDes: comp.relDes || null,
+        productId: comp.productId && comp.productId !== "" ? comp.productId : null,
         lambda: comp.lambda || 0,
         mu: comp.mu || 0,
         mttr: comp.mttr || "",
         productName: comp.productName,
         isManual: comp.isManual,
-        reliability: systemReliability,
-        unavailability: systemUnavailability,
       }));
     }
 
-    console.log("Updating K-of-N data:", updateData);
-
-    // Make the API call for update
     Api.patch(`/api/v1/elementParametersRBD/updateRBD/${blockId}`, updateData)
       .then((response) => {
-        console.log("Update API Response:", response.data);
         if (response?.data?.success) {
-          toast?.success?.("K-out-of-N block updated successfully");
-          onSubmit(updateData);
+          toast.success("K-out-of-N block updated successfully");
+          onSubmit(updateData, "edit", blockId);
           onClose();
         } else {
-          toast?.error?.("Failed to update K-out-of-N block");
+          toast.error("Failed to update K-out-of-N block");
         }
       })
       .catch((error) => {
         console.error("Error updating KOfN:", error);
-        toast?.error?.(
-          "Error updating K-out-of-N block: " +
-            (error.response?.data?.message || error.message),
-        );
+        toast.error(`Error updating: ${error.response?.data?.message || error.message}`);
       });
   };
+
+  const handleSubmitOrUpdate = () => {
+    if (mode === "edit") {
+      handleUpdate();
+    } else {
+      handleCreate();
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
     <div
       style={{
@@ -1061,7 +711,6 @@ useEffect(() => {
               >
                 n (total items):
               </label>
-
               <input
                 type="number"
                 min={k}
@@ -1078,67 +727,34 @@ useEffect(() => {
               />
             </div>
             {selectedLabel === "Identical (Load Sharing)" && (
-              <div style={{ marginBottom: "20px" }}>
-                <div
-                  style={{ display: "flex", gap: "30px", marginBottom: "20px" }}
-                >
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "5px",
-                        fontSize: "13px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Load:
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={load}
-                      min="0"
-                      onChange={(e) => setLoad(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "6px",
-                        border: "1px solid #7f9db9",
-                        borderRadius: "3px",
-                        boxSizing: "border-box",
-                      }}
-                      placeholder="100"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* {selectedLabel !== "Non-Identical" && (
               <div>
-                <label style={{
-                  display: "block",
-                  marginBottom: "5px",
-                  fontSize: "13px",
-                  fontWeight: "500"
-                }}>
-                  System MTTR (hours):
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "5px",
+                    fontSize: "13px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Load:
                 </label>
                 <input
                   type="number"
                   step="0.1"
+                  value={load}
                   min="0"
-                  value={values?.mttr || ""}
-                  onChange={(e) => handleChange('mttr', e.target.value)}
-                  placeholder="MTTR value will auto-populate"
+                  onChange={(e) => setLoad(e.target.value)}
                   style={{
                     width: "100%",
                     padding: "6px",
                     border: "1px solid #7f9db9",
                     borderRadius: "3px",
+                    boxSizing: "border-box",
                   }}
+                  placeholder="100"
                 />
               </div>
-            )} */}
+            )}
           </div>
 
           {selectedLabel === "Non-Identical" && n > 0 && (
@@ -1202,12 +818,7 @@ useEffect(() => {
                         ]}
                         onChange={(option) => {
                           if (option) {
-                            handleComponentChange(
-                              index,
-                              "product",
-                              option.value,
-                              option,
-                            );
+                            handleComponentChange(index, "product", option.value, option);
                           }
                         }}
                         placeholder="Select product or enter manually..."
@@ -1295,38 +906,6 @@ useEffect(() => {
                         Repair Rate (μ): {component.mu.toFixed(6)} /hour
                       </div>
                     )}
-                    <div>
-                      <span>
-                        U {index + 1}:{" "}
-                        {(() => {
-                          const lambda = Number(component?.lambda);
-                          const mu = Number(component?.mu);
-
-                          if (
-                            !Number.isFinite(lambda) ||
-                            !Number.isFinite(mu) ||
-                            lambda + mu === 0
-                          ) {
-                            return "0.000000";
-                          }
-
-                          return (lambda / (lambda + mu)).toFixed(6);
-                        })()}
-                      </span>
-                    </div>
-                    <div>
-                      <span>
-                        Reliability {index + 1}:{" "}
-                        {Math.exp(-(component.lambda * missionTime))?.toFixed(
-                          6,
-                        )}
-                      </span>
-                    </div>
-                    <span className="mt-2">
-                      Q {index + 1} :{" "}
-                      {1 -
-                        Math.exp(-(component.lambda * missionTime))?.toFixed(6)}
-                    </span>
                   </div>
                 ))}
               </div>
@@ -1377,7 +956,7 @@ useEffect(() => {
           }}
         >
           <button
-            onClick={handleSubmit}
+            onClick={handleSubmitOrUpdate}
             style={{
               padding: "8px 25px",
               backgroundColor: "#4CAF50",
@@ -1391,7 +970,7 @@ useEffect(() => {
             onMouseEnter={(e) => (e.target.style.backgroundColor = "#45a049")}
             onMouseLeave={(e) => (e.target.style.backgroundColor = "#4CAF50")}
           >
-            OK
+            {mode === "edit" ? "Update" : "OK"}
           </button>
           <button
             onClick={onClose}
@@ -1415,3 +994,5 @@ useEffect(() => {
     </div>
   );
 };
+
+export default KOfNConfigModal;

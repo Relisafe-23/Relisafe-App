@@ -2049,27 +2049,16 @@ const handleBlockMenuSelect = (action) => {
     
     // Check block type and open appropriate modal
     if (foundBlock.type === "K-out-of-N" || foundBlock.elementType === "K-out-of-N") {
-      // Handle K-out-of-N edit - Open CaseSelectionModal
-      const existingKOfNType = foundBlock.kOfNType || 
-                               foundBlock.data?.kOfNType || 
-                               foundBlock.selectedLabel ||
-                               "Identical";
-      
-      let selectedCaseId = "case3";
-      if (existingKOfNType === "Non-Identical") {
-        selectedCaseId = "case4";
-      } else if (existingKOfNType === "Identical (Load Sharing)") {
-        selectedCaseId = "case5";
-      }
-      
+      // Prepare existing data for edit
       const existingData = {
+        id: foundBlock._id || foundBlock.id,
         k: foundBlock.k || foundBlock.data?.k,
         n: foundBlock.n || foundBlock.data?.n,
         lambda: foundBlock.lambda || foundBlock.data?.lambda,
         mu: foundBlock.mu || foundBlock.data?.mu,
         mttr: foundBlock.mttr || foundBlock.data?.mttr,
         formula: foundBlock.formula || foundBlock.data?.formula || "standard",
-        kOfNType: existingKOfNType,
+        kOfNType: foundBlock.kOfNType || foundBlock.data?.kOfNType || "Identical",
         components: foundBlock.components || foundBlock.data?.components,
         name: foundBlock.name || foundBlock.data?.name,
         partNumber: foundBlock.partNumber,
@@ -2080,16 +2069,16 @@ const handleBlockMenuSelect = (action) => {
         load: foundBlock.load,
         reliability: foundBlock.reliability,
         unavailability: foundBlock.unavailability,
+        selectedLabel: foundBlock.kOfNType || foundBlock.data?.kOfNType || "Identical"
       };
       
+      // Open CaseSelectionModal in edit mode
       setKOfNModal({
         open: true,
         mode: "edit",
         blockId: blockMenu.blockId,
         nodeIndex: null,
         initialData: existingData,
-        selectedCase: selectedCaseId,
-        selectedLabel: existingKOfNType,
       });
     } 
     else if (foundBlock.type === "SubRBD" || foundBlock.elementType === "SubRBD") {
