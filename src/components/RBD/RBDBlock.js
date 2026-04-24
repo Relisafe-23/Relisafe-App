@@ -76,7 +76,7 @@ const [selectedBlock, setSelectedBlock] = useState(null);
     mttr: blockData?.mttr || blockData?.data?.mttr || ''
   });
     const missionTime = location.state?.missionTime;
-console.log("mission",missionTime)
+// console.log("mission",missionTime)
   useEffect(() => {
     setFormData({
       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : '',
@@ -310,7 +310,7 @@ console.log("mission",missionTime)
                   onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
                   setParentItemId(item?.id);
                   setTargetBranchId(branch?._id);
-                  console.log(branch,'branch console')
+                  // console.log(branch,'branch console')
                   setIdforApi({
                     branchId: branch?._id, branchIndex: branch?.index,
                     ItemId: item?.id, location: rightNodeId,
@@ -347,7 +347,7 @@ console.log("mission",missionTime)
       const n = blockData?.n || blockData?.data?.n;
       // const missionTime = missionTime;
    
-      console.log("MissionTime",missionTime)
+      // console.log("MissionTime",missionTime)
   const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
   const MTBF = Number(mtbf || 0);
   const MTTR = Number(mttr || 0);
