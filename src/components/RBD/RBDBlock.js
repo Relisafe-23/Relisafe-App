@@ -348,7 +348,7 @@ console.log("mission",missionTime)
       // const missionTime = missionTime;
    
       console.log("MissionTime",missionTime)
-       const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+  const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
   const MTBF = Number(mtbf || 0);
   const MTTR = Number(mttr || 0);
   const t = Number(missionTime || 0);

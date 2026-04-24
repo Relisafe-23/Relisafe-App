@@ -52,7 +52,7 @@ const ElementParametersModal = ({
     productName: modelBlock?.productName || "",
     id: modelBlock?.id || "",
     repairDistribution: modelBlock?.repairDistribution || "Exponential",
-    mtbf: modelBlock?.mtbf || "1303617.9",
+    mtbf: modelBlock?.mtbf || "",
     load: modelBlock?.load || "100",
     mct: modelBlock?.mct || "",
     productNumber: modelBlock?.productNumber || "",
