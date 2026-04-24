@@ -2749,9 +2749,31 @@ export default function RBDButton() {
     console.log("action - ", action);
 
 
-    if (!blockMenu.blockId) return;
-    if (action === "Delete...") {
-      handleDeleteBlock(blockMenu.blockId);
+  if (!blockMenu.blockId) return;
+
+  // Handle Delete action
+  if (action === "Delete...") {
+    handleDeleteBlock(blockMenu.blockId);
+    setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+    return;
+  }
+
+  // Handle Edit action
+  if (action === "Edit...") {
+    let foundBlock = null;
+    
+    // Find the block
+    if (parentItem?.type === "parallel-section") {
+      setParentItemId(parentItem?.id);
+      parentItem.branches?.forEach((br) =>
+        br.blocks?.forEach((bl) => {
+          if (bl._id === blockMenu.blockId || bl.id === blockMenu.blockId)
+            foundBlock = bl;
+        })
+      );
+      setParallelFoundBlock(foundBlock);
+    } else {
+      foundBlock = blocks.find((b) => b.id === blockMenu.blockId);
     }
 
     // if (action === "Edit...") {
@@ -3050,8 +3072,130 @@ export default function RBDButton() {
       }
 
       setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+      return;
     }
-  };
+    
+    // Check block type and open appropriate modal
+    if (foundBlock.type === "K-out-of-N" || foundBlock.elementType === "K-out-of-N") {
+      // Prepare existing data for edit
+      const existingData = {
+        id: foundBlock._id || foundBlock.id,
+        k: foundBlock.k || foundBlock.data?.k,
+        n: foundBlock.n || foundBlock.data?.n,
+        lambda: foundBlock.lambda || foundBlock.data?.lambda,
+        mu: foundBlock.mu || foundBlock.data?.mu,
+        mttr: foundBlock.mttr || foundBlock.data?.mttr,
+        formula: foundBlock.formula || foundBlock.data?.formula || "standard",
+        kOfNType: foundBlock.kOfNType || foundBlock.data?.kOfNType || "Identical",
+        components: foundBlock.components || foundBlock.data?.components,
+        name: foundBlock.name || foundBlock.data?.name,
+        partNumber: foundBlock.partNumber,
+        productName: foundBlock.productName,
+        productId: foundBlock.productId,
+        indexCount: foundBlock.indexCount,
+        color: foundBlock.color,
+        load: foundBlock.load,
+        reliability: foundBlock.reliability,
+        unavailability: foundBlock.unavailability,
+        selectedLabel: foundBlock.kOfNType || foundBlock.data?.kOfNType || "Identical"
+      };
+      
+      // Open CaseSelectionModal in edit mode
+      setKOfNModal({
+        open: true,
+        mode: "edit",
+        blockId: blockMenu.blockId,
+        nodeIndex: null,
+        initialData: existingData,
+      });
+    } 
+    else if (foundBlock.type === "SubRBD" || foundBlock.elementType === "SubRBD") {
+      // Handle SubRBD edit
+      let selectedRbd = null;
+      if (foundBlock.data?.rbdData) {
+        selectedRbd = foundBlock.data.rbdData;
+      } else if (foundBlock.subRbdData) {
+        selectedRbd = foundBlock.subRbdData;
+      } else if (foundBlock.rbdData) {
+        selectedRbd = foundBlock.rbdData;
+      }
+      setRbdListModal({
+        open: true,
+        mode: "edit",
+        blockId: blockMenu.blockId,
+        nodeIndex: null,
+        selectedRbd: selectedRbd,
+      });
+    } 
+    else {
+      // Handle Regular blocks and others
+      const bmap = {
+        "K-out-of-N": "K_OUT_OF_N",
+        SubRBD: "SUBRBD",
+        "Parallel Section": "PARALLEL_SECTION",
+        "Parallel Branch": "PARALLEL_BRANCH",
+      };
+      setElementModal({
+        open: true,
+        mode: "edit",
+        blockId: blockMenu.blockId,
+        blockType: bmap[foundBlock.type] || "REGULAR",
+        nodeIndex: null,
+      });
+    }
+    
+    setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+    return;
+  }
+
+  // Handle Add actions from context menu
+  if (action === "Add K-out-of-N") {
+    setKOfNModal({
+      open: true,
+      mode: "add",
+      blockId: nextId,
+      nodeIndex: clickedNodeInfo.index,
+      initialData: {
+        k: 2,
+        n: 3,
+        lambda: 0.001,
+        mu: 1000,
+        formula: "standard",
+        name: "K-out-of-N Block",
+      },
+    });
+  } else if (action === "Add SubRBD") {
+    setRbdListModal({
+      open: true,
+      mode: "add",
+      blockId: nextId,
+      nodeIndex: clickedNodeInfo.index,
+      selectedRbd: null,
+    });
+  } else if (action === "Add Parallel Section") {
+    setPendingAction({
+      type: "parallel",
+      nodeIndex: clickedNodeInfo.index,
+    });
+    setShowParallelModal(true);
+  } else if (action.startsWith("Add ")) {
+    const amap = {
+      "Add K-out-of-N": "K_OUT_OF_N",
+      "Add SubRBD": "SUBRBD",
+      "Add Parallel Section": "PARALLEL_SECTION",
+      "Add Parallel Branch": "PARALLEL_BRANCH",
+    };
+    setElementModal({
+      open: true,
+      mode: "add",
+      blockId: nextId,
+      blockType: amap[action] || "REGULAR",
+      nodeIndex: clickedNodeInfo.index,
+    });
+  }
+
+  setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+};
   const handleClose = () => {
     setKOfNModal((prev) => ({
       ...prev,
@@ -3214,19 +3358,6 @@ export default function RBDButton() {
               />
             )}
 
-            {kOfNModal.open && (
-              <>
-                <CaseSelectionModal
-                  isOpen={kOfNModal.open}
-                  targetId={targetId}
-                  handleClose={handleClose}
-                  onSelect={(item) => {
-                    // console.log(item);
-                    handleClose();
-                  }}
-                />
-              </>
-            )}
 
             {showParallelModal && (
               <div
@@ -3447,16 +3578,7 @@ export default function RBDButton() {
           />
         )}
 
-        {kOfNModal.open && (
-          <CaseSelectionModal
-            isOpen={kOfNModal.open}
-            handleClose={handleClose}
-            onSelect={(item) => {
-              // console.log(item);
-              handleClose();
-            }}
-          />
-        )}
+          
 
         {/* {showParallelModal && (
           <div style={{
@@ -3583,21 +3705,26 @@ export default function RBDButton() {
           currentBlock={blocks.find((b) => b.id === elementModal.blockId)}
         />
       )}
-      {kOfNModal.open && (
-        <CaseSelectionModal
-          isOpen={kOfNModal.open}
-          handleClose={() => {
-            setKOfNModal({
-              open: false,
-              blockId: null,
-              initialData: null,
-              mode: "add",
-              nodeIndex: null,
-            });
-          }}
-          onSelect={handleKOfNSelect}
-        />
-      )}
+     {/* CaseSelectionModal for K-out-of-N */}
+{kOfNModal.open && (
+  <CaseSelectionModal
+    isOpen={kOfNModal.open}
+    handleClose={() => {
+      setKOfNModal({
+        open: false,
+        blockId: null,
+        initialData: null,
+        mode: "add",
+        nodeIndex: null,
+        selectedCase: null,
+        selectedLabel: null,
+      });
+    }}
+    onSelect={handleKOfNSelect}
+    mode={kOfNModal.mode}
+    existingData={kOfNModal.initialData}
+  />
+)}
       {showParallelModal && (
         <div
           style={{
