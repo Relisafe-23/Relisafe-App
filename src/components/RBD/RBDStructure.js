@@ -1245,6 +1245,162 @@ export default function RBDButton() {
 //     })
 //     .catch(err => console.log(err, 'error'));
 // };
+// const getBlock = () => {
+//   Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
+//     .then((res) => {
+//       const data = res.data.data;
+
+//       console.log("API Response:", data);
+
+//       setShowSymbol(data.length > 0);
+//       setBlocks(data);
+
+//       // Function to compute reliability
+//       const computeGroupReliability = (blocks, arrangement) => {
+//         console.log("====================================");
+//         console.log("computeGroupReliability called");
+//         console.log("Arrangement:", arrangement);
+//         console.log("Blocks received:", blocks);
+
+//         const reliabilities = blocks
+//           .map((item, index) => {
+//             const r = Number(item.reliability);
+
+//             console.log(`Block ${index + 1}:`, item);
+//             console.log(`Block ${index + 1} Reliability:`, r);
+
+//             return isNaN(r) ? null : r;
+//           })
+//           .filter((r) => r !== null);
+
+//         console.log("Valid Reliabilities:", reliabilities);
+
+//         if (reliabilities.length === 0) {
+//           console.log("No valid reliabilities found. Returning 1");
+//           return 1;
+//         }
+
+//         if (arrangement === "horizontal") {
+//           console.log("Parallel formula applied");
+
+//           const productOfUnavailabilities = reliabilities.reduce(
+//             (acc, r, i) => {
+//               console.log(
+//                 `Step ${i + 1}: acc=${acc}, (1-${r})=${1 - r}, result=${
+//                   acc * (1 - r)
+//                 }`
+//               );
+//               return acc * (1 - r);
+//             },
+//             1
+//           );
+
+//           console.log(
+//             "Product of Unavailabilities:",
+//             productOfUnavailabilities
+//           );
+
+//           const parallelReliability = 1 - productOfUnavailabilities;
+
+//           console.log("Parallel Reliability:", parallelReliability);
+
+//           return parallelReliability;
+//         } else {
+//           console.log("Series formula applied");
+
+//           const seriesReliability = reliabilities.reduce((acc, r, i) => {
+//             console.log(
+//               `Step ${i + 1}: acc=${acc}, r=${r}, result=${acc * r}`
+//             );
+//             return acc * r;
+//           }, 1);
+
+//           console.log("Series Reliability:", seriesReliability);
+
+//           return seriesReliability;
+//         }
+//       };
+
+//       // Top level reliability mapping
+//       const topLevelReliabilities = data.map((item, index) => {
+//         console.log("====================================");
+//         console.log(
+//   `Top Level Item1223 ${index + 1}:`,
+//   item.branches
+//     .filter(branch => branch.blocks)
+//     .map(branch =>
+//       branch.blocks.map(block => ({
+//         reliability: block.reliability,
+//         unavailability: 1 - Number(block.reliability)
+//       }))
+//     )
+// );
+// console.log(
+//   `Top Level Item ${index + 1}:`,
+// data.map((item=>item.branches))
+// );
+
+//         const hasBranches =
+//           item.arrangement === "horizontal" &&
+//           Array.isArray(item.branches?.blocks) &&
+//           item.branches.blocks.length > 0;
+
+//         console.log("item.arrangement:", item.arrangement);
+//         console.log(
+//           "item.arrangement === 'horizontal':",
+//           item.arrangement === "horizontal"
+//         );
+//         console.log("item.branches?.blocks:", item.branches?.blocks);
+//         console.log(
+//           "Array.isArray(item.branches?.blocks):",
+//           Array.isArray(item.branches?.blocks)
+//         );
+//         console.log(
+//           "item.branches.blocks.length:",
+//           item.branches?.blocks?.length
+//         );
+//         console.log("hasBranches:", hasBranches);
+
+//         if (hasBranches) {
+//           const parallelR = computeGroupReliability(
+//             item.branches.blocks,
+//             "horizontal"
+//           );
+
+//           console.log("Parallel Section Reliability:", parallelR);
+
+//           return parallelR;
+//         } else {
+//           const r = Number(item.reliability);
+
+//           console.log("Single Block Reliability:", r);
+
+//           return isNaN(r) ? 1 : r;
+//         }
+//       });
+
+//       console.log("====================================");
+//       console.log("Top Level Reliabilities:", topLevelReliabilities);
+
+//       // Final system reliability (series)
+//       const totalReliability = topLevelReliabilities.reduce((acc, r, i) => {
+//         console.log(
+//           `Final Step ${i + 1}: acc=${acc}, r=${r}, result=${acc * r}`
+//         );
+//         return acc * r;
+//       }, 1);
+
+//       const totalUnavailability = 1 - totalReliability;
+
+//       console.log("====================================");
+//       console.log("Total Reliability:", totalReliability);
+//       console.log("Total Unavailability:", totalUnavailability);
+
+//       setTotalReliability(totalReliability);
+//       setTotalUnavailability(totalUnavailability);
+//     })
+//     .catch((err) => console.log(err, "error"));
+// };
 const getBlock = () => {
   Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
     .then((res) => {
@@ -1255,142 +1411,183 @@ const getBlock = () => {
       setShowSymbol(data.length > 0);
       setBlocks(data);
 
-      // Function to compute reliability
-      const computeGroupReliability = (blocks, arrangement) => {
-        console.log("====================================");
-        console.log("computeGroupReliability called");
-        console.log("Arrangement:", arrangement);
-        console.log("Blocks received:", blocks);
+      // Recursive function to compute reliability for any block or parallel section
+      const computeReliability = (item) => {
+        // Check if this is a parallel section (has arrangement "horizontal" and branches)
+        if (item.arrangement === "horizontal" && item.branches && item.branches.length > 0) {
+          console.log("Found Parallel Section:", {
+            id: item._id,
+            isNested: item.isNested,
+            branchCount: item.branches.length,
+            k: item.k,
+            n: item.n
+          });
+          
+          // Calculate reliability for parallel section
+          return computeParallelSectionReliability(item.branches);
+        }
+        
+        // Regular block - return its reliability
+        const reliability = Number(item.reliability);
+        console.log("Regular Block:", {
+          id: item._id,
+          reliability: reliability,
+          isNested: item.isNested
+        });
+        return isNaN(reliability) ? 1 : reliability;
+      };
 
-        const reliabilities = blocks
-          .map((item, index) => {
-            const r = Number(item.reliability);
-
-            console.log(`Block ${index + 1}:`, item);
-            console.log(`Block ${index + 1} Reliability:`, r);
-
-            return isNaN(r) ? null : r;
-          })
-          .filter((r) => r !== null);
-
-        console.log("Valid Reliabilities:", reliabilities);
-
-        if (reliabilities.length === 0) {
-          console.log("No valid reliabilities found. Returning 1");
+      // Function to compute parallel section reliability from branches
+      const computeParallelSectionReliability = (branches) => {
+        if (!branches || branches.length === 0) {
+          console.log("No branches found, returning 1");
           return 1;
         }
 
-        if (arrangement === "horizontal") {
-          console.log("Parallel formula applied");
+        console.log(`Computing Parallel Section with ${branches.length} branches`);
+        
+        // Calculate reliability for each branch (series of blocks in that branch)
+        const branchReliabilities = branches.map((branch, idx) => {
+          console.log(`Branch ${idx + 1}:`, branch);
+          return computeBranchReliability(branch);
+        });
 
-          const productOfUnavailabilities = reliabilities.reduce(
-            (acc, r, i) => {
-              console.log(
-                `Step ${i + 1}: acc=${acc}, (1-${r})=${1 - r}, result=${
-                  acc * (1 - r)
-                }`
-              );
-              return acc * (1 - r);
-            },
-            1
-          );
+        console.log("Branch Reliabilities:", branchReliabilities);
 
-          console.log(
-            "Product of Unavailabilities:",
-            productOfUnavailabilities
-          );
+        // For parallel system: 1 - Π(1 - R_i)
+        const productOfUnavailabilities = branchReliabilities.reduce(
+          (acc, r) => acc * (1 - r),
+          1
+        );
 
-          const parallelReliability = 1 - productOfUnavailabilities;
+        const parallelReliability = 1 - productOfUnavailabilities;
+        console.log("Parallel Section Reliability:", parallelReliability);
+        
+        return parallelReliability;
+      };
 
-          console.log("Parallel Reliability:", parallelReliability);
+      // Function to compute branch reliability (series of blocks)
+      const computeBranchReliability = (branch) => {
+        if (!branch.blocks || branch.blocks.length === 0) {
+          console.log("Branch has no blocks, returning 1");
+          return 1;
+        }
 
-          return parallelReliability;
+        console.log(`Computing Branch with ${branch.blocks.length} blocks`);
+        
+        // Calculate reliability for each block in the branch
+        const blockReliabilities = branch.blocks.map((block, idx) => {
+          console.log(`Block ${idx + 1} in branch:`, block);
+          
+          // Check if this block is a nested parallel section
+          if (block.arrangement === "horizontal" && block.branches && block.branches.length > 0) {
+            console.log(`Block ${idx + 1} is a NESTED Parallel Section (isNested: ${block.isNested})`);
+            // Recursively compute nested parallel section
+            return computeParallelSectionReliability(block.branches);
+          }
+          
+          // Regular block
+          const reliability = Number(block.reliability);
+          console.log(`Block ${idx + 1} is Regular Block, Reliability:`, reliability);
+          return isNaN(reliability) ? 1 : reliability;
+        });
+
+        console.log("Block Reliabilities in branch:", blockReliabilities);
+
+        // For series system: R = R1 * R2 * ... * Rn
+        const seriesReliability = blockReliabilities.reduce((acc, r) => acc * r, 1);
+        console.log("Branch Series Reliability:", seriesReliability);
+        
+        return seriesReliability;
+      };
+
+      // Recursive function to log the complete structure
+      const logStructure = (item, depth = 0, type = "Top Level") => {
+        const indent = "  ".repeat(depth);
+        
+        if (item.arrangement === "horizontal" && item.branches) {
+          console.log(`${indent}[${type}] PARALLEL SECTION - K=${item.k || 1}, N=${item.n || item.branches.length}, isNested: ${item.isNested || false}`);
+          
+          item.branches.forEach((branch, bi) => {
+            console.log(`${indent}  └─ Branch ${bi + 1} (index: ${branch.index})`);
+            
+            if (branch.blocks && branch.blocks.length > 0) {
+              branch.blocks.forEach((block, blkIdx) => {
+                if (block.arrangement === "horizontal" && block.branches) {
+                  console.log(`${indent}      └─ Block ${blkIdx + 1}: NESTED PARALLEL SECTION (isNested: ${block.isNested})`);
+                  logStructure(block, depth + 3, "Nested");
+                } else {
+                  const reliability = block.reliability || "N/A";
+                  console.log(`${indent}      └─ Block ${blkIdx + 1}: Regular Block (R=${reliability})`);
+                }
+              });
+            } else {
+              console.log(`${indent}      └─ No blocks in this branch`);
+            }
+          });
         } else {
-          console.log("Series formula applied");
-
-          const seriesReliability = reliabilities.reduce((acc, r, i) => {
-            console.log(
-              `Step ${i + 1}: acc=${acc}, r=${r}, result=${acc * r}`
-            );
-            return acc * r;
-          }, 1);
-
-          console.log("Series Reliability:", seriesReliability);
-
-          return seriesReliability;
+          const reliability = item.reliability || "N/A";
+          console.log(`${indent}[${type}] REGULAR BLOCK - R=${reliability}, isNested: ${item.isNested || false}`);
         }
       };
 
-      // Top level reliability mapping
-      const topLevelReliabilities = data.map((item, index) => {
-        console.log("====================================");
-console.log(
-  `Top Level Item ${index + 1}:`,
-  item.branches
-    ?.filter(branch => branch.blocks)
-    ?.map(branch =>
-      branch.blocks.map(block => ({
-        reliability: block.reliability,
-        unavailability: 1 - Number(block.reliability)
-      }))
-    )
-);
-
-        const hasBranches =
-          item.arrangement === "horizontal" &&
-          Array.isArray(item.branches?.blocks) &&
-          item.branches.blocks.length > 0;
-
-        console.log("item.arrangement:", item.arrangement);
-        console.log(
-          "item.arrangement === 'horizontal':",
-          item.arrangement === "horizontal"
-        );
-        console.log("item.branches?.blocks:", item.branches?.blocks);
-        console.log(
-          "Array.isArray(item.branches?.blocks):",
-          Array.isArray(item.branches?.blocks)
-        );
-        console.log(
-          "item.branches.blocks.length:",
-          item.branches?.blocks?.length
-        );
-        console.log("hasBranches:", hasBranches);
-
-        if (hasBranches) {
-          const parallelR = computeGroupReliability(
-            item.branches.blocks,
-            "horizontal"
-          );
-
-          console.log("Parallel Section Reliability:", parallelR);
-
-          return parallelR;
-        } else {
-          const r = Number(item.reliability);
-
-          console.log("Single Block Reliability:", r);
-
-          return isNaN(r) ? 1 : r;
-        }
+      // Log complete structure
+      console.log("\n=== RBD STRUCTURE ANALYSIS ===");
+      data.forEach((item, idx) => {
+        console.log(`\n--- Top Level Item ${idx + 1} ---`);
+        logStructure(item, 1, `Top${idx + 1}`);
       });
 
-      console.log("====================================");
-      console.log("Top Level Reliabilities:", topLevelReliabilities);
+      // Calculate top level reliabilities
+      const topLevelReliabilities = data.map((item, index) => {
+        console.log(`\n=== Calculating Top Level Item ${index + 1} ===`);
+        
+        // Check if this is a parallel section at top level
+        if (item.arrangement === "horizontal" && item.branches && item.branches.length > 0) {
+          console.log(`Item ${index + 1} is a Parallel Section at top level`);
+          const parallelReliability = computeParallelSectionReliability(item.branches);
+          console.log(`Item ${index + 1} Parallel Section Reliability:`, parallelReliability);
+          return parallelReliability;
+        }
+        
+        // Single block at top level
+        console.log(`Item ${index + 1} is a Single Block at top level`);
+        const blockReliability = computeReliability(item);
+        console.log(`Item ${index + 1} Block Reliability:`, blockReliability);
+        return blockReliability;
+      });
 
-      // Final system reliability (series)
+      console.log("\n=== Top Level Reliabilities ===");
+      console.log("Top Level Reliabilities Array:", topLevelReliabilities);
+
+      // Final system reliability (series combination of top level items)
       const totalReliability = topLevelReliabilities.reduce((acc, r, i) => {
-        console.log(
-          `Final Step ${i + 1}: acc=${acc}, r=${r}, result=${acc * r}`
-        );
+        console.log(`Final Step ${i + 1}: acc=${acc}, r=${r}, result=${acc * r}`);
         return acc * r;
       }, 1);
 
       const totalUnavailability = 1 - totalReliability;
 
-      console.log("====================================");
-      console.log("Total Reliability:", totalReliability);
-      console.log("Total Unavailability:", totalUnavailability);
+      console.log("\n=== FINAL RESULTS ===");
+      console.log("Total System Reliability:", totalReliability);
+      console.log("Total System Unavailability:", totalUnavailability);
+      console.log("Formula: Series combination of", topLevelReliabilities.length, "top level items");
+      
+      // If there are nested sections, show the calculation summary
+      const hasNested = data.some(item => 
+        (item.arrangement === "horizontal" && item.branches?.some(branch => 
+          branch.blocks?.some(block => block.arrangement === "horizontal")
+        ))
+      );
+      
+      if (hasNested) {
+        console.log("\n📊 Nested Parallel Sections Detected!");
+        console.log("Calculation Method:");
+        console.log("1. Each nested parallel section is calculated recursively");
+        console.log("2. Parallel formula: R = 1 - Π(1 - R_i) for each branch");
+        console.log("3. Series formula: R = Π(R_i) for blocks in a branch");
+        console.log("4. Top level items combine in series");
+      }
 
       setTotalReliability(totalReliability);
       setTotalUnavailability(totalUnavailability);
@@ -2912,11 +3109,11 @@ console.log(
   {/* Bottom content */}
   <div className="mt-1">
     <div>
-      <b>Reliability: </b>{totalReliability}
+      <b>Reliability: </b>{totalReliability?.toFixed(9)}
     </div>
  
     <div>
-      <b>Unavailability: </b>{totalUnavailability}
+      <b>Unavailability: </b>{totalUnavailability?.toFixed(9)}
     </div>
   </div>
 
