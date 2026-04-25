@@ -9,6 +9,7 @@ export const KOfNConfigModal = ({
   isOpen,
   onClose,
   onSubmit,
+  targetId,
   initialData,
   mode = "add",
   currentBlock,
@@ -416,6 +417,7 @@ export const KOfNConfigModal = ({
       productName: values.productName,
       color: values.color,
       load: selectedLabel === "Identical (Load Sharing)" ? load : values.load,
+      targetId:targetId,
     };
 
     if (selectedLabel === "Non-Identical") {

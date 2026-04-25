@@ -2,17 +2,22 @@
 import React, { useState, useEffect } from "react";
 import { KOfNConfigModal } from "./KOfNConfigModal";
 
-export const CaseSelectionModal = ({ 
-  isOpen, 
-  handleClose, 
-  onSelect, 
-  mode = "add", 
-  existingData = null 
-}) => {
+const CaseSelectionModal = ({ isOpen, handleClose, targetId, onSelect, mode = 'add', existingData = null }) => {
+
+  console.log(targetId,'targetId from caseselection')
+  const [selected, setSelected] = useState(null);
+  const [kOfNModal, setKOfNModal] = useState({
+    open: false, 
+    blockId: null,
+    initialData: existingData,
+    mode: mode,
+    nodeIndex: null,
+    selectedCase: null,
+    selectedLabel: null
+  });
   const [selectedCase, setSelectedCase] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [selectedLabel, setSelectedLabel] = useState("");
-
   // Reset when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -89,6 +94,7 @@ export const CaseSelectionModal = ({
       <KOfNConfigModal
         isOpen={showConfigModal}
         onClose={handleConfigClose}
+          targetId={targetId}
         onSubmit={handleConfigSubmit}
         initialData={existingData}
         mode={mode}
