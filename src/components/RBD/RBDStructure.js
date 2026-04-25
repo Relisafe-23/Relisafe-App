@@ -96,24 +96,24 @@ const getNestedParallelSectionWidth = (block) => {
   const maxBranchW =
     branches.length > 0
       ? Math.max(
-        ...branches.map((br) => {
-          const branchBlocks = br.blocks || [];
-          let totalW = 0;
-          branchBlocks.forEach((b, idx) => {
-            if (
-              (b.type === "Parallel Section" ||
-                b.elementType === "Parallel Section") &&
-              b.branches?.length > 0
-            ) {
-              totalW +=
-                getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
-            } else {
-              totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
-            }
-          });
-          return Math.max(totalW, NESTED.BW);
-        }),
-      )
+          ...branches.map((br) => {
+            const branchBlocks = br.blocks || [];
+            let totalW = 0;
+            branchBlocks.forEach((b, idx) => {
+              if (
+                (b.type === "Parallel Section" ||
+                  b.elementType === "Parallel Section") &&
+                b.branches?.length > 0
+              ) {
+                totalW +=
+                  getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
+              } else {
+                totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
+              }
+            });
+            return Math.max(totalW, NESTED.BW);
+          }),
+        )
       : NESTED.BW;
 
   const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD;
@@ -320,7 +320,7 @@ export const BiDirectionalSymbol = ({
   const location = useLocation();
 
   const missionTime = location.state?.missionTime;
-  const [mission, setMission] = useState('');
+  const [mission, setMission] = useState("");
   const [rbdList, setRbdList] = useState([]);
   const { id, rbdId } = useParams();
   const projectId = id;
@@ -443,7 +443,6 @@ export const BiDirectionalSymbol = ({
   };
   // ── wire segments ───────────────────────────────────────────────────────────
   const buildWireLines = (items, rightBoxX) => {
-
     const lines = [];
     if (items.length === 0) {
       lines.push({
@@ -488,7 +487,6 @@ export const BiDirectionalSymbol = ({
     return lines;
   };
   const renderParallelSection = (item) => {
-
     const { x, rightX, branches, id, blockData, width: dynW, secTopY } = item;
     if (!branches || branches.length === 0) return null;
 
@@ -704,7 +702,6 @@ export const BiDirectionalSymbol = ({
                               ItemId: item?.id,
                               location: `branch-${branch?.index}-left`,
                             });
-
                           }}
                         />
                         <RBDBlock
@@ -782,7 +779,12 @@ export const BiDirectionalSymbol = ({
                             onClick={(e) => {
                               e.stopPropagation();
                               const id = midNodeId(bIdx);
-                              onOpenMenu(e.clientX, e.clientY, branch?._id, `${branch.blocks[0]._id} ,parallel`);
+                              onOpenMenu(
+                                e.clientX,
+                                e.clientY,
+                                branch?._id,
+                                `${branch.blocks[0]._id} ,parallel`,
+                              );
                               // setIdforApi({
                               //   branchId: branch?._id,
                               //   branchIndex: branch?.index,
@@ -1066,14 +1068,9 @@ export const BlockContextMenu = ({
 
 // ─── RBDButton ────────────────────────────────────────────────────────────────
 
-
 export default function RBDButton() {
-
-
-
   const { id, rbdId } = useParams();
   const projectId = id;
-
 
   const [parallelBranchMode, setParallelBranchMode] = useState({
     active: false,
@@ -1083,12 +1080,10 @@ export default function RBDButton() {
 
   const parallelBranchModeRef = useRef(parallelBranchMode);
 
-
-
   const [showSymbol, setShowSymbol] = useState(false);
   const [menu, setMenu] = useState(null);
   const [targetId, setTargetId] = useState(null);
-  const [innerTargetId, setInnerTargetId] = useState(null)
+  const [innerTargetId, setInnerTargetId] = useState(null);
   const [targtBranchId, setTargetBranchId] = useState(null);
 
   // setTargetBranchId()
@@ -1419,7 +1414,6 @@ export default function RBDButton() {
   //   console.log(startNode, 'startNode')
   //   console.log(endNode, 'endNode')
 
-
   //   // const parseNode = (n) =>
   //   // typeof n === "string" && n.startsWith("branch-")
   //   //   ? {
@@ -1444,10 +1438,8 @@ export default function RBDButton() {
   //   const start = parseNode(startNode);
   //   const end = parseNode(endNode);
 
-
   //   console.log(start, 'start')
   //   console.log(end, 'end')
-
 
   //   const topLevel = blocks.filter(
   //     (b) => b.type === "Parallel Section" || !b.data?.parentSection,
@@ -1777,6 +1769,30 @@ export default function RBDButton() {
       return;
     }
 
+    const mainBlocks = topLevel.slice(wrapStart, wrapEnd);
+    if (!mainBlocks.length) {
+      toast.error("No blocks between the selected nodes");
+      return;
+    }
+
+    const payload = {
+      rbdId,
+      projectId,
+      companyId: localStorage.getItem("companyId"),
+      elementType: "Parallel Branch",
+      type: "Parallel Branch",
+      isParallel: true,
+      isParallelBranch: true,
+      range: {
+        startBlockId: getId(topLevel[si]) ?? null, // block to the LEFT of start node (null if first node)
+        endBlockId: getId(topLevel[ei]), // block to the RIGHT of end node
+        blockIds: mainBlocks.map((b) => getId(b)), // all blocks being wrapped
+      },
+      k: 1,
+      n: 2,
+      branchCount: 2,
+    };
+
     try {
       const payload = {
         startBlockId: startNode ?? null,  // block _id LEFT of start node
@@ -1793,7 +1809,9 @@ export default function RBDButton() {
       getBlock(); // re-fetch to redraw diagram
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Failed to create parallel branch");
+      toast.error(
+        err.response?.data?.message || "Failed to create parallel branch",
+      );
     }
   };
 
@@ -1801,7 +1819,6 @@ export default function RBDButton() {
   useEffect(() => {
     parallelBranchModeRef.current = parallelBranchMode;
   }, [parallelBranchMode]);
-
 
   // ── menu open ──────────────────────────────────────────────────────────────
   // const openMenu = (x, y, index) => {
@@ -1833,7 +1850,11 @@ export default function RBDButton() {
 
     if (mode.active) {
       if (!mode.startNode && mode.startNode !== null) {
-        setParallelBranchMode({ active: false, startNode: null, endNode: null });
+        setParallelBranchMode({
+          active: false,
+          startNode: null,
+          endNode: null,
+        });
         return;
       }
       createParallelBranch(mode.startNode, index);
@@ -1842,7 +1863,7 @@ export default function RBDButton() {
     }
     setMenu({ x, y, index });
     setTargetId(index);
-    setInnerTargetId(innerBlock)
+    setInnerTargetId(innerBlock);
     setSelectedNode(index);
     setClickedNodeInfo({ index, x, y });
   };
@@ -2254,12 +2275,12 @@ export default function RBDButton() {
         blocks.map((block) =>
           block.id === elementModal.blockId
             ? {
-              ...block,
-              data: {
-                ...block.data,
-                switchData: switchData,
-              },
-            }
+                ...block,
+                data: {
+                  ...block.data,
+                  switchData: switchData,
+                },
+              }
             : block,
         ),
       );
@@ -2344,7 +2365,6 @@ export default function RBDButton() {
 
   // ── node menu ──────────────────────────────────────────────────────────────
   const handleSelect = (action) => {
-
     if (action === "Add Parallel Section") {
       setPendingAction({ type: "parallel", nodeIndex: clickedNodeInfo.index });
       setShowParallelModal(true);
@@ -2364,7 +2384,7 @@ export default function RBDButton() {
     if (action === "Add Parallel Branch") {
       setParallelBranchMode({
         active: true,
-        startNode: targetId,  // ← targetId is the RelateId (block's _id), same as what openMenu passes for end node
+        startNode: targetId, // ← targetId is the RelateId (block's _id), same as what openMenu passes for end node
         endNode: null,
       });
       setMenu(null);
@@ -2408,12 +2428,11 @@ export default function RBDButton() {
     if (action === "Add Regular") {
       const innerIdMatch = innerTargetId?.match(/^([a-f0-9]+)/);
       if (innerTargetId && innerTargetId?.includes("parallel")) {
-
         if (innerIdMatch && innerIdMatch[1]) {
           // console.log(innerIdMatch[1], 'innerIdMatch[1]');
           setTargetId(innerIdMatch[1]);
         } else {
-          console.log('No valid inner ID found in:', innerTargetId);
+          console.log("No valid inner ID found in:", innerTargetId);
         }
       }
       setElementModal({
@@ -2421,7 +2440,10 @@ export default function RBDButton() {
         mode: "add",
         blockId: nextId,
         blockType: action.replace("Add ", ""),
-        nodeIndex: (innerIdMatch && innerIdMatch[1]) ? innerIdMatch[1] : clickedNodeInfo.index,
+        nodeIndex:
+          innerIdMatch && innerIdMatch[1]
+            ? innerIdMatch[1]
+            : clickedNodeInfo.index,
         idforApi:
           menu?.index == idforApi?.branchIndex
             ? idforApi
@@ -2556,6 +2578,7 @@ export default function RBDButton() {
   
   const handleBlockMenuSelect = (action) => {
 
+    if (!blockMenu.blockId) return;
 
 
     if (!blockMenu.blockId) return;
@@ -3010,11 +3033,12 @@ export default function RBDButton() {
                 mode={rbdListModal.mode}
                 blockId={rbdListModal.blockId}
                 nodeIndex={rbdListModal.nodeIndex}
-                onConfirm={handleSubRBDConfirm} // Add this callback
+                onConfirm={handleSubRBDConfirm}
                 rbdList={rbdList}
+                totalReliability={totalReliability} // ← ADD THIS
+                totalUnavailability={totalUnavailability} // ← ADD THIS
               />
             )}
-
 
             {showParallelModal && (
               <div
@@ -3232,18 +3256,6 @@ export default function RBDButton() {
             parentItemId={parentItemId}
             getBlock={getBlock}
             currentBlock={blocks.find((b) => b.id === elementModal.blockId)}
-          />
-        )}
-
-        {kOfNModal.open && (
-          <CaseSelectionModal
-            isOpen={kOfNModal.open}
-            handleClose={handleClose}
-            targetId={targetId}
-            onSelect={(item) => {
-              // console.log(item);
-              handleClose();
-            }}
           />
         )}
 

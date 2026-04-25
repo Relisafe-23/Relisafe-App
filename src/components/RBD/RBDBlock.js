@@ -27,6 +27,7 @@ export const RBDBlock = ({
   setIdforApi,
   x,
   y,
+
   setParentItemId,
   onEdit,
   onDelete,
@@ -42,8 +43,9 @@ export const RBDBlock = ({
   branchIndex: parentBranchIndex,
   itemId: parentItemId,
   isNested = false,
-  selectedLabel,
+
   // Props for branch nodes
+    selectedLabel,
   branch,
   item,
   branchBlocks,
@@ -119,7 +121,6 @@ export const RBDBlock = ({
     );
   }
 
-
   return renderRegularBlock();
 
   function renderNestedParallelSection() {
@@ -132,7 +133,6 @@ export const RBDBlock = ({
       INNER_PAD = 14;
     const CONTAINER_PADDING = 20,
       BRANCH_SPACING = 20;
-
 
     const getBranchHeight = (branch) => {
       const branchBlocks = branch.blocks || [];
@@ -468,7 +468,6 @@ export const RBDBlock = ({
             <>
               <tspan x={x + BLOCK_W / 2} dy="-4">
                 R: {reliability}
-
               </tspan>
               <tspan x={x + BLOCK_W / 2} dy="10">
                 U: {unavailability}
