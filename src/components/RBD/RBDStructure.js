@@ -20,23 +20,23 @@ import "../../css/RBD.scss";
 // import ReactFlowD from './ReactFlow/ReactFlowD.jsx';
 
 const C = {
-  TERMINAL_W: 60,
+  TERMINAL_W: 70,
   TERMINAL_H: 40,
-  TERMINAL_LEFT_X: 50,
-  ARROW_W: 12,
-  ARROW_H: 16,
+  TERMINAL_LEFT_X: 60,
+  ARROW_W: 15,
+  ARROW_H: 15,
   BLOCK_W: 60,
   BLOCK_H: 40,
-  BLOCK_SPACING: 20,
+  BLOCK_SPACING: 25,
   NODE_R: 5,
-  NODE_SPACING: 20,
+  NODE_SPACING: 35,
   BRANCH_MIN_H: 40,
-  BRANCH_SPACING: 20,
-  RAIL_PAD_X: 20,
-  INNER_PAD_X: 14,
-  BLOCK_GAP: 67,
+  BRANCH_SPACING: 35,
+  RAIL_PAD_X: 22,
+  INNER_PAD_X: 25,
+  BLOCK_GAP: 35,
   CENTER_Y: 200,
-  MIN_OUTPUT_GAP: 40,
+  MIN_OUTPUT_GAP: 30,
   BASE_RIGHT_X: 200,
   MIN_CANVAS_W: 800,
   MIN_CANVAS_H: 420,
@@ -44,13 +44,13 @@ const C = {
 
 // ── Shared layout constants (must match RBDBlock exactly) ──────────────────
 const NESTED = {
-  BW: 60,
-  BH: 40,
-  GAP: 12,
-  RAIL_PAD: 20,
-  INNER_PAD: 14,
-  CONTAINER_PADDING: 20,
-  BRANCH_SPACING: 20,
+  BW: 20,
+  BH: 15,
+  GAP: 20,
+  RAIL_PAD: 15,
+  INNER_PAD: 15,
+  CONTAINER_PADDING: 15,
+  BRANCH_SPACING: 10,
 };
 
 // Recursive: actual height of a single branch (accounts for nested parallel sections)
@@ -280,7 +280,7 @@ const InsertNode = ({
       <circle
         cx={cx}
         cy={cy}
-        r={r}
+        r={r + 1}
         fill={isSel ? "#0078d4" : "black"}
         style={{ cursor: "pointer" }}
       />
@@ -1159,42 +1159,78 @@ export default function RBDButton() {
   // console.log(targetId, 'targetId')
 
 
-
   // ── zoom / pan state ───────────────────────────────────────────────────────
   const [open, setOpen] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
-  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
 
-  // ── zoom / pan handlers (FIXED) ────────────────────────────────────────────
-  const handleWheelScroll = (event) => {
-    event.preventDefault();
-    const newZoom = zoomLevel + event.deltaY * -0.001;
-    setZoomLevel(Math.min(Math.max(0.1, newZoom), 2));
+  // ── canvas container ref (needed to block native scroll) ──────────────────
+  const canvasRef = useRef(null);
+
+  // Block native wheel scroll on the canvas so our zoom handler takes over
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const prevent = (e) => e.preventDefault();
+    el.addEventListener("wheel", prevent, { passive: false });
+    return () => el.removeEventListener("wheel", prevent);
+  }, []);
+
+  // ── zoom / pan handlers ────────────────────────────────────────────────────
+  const handleWheelScroll = (e) => {
+    e.preventDefault();
+
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    const newZoom = Math.min(Math.max(zoomLevel * zoomFactor, 0.1), 5);
+
+    // Zoom toward the mouse cursor position
+    const rect = canvasRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    setPanOffset((prev) => ({
+      x: mouseX - (mouseX - prev.x) * (newZoom / zoomLevel),
+      y: mouseY - (mouseY - prev.y) * (newZoom / zoomLevel),
+    }));
+
+    setZoomLevel(newZoom);
   };
 
-  const handleMouseDown = (event) => {
-    if (event.button === 0) {
-      setIsDragging(true);
-      setPanStart({
-        x: event.clientX - panOffset.x,
-        y: event.clientY - panOffset.y,
-      });
-    }
+  const handleMouseDown = (e) => {
+    // Only pan with left mouse button, and not when clicking canvas controls
+    if (e.button !== 0) return;
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - panOffset.x,
+      y: e.clientY - panOffset.y,
+    });
   };
 
-  const handleMouseMove = (event) => {
-    if (!isDragging) return; // KEY FIX: only pan when mouse button is held
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
     setPanOffset({
-      x: event.clientX - panStart.x,
-      y: event.clientY - panStart.y,
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y,
     });
   };
 
   const handleMouseUp = () => {
-    setIsDragging(false); // KEY FIX: stop dragging on mouse release
+    setIsDragging(false);
+  };
+
+  // ── zoom control helpers ───────────────────────────────────────────────────
+  const handleZoomIn = () =>
+    setZoomLevel((z) => Math.min(z * 1.2, 5));
+
+  const handleZoomOut = () =>
+    setZoomLevel((z) => Math.max(z * 0.8, 0.1));
+
+  const handleZoomReset = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
   };
 
 
@@ -1216,6 +1252,8 @@ export default function RBDButton() {
 
   // Add state for layout key
   const [layoutKey, setLayoutKey] = useState(0);
+
+  console.log("Layout.......... : " , layoutKey);
 
   // Fetch RBD list for SubRBD selection
   useEffect(() => {
@@ -3129,6 +3167,20 @@ export default function RBDButton() {
 
   // const [open, setOpen] = useState(false);
   // const [selectedCase, setSelectedCase] = useState(null);
+  const zoomBtnStyle = {
+    width: 28,
+    height: 28,
+    border: "1px solid #ccc",
+    borderRadius: 4,
+    backgroundColor: "#f5f5f5",
+    cursor: "pointer",
+    fontSize: 16,
+    lineHeight: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 0,
+  };
 
 
   return (
@@ -3161,28 +3213,106 @@ export default function RBDButton() {
         </div> */}
 
       {showSymbol && (
+        // <div
+        //   style={{
+        //     display: "flex",
+        //     justifyContent: "center",
+        //     alignItems: "center",
+        //     overflow: "hidden",
+        //     width: "100%",
+        //     height: "100vh",
+        //     border: "3px solid red"
+        //   }}
+        // >
+        //   <div
+        //     className="tree-wrapper"
+        //     style={{
+        //       transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
+        //       transformOrigin: "0 0",
+        //       cursor: isDragging ? "grabbing" : "grab",
+        //       border: "3px solid green"
+        //     }}
+        //     onWheel={handleWheelScroll}
+        //     onMouseDown={handleMouseDown}
+        //     onMouseMove={handleMouseMove}
+        //     onMouseUp={handleMouseUp}
+        //     onMouseLeave={handleMouseUp}
+        //   >
         <div
+          ref={canvasRef}
+          onWheel={handleWheelScroll}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
           style={{
             display: "flex",
             justifyContent: "center",
-            alignItems: "start",
+            alignItems: "center",
             overflow: "hidden",
             width: "100%",
-            height: "100vh"
+            height: "100vh",
+            border: "3px solid red",
+            cursor: isDragging ? "grabbing" : "grab",
+            userSelect: "none",        // prevent text selection while dragging
+            position: "relative",
+            marginTop:"3rem"
           }}
         >
+          {/* ── Zoom controls overlay ─────────────────────────────────────── */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 20,
+              right: 20,
+              zIndex: 9999,
+              display: "flex",
+              gap: 6,
+              backgroundColor: "rgba(255,255,255,0.92)",
+              border: "3px solid blue",
+              borderRadius: 6,
+              padding: "4px 8px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              userSelect: "none",
+            }}
+            // Stop mouse events on the controls panel from triggering canvas pan
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={handleZoomOut}
+              title="Zoom Out"
+              style={zoomBtnStyle}
+            >
+              −
+            </button>
+            <span style={{ fontSize: 12, minWidth: 42, textAlign: "center",marginTop:"5px", color: "#333" }}>
+              {Math.round(zoomLevel * 100)}%
+            </span>
+            <button
+              onClick={handleZoomIn}
+              title="Zoom In"
+              style={zoomBtnStyle}
+            >
+              +
+            </button>
+            <button
+              onClick={handleZoomReset}
+              title="Reset View"
+              style={{ ...zoomBtnStyle, fontSize: 10, padding: "3px 18px" }}
+            >
+              Reset
+            </button>
+          </div>
           <div
             className="tree-wrapper"
             style={{
+              display:"flex",
               transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
               transformOrigin: "0 0",
-              cursor: isDragging ? "grabbing" : "grab",
+              border: "3px solid green",
+              justifyContent:"center",
+              alignContent:"center"
             }}
-            onWheel={handleWheelScroll}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
           >
             <BiDirectionalSymbol
               onNodeClick={handleNodeClick}
