@@ -188,7 +188,7 @@ const SubRBDModal = ({
         </h3>
 
         {/* Display Current System Totals */}
-        <div
+        {/* <div
           style={{
             backgroundColor: "#e8f4f8",
             padding: "12px",
@@ -230,7 +230,7 @@ const SubRBDModal = ({
               </span>
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div style={{ marginBottom: "20px" }}>
           <label
@@ -335,7 +335,7 @@ const SubRBDModal = ({
                 <div style={{ marginLeft: "10px" }}>
                   <div style={{ marginBottom: "5px" }}>
                     <span style={{ fontWeight: "bold", color: "#4CAF50" }}>
-                      ✓ Reliability:
+                       Reliability:
                     </span>{" "}
                     <span style={{ fontFamily: "monospace", fontSize: "12px" }}>
                       {selectedRbdMetrics.reliability !== null
@@ -347,7 +347,7 @@ const SubRBDModal = ({
                   </div>
                   <div>
                     <span style={{ fontWeight: "bold", color: "#f44336" }}>
-                      ✗ Unavailability:
+                       Unavailability:
                     </span>{" "}
                     <span style={{ fontFamily: "monospace", fontSize: "12px" }}>
                       {selectedRbdMetrics.unavailability !== null
