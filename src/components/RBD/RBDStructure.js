@@ -1100,6 +1100,7 @@ export default function RBDButton() {
     y: 0,
   });
   const [blocks, setBlocks] = useState([]);
+  console.log(blocks)
   const [nextId, setNextId] = useState(1);
   const [selectedNode, setSelectedNode] = useState(null);
   const [idforApi, setIdforApi] = useState({
@@ -1464,129 +1465,29 @@ export default function RBDButton() {
   //   setNextId((id) => id + 4);
   // };
 
-  // const createParallelBranch = (startNode, endNode) => {
-  //   const getId = (b) => String(b._id ?? b.id ?? "");
-
-  //   const topLevel = blocks.filter(
-  //     (b) => b.type === "Parallel Section" || !b.data?.parentSection,
-  //   );
-
-  //   // Each node's RelateId = the block immediately to its LEFT
-  //   // startNode's RelateId = block[si], so we wrap blocks AFTER si (starting at si+1)
-  //   // endNode's RelateId   = block[ei], so we wrap blocks UP TO AND INCLUDING ei
-
-  //   const si = startNode == null
-  //     ? -1  // first node (before all blocks) has no RelateId
-  //     : topLevel.findIndex((b) => getId(b) === String(startNode));
-
-  //   const ei = endNode == null
-  //     ? topLevel.length - 1
-  //     : topLevel.findIndex((b) => getId(b) === String(endNode));
-
-  //   console.log("si:", si, "ei:", ei);
-
-  //   // blocks to wrap = topLevel[si+1 .. ei] inclusive
-  //   const wrapStart = si + 1;
-  //   const wrapEnd = ei + 1; // slice end is exclusive
-
-  //   if (wrapStart >= wrapEnd) {
-  //     toast.error("Please select nodes with at least one block between them");
-  //     return;
-  //   }
-
-  //   const mainBlocks = topLevel.slice(wrapStart, wrapEnd);
-  //   if (!mainBlocks.length) {
-  //     toast.error("No blocks between the selected nodes");
-  //     return;
-  //   }
-
-  //   console.log("wrapping blocks:", mainBlocks.map(b => getId(b)));
-
-  //   const sectionId = nextId;
-
-  //   const section = {
-  //     id: sectionId,
-  //     type: "Parallel Section",
-  //     k: 1,
-  //     n: 2,
-  //     isParallel: true,
-  //     branches: [
-  //       {
-  //         id: sectionId + 1,
-  //         _id: sectionId + 1,
-  //         index: 0,
-  //         name: "Main Branch",
-  //         type: "Parallel Branch",
-  //         isParallelBranch: true,
-  //         isMainBranch: true,
-  //         blocks: mainBlocks.map((b) => ({ ...b, parentSection: sectionId })),
-  //       },
-  //       {
-  //         id: sectionId + 2,
-  //         _id: sectionId + 2,
-  //         index: 1,
-  //         name: "Bypass Branch",
-  //         type: "Parallel Branch",
-  //         isParallelBranch: true,
-  //         isBypassBranch: true,
-  //         blocks: [
-  //           {
-  //             id: sectionId + 3,
-  //             type: "Regular",
-  //             name: "Bypass Block",
-  //             parentSection: sectionId,
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //     data: {
-  //       elementType: "Parallel Section",
-  //       name: "Parallel Section",
-  //       k: 1,
-  //       n: 2,
-  //       isParallel: true,
-  //     },
-  //   };
-
-  //   // Remove mainBlocks from flat array, insert section where they were
-  //   const toRemove = new Set(mainBlocks.map((b) => getId(b)));
-
-  //   // Find insertion point in original blocks array (before removal)
-  //   const insertAt = blocks.findIndex((b) => getId(b) === getId(mainBlocks[0]));
-
-  //   const remaining = blocks.filter((b) => !toRemove.has(getId(b)));
-
-  //   // After removal, the insertion point shifts — find where to insert
-  //   // by locating the first block in remaining that originally came after insertAt
-  //   let insertInRemaining = remaining.findIndex(
-  //     (b) => blocks.findIndex((ob) => getId(ob) === getId(b)) > insertAt + mainBlocks.length - 1
-  //   );
-  //   if (insertInRemaining === -1) insertInRemaining = remaining.length;
-
-  //   const next = [...remaining];
-  //   next.splice(insertInRemaining, 0, section);
-
-  //   setBlocks(next);
-  //   setNextId((id) => id + 4);
-  // };
-
-  const createParallelBranch = async (startNode, endNode) => {
+  const createParallelBranch = (startNode, endNode) => {
     const getId = (b) => String(b._id ?? b.id ?? "");
 
     const topLevel = blocks.filter(
       (b) => b.type === "Parallel Section" || !b.data?.parentSection,
     );
 
+    // Each node's RelateId = the block immediately to its LEFT
+    // startNode's RelateId = block[si], so we wrap blocks AFTER si (starting at si+1)
+    // endNode's RelateId   = block[ei], so we wrap blocks UP TO AND INCLUDING ei
+
     const si = startNode == null
-      ? -1
+      ? -1  // first node (before all blocks) has no RelateId
       : topLevel.findIndex((b) => getId(b) === String(startNode));
 
     const ei = endNode == null
       ? topLevel.length - 1
       : topLevel.findIndex((b) => getId(b) === String(endNode));
 
+
+    // blocks to wrap = topLevel[si+1 .. ei] inclusive
     const wrapStart = si + 1;
-    const wrapEnd = ei + 1;
+    const wrapEnd = ei + 1; // slice end is exclusive
 
     if (wrapStart >= wrapEnd) {
       toast.error("Please select nodes with at least one block between them");
@@ -1599,35 +1500,133 @@ export default function RBDButton() {
       return;
     }
 
-    const payload = {
-      rbdId,
-      projectId,
-      companyId: localStorage.getItem("companyId"),
-      elementType: "Parallel Branch",
-      type: "Parallel Branch",
-      isParallel: true,
-      isParallelBranch: true,
-      range: {
-        startBlockId: getId(topLevel[si]) ?? null,  // block to the LEFT of start node (null if first node)
-        endBlockId: getId(topLevel[ei]),           // block to the RIGHT of end node
-        blockIds: mainBlocks.map((b) => getId(b)),  // all blocks being wrapped
-      },
+
+    const sectionId = nextId;
+
+    const section = {
+      id: sectionId,
+      type: "Parallel Section",
       k: 1,
       n: 2,
-      branchCount: 2,
+      isParallel: true,
+      branches: [
+        {
+          id: sectionId + 1,
+          _id: sectionId + 1,
+          index: 0,
+          name: "Main Branch",
+          type: "Parallel Branch",
+          isParallelBranch: true,
+          isMainBranch: true,
+          blocks: mainBlocks.map((b) => ({ ...b, parentSection: sectionId })),
+        },
+        {
+          id: sectionId + 2,
+          _id: sectionId + 2,
+          index: 1,
+          name: "Bypass Branch",
+          type: "Parallel Branch",
+          isParallelBranch: true,
+          isBypassBranch: true,
+          blocks: [
+            {
+              id: sectionId + 3,
+              type: "Regular",
+              name: "Bypass Block",
+              parentSection: sectionId,
+            },
+          ],
+        },
+      ],
+      data: {
+        elementType: "Parallel Section",
+        name: "Parallel Section",
+        k: 1,
+        n: 2,
+        isParallel: true,
+      },
     };
 
-    try {
-      await Api.post("/api/v1/elementParametersRBD/create", payload);
-      toast.success("Parallel branch created successfully");
-      getBlock(); // re-fetch so the diagram redraws with the new range
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || "Failed to create parallel branch");
-    }
+    // Remove mainBlocks from flat array, insert section where they were
+    const toRemove = new Set(mainBlocks.map((b) => getId(b)));
+
+    // Find insertion point in original blocks array (before removal)
+    const insertAt = blocks.findIndex((b) => getId(b) === getId(mainBlocks[0]));
+
+    const remaining = blocks.filter((b) => !toRemove.has(getId(b)));
+
+    // After removal, the insertion point shifts — find where to insert
+    // by locating the first block in remaining that originally came after insertAt
+    let insertInRemaining = remaining.findIndex(
+      (b) => blocks.findIndex((ob) => getId(ob) === getId(b)) > insertAt + mainBlocks.length - 1
+    );
+    if (insertInRemaining === -1) insertInRemaining = remaining.length;
+
+    const next = [...remaining];
+    next.splice(insertInRemaining, 0, section);
+
+    setBlocks(next);
+    console.log(blocks, 'blocks inside the parallel branch')
+    setNextId((id) => id + 4);
   };
 
-  console.log(blocks, 'after parallel branch')
+  // const createParallelBranch = async (startNode, endNode) => {
+  //   const getId = (b) => String(b._id ?? b.id ?? "");
+
+  //   const topLevel = blocks.filter(
+  //     (b) => b.type === "Parallel Section" || !b.data?.parentSection,
+  //   );
+
+  //   const si = startNode == null
+  //     ? -1
+  //     : topLevel.findIndex((b) => getId(b) === String(startNode));
+
+  //   const ei = endNode == null
+  //     ? topLevel.length - 1
+  //     : topLevel.findIndex((b) => getId(b) === String(endNode));
+
+  //   const wrapStart = si + 1;
+  //   const wrapEnd = ei + 1;
+  //   console.log(parallelBranchMode,'parallelBranchMode')
+  //   if (wrapStart >= wrapEnd) {
+  //     toast.error("Please select nodes with at least one block between them");
+  //     return;
+  //   }
+
+  //   const mainBlocks = topLevel.slice(wrapStart, wrapEnd);
+  //   if (!mainBlocks.length) {
+  //     toast.error("No blocks between the selected nodes");
+  //     return;
+  //   }
+
+  //   const payload = {
+  //     rbdId,
+  //     projectId,
+  //     companyId: localStorage.getItem("companyId"),
+  //     elementType: "Parallel Branch",
+  //     type: "Parallel Branch",
+  //     isParallel: true,
+  //     isParallelBranch: true,
+  //     range: {
+  //       startBlockId: getId(topLevel[si]) ?? null,  // block to the LEFT of start node (null if first node)
+  //       endBlockId: getId(topLevel[ei]),           // block to the RIGHT of end node
+  //       blockIds: mainBlocks.map((b) => getId(b)),  // all blocks being wrapped
+  //     },
+  //     k: 1,
+  //     n: 2,
+  //     branchCount: 2,
+  //   };
+
+  //   try {
+  //     await Api.post("/api/v1/elementParametersRBD/create", payload);
+  //     toast.success("Parallel branch created successfully");
+  //     getBlock(); // re-fetch so the diagram redraws with the new range
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error(err.response?.data?.message || "Failed to create parallel branch");
+  //   }
+  // };
+
 
 
   useEffect(() => {
@@ -1672,7 +1671,6 @@ export default function RBDButton() {
       setParallelBranchMode({ active: false, startNode: null, endNode: null });
       return;
     }
-    console.log(innerBlock, 'innerBlock')
     setMenu({ x, y, index });
     setTargetId(index);
     setInnerTargetId(innerBlock)
@@ -1862,7 +1860,6 @@ export default function RBDButton() {
 
   useEffect(() => {
     if (projectId) {
-      console.log("Fetching RBD list for project:", projectId);
       Api.get("/api/v1/EditConfigRBD/", {
         // Make sure the endpoint is correct
         params: {
@@ -1870,7 +1867,6 @@ export default function RBDButton() {
         },
       })
         .then((res) => {
-          console.log("RBD list response:", res.data);
           setRbdList(res.data.data || []);
         })
         .catch((error) => {
@@ -1960,7 +1956,7 @@ export default function RBDButton() {
     )
       .then((res) => {
         toast.success("Successfully Created");
-        console.log(res);
+        // console.log(res);
         getBlock();
       })
       .catch((err) => console.log(err));
@@ -2151,8 +2147,6 @@ export default function RBDButton() {
     );
   }
 
-  { console.log(parallelBranchMode, 'parallelBranchMode') }
-
   {
     /* Highlight the start node */
   }
@@ -2182,7 +2176,6 @@ export default function RBDButton() {
   // ── node menu ──────────────────────────────────────────────────────────────
   const handleSelect = (action) => {
 
-    console.log(action, 'action from handle select')
     if (action === "Add Parallel Section") {
       setPendingAction({ type: "parallel", nodeIndex: clickedNodeInfo.index });
       setShowParallelModal(true);
@@ -2210,11 +2203,28 @@ export default function RBDButton() {
       return;
     }
     if (action === "Add K-out-of-N") {
+      console.log("Hello")
+      console.log(innerTargetId, "123innerTargetId")
+      console.log(innerTargetId, "123innerTargetId")
+
+
+      const innerIdMatch = innerTargetId?.match(/^([a-f0-9]+)/);
+      console.log(innerIdMatch,'innerIdMatch')
+      if (innerTargetId && innerTargetId?.includes("parallel")) {
+
+        if (innerIdMatch && innerIdMatch[1]) {
+          console.log(innerIdMatch[1], 'innerIdMatch[1] koutofn');
+          setTargetId(innerIdMatch[1]);
+        } else {
+          console.log('No valid inner ID found in:', innerTargetId);
+        }
+      }
+
       setKOfNModal({
         open: true,
         mode: "add",
         blockId: nextId,
-        nodeIndex: clickedNodeInfo.index,
+        nodeIndex: (innerIdMatch && innerIdMatch[1]) ? innerIdMatch[1] : clickedNodeInfo.index,
         initialData: {
           k: 2,
           n: 3,
@@ -2227,14 +2237,11 @@ export default function RBDButton() {
       return;
     }
     if (action === "Add Regular") {
-      console.log(menu, "menu 123456789");
-      console.log(idforApi?.index, "idforApi?.location");
-      console.log(innerTargetId, 'innerTargetId Add regular')
       const innerIdMatch = innerTargetId?.match(/^([a-f0-9]+)/);
       if (innerTargetId && innerTargetId?.includes("parallel")) {
 
         if (innerIdMatch && innerIdMatch[1]) {
-          console.log(innerIdMatch[1], 'innerIdMatch[1]');
+          // console.log(innerIdMatch[1], 'innerIdMatch[1]');
           setTargetId(innerIdMatch[1]);
         } else {
           console.log('No valid inner ID found in:', innerTargetId);
@@ -2255,13 +2262,26 @@ export default function RBDButton() {
         // idforApi: idforApi
       });
     }
+
     if (action === "Add SubRBD") {
+      // Apply same logic from Add Regular
+      const innerIdMatch = innerTargetId?.match(/^([a-f0-9]+)/);
+      if (innerTargetId && innerTargetId?.includes("parallel")) {
+
+        if (innerIdMatch && innerIdMatch[1]) {
+          // console.log(innerIdMatch[1], 'innerIdMatch[1]');
+          setTargetId(innerIdMatch[1]);
+        } else {
+          console.log('No valid inner ID found in:', innerTargetId);
+        }
+      }
+
       // Open RBD list modal instead of element parameters modal
       setRbdListModal({
         open: true,
         mode: "add",
         blockId: nextId,
-        nodeIndex: clickedNodeInfo.index,
+        nodeIndex: (innerIdMatch && innerIdMatch[1]) ? innerIdMatch[1] : clickedNodeInfo.index,
         selectedRbd: null,
       });
       return;
@@ -2326,7 +2346,6 @@ export default function RBDButton() {
 
   // ── delete ─────────────────────────────────────────────────────────────────
   const handleDeleteBlock = (id) => {
-    console.log(id, "id from delete");
 
     if (parentItemId) {
       Api.delete(
@@ -2367,8 +2386,6 @@ export default function RBDButton() {
 
   // ── block menu ─────────────────────────────────────────────────────────────
   const handleBlockMenuSelect = (action) => {
-    console.log("blockMenu - ", blockMenu);
-    console.log("action - ", action);
 
 
     if (!blockMenu.blockId) return;
@@ -2564,14 +2581,9 @@ export default function RBDButton() {
       // Check if we're in a parallel-section context
       if (parentItem?.type === "parallel-section") {
         setParentItemId(parentItem?.id);
-        console.log(parentItem?.id, "parentItem?.id");
-        console.log(blockMenu.blockId, "blockMenu.blockId");
-        console.log(parentItem.branches, "parentItem.branches");
 
         // Use recursive search instead of just one level
         foundBlock = findBlockRecursively(parentItem, blockMenu.blockId);
-
-        console.log(foundBlock, 'foundBlock (recursive search)');
         setParallelFoundBlock(foundBlock);
       } else {
         // Search in main blocks array (also recursive if blocks contain nested structures)
@@ -2586,7 +2598,6 @@ export default function RBDButton() {
       }
 
       if (!foundBlock) {
-        console.log('Block not found:', blockMenu.blockId);
         setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
         return;
       }
@@ -2597,7 +2608,7 @@ export default function RBDButton() {
           foundBlock.type === "SubRBD" ||
           foundBlock.elementType === "SubRBD"
         ) {
-          console.log("Editing SubRBD block:", foundBlock);
+          // console.log("Editing SubRBD block:", foundBlock);
 
           // Get the selected RBD data
           let selectedRbd = null;
@@ -2633,7 +2644,6 @@ export default function RBDButton() {
           });
         }
         else if (foundBlock.type === "parallel-section" || foundBlock.type === "Parallel Section") {
-          console.log("Editing Parallel Section:", foundBlock);
           // Open parallel modal for editing
           setPendingAction({
             type: "edit",
@@ -2644,7 +2654,6 @@ export default function RBDButton() {
           setShowParallelModal(true);
         }
         else if (foundBlock.type === "parallel-branch" || foundBlock.type === "Parallel Branch") {
-          console.log("Editing Parallel Branch:", foundBlock);
           // Open parallel modal for editing branch
           setPendingAction({
             type: "edit",
@@ -2776,7 +2785,6 @@ export default function RBDButton() {
                 }}
               />
             )}
-            {console.log(targetId, "targetI before model")}
             {elementModal.open && (
               <ElementParametersModal
                 key={elementModal.blockId}
@@ -3063,6 +3071,7 @@ export default function RBDButton() {
           <CaseSelectionModal
             isOpen={kOfNModal.open}
             handleClose={handleClose}
+            targetId={targetId}
             onSelect={(item) => {
               // console.log(item);
               handleClose();
@@ -3198,6 +3207,7 @@ export default function RBDButton() {
       {kOfNModal.open && (
         <CaseSelectionModal
           isOpen={kOfNModal.open}
+          targetId={targetId}
           handleClose={() => {
             setKOfNModal({
               open: false,

@@ -4,7 +4,9 @@ import Api from "../../Api";
 import { useParams, useLocation } from 'react-router-dom';
 import CreatableSelect from 'react-select/creatable';
 import { toast } from 'react-toastify';
-export const KOfNConfigModal = ({ isOpen, onClose, onSubmit, initialData, mode = 'add', currentBlock,selectedLabel, selectedCase }) => {
+export const KOfNConfigModal = ({ isOpen,targetId, onClose, onSubmit, initialData, mode = 'add', currentBlock,selectedLabel, selectedCase }) => {
+
+  console.log(targetId,'targetId from kofnconfig modla')
 
   const [k, setK] = useState(null);
   const [n, setN] = useState(null);
@@ -669,6 +671,7 @@ const handleSubmit = () => {
     productName: values.productName,
     color: values.color,
     load: selectedLabel === "Identical (Load Sharing)" ? load : values.load,
+    targetId : targetId,
   };
 
   // Handle Non-Identical components

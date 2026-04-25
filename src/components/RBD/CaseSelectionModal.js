@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { KOfNConfigModal } from "./KOfNConfigModal";
 
-const CaseSelectionModal = ({ isOpen, handleClose, onSelect, mode = 'add', existingData = null }) => {
+const CaseSelectionModal = ({ isOpen, handleClose, targetId, onSelect, mode = 'add', existingData = null }) => {
+
+  console.log(targetId,'targetId from caseselection')
   const [selected, setSelected] = useState(null);
   const [kOfNModal, setKOfNModal] = useState({
     open: false, 
@@ -84,6 +86,7 @@ const CaseSelectionModal = ({ isOpen, handleClose, onSelect, mode = 'add', exist
 
       <KOfNConfigModal
         isOpen={kOfNModal.open}
+        targetId={targetId}
         selectedCase={kOfNModal.selectedCase}
         selectedLabel={kOfNModal.selectedLabel}
         onClose={handleKOfNClose}
