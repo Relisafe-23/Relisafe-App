@@ -1,7 +1,6 @@
-
-import React, { useEffect, useState } from 'react';
-import { KOfNBlock } from './KOfNBlock';
-import { useLocation, useParams,useHistory } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { KOfNBlock } from "./KOfNBlock";
+import { useLocation, useParams, useHistory } from "react-router-dom";
 // Constants for layout
 const CONSTANTS = {
   BLOCK_W: 60,
@@ -27,6 +26,7 @@ export const RBDBlock = ({
   setIdforApi,
   x,
   y,
+  selectedLabel,
   setParentItemId,
   onEdit,
   onDelete,
@@ -53,21 +53,21 @@ export const RBDBlock = ({
   blockRowLeftX,
   setTargetBranchId,
 }) => {
-const [selectedId, setSelectedId] = useState(null);
-const [isSelected, setIsSelected] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [isSelected, setIsSelected] = useState(false);
 
-const handleSelect = (clickedId) => {
-  if (selectedId === clickedId) {
-    setSelectedId(null);
-    setIsSelected(false);
-  } else {
-    setSelectedId(clickedId);
-    setIsSelected(true);
-  }
-};
+  const handleSelect = (clickedId) => {
+    if (selectedId === clickedId) {
+      setSelectedId(null);
+      setIsSelected(false);
+    } else {
+      setSelectedId(clickedId);
+      setIsSelected(true);
+    }
+  };
   const location = useLocation();
 
-const [selectedBlock, setSelectedBlock] = useState(null);
+  const [selectedBlock, setSelectedBlock] = useState(null);
   const [formData, setFormData] = useState({
     fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : "",
     k: blockData?.k || blockData?.data?.k || "2",
@@ -75,8 +75,8 @@ const [selectedBlock, setSelectedBlock] = useState(null);
     mtbf: blockData?.mtbf || blockData?.data?.mtbf || "",
     mttr: blockData?.mttr || blockData?.data?.mttr || "",
   });
-    const missionTime = location.state?.missionTime;
-console.log("mission",missionTime)
+  const missionTime = location.state?.missionTime;
+  console.log("mission", missionTime);
   useEffect(() => {
     setFormData({
       fr: blockData?.fr ? (1 / blockData.fr)?.toFixed(6) : "",
@@ -94,7 +94,7 @@ console.log("mission",missionTime)
       blockData?.elementType === "Parallel Section") &&
     blockData?.branches &&
     blockData?.branches.length > 0;
-  
+
   // If it's a nested parallel section, render it recursively
   if (isNestedParallel) {
     return renderNestedParallelSection();
@@ -118,7 +118,6 @@ console.log("mission",missionTime)
     );
   }
 
-
   return renderRegularBlock();
 
   function renderNestedParallelSection() {
@@ -131,7 +130,6 @@ console.log("mission",missionTime)
       INNER_PAD = 14;
     const CONTAINER_PADDING = 20,
       BRANCH_SPACING = 20;
-
 
     const getBranchHeight = (branch) => {
       const branchBlocks = branch.blocks || [];
@@ -394,7 +392,7 @@ console.log("mission",missionTime)
                   onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
                   setParentItemId(item?.id);
                   setTargetBranchId(branch?._id);
-                  console.log(branch,'branch console')
+                  console.log(branch, "branch console");
                   setIdforApi({
                     branchId: branch?._id,
                     branchIndex: branch?.index,
@@ -433,26 +431,26 @@ console.log("mission",missionTime)
       const k = blockData?.k || blockData?.data?.k;
       const n = blockData?.n || blockData?.data?.n;
       // const missionTime = missionTime;
-   
-      console.log("MissionTime",missionTime)
-  const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
-  const MTBF = Number(mtbf || 0);
-  const MTTR = Number(mttr || 0);
-  const t = Number(missionTime || 0);
 
-  let reliability = 0;
-  let unavailability = 0;
+      console.log("MissionTime", missionTime);
+      const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+        const MTBF = Number(mtbf || 0);
+        const MTTR = Number(mttr || 0);
+        const t = Number(missionTime || 0);
 
-  if (MTBF > 0 && t >= 0) {
-    const r = Math.exp(-t / MTBF);
-    const u = 1 - r;
+        let reliability = 0;
+        let unavailability = 0;
 
-    reliability = r < 1e-4 ? r.toExponential(2) : r.toFixed(7);
-    unavailability = u < 1e-4 ? u.toExponential(2) : u.toFixed(7);
-  }
+        if (MTBF > 0 && t >= 0) {
+          const r = Math.exp(-t / MTBF);
+          const u = 1 - r;
 
-  return { reliability, unavailability };
-};
+          reliability = r < 1e-4 ? r.toExponential(2) : r.toFixed(7);
+          unavailability = u < 1e-4 ? u.toExponential(2) : u.toFixed(7);
+        }
+
+        return { reliability, unavailability };
+      };
 
       switch (t) {
         case "Regular":
@@ -462,12 +460,11 @@ console.log("mission",missionTime)
             mttr,
             missionTime,
           });
-        // console.log("reliability1234555",reliability)
+          // console.log("reliability1234555",reliability)
           return (
             <>
               <tspan x={x + BLOCK_W / 2} dy="-4">
                 R: {reliability}
-              
               </tspan>
               <tspan x={x + BLOCK_W / 2} dy="10">
                 U: {unavailability}
@@ -520,25 +517,23 @@ console.log("mission",missionTime)
 
     return (
       <svg
-  onClick={(e) => {
-    // only reset if clicked directly on svg (not on child elements)
-    if (e.target === e.currentTarget) {
-      setSelectedId(null);
-    }
-  }}
->
-      <g
-        onContextMenu={handleContextMenu}
-        style={{ cursor: "context-menu" }}
-        onClick={() => {
-          if (setParentItemId) setParentItemId(null);
-    handleSelect(id);
-
+        onClick={(e) => {
+          // only reset if clicked directly on svg (not on child elements)
+          if (e.target === e.currentTarget) {
+            setSelectedId(null);
+          }
         }}
-        
       >
-        {/* name label above block */}
-        {/* {getBlockName() && (
+        <g
+          onContextMenu={handleContextMenu}
+          style={{ cursor: "context-menu" }}
+          onClick={() => {
+            if (setParentItemId) setParentItemId(null);
+            handleSelect(id);
+          }}
+        >
+          {/* name label above block */}
+          {/* {getBlockName() && (
           <text
             x={x + BLOCK_W / 2}
             y={y - 4}
@@ -551,39 +546,39 @@ console.log("mission",missionTime)
           </text>
         )} */}
 
-        <circle
-          cx={x}
-          cy={y}
-          fill="none"
-          stroke="#0078d4"
-          strokeWidth="2"
-          strokeDasharray="4 2"
-        />
+          <circle
+            cx={x}
+            cy={y}
+            fill="none"
+            stroke="#0078d4"
+            strokeWidth="2"
+            strokeDasharray="4 2"
+          />
 
-        <rect
-          x={x}
-          y={y}
-          width={BLOCK_W}
-          height={BLOCK_H}
-          fill={getBlockColor()}
-        stroke={selectedId === id ? "#0078d4" : "#2a7a2a"}
-          strokeWidth="1"
-          rx="2"
-        />
+          <rect
+            x={x}
+            y={y}
+            width={BLOCK_W}
+            height={BLOCK_H}
+            fill={getBlockColor()}
+            stroke={selectedId === id ? "#0078d4" : "#2a7a2a"}
+            strokeWidth="1"
+            rx="2"
+          />
 
-        {/* main value line */}
-        <text
-          x={x + BLOCK_W / 2}
-          y={y + BLOCK_H / 2}
-          textAnchor="middle"
-          dominantBaseline="middle"
-          fill="white"
-          fontSize="8"
-          fontWeight="bold"
-        >
-          {getBlockContent()}
-        </text>
-      </g>
+          {/* main value line */}
+          <text
+            x={x + BLOCK_W / 2}
+            y={y + BLOCK_H / 2}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="white"
+            fontSize="8"
+            fontWeight="bold"
+          >
+            {getBlockContent()}
+          </text>
+        </g>
       </svg>
     );
   }
