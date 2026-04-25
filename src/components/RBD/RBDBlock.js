@@ -519,14 +519,14 @@ export const RBDBlock = ({
     const getBlockName = () => blockData?.name || blockData?.data?.name || "";
 
     return (
-      <svg
-        onClick={(e) => {
-          // only reset if clicked directly on svg (not on child elements)
-          if (e.target === e.currentTarget) {
-            setSelectedId(null);
-          }
-        }}
-      >
+      // <svg
+      //   onClick={(e) => {
+      //     // only reset if clicked directly on svg (not on child elements)
+      //     if (e.target === e.currentTarget) {
+      //       setSelectedId(null);
+      //     }
+      //   }}
+      // >
 
         <g
           onContextMenu={handleContextMenu}
@@ -562,7 +562,7 @@ export const RBDBlock = ({
             width={BLOCK_W}
             height={BLOCK_H}
             fill={getBlockColor()}
-            stroke={selectedId === id ? "#0078d4" : "#2a7a2a"}
+            stroke="#2a7a2a"
             strokeWidth="1"
             rx="2"
           />
@@ -580,7 +580,7 @@ export const RBDBlock = ({
             {getBlockContent()}
           </text>
         </g>
-      </svg>
+      // </svg>
     );
   }
 };

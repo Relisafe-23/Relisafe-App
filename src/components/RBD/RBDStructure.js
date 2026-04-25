@@ -499,7 +499,7 @@ export const BiDirectionalSymbol = ({
 
     return (
       <g key={id}>
-        <text
+        {/* <text
           x={x + dynW / 2}
           y={secTopY}
           textAnchor="middle"
@@ -509,7 +509,7 @@ export const BiDirectionalSymbol = ({
           fill="#333"
         >
           K={blockData?.k || 1}:N={branches.length}
-        </text>
+        </text> */}
 
         <line
           x1={leftRailX}
@@ -2934,11 +2934,11 @@ export default function RBDButton() {
           {/* Bottom content */}
           <div className="mt-1">
             <div>
-              <b>Reliability: </b>{totalReliability?.toFixed(9)}
+              <b>Reliability: </b>{totalReliability?.toFixed(10)}
             </div>
 
             <div>
-              <b>Unavailability: </b>{totalUnavailability?.toFixed(9)}
+              <b>Unavailability: </b>{totalUnavailability?.toFixed(10)}
             </div>
           </div>
 
@@ -2959,7 +2959,7 @@ export default function RBDButton() {
         </div> */}
 
         {showSymbol && (
-          <div style={{ width: "100%", overflowX: "auto" }}>
+          <div style={{ width: "100%"}}>
             <BiDirectionalSymbol
               onNodeClick={handleNodeClick}
               setTargetBranchId={setTargetBranchId}
