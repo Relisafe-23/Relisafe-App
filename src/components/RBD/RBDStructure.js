@@ -2737,7 +2737,7 @@ export default function RBDButton() {
         </div> */}
 
         {showSymbol && (
-          <div style={{ width: "100%", overflowX: "auto" }}>
+          <div style={{ width: "100%"}}>
             <BiDirectionalSymbol
               onNodeClick={handleNodeClick}
               setTargetBranchId={setTargetBranchId}
