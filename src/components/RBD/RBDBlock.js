@@ -42,6 +42,7 @@ export const RBDBlock = ({
   branchIndex: parentBranchIndex,
   itemId: parentItemId,
   isNested = false,
+  selectedLabel,
   // Props for branch nodes
   branch,
   item,
@@ -520,14 +521,14 @@ export const RBDBlock = ({
 
     return (
       <svg
-  onClick={(e) => {
-    // only reset if clicked directly on svg (not on child elements)
-    if (e.target === e.currentTarget) {
-      setSelectedId(null);
-    }
-  }}
->
-     
+        onClick={(e) => {
+          // only reset if clicked directly on svg (not on child elements)
+          if (e.target === e.currentTarget) {
+            setSelectedId(null);
+          }
+        }}
+      >
+
         <g
           onContextMenu={handleContextMenu}
           style={{ cursor: 'context-menu' }}

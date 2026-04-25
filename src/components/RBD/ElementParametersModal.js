@@ -52,7 +52,7 @@ const ElementParametersModal = ({
     productName: modelBlock?.productName || "",
     id: modelBlock?.id || "",
     repairDistribution: modelBlock?.repairDistribution || "Exponential",
-    mtbf: modelBlock?.mtbf || "",
+    mtbf: modelBlock?.mtbf || "0",
     load: modelBlock?.load || "100",
     mct: modelBlock?.mct || "",
     productNumber: modelBlock?.productNumber || "",
@@ -113,26 +113,26 @@ const ElementParametersModal = ({
       //     id: item.id,
       //   }));
 
-        // console.log(res.data,'pbs')
-        const options = res.data.data
-          .filter(item => item?.indexCount && item?.partNumber)
-          .map(item => ({
-            label: item.indexCount,
-            value: item.indexCount,
-            partNumber: item.partNumber,
-            productName: item.productName,
-            productId: item.productId,
-            fr: item.fr,
-            mct: item.mct || "",
-            mttr: item.mttr || "",
-            id: item.id
-          }));
-       
-        const productIdst = res.data.data.filter(item => item?.productId).map(item => item.productId);
-        console.log("Options", options);
-        setProductIds(productIdst);
-        setOptions(options);
-      });
+      // console.log(res.data,'pbs')
+      const options = res.data.data
+        .filter(item => item?.indexCount && item?.partNumber)
+        .map(item => ({
+          label: item.indexCount,
+          value: item.indexCount,
+          partNumber: item.partNumber,
+          productName: item.productName,
+          productId: item.productId,
+          fr: item.fr,
+          mct: item.mct || "",
+          mttr: item.mttr || "",
+          id: item.id
+        }));
+
+      const productIdst = res.data.data.filter(item => item?.productId).map(item => item.productId);
+
+      setProductIds(productIdst);
+      setOptions(options);
+    });
   };
 
   const getProductData = () => {
@@ -226,25 +226,25 @@ const ElementParametersModal = ({
     getProductData();
   }, [projectId, productId]); // Added proper dependencies
 
-    const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
-  const MTBF = Number(mtbf || 0);
-  const MTTR = Number(mttr || 0);
-  const t = Number(missionTime || 0);
+  const calculateMetrics = ({ mtbf, mttr, missionTime }) => {
+    const MTBF = Number(mtbf || 0);
+    const MTTR = Number(mttr || 0);
+    const t = Number(missionTime || 0);
 
-  let reliability = 0;
-  let unavailability = 0;
+    let reliability = 0;
+    let unavailability = 0;
 
-  if (MTBF > 0 && t >= 0) {
-    const r = Math.exp(-t / MTBF);
-    const u = 1 - r;
+    if (MTBF > 0 && t >= 0) {
+      const r = Math.exp(-t / MTBF);
+      const u = 1 - r;
 
-    reliability = r < 1e-4 ? r.toExponential(2) : r.toFixed(7);
-    unavailability = u < 1e-4 ? u.toExponential(2) : u.toFixed(7);
-  }
+      reliability = r < 1e-4 ? r.toExponential(2) : r.toFixed(7);
+      unavailability = u < 1e-4 ? u.toExponential(2) : u.toFixed(7);
+    }
 
-  return { reliability, unavailability };
-};
-  
+    return { reliability, unavailability };
+  };
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e) => {
@@ -255,14 +255,14 @@ const ElementParametersModal = ({
       if (!companyId || !rbdId || !projectId) {
         throw new Error("Missing required IDs");
       }
-     
-          const { reliability, unavailability } = calculateMetrics({
+
+      const { reliability, unavailability } = calculateMetrics({
         mtbf: values.mtbf,
         mttr: values.mttr,
         missionTime
       });
-          
-    console.log("reliability1,availability2", reliability, unavailability)
+
+      console.log("reliability1,availability2", reliability, unavailability)
       const payload = {
         indexCount: values.indexCount,
         partNumber: values.partNumber,
@@ -293,66 +293,65 @@ const ElementParametersModal = ({
         reliability: reliability,
         unavailability: unavailability
       };
-      console.log("Paylooooooad",payload);
+
       const response = await Api.post("/api/v1/elementParametersRBD/create", payload);
-      console.log("responseeeeeeeeee",response)
+
       await getBlock();
 
-     onSubmit({
-  ...values,
-  reliability,
-  unavailability,
-  targetId: elementModal?.idforApi?.targetId || elementModal?.nodeIndex
-});
+      onSubmit({
+        ...values,
+        reliability,
+        unavailability,
+        targetId: elementModal?.idforApi?.targetId || elementModal?.nodeIndex
+      });
       onClose();
     } catch (error) {
       console.error("Submission failed:", error);
 
     }
-   
+
   }
 
-  
-const handleUpdate = async (e) => {
-  e.preventDefault();
-  console.log("33333333333");
 
-  let endpoint;
+  const handleUpdate = async (e) => {
+    e.preventDefault();
 
-  if (parentItemId) {
-    endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${mainId}`;
-  } else {
-    endpoint = `/api/v1/elementParametersRBD/updateRBD/${mainId}`;
-  }
 
-  try {
-    // console.log("444444.....");
-    const { reliability, unavailability } = calculateMetrics({
-      mtbf: values.mtbf,
-      mttr: values.mttr,
-      missionTime
-    });
+    let endpoint;
 
-  console.log("444444.....",reliability);
-    // OPTIONAL: include in payload
-    const payload = {
-      ...values,
-      reliability,
-      unavailability
-    };
-    console.log("Paylooooooad",payload);
-    const res = await Api.patch(endpoint, payload);
-      console.log("res....",res)
-    if (res.data.success === true) {
-      onClose();
+    if (parentItemId) {
+      endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${mainId}`;
     } else {
-      console.log("error update");
+      endpoint = `/api/v1/elementParametersRBD/updateRBD/${mainId}`;
     }
 
-  } catch (error) {
-    console.log("failed Api", error);
-  }
-};
+    try {
+      // console.log("444444.....");
+      const { reliability, unavailability } = calculateMetrics({
+        mtbf: values.mtbf,
+        mttr: values.mttr,
+        missionTime
+      });
+
+      // OPTIONAL: include in payload
+      const payload = {
+        ...values,
+        reliability,
+        unavailability
+      };
+
+      const res = await Api.patch(endpoint, payload);
+
+      if (res.data.success === true) {
+        onClose();
+      } else {
+        console.log("error update");
+      }
+
+    } catch (error) {
+      console.log("failed Api", error);
+    }
+  };
 
   const handleChange = (field, value) => {
     setValues(prev => {
@@ -976,7 +975,7 @@ const handleUpdate = async (e) => {
                         }}
                         placeholder="445089"
                       />
-
+                      {console.log("MTBF", values?.mtbf)}
                     </div>
 
 
