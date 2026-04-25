@@ -1,5 +1,5 @@
-// SubRBDModal.jsx
-import React from "react";
+// SubRBDModal.jsx - Updated Version
+import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import Api from "../../Api";
 
@@ -13,14 +13,111 @@ const SubRBDModal = ({
   nodeIndex = null,
   onConfirm,
   rbdList = [],
-  totalReliability = 0, // Add this prop
-  totalUnavailability = 0, // Add this prop
+  totalReliability = 0,
+  totalUnavailability = 0,
 }) => {
-  const [selectedRbd, setSelectedRbd] = React.useState(rbdData || null);
+  const [selectedRbd, setSelectedRbd] = useState(rbdData || null);
+  const [selectedRbdMetrics, setSelectedRbdMetrics] = useState({
+    reliability: null,
+    unavailability: null,
+    loading: false,
+  });
 
   console.log(targetId, "targetId from Sub rbd");
   console.log(totalReliability, "totalReliability from Sub rbd");
   console.log(totalUnavailability, "totalUnavailability from Sub rbd");
+
+  // Fetch metrics when a new RBD is selected
+  useEffect(() => {
+    const fetchRBDMetrics = async () => {
+      if (!selectedRbd || !selectedRbd.id) {
+        setSelectedRbdMetrics({
+          reliability: null,
+          unavailability: null,
+          loading: false,
+        });
+        return;
+      }
+
+      setSelectedRbdMetrics((prev) => ({ ...prev, loading: true }));
+
+      try {
+        // Fetch the RBD structure to calculate its reliability
+        const response = await Api.get(
+          `/api/v1/elementParametersRBD/getRBD/${selectedRbd.id}/${selectedRbd.projectId}`,
+        );
+        const data = response.data.data;
+
+        // Calculate reliability recursively (same logic as in table)
+        const computeReliability = (item) => {
+          if (
+            item.arrangement === "horizontal" &&
+            item.branches &&
+            item.branches.length > 0
+          ) {
+            return computeParallelSectionReliability(item.branches);
+          }
+          const reliability = Number(item.reliability);
+          return isNaN(reliability) ? 1 : reliability;
+        };
+
+        const computeParallelSectionReliability = (branches) => {
+          if (!branches || branches.length === 0) return 1;
+          const branchReliabilities = branches.map((branch) =>
+            computeBranchReliability(branch),
+          );
+          const productOfUnavailabilities = branchReliabilities.reduce(
+            (acc, r) => acc * (1 - r),
+            1,
+          );
+          return 1 - productOfUnavailabilities;
+        };
+
+        const computeBranchReliability = (branch) => {
+          if (!branch.blocks || branch.blocks.length === 0) return 1;
+          const blockReliabilities = branch.blocks.map((block) => {
+            if (
+              block.arrangement === "horizontal" &&
+              block.branches &&
+              block.branches.length > 0
+            ) {
+              return computeParallelSectionReliability(block.branches);
+            }
+            const reliability = Number(block.reliability);
+            return isNaN(reliability) ? 1 : reliability;
+          });
+          return blockReliabilities.reduce((acc, r) => acc * r, 1);
+        };
+
+        const topLevelReliabilities = data.map((item) =>
+          computeReliability(item),
+        );
+        const reliability = topLevelReliabilities.reduce(
+          (acc, r) => acc * r,
+          1,
+        );
+        const unavailability = 1 - reliability;
+
+        setSelectedRbdMetrics({
+          reliability: reliability,
+          unavailability: unavailability,
+          loading: false,
+        });
+      } catch (error) {
+        console.error(
+          `Error fetching metrics for RBD ${selectedRbd.id}:`,
+          error,
+        );
+        setSelectedRbdMetrics({
+          reliability: null,
+          unavailability: null,
+          loading: false,
+        });
+      }
+    };
+
+    fetchRBDMetrics();
+  }, [selectedRbd]);
 
   const handleConfirm = () => {
     if (!selectedRbd) {
@@ -223,6 +320,17 @@ const SubRBDModal = ({
                   }}
                 >
                   Selected RBD Metrics:
+                  {selectedRbdMetrics.loading && (
+                    <span
+                      style={{
+                        marginLeft: "10px",
+                        fontSize: "11px",
+                        color: "#666",
+                      }}
+                    >
+                      (Loading...)
+                    </span>
+                  )}
                 </div>
                 <div style={{ marginLeft: "10px" }}>
                   <div style={{ marginBottom: "5px" }}>
@@ -230,12 +338,10 @@ const SubRBDModal = ({
                       ✓ Reliability:
                     </span>{" "}
                     <span style={{ fontFamily: "monospace", fontSize: "12px" }}>
-                      {selectedRbd.reliability !== undefined &&
-                      selectedRbd.reliability !== null
-                        ? formatValue(selectedRbd.reliability)
-                        : selectedRbd.systemReliability !== undefined &&
-                            selectedRbd.systemReliability !== null
-                          ? formatValue(selectedRbd.systemReliability)
+                      {selectedRbdMetrics.reliability !== null
+                        ? formatValue(selectedRbdMetrics.reliability)
+                        : selectedRbdMetrics.loading
+                          ? "Calculating..."
                           : "N/A"}
                     </span>
                   </div>
@@ -244,12 +350,10 @@ const SubRBDModal = ({
                       ✗ Unavailability:
                     </span>{" "}
                     <span style={{ fontFamily: "monospace", fontSize: "12px" }}>
-                      {selectedRbd.unavailability !== undefined &&
-                      selectedRbd.unavailability !== null
-                        ? formatValue(selectedRbd.unavailability)
-                        : selectedRbd.systemUnavailability !== undefined &&
-                            selectedRbd.systemUnavailability !== null
-                          ? formatValue(selectedRbd.systemUnavailability)
+                      {selectedRbdMetrics.unavailability !== null
+                        ? formatValue(selectedRbdMetrics.unavailability)
+                        : selectedRbdMetrics.loading
+                          ? "Calculating..."
                           : "N/A"}
                     </span>
                   </div>
