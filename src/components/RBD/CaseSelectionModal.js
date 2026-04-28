@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { KOfNConfigModal } from "./KOfNConfigModal";
 
-const CaseSelectionModal = ({ isOpen, handleClose, targetId, onSelect, mode = 'add', existingData = null }) => {
+const CaseSelectionModal = ({ isOpen,parentItemId, handleClose, targetId, onSelect, mode = 'add', existingData = null }) => {
 
   console.log(targetId,'targetId from caseselection')
   const [selected, setSelected] = useState(null);
@@ -98,6 +98,7 @@ const CaseSelectionModal = ({ isOpen, handleClose, targetId, onSelect, mode = 'a
         onSubmit={handleConfigSubmit}
         initialData={existingData}
         mode={mode}
+        parentItemId={parentItemId}
         selectedLabel={selectedLabel}
         selectedCase={selectedCase}
       />

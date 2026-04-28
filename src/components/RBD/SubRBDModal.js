@@ -123,10 +123,16 @@ const SubRBDModal = ({
     if (!selectedRbd) {
       alert("Please select an RBD");
       return;
+     
     }
 
     if (onConfirm) {
-      onConfirm(selectedRbd, mode, blockId, nodeIndex);
+         const enrichedRbd = {
+      ...selectedRbd,
+      reliability: selectedRbdMetrics.reliability ?? selectedRbd.reliability ?? 0,
+      unavailability: selectedRbdMetrics.unavailability ?? selectedRbd.unavailability ?? 0,
+    };
+         onConfirm(enrichedRbd, mode, blockId, nodeIndex);
     }
   };
 

@@ -66,15 +66,7 @@ export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
       onClick={() => onEdit?.(null, id, blockData)}
       style={{ cursor: "pointer" }}
     >
-      <rect
-        x={x - 15}
-        y={startY - 5}
-        width={blockWidth + 30}
-        height={totalHeight + 1}
-        fill="#ffff"
-        strokeWidth="1"
-        rx="5"
-      />
+     
 
       {Array.from({ length: 3 }).map((_, index) => {
         const offset = (2 - index) * 6;

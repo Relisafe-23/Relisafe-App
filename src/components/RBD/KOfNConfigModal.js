@@ -9,6 +9,7 @@ export const KOfNConfigModal = ({
   isOpen,
   onClose,
   onSubmit,
+  parentItemId,
   targetId,
   initialData,
   mode = "add",
@@ -68,13 +69,13 @@ export const KOfNConfigModal = ({
           productId: comp.productId || null,
           selectedOption: comp.productId
             ? {
-                label: comp.productName || `Component ${comp.id}`,
-                value: comp.productId,
-                productId: comp.productId,
-                productName: comp.productName,
-                lambda: comp.lambda,
-                mttr: comp.mttr,
-              }
+              label: comp.productName || `Component ${comp.id}`,
+              value: comp.productId,
+              productId: comp.productId,
+              productName: comp.productName,
+              lambda: comp.lambda,
+              mttr: comp.mttr,
+            }
             : null,
         }));
         setNonIdenticalComponents(componentsWithIds);
@@ -150,7 +151,7 @@ export const KOfNConfigModal = ({
       const lambdaVal = Number(lambda);
       const loadValue = getLoadValue();
       const t = missionTime;
-      
+
       if (!isNaN(nVal) && !isNaN(lambdaVal) && !isNaN(loadValue) && !isNaN(t)) {
         const lambdaEff = lambdaVal * loadValue;
         reliability = Math.exp(-nVal * lambdaEff * t);
@@ -304,7 +305,7 @@ export const KOfNConfigModal = ({
     const validComponents = components.filter(
       (comp) => comp && typeof comp.lambda === "number"
     );
-    
+
     if (validComponents.length !== nVal) return 0;
 
     const totalCombinations = Math.pow(2, nVal);
@@ -417,7 +418,7 @@ export const KOfNConfigModal = ({
       productName: values.productName,
       color: values.color,
       load: selectedLabel === "Identical (Load Sharing)" ? load : values.load,
-      targetId:targetId,
+      targetId: targetId,
     };
 
     if (selectedLabel === "Non-Identical") {
@@ -446,12 +447,28 @@ export const KOfNConfigModal = ({
   };
 
   const handleUpdate = () => {
-    const blockId = initialData?.id || currentBlock?.id || values?.id;
+
+    console.log(parentItemId, 'parentItemId')
+
+    console.log(initialData,'initialData')
+
+    const blockId = initialData?._id || currentBlock?.id || values?.id;
+
+    console.log(blockId, 'blockId')
+
 
     if (!blockId) {
       console.error("No block ID found for update");
       toast.error("Cannot update: Block ID not found");
       return;
+    }
+
+    let endpoint;
+
+    if (parentItemId) {
+      endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${blockId}`;
+    } else {
+      endpoint = `/api/v1/elementParametersRBD/updateRBD/${blockId}`;
     }
 
     const updateData = {
@@ -492,7 +509,9 @@ export const KOfNConfigModal = ({
       }));
     }
 
-    Api.patch(`/api/v1/elementParametersRBD/updateRBD/${blockId}`, updateData)
+    console.log(blockId, 'blockId')
+
+    Api.patch(endpoint, updateData)
       .then((response) => {
         if (response?.data?.success) {
           toast.success("K-out-of-N block updated successfully");

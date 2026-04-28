@@ -96,24 +96,24 @@ const getNestedParallelSectionWidth = (block) => {
   const maxBranchW =
     branches.length > 0
       ? Math.max(
-          ...branches.map((br) => {
-            const branchBlocks = br.blocks || [];
-            let totalW = 0;
-            branchBlocks.forEach((b, idx) => {
-              if (
-                (b.type === "Parallel Section" ||
-                  b.elementType === "Parallel Section") &&
-                b.branches?.length > 0
-              ) {
-                totalW +=
-                  getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
-              } else {
-                totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
-              }
-            });
-            return Math.max(totalW, NESTED.BW);
-          }),
-        )
+        ...branches.map((br) => {
+          const branchBlocks = br.blocks || [];
+          let totalW = 0;
+          branchBlocks.forEach((b, idx) => {
+            if (
+              (b.type === "Parallel Section" ||
+                b.elementType === "Parallel Section") &&
+              b.branches?.length > 0
+            ) {
+              totalW +=
+                getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
+            } else {
+              totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
+            }
+          });
+          return Math.max(totalW, NESTED.BW);
+        }),
+      )
       : NESTED.BW;
 
   const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD;
@@ -1039,11 +1039,11 @@ export const BlockContextMenu = ({
       "Edit...",
       "Delete...",
       "Split K-out-of-N...",
-      "Add Regular",
-      "Add K-out-of-N",
-      "Add SubRBD",
-      "Add Parallel Section",
-      "Add Parallel Branch",
+      // "Add Regular",
+      // "Add K-out-of-N",
+      // "Add SubRBD",
+      // "Add Parallel Section",
+      // "Add Parallel Branch",
     ].map((item) => (
       <div
         key={item}
@@ -1207,7 +1207,7 @@ export default function RBDButton() {
       .then((res) => {
         const data = res.data.data;
 
-        console.log("API Response:", data);
+        // console.log("API Response:", data);
 
         setShowSymbol(data.length > 0);
         setBlocks(data);
@@ -1216,13 +1216,13 @@ export default function RBDButton() {
         const computeReliability = (item) => {
           // Check if this is a parallel section (has arrangement "horizontal" and branches)
           if (item.arrangement === "horizontal" && item.branches && item.branches.length > 0) {
-            console.log("Found Parallel Section:", {
-              id: item._id,
-              isNested: item.isNested,
-              branchCount: item.branches.length,
-              k: item.k,
-              n: item.n
-            });
+            // console.log("Found Parallel Section:", {
+            //   id: item._id,
+            //   isNested: item.isNested,
+            //   branchCount: item.branches.length,
+            //   k: item.k,
+            //   n: item.n
+            // });
 
             // Calculate reliability for parallel section
             return computeParallelSectionReliability(item.branches);
@@ -1230,11 +1230,11 @@ export default function RBDButton() {
 
           // Regular block - return its reliability
           const reliability = Number(item.reliability);
-          console.log("Regular Block:", {
-            id: item._id,
-            reliability: reliability,
-            isNested: item.isNested
-          });
+          // console.log("Regular Block:", {
+          //   id: item._id,
+          //   reliability: reliability,
+          //   isNested: item.isNested
+          // });
           return isNaN(reliability) ? 1 : reliability;
         };
 
@@ -1245,15 +1245,15 @@ export default function RBDButton() {
             return 1;
           }
 
-          console.log(`Computing Parallel Section with ${branches.length} branches`);
+          // console.log(`Computing Parallel Section with ${branches.length} branches`);
 
           // Calculate reliability for each branch (series of blocks in that branch)
           const branchReliabilities = branches.map((branch, idx) => {
-            console.log(`Branch ${idx + 1}:`, branch);
+            // console.log(`Branch ${idx + 1}:`, branch);
             return computeBranchReliability(branch);
           });
 
-          console.log("Branch Reliabilities:", branchReliabilities);
+          // console.log("Branch Reliabilities:", branchReliabilities);
 
           // For parallel system: 1 - Π(1 - R_i)
           const productOfUnavailabilities = branchReliabilities.reduce(
@@ -1262,7 +1262,7 @@ export default function RBDButton() {
           );
 
           const parallelReliability = 1 - productOfUnavailabilities;
-          console.log("Parallel Section Reliability:", parallelReliability);
+          // console.log("Parallel Section Reliability:", parallelReliability);
 
           return parallelReliability;
         };
@@ -1270,34 +1270,34 @@ export default function RBDButton() {
         // Function to compute branch reliability (series of blocks)
         const computeBranchReliability = (branch) => {
           if (!branch.blocks || branch.blocks.length === 0) {
-            console.log("Branch has no blocks, returning 1");
+            // console.log("Branch has no blocks, returning 1");
             return 1;
           }
 
-          console.log(`Computing Branch with ${branch.blocks.length} blocks`);
+          // console.log(`Computing Branch with ${branch.blocks.length} blocks`);
 
           // Calculate reliability for each block in the branch
           const blockReliabilities = branch.blocks.map((block, idx) => {
-            console.log(`Block ${idx + 1} in branch:`, block);
+            // console.log(`Block ${idx + 1} in branch:`, block);
 
             // Check if this block is a nested parallel section
             if (block.arrangement === "horizontal" && block.branches && block.branches.length > 0) {
-              console.log(`Block ${idx + 1} is a NESTED Parallel Section (isNested: ${block.isNested})`);
+              // console.log(`Block ${idx + 1} is a NESTED Parallel Section (isNested: ${block.isNested})`);
               // Recursively compute nested parallel section
               return computeParallelSectionReliability(block.branches);
             }
 
             // Regular block
             const reliability = Number(block.reliability);
-            console.log(`Block ${idx + 1} is Regular Block, Reliability:`, reliability);
+            // console.log(`Block ${idx + 1} is Regular Block, Reliability:`, reliability);
             return isNaN(reliability) ? 1 : reliability;
           });
 
-          console.log("Block Reliabilities in branch:", blockReliabilities);
+          // console.log("Block Reliabilities in branch:", blockReliabilities);
 
           // For series system: R = R1 * R2 * ... * Rn
           const seriesReliability = blockReliabilities.reduce((acc, r) => acc * r, 1);
-          console.log("Branch Series Reliability:", seriesReliability);
+          // console.log("Branch Series Reliability:", seriesReliability);
 
           return seriesReliability;
         };
@@ -1307,72 +1307,72 @@ export default function RBDButton() {
           const indent = "  ".repeat(depth);
 
           if (item.arrangement === "horizontal" && item.branches) {
-            console.log(`${indent}[${type}] PARALLEL SECTION - K=${item.k || 1}, N=${item.n || item.branches.length}, isNested: ${item.isNested || false}`);
+            // console.log(`${indent}[${type}] PARALLEL SECTION - K=${item.k || 1}, N=${item.n || item.branches.length}, isNested: ${item.isNested || false}`);
 
             item.branches.forEach((branch, bi) => {
-              console.log(`${indent}  └─ Branch ${bi + 1} (index: ${branch.index})`);
+              // console.log(`${indent}  └─ Branch ${bi + 1} (index: ${branch.index})`);
 
               if (branch.blocks && branch.blocks.length > 0) {
                 branch.blocks.forEach((block, blkIdx) => {
                   if (block.arrangement === "horizontal" && block.branches) {
-                    console.log(`${indent}      └─ Block ${blkIdx + 1}: NESTED PARALLEL SECTION (isNested: ${block.isNested})`);
+                    // console.log(`${indent}      └─ Block ${blkIdx + 1}: NESTED PARALLEL SECTION (isNested: ${block.isNested})`);
                     logStructure(block, depth + 3, "Nested");
                   } else {
                     const reliability = block.reliability || "N/A";
-                    console.log(`${indent}      └─ Block ${blkIdx + 1}: Regular Block (R=${reliability})`);
+                    // console.log(`${indent}      └─ Block ${blkIdx + 1}: Regular Block (R=${reliability})`);
                   }
                 });
               } else {
-                console.log(`${indent}      └─ No blocks in this branch`);
+                // console.log(`${indent}      └─ No blocks in this branch`);
               }
             });
           } else {
             const reliability = item.reliability || "N/A";
-            console.log(`${indent}[${type}] REGULAR BLOCK - R=${reliability}, isNested: ${item.isNested || false}`);
+            // console.log(`${indent}[${type}] REGULAR BLOCK - R=${reliability}, isNested: ${item.isNested || false}`);
           }
         };
 
         // Log complete structure
-        console.log("\n=== RBD STRUCTURE ANALYSIS ===");
+        // console.log("\n=== RBD STRUCTURE ANALYSIS ===");
         data.forEach((item, idx) => {
-          console.log(`\n--- Top Level Item ${idx + 1} ---`);
+          // console.log(`\n--- Top Level Item ${idx + 1} ---`);
           logStructure(item, 1, `Top${idx + 1}`);
         });
 
         // Calculate top level reliabilities
         const topLevelReliabilities = data.map((item, index) => {
-          console.log(`\n=== Calculating Top Level Item ${index + 1} ===`);
+          // console.log(`\n=== Calculating Top Level Item ${index + 1} ===`);
 
           // Check if this is a parallel section at top level
           if (item.arrangement === "horizontal" && item.branches && item.branches.length > 0) {
-            console.log(`Item ${index + 1} is a Parallel Section at top level`);
+            // console.log(`Item ${index + 1} is a Parallel Section at top level`);
             const parallelReliability = computeParallelSectionReliability(item.branches);
-            console.log(`Item ${index + 1} Parallel Section Reliability:`, parallelReliability);
+            // console.log(`Item ${index + 1} Parallel Section Reliability:`, parallelReliability);
             return parallelReliability;
           }
 
           // Single block at top level
-          console.log(`Item ${index + 1} is a Single Block at top level`);
+          // console.log(`Item ${index + 1} is a Single Block at top level`);
           const blockReliability = computeReliability(item);
-          console.log(`Item ${index + 1} Block Reliability:`, blockReliability);
+          // console.log(`Item ${index + 1} Block Reliability:`, blockReliability);
           return blockReliability;
         });
 
-        console.log("\n=== Top Level Reliabilities ===");
-        console.log("Top Level Reliabilities Array:", topLevelReliabilities);
+        // console.log("\n=== Top Level Reliabilities ===");
+        // console.log("Top Level Reliabilities Array:", topLevelReliabilities);
 
         // Final system reliability (series combination of top level items)
         const totalReliability = topLevelReliabilities.reduce((acc, r, i) => {
-          console.log(`Final Step ${i + 1}: acc=${acc}, r=${r}, result=${acc * r}`);
+          // console.log(`Final Step ${i + 1}: acc=${acc}, r=${r}, result=${acc * r}`);
           return acc * r;
         }, 1);
 
         const totalUnavailability = 1 - totalReliability;
 
-        console.log("\n=== FINAL RESULTS ===");
-        console.log("Total System Reliability:", totalReliability);
-        console.log("Total System Unavailability:", totalUnavailability);
-        console.log("Formula: Series combination of", topLevelReliabilities.length, "top level items");
+        // console.log("\n=== FINAL RESULTS ===");
+        // console.log("Total System Reliability:", totalReliability);
+        // console.log("Total System Unavailability:", totalUnavailability);
+        // console.log("Formula: Series combination of", topLevelReliabilities.length, "top level items");
 
         // If there are nested sections, show the calculation summary
         const hasNested = data.some(item =>
@@ -1382,12 +1382,12 @@ export default function RBDButton() {
         );
 
         if (hasNested) {
-          console.log("\n📊 Nested Parallel Sections Detected!");
-          console.log("Calculation Method:");
-          console.log("1. Each nested parallel section is calculated recursively");
-          console.log("2. Parallel formula: R = 1 - Π(1 - R_i) for each branch");
-          console.log("3. Series formula: R = Π(R_i) for blocks in a branch");
-          console.log("4. Top level items combine in series");
+          // console.log("\n📊 Nested Parallel Sections Detected!");
+          // console.log("Calculation Method:");
+          // console.log("1. Each nested parallel section is calculated recursively");
+          // console.log("2. Parallel formula: R = 1 - Π(1 - R_i) for each branch");
+          // console.log("3. Series formula: R = Π(R_i) for blocks in a branch");
+          // console.log("4. Top level items combine in series");
         }
 
         setTotalReliability(totalReliability);
@@ -1396,7 +1396,7 @@ export default function RBDButton() {
       .catch((err) => console.log(err, "error"));
   };
   const handleKOfNSelect = (data) => {
-    console.log("K-of-N created successfully:", data);
+    // console.log("K-of-N created successfully:", data);
     // Refresh the blocks
     getBlock();
     // Close any open modals
@@ -1913,6 +1913,9 @@ export default function RBDButton() {
 
   // Handle SubRBD confirmation from modal
   const handleSubRBDConfirm = async (selectedRbd, mode, blockId, nodeIndex) => {
+    console.log("selectedRbd received:", selectedRbd);
+    console.log("reliability:", selectedRbd.reliability);
+    console.log("unavailability:", selectedRbd.unavailability);
     try {
       if (mode === "edit") {
         // UPDATE existing SubRBD block
@@ -1929,11 +1932,23 @@ export default function RBDButton() {
           },
         };
 
+        let endpoint;
+
+        console.log(parentItemId,'parentItemId')
+        console.log(blockId,'blockId')
+
+
+        if (parentItemId) {
+          endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${blockId}`;
+        } else {
+          endpoint = `/api/v1/elementParametersRBD/updateRBD/${blockId}`;
+        }
+
         // Fetch RBD list for SubRBD selection
 
         // Call API to update the block
         const response = await Api.patch(
-          `/api/v1/elementParametersRBD/updateRBD/${blockId}`,
+          endpoint,
           updateData,
         );
 
@@ -1949,6 +1964,8 @@ export default function RBDButton() {
                   name: selectedRbd.rbdTitle,
                   subRbdId: selectedRbd.id,
                   subRbdData: updateData.subRbdData,
+                  reliability: selectedRbd.reliability,
+                  unavailability: selectedRbd.unavailability,
                   isSubRBD: true,
                   data: {
                     ...block.data,
@@ -1976,6 +1993,8 @@ export default function RBDButton() {
           type: "SubRBD",
           name: selectedRbd.rbdTitle,
           subRbdId: selectedRbd.id,
+          reliability: selectedRbd.reliability,
+          unavailability: selectedRbd.unavailability,
           subRbdData: {
             id: selectedRbd.id,
             rbdTitle: selectedRbd.rbdTitle,
@@ -2011,6 +2030,8 @@ export default function RBDButton() {
             name: selectedRbd.rbdTitle,
             subRbdId: selectedRbd.id,
             subRbdData: newBlockData.subRbdData,
+            reliability: selectedRbd.reliability,
+            unavailability: selectedRbd.unavailability,
             isSubRBD: true,
             data: {
               rbdData: newBlockData.subRbdData,
@@ -2275,12 +2296,12 @@ export default function RBDButton() {
         blocks.map((block) =>
           block.id === elementModal.blockId
             ? {
-                ...block,
-                data: {
-                  ...block.data,
-                  switchData: switchData,
-                },
-              }
+              ...block,
+              data: {
+                ...block.data,
+                switchData: switchData,
+              },
+            }
             : block,
         ),
       );
@@ -2575,308 +2596,308 @@ export default function RBDButton() {
     }
   };
 
-  
-  const handleBlockMenuSelect = (action) => {
+
+  const handleBlockMenuSelect = (action) => {
 
     if (!blockMenu.blockId) return;
 
 
-    if (!blockMenu.blockId) return;
-    if (action === "Delete...") {
-      handleDeleteBlock(blockMenu.blockId);
-    }
+    if (!blockMenu.blockId) return;
+    if (action === "Delete...") {
+      handleDeleteBlock(blockMenu.blockId);
+    }
 
-    // if (action === "Edit...") {
-    //   let foundBlock = null;
-    //   if (parentItem?.type === "parallel-section") {
-    //     setParentItemId(parentItem?.id);
-    //     console.log(parentItem?.id, "parentItem?.id");
-    //     console.log(blockMenu.blockId, "blockMenu.blockId");
-    //     console.log(parentItem.branches, "blockMenu.blockId");
+    // if (action === "Edit...") {
+    //   let foundBlock = null;
+    //   if (parentItem?.type === "parallel-section") {
+    //     setParentItemId(parentItem?.id);
+    //     console.log(parentItem?.id, "parentItem?.id");
+    //     console.log(blockMenu.blockId, "blockMenu.blockId");
+    //     console.log(parentItem.branches, "blockMenu.blockId");
 
 
 
-    //     parentItem.branches?.forEach((br) =>
-    //       br.blocks?.forEach((bl) => {
-    //         if (bl._id === blockMenu.blockId || bl.id === blockMenu.blockId)
-    //           foundBlock = bl;
-    //       }),
-    //     );
+    //     parentItem.branches?.forEach((br) =>
+    //       br.blocks?.forEach((bl) => {
+    //         if (bl._id === blockMenu.blockId || bl.id === blockMenu.blockId)
+    //           foundBlock = bl;
+    //       }),
+    //     );
 
-    //     console.log(foundBlock,'foundBlock')
-    //     setParallelFoundBlock(foundBlock);
-    //   } else {
-    //     foundBlock = blocks.find((b) => b.id === blockMenu.blockId);
-    //   }
-    //   if (!foundBlock) {
-    //     setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
-    //     return;
-    //   }
-    //   if (foundBlock) {
-    //     // Check if it's a SubRBD block
-    //     if (
-    //       foundBlock.type === "SubRBD" ||
-    //       foundBlock.elementType === "SubRBD"
-    //     ) {
-    //       console.log("Editing SubRBD block:", foundBlock);
+    //     console.log(foundBlock,'foundBlock')
+    //     setParallelFoundBlock(foundBlock);
+    //   } else {
+    //     foundBlock = blocks.find((b) => b.id === blockMenu.blockId);
+    //   }
+    //   if (!foundBlock) {
+    //     setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+    //     return;
+    //   }
+    //   if (foundBlock) {
+    //     // Check if it's a SubRBD block
+    //     if (
+    //       foundBlock.type === "SubRBD" ||
+    //       foundBlock.elementType === "SubRBD"
+    //     ) {
+    //       console.log("Editing SubRBD block:", foundBlock);
 
-    //       // Get the selected RBD data
-    //       let selectedRbd = null;
+    //       // Get the selected RBD data
+    //       let selectedRbd = null;
 
-    //       // Try to get from data.rbdData first
-    //       if (foundBlock.data?.rbdData) {
-    //         selectedRbd = foundBlock.data.rbdData;
-    //       }
-    //       // Try from subRbdData
-    //       else if (foundBlock.subRbdData) {
-    //         selectedRbd = foundBlock.subRbdData;
-    //       }
-    //       // Try from rbdData directly
-    //       else if (foundBlock.rbdData) {
-    //         selectedRbd = foundBlock.rbdData;
-    //       }
+    //       // Try to get from data.rbdData first
+    //       if (foundBlock.data?.rbdData) {
+    //         selectedRbd = foundBlock.data.rbdData;
+    //       }
+    //       // Try from subRbdData
+    //       else if (foundBlock.subRbdData) {
+    //         selectedRbd = foundBlock.subRbdData;
+    //       }
+    //       // Try from rbdData directly
+    //       else if (foundBlock.rbdData) {
+    //         selectedRbd = foundBlock.rbdData;
+    //       }
 
-    //       setRbdListModal({
-    //         open: true,
-    //         mode: "edit",
-    //         blockId: blockMenu.blockId,
-    //         nodeIndex: null,
-    //         selectedRbd: selectedRbd,
-    //       });
-    //     } else if (foundBlock.type === "K-out-of-N") {
-    //       setKOfNModal({
-    //         open: true,
-    //         mode: "edit",
-    //         blockId: blockMenu.blockId,
-    //         nodeIndex: null,
-    //         initialData: foundBlock.data || foundBlock,
-    //       });
-    //     } else {
-    //       const bmap = {
-    //         "K-out-of-N": "K_OUT_OF_N",
-    //         SubRBD: "SUBRBD",
-    //         "Parallel Section": "PARALLEL_SECTION",
-    //         "Parallel Branch": "PARALLEL_BRANCH",
-    //       };
-    //       setElementModal({
-    //         open: true,
-    //         mode: "edit",
-    //         blockId: blockMenu.blockId,
-    //         blockType: bmap[foundBlock.type] || "REGULAR",
-    //         nodeIndex: null,
-    //       });
-    //     }
-    //   } else if (action === "Delete...") {
-    //     handleDeleteBlock(blockMenu.blockId);
-    //   } else if (action === "Add K-out-of-N") {
-    //     setKOfNModal({
-    //       open: true,
-    //       mode: "add",
-    //       blockId: nextId,
-    //       nodeIndex: clickedNodeInfo.index,
-    //       initialData: {
-    //         k: 2,
-    //         n: 3,
-    //         lambda: 0.001,
-    //         mu: 1000,
-    //         formula: "standard",
-    //         name: "K-out-of-N Block",
-    //       },
-    //     });
-    //   } else if (action === "Add SubRBD") {
-    //     // Open RBD list modal
-    //     setRbdListModal({
-    //       open: true,
-    //       mode: "add",
-    //       blockId: nextId,
-    //       nodeIndex: clickedNodeInfo.index,
-    //       selectedRbd: null,
-    //     });
-    //   } else if (action === "Add Parallel Section") {
-    //     setPendingAction({
-    //       type: "parallel",
-    //       nodeIndex: clickedNodeInfo.index,
-    //     });
-    //     setShowParallelModal(true);
-    //   } else if (action.startsWith("Add ")) {
-    //     const amap = {
-    //       "Add K-out-of-N": "K_OUT_OF_N",
-    //       "Add SubRBD": "SUBRBD",
-    //       "Add Parallel Section": "PARALLEL_SECTION",
-    //       "Add Parallel Branch": "PARALLEL_BRANCH",
-    //     };
-    //     setElementModal({
-    //       open: true,
-    //       mode: "add",
-    //       blockId: nextId,
-    //       blockType: amap[action] || "REGULAR",
-    //       nodeIndex: clickedNodeInfo.index,
-    //     });
-    //   }
+    //       setRbdListModal({
+    //         open: true,
+    //         mode: "edit",
+    //         blockId: blockMenu.blockId,
+    //         nodeIndex: null,
+    //         selectedRbd: selectedRbd,
+    //       });
+    //     } else if (foundBlock.type === "K-out-of-N") {
+    //       setKOfNModal({
+    //         open: true,
+    //         mode: "edit",
+    //         blockId: blockMenu.blockId,
+    //         nodeIndex: null,
+    //         initialData: foundBlock.data || foundBlock,
+    //       });
+    //     } else {
+    //       const bmap = {
+    //         "K-out-of-N": "K_OUT_OF_N",
+    //         SubRBD: "SUBRBD",
+    //         "Parallel Section": "PARALLEL_SECTION",
+    //         "Parallel Branch": "PARALLEL_BRANCH",
+    //       };
+    //       setElementModal({
+    //         open: true,
+    //         mode: "edit",
+    //         blockId: blockMenu.blockId,
+    //         blockType: bmap[foundBlock.type] || "REGULAR",
+    //         nodeIndex: null,
+    //       });
+    //     }
+    //   } else if (action === "Delete...") {
+    //     handleDeleteBlock(blockMenu.blockId);
+    //   } else if (action === "Add K-out-of-N") {
+    //     setKOfNModal({
+    //       open: true,
+    //       mode: "add",
+    //       blockId: nextId,
+    //       nodeIndex: clickedNodeInfo.index,
+    //       initialData: {
+    //         k: 2,
+    //         n: 3,
+    //         lambda: 0.001,
+    //         mu: 1000,
+    //         formula: "standard",
+    //         name: "K-out-of-N Block",
+    //       },
+    //     });
+    //   } else if (action === "Add SubRBD") {
+    //     // Open RBD list modal
+    //     setRbdListModal({
+    //       open: true,
+    //       mode: "add",
+    //       blockId: nextId,
+    //       nodeIndex: clickedNodeInfo.index,
+    //       selectedRbd: null,
+    //     });
+    //   } else if (action === "Add Parallel Section") {
+    //     setPendingAction({
+    //       type: "parallel",
+    //       nodeIndex: clickedNodeInfo.index,
+    //     });
+    //     setShowParallelModal(true);
+    //   } else if (action.startsWith("Add ")) {
+    //     const amap = {
+    //       "Add K-out-of-N": "K_OUT_OF_N",
+    //       "Add SubRBD": "SUBRBD",
+    //       "Add Parallel Section": "PARALLEL_SECTION",
+    //       "Add Parallel Branch": "PARALLEL_BRANCH",
+    //     };
+    //     setElementModal({
+    //       open: true,
+    //       mode: "add",
+    //       blockId: nextId,
+    //       blockType: amap[action] || "REGULAR",
+    //       nodeIndex: clickedNodeInfo.index,
+    //     });
+    //   }
 
-    //   setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
-    // }
+    //   setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+    // }
 
-    if (action === "Edit...") {
-      let foundBlock = null;
+    if (action === "Edit...") {
+      let foundBlock = null;
 
-      // Recursive function to search for block in nested parallel structures
-      const findBlockRecursively = (container, targetId) => {
-        if (!container) return null;
+      // Recursive function to search for block in nested parallel structures
+      const findBlockRecursively = (container, targetId) => {
+        if (!container) return null;
 
-        // Check current container
-        if (container._id === targetId || container.id === targetId) {
-          return container;
-        }
+        // Check current container
+        if (container._id === targetId || container.id === targetId) {
+          return container;
+        }
 
-        // Check branches (for parallel-section)
-        if (container.branches && Array.isArray(container.branches)) {
-          for (const branch of container.branches) {
-            // Check the branch itself
-            if (branch._id === targetId || branch.id === targetId) {
-              return branch;
-            }
+        // Check branches (for parallel-section)
+        if (container.branches && Array.isArray(container.branches)) {
+          for (const branch of container.branches) {
+            // Check the branch itself
+            if (branch._id === targetId || branch.id === targetId) {
+              return branch;
+            }
 
-            // Check blocks inside branch
-            if (branch.blocks && Array.isArray(branch.blocks)) {
-              for (const block of branch.blocks) {
-                const found = findBlockRecursively(block, targetId);
-                if (found) return found;
-              }
-            }
-          }
-        }
+            // Check blocks inside branch
+            if (branch.blocks && Array.isArray(branch.blocks)) {
+              for (const block of branch.blocks) {
+                const found = findBlockRecursively(block, targetId);
+                if (found) return found;
+              }
+            }
+          }
+        }
 
-        // Check blocks array (for parallel-branch or other containers)
-        if (container.blocks && Array.isArray(container.blocks)) {
-          for (const block of container.blocks) {
-            const found = findBlockRecursively(block, targetId);
-            if (found) return found;
-          }
-        }
+        // Check blocks array (for parallel-branch or other containers)
+        if (container.blocks && Array.isArray(container.blocks)) {
+          for (const block of container.blocks) {
+            const found = findBlockRecursively(block, targetId);
+            if (found) return found;
+          }
+        }
 
-        // Check nested parallel sections inside data
-        if (container.data?.parallelSection) {
-          const found = findBlockRecursively(container.data.parallelSection, targetId);
-          if (found) return found;
-        }
+        // Check nested parallel sections inside data
+        if (container.data?.parallelSection) {
+          const found = findBlockRecursively(container.data.parallelSection, targetId);
+          if (found) return found;
+        }
 
-        // Check nested branches in data
-        if (container.data?.branches && Array.isArray(container.data.branches)) {
-          for (const branch of container.data.branches) {
-            const found = findBlockRecursively(branch, targetId);
-            if (found) return found;
-          }
-        }
+        // Check nested branches in data
+        if (container.data?.branches && Array.isArray(container.data.branches)) {
+          for (const branch of container.data.branches) {
+            const found = findBlockRecursively(branch, targetId);
+            if (found) return found;
+          }
+        }
 
-        return null;
-      };
+        return null;
+      };
 
-      // Check if we're in a parallel-section context
-      if (parentItem?.type === "parallel-section") {
-        setParentItemId(parentItem?.id);
+      // Check if we're in a parallel-section context
+      if (parentItem?.type === "parallel-section") {
+        setParentItemId(parentItem?.id);
 
-        // Use recursive search instead of just one level
-        foundBlock = findBlockRecursively(parentItem, blockMenu.blockId);
-        setParallelFoundBlock(foundBlock);
-      } else {
-        // Search in main blocks array (also recursive if blocks contain nested structures)
-        const searchInMainBlocks = () => {
-          for (const block of blocks) {
-            const found = findBlockRecursively(block, blockMenu.blockId);
-            if (found) return found;
-          }
-          return null;
-        };
-        foundBlock = searchInMainBlocks();
-      }
+        // Use recursive search instead of just one level
+        foundBlock = findBlockRecursively(parentItem, blockMenu.blockId);
+        setParallelFoundBlock(foundBlock);
+      } else {
+        // Search in main blocks array (also recursive if blocks contain nested structures)
+        const searchInMainBlocks = () => {
+          for (const block of blocks) {
+            const found = findBlockRecursively(block, blockMenu.blockId);
+            if (found) return found;
+          }
+          return null;
+        };
+        foundBlock = searchInMainBlocks();
+      }
 
-      if (!foundBlock) {
-        setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
-        return;
-      }
+      if (!foundBlock) {
+        setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+        return;
+      }
 
-      if (foundBlock) {
-        // Check if it's a SubRBD block
-        if (
-          foundBlock.type === "SubRBD" ||
-          foundBlock.elementType === "SubRBD"
-        ) {
-          // console.log("Editing SubRBD block:", foundBlock);
+      if (foundBlock) {
+        // Check if it's a SubRBD block
+        if (
+          foundBlock.type === "SubRBD" ||
+          foundBlock.elementType === "SubRBD"
+        ) {
+          // console.log("Editing SubRBD block:", foundBlock);
 
-          // Get the selected RBD data
-          let selectedRbd = null;
+          // Get the selected RBD data
+          let selectedRbd = null;
 
-          // Try to get from data.rbdData first
-          if (foundBlock.data?.rbdData) {
-            selectedRbd = foundBlock.data.rbdData;
-          }
-          // Try from subRbdData
-          else if (foundBlock.subRbdData) {
-            selectedRbd = foundBlock.subRbdData;
-          }
-          // Try from rbdData directly
-          else if (foundBlock.rbdData) {
-            selectedRbd = foundBlock.rbdData;
-          }
+          // Try to get from data.rbdData first
+          if (foundBlock.data?.rbdData) {
+            selectedRbd = foundBlock.data.rbdData;
+          }
+          // Try from subRbdData
+          else if (foundBlock.subRbdData) {
+            selectedRbd = foundBlock.subRbdData;
+          }
+          // Try from rbdData directly
+          else if (foundBlock.rbdData) {
+            selectedRbd = foundBlock.rbdData;
+          }
 
-          setRbdListModal({
-            open: true,
-            mode: "edit",
-            blockId: blockMenu.blockId,
-            nodeIndex: null,
-            selectedRbd: selectedRbd,
-          });
-        }
-        else if (foundBlock.type === "K-out-of-N") {
-          setKOfNModal({
-            open: true,
-            mode: "edit",
-            blockId: blockMenu.blockId,
-            nodeIndex: null,
-            initialData: foundBlock.data || foundBlock,
-          });
-        }
-        else if (foundBlock.type === "parallel-section" || foundBlock.type === "Parallel Section") {
-          // Open parallel modal for editing
-          setPendingAction({
-            type: "edit",
-            nodeIndex: null,
-            blockData: foundBlock,
-            blockId: blockMenu.blockId
-          });
-          setShowParallelModal(true);
-        }
-        else if (foundBlock.type === "parallel-branch" || foundBlock.type === "Parallel Branch") {
-          // Open parallel modal for editing branch
-          setPendingAction({
-            type: "edit",
-            nodeIndex: null,
-            blockData: foundBlock,
-            blockId: blockMenu.blockId
-          });
-          setShowParallelModal(true);
-        }
-        else {
-          const bmap = {
-            "K-out-of-N": "K_OUT_OF_N",
-            SubRBD: "SUBRBD",
-            "Parallel Section": "PARALLEL_SECTION",
-            "Parallel Branch": "PARALLEL_BRANCH",
-          };
-          setElementModal({
-            open: true,
-            mode: "edit",
-            blockId: blockMenu.blockId,
-            blockType: bmap[foundBlock.type] || "REGULAR",
-            nodeIndex: null,
-          });
-        }
-      }
+          setRbdListModal({
+            open: true,
+            mode: "edit",
+            blockId: blockMenu.blockId,
+            nodeIndex: null,
+            selectedRbd: selectedRbd,
+          });
+        }
+        else if (foundBlock.type === "K-out-of-N") {
+          setKOfNModal({
+            open: true,
+            mode: "edit",
+            blockId: blockMenu.blockId,
+            nodeIndex: null,
+            initialData: foundBlock.data || foundBlock,
+          });
+        }
+        else if (foundBlock.type === "parallel-section" || foundBlock.type === "Parallel Section") {
+          // Open parallel modal for editing
+          setPendingAction({
+            type: "edit",
+            nodeIndex: null,
+            blockData: foundBlock,
+            blockId: blockMenu.blockId
+          });
+          setShowParallelModal(true);
+        }
+        else if (foundBlock.type === "parallel-branch" || foundBlock.type === "Parallel Branch") {
+          // Open parallel modal for editing branch
+          setPendingAction({
+            type: "edit",
+            nodeIndex: null,
+            blockData: foundBlock,
+            blockId: blockMenu.blockId
+          });
+          setShowParallelModal(true);
+        }
+        else {
+          const bmap = {
+            "K-out-of-N": "K_OUT_OF_N",
+            SubRBD: "SUBRBD",
+            "Parallel Section": "PARALLEL_SECTION",
+            "Parallel Branch": "PARALLEL_BRANCH",
+          };
+          setElementModal({
+            open: true,
+            mode: "edit",
+            blockId: blockMenu.blockId,
+            blockType: bmap[foundBlock.type] || "REGULAR",
+            nodeIndex: null,
+          });
+        }
+      }
 
-      setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
-    }
-  };
+      setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+    }
+  };
   const handleClose = () => {
     setKOfNModal((prev) => ({
       ...prev,
@@ -2959,7 +2980,7 @@ export default function RBDButton() {
         </div> */}
 
         {showSymbol && (
-          <div style={{ width: "100%"}}>
+          <div style={{ width: "100%" }}>
             <BiDirectionalSymbol
               onNodeClick={handleNodeClick}
               setTargetBranchId={setTargetBranchId}
@@ -3402,6 +3423,7 @@ export default function RBDButton() {
           }}
           onSelect={handleKOfNSelect}
           mode={kOfNModal.mode}
+          parentItemId={parentItemId}
           existingData={kOfNModal.initialData}
         />
       )}
@@ -3538,4 +3560,3 @@ export default function RBDButton() {
     </div>
   );
 }
-  
