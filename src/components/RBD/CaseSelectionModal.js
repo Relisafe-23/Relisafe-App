@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+// CaseSelectionModal.jsx
+import React, { useState, useEffect } from "react";
 import { KOfNConfigModal } from "./KOfNConfigModal";
 
-const CaseSelectionModal = ({ isOpen, handleClose, onSelect, mode = 'add', existingData = null }) => {
+const CaseSelectionModal = ({ isOpen,parentItemId, handleClose, targetId, onSelect, mode = 'add', existingData = null }) => {
+
+  console.log(targetId,'targetId from caseselection')
   const [selected, setSelected] = useState(null);
   const [kOfNModal, setKOfNModal] = useState({
     open: false, 
@@ -12,128 +15,181 @@ const CaseSelectionModal = ({ isOpen, handleClose, onSelect, mode = 'add', exist
     selectedCase: null,
     selectedLabel: null
   });
+  const [selectedCase, setSelectedCase] = useState(null);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [selectedLabel, setSelectedLabel] = useState("");
+  // Reset when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedCase(null);
+      setShowConfigModal(false);
+      setSelectedLabel("");
+      
+      // If in edit mode and we have existing data, pre-select the case
+      if (mode === "edit" && existingData) {
+        const existingType = existingData.kOfNType || existingData.selectedLabel;
+        if (existingType === "Non-Identical") {
+          setSelectedCase("case4");
+          setSelectedLabel("Non-Identical");
+          // Auto-open config modal for edit
+          setShowConfigModal(true);
+        } else if (existingType === "Identical (Load Sharing)") {
+          setSelectedCase("case5");
+          setSelectedLabel("Identical (Load Sharing)");
+          setShowConfigModal(true);
+        } else {
+          setSelectedCase("case3");
+          setSelectedLabel("Identical");
+          setShowConfigModal(true);
+        }
+      }
+    }
+  }, [isOpen, mode, existingData]);
 
-  const options = [
-    { id: "case3", label: "Identical" },
-    { id: "case4", label: "Non-Identical" },
-    { id: "case5", label: "Identical (Load Sharing)" }
+  const cases = [
+    {
+      id: "case3",
+      title: "Identical",
+      description: "All components are identical with same failure rate and MTTR",
+      label: "Identical"
+    },
+    {
+      id: "case4",
+      title: "Non-Identical",
+      description: "Components have different failure rates and MTTR values",
+      label: "Non-Identical"
+    },
+    {
+      id: "case5",
+      title: "Identical (Load Sharing)",
+      description: "Components share load when some fail, increasing failure rate",
+      label: "Identical (Load Sharing)"
+    }
   ];
 
-  const handleCaseSelect = (item) => {
-    setSelected(item.id);
-    setKOfNModal(prev => ({
-      ...prev,
-      open: true,
-      selectedCase: item.id,
-      selectedLabel: item.label
-    }));
+  const handleCaseSelect = (caseItem) => {
+    setSelectedCase(caseItem.id);
+    setSelectedLabel(caseItem.label);
+    setShowConfigModal(true);
   };
 
-  const handleKOfNSubmit = (data) => {
-    console.log("Received from KOfNConfigModal:", data);
-    
-    if (onSelect && typeof onSelect === 'function') {
-      onSelect(data);
-    }
-    
-    setKOfNModal(prev => ({
-      ...prev,
-      open: false
-    }));
+  const handleConfigSubmit = (data) => {
+    // Pass the mode, blockId, and existing data info to the parent
+    onSelect(data, mode, existingData?.id || existingData?._id);
+    setShowConfigModal(false);
     handleClose();
   };
 
-  const handleKOfNClose = () => {
-    setKOfNModal(prev => ({
-      ...prev,
-      open: false
-    }));
+  const handleConfigClose = () => {
+    setShowConfigModal(false);
+    if (mode !== "edit") {
+      handleClose();
+    }
   };
 
   if (!isOpen) return null;
 
-  return (
-    <>
-      <div style={styles.overlay}>
-        <div style={styles.modal}>
-          <h3 style={{ marginBottom: "15px", fontSize: "16px", fontWeight: "bold" }}>
-            Select K-out-of-N Case
-          </h3>
+  if (showConfigModal) {
+    return (
+      <KOfNConfigModal
+        isOpen={showConfigModal}
+        onClose={handleConfigClose}
+          targetId={targetId}
+        onSubmit={handleConfigSubmit}
+        initialData={existingData}
+        mode={mode}
+        parentItemId={parentItemId}
+        selectedLabel={selectedLabel}
+        selectedCase={selectedCase}
+      />
+    );
+  }
 
-          {options.map((item) => (
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 2000,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          padding: "24px",
+          width: "500px",
+          maxWidth: "90%",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+        }}
+      >
+        <h2 style={{ marginTop: 0, marginBottom: "16px", fontSize: "18px", fontWeight: "bold" }}>
+          {mode === "edit" ? "Edit K-out-of-N Configuration" : "Select K-out-of-N Configuration"}
+        </h2>
+        <p style={{ marginBottom: "24px", color: "#666", fontSize: "14px" }}>
+          Choose the type of K-out-of-N configuration you want to {mode === "edit" ? "edit" : "create"}:
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {cases.map((caseItem) => (
             <div
-              key={item.id}
-              onClick={() => handleCaseSelect(item)}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f0f0f0"}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+              key={caseItem.id}
+              onClick={() => handleCaseSelect(caseItem)}
               style={{
-                ...styles.option,
-                backgroundColor: selected === item.id ? "#d0e6ff" : "#f5f5f5",
-                border: selected === item.id ? "2px solid #3399ff" : "1px solid #ddd"
+                border: selectedCase === caseItem.id ? "2px solid #0078d4" : "1px solid #ddd",
+                borderRadius: "8px",
+                padding: "16px",
+                cursor: "pointer",
+                backgroundColor: selectedCase === caseItem.id ? "#f0f7ff" : "#fff",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#0078d4";
+                e.currentTarget.style.backgroundColor = "#f5f5f5";
+              }}
+              onMouseLeave={(e) => {
+                if (selectedCase !== caseItem.id) {
+                  e.currentTarget.style.borderColor = "#ddd";
+                  e.currentTarget.style.backgroundColor = "#fff";
+                }
               }}
             >
-              {item.label}
+              <h3 style={{ margin: "0 0 8px 0", fontSize: "16px", fontWeight: "600" }}>
+                {caseItem.title}
+              </h3>
+              <p style={{ margin: 0, fontSize: "13px", color: "#666" }}>
+                {caseItem.description}
+              </p>
             </div>
           ))}
+        </div>
 
-          <button onClick={handleClose} style={styles.closeBtn}>
-            Close
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "24px" }}>
+          <button
+            onClick={handleClose}
+            style={{
+              padding: "8px 20px",
+              backgroundColor: "#f44336",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "13px",
+            }}
+          >
+            Cancel
           </button>
         </div>
       </div>
-
-      <KOfNConfigModal
-        isOpen={kOfNModal.open}
-        selectedCase={kOfNModal.selectedCase}
-        selectedLabel={kOfNModal.selectedLabel}
-        onClose={handleKOfNClose}
-        onSubmit={handleKOfNSubmit}
-        mode={kOfNModal.mode}
-        initialData={kOfNModal.initialData}
-      />
-    </>
+    </div>
   );
-};
-
-const styles = {
-  overlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 2000
-  },
-  modal: {
-    background: "#fff",
-    padding: "20px",
-    borderRadius: "8px",
-    width: "320px",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.1)"
-  },
-  option: {
-    padding: "12px",
-    marginBottom: "8px",
-    borderRadius: "6px",
-    cursor: "pointer",
-    transition: "all 0.2s",
-    fontSize: "14px"
-  },
-  closeBtn: {
-    marginTop: "15px",
-    padding: "8px 16px",
-    background: "#666",
-    color: "#fff",
-    border: "none",
-    borderRadius: "4px",
-    cursor: "pointer",
-    width: "100%",
-    fontSize: "14px"
-  }
 };
 
 export default CaseSelectionModal;
