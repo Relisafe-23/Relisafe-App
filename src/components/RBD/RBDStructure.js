@@ -45,7 +45,7 @@ const C = {
 // ── Shared layout constants (must match RBDBlock exactly) ──────────────────
 const NESTED = {
   BW: 20,
-  BH: 15,
+  BH: 25,
   GAP: 20,
   RAIL_PAD: 15,
   INNER_PAD: 15,
@@ -1160,22 +1160,38 @@ export default function RBDButton() {
 
 
   // ── zoom / pan state ───────────────────────────────────────────────────────
-  const [open, setOpen] = useState(false);
-  const [selectedCase, setSelectedCase] = useState(null);
+  // const [open, setOpen] = useState(false);
+  // const [selectedCase, setSelectedCase] = useState(null);
+
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
 
+
   // ── canvas container ref (needed to block native scroll) ──────────────────
+
   const canvasRef = useRef(null);
 
   // Block native wheel scroll on the canvas so our zoom handler takes over
+  // useEffect(() => {
+  //   const el = canvasRef.current;
+  //   if (!el) return;
+  //   const prevent = (e) => e.preventDefault();
+  //   el.addEventListener("wheel", prevent, { passive: false });
+  //   return () => el.removeEventListener("wheel", prevent);
+  // }, []);
+
   useEffect(() => {
     const el = canvasRef.current;
     if (!el) return;
-    const prevent = (e) => e.preventDefault();
+
+    const prevent = (e) => {
+      if (e.ctrlKey) e.preventDefault(); // only block when zooming
+    };
+
     el.addEventListener("wheel", prevent, { passive: false });
+
     return () => el.removeEventListener("wheel", prevent);
   }, []);
 
@@ -1199,8 +1215,20 @@ export default function RBDButton() {
     setZoomLevel(newZoom);
   };
 
+  // const handleWheelScroll = (e) => {
+  //   if (!e.ctrlKey) return; // ✅ only zoom when Ctrl + scroll
+
+  //   e.preventDefault();
+
+  //   const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+
+  //   setZoomLevel((prev) => {
+  //     let newZoom = prev * zoomFactor;
+  //     return Math.min(Math.max(newZoom, 0.1), 5);
+  //   });
+  // };
+
   const handleMouseDown = (e) => {
-    // Only pan with left mouse button, and not when clicking canvas controls
     if (e.button !== 0) return;
     setIsDragging(true);
     setDragStart({
@@ -1253,7 +1281,7 @@ export default function RBDButton() {
   // Add state for layout key
   const [layoutKey, setLayoutKey] = useState(0);
 
-  console.log("Layout.......... : " , layoutKey);
+  console.log("Layout.......... : ", layoutKey);
 
   // Fetch RBD list for SubRBD selection
   useEffect(() => {
@@ -3184,19 +3212,24 @@ export default function RBDButton() {
 
 
   return (
-    <div style={{ minHeight: "100vh", padding: "20px" }}>
+    <div style={{ minHeight: "100vh" }}>
 
-      <div className="card shadow d-flex flex-column justify-content-center align-items-center p-3 mt-5">
-        <button onClick={() => setShowSymbol(true)} className="rbd-btn">
-          RBD
-        </button>
 
-        <div className="mt-1">
+
+      {/* <div className="mt-1">
           <b>Reliability:</b> {totalReliability?.toFixed(9)}
           <br />
           <b>Unavailability:</b> {totalUnavailability?.toFixed(9)}
+        </div> */}
+
+
+      {!showSymbol && (
+        <div className="card shadow d-flex flex-column justify-content-center align-items-center p-3 mt-5">
+          <button onClick={() => setShowSymbol(true)} className="rbd-btn">
+            RBD
+          </button>
         </div>
-      </div>
+      )}
 
       {/* <button
             onClick={() => setIsModalOpen(true)}
@@ -3238,290 +3271,304 @@ export default function RBDButton() {
         //     onMouseUp={handleMouseUp}
         //     onMouseLeave={handleMouseUp}
         //   >
-        <div
-          ref={canvasRef}
-          onWheel={handleWheelScroll}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            overflow: "hidden",
-            width: "100%",
-            height: "100vh",
-            border: "3px solid red",
-            cursor: isDragging ? "grabbing" : "grab",
-            userSelect: "none",        // prevent text selection while dragging
-            position: "relative",
-            marginTop:"3rem"
-          }}
-        >
-          {/* ── Zoom controls overlay ─────────────────────────────────────── */}
+        <>
+
           <div
+            ref={canvasRef}
+            onWheel={handleWheelScroll}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
             style={{
-              position: "absolute",
-              bottom: 20,
-              right: 20,
-              zIndex: 9999,
               display: "flex",
-              gap: 6,
-              backgroundColor: "rgba(255,255,255,0.92)",
-              border: "3px solid blue",
-              borderRadius: 6,
-              padding: "4px 8px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              userSelect: "none",
+              justifyContent: "center",
+              alignItems: "center",
+              overflow: "hidden",
+              width: "100%",
+              height: "100vh",
+              border: "3px solid red",
+              cursor: isDragging ? "grabbing" : "grab",
+              userSelect: "none",        // prevent text selection while dragging
+              position: "relative",
+              marginTop: "3rem"
             }}
+          >
+            <div
+              className="mt-3 ms-3 fs-5"
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0
+              }} >
+              <b>Reliability:</b> {totalReliability?.toFixed(9)}
+              <br />
+              <b>Unavailability:</b> {totalUnavailability?.toFixed(9)}
+            </div>
+            {/* ── Zoom controls overlay ─────────────────────────────────────── */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: 20,
+                right: 20,
+                zIndex: 9999,
+                display: "flex",
+                gap: 6,
+                backgroundColor: "rgba(255,255,255,0.92)",
+                border: "3px solid blue",
+                borderRadius: 6,
+                padding: "4px 8px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                userSelect: "none",
+              }}
             // Stop mouse events on the controls panel from triggering canvas pan
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={handleZoomOut}
-              title="Zoom Out"
-              style={zoomBtnStyle}
+            // onMouseDown={(e) => e.stopPropagation()}
             >
-              −
-            </button>
-            <span style={{ fontSize: 12, minWidth: 42, textAlign: "center",marginTop:"5px", color: "#333" }}>
-              {Math.round(zoomLevel * 100)}%
-            </span>
-            <button
-              onClick={handleZoomIn}
-              title="Zoom In"
-              style={zoomBtnStyle}
+              <button
+                onClick={handleZoomOut}
+                title="Zoom Out"
+                style={zoomBtnStyle}
+              >
+                −
+              </button>
+              <span style={{ fontSize: 12, minWidth: 42, textAlign: "center", marginTop: "5px", color: "#333" }}>
+                {Math.round(zoomLevel * 100)}%
+              </span>
+              <button
+                onClick={handleZoomIn}
+                title="Zoom In"
+                style={zoomBtnStyle}
+              >
+                +
+              </button>
+              <button
+                onClick={handleZoomReset}
+                title="Reset View"
+                style={{ ...zoomBtnStyle, fontSize: 10, padding: "3px 18px" }}
+              >
+                Reset
+              </button>
+            </div>
+            <div
+              className="tree-wrapper"
+              style={{
+                display: "flex",
+                transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
+                transformOrigin: "0 0",
+                //  transformOrigin: "center center",
+                border: "3px solid green",
+                justifyContent: "center",
+                alignContent: "center"
+              }}
             >
-              +
-            </button>
-            <button
-              onClick={handleZoomReset}
-              title="Reset View"
-              style={{ ...zoomBtnStyle, fontSize: 10, padding: "3px 18px" }}
-            >
-              Reset
-            </button>
-          </div>
-          <div
-            className="tree-wrapper"
-            style={{
-              display:"flex",
-              transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
-              transformOrigin: "0 0",
-              border: "3px solid green",
-              justifyContent:"center",
-              alignContent:"center"
-            }}
-          >
-            <BiDirectionalSymbol
-              onNodeClick={handleNodeClick}
-              setTargetBranchId={setTargetBranchId}
-              onOpenMenu={openMenu}
-              setIdforApi={setIdforApi}
-              setParentItem={setParentItem}
-              blocks={blocks}
-              setParentItemId={setParentItemId}
-              onDeleteBlock={handleDeleteBlock}
-              onEditBlock={handleEditBlock}
-              selectedNode={selectedNode}
-            />
-
-            {blockMenu.open && (
-              <BlockContextMenu
-                x={blockMenu.x}
-                y={blockMenu.y}
+              <BiDirectionalSymbol
+                onNodeClick={handleNodeClick}
+                setTargetBranchId={setTargetBranchId}
+                onOpenMenu={openMenu}
+                setIdforApi={setIdforApi}
+                setParentItem={setParentItem}
                 blocks={blocks}
-                parentItem={parentItem}
                 setParentItemId={setParentItemId}
-                setParallelFoundBlock={setParallelFoundBlock}
-                parallelFoundBlock={parallelFoundBlock}
-                onSelect={handleBlockMenuSelect}
-                onClose={() => {
-                  setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
-                  setParentItem(null);
-                }}
+                onDeleteBlock={handleDeleteBlock}
+                onEditBlock={handleEditBlock}
+                selectedNode={selectedNode}
               />
-            )}
-            {console.log(targetId, "targetI before model")}
-            {elementModal.open && (
-              <ElementParametersModal
-                key={elementModal.blockId}
-                isOpen={elementModal.open}
-                elementModal={elementModal}
-                targetId={targetId}
-                onClose={() => {
-                  setElementModal({
-                    open: false,
-                    mode: "add",
-                    blockId: null,
-                    blockType: "",
-                    nodeIndex: null,
-                  });
-                  setParentItem(null);
-                }}
-                setLoadChange={setLoadChange}
-                onSubmit={handleModalSubmit}
-                onOpenSwitchConfig={handleSwitchConfigOpen}
-                rbdId={rbdId}
-                projectId={id}
-                // currentBlock={
-                //   blocks.find((b) => b.id === elementModal.blockId)?.data
-                // }
-                parallelFoundBlock={parallelFoundBlock}
-                parentItemId={parentItemId}
-                currentBlock={blocks.find((b) => {
-                  // console.log("b.id:", b.id, "elementModal.blockId:", elementModal.blockId);
-                  return b.id === elementModal.blockId;
-                })}
-              />
-            )}
 
-            {/* RBD List Modal for SubRBD */}
-            {/* RBD List Modal for SubRBD */}
-            {rbdListModal.open && (
-              <SubRBDModal
-                show={rbdListModal.open}
-                targetId={targetId}
-                onHide={() => setRbdListModal({ ...rbdListModal, open: false })}
-                rbdData={rbdListModal.selectedRbd}
-                mode={rbdListModal.mode}
-                blockId={rbdListModal.blockId}
-                nodeIndex={rbdListModal.nodeIndex}
-                onConfirm={handleSubRBDConfirm} // Add this callback
-                rbdList={rbdList}
-              />
-            )}
-
-            {kOfNModal.open && (
-              <>
-                <CaseSelectionModal
-                  isOpen={kOfNModal.open}
-                  targetId={targetId}
-                  handleClose={handleClose}
-                  onSelect={(item) => {
-                    // console.log(item);
-                    handleClose();
+              {blockMenu.open && (
+                <BlockContextMenu
+                  x={blockMenu.x}
+                  y={blockMenu.y}
+                  blocks={blocks}
+                  parentItem={parentItem}
+                  setParentItemId={setParentItemId}
+                  setParallelFoundBlock={setParallelFoundBlock}
+                  parallelFoundBlock={parallelFoundBlock}
+                  onSelect={handleBlockMenuSelect}
+                  onClose={() => {
+                    setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+                    setParentItem(null);
                   }}
                 />
-              </>
-            )}
+              )}
+              {console.log(targetId, "targetI before model")}
+              {elementModal.open && (
+                <ElementParametersModal
+                  key={elementModal.blockId}
+                  isOpen={elementModal.open}
+                  elementModal={elementModal}
+                  targetId={targetId}
+                  onClose={() => {
+                    setElementModal({
+                      open: false,
+                      mode: "add",
+                      blockId: null,
+                      blockType: "",
+                      nodeIndex: null,
+                    });
+                    setParentItem(null);
+                  }}
+                  setLoadChange={setLoadChange}
+                  onSubmit={handleModalSubmit}
+                  onOpenSwitchConfig={handleSwitchConfigOpen}
+                  rbdId={rbdId}
+                  projectId={id}
+                  // currentBlock={
+                  //   blocks.find((b) => b.id === elementModal.blockId)?.data
+                  // }
+                  parallelFoundBlock={parallelFoundBlock}
+                  parentItemId={parentItemId}
+                  currentBlock={blocks.find((b) => {
+                    // console.log("b.id:", b.id, "elementModal.blockId:", elementModal.blockId);
+                    return b.id === elementModal.blockId;
+                  })}
+                />
+              )}
 
-            {showParallelModal && (
-              <div
-                style={{
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: "rgba(0,0,0,0.5)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  zIndex: 2000,
-                }}
-              >
+              {/* RBD List Modal for SubRBD */}
+              {/* RBD List Modal for SubRBD */}
+              {rbdListModal.open && (
+                <SubRBDModal
+                  show={rbdListModal.open}
+                  targetId={targetId}
+                  onHide={() => setRbdListModal({ ...rbdListModal, open: false })}
+                  rbdData={rbdListModal.selectedRbd}
+                  mode={rbdListModal.mode}
+                  blockId={rbdListModal.blockId}
+                  nodeIndex={rbdListModal.nodeIndex}
+                  onConfirm={handleSubRBDConfirm} // Add this callback
+                  rbdList={rbdList}
+                />
+              )}
+
+              {kOfNModal.open && (
+                <>
+                  <CaseSelectionModal
+                    isOpen={kOfNModal.open}
+                    targetId={targetId}
+                    handleClose={handleClose}
+                    onSelect={(item) => {
+                      // console.log(item);
+                      handleClose();
+                    }}
+                  />
+                </>
+              )}
+
+              {showParallelModal && (
                 <div
                   style={{
-                    backgroundColor: "#f0f0f0",
-                    padding: "20px",
-                    borderRadius: "8px",
-                    minWidth: "350px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                    border: "1px solid #999",
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: "rgba(0,0,0,0.5)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    zIndex: 2000,
                   }}
                 >
-                  <h3
+                  <div
                     style={{
-                      marginTop: 0,
-                      marginBottom: "20px",
-                      fontSize: "14px",
-                      fontWeight: "normal",
-                      color: "#333",
+                      backgroundColor: "#f0f0f0",
+                      padding: "20px",
+                      borderRadius: "8px",
+                      minWidth: "350px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      border: "1px solid #999",
                     }}
                   >
-                    Add Parallel Section
-                  </h3>
-
-                  <div style={{ marginBottom: "20px" }}>
-                    <label
+                    <h3
                       style={{
-                        display: "block",
-                        marginBottom: "5px",
-                        fontSize: "13px",
+                        marginTop: 0,
+                        marginBottom: "20px",
+                        fontSize: "14px",
+                        fontWeight: "normal",
                         color: "#333",
                       }}
                     >
-                      Number of branches :
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={branchCount}
-                      onChange={(e) =>
-                        setBranchCount(parseInt(e.target.value) || 1)
-                      }
+                      Add Parallel Section
+                    </h3>
+
+                    <div style={{ marginBottom: "20px" }}>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "5px",
+                          fontSize: "13px",
+                          color: "#333",
+                        }}
+                      >
+                        Number of branches :
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={branchCount}
+                        onChange={(e) =>
+                          setBranchCount(parseInt(e.target.value) || 1)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "6px",
+                          border: "1px solid #7f9db9",
+                          borderRadius: "3px",
+                          fontSize: "13px",
+                          backgroundColor: "white",
+                        }}
+                        autoFocus
+                      />
+                    </div>
+
+                    <div
                       style={{
-                        width: "100%",
-                        padding: "6px",
-                        border: "1px solid #7f9db9",
-                        borderRadius: "3px",
-                        fontSize: "13px",
                         backgroundColor: "white",
-                      }}
-                      autoFocus
-                    />
-                  </div>
-
-                  <div
-                    style={{
-                      backgroundColor: "white",
-                      padding: "10px",
-                      marginBottom: "20px",
-                      fontSize: "12px",
-                      color: "#333",
-                      border: "1px solid #ccc",
-                      fontFamily: "monospace",
-                      lineHeight: "1.5",
-                    }}
-                  >
-                    <div>Communication Unit</div>
-                    <div>19949.1</div>
-                    <div>#10</div>
-                    <div>#11</div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "8px",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <button
-                      onClick={handleParallelModalSubmit}
-                      style={{
-                        padding: "4px 20px",
-                        backgroundColor: "#e1e1e1",
+                        padding: "10px",
+                        marginBottom: "20px",
+                        fontSize: "12px",
                         color: "#333",
-                        border: "1px solid #999",
-                        borderRadius: "3px",
-                        cursor: "pointer",
-                        fontSize: "13px",
-                        minWidth: "70px",
+                        border: "1px solid #ccc",
+                        fontFamily: "monospace",
+                        lineHeight: "1.5",
                       }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.backgroundColor = "#d1d1d1")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.backgroundColor = "#e1e1e1")
-                      }
                     >
-                      OK
-                    </button>
-                    {/* <button
+                      <div>Communication Unit</div>
+                      <div>19949.1</div>
+                      <div>#10</div>
+                      <div>#11</div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <button
+                        onClick={handleParallelModalSubmit}
+                        style={{
+                          padding: "4px 20px",
+                          backgroundColor: "#e1e1e1",
+                          color: "#333",
+                          border: "1px solid #999",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          fontSize: "13px",
+                          minWidth: "70px",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#d1d1d1")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#e1e1e1")
+                        }
+                      >
+                        OK
+                      </button>
+                      {/* <button
                   onClick={handleParallelModalCancel}
                   style={{
                     padding: "4px 20px",
@@ -3538,35 +3585,36 @@ export default function RBDButton() {
                 >
                   Cancel
                 </button> */}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <SwitchConfigurationModal
-              isOpen={switchModal.open}
-              onClose={() => {
-                setSwitchModal({
-                  open: false,
-                  blockId: null,
-                  initialData: null,
-                });
-              }}
-              onSubmit={handleSwitchSubmit}
-              currentSwitchData={switchModal.initialData}
-            />
+              <SwitchConfigurationModal
+                isOpen={switchModal.open}
+                onClose={() => {
+                  setSwitchModal({
+                    open: false,
+                    blockId: null,
+                    initialData: null,
+                  });
+                }}
+                onSubmit={handleSwitchSubmit}
+                currentSwitchData={switchModal.initialData}
+              />
 
-            <EditRBDConfigurationModal
-              isOpen={isModalOpen}
-              onClose={() => {
-                setIsModalOpen(false);
-                setParentItem(null);
-              }}
-              onSave={handleSaveConfig}
-              initialConfig={rbdConfig}
-            />
+              <EditRBDConfigurationModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                  setIsModalOpen(false);
+                  setParentItem(null);
+                }}
+                onSave={handleSaveConfig}
+                initialConfig={rbdConfig}
+              />
+            </div>
           </div>
-        </div>
+        </>
       )}
       {menu && (
         <RBDContextMenu
