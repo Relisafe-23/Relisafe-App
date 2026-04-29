@@ -420,11 +420,11 @@ export const BlockContextMenu = ({ x, y, onSelect, onClose }) => (
       "Edit...",
       "Delete...",
       "Split K-out-of-N...",
-      "Add Regular",
-      "Add K-out-of-N",
-      "Add SubRBD",
-      "Add Parallel Section",
-      "Add Parallel Branch",
+      // "Add Regular",
+      // "Add K-out-of-N",
+      // "Add SubRBD",
+      // "Add Parallel Section",
+      // "Add Parallel Branch",
     ].map((item) => {
       // console.log("ITEM,....", item)
       return (
@@ -479,64 +479,98 @@ export default function RBDButton() {
   const location = useLocation();
   const history = useHistory();
 
-  // REMOVED duplicate state declarations
-  const [selectedRBD, setSelectedRBD] = useState([]);
+
+  
+  const [selectedRBD, setSelectedRBD] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modelItem, setModelItem] = useState(null);
-  const [rbdList, setRbdList] = useState([]);
-  const [rbdlistData, setRbdlistData] = useState([]);
+  const [modelItem, setModelItem] = useState(null)
+  const [rbdList, setRbdList] = useState([])
+  const [rBDTitle, setRBDTitle] = useState([])
+  const [mission, setMission] = useState([])
+  const [description, setDescription] = useState([])
+  const [rbdId, setRbdId] = useState("")
+  const [rbdlistData, setRbdlistData] = useState([])
+  const [missionData,setMissionData]= useState('')
   const [rbdConfig, setRbdConfig] = useState({
     rbdTitle: "My RBD",
     missionTime: 24,
     displayUpper: "Part number",
     displayLower: "MTBF",
-    printRemarks: "Yes",
+    printRemarks: "Yes"
   });
+  // REMOVED duplicate state declarations
+
+
+
+
+
+
+   useEffect(() => {
+  console.log("Updated MissionTime:", missionData);
+}, [missionData]);
 
   useEffect(() => {
     getRbdConfig();
   }, [projectId]);
 
-  const getRbdConfig = () => {
+   const getRbdConfig = () => {
+    // console.log("Fetching RBD configuration...")
     Api.get("/api/v1/EditConfigRBD/", {
       params: {
         projectId: projectId,
-      },
+      }
     })
       .then((res) => {
-        console.log("RBD Config Response:", res.data.data);
-        setRbdlistData(res.data.data);
-        setRbdList(res.data.data);
+     console.log("Resjkhjh",res)
+        setRbdlistData(res.data.data)
+        const rbdIds = res.data.data.map((item) => item.id); 
+        setRbdId(rbdIds);
+        const rbdName = res.data.data.filter((item) => item.rbdTitle).map((item) => item.rbdTitle)
+        const rbdDescription = res.data.data.filter((item) => item.description).map((item) => item.description)
+        setDescription(rbdDescription)
+        // console.log("descriptio.....n",rbdDescription)
+        const rbdMission = res.data.data.filter((item) => item.missionTime).map((item) => item.missionTime)
+    
+        setMission(rbdMission)
+        setRBDTitle(rbdName)
+        setRbdList(res.data.data)
+       
+        // Update state with fetched data if needed
+        // setRbdConfig(res.data.data);
       })
       .catch((error) => {
         console.error("Error fetching RBD config:", error);
       });
+  }
+
+  // const handleSaveConfig = async (configData) => {
+  //   try {
+  //     const payload = {
+  //       ...configData,
+  //       projectId: projectId,
+  //     };
+
+  //     if (modelItem?.id) {
+  //       // Update existing
+  //       await Api.patch(
+  //         `/api/v1/EditConfigRBD/update/${modelItem.id}`,
+  //         payload,
+  //       );
+  //     } else {
+  //       // Create new
+  //       await Api.post("/api/v1/EditConfigRBD/create", payload);
+  //     }
+  //     getRbdConfig(); // Refresh the table
+  //     setIsModalOpen(false);
+  //     setModelItem(null);
+  //   } catch (error) {
+  //     console.error("Save failed:", error);
+  //   }
+  // };
+ const handleSaveConfig = (newConfig) => {
+    setRbdConfig(newConfig);
+    // console.log("Saved config:", newConfig);
   };
-
-  const handleSaveConfig = async (configData) => {
-    try {
-      const payload = {
-        ...configData,
-        projectId: projectId,
-      };
-
-      if (modelItem?.id) {
-        // Update existing
-        await Api.patch(
-          `/api/v1/EditConfigRBD/update/${modelItem.id}`,
-          payload,
-        );
-      } else {
-       
-      }
-      getRbdConfig(); // Refresh the table
-      setIsModalOpen(false);
-      setModelItem(null);
-    } catch (error) {
-      console.error("Save failed:", error);
-    }
-  };
-
   const handleClose = () => {
     setIsModalOpen(false);
     setModelItem(null);
@@ -545,6 +579,7 @@ export default function RBDButton() {
   const handleEditClick = (item, index) => {
     setIsModalOpen(true);
     setModelItem(item);
+      const selectedRbdId = rbdId[index];
   };
 
   const handleViewClick = (item, index) => {

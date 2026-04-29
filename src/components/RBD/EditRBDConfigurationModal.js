@@ -3,12 +3,7 @@ import React, { useState, useEffect } from "react";
 import Api from "../../Api";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
- const initialState = {
-    rbdTitle: "",
-    missionTime: "",
-    description: "",
-    id: null,
-  };
+
 const EditRBDConfigurationModal = ({ isOpen, onClose, onSave, editData, modelItem, setIsModalOpen,setModelItem, getRbdConfig }) => {
 
   const { id } = useParams();
@@ -16,7 +11,12 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave, editData, modelIte
 
   // console.log(modelItem, 'modelItem')
 
- 
+  const initialState = {
+    rbdTitle: "",
+    missionTime: '',
+    description: "",
+    id: null,
+  };
 
   const resetForm = () => {
     setValues(initialState);
@@ -26,16 +26,16 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave, editData, modelIte
   const [values, setValues] = useState(initialState);
 
   const [errors, setErrors] = useState({});
-  // useEffect(() => {
-  //   if (isOpen && modelItem) {
-  //     setValues({
-  //       rbdTitle: modelItem.rbdTitle || "",
-  //       missionTime: modelItem.missionTime || 1,
-  //       description: modelItem.description || "",
-  //       id: modelItem.id || null
-  //     });
-  //   }
-  // }, [isOpen, modelItem]);
+  useEffect(() => {
+    if (isOpen && modelItem) {
+      setValues({
+        rbdTitle: modelItem.rbdTitle || "",
+        missionTime: modelItem.missionTime || '',
+        description: modelItem.description || "",
+        id: modelItem.id || null
+      });
+    }
+  }, [isOpen, modelItem]);
 
 
   const overlayStyle = {
@@ -202,13 +202,12 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave, editData, modelIte
         description: values.description,
       })
         .then((res) => {
-          console.log("resbhkk",res)
           onSave(res.data);
           getRbdConfig();
-          toast.success("Created RBD");
+          toast.success("Created RBD")
+          resetForm();
           setModelItem(null);
-          setIsModalOpen(false);
-               resetForm();
+          setIsModalOpen(false)
         })
         .catch((error) => {
           console.error("Error saving config:", error);
