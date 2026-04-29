@@ -527,8 +527,7 @@ export default function RBDButton() {
           payload,
         );
       } else {
-        // Create new
-        await Api.post("/api/v1/EditConfigRBD/create", payload);
+       
       }
       getRbdConfig(); // Refresh the table
       setIsModalOpen(false);
@@ -551,11 +550,12 @@ export default function RBDButton() {
   const handleViewClick = (item, index) => {
     let rbdId = item?.id;
     let id = item?.projectId;
+    let rbdTitle = item?.rbdTitle;
     const rbdData = item?.missionTime;
 
     history.push({
       pathname: `/project/${id}/rbd/structure/${rbdId}`,
-      state: { missionTime: rbdData },
+      state: { missionTime: rbdData ,rbdTitle:rbdTitle },
     });
   };
 
