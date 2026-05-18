@@ -13,7 +13,7 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave, editData, modelIte
 
   const initialState = {
     rbdTitle: "",
-    missionTime: 1,
+    missionTime: '',
     description: "",
     id: null,
   };
@@ -30,7 +30,7 @@ const EditRBDConfigurationModal = ({ isOpen, onClose, onSave, editData, modelIte
     if (isOpen && modelItem) {
       setValues({
         rbdTitle: modelItem.rbdTitle || "",
-        missionTime: modelItem.missionTime || 1,
+        missionTime: modelItem.missionTime || '',
         description: modelItem.description || "",
         id: modelItem.id || null
       });

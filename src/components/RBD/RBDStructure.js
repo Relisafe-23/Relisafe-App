@@ -96,24 +96,24 @@ const getNestedParallelSectionWidth = (block) => {
   const maxBranchW =
     branches.length > 0
       ? Math.max(
-        ...branches.map((br) => {
-          const branchBlocks = br.blocks || [];
-          let totalW = 0;
-          branchBlocks.forEach((b, idx) => {
-            if (
-              (b.type === "Parallel Section" ||
-                b.elementType === "Parallel Section") &&
-              b.branches?.length > 0
-            ) {
-              totalW +=
-                getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
-            } else {
-              totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
-            }
-          });
-          return Math.max(totalW, NESTED.BW);
-        }),
-      )
+          ...branches.map((br) => {
+            const branchBlocks = br.blocks || [];
+            let totalW = 0;
+            branchBlocks.forEach((b, idx) => {
+              if (
+                (b.type === "Parallel Section" ||
+                  b.elementType === "Parallel Section") &&
+                b.branches?.length > 0
+              ) {
+                totalW +=
+                  getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
+              } else {
+                totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
+              }
+            });
+            return Math.max(totalW, NESTED.BW);
+          }),
+        )
       : NESTED.BW;
 
   const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD;
@@ -123,25 +123,6 @@ const getNestedParallelSectionWidth = (block) => {
   );
 };
 
-// const branchHeight = (branch) => {
-//   let height = C.BRANCH_MIN_H;
-
-//   // Check for nested parallel sections
-//   if (branch.blocks) {
-//     branch.blocks.forEach(block => {
-//       if ((block.type === 'Parallel Section' || block.elementType === 'Parallel Section') && block.branches) {
-//         // Calculate height needed for nested parallel section
-//         const nestedBranches = block.branches;
-//         const nestedHeight = nestedBranches.length * 70 + 40; // 70 is ROW_STEP, 40 is padding
-//         height = Math.max(height, nestedHeight);
-//       }
-//     });
-//   }
-
-//   return height;
-// };
-
-// Height of one outer branch (used by BiDirectionalSymbol)
 const branchHeight = (branch) => {
   let height = C.BRANCH_MIN_H;
   if (branch.blocks) {
@@ -159,13 +140,6 @@ const branchHeight = (branch) => {
   return Math.max(height, C.BRANCH_MIN_H);
 };
 
-// const sectionTotalHeight = (branches) => {
-//   if (!branches || branches.length === 0) return C.BRANCH_MIN_H;
-//   return branches.reduce((acc, br) => acc + branchHeight(br), 0)
-//     + Math.max(0, branches.length - 1) * C.BRANCH_SPACING;
-// };
-
-// Fix sectionTotalHeight to use corrected branchHeight
 const sectionTotalHeight = (branches) => {
   if (!branches || branches.length === 0) return C.BRANCH_MIN_H;
   return (
@@ -174,18 +148,6 @@ const sectionTotalHeight = (branches) => {
   );
 };
 
-// const sectionWidth = (block) => {
-//   const branches = block.branches || [];
-//   const leftGrowth = block.leftGrowth || 0;
-//   if (!branches.length) return 160 + leftGrowth;
-//   const maxBlocks = Math.max(...branches.map(br => (br.blocks || []).length));
-//   const innerW = maxBlocks > 0
-//     ? C.INNER_PAD_X + maxBlocks * C.BLOCK_W + (maxBlocks - 1) * C.BLOCK_GAP + C.INNER_PAD_X
-//     : C.INNER_PAD_X * 2 + 40;
-//   return C.RAIL_PAD_X * 2 + innerW + leftGrowth;
-// };
-
-// Fix sectionWidth to account for nested parallel section widths
 const sectionWidth = (block) => {
   const branches = block.branches || [];
   const leftGrowth = block.leftGrowth || 0;
@@ -215,31 +177,6 @@ const sectionWidth = (block) => {
   return C.RAIL_PAD_X * 2 + innerW + leftGrowth;
 };
 
-// const branchCenterY = (branches, idx, secTopY) => {
-//   let y = secTopY;
-//   for (let i = 0; i < idx; i++) {
-//     // Calculate actual height for each branch including nested sections
-//     const branch = branches[i];
-//     let branchHeight = C.BRANCH_MIN_H;
-
-//     // Check if branch has any nested parallel sections
-//     if (branch.blocks) {
-//       branch.blocks.forEach(block => {
-//         if ((block.type === 'Parallel Section' || block.elementType === 'Parallel Section') && block.branches) {
-//           // Calculate height needed for nested parallel section
-//           const nestedBranches = block.branches;
-//           const nestedHeight = nestedBranches.length * 70 + 40; // 70 is ROW_STEP, 40 is padding
-//           branchHeight = Math.max(branchHeight, nestedHeight);
-//         }
-//       });
-//     }
-
-//     y += branchHeight + C.BRANCH_SPACING;
-//   }
-//   return y + (branchHeight(branches[idx]) / 2);
-// };
-
-// Fix branchCenterY to use the corrected branchHeight function
 const branchCenterY = (branches, idx, secTopY) => {
   let y = secTopY;
   for (let i = 0; i < idx; i++) {
@@ -259,7 +196,7 @@ const InsertNode = ({
   id,
 }) => {
   const isSel = selectedNode === nodeId;
-
+  const [selectedId, setSelectedId] = useState();
   return (
     <g
       onClick={(e) => {
@@ -320,8 +257,9 @@ export const BiDirectionalSymbol = ({
   setIdforApi,
 }) => {
   const location = useLocation();
-
+  const RBDTitle = location?.state?.rbdTitle;
   const missionTime = location.state?.missionTime;
+
   const [mission, setMission] = useState("");
   const [rbdList, setRbdList] = useState([]);
   const { id, rbdId } = useParams();
@@ -541,88 +479,7 @@ export const BiDirectionalSymbol = ({
           const rightNodeId = `branch-${branchKey}-right`;
           const midNodeId = (bIdx) => `branch-${branchKey}-mid-${bIdx}`;
 
-          // ── block positions: left-aligned from leftRailX + INNER_PAD_X ──
-          // leftGrowth is already baked into x (sectionX shifted left in layout),
-          // so leftRailX naturally shifts left. All branches use fixed INNER_PAD_X.
-          // Add LEFT  → leftRailX moves left by STEP, new block appears at leftRailX+pad ✅
-          // Add RIGHT → rightRailX grows right, existing blocks unchanged ✅
           const blockRowLeftX = leftRailX + C.INNER_PAD_X;
-
-          // return (
-          //   <g key={branch._id ?? branch.id ?? idx}>
-
-          //     <InsertNode cx={leftRailX} cy={wireY} nodeId={leftNodeId}
-          //       selectedNode={selectedNode} onOpenMenu={onOpenMenu} r={4} />
-
-          //     {branchBlocks.length === 0 ? (
-          //       <line x1={leftRailX} y1={wireY} x2={rightRailX} y2={wireY}
-          //         stroke="black" strokeWidth="2" strokeDasharray={dash} />
-          //     ) : (
-          //       <>
-          //         {/* wire: left rail → first block (stretches as section grows) */}
-          //         <line x1={leftRailX} y1={wireY} x2={blockRowLeftX} y2={wireY}
-          //           stroke="black" strokeWidth="2" strokeDasharray={dash} />
-
-          //         {branchBlocks.map((block, bIdx) => {
-          //           const bx     = blockRowLeftX + bIdx * (C.BLOCK_W + C.BLOCK_GAP);
-          //           const isLast = bIdx === branchBlocks.length - 1;
-
-          //           return (
-          //             <g
-          //               key={block._id ?? block.id ?? bIdx}
-          //               onClick={() => { setParentItem(item); setParentItemId(item?.id); }}
-          //               onContextMenu={(e) => {
-          //                 e.preventDefault(); e.stopPropagation();
-          //                 setParentItem(item); setParentItemId(item?.id);
-          //               }}
-          //             >
-          //               <RBDBlock
-          //                 id={block._id ?? block.id}
-          //                 type={block.type}
-          //                 x={bx}
-          //                 y={wireY - C.BLOCK_H / 2}
-          //                 onEdit={onEditBlock}
-          //                 onDelete={onDeleteBlock}
-          //                 setIdforApi={setIdforApi}
-          //                 blockData={block}
-          //                 width={C.BLOCK_W}
-          //                 height={C.BLOCK_H}
-          //               />
-
-          //               {!isLast && (
-          //                 <>
-          //                   <line
-          //                     x1={bx + C.BLOCK_W} y1={wireY}
-          //                     x2={bx + C.BLOCK_W + C.BLOCK_GAP} y2={wireY}
-          //                     stroke="black" strokeWidth="2" strokeDasharray={dash}
-          //                   />
-          //                   <InsertNode
-          //                     cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2} cy={wireY}
-          //                     nodeId={midNodeId(bIdx)}
-          //                     selectedNode={selectedNode} onOpenMenu={onOpenMenu} r={4}
-          //                   />
-          //                 </>
-          //               )}
-
-          //               {/* wire: last block → right rail (always INNER_PAD_X gap) */}
-          //               {isLast && (
-          //                 <line
-          //                   x1={bx + C.BLOCK_W} y1={wireY}
-          //                   x2={rightRailX} y2={wireY}
-          //                   stroke="black" strokeWidth="2" strokeDasharray={dash}
-          //                 />
-          //               )}
-          //             </g>
-          //           );
-          //         })}
-          //       </>
-          //     )}
-
-          //     <InsertNode cx={rightRailX} cy={wireY} nodeId={rightNodeId}
-          //       selectedNode={selectedNode} onOpenMenu={onOpenMenu} r={4} />
-
-          //   </g>
-          // );
 
           return (
             <g key={branch._id ?? branch.id ?? idx}>
@@ -753,33 +610,6 @@ export const BiDirectionalSymbol = ({
                           onOpenMenu={onOpenMenu}
                         />
 
-                        {/* RIGHT NODE */}
-                        {/* {!isLast &&
-                          <circle
-                            cx={rightRailX}
-                            cy={wireY}
-                            r={4}
-                            fill={selectedNode === rightNodeId ? "#0078d4" : "black"}
-                            style={{ cursor: "pointer" }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onOpenMenu(e.clientX, e.clientY, branch.index);
-                              // console.log(branch?._id, '1')
-                              // console.log(branch?.index, '2')
-                              // console.log(item?.id, '3')
-                              // console.log(`branch-${branch.index}-right`, '4')
-                              setIdforApi({
-                                branchId: branch?._id,
-                                branchIndex: branch?.index,
-                                ItemId: item?.id,
-                                location: `branch-${branch.index}-right`
-                              });
-                            }}
-                          />
-                        } */}
-
-                        {/* BETWEEN BLOCKS */}
-                        {/* {!isLast && ( */}
                         <>
                           <line
                             // x1={bx + C.BLOCK_W}
@@ -1106,6 +936,7 @@ export const BlockContextMenu = ({
 export default function RBDButton() {
   const { id, rbdId } = useParams();
   const projectId = id;
+  const location = useLocation();
 
   const [parallelBranchMode, setParallelBranchMode] = useState({
     active: false,
@@ -1133,7 +964,7 @@ export default function RBDButton() {
     y: 0,
   });
   const [blocks, setBlocks] = useState([]);
-  console.log(blocks)
+  console.log(blocks);
   const [nextId, setNextId] = useState(1);
   const [selectedNode, setSelectedNode] = useState(null);
   const [idforApi, setIdforApi] = useState({
@@ -1186,10 +1017,7 @@ export default function RBDButton() {
     initialData: null,
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // console.log(idforApi, 'idforApi from rbd nested')
-  // console.log(targetId, 'targetId')
-
+  const RBDTitle = location?.state?.rbdTitle;
   const [listedRBDs, setListedRBDs] = useState([]);
   useEffect(() => {
     getBlock();
@@ -1226,17 +1054,15 @@ export default function RBDButton() {
   // Get API for current the blocks
   const [rbdConfig, setRbdConfig] = useState({
     rbdTitle: "My RBD",
-    missionTime: 24,
+    missionTime: "",
     displayUpper: "Part number",
     displayLower: "MTBF",
     printRemarks: "Yes",
   });
-  const location = useLocation();
 
   useEffect(() => {
     getBlock();
   }, [rbdId, projectId, loadChange]);
-
 
   const getBlock = () => {
     Api.get(`/api/v1/elementParametersRBD/getRBD/${rbdId}/${projectId}`)
@@ -1251,7 +1077,11 @@ export default function RBDButton() {
         // Recursive function to compute reliability for any block or parallel section
         const computeReliability = (item) => {
           // Check if this is a parallel section (has arrangement "horizontal" and branches)
-          if (item.arrangement === "horizontal" && item.branches && item.branches.length > 0) {
+          if (
+            item.arrangement === "horizontal" &&
+            item.branches &&
+            item.branches.length > 0
+          ) {
             // console.log("Found Parallel Section:", {
             //   id: item._id,
             //   isNested: item.isNested,
@@ -1294,7 +1124,7 @@ export default function RBDButton() {
           // For parallel system: 1 - Π(1 - R_i)
           const productOfUnavailabilities = branchReliabilities.reduce(
             (acc, r) => acc * (1 - r),
-            1
+            1,
           );
 
           const parallelReliability = 1 - productOfUnavailabilities;
@@ -1317,7 +1147,11 @@ export default function RBDButton() {
             // console.log(`Block ${idx + 1} in branch:`, block);
 
             // Check if this block is a nested parallel section
-            if (block.arrangement === "horizontal" && block.branches && block.branches.length > 0) {
+            if (
+              block.arrangement === "horizontal" &&
+              block.branches &&
+              block.branches.length > 0
+            ) {
               // console.log(`Block ${idx + 1} is a NESTED Parallel Section (isNested: ${block.isNested})`);
               // Recursively compute nested parallel section
               return computeParallelSectionReliability(block.branches);
@@ -1332,7 +1166,10 @@ export default function RBDButton() {
           // console.log("Block Reliabilities in branch:", blockReliabilities);
 
           // For series system: R = R1 * R2 * ... * Rn
-          const seriesReliability = blockReliabilities.reduce((acc, r) => acc * r, 1);
+          const seriesReliability = blockReliabilities.reduce(
+            (acc, r) => acc * r,
+            1,
+          );
           // console.log("Branch Series Reliability:", seriesReliability);
 
           return seriesReliability;
@@ -1380,9 +1217,15 @@ export default function RBDButton() {
           // console.log(`\n=== Calculating Top Level Item ${index + 1} ===`);
 
           // Check if this is a parallel section at top level
-          if (item.arrangement === "horizontal" && item.branches && item.branches.length > 0) {
+          if (
+            item.arrangement === "horizontal" &&
+            item.branches &&
+            item.branches.length > 0
+          ) {
             // console.log(`Item ${index + 1} is a Parallel Section at top level`);
-            const parallelReliability = computeParallelSectionReliability(item.branches);
+            const parallelReliability = computeParallelSectionReliability(
+              item.branches,
+            );
             // console.log(`Item ${index + 1} Parallel Section Reliability:`, parallelReliability);
             return parallelReliability;
           }
@@ -1411,10 +1254,14 @@ export default function RBDButton() {
         // console.log("Formula: Series combination of", topLevelReliabilities.length, "top level items");
 
         // If there are nested sections, show the calculation summary
-        const hasNested = data.some(item =>
-        (item.arrangement === "horizontal" && item.branches?.some(branch =>
-          branch.blocks?.some(block => block.arrangement === "horizontal")
-        ))
+        const hasNested = data.some(
+          (item) =>
+            item.arrangement === "horizontal" &&
+            item.branches?.some((branch) =>
+              branch.blocks?.some(
+                (block) => block.arrangement === "horizontal",
+              ),
+            ),
         );
 
         if (hasNested) {
@@ -1445,357 +1292,20 @@ export default function RBDButton() {
     });
   };
 
-  // ── parallel branch creation ───────────────────────────────────────────────
-  // const createParallelBranch = (startNode, endNode) => {
-  //   console.log(startNode, 'startNode')
-  //   console.log(endNode, 'endNode')
-
-  //   // const parseNode = (n) =>
-  //   // typeof n === "string" && n.startsWith("branch-")
-  //   //   ? {
-  //   //       type: "branch",
-  //   //       branchId: parseInt(n.split("-")[1]),
-  //   //       position: n.split("-")[2],
-  //   //     }
-  //   //   : { type: "top-level", nodeIndex: parseInt(n) };
-
-  //   const parseNode = (n) =>
-  //     typeof n === "string" && n.startsWith("branch-")
-  //       ? {
-  //         type: "branch",
-  //         branchId: n.split("-")[1],
-  //         position: n.split("-")[2],
-  //       }
-  //       : {
-  //         type: "top-level",
-  //         id: n,
-  //       };
-
-  //   const start = parseNode(startNode);
-  //   const end = parseNode(endNode);
-
-  //   console.log(start, 'start')
-  //   console.log(end, 'end')
-
-  //   const topLevel = blocks.filter(
-  //     (b) => b.type === "Parallel Section" || !b.data?.parentSection,
-  //   );
-
-  //   console.log(start.type, 'start.type')
-  //   console.log(topLevel, 'topLevel')
-
-  //   if (start.type !== "top-level" || end.type !== "top-level") return;
-  //   // const si = start.nodeIndex,
-  //   //   ei = end.nodeIndex;
-
-  //   const si = topLevel.findIndex((b) => b.id === start.id);
-  //   const ei = topLevel.findIndex((b) => b.id === end.id);
-  //   if (si < 0 || ei < 0 || si >= ei) {
-  //     alert("Invalid start/end nodes");
-  //     return;
-  //   }
-
-  //   const mainBlocks = topLevel.slice(si, ei);
-  //   if (!mainBlocks.length) {
-  //     alert("No blocks between nodes");
-  //     return;
-  //   }
-
-  //   const sectionId = nextId;
-  //   const section = {
-  //     id: sectionId,
-  //     type: "Parallel Section",
-  //     data: {
-  //       elementType: "Parallel Section",
-  //       name: "Parallel Section",
-  //       branchCount: 2,
-  //       sectionId,
-  //       isParallel: true,
-  //       arrangement: "horizontal",
-  //       k: 1,
-  //       n: 2,
-  //     },
-  //     branches: [],
-  //   };
-  //   const mainBranch = {
-  //     id: sectionId + 1,
-  //     type: "Parallel Branch",
-  //     data: {
-  //       elementType: "Parallel Branch",
-  //       name: "Main Branch",
-  //       branchIndex: 0,
-  //       parentSection: sectionId,
-  //       isParallelBranch: true,
-  //       isMainBranch: true,
-  //     },
-  //     blocks: mainBlocks.map((b) => ({
-  //       id: b.id,
-  //       type: b.type,
-  //       data: { ...b.data, parentSection: sectionId },
-  //     })),
-  //   };
-  //   const bypassBranch = {
-  //     id: sectionId + 2,
-  //     type: "Parallel Branch",
-  //     data: {
-  //       elementType: "Parallel Branch",
-  //       name: "Bypass Branch",
-  //       branchIndex: 1,
-  //       parentSection: sectionId,
-  //       isParallelBranch: true,
-  //       isBypassBranch: true,
-  //     },
-  //     blocks: [
-  //       {
-  //         id: sectionId + 3,
-  //         type: "Regular",
-  //         data: {
-  //           elementType: "Regular",
-  //           name: "Bypass Block",
-  //           parentSection: sectionId,
-  //         },
-  //       },
-  //     ],
-  //   };
-
-  //   const toRemove = new Set(mainBlocks.map((b) => b.id));
-  //   const remaining = blocks.filter((b) => !toRemove.has(b.id));
-  //   const insertAt = remaining.findIndex((b) => b.id === mainBlocks[0].id);
-  //   const next = [...remaining];
-  //   insertAt !== -1
-  //     ? next.splice(insertAt, 0, section, mainBranch, bypassBranch)
-  //     : next.push(section, mainBranch, bypassBranch);
-  //   setBlocks(next);
-  //   setNextId((id) => id + 4);
-  // };
-
-  // const createParallelBranch = (startNode, endNode) => {
-  //   const parseNode = (n) =>
-  //     typeof n === "string" && n.startsWith("branch-")
-  //       ? { type: "branch", branchId: n.split("-")[1], position: n.split("-")[2] }
-  //       : { type: "top-level", id: n };
-
-  //   const start = parseNode(startNode);
-  //   const end = parseNode(endNode);
-
-  //   if (start.type !== "top-level" || end.type !== "top-level") return;
-
-  //   const topLevel = blocks.filter(
-  //     (b) => b.type === "Parallel Section" || !b.data?.parentSection,
-  //   );
-
-  //   // ✅ FIX: compare against both _id and id since API returns MongoDB _id
-  //   const getId = (b) => String(b._id ?? b.id ?? "");
-
-  //   const si = topLevel.findIndex((b) => getId(b) === String(start.id));
-  //   const ei = topLevel.findIndex((b) => getId(b) === String(end.id));
-
-  //   console.log("si:", si, "ei:", ei);
-
-  //   if (si < 0 || ei < 0 || si >= ei) {
-  //     toast.error("Please select a start node and an end node with blocks between them");
-  //     return;
-  //   }
-
-  //   // slice from si up to (not including) ei — these are the blocks to wrap
-  //   const mainBlocks = topLevel.slice(si, ei);
-  //   if (!mainBlocks.length) {
-  //     toast.error("No blocks between the selected nodes");
-  //     return;
-  //   }
-
-  //   const sectionId = nextId;
-
-  //   const section = {
-  //     id: sectionId,
-  //     type: "Parallel Section",
-  //     k: 1,
-  //     n: 2,
-  //     isParallel: true,
-  //     branches: [
-  //       {
-  //         id: sectionId + 1,
-  //         _id: sectionId + 1,
-  //         index: 0,
-  //         name: "Main Branch",
-  //         type: "Parallel Branch",
-  //         isParallelBranch: true,
-  //         isMainBranch: true,
-  //         blocks: mainBlocks.map((b) => ({
-  //           ...b,
-  //           parentSection: sectionId,
-  //         })),
-  //       },
-  //       {
-  //         id: sectionId + 2,
-  //         _id: sectionId + 2,
-  //         index: 1,
-  //         name: "Bypass Branch",
-  //         type: "Parallel Branch",
-  //         isParallelBranch: true,
-  //         isBypassBranch: true,
-  //         blocks: [
-  //           {
-  //             id: sectionId + 3,
-  //             type: "Regular",
-  //             name: "Bypass Block",
-  //             parentSection: sectionId,
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //     data: {
-  //       elementType: "Parallel Section",
-  //       name: "Parallel Section",
-  //       k: 1,
-  //       n: 2,
-  //       isParallel: true,
-  //     },
-  //   };
-
-  //   // ✅ FIX: remove mainBlocks from the flat blocks array using _id OR id
-  //   const toRemove = new Set(mainBlocks.map((b) => getId(b)));
-  //   const remaining = blocks.filter((b) => !toRemove.has(getId(b)));
-
-  //   // ✅ FIX: insert at the position where the FIRST mainBlock was
-  //   const insertAt = blocks.findIndex((b) => getId(b) === getId(mainBlocks[0]));
-  //   const next = [...remaining];
-
-  //   // Calculate correct insert position in the remaining array
-  //   // (some blocks before insertAt may have been removed, so recompute)
-  //   const insertInRemaining = remaining.findIndex(
-  //     (b) => {
-  //       // insert before the first block that came AFTER all removed blocks
-  //       const origIdx = blocks.findIndex((ob) => getId(ob) === getId(b));
-  //       return origIdx > insertAt + mainBlocks.length - 1;
-  //     }
-  //   );
-
-  //   if (insertInRemaining !== -1) {
-  //     next.splice(insertInRemaining, 0, section);
-  //   } else {
-  //     next.push(section);
-  //   }
-
-  //   setBlocks(next);
-  //   setNextId((id) => id + 4);
-  // };
-
-  // const createParallelBranch = (startNode, endNode) => {
-  //   const getId = (b) => String(b._id ?? b.id ?? "");
-
-  //   const topLevel = blocks.filter(
-  //     (b) => b.type === "Parallel Section" || !b.data?.parentSection,
-  //   );
-
-  //   // Each node's RelateId = the block immediately to its LEFT
-  //   // startNode's RelateId = block[si], so we wrap blocks AFTER si (starting at si+1)
-  //   // endNode's RelateId   = block[ei], so we wrap blocks UP TO AND INCLUDING ei
-
-  //   const si = startNode == null
-  //     ? -1  // first node (before all blocks) has no RelateId
-  //     : topLevel.findIndex((b) => getId(b) === String(startNode));
-
-  //   const ei = endNode == null
-  //     ? topLevel.length - 1
-  //     : topLevel.findIndex((b) => getId(b) === String(endNode));
-
-
-  //   // blocks to wrap = topLevel[si+1 .. ei] inclusive
-  //   const wrapStart = si + 1;
-  //   const wrapEnd = ei + 1; // slice end is exclusive
-
-  //   if (wrapStart >= wrapEnd) {
-  //     toast.error("Please select nodes with at least one block between them");
-  //     return;
-  //   }
-
-  //   const mainBlocks = topLevel.slice(wrapStart, wrapEnd);
-  //   if (!mainBlocks.length) {
-  //     toast.error("No blocks between the selected nodes");
-  //     return;
-  //   }
-
-
-  //   const sectionId = nextId;
-
-  //   const section = {
-  //     id: sectionId,
-  //     type: "Parallel Section",
-  //     k: 1,
-  //     n: 2,
-  //     isParallel: true,
-  //     branches: [
-  //       {
-  //         id: sectionId + 1,
-  //         _id: sectionId + 1,
-  //         index: 0,
-  //         name: "Main Branch",
-  //         type: "Parallel Branch",
-  //         isParallelBranch: true,
-  //         isMainBranch: true,
-  //         blocks: mainBlocks.map((b) => ({ ...b, parentSection: sectionId })),
-  //       },
-  //       {
-  //         id: sectionId + 2,
-  //         _id: sectionId + 2,
-  //         index: 1,
-  //         name: "Bypass Branch",
-  //         type: "Parallel Branch",
-  //         isParallelBranch: true,
-  //         isBypassBranch: true,
-  //         blocks: [
-  //           {
-  //             id: sectionId + 3,
-  //             type: "Regular",
-  //             name: "Bypass Block",
-  //             parentSection: sectionId,
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //     data: {
-  //       elementType: "Parallel Section",
-  //       name: "Parallel Section",
-  //       k: 1,
-  //       n: 2,
-  //       isParallel: true,
-  //     },
-  //   };
-
-  //   // Remove mainBlocks from flat array, insert section where they were
-  //   const toRemove = new Set(mainBlocks.map((b) => getId(b)));
-
-  //   // Find insertion point in original blocks array (before removal)
-  //   const insertAt = blocks.findIndex((b) => getId(b) === getId(mainBlocks[0]));
-
-  //   const remaining = blocks.filter((b) => !toRemove.has(getId(b)));
-
-  //   // After removal, the insertion point shifts — find where to insert
-  //   // by locating the first block in remaining that originally came after insertAt
-  //   let insertInRemaining = remaining.findIndex(
-  //     (b) => blocks.findIndex((ob) => getId(ob) === getId(b)) > insertAt + mainBlocks.length - 1
-  //   );
-  //   if (insertInRemaining === -1) insertInRemaining = remaining.length;
-
-  //   const next = [...remaining];
-  //   next.splice(insertInRemaining, 0, section);
-
-  //   setBlocks(next);
-  //   console.log(blocks, 'blocks inside the parallel branch')
-  //   setNextId((id) => id + 4);
-  // };
-
   const createParallelBranch = async (startNode, endNode) => {
     const getId = (b) => String(b._id ?? b.id ?? "");
     const topLevel = blocks.filter(
-      (b) => b.type === "Parallel Section" || !b.data?.parentSection
+      (b) => b.type === "Parallel Section" || !b.data?.parentSection,
     );
 
-    const si = startNode == null ? -1
-      : topLevel.findIndex(b => getId(b) === String(startNode));
-    const ei = endNode == null ? topLevel.length - 1
-      : topLevel.findIndex(b => getId(b) === String(endNode));
+    const si =
+      startNode == null
+        ? -1
+        : topLevel.findIndex((b) => getId(b) === String(startNode));
+    const ei =
+      endNode == null
+        ? topLevel.length - 1
+        : topLevel.findIndex((b) => getId(b) === String(endNode));
 
     const wrapStart = si + 1;
     const wrapEnd = ei + 1;
@@ -1831,14 +1341,14 @@ export default function RBDButton() {
 
     try {
       const payload = {
-        startBlockId: startNode ?? null,  // block _id LEFT of start node
-        endBlockId: endNode ?? null,      // block _id RIGHT of end node
+        startBlockId: startNode ?? null, // block _id LEFT of start node
+        endBlockId: endNode ?? null, // block _id RIGHT of end node
         companyId: localStorage.getItem("companyId"),
       };
 
       await Api.post(
         `/api/v1/elementParametersRBD/${rbdId}/${projectId}/add-parallel-branch`,
-        payload
+        payload,
       );
 
       toast.success("Parallel branch created successfully");
@@ -1850,7 +1360,6 @@ export default function RBDButton() {
       );
     }
   };
-
 
   useEffect(() => {
     parallelBranchModeRef.current = parallelBranchMode;
@@ -1970,9 +1479,7 @@ export default function RBDButton() {
 
         let endpoint;
 
-        console.log(parentItemId, 'parentItemId')
-        console.log(blockId, 'blockId')
-
+    
 
         if (parentItemId) {
           endpoint = `/api/v1/elementParametersRBD/updateRBD/${parentItemId}/block/${blockId}`;
@@ -1983,10 +1490,7 @@ export default function RBDButton() {
         // Fetch RBD list for SubRBD selection
 
         // Call API to update the block
-        const response = await Api.patch(
-          endpoint,
-          updateData,
-        );
+        const response = await Api.patch(endpoint, updateData);
 
         if (response.data.success) {
           // Update local state
@@ -2332,12 +1836,12 @@ export default function RBDButton() {
         blocks.map((block) =>
           block.id === elementModal.blockId
             ? {
-              ...block,
-              data: {
-                ...block.data,
-                switchData: switchData,
-              },
-            }
+                ...block,
+                data: {
+                  ...block.data,
+                  switchData: switchData,
+                },
+              }
             : block,
         ),
       );
@@ -2449,20 +1953,18 @@ export default function RBDButton() {
       return;
     }
     if (action === "Add K-out-of-N") {
-      console.log("Hello")
-      console.log(innerTargetId, "123innerTargetId")
-      console.log(innerTargetId, "123innerTargetId")
-
+      console.log("Hello");
+      console.log(innerTargetId, "123innerTargetId");
+      console.log(innerTargetId, "123innerTargetId");
 
       const innerIdMatch = innerTargetId?.match(/^([a-f0-9]+)/);
-      console.log(innerIdMatch, 'innerIdMatch')
+      console.log(innerIdMatch, "innerIdMatch");
       if (innerTargetId && innerTargetId?.includes("parallel")) {
-
         if (innerIdMatch && innerIdMatch[1]) {
-          console.log(innerIdMatch[1], 'innerIdMatch[1] koutofn');
+          console.log(innerIdMatch[1], "innerIdMatch[1] koutofn");
           setTargetId(innerIdMatch[1]);
         } else {
-          console.log('No valid inner ID found in:', innerTargetId);
+          console.log("No valid inner ID found in:", innerTargetId);
         }
       }
 
@@ -2470,7 +1972,10 @@ export default function RBDButton() {
         open: true,
         mode: "add",
         blockId: nextId,
-        nodeIndex: (innerIdMatch && innerIdMatch[1]) ? innerIdMatch[1] : clickedNodeInfo.index,
+        nodeIndex:
+          innerIdMatch && innerIdMatch[1]
+            ? innerIdMatch[1]
+            : clickedNodeInfo.index,
         initialData: {
           k: 2,
           n: 3,
@@ -2515,12 +2020,11 @@ export default function RBDButton() {
       // Apply same logic from Add Regular
       const innerIdMatch = innerTargetId?.match(/^([a-f0-9]+)/);
       if (innerTargetId && innerTargetId?.includes("parallel")) {
-
         if (innerIdMatch && innerIdMatch[1]) {
           // console.log(innerIdMatch[1], 'innerIdMatch[1]');
           setTargetId(innerIdMatch[1]);
         } else {
-          console.log('No valid inner ID found in:', innerTargetId);
+          console.log("No valid inner ID found in:", innerTargetId);
         }
       }
 
@@ -2529,7 +2033,10 @@ export default function RBDButton() {
         open: true,
         mode: "add",
         blockId: nextId,
-        nodeIndex: (innerIdMatch && innerIdMatch[1]) ? innerIdMatch[1] : clickedNodeInfo.index,
+        nodeIndex:
+          innerIdMatch && innerIdMatch[1]
+            ? innerIdMatch[1]
+            : clickedNodeInfo.index,
         selectedRbd: null,
       });
       return;
@@ -2594,7 +2101,6 @@ export default function RBDButton() {
 
   // ── delete ─────────────────────────────────────────────────────────────────
   const handleDeleteBlock = (id) => {
-
     if (parentItemId) {
       Api.delete(
         `/api/v1/elementParametersRBD/deleteRBD/${parentItemId}/block/${id}`,
@@ -2633,147 +2139,13 @@ export default function RBDButton() {
     }
   };
 
-
   const handleBlockMenuSelect = (action) => {
-
     if (!blockMenu.blockId) return;
-
 
     if (!blockMenu.blockId) return;
     if (action === "Delete...") {
       handleDeleteBlock(blockMenu.blockId);
     }
-
-    // if (action === "Edit...") {
-    //   let foundBlock = null;
-    //   if (parentItem?.type === "parallel-section") {
-    //     setParentItemId(parentItem?.id);
-    //     console.log(parentItem?.id, "parentItem?.id");
-    //     console.log(blockMenu.blockId, "blockMenu.blockId");
-    //     console.log(parentItem.branches, "blockMenu.blockId");
-
-
-
-    //     parentItem.branches?.forEach((br) =>
-    //       br.blocks?.forEach((bl) => {
-    //         if (bl._id === blockMenu.blockId || bl.id === blockMenu.blockId)
-    //           foundBlock = bl;
-    //       }),
-    //     );
-
-    //     console.log(foundBlock,'foundBlock')
-    //     setParallelFoundBlock(foundBlock);
-    //   } else {
-    //     foundBlock = blocks.find((b) => b.id === blockMenu.blockId);
-    //   }
-    //   if (!foundBlock) {
-    //     setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
-    //     return;
-    //   }
-    //   if (foundBlock) {
-    //     // Check if it's a SubRBD block
-    //     if (
-    //       foundBlock.type === "SubRBD" ||
-    //       foundBlock.elementType === "SubRBD"
-    //     ) {
-    //       console.log("Editing SubRBD block:", foundBlock);
-
-    //       // Get the selected RBD data
-    //       let selectedRbd = null;
-
-    //       // Try to get from data.rbdData first
-    //       if (foundBlock.data?.rbdData) {
-    //         selectedRbd = foundBlock.data.rbdData;
-    //       }
-    //       // Try from subRbdData
-    //       else if (foundBlock.subRbdData) {
-    //         selectedRbd = foundBlock.subRbdData;
-    //       }
-    //       // Try from rbdData directly
-    //       else if (foundBlock.rbdData) {
-    //         selectedRbd = foundBlock.rbdData;
-    //       }
-
-    //       setRbdListModal({
-    //         open: true,
-    //         mode: "edit",
-    //         blockId: blockMenu.blockId,
-    //         nodeIndex: null,
-    //         selectedRbd: selectedRbd,
-    //       });
-    //     } else if (foundBlock.type === "K-out-of-N") {
-    //       setKOfNModal({
-    //         open: true,
-    //         mode: "edit",
-    //         blockId: blockMenu.blockId,
-    //         nodeIndex: null,
-    //         initialData: foundBlock.data || foundBlock,
-    //       });
-    //     } else {
-    //       const bmap = {
-    //         "K-out-of-N": "K_OUT_OF_N",
-    //         SubRBD: "SUBRBD",
-    //         "Parallel Section": "PARALLEL_SECTION",
-    //         "Parallel Branch": "PARALLEL_BRANCH",
-    //       };
-    //       setElementModal({
-    //         open: true,
-    //         mode: "edit",
-    //         blockId: blockMenu.blockId,
-    //         blockType: bmap[foundBlock.type] || "REGULAR",
-    //         nodeIndex: null,
-    //       });
-    //     }
-    //   } else if (action === "Delete...") {
-    //     handleDeleteBlock(blockMenu.blockId);
-    //   } else if (action === "Add K-out-of-N") {
-    //     setKOfNModal({
-    //       open: true,
-    //       mode: "add",
-    //       blockId: nextId,
-    //       nodeIndex: clickedNodeInfo.index,
-    //       initialData: {
-    //         k: 2,
-    //         n: 3,
-    //         lambda: 0.001,
-    //         mu: 1000,
-    //         formula: "standard",
-    //         name: "K-out-of-N Block",
-    //       },
-    //     });
-    //   } else if (action === "Add SubRBD") {
-    //     // Open RBD list modal
-    //     setRbdListModal({
-    //       open: true,
-    //       mode: "add",
-    //       blockId: nextId,
-    //       nodeIndex: clickedNodeInfo.index,
-    //       selectedRbd: null,
-    //     });
-    //   } else if (action === "Add Parallel Section") {
-    //     setPendingAction({
-    //       type: "parallel",
-    //       nodeIndex: clickedNodeInfo.index,
-    //     });
-    //     setShowParallelModal(true);
-    //   } else if (action.startsWith("Add ")) {
-    //     const amap = {
-    //       "Add K-out-of-N": "K_OUT_OF_N",
-    //       "Add SubRBD": "SUBRBD",
-    //       "Add Parallel Section": "PARALLEL_SECTION",
-    //       "Add Parallel Branch": "PARALLEL_BRANCH",
-    //     };
-    //     setElementModal({
-    //       open: true,
-    //       mode: "add",
-    //       blockId: nextId,
-    //       blockType: amap[action] || "REGULAR",
-    //       nodeIndex: clickedNodeInfo.index,
-    //     });
-    //   }
-
-    //   setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
-    // }
 
     if (action === "Edit...") {
       let foundBlock = null;
@@ -2815,12 +2187,18 @@ export default function RBDButton() {
 
         // Check nested parallel sections inside data
         if (container.data?.parallelSection) {
-          const found = findBlockRecursively(container.data.parallelSection, targetId);
+          const found = findBlockRecursively(
+            container.data.parallelSection,
+            targetId,
+          );
           if (found) return found;
         }
 
         // Check nested branches in data
-        if (container.data?.branches && Array.isArray(container.data.branches)) {
+        if (
+          container.data?.branches &&
+          Array.isArray(container.data.branches)
+        ) {
           for (const branch of container.data.branches) {
             const found = findBlockRecursively(branch, targetId);
             if (found) return found;
@@ -2886,8 +2264,7 @@ export default function RBDButton() {
             nodeIndex: null,
             selectedRbd: selectedRbd,
           });
-        }
-        else if (foundBlock.type === "K-out-of-N") {
+        } else if (foundBlock.type === "K-out-of-N") {
           setKOfNModal({
             open: true,
             mode: "edit",
@@ -2895,28 +2272,31 @@ export default function RBDButton() {
             nodeIndex: null,
             initialData: foundBlock.data || foundBlock,
           });
-        }
-        else if (foundBlock.type === "parallel-section" || foundBlock.type === "Parallel Section") {
+        } else if (
+          foundBlock.type === "parallel-section" ||
+          foundBlock.type === "Parallel Section"
+        ) {
           // Open parallel modal for editing
           setPendingAction({
             type: "edit",
             nodeIndex: null,
             blockData: foundBlock,
-            blockId: blockMenu.blockId
+            blockId: blockMenu.blockId,
           });
           setShowParallelModal(true);
-        }
-        else if (foundBlock.type === "parallel-branch" || foundBlock.type === "Parallel Branch") {
+        } else if (
+          foundBlock.type === "parallel-branch" ||
+          foundBlock.type === "Parallel Branch"
+        ) {
           // Open parallel modal for editing branch
           setPendingAction({
             type: "edit",
             nodeIndex: null,
             blockData: foundBlock,
-            blockId: blockMenu.blockId
+            blockId: blockMenu.blockId,
           });
           setShowParallelModal(true);
-        }
-        else {
+        } else {
           const bmap = {
             "K-out-of-N": "K_OUT_OF_N",
             SubRBD: "SUBRBD",
@@ -2969,251 +2349,239 @@ export default function RBDButton() {
   const [open, setOpen] = useState(false);
   const [selectedCase, setSelectedCase] = useState(null);
   return (
-    <div style={{ minHeight: "100vh", padding: "20px", overflowX: "auto" }}>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          width: "100%",
-          marginTop: "50px",
-        }}
-      >
-        <div className="card shadow d-flex flex-column justify-content-center align-items-center p-3">
+    <>
+      <div className="mt-5">
+        <div>
+          <b>RBD Title: </b>
+          {RBDTitle}
+          <br />
+          <b>Reliability: </b>
+          {totalReliability?.toFixed(10)}
+        </div>
 
-          <div>
-            <button
-              onClick={() => setShowSymbol(true)}
-              className="rbd-btn"
-            >
+        <div>
+          <b>Unavailability: </b>
+          {totalUnavailability?.toFixed(10)}
+        </div>
+      </div>
+      <div style={{ minHeight: "100vh", padding: "5%" }}>
+        {!showSymbol && (
+          <div className="text-center">
+            <button onClick={() => setShowSymbol(true)} className="rbd-btn">
               RBD
             </button>
           </div>
+        )}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "100%",
+            marginTop: "50px",
+          }}
+        >
+          <div></div>
 
-          {/* Bottom content */}
-          <div className="mt-1">
-            <div>
-              <b>Reliability: </b>{totalReliability?.toFixed(10)}
-            </div>
-
-            <div>
-              <b>Unavailability: </b>{totalUnavailability?.toFixed(10)}
-            </div>
-          </div>
-
-        </div>
-
-        {/* <button
-            onClick={() => setIsModalOpen(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px',
-                     backgroundColor: '#2b4f81', color: 'white', border: 'none',
-                     borderRadius: '4px', cursor: 'pointer', fontSize: 14 }}
-          >
-            <FiSettings size={18} /> RBD Configuration
-          </button> */}
-        {/* </div> */}
-        {/* <h1>Hello</h1>
-        <div style={{ height: '500px', width: '1000px' }}>
-          <ReactFlowD />
-        </div> */}
-
-        {showSymbol && (
-          <div style={{ width: "100%" }}>
-            <BiDirectionalSymbol
-              onNodeClick={handleNodeClick}
-              setTargetBranchId={setTargetBranchId}
-              onOpenMenu={openMenu}
-              setIdforApi={setIdforApi}
-              setParentItem={setParentItem}
-              blocks={blocks}
-              setParentItemId={setParentItemId}
-              onDeleteBlock={handleDeleteBlock}
-              onEditBlock={handleEditBlock}
-              selectedNode={selectedNode}
-            />
-
-            {blockMenu.open && (
-              <BlockContextMenu
-                x={blockMenu.x}
-                y={blockMenu.y}
+          {showSymbol && (
+            <div style={{ width: "100%" }}>
+              <BiDirectionalSymbol
+                onNodeClick={handleNodeClick}
+                setTargetBranchId={setTargetBranchId}
+                onOpenMenu={openMenu}
+                setIdforApi={setIdforApi}
+                setParentItem={setParentItem}
                 blocks={blocks}
-                parentItem={parentItem}
                 setParentItemId={setParentItemId}
-                setParallelFoundBlock={setParallelFoundBlock}
-                parallelFoundBlock={parallelFoundBlock}
-                onSelect={handleBlockMenuSelect}
-                onClose={() => {
-                  setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
-                  setParentItem(null);
-                }}
+                onDeleteBlock={handleDeleteBlock}
+                onEditBlock={handleEditBlock}
+                selectedNode={selectedNode}
               />
-            )}
-            {elementModal.open && (
-              <ElementParametersModal
-                key={elementModal.blockId}
-                isOpen={elementModal.open}
-                elementModal={elementModal}
-                targetId={targetId}
-                onClose={() => {
-                  setElementModal({
-                    open: false,
-                    mode: "add",
-                    blockId: null,
-                    blockType: "",
-                    nodeIndex: null,
-                  });
-                  setParentItem(null);
-                }}
-                setLoadChange={setLoadChange}
-                onSubmit={handleModalSubmit}
-                onOpenSwitchConfig={handleSwitchConfigOpen}
-                rbdId={rbdId}
-                projectId={id}
-                // currentBlock={
-                //   blocks.find((b) => b.id === elementModal.blockId)?.data
-                // }
-                parallelFoundBlock={parallelFoundBlock}
-                parentItemId={parentItemId}
-                currentBlock={blocks.find((b) => {
-                  // console.log("b.id:", b.id, "elementModal.blockId:", elementModal.blockId);
-                  return b.id === elementModal.blockId;
-                })}
-              />
-            )}
 
-            {/* RBD List Modal for SubRBD */}
-            {/* RBD List Modal for SubRBD */}
-            {rbdListModal.open && (
-              <SubRBDModal
-                show={rbdListModal.open}
-                targetId={targetId}
-                onHide={() => setRbdListModal({ ...rbdListModal, open: false })}
-                rbdData={rbdListModal.selectedRbd}
-                mode={rbdListModal.mode}
-                blockId={rbdListModal.blockId}
-                nodeIndex={rbdListModal.nodeIndex}
-                onConfirm={handleSubRBDConfirm}
-                rbdList={rbdList}
-                totalReliability={totalReliability} // ← ADD THIS
-                totalUnavailability={totalUnavailability} // ← ADD THIS
-              />
-            )}
+              {blockMenu.open && (
+                <BlockContextMenu
+                  x={blockMenu.x}
+                  y={blockMenu.y}
+                  blocks={blocks}
+                  parentItem={parentItem}
+                  setParentItemId={setParentItemId}
+                  setParallelFoundBlock={setParallelFoundBlock}
+                  parallelFoundBlock={parallelFoundBlock}
+                  onSelect={handleBlockMenuSelect}
+                  onClose={() => {
+                    setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+                    setParentItem(null);
+                  }}
+                />
+              )}
+              {elementModal.open && (
+                <ElementParametersModal
+                  key={elementModal.blockId}
+                  isOpen={elementModal.open}
+                  elementModal={elementModal}
+                  targetId={targetId}
+                  onClose={() => {
+                    setElementModal({
+                      open: false,
+                      mode: "add",
+                      blockId: null,
+                      blockType: "",
+                      nodeIndex: null,
+                    });
+                    setParentItem(null);
+                  }}
+                  setLoadChange={setLoadChange}
+                  onSubmit={handleModalSubmit}
+                  onOpenSwitchConfig={handleSwitchConfigOpen}
+                  rbdId={rbdId}
+                  projectId={id}
+                  // currentBlock={
+                  //   blocks.find((b) => b.id === elementModal.blockId)?.data
+                  // }
+                  parallelFoundBlock={parallelFoundBlock}
+                  parentItemId={parentItemId}
+                  currentBlock={blocks.find((b) => {
+                    // console.log("b.id:", b.id, "elementModal.blockId:", elementModal.blockId);
+                    return b.id === elementModal.blockId;
+                  })}
+                />
+              )}
 
-            {showParallelModal && (
-              <div
-                style={{
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: "rgba(0,0,0,0.5)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  zIndex: 2000,
-                }}
-              >
+              {/* RBD List Modal for SubRBD */}
+              {/* RBD List Modal for SubRBD */}
+              {rbdListModal.open && (
+                <SubRBDModal
+                  show={rbdListModal.open}
+                  targetId={targetId}
+                  onHide={() =>
+                    setRbdListModal({ ...rbdListModal, open: false })
+                  }
+                  rbdData={rbdListModal.selectedRbd}
+                  mode={rbdListModal.mode}
+                  blockId={rbdListModal.blockId}
+                  nodeIndex={rbdListModal.nodeIndex}
+                  onConfirm={handleSubRBDConfirm}
+                  rbdList={rbdList}
+                  totalReliability={totalReliability} // ← ADD THIS
+                  totalUnavailability={totalUnavailability} // ← ADD THIS
+                />
+              )}
+
+              {showParallelModal && (
                 <div
                   style={{
-                    backgroundColor: "#f0f0f0",
-                    padding: "20px",
-                    borderRadius: "8px",
-                    minWidth: "350px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                    border: "1px solid #999",
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: "rgba(0,0,0,0.5)",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    zIndex: 2000,
                   }}
                 >
-                  <h3
+                  <div
                     style={{
-                      marginTop: 0,
-                      marginBottom: "20px",
-                      fontSize: "14px",
-                      fontWeight: "normal",
-                      color: "#333",
+                      backgroundColor: "#f0f0f0",
+                      padding: "20px",
+                      borderRadius: "8px",
+                      minWidth: "350px",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      border: "1px solid #999",
                     }}
                   >
-                    Add Parallel Section
-                  </h3>
-
-                  <div style={{ marginBottom: "20px" }}>
-                    <label
+                    <h3
                       style={{
-                        display: "block",
-                        marginBottom: "5px",
-                        fontSize: "13px",
+                        marginTop: 0,
+                        marginBottom: "20px",
+                        fontSize: "14px",
+                        fontWeight: "normal",
                         color: "#333",
                       }}
                     >
-                      Number of branches :
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={branchCount}
-                      onChange={(e) =>
-                        setBranchCount(parseInt(e.target.value) || 1)
-                      }
+                      Add Parallel Section
+                    </h3>
+
+                    <div style={{ marginBottom: "20px" }}>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "5px",
+                          fontSize: "13px",
+                          color: "#333",
+                        }}
+                      >
+                        Number of branches :
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={branchCount}
+                        onChange={(e) =>
+                          setBranchCount(parseInt(e.target.value) || 1)
+                        }
+                        style={{
+                          width: "100%",
+                          padding: "6px",
+                          border: "1px solid #7f9db9",
+                          borderRadius: "3px",
+                          fontSize: "13px",
+                          backgroundColor: "white",
+                        }}
+                        autoFocus
+                      />
+                    </div>
+
+                    <div
                       style={{
-                        width: "100%",
-                        padding: "6px",
-                        border: "1px solid #7f9db9",
-                        borderRadius: "3px",
-                        fontSize: "13px",
                         backgroundColor: "white",
-                      }}
-                      autoFocus
-                    />
-                  </div>
-
-                  <div
-                    style={{
-                      backgroundColor: "white",
-                      padding: "10px",
-                      marginBottom: "20px",
-                      fontSize: "12px",
-                      color: "#333",
-                      border: "1px solid #ccc",
-                      fontFamily: "monospace",
-                      lineHeight: "1.5",
-                    }}
-                  >
-                    <div>Communication Unit</div>
-                    <div>19949.1</div>
-                    <div>#10</div>
-                    <div>#11</div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "8px",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <button
-                      onClick={handleParallelModalSubmit}
-                      style={{
-                        padding: "4px 20px",
-                        backgroundColor: "#e1e1e1",
+                        padding: "10px",
+                        marginBottom: "20px",
+                        fontSize: "12px",
                         color: "#333",
-                        border: "1px solid #999",
-                        borderRadius: "3px",
-                        cursor: "pointer",
-                        fontSize: "13px",
-                        minWidth: "70px",
+                        border: "1px solid #ccc",
+                        fontFamily: "monospace",
+                        lineHeight: "1.5",
                       }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.backgroundColor = "#d1d1d1")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.backgroundColor = "#e1e1e1")
-                      }
                     >
-                      OK
-                    </button>
-                    {/* <button
+                      <div>Communication Unit</div>
+                      <div>19949.1</div>
+                      <div>#10</div>
+                      <div>#11</div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "8px",
+                        justifyContent: "flex-end",
+                      }}
+                    >
+                      <button
+                        onClick={handleParallelModalSubmit}
+                        style={{
+                          padding: "4px 20px",
+                          backgroundColor: "#e1e1e1",
+                          color: "#333",
+                          border: "1px solid #999",
+                          borderRadius: "3px",
+                          cursor: "pointer",
+                          fontSize: "13px",
+                          minWidth: "70px",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#d1d1d1")
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#e1e1e1")
+                        }
+                      >
+                        OK
+                      </button>
+                      {/* <button
                   onClick={handleParallelModalCancel}
                   style={{
                     padding: "4px 20px",
@@ -3230,35 +2598,161 @@ export default function RBDButton() {
                 >
                   Cancel
                 </button> */}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            <SwitchConfigurationModal
-              isOpen={switchModal.open}
-              onClose={() => {
-                setSwitchModal({
-                  open: false,
-                  blockId: null,
-                  initialData: null,
-                });
-              }}
-              onSubmit={handleSwitchSubmit}
-              currentSwitchData={switchModal.initialData}
-            />
+              <SwitchConfigurationModal
+                isOpen={switchModal.open}
+                onClose={() => {
+                  setSwitchModal({
+                    open: false,
+                    blockId: null,
+                    initialData: null,
+                  });
+                }}
+                onSubmit={handleSwitchSubmit}
+                currentSwitchData={switchModal.initialData}
+              />
 
-            <EditRBDConfigurationModal
-              isOpen={isModalOpen}
+              <EditRBDConfigurationModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                  setIsModalOpen(false);
+                  setParentItem(null);
+                }}
+                onSave={handleSaveConfig}
+                initialConfig={rbdConfig}
+              />
+            </div>
+          )}
+          {menu && (
+            <RBDContextMenu
+              x={menu.x}
+              y={menu.y}
+              onSelect={handleSelect}
               onClose={() => {
-                setIsModalOpen(false);
+                setMenu(null);
                 setParentItem(null);
               }}
-              onSave={handleSaveConfig}
-              initialConfig={rbdConfig}
             />
+          )}
+
+          {blockMenu.open && (
+            <BlockContextMenu
+              x={blockMenu.x}
+              y={blockMenu.y}
+              setParallelFoundBlock={setParallelFoundBlock}
+              onSelect={handleBlockMenuSelect}
+              onClose={() => {
+                setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
+                setParentItem(null);
+              }}
+            />
+          )}
+
+          {elementModal.open && (
+            <ElementParametersModal
+              key={elementModal.blockId}
+              isOpen
+              elementModal={elementModal}
+              onClose={() => {
+                setElementModal({
+                  open: false,
+                  mode: "add",
+                  blockId: null,
+                  blockType: "",
+                  nodeIndex: null,
+                  idforApi: null,
+                });
+                setParentItem(null);
+              }}
+              setLoadChange={setLoadChange}
+              onSubmit={handleModalSubmit}
+              onOpenSwitchConfig={(data) =>
+                setSwitchModal({
+                  open: true,
+                  blockId: elementModal.blockId,
+                  initialData: data,
+                })
+              }
+              rbdId={rbdId}
+              projectId={id}
+              parallelFoundBlock={parallelFoundBlock}
+              parentItemId={parentItemId}
+              getBlock={getBlock}
+              currentBlock={blocks.find((b) => b.id === elementModal.blockId)}
+            />
+          )}
+
+          {/* {showParallelModal && (
+          <div style={{
+            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000
+          }}>
+            <div style={{
+              backgroundColor: '#f0f0f0', padding: 20, borderRadius: 8,
+              minWidth: 350, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #999'
+            }}>
+              <h3 style={{ marginTop: 0, marginBottom: 20, fontSize: 14, fontWeight: 'normal', color: '#333' }}>
+                Add Parallel Section
+              </h3>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', marginBottom: 5, fontSize: 13, color: '#333' }}>Number of branches:</label>
+                <input type="number" min="2" max="20" value={branchCount}
+                  onChange={(e) => setBranchCount(parseInt(e.target.value) || 2)}
+                  style={{ width: '100%', padding: 6, border: '1px solid #7f9db9', borderRadius: 3, fontSize: 13, backgroundColor: 'white' }}
+                  autoFocus
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                {[['OK', handleParallelModalSubmit],
+                ['Cancel', () => { setShowParallelModal(false); setBranchCount(3); setPendingAction(null); }]
+                ].map(([label, fn]) => (
+                  <button key={label} onClick={fn}
+                    style={{
+                      padding: '4px 20px', backgroundColor: '#e1e1e1', color: '#333',
+                      border: '1px solid #999', borderRadius: 3, cursor: 'pointer', fontSize: 13, minWidth: 70
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#d1d1d1')}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#e1e1e1')}
+                  >{label}</button>
+                ))}
+              </div>
+            </div>
           </div>
-        )}
+        )} */}
+
+          <SwitchConfigurationModal
+            isOpen={switchModal.open}
+            onClose={() =>
+              setSwitchModal({ open: false, blockId: null, initialData: null })
+            }
+            onSubmit={(data) => {
+              setBlocks((prev) =>
+                prev.map((b) =>
+                  b.id === elementModal.blockId
+                    ? { ...b, data: { ...b.data, switchData: data } }
+                    : b,
+                ),
+              );
+              setSwitchModal({ open: false, blockId: null, initialData: null });
+            }}
+            currentSwitchData={switchModal.initialData}
+          />
+
+          <EditRBDConfigurationModal
+            isOpen={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setParentItem(null);
+            }}
+            onSave={setRbdConfig}
+            initialConfig={rbdConfig}
+          />
+        </div>
+
         {menu && (
           <RBDContextMenu
             x={menu.x}
@@ -3317,44 +2811,132 @@ export default function RBDButton() {
             currentBlock={blocks.find((b) => b.id === elementModal.blockId)}
           />
         )}
-
-        {/* {showParallelModal && (
-          <div style={{
-            position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000
-          }}>
-            <div style={{
-              backgroundColor: '#f0f0f0', padding: 20, borderRadius: 8,
-              minWidth: 350, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: '1px solid #999'
-            }}>
-              <h3 style={{ marginTop: 0, marginBottom: 20, fontSize: 14, fontWeight: 'normal', color: '#333' }}>
+        {/* CaseSelectionModal for K-out-of-N */}
+        {kOfNModal.open && (
+          <CaseSelectionModal
+            isOpen={kOfNModal.open}
+            targetId={targetId}
+            handleClose={() => {
+              setKOfNModal({
+                open: false,
+                blockId: null,
+                initialData: null,
+                mode: "add",
+                nodeIndex: null,
+                selectedCase: null,
+                selectedLabel: null,
+              });
+            }}
+            onSelect={handleKOfNSelect}
+            mode={kOfNModal.mode}
+            parentItemId={parentItemId}
+            existingData={kOfNModal.initialData}
+          />
+        )}
+        {showParallelModal && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 2000,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "#f0f0f0",
+                padding: 20,
+                borderRadius: 8,
+                minWidth: 350,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                border: "1px solid #999",
+              }}
+            >
+              <h3
+                style={{
+                  marginTop: 0,
+                  marginBottom: 20,
+                  fontSize: 14,
+                  fontWeight: "normal",
+                  color: "#333",
+                }}
+              >
                 Add Parallel Section
               </h3>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', marginBottom: 5, fontSize: 13, color: '#333' }}>Number of branches:</label>
-                <input type="number" min="2" max="20" value={branchCount}
-                  onChange={(e) => setBranchCount(parseInt(e.target.value) || 2)}
-                  style={{ width: '100%', padding: 6, border: '1px solid #7f9db9', borderRadius: 3, fontSize: 13, backgroundColor: 'white' }}
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: 5,
+                    fontSize: 13,
+                    color: "#333",
+                  }}
+                >
+                  Number of branches:
+                </label>
+                <input
+                  type="number"
+                  min="2"
+                  max="20"
+                  value={branchCount}
+                  onChange={(e) =>
+                    setBranchCount(parseInt(e.target.value) || 2)
+                  }
+                  style={{
+                    width: "100%",
+                    padding: 6,
+                    border: "1px solid #7f9db9",
+                    borderRadius: 3,
+                    fontSize: 13,
+                    backgroundColor: "white",
+                  }}
                   autoFocus
                 />
               </div>
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                {[['OK', handleParallelModalSubmit],
-                ['Cancel', () => { setShowParallelModal(false); setBranchCount(3); setPendingAction(null); }]
+              <div
+                style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}
+              >
+                {[
+                  ["OK", handleParallelModalSubmit],
+                  [
+                    "Cancel",
+                    () => {
+                      setShowParallelModal(false);
+                      setBranchCount(3);
+                      setPendingAction(null);
+                    },
+                  ],
                 ].map(([label, fn]) => (
-                  <button key={label} onClick={fn}
+                  <button
+                    key={label}
+                    onClick={fn}
                     style={{
-                      padding: '4px 20px', backgroundColor: '#e1e1e1', color: '#333',
-                      border: '1px solid #999', borderRadius: 3, cursor: 'pointer', fontSize: 13, minWidth: 70
+                      padding: "4px 20px",
+                      backgroundColor: "#e1e1e1",
+                      color: "#333",
+                      border: "1px solid #999",
+                      borderRadius: 3,
+                      cursor: "pointer",
+                      fontSize: 13,
+                      minWidth: 70,
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#d1d1d1')}
-                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#e1e1e1')}
-                  >{label}</button>
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#d1d1d1")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#e1e1e1")
+                    }
+                  >
+                    {label}
+                  </button>
                 ))}
               </div>
             </div>
           </div>
-        )} */}
+        )}
 
         <SwitchConfigurationModal
           isOpen={switchModal.open}
@@ -3384,217 +2966,6 @@ export default function RBDButton() {
           initialConfig={rbdConfig}
         />
       </div>
-
-      {menu && (
-        <RBDContextMenu
-          x={menu.x}
-          y={menu.y}
-          onSelect={handleSelect}
-          onClose={() => {
-            setMenu(null);
-            setParentItem(null);
-          }}
-        />
-      )}
-
-      {blockMenu.open && (
-        <BlockContextMenu
-          x={blockMenu.x}
-          y={blockMenu.y}
-          setParallelFoundBlock={setParallelFoundBlock}
-          onSelect={handleBlockMenuSelect}
-          onClose={() => {
-            setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
-            setParentItem(null);
-          }}
-        />
-      )}
-
-      {elementModal.open && (
-        <ElementParametersModal
-          key={elementModal.blockId}
-          isOpen
-          elementModal={elementModal}
-          onClose={() => {
-            setElementModal({
-              open: false,
-              mode: "add",
-              blockId: null,
-              blockType: "",
-              nodeIndex: null,
-              idforApi: null,
-            });
-            setParentItem(null);
-          }}
-          setLoadChange={setLoadChange}
-          onSubmit={handleModalSubmit}
-          onOpenSwitchConfig={(data) =>
-            setSwitchModal({
-              open: true,
-              blockId: elementModal.blockId,
-              initialData: data,
-            })
-          }
-          rbdId={rbdId}
-          projectId={id}
-          parallelFoundBlock={parallelFoundBlock}
-          parentItemId={parentItemId}
-          getBlock={getBlock}
-          currentBlock={blocks.find((b) => b.id === elementModal.blockId)}
-        />
-      )}
-      {/* CaseSelectionModal for K-out-of-N */}
-      {kOfNModal.open && (
-        <CaseSelectionModal
-          isOpen={kOfNModal.open}
-          targetId={targetId}
-          handleClose={() => {
-            setKOfNModal({
-              open: false,
-              blockId: null,
-              initialData: null,
-              mode: "add",
-              nodeIndex: null,
-              selectedCase: null,
-              selectedLabel: null,
-            });
-          }}
-          onSelect={handleKOfNSelect}
-          mode={kOfNModal.mode}
-          parentItemId={parentItemId}
-          existingData={kOfNModal.initialData}
-        />
-      )}
-      {showParallelModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 2000,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "#f0f0f0",
-              padding: 20,
-              borderRadius: 8,
-              minWidth: 350,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              border: "1px solid #999",
-            }}
-          >
-            <h3
-              style={{
-                marginTop: 0,
-                marginBottom: 20,
-                fontSize: 14,
-                fontWeight: "normal",
-                color: "#333",
-              }}
-            >
-              Add Parallel Section
-            </h3>
-            <div style={{ marginBottom: 20 }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: 5,
-                  fontSize: 13,
-                  color: "#333",
-                }}
-              >
-                Number of branches:
-              </label>
-              <input
-                type="number"
-                min="2"
-                max="20"
-                value={branchCount}
-                onChange={(e) => setBranchCount(parseInt(e.target.value) || 2)}
-                style={{
-                  width: "100%",
-                  padding: 6,
-                  border: "1px solid #7f9db9",
-                  borderRadius: 3,
-                  fontSize: 13,
-                  backgroundColor: "white",
-                }}
-                autoFocus
-              />
-            </div>
-            <div
-              style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}
-            >
-              {[
-                ["OK", handleParallelModalSubmit],
-                [
-                  "Cancel",
-                  () => {
-                    setShowParallelModal(false);
-                    setBranchCount(3);
-                    setPendingAction(null);
-                  },
-                ],
-              ].map(([label, fn]) => (
-                <button
-                  key={label}
-                  onClick={fn}
-                  style={{
-                    padding: "4px 20px",
-                    backgroundColor: "#e1e1e1",
-                    color: "#333",
-                    border: "1px solid #999",
-                    borderRadius: 3,
-                    cursor: "pointer",
-                    fontSize: 13,
-                    minWidth: 70,
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor = "#d1d1d1")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = "#e1e1e1")
-                  }
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <SwitchConfigurationModal
-        isOpen={switchModal.open}
-        onClose={() =>
-          setSwitchModal({ open: false, blockId: null, initialData: null })
-        }
-        onSubmit={(data) => {
-          setBlocks((prev) =>
-            prev.map((b) =>
-              b.id === elementModal.blockId
-                ? { ...b, data: { ...b.data, switchData: data } }
-                : b,
-            ),
-          );
-          setSwitchModal({ open: false, blockId: null, initialData: null });
-        }}
-        currentSwitchData={switchModal.initialData}
-      />
-
-      <EditRBDConfigurationModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setParentItem(null);
-        }}
-        onSave={setRbdConfig}
-        initialConfig={rbdConfig}
-      />
-    </div>
+    </>
   );
 }
