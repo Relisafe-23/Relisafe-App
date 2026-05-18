@@ -20,23 +20,23 @@ import "../../css/RBD.scss";
 // import ReactFlowD from './ReactFlow/ReactFlowD.jsx';
 
 const C = {
-  TERMINAL_W: 60,
+  TERMINAL_W: 70,
   TERMINAL_H: 40,
   TERMINAL_LEFT_X: 50,
-  ARROW_W: 12,
-  ARROW_H: 16,
+  ARROW_W: 15,
+  ARROW_H: 15,
   BLOCK_W: 60,
   BLOCK_H: 40,
-  BLOCK_SPACING: 20,
+  BLOCK_SPACING: 40,
   NODE_R: 5,
-  NODE_SPACING: 20,
-  BRANCH_MIN_H: 40,
-  BRANCH_SPACING: 20,
+  NODE_SPACING: 25,
+  BRANCH_MIN_H: 25,
+  BRANCH_SPACING: 25,
   RAIL_PAD_X: 20,
-  INNER_PAD_X: 14,
-  BLOCK_GAP: 67,
-  CENTER_Y: 200,
-  MIN_OUTPUT_GAP: 40,
+  INNER_PAD_X: 25,
+  BLOCK_GAP: 15,
+  CENTER_Y: 350,
+  MIN_OUTPUT_GAP: 35,
   BASE_RIGHT_X: 200,
   MIN_CANVAS_W: 800,
   MIN_CANVAS_H: 420,
@@ -44,13 +44,13 @@ const C = {
 
 // ── Shared layout constants (must match RBDBlock exactly) ──────────────────
 const NESTED = {
-  BW: 60,
-  BH: 40,
-  GAP: 12,
+  BW: 30,
+  BH: 20,
+  GAP: 30,
   RAIL_PAD: 20,
-  INNER_PAD: 14,
-  CONTAINER_PADDING: 20,
-  BRANCH_SPACING: 20,
+  INNER_PAD: 20,
+  CONTAINER_PADDING: 10,
+  BRANCH_SPACING: 10,
 };
 
 // Recursive: actual height of a single branch (accounts for nested parallel sections)
@@ -261,7 +261,12 @@ const InsertNode = ({
   const isSel = selectedNode === nodeId;
 
   return (
-    <g>
+    <g
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpenMenu(e.clientX, e.clientY, id);
+      }}
+      style={{ cursor: "pointer" }}>
       {isSel && (
         <circle
           cx={cx}
@@ -278,11 +283,8 @@ const InsertNode = ({
         cy={cy}
         r={r}
         fill={isSel ? "#0078d4" : "black"}
-        style={{ cursor: "pointer" }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpenMenu(e.clientX, e.clientY, id);
-        }}
+
+
       />
       <line
         x1={cx - 3}
@@ -666,9 +668,28 @@ export const BiDirectionalSymbol = ({
                     strokeDasharray={dash}
                   />
 
-                  {branchBlocks.map((block, bIdx) => {
+                  {/* {branchBlocks.map((block, bIdx) => {
                     const bx = blockRowLeftX + bIdx * (C.BLOCK_W + C.BLOCK_GAP);
+                    const isLast = bIdx === branchBlocks.length - 1; */}
+
+                  {branchBlocks.map((block, bIdx) => {
+                    // Compute cumulative x by summing actual widths of all preceding blocks
+                    let bx = blockRowLeftX;
+                    for (let i = 0; i < bIdx; i++) {
+                      const prevBlock = branchBlocks[i];
+                      const isNestedPS =
+                        (prevBlock.type === "Parallel Section" ||
+                          prevBlock.elementType === "Parallel Section") &&
+                        prevBlock.branches?.length > 0;
+                      bx += (isNestedPS ? getNestedParallelSectionWidth(prevBlock) : C.BLOCK_W) + C.BLOCK_GAP;
+                    }
                     const isLast = bIdx === branchBlocks.length - 1;
+                    const isNestedPS =
+                      (block.type === "Parallel Section" ||
+                        block.elementType === "Parallel Section") &&
+                      block.branches?.length > 0;
+                    const blockW = isNestedPS ? getNestedParallelSectionWidth(block) : C.BLOCK_W;
+                    const blockH = isNestedPS ? getNestedParallelSectionHeight(block) : C.BLOCK_H;
 
                     return (
                       <g
@@ -717,13 +738,18 @@ export const BiDirectionalSymbol = ({
                           leftNodeId={leftNodeId}
                           rightNodeId={rightNodeId}
                           x={bx}
-                          y={wireY - C.BLOCK_H / 2} // ← ENSURE this is wireY - half, not just wireY
-                          onEdit={onEditBlock}
+                          // y={wireY - C.BLOCK_H / 2}  // ← ENSURE this is wireY - half, not just wireY
+                          y={wireY - blockH / 2}
+
+                          // onEdit={onEditBlock}
+                          onEdit={(e, id, blockData) => onEditBlock(e, id, blockData, item)}
                           onDelete={onDeleteBlock}
                           setIdforApi={setIdforApi}
                           blockData={block}
-                          width={C.BLOCK_W}
-                          height={C.BLOCK_H}
+                          // width={C.BLOCK_W}
+                          // height={C.BLOCK_H}
+                          width={blockW}
+                          height={blockH}
                           onOpenMenu={onOpenMenu}
                         />
 
@@ -756,9 +782,13 @@ export const BiDirectionalSymbol = ({
                         {/* {!isLast && ( */}
                         <>
                           <line
-                            x1={bx + C.BLOCK_W}
+                            // x1={bx + C.BLOCK_W}
+                            // y1={wireY}
+                            // x2={bx + C.BLOCK_W + C.BLOCK_GAP}
+                            // y2={wireY}
+                            x1={bx + blockW}
                             y1={wireY}
-                            x2={bx + C.BLOCK_W + C.BLOCK_GAP}
+                            x2={bx + blockW + C.BLOCK_GAP}
                             y2={wireY}
                             stroke="black"
                             strokeWidth="2"
@@ -767,7 +797,8 @@ export const BiDirectionalSymbol = ({
 
                           {/* MID NODE */}
                           <circle
-                            cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+                            // cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+                            cx={bx + blockW + C.BLOCK_GAP / 2}
                             cy={wireY}
                             r={4}
                             fill={
@@ -810,7 +841,11 @@ export const BiDirectionalSymbol = ({
                         {/* LAST BLOCK → RIGHT */}
                         {isLast && (
                           <line
-                            x1={bx + C.BLOCK_W}
+                            // x1={bx + C.BLOCK_W}
+                            // y1={wireY}
+                            // x2={rightRailX}
+                            // y2={wireY}
+                            x1={bx + blockW}
                             y1={wireY}
                             x2={rightRailX}
                             y2={wireY}
@@ -1092,6 +1127,7 @@ export default function RBDButton() {
   const [blockMenu, setBlockMenu] = useState({
     open: false,
     parentId: null,
+    parentItemData: null,
     blockId: null,
     x: 0,
     y: 0,
@@ -1207,7 +1243,7 @@ export default function RBDButton() {
       .then((res) => {
         const data = res.data.data;
 
-        // console.log("API Response:", data);
+        console.log("RBD Block Data .......... :", res.data.data);
 
         setShowSymbol(data.length > 0);
         setBlocks(data);
@@ -1934,8 +1970,8 @@ export default function RBDButton() {
 
         let endpoint;
 
-        console.log(parentItemId,'parentItemId')
-        console.log(blockId,'blockId')
+        console.log(parentItemId, 'parentItemId')
+        console.log(blockId, 'blockId')
 
 
         if (parentItemId) {
@@ -2583,12 +2619,13 @@ export default function RBDButton() {
   };
 
   // ── edit block ─────────────────────────────────────────────────────────────
-  const handleEditBlock = (e, id, blockData) => {
+  const handleEditBlock = (e, id, blockData, currentParentItem) => {
     if (e) {
       const rect = e.target.getBoundingClientRect();
       setBlockMenu({
         open: true,
-        parentId: parentItem?.id ?? null,
+        parentId: currentParentItem?.id ?? parentItem?.id ?? null,
+        parentItemData: currentParentItem ?? parentItem ?? null,
         blockId: blockData?.id || blockData?._id,
         x: rect.right,
         y: rect.top,
@@ -2794,11 +2831,12 @@ export default function RBDButton() {
       };
 
       // Check if we're in a parallel-section context
-      if (parentItem?.type === "parallel-section") {
-        setParentItemId(parentItem?.id);
+      const activeParent = blockMenu.parentItemData ?? parentItem ?? null;
+      if (activeParent?.type === "parallel-section") {
+        setParentItemId(activeParent?.id);
 
         // Use recursive search instead of just one level
-        foundBlock = findBlockRecursively(parentItem, blockMenu.blockId);
+        foundBlock = findBlockRecursively(activeParent, blockMenu.blockId);
         setParallelFoundBlock(foundBlock);
       } else {
         // Search in main blocks array (also recursive if blocks contain nested structures)

@@ -45,7 +45,7 @@ export const RBDBlock = ({
   isNested = false,
 
   // Props for branch nodes
-    selectedLabel,
+  selectedLabel,
   branch,
   item,
   branchBlocks,
@@ -444,7 +444,11 @@ export const RBDBlock = ({
         let reliability = 0;
         let unavailability = 0;
 
-        if (MTBF > 0 && t >= 0) {
+        if (MTBF == 1000 && t >= 0) {
+          reliability = 0;
+          unavailability = 0;
+        }
+        else {
           const r = Math.exp(-t / MTBF);
           const u = 1 - r;
 
@@ -466,12 +470,19 @@ export const RBDBlock = ({
           // console.log("reliability1234555",reliability)
           return (
             <>
-              <tspan x={x + BLOCK_W / 2} dy="-4">
-                R: {reliability}
-              </tspan>
-              <tspan x={x + BLOCK_W / 2} dy="10">
-                U: {unavailability}
-              </tspan>
+              {reliability === 0 || unavailability === 0 ?
+                (<tspan>
+                  Block
+                </tspan>) : (
+                  <>
+                    <tspan x={x + BLOCK_W / 2} dy="-4">
+                      R: {reliability}
+                    </tspan>
+                    <tspan x={x + BLOCK_W / 2} dy="10">
+                      U: {unavailability}
+                    </tspan>
+                  </>
+                )}
             </>
           );
         }
@@ -528,18 +539,18 @@ export const RBDBlock = ({
       //   }}
       // >
 
-        <g
-          onContextMenu={handleContextMenu}
-          style={{ cursor: 'context-menu' }}
-          onClick={() => {
-            if (setParentItemId) setParentItemId(null);
-            handleSelect(id);
+      <g
+        onContextMenu={handleContextMenu}
+        style={{ cursor: 'context-menu' }}
+        onClick={() => {
+          if (setParentItemId) setParentItemId(null);
+          handleSelect(id);
 
-          }}
+        }}
 
-        >
-          {/* name label above block */}
-          {/* {getBlockName() && (
+      >
+        {/* name label above block */}
+        {/* {getBlockName() && (
           <text
             x={x + BLOCK_W / 2}
             y={y - 4}
@@ -552,34 +563,34 @@ export const RBDBlock = ({
           </text>
         )} */}
 
-          <circle cx={x} cy={y}
-            fill="none" stroke="#0078d4" strokeWidth="2" strokeDasharray="4 2" />
+        <circle cx={x} cy={y}
+          fill="none" stroke="#0078d4" strokeWidth="2" strokeDasharray="4 2" />
 
 
-          <rect
-            x={x}
-            y={y}
-            width={BLOCK_W}
-            height={BLOCK_H}
-            fill={getBlockColor()}
-            stroke="#2a7a2a"
-            strokeWidth="1"
-            rx="2"
-          />
+        <rect
+          x={x}
+          y={y}
+          width={BLOCK_W}
+          height={BLOCK_H}
+          fill={getBlockColor()}
+          stroke="#2a7a2a"
+          strokeWidth="1"
+          rx="2"
+        />
 
-          {/* main value line */}
-          <text
-            x={x + BLOCK_W / 2}
-            y={y + BLOCK_H / 2}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="white"
-            fontSize="8"
-            fontWeight="bold"
-          >
-            {getBlockContent()}
-          </text>
-        </g>
+        {/* main value line */}
+        <text
+          x={x + BLOCK_W / 2}
+          y={y + BLOCK_H / 2}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="white"
+          fontSize="8"
+          fontWeight="bold"
+        >
+          {getBlockContent()}
+        </text>
+      </g>
       // </svg>
     );
   }
