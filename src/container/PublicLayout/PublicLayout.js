@@ -2,7 +2,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { Switch, Route, Redirect, useHistory } from "react-router-dom";
 import SideBar from "../../components/SideBar";
 import HeaderNavBar from "../../components/HeaderNavBar";
-import RbdIndex from "../../components/HeaderNavBar/RbdIndex";
+import RbdIndex from "../../components/RBDnavbar/RbdIndex";
 import routes from "../../routes";
 import "../../css/SideBar.scss";
 

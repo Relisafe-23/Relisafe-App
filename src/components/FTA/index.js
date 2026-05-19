@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { removeChartDataHelper } from "../../utils";
 import RenderTree from "../../components/FTA/RenderTree";
 import "../../App.css";
+import { FaEdit, FaTrash, FaEye, FaFileAlt, FaArrowLeft } from "react-icons/fa";
 import Api from "../../Api";
 import { Button, Form } from "react-bootstrap";
 import { Modal } from "antd";
@@ -15,8 +16,14 @@ import { customStyles } from "../../components/core/select";
 import { toast } from "react-toastify";
 import { useModal } from "../ModalContext";
 import { useHistory } from "react-router-dom";
-import HeaderNavBar from "../HeaderNavBar";
 import EventsReportModal from "./EventsReportModal";
+import FTAtable from "./FTAtable";
+import UnavailabilityReportModal from "./UnavailablityReportModal";
+import SteadyStateReportModal from "./SteadyStateReportModal";
+import HeaderNavBar from "../HeaderNavBar";
+import RenderNode from "./RenderNode";
+// Remove ProbabilityContext import
+
 const initialData = {
   id: 1,
   code: "jack_hill",
@@ -62,8 +69,14 @@ const initialData = {
 
 export default function FTA(props) {
   const [showGrid, setShowGrid] = useState(false);
-
- const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
+  const [currentCalculationMode, setCurrentCalculationMode] = useState("");
+  const [calculationMode, setCalculationMode] = useState(null);
+  const [treeRenderCalculationMode, setTreeRenderCalculationMode] = useState(null);
+  const [viewMode, setViewMode] = useState("table");
+  const [trees, setTrees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedTreeId, setSelectedTreeId] = useState(null);
+  const [projectId, setProjectId] = useState(props?.location?.state?.projectId);
   const [chartData, setChartData] = useState([]);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panning, setPanning] = useState(false);
@@ -73,15 +86,28 @@ export default function FTA(props) {
   const [nodeLength, setNodeLength] = useState([]);
   const [calcTypes, setCalcTypes] = useState();
   const [productData, setProductData] = useState([]);
-  const [currentReportType, setCurrentReportType] = useState('all');
- 
+  const [currentReportType, setCurrentReportType] = useState("all");
+
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [eventsData, setEventsData] = useState([]);
   const [gatesData, setGatesData] = useState([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // LOCAL STATE for probability modal - NO CONTEXT NEEDED
+  const [isProbabilityModalOpen, setIsProbabilityModalOpen] = useState(false);
+  const [probabilityParams, setProbabilityParams] = useState(null);
 
+  const [isUnavailabilityReportOpen, setIsUnavailabilityReportOpen] =
+    useState(false);
+  const [isSteadyStateReportOpen, setIsSteadyStateReportOpen] = useState(false);
+  const [probabilityCalcData, setProbabilityCalcData] = useState([]);
+  const [currentMissionTime, setCurrentMissionTime] = useState("");
+  const [isCutSetReportOpen, setIsCutSetReportOpen] = useState(false);
+  // ... other useState declarations
+
+  const [repeatedEvents, setRepeatedEvents] = useState([]);
+  const [showRepeatedEvents, setShowRepeatedEvents] = useState(false);
   const history = useHistory();
-
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const formikRef = useRef(null);
 
@@ -93,102 +119,603 @@ export default function FTA(props) {
     isDeleteSucess,
     saveFromFile,
     reloadData,
+    openDeleteNode,
     stopTriggerReload,
+    onBack, // Add this prop
+    showBackButton = false,
+    child, // Add this prop
+    handleAdd, // Add this prop
   } = useModal();
 
-  const handleZoomToFit = () => {
-
-  setPanOffset({ x: 0, y: 0 }); 
-  toast.success("Zoomed to fit screen");
-};
-
-const handleZoomOriginal = () => {
-  setZoomLevel(1); 
-  setPanOffset({ x: 0, y: 0 }); 
-  toast.success("Reset to original size");
-};
-
-const handleToggleGrid = () => {
-  const newShowGrid = !showGrid;
-  setShowGrid(newShowGrid);
-  toast.success(newShowGrid ? "Grid shown" : "Grid hidden");
-};
-
-const handleOriginalLayout = () => {
-  setZoomLevel(1);
-  setPanOffset({ x: 0, y: 0 });
-  setPanning(false);
-  setPanStart({ x: 0, y: 0 });
-  toast.success("Original layout restored");
-};
-
-const generateReport = (type = 'all') => {
-  if (!chartData) {
-    toast.warning('No fault tree data available');
-    return;
-  }
-
-  const extractAllNodes = (node) => {
-    const nodes = [];
-    
-    if (node) {
-      const hasFailureRate = node.fr || node.failureRate || node.frValue || node.failureRateValue;
-      const isEvent = hasFailureRate || node.calcTypes || node.isEvent === true;
-      const isGate = node.gateType || (node.children && node.children.length > 0);
-      
-      const failureRate = node.fr || node.failureRate || node.frValue || node.failureRateValue || 'N/A';
-      
-      const nodeData = {
-        id: node.id,
-        code: node.code || node.name || `Gate ${node.gateId}`,
-        description: node.description || 'No description',
-        type: isEvent ? 'Event' : (isGate ? 'Gate' : 'Unknown'),
-        failureRate: isEvent ? failureRate : 'N/A',
-        calcType: node.calcTypes || 'N/A',
-        gateType: node.gateType || 'N/A',
-        gateId: node.gateId || 'N/A',
-        children: node.children || [],
-        product: node.product || 'N/A',
-        childCount: node.children ? node.children.length : 0,
-      };
-      
-      console.log("Node Data:", nodeData);
-      nodes.push(nodeData);
-      
-      if (node.children && node.children.length > 0) {
-        node.children.forEach(child => {
-          nodes.push(...extractAllNodes(child));
-        });
-      }
-    }
-    
-    return nodes;
+  const handelDelete = () => {
+    openDeleteNode();
   };
 
-  const allNodes = extractAllNodes(chartData);
+  // ===== LOCAL MODAL FUNCTIONS - NO CONTEXT NEEDED =====
+  const openProbabilityModal = (params) => {
+    setProbabilityParams(params);
+    setIsProbabilityModalOpen(true);
+  };
+
+  const closeProbabilityModal = () => {
+    setIsProbabilityModalOpen(false);
+    setProbabilityParams(null);
+  };
+
   
-  const events = allNodes.filter(node => node.type === 'Event');
-  const gates = allNodes.filter(node => node.type === 'Gate');
-  
-  console.log("Events found:", events);
-  console.log("Gates found:", gates);
-  
-  setEventsData(events);
-  setGatesData(gates);
-  setCurrentReportType(type); 
-  setIsReportModalOpen(true);
-  
-  toast.success(`${type === 'events' ? 'Events' : type === 'gates' ? 'Gates' : 'Report'} generated successfully`);
-};
+
+
+  const calculateUnavailability = (values) => {
+    console.log("=== STARTING CALCULATION ===");
+    console.log("Values from form:", values);
+    console.log("Chart data:", chartData);
+
+    // Determine which calculation type was selected
+    const calculationType = values?.calcTypes?.value || values?.calcTypes;
+    const isUnavailabilityMode = calculationType === "Unavailability at time t Q(t)";
+    const isSteadyStateMode = calculationType === "Steady-state mean unavailability Q";
+    setCurrentCalculationMode(calculationType);
+
+    // Function to extract and calculate for all event nodes
+    const extractProbabilityNodes = (node) => {
+      const nodes = [];
+
+      if (node) {
+        // Check if this is an event node
+        console.log("Checking node:", node.name || node.gateId, "isEvent:", node.isEvent);
+
+        if (node.isEvent === true) {
+          console.log("✅ FOUND EVENT NODE:", node.name || node.gateId);
+          console.log("Node data:", {
+            name: node.name,
+            calcTypes: node.calcTypes,
+            fr: node.fr,
+            isP: node.isP,
+            mttr: node.mttr,
+            isT: node.isT,
+            timeToFirstTest: node.timeToFirstTest,
+             eventMissionTime: node.eventMissionTime 
+          });
+
+          // Parse parameters with defaults
+          const lambda = parseFloat(node.fr) || 0;
+          const t = parseFloat(values?.missionTime) || 0;
+          const q = parseFloat(node.isP) || 0;
+          const mttr = parseFloat(node.mttr) || 0;
+          const mu = mttr > 0 ? 1 / mttr : 0;
+          const T = parseFloat(node.isT) || 0;
+          const tm = parseFloat(node.eventMissionTime) || t;
+          const n = 1; // 👈 FIXED: n is defined here before any case uses it
+
+          let result = 0;
+          let formula = "";
+          let frequency = 0;
+
+          // Calculate based on event type and selected calculation mode
+          switch (node.calcTypes) {
+            // #1 Probability
+            case "Probability":
+              if (isUnavailabilityMode) {
+                result = q;
+                formula = `Q(t) = q = ${q}`;
+              } else if (isSteadyStateMode) {
+                result = q;
+                formula = `Q̄ = q = ${q}`;
+              }
+              frequency = 0;
+              formula += ` | w(t) = 0`;
+              break;
+
+            // #2 Frequency
+            case "Frequency":
+              if (isUnavailabilityMode) {
+                result = 0;
+                formula = `Q(t) = 0 (Frequency event)`;
+              } else if (isSteadyStateMode) {
+                result = 0;
+                formula = `Q̄ = 0 (Frequency event)`;
+              }
+              frequency = lambda;
+              formula += ` | w(t) = f = ${frequency.toExponential(4)}/h`;
+              break;
+
+            // #3 Constant mission time
+                  case "Constant mission time":
+            if (isUnavailabilityMode) {
+              // Use tm here instead of t
+              result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
+              formula = `Q(t) = 1-(1-${q})^${n}·e^(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
+            } else if (isSteadyStateMode) {
+              result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * tm);
+              formula = `Q̄ = 1-(1-${q})^${n}·e^(-${lambda.toExponential(2)}·${tm}) = ${result.toExponential(4)}`;
+            }
+            frequency = 0;
+            formula += ` | w(t) = 0`;
+            break;
+
+            // #4 Repairable
+            case "Repairable":
+              const lambdaMu = lambda + mu;
+              if (isUnavailabilityMode) {
+                if (lambdaMu > 0) {
+                  const expTerm = Math.exp(-lambdaMu * t);
+                  result = Math.pow(q, n) * expTerm + Math.pow(lambda / lambdaMu, n) * (1 - expTerm);
+                } else {
+                  result = Math.pow(q, n);
+                }
+                formula = `Q(t) = ${q}^${n}·e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t}) + (${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}))^${n}[1-e^(-(${lambda.toExponential(2)}+${mu.toExponential(2)})·${t})] = ${result.toExponential(4)}`;
+              } else if (isSteadyStateMode) {
+                if (lambdaMu > 0) {
+                  result = lambda / lambdaMu;
+                } else {
+                  result = 0;
+                }
+                formula = `Q̄ = λ/(λ+μ) = ${lambda.toExponential(2)}/(${lambda.toExponential(2)}+${mu.toExponential(2)}) = ${result.toExponential(4)}`;
+              }
+              frequency = Math.pow(lambda, n) * (1 - result);
+              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+              break;
+
+            // #5 Unrepairable
+            case "Unrepairable":
+              if (isUnavailabilityMode) {
+                result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+                formula = `Q(t) = 1-(1-${q})^${n}·e^(-${lambda.toExponential(2)}·${t}) = ${result.toExponential(4)}`;
+              } else if (isSteadyStateMode) {
+                result = 1;
+                formula = `Q̄ = 1 (Unrepairable element)`;
+              }
+              frequency = Math.pow(lambda, n) * (1 - result);
+              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+              break;
+
+            // #6 Periodical tests
+            case "Periodical tests":
+              const Ti = parseFloat(node.isT) || 0;
+              const Tf = parseFloat(node.timeToFirstTest) || 0;
+
+              if (isUnavailabilityMode) {
+                if (t < Tf) {
+                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [t < Tf] = ${result.toExponential(4)}`;
+                } else if (Math.abs(t - (Tf + n * Ti)) < 0.0001) {
+                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * Ti);
+                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${Ti}) [t = Tf + nTi] = ${result.toExponential(4)}`;
+                } else if (t > Tf + n * Ti && t <= Tf + n * Ti + mttr) {
+                  const t1 = t - (Tf + n * Ti);
+                  const term1 = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * Ti);
+                  const term2 = Math.pow(1 - q, n) * Math.exp(-lambda * Ti) *
+                    (1 - Math.pow(1 - q, n) * Math.exp(-lambda * t1));
+                  result = term1 + term2;
+                  formula = `Q(t) = ${term1.toExponential(4)} + ${term2.toExponential(4)} [Tf + nTi < t <= Tf + nTi + MTTR] = ${result.toExponential(4)}`;
+                } else if (t > Tf + n * Ti + mttr && t < Tf + n * Ti + Ti) {
+                  const t1 = t - (Tf + n * Ti);
+                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t1);
+                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t1}) [Tf + nTi + MTTR < t < Tf + nTi + Ti] = ${result.toExponential(4)}`;
+                } else {
+                  result = 0;
+                  formula = "Q(t) = 0 (No matching condition)";
+                }
+              } else if (isSteadyStateMode) {
+                result = (lambda * Ti) / 2 + lambda * mttr;
+                formula = `Q̄ ≈ λ·Ti/2 + λ·MTTR = (${lambda.toExponential(2)}·${Ti})/2 + ${lambda.toExponential(2)}·${mttr} = ${result.toExponential(4)} (simplified)`;
+              }
+              frequency = Math.pow(lambda, n) * (1 - result);
+              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+              break;
+
+            // #7 Latent
+            case "Latent":
+              if (isUnavailabilityMode) {
+                result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
+                formula = `Q(t) = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
+              } else if (isSteadyStateMode) {
+                result = 1 - Math.pow(1 - q, t) * Math.exp(-lambda * T);
+                formula = `Q̄ = 1-(1-${q})^${t}·e^(-${lambda.toExponential(2)}·${T}) = ${result.toExponential(4)}`;
+              }
+              frequency = Math.pow(lambda, 1) * (1 - result);
+              formula += ` | w(t) = λ·(1-Q(t)) = ${lambda.toExponential(2)}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+              break;
+
+            // #8 Average probability per mission hour
+            case "Average probability per mission hour":
+              if (isUnavailabilityMode) {
+                result = 1 - Math.pow(1 - q, t);
+                formula = `Q(t) = 1-(1-${q})^${t} = ${result.toExponential(4)}`;
+              } else if (isSteadyStateMode) {
+                result = 1;
+                formula = `Q̄ = 1`;
+              }
+              frequency = 0;
+              formula += ` | w(t) = 0`;
+              break;
+
+            // #9 Periodical Tests #2
+            case "Periodical Tests #2":
+              const Tf2 = parseFloat(node.timeToFirstTest) || 0;
+              if (isUnavailabilityMode) {
+                if (t < Tf2) {
+                  result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * t);
+                  formula = `Q(t) = 1-(1-${q})^${n}·exp(-${lambda.toExponential(2)}·${t}) [Phase 1] = ${result.toExponential(4)}`;
+                } else {
+                  const cycles = Math.floor((t - Tf2) / T);
+                  const timeInCycle = (t - Tf2) % T;
+                  if (timeInCycle < mttr) {
+                    result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * (Tf2 + cycles * T));
+                    formula = `Q(t) ≈ ${result.toExponential(4)} [Repair phase]`;
+                  } else {
+                    result = 1 - Math.pow(1 - q, n) * Math.exp(-lambda * (Tf2 + cycles * T));
+                    formula = `Q(t) ≈ ${result.toExponential(4)} [Operating phase]`;
+                  }
+                }
+              } else if (isSteadyStateMode) {
+                result = (lambda * T) / 2 + lambda * mttr;
+                formula = `Q̄ ≈ λ·T/2 + λ·MTTR = (${lambda.toExponential(2)}·${T})/2 + ${lambda.toExponential(2)}·${mttr} = ${result.toExponential(4)} (simplified)`;
+              }
+              frequency = Math.pow(lambda, n) * (1 - result);
+              formula += ` | w(t) = λ^${n}·(1-Q(t)) = ${lambda.toExponential(2)}^${n}·(1-${result.toExponential(4)}) = ${frequency.toExponential(4)}/h`;
+              break;
+
+            default:
+              console.log("Unknown calculation type:", node.calcTypes);
+              // Use simple formula as fallback
+              if (isUnavailabilityMode) {
+                result = 1 - Math.exp(-lambda * t);
+                formula = `Q(t) = 1-e^(-λt) = ${result.toExponential(4)} (fallback)`;
+              } else {
+                result = lambda / (lambda + mu) || 0;
+                formula = `Q̄ = λ/(λ+μ) = ${result.toExponential(4)} (fallback)`;
+              }
+              frequency = lambda * (1 - result);
+              formula += ` | w(t) = λ·(1-Q) = ${frequency.toExponential(4)}/h`;
+              break;
+          }
+
+          // Handle NaN or infinite values
+          if (isNaN(result) || !isFinite(result)) result = 0;
+          if (isNaN(frequency) || !isFinite(frequency)) frequency = 0;
+
+          console.log(`Calculated value for ${node.name}:`, result);
+
+          // Push the data
+          nodes.push({
+            id: node.id,
+            gateId: node.gateId,
+            name: node.name || node.code || `Gate ${node.gateId}`,
+            description: node.description || "",
+            failureRate: node.fr || "N/A",
+            missionTime: t.toString(),
+            mttr: node.mttr || "N/A",
+            calcType: node.calcTypes || "N/A",
+            q: node.isP || "N/A",
+            T: node.isT || "N/A",
+            timeToFirstTest: node.timeToFirstTest || "0",
+            unavailability: isUnavailabilityMode ? result.toExponential(4) : "N/A",
+            steadyStateUnavailability: isSteadyStateMode ? result.toExponential(4) : "N/A",
+            frequency: frequency > 0 ? frequency.toExponential(4) : "0",
+            formula: formula,
+            eventMissionTime: node.eventMissionTime || "0",
+            calculationMode: isUnavailabilityMode ? "Q(t)" : "Q̄",
+            rawValue: result,
+          });
+        }
+
+        // Process children
+        if (node.children && node.children.length > 0) {
+          node.children.forEach((child) => {
+            nodes.push(...extractProbabilityNodes(child));
+          });
+        }
+      }
+
+      return nodes;
+    };
+
+    // Run the calculation
+    const calcData = extractProbabilityNodes(chartData);
+    console.log("📊 FINAL CALCULATION RESULTS:", calcData);
+    console.log("Number of results found:", calcData.length);
+
+    // Update state
+    setProbabilityCalcData(calcData);
+
+    // Open the appropriate modal
+    if (isUnavailabilityMode) {
+      console.log("Opening Unavailability Report");
+      setCurrentMissionTime(values?.missionTime);
+      setIsUnavailabilityReportOpen(true);
+    } else if (isSteadyStateMode) {
+      console.log("Opening Steady State Report");
+      setIsSteadyStateReportOpen(true);
+    }
+  };
+  const submitProbabilityCalculation = (values) => {
+    console.log("Submitting calculation:", values);
+    calculateUnavailability(values);
+    closeProbabilityModal();
+  };
+
+  const detectRepeatedEvents = (treeData) => {
+    const lambdaTypeMap = new Map(); // Store lambda+type combinations
+    const repeated = [];
+
+    const traverse = (node) => {
+      if (node?.isEvent) {
+        // Get the lambda/failure rate value and calculation type
+        const lambda = node.fr || node.failureRate || "0";
+        const calcType = node.calcTypes || "unknown";
+
+        // Create a combined key from lambda value and calculation type
+        const key = `${lambda}|${calcType}`;
+
+        if (lambdaTypeMap.has(key)) {
+          // This lambda+type combination has been seen before
+          const existingIds = lambdaTypeMap.get(key);
+
+          // Mark current node
+          if (!repeated.includes(node.gateId)) {
+            repeated.push(node.gateId);
+          }
+
+          // Mark all previous occurrences with same lambda+type
+          existingIds.forEach(id => {
+            if (!repeated.includes(id)) {
+              repeated.push(id);
+            }
+          });
+
+          // Add current node to the list
+          existingIds.push(node.gateId);
+          lambdaTypeMap.set(key, existingIds);
+        } else {
+          // First time seeing this lambda+type combination
+          lambdaTypeMap.set(key, [node.gateId]);
+        }
+      }
+
+      if (node.children && node.children.length > 0) {
+        node.children.forEach(child => traverse(child));
+      }
+    };
+
+    traverse(treeData);
+
+    // Log for debugging
+    console.log("Lambda+Type Map:", Array.from(lambdaTypeMap.entries()));
+    console.log("Found repeated events:", repeated);
+
+    return repeated;
+  };
+
+
+  const handleShowRepeatedEvents = () => {
+    if (!chartData) {
+      toast.warning("No fault tree data available");
+      return;
+    }
+
+    // Toggle the show state
+    const newShowState = !showRepeatedEvents;
+
+    if (newShowState) {
+      // Find events with same lambda values
+      const repeated = detectRepeatedEvents(chartData);
+      setRepeatedEvents(repeated);
+
+      if (repeated.length > 0) {
+        toast.info(`Found ${repeated.length} event(s) with  lambda values`);
+      } else {
+        toast.success("No  lambda values found");
+      }
+    } else {
+      // Clear repeated events when turning off
+      setRepeatedEvents([]);
+    }
+
+    setShowRepeatedEvents(newShowState);
+  };
+
+  useEffect(() => {
+    window.showRepeatedEvents = () => {
+      handleShowRepeatedEvents();
+    };
+
+    return () => {
+      delete window.showRepeatedEvents;
+    };
+  }, [chartData, showRepeatedEvents]);
+
+  // const calculateUnavailability = (values) => {
+  //   const extractProbabilityNodes = (node) => {
+  //     const nodes = [];
+
+  //     if (node) {
+  //       const hasFailureData = node.fr || node.calcTypes;
+
+  //       if (hasFailureData) {
+  //         let unavailability = 0;
+
+  //         if (values.calcTypes?.value === "Unavailability at time t Q(t)") {
+  //           const lambda = parseFloat(node.fr) || 0;
+  //           const t = parseFloat(values.missionTime) || 0;
+  //           unavailability = 1 - Math.exp(-lambda * t);
+  //         } else {
+  //           const lambda = parseFloat(node.fr) || 0;
+  //           const mttr = parseFloat(node.mttr) || 0;
+  //           const mu = mttr > 0 ? 1 / mttr : 0;
+  //           unavailability = lambda + mu > 0 ? lambda / (lambda + mu) : 0;
+  //         }
+
+  //         nodes.push({
+  //           name: node.name || node.code || `Gate ${node.gateId}`,
+  //           description: node.description || '',
+  //           failureRate: node.fr || 'N/A',
+  //           missionTime: values.missionTime || '',
+  //           mttr: node.mttr || 'N/A',
+  //           unavailability: unavailability.toExponential(4),
+  //           steadyStateUnavailability: unavailability.toExponential(4)
+  //         });
+  //       }
+
+  //       if (node.children && node.children.length > 0) {
+  //         node.children.forEach(child => {
+  //           nodes.push(...extractProbabilityNodes(child));
+  //         });
+  //       }
+  //     }
+
+  //     return nodes;
+  //   };
+
+  //   const calcData = extractProbabilityNodes(chartData);
+  //   setProbabilityCalcData(calcData);
+
+  //   if (values.calcTypes?.value === "Unavailability at time t Q(t)") {
+  //     setCurrentMissionTime(values.missionTime);
+  //     setIsUnavailabilityReportOpen(true);
+  //   } else {
+  //     setIsSteadyStateReportOpen(true);
+  //   }
+  // };
+
+  const generateReport = (type = "all") => {
+    if (!chartData) {
+      toast.warning("No fault tree data available");
+      return;
+    }
+
+    const extractAllNodes = (node) => {
+      const nodes = [];
+
+      if (node) {
+        const hasFailureRate =
+          node.fr || node.failureRate || node.frValue || node.failureRateValue;
+        const isEvent =
+          hasFailureRate || node.calcTypes || node.isEvent === true;
+        const isGate =
+          node.gateType || (node.children && node.children.length > 0);
+
+        const failureRate =
+          node.fr ||
+          node.failureRate ||
+          node.frValue ||
+          node.failureRateValue ||
+          "N/A";
+
+        const nodeData = {
+          id: node.id,
+          code: node.code || node.name || `Gate ${node.gateId}`,
+          description: node.description || "No description",
+          type: isEvent ? "Event" : isGate ? "Gate" : "Unknown",
+          failureRate: isEvent ? failureRate : "N/A",
+          calcType: node.calcTypes || "N/A",
+          gateType: node.gateType || "N/A",
+          gateId: node.gateId || "N/A",
+          children: node.children || [],
+          product: node.product || "N/A",
+          childCount: node.children ? node.children.length : 0,
+        };
+
+        nodes.push(nodeData);
+
+        if (node.children && node.children.length > 0) {
+          node.children.forEach((child) => {
+            nodes.push(...extractAllNodes(child));
+          });
+        }
+      }
+
+      return nodes;
+    };
+
+    const allNodes = extractAllNodes(chartData);
+    const events = allNodes.filter((node) => node.type === "Event");
+    const gates = allNodes.filter((node) => node.type === "Gate");
+
+    setEventsData(events);
+    setGatesData(gates);
+    setCurrentReportType(type);
+    setIsReportModalOpen(true);
+
+    toast.success(
+      `${type === "events" ? "Events" : type === "gates" ? "Gates" : "Report"} generated successfully`,
+    );
+  };
+
+  useEffect(() => {
+    window.generateFTAReport = (type) => {
+      generateReport(type);
+    };
+
+    return () => {
+      delete window.generateFTAReport;
+    };
+  }, [generateReport]); // This useEffect references generateReport
+
+  // ===== USE EFFECT FOR PROBABILITY PARAMS =====
+  useEffect(() => {
+    if (probabilityParams) {
+      // calculateUnavailability(probabilityParams);
+    }
+  }, [probabilityParams]);
+
+  // ===== WINDOW OPEN PROBABILITY MODAL =====
+  useEffect(() => {
+    window.openProbabilityModal = (params) => {
+      openProbabilityModal(params);
+    };
+
+    return () => {
+      delete window.openProbabilityModal;
+    };
+  }, []);
+
+  const handleZoomToFit = () => {
+    setPanOffset({ x: 0, y: 0 });
+    toast.success("Zoomed to fit screen");
+  };
+
+  const handleZoomOriginal = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    toast.success("Reset to original size");
+  };
+
+  const handleToggleGrid = () => {
+    const newShowGrid = !showGrid;
+    setShowGrid(newShowGrid);
+    toast.success(newShowGrid ? "Grid shown" : "Grid hidden");
+  };
+
+  const handleOriginalLayout = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setPanning(false);
+    setPanStart({ x: 0, y: 0 });
+    toast.success("Original layout restored");
+  };
+
+  // ===== GENERATE REPORT FUNCTION - NO HOOKS INSIDE =====
 
   const handleWheelScroll = (event) => {
-    const newZoom = zoomLevel + event.deltaY * -0.001; 
+    const newZoom = zoomLevel + event.deltaY * -0.001;
     setZoomLevel(Math.min(Math.max(0.1, newZoom), 2));
   };
+
+  // const handleMouseDown = (event) => {
+  //   if (event.button === 0) {
+  //     setPanning(true);
+  //     setPanStart({ x: event.clientX, y: event.clientY });
+  //   }
+  // };
+
   const handleMouseDown = (event) => {
     if (event.button === 0) {
-      setPanning(true);
-      setPanStart({ x: event.clientX, y: event.clientY });
+      setPanning(true); // setPanStart({ x: event.clientX, y: event.clientY });
+      setPanStart({
+        x: event.clientX - panOffset.x,
+        y: event.clientY - panOffset.y,
+      });
     }
   };
 
@@ -207,265 +734,450 @@ const generateReport = (type = 'all') => {
     }
   };
 
-  //   const [selectedNodeId, setSelectedNodeId] = useState(null);
-  //   const formikRef = useRef(null);
-
-  //   const {
-  //     isFTAModalOpen,
-  //     closeFTAModal,
-  //     isPropertiesModal,
-  //     closePropertiesModal,
-  //     isDeleteSucess,
-  //     saveFromFile,
-  //     reloadData,
-  //     stopTriggerReload,
-  //   } = useModal();
-
-  //   const handleWheelScroll = (event) => {
-  //     // event.preventDefault(); // Prevent default scroll behavior
-  //     const newZoom = zoomLevel + event.deltaY * -0.001; // Adjust the scaling factor as needed
-  //     setZoomLevel(Math.min(Math.max(0.1, newZoom), 2)); // Limit zoom level between 0.5 and 2
-  //   };
-  //   const handleMouseDown = (event) => {
-  //     if (event.button === 0) {
-  //       // event.preventDefault(); // Prevent default mouse behavior
-  //       setPanning(true);
-  //       setPanStart({ x: event.clientX, y: event.clientY });
-  //     }
-  //   };
-
-  //   const handleMouseMove = (event) => {
-  //     if (panning) {
-  //       // event.preventDefault(); // Prevent default mouse behavior
-  //       const offsetX = event.clientX - panStart.x;
-  //       const offsetY = event.clientY - panStart.y;
-  //       setPanOffset({ x: offsetX, y: offsetY });
-  //     }
-  //   };
-
-  //   const handleMouseUp = (event) => {
-  //     if (panning) {
-  //       // event.preventDefault(); // Prevent default mouse behavior
-  //       setPanning(false);
-  //       setPanStart({ x: 0, y: 0 });
-  //     }
-  //   };
-
-    const removeChartData = (id) => {
-      setChartData((oldData) => {
-        return removeChartDataHelper(oldData, id);
-      });
-    };
-
-    const addChartNode = (id, newNode) => {
-      setChartData((oldData) => {
-        const addNodeHelper = (data) => {
-          if (!data) return;
-          if (data.id === id) {
-            return {
-              ...data,
-              children: [...(data.children || []), newNode],
-            };
-          }
-          return {
-            ...data,
-            children: data?.children?.map((child) => addNodeHelper(child)),
-          };
-        };
-
-        return addNodeHelper(oldData);
-      });
-    };
-const getFullFTAdata = (id) => {
-      if (id) {
-        Api.get(`/api/v1/FTA/get/tree/${id}`).then((res) => {
-          const data = res?.data?.nodeData[0];
-          saveFromFile(data);
-        });
-      } else {
-        saveFromFile(null);
-      }
-    };
-
-    
-    const editChartNode = (id, newNode) => {
-      setChartData((oldData) => {
-        const editNodeHelper = (data) => {
-          if (!data) return;
-          if (data.id === id) {
-            return { ...data, ...newNode };
-          }
-          return {
-            ...data,
-            children: data?.children?.map((child) => editNodeHelper(child)),
-          };
-        };
-
-        return editNodeHelper(oldData);
-      });
-    };
-    const validate = Yup.object().shape({
-      name: Yup.string().required("Name is Required"),
-      description: Yup.string().required("Description is Required"),
-      gateId: Yup.string().required("Gate Id is Required"),
-      calcTypes: Yup.object().required("Calc.Types is Required"),
-      missionTime:
-        calcTypes === "Unavailability at time t Q(t)"
-          ? Yup.string().required("Mission Time t is Required")
-          : Yup.object().nullable(),
+  const removeChartData = (id) => {
+    setChartData((oldData) => {
+      return removeChartDataHelper(oldData, id);
     });
+  };
 
-    const parentSubmit = (values, { resetForm }) => {
+  const addChartNode = (id, newNode) => {
+    setChartData((oldData) => {
+      const addNodeHelper = (data) => {
+        if (!data) return;
+        if (data.id === id) {
+          return {
+            ...data,
+            children: [...(data.children || []), newNode],
+          };
+        }
+        return {
+          ...data,
+          children: data?.children?.map((child) => addNodeHelper(child)),
+        };
+      };
 
-      console.log(values, "...values")
+      return addNodeHelper(oldData);
+    });
+  };
 
-      const companyId = localStorage.getItem("companyId");
-      Api.post("/api/v1/FTA/create/parent", {
-        gateType: "OR",
-        name: values.name,
-        description: values.description,
-        gateId: values.gateId,
-        calcTypes: values.calcTypes.value,
-        missionTime: values.missionTime,
-        projectId: projectId,
-        companyId: companyId,
-      }).then((res) => {
-        getFTAData();
-        setIsModalOpen(false);
-        resetForm({ values: "" });
-        handleCancel();
-        setCalcTypes("");
-        toast("Created", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          type: "success",
-        });
-      });
-    };
-    const updateProperties = (values, { resetForm }) => {
-      Api.patch(`/api/v1/FTA/update/property/${chartData?.parentId}`, {
-        productId: chartData?.id,
-        name: values.name,
-        description: values.description,
-        calcTypes: values.calcTypes.value,
-        missionTime: values.missionTime,
-        gateType: chartData.gateType,
-      }).then((res) => {
-        getFTAData();
-        setIsModalOpen(false);
-        resetForm({ values: "" });
-        handleCancel();
-        setCalcTypes("");
-        toast("Updated Successfully", {
-          position: "top-right",
-          autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          theme: "light",
-          type: "success",
-        });
-      });
-    };
+  const editChartNode = (id, newNode) => {
+    setChartData((oldData) => {
+      const editNodeHelper = (data) => {
+        if (!data) return;
+        if (data.id === id) {
+          return { ...data, ...newNode };
+        }
+        return {
+          ...data,
+          children: data?.children?.map((child) => editNodeHelper(child)),
+        };
+      };
 
-    const getFTAData = () => {
-      Api.get(`/api/v1/FTA/get/${projectId}`).then((res) => {
-        console.log(res, "response from api getFTAData")
-        const getLength = res?.data?.nodeData;
-        console.log(getLength.length, "getLength")
-        const data = res?.data?.nodeData[getLength.length - 1]?.treeStructure;
-        console.log(data, "....")
-        setChartData(data);
-        setNodeLength(getLength);
-        getFullFTAdata(data?.parentId);
-        stopTriggerReload();
-      });
-    };
+      return editNodeHelper(oldData);
+    });
+  };
 
-    const handleCancel = () => {
-      if (formikRef.current) {
-        formikRef.current.resetForm();
-      }
-      setIsModalOpen(false);
-      closeFTAModal();
-      closePropertiesModal();
-    };
-
-    if (isDeleteSucess) {
+  const validate = Yup.object().shape({
+    name: Yup.string().required("Name is Required"),
+    description: Yup.string().required("Description is Required"),
+    gateId: Yup.string().required("Gate Id is Required"),
+    calcTypes: Yup.object().required("Calc.Types is Required"),
+    missionTime: Yup.mixed().when("calcTypes", {
+      is: (calcTypes) => calcTypes?.value === "Unavailability at time t Q(t)",
+      then: Yup.string().required("Mission Time t is Required"),
+      otherwise: Yup.string().nullable(), // Changed from Yup.object().nullable()
+    }),
+  });
+  const parentSubmit = (values, { resetForm }) => {
+    const companyId = localStorage.getItem("companyId");
+    Api.post("/api/v1/FTA/create/parent", {
+      gateType: "OR",
+      name: values.name,
+      description: values.description,
+      gateId: values.gateId,
+      calcTypes: values.calcTypes.value,
+      missionTime: values.missionTime,
+      projectId: projectId,
+      companyId: companyId,
+    }).then((res) => {
       getFTAData();
+      setIsModalOpen(false);
+      resetForm({ values: "" });
+      handleCancel();
+      setCalcTypes("");
+      toast("Created", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "success",
+      });
+    });
+  };
+
+  const updateProperties = (values, { resetForm }) => {
+    Api.patch(`/api/v1/FTA/update/property/${chartData?.parentId}`, {
+      productId: chartData?.id,
+      name: values.name,
+      description: values.description,
+      calcTypes: values.calcTypes.value,
+      missionTime: values.missionTime,
+      gateType: chartData.gateType,
+    }).then((res) => {
+      getFTAData();
+      setIsModalOpen(false);
+      resetForm({ values: "" });
+      handleCancel();
+      setCalcTypes("");
+      toast("Updated Successfully", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        type: "success",
+      });
+    });
+  };
+
+  const getFTAData = () => {
+    setLoading(true);
+    Api.get(`/api/v1/FTA/get/${projectId}`)
+      .then((res) => {
+        const allTreeData = res?.data?.nodeData || [];
+        setTrees(allTreeData);
+        setNodeLength(allTreeData);
+
+        if (viewMode === "chart" && allTreeData.length > 0 && selectedTreeId) {
+          const treeToShow =
+            allTreeData.find(
+              (tree) =>
+                tree._id === selectedTreeId || tree.id === selectedTreeId,
+            ) || allTreeData[0];
+          setChartData(treeToShow.treeStructure || {});
+          if (treeToShow.treeStructure?.parentId) {
+            getFullFTAdata(treeToShow.treeStructure.parentId);
+          }
+        }
+
+        setLoading(false);
+        stopTriggerReload();
+      })
+      .catch((error) => {
+        console.error("Error fetching trees:", error);
+        // toast.error("Failed to load trees");
+        setLoading(false);
+      });
+  };
+
+  const handleDeleteTree = (tree) => {
+    if (!tree) {
+      toast.error("Invalid tree ID");
+      return;
     }
 
-    const getTreeProduct = () => {
-      const userId = localStorage.getItem("userId");
-      Api.get(`/api/v1/productTreeStructure/product/list`, {
-        params: {
-          projectId: projectId,
-          userId: userId,
-        },
+    if (
+      window.confirm(
+        "Are you sure you want to delete this tree and all its nodes?",
+      )
+    ) {
+      try {
+        Api.delete(`/api/v1/FTA/delete/${tree?.projectId}/${tree?.id}`)
+          .then((res) => {
+            toast.success("Tree deleted successfully");
+
+            if (selectedTreeId === tree?.id) {
+              handleBackToTable();
+            }
+
+            getFTAData();
+          })
+          .catch((error) => {
+            console.error("Delete error:", error);
+          });
+      } catch (error) {
+        console.error("Unexpected error during tree deletion:", error);
+        toast.error("An unexpected error occurred while deleting the tree.");
+      }
+    }
+  };
+
+  const handleViewTree = (tree) => {
+    setChartData(tree.treeStructure || {});
+    setSelectedTreeId(tree.id || tree._id);
+    setViewMode("chart");
+
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setPanning(false);
+
+    if (tree.treeStructure?.parentId) {
+      getFullFTAdata(tree.treeStructure.parentId);
+    }
+
+    // toast.success(`Viewing tree: ${tree.name}`);
+  };
+
+  const handleCreateNewTree = () => {
+    setIsModalOpen(true);
+    // :white_check_mark: Reset position
+    setPanOffset({ x: 0, y: 0 });
+    setZoomLevel(1);
+    setPanning(false);
+  };
+
+  const handleBackToTable = () => {
+    setViewMode("table");
+    setChartData([]);
+    setSelectedTreeId(null);
+  };
+
+  const handleCancel = () => {
+    if (formikRef.current) {
+      formikRef.current.resetForm();
+    }
+    setIsModalOpen(false);
+    closeFTAModal();
+    closePropertiesModal();
+  };
+
+  if (isDeleteSucess) {
+    getFTAData();
+  }
+
+  const getTreeProduct = () => {
+    const userId = localStorage.getItem("userId");
+    Api.get(`/api/v1/productTreeStructure/product/list`, {
+      params: {
+        projectId: projectId,
+        userId: userId,
+      },
+    })
+      .then((res) => {
+        const treeData = res?.data?.data;
+        setProductData(treeData);
       })
-        .then((res) => {
-          const treeData = res?.data?.data;
-          setProductData(treeData);
-        })
-        .catch((error) => {
-          const errorStatus = error?.response?.status;
-          if (errorStatus === 401) {
-            logout();
-          }
-        });
-    };
-    const logout = () => {
-      localStorage.clear(history.push("/login"));
-      window.location.reload();
+      .catch((error) => {
+        const errorStatus = error?.response?.status;
+        if (errorStatus === 401) {
+          logout();
+        }
+      });
+  };
+
+  const logout = () => {
+    localStorage.clear(history.push("/login"));
+    window.location.reload();
+  };
+
+  useEffect(() => {
+    if (projectId) {
+      getFTAData();
+      getTreeProduct();
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    if (reloadData && projectId) {
+      getFTAData();
+      stopTriggerReload();
+    }
+  }, [reloadData, projectId, stopTriggerReload]);
+
+  useEffect(() => {
+    window.triggerFTAUpdate = () => {
+      setRefreshTrigger((prev) => prev + 1);
     };
 
+    return () => {
+      delete window.triggerFTAUpdate;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (projectId) {
+      getFTAData();
+    }
+  }, [projectId, refreshTrigger]);
+
+  const getFullFTAdata = (id) => {
+    if (id) {
+      Api.get(`/api/v1/FTA/get/tree/${id}`).then((res) => {
+        const data = res?.data?.nodeData[0];
+        console.log(data, "from index");
+        setCurrentCalculationMode(data?.treeStructure?.calcTypes || "")
+        saveFromFile(data);
+      });
+    } else {
+      saveFromFile(null);
+    }
+  };
+
+  const isSteadyStateMode = (values) => {
+    console.log(values, 'from index od isSteady Ste')
+    return calculationMode === "Steady-state mean unavailability Q";
+  };
+
+  // console.log(treeRenderCalculationMode, "calculation mode in index");
 
   return (
     <div>
-   <HeaderNavBar 
-  selectedComponent="FTA"
-  onGenerateReport={generateReport}
-  onZoomToFit={handleZoomToFit}
-  onZoomOriginal={handleZoomOriginal}
-  onToggleGrid={handleToggleGrid}
-  onOriginalLayout={handleOriginalLayout}
-/>
-      {nodeLength.length > 0 ? (
-        <div
-          className="org-chart-container"
-          style={{
-            transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`,
-            paddingTop: "70px",
-          }}
-          onWheel={handleWheelScroll}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-        >
-          <Tree lineWidth={"2px"} lineColor={"green"} lineBorderRadius={"10px"} className="org-chart-container">
-            <RenderTree
-              data={nodeLength.length > 0 ? chartData : 0}
-              handleRemove={removeChartData}
-              handleAdd={addChartNode}
-              handleEdit={editChartNode}
-              projectId={projectId}
-              getFTAData={getFTAData}
-              productData={productData}
-              selectedNodeId={selectedNodeId} // Pass selectedNodeId to RenderTree
-              setSelectedNodeId={setSelectedNodeId} // Pass setSelectedNodeId function to RenderTree
-            />
-          </Tree>
+      {viewMode === "chart" && (
+        <HeaderNavBar
+          // style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000 }}
+          selectedComponent="FTA"
+          onZoomToFit={handleZoomToFit}
+          onZoomOriginal={handleZoomOriginal}
+          onToggleGrid={handleToggleGrid}
+          onOriginalLayout={handleOriginalLayout}
+          isTreeView={viewMode === "chart"}
+          onBackToTable={handleBackToTable}
+          setViewMode={setViewMode}
+          setChartData={setChartData}
+          selectedTreeId={selectedTreeId}
+          showRepeatedEvents={showRepeatedEvents}
+       
+
+
+        />
+      )}
+      
+      {viewMode === "table" ? (
+        <FTAtable
+          trees={trees}
+          loading={loading}
+          onViewTree={handleViewTree}
+          onCreateNewTree={handleCreateNewTree}
+          projectId={projectId}
+          onBack={() => window.history.back()} // or your custom back function
+          showBackButton={true}
+        />
+      ) : nodeLength.length > 0 && chartData ? (
+        <div>
+          {/* <div
+            style={{
+              padding: "20px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginTop: "75px",
+              zIndex: 3,
+            }}
+          >
+            <Button
+              variant="outline-secondary"
+              onClick={handleBackToTable}
+              title="Back to Trees List"
+            >
+              <FaArrowLeft />
+            </Button>
+          </div> */}
+
+          <div
+            className="org-chart-container"
+            style={{
+              transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
+              display: "flex",
+              justifyContent: "center",
+              width: "100%",
+              transformOrigin: "center center",
+              height: "10px",
+              padding: "20px",
+              zIndex: 1,
+              position: "relative",
+            }}
+            onWheel={handleWheelScroll}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+          >
+            <div
+              className="tree-wrapper"
+              style={{
+                position: "absolute",
+                top: "0",
+                left: "50%",
+                transform: "translateX(-50%)",
+                padding: "20px",
+                zIndex: 7,
+              }}
+            >
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "10px",
+                marginLeft: "9px",
+                marginTop: "30px",
+              }}>
+                <RenderNode
+                  // node={data}
+                  // parNod={parNod}
+                  handleRemove={removeChartData}
+                  handleAdd={addChartNode}
+                  setViewMode={setViewMode}
+                  handleEdit={editChartNode}
+                  node={chartData}
+                  projectId={projectId}
+                  getFTAData={getFTAData}
+                  productData={productData}
+                  selectedNodeId={selectedNodeId}
+                  setSelectedNodeId={setSelectedNodeId}
+                  calculationResults={probabilityCalcData}  // Pass calculation results
+                  calculationMode={currentCalculationMode}
+                  setCurrentCalculationMode={setCurrentCalculationMode}
+                  showRepeatedEvents={showRepeatedEvents}
+                  repeatedEvents={repeatedEvents}
+                />
+              </div>
+              <Tree
+                lineWidth={"2px"}
+                lineColor={"green"}
+                lineBorderRadius={"10px"}
+                className="org-chart-container"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+              >
+                {chartData?.children?.map((child, index) => (
+                  <RenderTree
+                    key={index}
+                    data={child}
+                    handleRemove={removeChartData}
+                    handleAdd={addChartNode}
+                    handleEdit={editChartNode}
+                    projectId={projectId}
+                    getFTAData={getFTAData}
+                    productData={productData}
+                    selectedNodeId={selectedNodeId}
+                    calculationMode={currentCalculationMode}
+                    setSelectedNodeId={setSelectedNodeId}
+                    calculationResults={probabilityCalcData}
+                    setCurrentCalculationMode={setCurrentCalculationMode}
+                    treeRenderCalculationMode={treeRenderCalculationMode}
+                    repeatedEvents={repeatedEvents}        // ADD THIS LINE
+                    showRepeatedEvents={showRepeatedEvents} // ADD THIS LINE
+
+                  />
+                ))}
+              </Tree>
+
+
+            </div>
+          </div>
         </div>
       ) : (
-        <div style={{ height: "100vh", display: "flex", justifyContent: "center" }}>
+        <div
+          style={{ height: "100vh", display: "flex", justifyContent: "center" }}
+        >
           <div style={{ paddingTop: "90px" }}>
             <Button
               onClick={() => setIsModalOpen(true)}
@@ -484,116 +1196,299 @@ const getFullFTAdata = (id) => {
           </div>
         </div>
       )}
-   <EventsReportModal
-  isOpen={isReportModalOpen}
-  onClose={() => setIsReportModalOpen(false)}
-  eventsData={eventsData}
-  gatesData={gatesData}
-  reportType={currentReportType} // Pass the current report type
-/>
-      
-      
+
+      {/* LOCAL PROBABILITY MODAL - NO CONTEXT NEEDED */}
+      <Modal
+        title={
+          <p style={{ margin: "0px", color: "#00a9c9", width: "500px" }}>
+            Calculation Parameter
+          </p>
+        }
+        open={isProbabilityModalOpen}
+        footer={null}
+        onCancel={closeProbabilityModal}
+        maskClosable={false}
+      >
+        <hr />
+        <Formik
+          enableReinitialize={true}
+          initialValues={{
+            name: chartData?.name || "",
+            description: chartData?.description || "",
+            calcTypes: chartData?.calcTypes
+              ? { label: chartData?.calcTypes, value: chartData?.calcTypes }
+              : "",
+            missionTime: chartData?.missionTime || "",
+          }}
+          onSubmit={(values) => {
+            submitProbabilityCalculation(values);
+          }}
+          validationSchema={Yup.object().shape({
+            name: Yup.string().required("Name is Required"),
+            description: Yup.string().required("Description is Required"),
+            calcTypes: Yup.object().required("Calc.Types is Required"),
+            missionTime: Yup.string().when("calcTypes", {
+              is: (calcTypes) =>
+                calcTypes?.value === "Unavailability at time t Q(t)",
+              then: Yup.string().required("Mission time t is required"),
+            }),
+          })}
+        >
+          {({
+            values,
+            handleChange,
+            handleSubmit,
+            handleBlur,
+            setFieldValue,
+          }) => (
+            <Form onSubmit={handleSubmit}>
+              <Form.Group className="mb-2">
+                <Label notify={true}>Name</Label>
+                <Form.Control
+                  type="text"
+                  name="name"
+                  placeholder="Name"
+                  value={values.name}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ErrorMessage
+                  className="error text-danger"
+                  component="span"
+                  name="name"
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-2">
+                <Label notify={true}>Description</Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  type="text"
+                  name="description"
+                  placeholder="Description"
+                  value={values.description}
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                />
+                <ErrorMessage
+                  className="error text-danger"
+                  component="span"
+                  name="description"
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-2">
+                <Label notify={true}>Calc.Types</Label>
+                <Select
+                  styles={customStyles}
+                  name="calcTypes"
+                  value={values.calcTypes}
+                  onBlur={handleBlur}
+                  onChange={(e) => setFieldValue("calcTypes", e)}
+                  options={[
+                    {
+                      value: "Unavailability at time t Q(t)",
+                      label: "Unavailability at time t Q(t)",
+                    },
+                    {
+                      value: "Steady-state mean unavailability Q",
+                      label: "Steady-state mean unavailability Q",
+                    },
+                  ]}
+                />
+                <ErrorMessage
+                  className="error text-danger"
+                  component="span"
+                  name="calcTypes"
+                />
+              </Form.Group>
+
+              {values.calcTypes?.value === "Unavailability at time t Q(t)" && (
+                <Form.Group className="mb-2">
+                  <Label notify={true}>Mission time t</Label>
+                  <div style={{ display: "flex", alignItems: "center" }}>
+                    <Form.Control
+                      type="text"
+                      name="missionTime"
+                      placeholder="Mission time t"
+                      value={values.missionTime}
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                      style={{ width: "80%" }}
+                    />
+                    <p
+                      style={{
+                        margin: "0px",
+                        fontWeight: "bold",
+                        marginLeft: "20px",
+                      }}
+                    >
+                      (hours)
+                    </p>
+                  </div>
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="missionTime"
+                  />
+                </Form.Group>
+              )}
+
+              <div className="d-flex justify-content-end mt-4">
+                <Button
+                  className="me-2"
+                  variant="outline-secondary"
+                  onClick={closeProbabilityModal}
+
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Calculate</Button>
+                {console.log(closeProbabilityModal, "submitted values")}
+                {console.log(values, "submitted values@@@@@@@")}
+              </div>
+            </Form>
+          )}
+        </Formik>
+      </Modal>
+
+      <EventsReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        eventsData={eventsData}
+        gatesData={gatesData}
+        //  onGenerateReport={generateReport}
+        reportType={currentReportType}
+      />
+
+      <UnavailabilityReportModal
+        isOpen={isUnavailabilityReportOpen}
+        onClose={() => setIsUnavailabilityReportOpen(false)}
+        calculationData={probabilityCalcData}
+        missionTime={currentMissionTime}
+        calculationDataMode={currentCalculationMode}
+
+
+      />
+
+      <SteadyStateReportModal
+        isOpen={isSteadyStateReportOpen}
+        onClose={() => setIsSteadyStateReportOpen(false)}
+        calculationData={probabilityCalcData}
+        calculationDataMode={currentCalculationMode}
+      />
 
       <Modal
-        title={<p style={{ margin: "0px", color: "#00a9c9" ,width:'500px' }}>Fault Tree Properties</p>}
+        title={
+          <p style={{ margin: "0px", color: "#00a9c9", width: "500px" }}>
+            Fault Tree Properties
+          </p>
+        }
         open={
           isModalOpen
             ? isModalOpen
             : isFTAModalOpen
-            ? isFTAModalOpen
-            : isPropertiesModal && nodeLength.length > 0
-            ? isPropertiesModal
-            : null
+              ? isFTAModalOpen
+              : isPropertiesModal && nodeLength.length > 0
+                ? isPropertiesModal
+                : null
         }
         footer={null}
         onCancel={handleCancel}
         maskClosable={false}
       >
         <hr />
-        {/* <Formik
+        <Formik
           enableReinitialize={true}
           initialValues={{
             name: isPropertiesModal ? chartData?.name : "",
             description: isPropertiesModal ? chartData?.description : "",
-            calcTypes: isPropertiesModal ? { label: chartData?.calcTypes, value: chartData?.calcTypes } : "",
+            calcTypes: isPropertiesModal
+              ? { label: chartData?.calcTypes, value: chartData?.calcTypes }
+              : "",
             missionTime: isPropertiesModal ? chartData?.missionTime : "",
             gateId: 1,
           }}
           onSubmit={isPropertiesModal ? updateProperties : parentSubmit}
           validationSchema={validate}
           innerRef={formikRef}
-        > */}
-          <hr />
-          <Formik
-            enableReinitialize={true}
-            initialValues={{
-              name: isPropertiesModal ? chartData?.name : "",
-              description: isPropertiesModal ? chartData?.description : "",
-              calcTypes: isPropertiesModal ? { label: chartData?.calcTypes, value: chartData?.calcTypes } : "",
-              missionTime: isPropertiesModal ? chartData?.missionTime : "",
-              gateId: 1,
-            }}
-            onSubmit={isPropertiesModal ? updateProperties : parentSubmit}
-            validationSchema={validate}
-            innerRef={formikRef}
-          >
-            {(formik) => {
-              const { values, handleChange, handleSubmit, handleBlur, isValid, mainProductForm, setFieldValue } = formik;
-              return (
-                <Form onSubmit={handleSubmit}>
-                  <Form.Group className="mb-2">
-                    <Label notify={true}>Name</Label>
-                    <Form.Control
-                      type="text"
-                      name="name"
-                      placeholder="Name"
-                      value={values.name}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    />
-                    <ErrorMessage className="error text-danger" component="span" name="name" />
-                  </Form.Group>
-                  <Form.Group className="mb-2">
-                    <Label notify={true}>Description</Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      type="text"
-                      name="description"
-                      placeholder="Description"
-                      value={values.description}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    />
-                    <ErrorMessage className="error text-danger" component="span" name="description" />
-                  </Form.Group>
-                  <Form.Group className="mb-2">
-                    <Label notify={true}>Calc.Types</Label>
-                    <Select
-                      styles={customStyles}
-                      name="calcTypes"
-                      type="select"
-                      value={values.calcTypes}
-                      onBlur={handleBlur}
-                      onChange={(e) => {
-                        setFieldValue("calcTypes", e);
-                        setCalcTypes(e.value);
-                      }}
-                      options={[
-                        {
-                          value: "Unavailability at time t Q(t)",
-                          label: "Unavailability at time t Q(t)",
-                        },
-                        {
-                          value: "Steady-state mean unavailability Q",
-                          label: "Steady-state mean unavailability Q",
-                        },
-                      ]}
-                    />
-                    <ErrorMessage className="error text-danger" component="span" name="calcTypes" />
-                  </Form.Group>
-
-                  {values.calcTypes?.value === "Unavailability at time t Q(t)" ? (
+        >
+          {(formik) => {
+            const {
+              values,
+              handleChange,
+              handleSubmit,
+              handleBlur,
+              setFieldValue,
+            } = formik;
+            return (
+              <Form onSubmit={handleSubmit}>
+                <Form.Group className="mb-2">
+                  <Label notify={true}>Name</Label>
+                  <Form.Control
+                    type="text"
+                    name="name"
+                    placeholder="Name"
+                    value={values.name}
+                    onBlur={handleBlur}
+                    onChange={handleChange}
+                  />
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="name"
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Label notify={true}>Description</Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    type="text"
+                    name="description"
+                    placeholder="Description"
+                    value={values.description}
+                    onBlur={handleBlur}
+                    onChange={handleChange}
+                  />
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="description"
+                  />
+                </Form.Group>
+                <Form.Group className="mb-2">
+                  <Label notify={true}>Calc.Types</Label>
+                  <Select
+                    styles={customStyles}
+                    name="calcTypes"
+                    type="select"
+                    value={values.calcTypes}
+                    onBlur={handleBlur}
+                    onChange={(e) => {
+                      setFieldValue("calcTypes", e);
+                      setCalcTypes(e.value);
+                    }}
+                    options={[
+                      {
+                        value: "Unavailability at time t Q(t)",
+                        label: "Unavailability at time t Q(t)",
+                      },
+                      {
+                        value: "Steady-state mean unavailability Q",
+                        label: "Steady-state mean unavailability Q",
+                      },
+                    ]}
+                  />
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="calcTypes"
+                  />
+                </Form.Group>
+                {values.calcTypes?.value ===
+                  "Unavailability at time t Q(t)" && (
                     <Form.Group className="mb-2">
                       <Label notify={true}>Mission time t</Label>
                       <div style={{ display: "flex", alignItems: "center" }}>
@@ -606,36 +1501,59 @@ const getFullFTAdata = (id) => {
                           onChange={handleChange}
                           style={{ width: "80%" }}
                         />
-                        <p style={{ margin: "0px", fontWeight: "bold", marginLeft: "20px" }}>( hours)</p>
+                        <p
+                          style={{
+                            margin: "0px",
+                            fontWeight: "bold",
+                            marginLeft: "20px",
+                          }}
+                        >
+                          ( hours)
+                        </p>
                       </div>
-                      <ErrorMessage className="error text-danger" component="span" name="missionTime" />
+                      <ErrorMessage
+                        className="error text-danger"
+                        component="span"
+                        name="missionTime"
+                      />
                     </Form.Group>
-                  ) : null}
+                  )}
 
-                  <Form.Group className="mb-2">
-                    <Label notify={true}>Gate Id</Label>
-                    <Form.Control
-                      disabled={true}
-                      type="text"
-                      name="gateId"
-                      placeholder="Gate Id"
-                      value={values.gateId}
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                    />
-                    <ErrorMessage className="error text-danger" component="span" name="gateId" />
-                  </Form.Group>
-                  <div className="d-flex justify-content-end mt-4">
-                    <Button className=" me-2" variant="outline-secondary" type="reset" onClick={handleCancel}>
-                      Cancel
-                    </Button>
-                    <Button type="submit">{isPropertiesModal ? "Save Changes" : "Create"}</Button>
-                  </div>
-                </Form>
-              );
-            }}
-          </Formik>
-        </Modal>
-      </div>
-    );
-  }
+                <Form.Group className="mb-2">
+                  <Label notify={true}>Gate Id</Label>
+                  <Form.Control
+                    disabled={true}
+                    type="text"
+                    name="gateId"
+                    placeholder="Gate Id"
+                    value={values.gateId}
+                    onBlur={handleBlur}
+                    onChange={handleChange}
+                  />
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="gateId"
+                  />
+                </Form.Group>
+                <div className="d-flex justify-content-end mt-4">
+                  <Button
+                    className=" me-2"
+                    variant="outline-secondary"
+                    type="reset"
+                    onClick={handleCancel}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    {isPropertiesModal ? "Save Changes" : "Create"}
+                  </Button>
+                </div>
+              </Form>
+            );
+          }}
+        </Formik>
+      </Modal>
+    </div>
+  );
+}
