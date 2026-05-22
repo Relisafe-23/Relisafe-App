@@ -100,7 +100,7 @@ const UnavailabilityReportModal = ({
       title="Unavailability at Time t - Q(t) Report"
       open={isOpen}
       onCancel={onClose}
-      width={1400}
+      width={1200}
       footer={[
         <Button key="download" onClick={downloadCSV} style={{ marginRight: '10px' }}>
           Download CSV
@@ -115,7 +115,7 @@ const UnavailabilityReportModal = ({
         <p>Total Components: {calculationData.length}</p>
       </div>
 
-      <div style={{ maxHeight: '500px', overflow: 'auto' }}>
+      <div style={{ maxHeight:'350px', overflow: 'auto' }}>
         {calculationData.length > 0 ? (
           <MaterialTable
             icons={tableIcons}

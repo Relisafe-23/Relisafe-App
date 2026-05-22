@@ -35,7 +35,7 @@ export default function RenderNode({
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newNode, setNewNode] = useState({});
-  const [totalNoOfGate, setTotalNoOfGate] = useState();
+  const [totalNoOfGate, setTotalNoOfGate] = useState(0);
   const [type, setType] = useState("add");
   const [activeNodeData, setActiveNodeData] = useState([]);
   const [modal2Open, setModal2Open] = useState(false);
@@ -49,7 +49,7 @@ export default function RenderNode({
   const [onChangeEventTimeToFirstTest, setOnChangeEventTimeToFirstTest] = useState();
   // const [onChangeEventIsT, setOnChangeEventIsT] = useState(); 
 
- 
+
 
   console.log(node, ' - node from ')
   const [eventData, setEventData] = useState({
@@ -62,6 +62,7 @@ export default function RenderNode({
     isT: node?.isT,
     timeToFirstTest: node?.timeToFirstTest, // This is Tf
     eventMissionTime: node?.eventMissionTime,
+    failureMode: node?.failuremode,
   });
   const isSteadyStateMode = () => {
     // console.log(calculationMode, 'calculationMode')
@@ -94,7 +95,7 @@ export default function RenderNode({
   const [FMECAdata, setFMECAdata] = useState([]);
   const [deleteId, setDeleteId] = useState(node?.id)
 
-  console.log(deleteId, 'deleteId')
+  // console.log(deleteId, 'deleteId')
 
   const formikRef = useRef(null);
 
@@ -187,14 +188,14 @@ export default function RenderNode({
     description: Yup.string().required("Description is Required"),
     calcTypes: Yup.object().required("Calc.Type is Required"),
     isProducts: Yup.object().required("Product is Required"),
-      isP: Yup.mixed().when('calcTypes', {
-    is: (calcTypes) => calcTypes?.value === "Probability" || calcTypes?.value === "Constant Probability",
-    then: Yup.number()
-      .typeError("Probability must be a number")
-      .max(1, "Probability cannot be greater than 1")
-      .required("Probability is required"),
-    otherwise: Yup.mixed().nullable()
-  }),
+    isP: Yup.mixed().when('calcTypes', {
+      is: (calcTypes) => calcTypes?.value === "Probability" || calcTypes?.value === "Constant Probability",
+      then: Yup.number()
+        .typeError("Probability must be a number")
+        .max(1, "Probability cannot be greater than 1")
+        .required("Probability is required"),
+      otherwise: Yup.mixed().nullable()
+    }),
   });
 
   const handleCancel = () => {
@@ -210,6 +211,22 @@ export default function RenderNode({
     setIsEventModal(false);
     setModal2Open(false);
     setIsFRtrigger(false);
+
+    // ✅ ADD THESE RESETS
+    setOnChangeEventName(undefined);
+    setOnChangeEventDescription(undefined);
+    setOnChangeEventCalcTypes(undefined);
+    setOnChangeEventIsP(undefined);
+    setOnChangeEventFR(undefined);
+    setOnChangeEventMTTR(undefined);
+    setOnChangeEventIsT(undefined);
+    setOnChangeEventEventMissionTime(undefined);
+    setOnChangeEventTimeToFirstTest(undefined);
+    setIsProductName(undefined);     // FIXED - clear fully
+    setShowFrRate(undefined);        // FIXED - clear fully
+    setIsFailureMode(undefined);     // FIXED - clear fully
+
+
   };
 
   const convertNumber = parseInt(node?.indexCount);
@@ -249,19 +266,19 @@ export default function RenderNode({
   };
 
   const updateFTA = (values) => {
-      if ((values?.calcTypes?.value === "Probability" || values?.calcTypes?.value === "Constant Probability") && 
+    if ((values?.calcTypes?.value === "Probability" || values?.calcTypes?.value === "Constant Probability") &&
       values?.isP) {
-    const probValue = parseFloat(values.isP);
-    if (isNaN(probValue)) {
-      toast.error("Probability must be a number");
-      return;
+      const probValue = parseFloat(values.isP);
+      if (isNaN(probValue)) {
+        toast.error("Probability must be a number");
+        return;
+      }
+      if (probValue > 1) {
+        toast.error("Probability cannot be greater than 1");
+        return;
+      }
     }
-    if (probValue > 1) {
-      toast.error("Probability cannot be greater than 1");
-      return;
-    }
-  }
-  
+
     if (node?.indexCount === 1) {
       Api.patch(`/api/v1/FTA/update/property/${node?.parentId}`, {
         productId: node?.id,
@@ -365,18 +382,18 @@ export default function RenderNode({
 
 
 
-  const eventSubmit = (values, { resetForm , setErrors }) => {
-      if (values.calcTypes.value === "Probability" || values.calcTypes.value === "Constant Probability") {
-    const probValue = parseFloat(values.isP);
-    if (isNaN(probValue)) {
-      setErrors({ isP: "Probability must be a number" });
-      return;
+  const eventSubmit = (values, { resetForm, setErrors }) => {
+    if (values.calcTypes.value === "Probability" || values.calcTypes.value === "Constant Probability") {
+      const probValue = parseFloat(values.isP);
+      if (isNaN(probValue)) {
+        setErrors({ isP: "Probability must be a number" });
+        return;
+      }
+      if (probValue > 1) {
+        setErrors({ isP: "Probability cannot be greater than 1" });
+        return;
+      }
     }
-    if (probValue > 1) {
-      setErrors({ isP: "Probability cannot be greater than 1" });
-      return;
-    }
-  }
     const companyId = localStorage.getItem("companyId");
     Api.post("/api/v1/FTA/create/child/node", {
       companyId: companyId,
@@ -432,6 +449,8 @@ export default function RenderNode({
           ? null
           : values.isT,
       timeToFirstTest: values.timeToFirstTest || "0",
+      // failureMode: values?.isFailureMode || "0",
+      failureMode: values?.isFailureMode?.value || isFailureMode || "0",
     }).then((res) => {
       setIsEventModal(false);
       closeEditGateModal();
@@ -440,6 +459,21 @@ export default function RenderNode({
       getFTAData();
       setIsFRtrigger(false);
       resetForm({ values: "" });
+
+      // ✅ ADD THESE RESETS
+      setOnChangeEventName(undefined);
+      setOnChangeEventDescription(undefined);
+      setOnChangeEventCalcTypes(undefined);
+      setOnChangeEventIsP(undefined);
+      setOnChangeEventFR(undefined);
+      setOnChangeEventMTTR(undefined);
+      setOnChangeEventIsT(undefined);
+      setOnChangeEventEventMissionTime(undefined);
+      setOnChangeEventTimeToFirstTest(undefined);
+      setIsProductName(undefined);     // FIXED - clear fully
+      setShowFrRate(undefined);        // FIXED - clear fully
+      setIsFailureMode(undefined);     // FIXED - clear fully
+
 
 
       toast("Event Node Created Successfully", {
@@ -614,6 +648,7 @@ export default function RenderNode({
       },
     }).then((res) => {
       setFMECAdata(res?.data?.data);
+      console.log(res?.data?.data, 'get data ')
     });
   };
 
@@ -807,6 +842,7 @@ export default function RenderNode({
               setIsFRtrigger(false);
             }}
           >
+            {console.log(node)}
             <Card.Header
               style={{
                 height: "20px",
@@ -867,7 +903,7 @@ export default function RenderNode({
                 }}
               >
 
-                {node?.gateId || "GATE"}
+                {node?.indexCount || "GATE"}
               </p>
             </Card.Header>
 
@@ -968,15 +1004,15 @@ export default function RenderNode({
                       )}
 
                       {/* #3 Constant mission time */}
-{/* #3 Constant mission time */}
-{node?.calcTypes === "Constant mission time" && (
-  <span>
-    {isSteadyStateMode()
-      ? `Q̄ = 1-(1-${node?.isP || '0'})·e^(-λ·tm), λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, tm=${node?.eventMissionTime || '0'}h`
-      : `Q(t) = 1-(1-${node?.isP || '0'})·e^(-λ·tm), λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, tm=${node?.eventMissionTime || '0'}h`
-    }
-  </span>
-)}
+                      {/* #3 Constant mission time */}
+                      {node?.calcTypes === "Constant mission time" && (
+                        <span>
+                          {isSteadyStateMode()
+                            ? `Q̄ = 1-(1-${node?.isP || '0'})·e^(-λ·tm), λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, tm=${node?.eventMissionTime || '0'}h`
+                            : `Q(t) = 1-(1-${node?.isP || '0'})·e^(-λ·tm), λ=${node?.fr ? parseFloat(node.fr).toExponential(2) : '0'}/h, tm=${node?.eventMissionTime || '0'}h`
+                          }
+                        </span>
+                      )}
                       {/* #4 Repairable */}
                       {node?.calcTypes === "Repairable" && (
                         <span>
@@ -1253,12 +1289,12 @@ export default function RenderNode({
                         )}
 
                         {/* #3 Constant mission time */}
-                    {/* #3 Constant mission time */}
-{node?.calcTypes === "Constant mission time" && (
-  isSteadyStateMode()
-    ? "Q̄ = 1-(1-q)·e^(-λ·tm), w(t) = 0"
-    : "Q(t) = 1-(1-q)·e^(-λ·tm), w(t) = 0"
-)}
+                        {/* #3 Constant mission time */}
+                        {node?.calcTypes === "Constant mission time" && (
+                          isSteadyStateMode()
+                            ? "Q̄ = 1-(1-q)·e^(-λ·tm), w(t) = 0"
+                            : "Q(t) = 1-(1-q)·e^(-λ·tm), w(t) = 0"
+                        )}
                         {/* #4 Repairable */}
                         {node?.calcTypes === "Repairable" && (
                           isSteadyStateMode()
@@ -1340,33 +1376,33 @@ export default function RenderNode({
                       </div>
 
                       {/* PARAMETERS - Shows the actual numbers */}
-                {/* PARAMETERS - Shows the actual numbers */}
-<div style={{ textAlign: "left", paddingLeft: "5px", marginTop: "2px" }}>
-  {/* Failure Rate λ */}
-  {node?.fr && node.fr !== "0" && node.fr !== "-" && (
-    <div>λ = {parseFloat(node.fr).toExponential(2)}/h</div>
-  )}
-  
-  {/* Probability q */}
-  {node?.isP && node.isP !== "0" && node.isP !== "" && (
-    <div>q = {node.isP}</div>
-  )}
-  
-  {/* MTTR */}
-  {node?.mttr && node.mttr !== "0" && (
-    <div>MTTR = {node.mttr}h, μ = {node.mttr ? (1 / parseFloat(node.mttr)).toExponential(2) : '0'}/h</div>
-  )}
-  
-  {/* Test Interval T/Ti */}
-  {node?.isT && node.isT !== "0" && (
-    <div>T = {node.isT}h</div>
-  )}
-  
-  {/* Mission Time tm - ADD THIS SECTION */}
-  {node?.eventMissionTime && node.eventMissionTime !== "0" && (
-    <div>tm = {node.eventMissionTime}h</div>
-  )}
-</div>
+                      {/* PARAMETERS - Shows the actual numbers */}
+                      <div style={{ textAlign: "left", paddingLeft: "5px", marginTop: "2px" }}>
+                        {/* Failure Rate λ */}
+                        {node?.fr && node.fr !== "0" && node.fr !== "-" && (
+                          <div>λ = {parseFloat(node.fr).toExponential(2)}/h</div>
+                        )}
+
+                        {/* Probability q */}
+                        {node?.isP && node.isP !== "0" && node.isP !== "" && (
+                          <div>q = {node.isP}</div>
+                        )}
+
+                        {/* MTTR */}
+                        {node?.mttr && node.mttr !== "0" && (
+                          <div>MTTR = {node.mttr}h, μ = {node.mttr ? (1 / parseFloat(node.mttr)).toExponential(2) : '0'}/h</div>
+                        )}
+
+                        {/* Test Interval T/Ti */}
+                        {node?.isT && node.isT !== "0" && (
+                          <div>T = {node.isT}h</div>
+                        )}
+
+                        {/* Mission Time tm - ADD THIS SECTION */}
+                        {node?.eventMissionTime && node.eventMissionTime !== "0" && (
+                          <div>tm = {node.eventMissionTime}h</div>
+                        )}
+                      </div>
                     </>
                   )}
                 </div>
@@ -1737,17 +1773,17 @@ export default function RenderNode({
               ? isEventModalOpen
               : isEventModal
         }
-     footer={null}
-  onCancel={handleCancel}
-  maskClosable={false}
-  width={500}
-  style={{ top: 20 }}
-  bodyStyle={{
-    maxHeight: '70vh',
-    overflowY: 'auto',
-    // padding: '0 24px 24px 24px'
-  }}
->
+        footer={null}
+        onCancel={handleCancel}
+        maskClosable={false}
+        width={500}
+        style={{ top: 20 }}
+        bodyStyle={{
+          maxHeight: '70vh',
+          overflowY: 'auto',
+          // padding: '0 24px 24px 24px'
+        }}
+      >
         <hr />
         <Formik
           enableReinitialize={true}
@@ -1773,6 +1809,7 @@ export default function RenderNode({
                 : "",
             mttr: onChangeEventMTTR ? onChangeEventMTTR : node?.isEvent ? eventData?.mttr : "",
             isT: onChangeEventIsT ? onChangeEventIsT : node?.isEvent ? eventData?.isT : "",
+            isFailureMode: eventData.failureMode,
             gateId:
               selectedNodeId === node?.gateId && isEventModalOpen
                 ? addGateCount
@@ -1788,6 +1825,7 @@ export default function RenderNode({
             const { values, handleChange, handleSubmit, handleBlur, setFieldValue } = formik;
             return (
               <Form onSubmit={handleSubmit}>
+                {console.log(values, 'values')}
                 <Form.Group className="mb-2">
                   <Label notify={true}>Name</Label>
                   <Form.Control
@@ -1952,22 +1990,22 @@ export default function RenderNode({
                       </Form.Group>
                     )}                </Form.Group>
 
-               {values.calcTypes.value === "Probability" ? (
-  <Form.Group className="mb-2">
-    <Label>p (Probability)</Label>
-    <Form.Control
-      type="text"
-      name="isP"
-      placeholder="Enter probability value"
-      value={values.isP}
-      onBlur={handleBlur}
-      onChange={(e) => setOnChangeEventIsP(e?.target?.value)}
-    />
-    <ErrorMessage className="error text-danger" component="span" name="isP" />
-    <Form.Text className="text-muted">
-      Probability value cannot exceed 1
-    </Form.Text>
-  </Form.Group>
+                {values.calcTypes.value === "Probability" ? (
+                  <Form.Group className="mb-2">
+                    <Label>p (Probability)</Label>
+                    <Form.Control
+                      type="text"
+                      name="isP"
+                      placeholder="Enter probability value"
+                      value={values.isP}
+                      onBlur={handleBlur}
+                      onChange={(e) => setOnChangeEventIsP(e?.target?.value)}
+                    />
+                    <ErrorMessage className="error text-danger" component="span" name="isP" />
+                    <Form.Text className="text-muted">
+                      Probability value cannot exceed 1
+                    </Form.Text>
+                  </Form.Group>
                 ) : (values.calcTypes.value !== undefined && values.calcTypes.value !== "Probability") ||
                   (values.calcTypes.value !== undefined &&
                     values.calcTypes.value !== "Unrepairable") ? (
@@ -2049,26 +2087,42 @@ export default function RenderNode({
                   </Form.Group>
                 ) : null}
 
+                {console.log(values.isFailureMode, 'values.isFailureMode')}
                 <Form.Group className="mb-2">
-                  <Label notify={true}>Failure Mode</Label>
+                  <Label notify={true}>Failure Mode </Label>
+
                   <Select
-                    type="select"
                     styles={customStyles}
-                    value={values.isFailureMode}
                     name="isFailureMode"
                     placeholder="Select Failure Mode"
-                    onChange={(e) => setIsFailureMode(e.value)}
+
+                    value={
+                      values.isFailureMode
+                        ? {
+                          label: values.isFailureMode,
+                          value: values.isFailureMode,
+                        }
+                        : null
+                    }
+
+                    onChange={(e) => {
+                      setFieldValue("isFailureMode", e.value);
+                      setIsFailureMode(e.value);
+                    }}
+
                     onBlur={handleBlur}
-                    options={[
-                      {
-                        options: FMECAdata?.map((list, i) => ({
-                          label: list?.failureMode,
-                          value: list?.failureMode,
-                        })),
-                      },
-                    ]}
+
+                    options={FMECAdata?.map((list) => ({
+                      label: list?.failureMode,
+                      value: list?.failureMode,
+                    }))}
                   />
-                  <ErrorMessage className="error text-danger" component="span" name="isProducts" />
+
+                  <ErrorMessage
+                    className="error text-danger"
+                    component="span"
+                    name="isFailureMode"
+                  />
                 </Form.Group>
 
                 <div className="d-flex justify-content-end mt-4">
