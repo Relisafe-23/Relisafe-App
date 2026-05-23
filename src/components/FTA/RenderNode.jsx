@@ -157,6 +157,7 @@ export default function RenderNode({
         count: convertNumber,
       },
     }).then((res) => {
+      console.log(res.data, 'GET API')
       const totalGateNumber = res?.data?.gateId[0].totalGateId;
       setTotalNoOfGate(totalGateNumber);
     });
@@ -492,6 +493,9 @@ export default function RenderNode({
   };
 
   const addGateCount = totalNoOfGate + 1;
+  // const addGateCount = node?.gateId + 1;
+
+  console.log(addGateCount, 'addGateCount')
 
   const handleAddNode = (type, isEvent) => {
     setSelectedNodeId(null);
@@ -502,8 +506,19 @@ export default function RenderNode({
         count: convertNumber,
       },
     }).then((res) => {
-      const totalGateNumber = res?.data?.gateId[0].totalGateId;
+      // const totalGateNumber = res?.data?.gateId[0].totalGateId;
+      // setTotalNoOfGate(totalGateNumber);
+
+      const searchId = node?.parentId ? node?.parentId : node?.id
+
+      console.log(searchId, 'searchId')
+
+      const totalGateNumber = res?.data?.gateId?.find(
+        item => item?.id === searchId
+      )?.totalGateId;
       setTotalNoOfGate(totalGateNumber);
+      console.log(res, 'ann res')
+      console.log(node?.id, 'node?.id')
     });
     if (isEvent === "isEvent" || isEvent === "isEventEdit") {
       setIsEventModal(true);
@@ -527,7 +542,6 @@ export default function RenderNode({
 
     closeDeleteNode(sendDataToModalContext);
   };
-
   // const confirm = (event) => {
   //   Modal.confirm({
   //     title:
@@ -546,8 +560,6 @@ export default function RenderNode({
   //     },
   //   });
   // };
-
-
   const confirm = (event) => {
     // Prevent event bubbling
     if (event) {
@@ -583,6 +595,8 @@ export default function RenderNode({
     const projId = projectId;
     const childId = node?.id;
     const parantId = node?.parentId;
+    console.log(parantId, 'parantId')
+    console.log(deleteId, 'deleteId')
     Api.delete(`/api/v1/FTA/delete/${parantId}/${deleteId}`, {
       params: {
         tableParentId: node?.indexCount === 1 ? node?.parentId : null,
@@ -626,15 +640,30 @@ export default function RenderNode({
     { value: "Average probability per mission hour", label: "Average probability per mission hour" },
     { value: "Periodical Tests #2", label: "Periodical Tests #2" },
   ];
-
-
   const handleGetFRapi = (e) => {
     const companyId = localStorage.getItem("companyId");
     const productId = e.value.id;
     const treeStructureId = e.value.parentId;
     Api.get(`/api/v1/FTA/get/frRate/${projectId}/${productId}/${treeStructureId}/${companyId}`).then((res) => {
       const data = res?.data?.getFRdata;
+      console.log("getFRdata full response:", data);
       setShowFrRate(data?.frpRate);
+    });
+
+    Api.get(`/api/v1/mttrPrediction/details`, {
+      params: {
+        projectId: projectId,
+        productId: productId,
+        companyId: companyId,
+      },
+    }).then((res) => {
+      const mttrData = res?.data?.data;
+      console.log("mttr prediction data:", mttrData); // ← verify first
+      if (mttrData?.mttr) {
+        setOnChangeEventMTTR(mttrData.mttr); // ✅ auto-fills MTTR field
+      }
+    }).catch((err) => {
+      console.log("mttr fetch error:", err);
     });
   };
 
@@ -648,7 +677,7 @@ export default function RenderNode({
       },
     }).then((res) => {
       setFMECAdata(res?.data?.data);
-      console.log(res?.data?.data, 'get data ')
+
     });
   };
 
@@ -704,9 +733,6 @@ export default function RenderNode({
       });
     }
   };
-
-
-
   // Function to get node styles based on type and highlight status
   // Update your getNodeStyles function to return complete styles
   const getNodeStyles = () => {
@@ -903,7 +929,9 @@ export default function RenderNode({
                 }}
               >
 
-                {node?.indexCount || "GATE"}
+                {/* {node?.indexCount || "GATE"} */}
+                {`${node?.gateId} - Gate` || "GATE"}
+
               </p>
             </Card.Header>
 
@@ -1421,6 +1449,11 @@ export default function RenderNode({
         maskClosable={false}
       >
         <hr />
+        {console.log(selectedNodeId, 'selectedNodeId')}
+        {console.log(node?.gateId, 'node?.gateId')}
+        {console.log(isChildCreate, 'isChildCreate')}
+
+
         <Formik
           enableReinitialize={true}
           initialValues={{
@@ -1508,7 +1541,7 @@ export default function RenderNode({
                   <ErrorMessage className="error text-danger" component="span" name="description" />
                 </Form.Group>
                 <Form.Group className="mb-2">
-                  <Label notify={true}>Gate Id</Label>
+                  <Label notify={true}>Gate Id 1</Label>
                   <Form.Control
                     disabled={true}
                     type="text"
@@ -1739,7 +1772,7 @@ export default function RenderNode({
                   <ErrorMessage className="error text-danger" component="span" name="description" />
                 </Form.Group>
                 <Form.Group className="mb-2">
-                  <Label notify={true}>Gate Id</Label>
+                  <Label notify={true}>Gate Id 2</Label>
                   <Form.Control
                     disabled={true}
                     type="text"
@@ -1784,6 +1817,10 @@ export default function RenderNode({
           // padding: '0 24px 24px 24px'
         }}
       >
+        {console.log(onChangeEventMTTR, 'onChangeEventMTTR')}
+        {console.log(node?.isEvent, 'node?.isEvent')}
+        {console.log(eventData, 'eventData')}
+
         <hr />
         <Formik
           enableReinitialize={true}
@@ -1807,7 +1844,11 @@ export default function RenderNode({
               : node?.isEvent
                 ? eventData?.eventMissionTime
                 : "",
-            mttr: onChangeEventMTTR ? onChangeEventMTTR : node?.isEvent ? eventData?.mttr : "",
+            mttr: onChangeEventMTTR
+              ? onChangeEventMTTR
+              : node?.isEvent
+                ? eventData?.mttr
+                : "",
             isT: onChangeEventIsT ? onChangeEventIsT : node?.isEvent ? eventData?.isT : "",
             isFailureMode: eventData.failureMode,
             gateId:
@@ -2049,6 +2090,7 @@ export default function RenderNode({
                     <ErrorMessage className="error text-danger" component="span" name="eventMissionTime" />
                   </Form.Group>
                 ) : null}
+                {/* repairmttr */}
                 {values.calcTypes.value === "Repairable" || values.calcTypes.value === "Latent repairable" ? (
                   <Form.Group className="mb-2" style={{ width: "95%" }}>
                     <Label>MTTR</Label>
