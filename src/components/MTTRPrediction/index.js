@@ -1181,6 +1181,11 @@ const MTTRPrediction = (props, active) => {
           ? mttrResult.sumOfTime / mttrResult.sumOfTotal
           : 0;
 
+        console.log(mttrResult?.sumOfTotal,'mttrResult.sumOfTotal')
+        console.log(mttrResult?.sumOfTime,'mttrResult.sumOfTime')
+
+
+        console.log(mttrValue,'mttrValue')
         setMttrCalculatedValue(mttrValue);
       })
       .catch((error) => {

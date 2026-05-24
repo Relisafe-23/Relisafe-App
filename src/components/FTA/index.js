@@ -861,6 +861,7 @@ export default function FTA(props) {
               (tree) =>
                 tree._id === selectedTreeId || tree.id === selectedTreeId,
             ) || allTreeData[0];
+            
           setChartData(treeToShow.treeStructure || {});
           if (treeToShow.treeStructure?.parentId) {
             getFullFTAdata(treeToShow.treeStructure.parentId);
