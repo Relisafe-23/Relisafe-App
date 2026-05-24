@@ -867,6 +867,7 @@ const fmecaData = React.useMemo(() => {
                           )}
                         </tr>
                       </thead>
+                      {console.log(fmecaData,'fmecaData')}
                       <tbody>
                         {fmecaData?.map((row, rowIndex) => (
                           <tr key={rowIndex}>

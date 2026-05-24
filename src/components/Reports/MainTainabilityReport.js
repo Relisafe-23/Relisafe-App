@@ -45,7 +45,7 @@ function MaintainabilityReport(props) {
   const [pmmraTreeData, setPmmraTreeData] = useState([]);
   const [columnLength, setColumnLength] = useState(false);
   const [columnVisibility, setColumnVisibility] = useState({
-     Id: true,
+    Id: true,
     "PM Task ID": true,
     "PM Task Type": true,
     "Task Intervel Frequency": true,
@@ -96,7 +96,7 @@ function MaintainabilityReport(props) {
 
   // Mapping of headers to data keys
   const headerKeyMapping = {
-        Id: "indexCount",
+    Id: "indexCount",
 
     "Product Name": "productName",
     "Part Number": "partNumber",
@@ -169,7 +169,7 @@ function MaintainabilityReport(props) {
   const userId = localStorage.getItem("userId");
 
   const header1 = [
-     
+
     "S.No",
     "Id",
     "Product Name",
@@ -181,6 +181,7 @@ function MaintainabilityReport(props) {
     "Environment",
     "Temperature",
     "FR",
+    "FMECA Failure ID",
     "MTTR",
     "MCT",
     "MLH",
@@ -331,6 +332,7 @@ function MaintainabilityReport(props) {
     })
       .then((res) => {
         const treeData = res?.data?.data;
+        console.log(treeData, 'treeData')
         setData(treeData);
         setIsLoading(false);
       })
@@ -820,41 +822,61 @@ function MaintainabilityReport(props) {
                         )}
                       </tr>
                     </thead>
+                    {console.log(safeData, 'safeData')}
                     <tbody>
-                      {safeData?.map((row, rowIndex) => (
-                        <tr key={rowIndex}>
-                          {combinedHeaders.map((header) => {
-                            const key = headerKeyMapping[header];
-                            let value =
-                              row.productId[key] ??
-                              row.mttrData[key] ??
-                              row.pmmraData[key] ??
-                              "-";
-                            if (header === "S.No") {
-                              return (
-                                <td
-                                  key={header}
-                                  style={{ textAlign: "center" }}
-                                >
-                                  {rowIndex + 1}
-                                </td>
-                              )
-                            }
-                            // Check if the header is "FR" and format the value to 6 decimal places
-                            if (header === "FR" && typeof value === "number") {
-                              value = value.toFixed(6);
-                            }
+                      {(() => {
+                        let serialCounter = 1;
+
+                        return safeData?.flatMap((row, rowIndex) => {
+                          // Get the length of pmmraData array, default to 1 if empty
+                          const pmmraLength = row.pmmraData?.length || 1;
+
+                          // Create an array of indices to map over
+                          return Array.from({ length: pmmraLength }, (_, pmmraIndex) => {
+                            const currentSerial = serialCounter++;
+
                             return (
-                              <td
-                                key={header}
-                                style={{ textAlign: "center" }}
-                              >
-                                {value}
-                              </td>
+                              <tr key={`${rowIndex}-${pmmraIndex}`}>
+                                {combinedHeaders.map((header) => {
+                                  const key = headerKeyMapping[header];
+                                  let value;
+
+                                  // Handle S.No header with proper sequential numbering
+                                  if (header === "S.No") {
+                                    return (
+                                      <td key={header} style={{ textAlign: "center" }}>
+                                        {currentSerial}
+                                      </td>
+                                    );
+                                  }
+
+                                  // Get value based on the data structure
+                                  if (row.pmmraData?.[pmmraIndex]?.[key]) {
+                                    value = row.pmmraData[pmmraIndex][key];
+                                  } else if (row.productId?.[key]) {
+                                    value = row.productId[key];
+                                  } else if (row.mttrData?.[key]) {
+                                    value = row.mttrData[key];
+                                  } else {
+                                    value = "-";
+                                  }
+
+                                  // Format FR values
+                                  if (header === "FR" && typeof value === "number") {
+                                    value = value.toFixed(6);
+                                  }
+
+                                  return (
+                                    <td key={header} style={{ textAlign: "center" }}>
+                                      {value}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
                             );
-                          })}
-                        </tr>
-                      ))}
+                          });
+                        });
+                      })()}
                     </tbody>
                   </table>
                 </div>
