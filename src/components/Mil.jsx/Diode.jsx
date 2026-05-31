@@ -1345,27 +1345,46 @@ calculationDetails.push({
             calculationDetails.push({ name: 'Application Factor (πA)', value: pi_A });
 
 
- let pi_R = 1;
-    let powerRatingDescription1 = '';
+let pi_R = 1;
+let powerRatingDescription1 = '';
 
-    if (formData.transistorPowerFactor) {
-        // Use dropdown value if selected
-        const powerFactor = transistorPowerFactors.find(p => p.power === formData.transistorPowerFactor);
-        pi_R = powerFactor ? powerFactor.pi_R : 1;
-        powerRatingDescription1 = `Selected power factor: ${formData.transistorPowerFactor} (πR = ${pi_R})`;
-    } else if (formData.powerInput1) {
-        // Calculate from manual input if provided
-          const Pr = parseFloat(formData.powerInput1) || 1;
-          pi_R = Math.pow(Pr, 0.37);
-      
-        pi_R = calculatePiR(Pr);
-        powerRatingDescription1 = `Calculated from input power (${Pr} W): πR = ${pi_R.toFixed(4)}`;
-    } 
-  calculationDetails.push({ 
-        name: 'Power Rating Factor (πR)', 
-        value: pi_R.toFixed(4),
-        description: powerRatingDescription1
-    });
+const calculatePiR = (Pr) => {
+    // If Pr ≤ 0.1W
+    if (Pr <= 0.1) {
+        return 0.43;
+    }
+
+    // If Pr > 0.1W
+    return Math.pow(Pr, 0.37);
+};
+
+if (formData.transistorPowerFactor) {
+    // Use dropdown value if selected
+    const powerFactor = transistorPowerFactors.find(
+        p => p.power === formData.transistorPowerFactor
+    );
+
+    pi_R = powerFactor ? powerFactor.pi_R : 1;
+
+    powerRatingDescription1 =
+        `Selected power factor: ${formData.transistorPowerFactor} (πR = ${pi_R})`;
+
+} else if (formData.powerInput1) {
+
+    // Calculate from manual Pr input
+    const Pr = parseFloat(formData.powerInput1) || 1;
+
+    pi_R = calculatePiR(Pr);
+
+    powerRatingDescription1 =
+        `Calculated from input power (${Pr} W): πR = ${pi_R.toFixed(4)}`;
+}
+
+calculationDetails.push({
+    name: 'Power Rating Factor (πR)',
+    value: pi_R.toFixed(4),
+    description: powerRatingDescription1
+});
  
 
 let pi_S = 1;

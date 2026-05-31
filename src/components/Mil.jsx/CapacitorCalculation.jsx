@@ -193,25 +193,27 @@ function CapacitorCalculation({ onCalculate }) {
 
 
 
-    const calculatePiT = () => {
-    // Constants from the 
-       if (!selectedCapacitor || selectedCapacitor?.value?.πtColumn === "N/A (πt=1)") {
+ const calculatePiT = () => {
+    if (!selectedCapacitor || selectedCapacitor?.value?.πtColumn === "N/A (πt=1)") {
       return 1.0;
     }
-    const BOLTZMANN_CONSTANT = 8.617e-5; // eV/K
-    const REFERENCE_TEMP = 298; // K (25°C)
+    
+    const BOLTZMANN_CONSTANT = 8.617e-5;  // 8.617 × 10⁻⁵ eV/K
+    const REFERENCE_TEMP = 298;            // 25°C + 273 = 298K
 
-    // Get activation energy based on column selection
-    const Ea = selectedCapacitor?.value?.πtColumn === 1 ? 0.15 : 0.35; // eV (from image columns)
+    // Column 1: Ea = 0.15, Column 2: Ea = 0.35
+    const Ea = selectedCapacitor?.value?.πtColumn === 1 ? 0.15 : 0.35;
 
-    // Convert temperature to Kelvin
+    // T + 273 (convert °C to Kelvin)
     const tempInKelvin = temperature + 273;
 
-    // Calculate πT using Arrhenius equation
+    // πT = exp( -Ea / 8.617×10⁻⁵ × (1/(T+273) - 1/298) )
     const exponent = (-Ea / BOLTZMANN_CONSTANT) *
       ((1 / tempInKelvin) - (1 / REFERENCE_TEMP));
 
-    return Math.exp(exponent);
+    const result = Math.exp(exponent); // ✅ No .toFixed() here
+
+    return parseFloat(result.toFixed(2)); // ✅ Clean 2 decimal output as number
   };
 
   const calculatePiC = () => {
@@ -371,7 +373,7 @@ console.log("S (Stress Ratio)...", S);
    const calculateFailureRate = () => {
   
     const λb = selectedCapacitor?.value.λb;
-    const πT = calculatePiT();
+    const πT = calculatePiT()?.toFixed(2);
     const πC = calculatePiC();
     const πV = calculatePiV();
     const πSR = calculatePiSR();
@@ -573,7 +575,7 @@ const newResult = {
               {errors.dcVoltageApplied && <small style={{ color: 'red' }}>{errors.dcVoltageApplied}</small>}
                     {selectedCapacitor?.value?.πvColumn && capacitorTypes.some(type => type.πvColumn === selectedCapacitor?.value?.πvColumn) && (
               <div className="mt-2">
-                Calculated π<sub>V</sub>: {calculatePiV()?.toFixed(3)}
+                Calculated π<sub>V</sub>: {calculatePiV()?.toFixed(1)}
                 <br />
                 <small>
            Using { selectedCapacitor?.value?.πvColumn === 1 ? 'Column 1' : 
@@ -664,7 +666,7 @@ selectedCapacitor?.value?.πvColumn === 4 ?'Column 4':'Column 5'} formula
             </div>
               {selectedCapacitor?.value?.πtColumn && capacitorTypes.some(type => type.πtColumn === selectedCapacitor?.value.πtColumn) && (
               <div className="mt-2">
-                Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(3)}
+                Calculated π<sub>T</sub>: {calculatePiT()?.toFixed(1)}
                 <br />
                 <small>
                   Using {selectedCapacitor?.value?.πtColumn === 1 ? 'Column 1' : 'Column 2'}
@@ -869,7 +871,7 @@ selectedCapacitor?.value?.πvColumn === 4 ?'Column 4':'Column 5'} formula
             <div className="d-flex align-items-center">
               <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
               <span className="ms-2">
-                {calculateFailureRate()?.toFixed(10)} failures/10<sup>6</sup> hours
+                {calculateFailureRate()?.toFixed(3)} failures/10<sup>6</sup> hours
               </span>
             </div>
           </div>
