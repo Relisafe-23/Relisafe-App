@@ -4,8 +4,6 @@ import EditRBDConfiguration from "./EditRBDConfiguration";
  const RBDConfigPage = ({ selectedComponent }) => {
   const [showEdit, setShowEdit] = useState(false);
 
-  console.log("RBDConfigPage rendered with selectedComponent:", selectedComponent);
-
   return (
     <div>
       {selectedComponent === "RBD" && (
