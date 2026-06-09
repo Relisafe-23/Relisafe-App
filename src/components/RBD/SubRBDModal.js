@@ -8,6 +8,7 @@ const SubRBDModal = ({
   onHide,
   rbdData,
   targetId,
+  rbdId,
   mode = "add",
   blockId = null,
   nodeIndex = null,
@@ -150,7 +151,12 @@ const SubRBDModal = ({
     }
     return value;
   };
-
+// In your SubRBDModal, filter out the current RBD
+// In your SubRBDModal, filter out the current RBD
+const filteredRbdList = rbdList.filter(
+  (rbd) => rbd._id !== rbdId && rbd.id !== rbdId
+);
+ console.log("filteredRbdList",filteredRbdList)
   if (!show) return null;
 
   return (
@@ -269,17 +275,19 @@ const SubRBDModal = ({
               }
             }}
           >
-            <option value="">-- Select an RBD --</option>
-            {rbdList && rbdList.length > 0 ? (
-              rbdList.map((rbd) => (
-                <option key={rbd.id || rbd._id} value={JSON.stringify(rbd)}>
-                  {rbd.rbdTitle || `RBD ${rbd.id || rbd._id}`} -{" "}
-                  {rbd.description || "No description"}
-                </option>
-              ))
-            ) : (
-              <option disabled>No RBDs available</option>
-            )}
+           
+<option value="">-- Select an RBD --</option>
+{filteredRbdList && filteredRbdList.length > 0 ? (
+  filteredRbdList.map((rbd) => (
+    <option key={rbd.id || rbd._id} value={JSON.stringify(rbd)}>
+      {rbd.rbdTitle || `RBD ${rbd.id || rbd._id}`} -{" "}
+      {rbd.description || "No description"}
+    </option>
+  ))
+) : (
+  <option disabled>No RBDs available</option>
+)}
+  
           </select>
 
           {selectedRbd && (

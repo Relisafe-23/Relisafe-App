@@ -581,10 +581,15 @@ export const BiDirectionalSymbol = ({
                           setIdforApi={setIdforApi}
                           blockData={block}
                           width={C.BLOCK_W}
+                            // Pass reliability
+  subrbdreliability={block?.reliability}
+
+  // Pass unavailability if needed
+  subrbdunavailability={block?.unavailability}
                           height={C.BLOCK_H}
                           onOpenMenu={onOpenMenu}
                         />
-
+{console.log("subrbdreliability11111111111",block?.reliability)}
                         <>
                           <line
                             x1={bx + C.BLOCK_W}
@@ -780,6 +785,8 @@ export const BiDirectionalSymbol = ({
               onEdit={onEditBlock}
               onDelete={onDeleteBlock}
               blockData={item.blockData}
+             subrbdreliability={item.blockData?.reliability}
+             subrbdunavailability={item.blockData?.unavailability}
               mission={missionTime}
               width={C.BLOCK_W}
               height={C.BLOCK_H}
@@ -2420,12 +2427,15 @@ export default function RBDButton() {
                   onHide={() =>
                     setRbdListModal({ ...rbdListModal, open: false })
                   }
+                   rbdId={rbdId}  
+
                   rbdData={rbdListModal.selectedRbd}
                   mode={rbdListModal.mode}
                   blockId={rbdListModal.blockId}
                   nodeIndex={rbdListModal.nodeIndex}
                   onConfirm={handleSubRBDConfirm}
                   rbdList={rbdList}
+                    currentRbdId={rbdId} 
                   totalReliability={totalReliability} // ← ADD THIS
                   totalUnavailability={totalUnavailability} // ← ADD THIS
                 />

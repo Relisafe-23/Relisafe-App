@@ -33,7 +33,7 @@ export const KOfNConfigModal = ({
   const [nonIdenticalComponents, setNonIdenticalComponents] = useState([]);
   const [options, setOptions] = useState([]);
   const [systemReliability, setSystemReliability] = useState(0);
-
+console.log("nonIdenticalComponents",nonIdenticalComponents)
   const [values, setValues] = useState({
     relDes: currentBlock?.relDes || "",
     time: currentBlock?.time || " ",
@@ -45,7 +45,7 @@ export const KOfNConfigModal = ({
     color: currentBlock?.color || "#ffffff",
     productName: currentBlock?.productName || "",
     id: currentBlock?.id || "",
-    load: currentBlock?.load || "100",
+    load: currentBlock?.load || "",
     mttr: currentBlock?.mttr || "",
     productNumber: currentBlock?.productNumber || "",
     productTreeItemID: currentBlock?.productTreeItemID || "",

@@ -27,7 +27,8 @@ export const RBDBlock = ({
   setIdforApi,
   x,
   y,
-
+ subrbdreliability,
+  subrbdunavailability,
   setParentItemId,
   onEdit,
   onDelete,
@@ -58,7 +59,9 @@ export const RBDBlock = ({
 }) => {
   const [selectedId, setSelectedId] = useState(null);
   const [isSelected, setIsSelected] = useState(false);
-
+    const reliability = subrbdreliability ?? blockData?.reliability;
+  const unavailability = subrbdunavailability ?? blockData?.unavailability;
+console.log("subrbdreliability",subrbdreliability)
   const handleSelect = (clickedId) => {
     if (selectedId === clickedId) {
       setSelectedId(null);
@@ -492,10 +495,16 @@ export const RBDBlock = ({
             </>
           );
         }
-        case "SubRBD":
-          return "Sub RBD";
-        default:
-          return "Block";
+    case "SubRBD":
+   
+  return (
+    <>
+      <tspan x={x + BLOCK_W / 2} dy="-4">R:{subrbdreliability?.toFixed(7) ?? "N/A"}  </tspan>
+       <tspan x={x + BLOCK_W / 2} dy="10">U:{subrbdunavailability?.toFixed(7) ?? "N/A"} </tspan>
+    </>
+  );
+default:
+  return "Block";
       }
     };
 

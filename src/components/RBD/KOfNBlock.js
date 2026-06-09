@@ -6,17 +6,17 @@ export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
   const layerHeight = 0.5;
 
   // Get values from blockData
-  const k = blockData?.k || blockData?.data?.k || 2;
-  const n = blockData?.n || blockData?.data?.n || 3;
-  const lambda = blockData?.lambda || blockData?.data?.lambda || 0.001;
-  const mu = blockData?.mu || blockData?.data?.mu || 1000;
+  const k = blockData?.k || blockData?.data?.k || '';
+  const n = blockData?.n || blockData?.data?.n || '';
+  const lambda = blockData?.lambda || blockData?.data?.lambda || "";
+  const mu = blockData?.mu || blockData?.data?.mu || '';
   const reliability =
-    blockData?.reliability || blockData?.data?.reliability || 0;
+    blockData?.reliability || blockData?.data?.reliability || '';
   const unavailability =
-    blockData?.unavailability || blockData?.data?.unavailability || 0;
+    blockData?.unavailability || blockData?.data?.unavailability || '';
   const kOfNType =
     blockData?.kOfNType || blockData?.data?.kOfNType || "Identical";
-  const load = blockData?.load || blockData?.data?.load || 100;
+  const load = blockData?.load || blockData?.data?.load || '';
   const effectiveLambda = blockData?.effectiveLambda || lambda;
   const effectiveMu = blockData?.effectiveMu || mu;
 
