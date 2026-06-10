@@ -372,7 +372,7 @@ console.log("S (Stress Ratio)...", S);
   
     const λb = selectedCapacitor?.value.λb;
     const πT = calculatePiT();
-    const πC = calculatePiC();
+    const πC = calculatePiC()?.toFixed(1);
     const πV = calculatePiV();
     const πSR = calculatePiSR();
     console.log(" πSR..", πSR)
@@ -869,7 +869,7 @@ selectedCapacitor?.value?.πvColumn === 4 ?'Column 4':'Column 5'} formula
             <div className="d-flex align-items-center">
               <strong>Predicted Failure Rate (λ<sub>p</sub>):</strong>
               <span className="ms-2">
-                {calculateFailureRate()?.toFixed(10)} failures/10<sup>6</sup> hours
+                {calculateFailureRate()?.toFixed(3)} failures/10<sup>6</sup> hours
               </span>
             </div>
           </div>
