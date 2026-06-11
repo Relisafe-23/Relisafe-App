@@ -34,8 +34,13 @@ export const KOfNConfigModal = ({
   const [options, setOptions] = useState([]);
   const [systemReliability, setSystemReliability] = useState(0);
 
+  console.log(currentBlock,'currentBlock')
+  console.log(initialData,'initialData')
+
+  
+
   const [values, setValues] = useState({
-    relDes: currentBlock?.relDes || "",
+    relDes: initialData?.productName || "",
     time: currentBlock?.time || " ",
     elementType: currentBlock?.elementType || "K-out-of-N",
     reliability: currentBlock?.systemReliability || 0,
@@ -50,7 +55,7 @@ export const KOfNConfigModal = ({
     productNumber: currentBlock?.productNumber || "",
     productTreeItemID: currentBlock?.productTreeItemID || "",
     productId: currentBlock?.productId || "",
-    indexCount: currentBlock?.indexCount || "",
+    indexCount: initialData?.indexCount || "",
   });
 
   // Initialize from initialData
@@ -452,7 +457,7 @@ export const KOfNConfigModal = ({
 
     console.log(initialData,'initialData')
 
-    const blockId = initialData?._id || currentBlock?.id || values?.id;
+    const blockId = initialData?.id || initialData?._id || currentBlock?.id || values?.id;
 
     console.log(blockId, 'blockId')
 
@@ -651,7 +656,7 @@ export const KOfNConfigModal = ({
                 </label>
                 <input
                   type="text"
-                  value={values?.productName || ""}
+                  value={values?.relDes || ""}
                   onChange={(e) => handleChange("productName", e.target.value)}
                   placeholder="Transmitter"
                   style={{
