@@ -159,7 +159,7 @@ export default function RenderNode({
     }).then((res) => {
       console.log(res.data, 'GET API')
       const totalGateNumber = res?.data?.gateId[0].totalGateId;
-      setTotalNoOfGate(totalGateNumber);
+      // setTotalNoOfGate(totalGateNumber);
     });
 
     const sendDataToModalContext = {
@@ -1466,6 +1466,7 @@ export default function RenderNode({
             name: selectedNodeId === node?.gateId && isChildCreate ? "" : type === "modify" ? newNode?.name : "",
             description:
               selectedNodeId === node?.gateId && isChildCreate ? "" : type === "modify" ? newNode?.description : "",
+            
             gateId:
               selectedNodeId === node?.gateId && isChildCreate
                 ? addGateCount
@@ -1708,7 +1709,12 @@ export default function RenderNode({
             gateType: { label: activeNodeData?.gateType, value: activeNodeData?.gateType },
             name: activeNodeData?.name,
             description: activeNodeData?.description,
-            gateId: activeNodeData?.gateId,
+            gateId:
+              selectedNodeId === node?.gateId && isChildCreate
+                ? addGateCount
+                : type === "modify"
+                  ? newNode?.gateId
+                  : addGateCount,
           }}
           onSubmit={updateFTA}
           validationSchema={validate}
