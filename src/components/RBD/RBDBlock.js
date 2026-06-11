@@ -460,7 +460,7 @@ console.log("subrbdreliability",subrbdreliability)
 
       switch (t) {
         case "Regular":
-        case "REGULAR": {
+            case "REGULAR": {
           const { reliability, unavailability } = calculateMetrics({
             mtbf,
             mttr,
@@ -469,12 +469,19 @@ console.log("subrbdreliability",subrbdreliability)
           // console.log("reliability1234555",reliability)
           return (
             <>
-              <tspan x={x + BLOCK_W / 2} dy="-4">
-                R: {reliability}
-              </tspan>
-              <tspan x={x + BLOCK_W / 2} dy="10">
-                U: {unavailability}
-              </tspan>
+              {reliability === 0 || unavailability === 0 ?
+                (<tspan>
+                  Block
+                </tspan>) : (
+                  <>
+                    <tspan x={x + BLOCK_W / 2} dy="-4">
+                      R: {reliability}
+                    </tspan>
+                    <tspan x={x + BLOCK_W / 2} dy="10">
+                      U: {unavailability}
+                    </tspan>
+                  </>
+                )}
             </>
           );
         }
