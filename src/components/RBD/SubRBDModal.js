@@ -364,8 +364,8 @@ const filteredRbdList = rbdList.filter(
                        Unavailability:
                     </span>{" "}
                     <span style={{ fontFamily: "monospace", fontSize: "12px" }}>
-                      {selectedRbdMetrics.unavailability !== null
-                        ? formatValue(selectedRbdMetrics.unavailability)
+                      {selectedRbdMetrics?.unavailability !== null
+                        ? formatValue(selectedRbdMetrics?.unavailability)
                         : selectedRbdMetrics.loading
                           ? "Calculating..."
                           : "N/A"}

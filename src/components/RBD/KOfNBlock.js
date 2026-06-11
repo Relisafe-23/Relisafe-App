@@ -38,12 +38,12 @@ export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
   // Format values for display
   const formatReliability = () => {
     if (reliability === 0) return "0.0000";
-    return reliability.toFixed(6);
+    return reliability;
   };
 
   const formatUnavailability = () => {
     if (unavailability === 0) return "0.0000";
-    return unavailability.toFixed(6);
+    return unavailability;
   };
 
   // Get heading based on type

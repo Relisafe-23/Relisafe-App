@@ -96,24 +96,24 @@ const getNestedParallelSectionWidth = (block) => {
   const maxBranchW =
     branches.length > 0
       ? Math.max(
-          ...branches.map((br) => {
-            const branchBlocks = br.blocks || [];
-            let totalW = 0;
-            branchBlocks.forEach((b, idx) => {
-              if (
-                (b.type === "Parallel Section" ||
-                  b.elementType === "Parallel Section") &&
-                b.branches?.length > 0
-              ) {
-                totalW +=
-                  getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
-              } else {
-                totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
-              }
-            });
-            return Math.max(totalW, NESTED.BW);
-          }),
-        )
+        ...branches.map((br) => {
+          const branchBlocks = br.blocks || [];
+          let totalW = 0;
+          branchBlocks.forEach((b, idx) => {
+            if (
+              (b.type === "Parallel Section" ||
+                b.elementType === "Parallel Section") &&
+              b.branches?.length > 0
+            ) {
+              totalW +=
+                getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
+            } else {
+              totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
+            }
+          });
+          return Math.max(totalW, NESTED.BW);
+        }),
+      )
       : NESTED.BW;
 
   const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD;
@@ -570,26 +570,26 @@ export const BiDirectionalSymbol = ({
                           item={item}
                           leftRailX={leftRailX}
                           rightRailX={rightRailX}
-                          wireY={wireY} // ← ADD THIS — nested parallel section uses it to center itself
+                          wireY={wireY} 
                           selectedNode={selectedNode}
                           leftNodeId={leftNodeId}
                           rightNodeId={rightNodeId}
                           x={bx}
-                          y={wireY - C.BLOCK_H / 2} // ← ENSURE this is wireY - half, not just wireY
+                          y={wireY - C.BLOCK_H / 2} 
                           onEdit={onEditBlock}
                           onDelete={onDeleteBlock}
                           setIdforApi={setIdforApi}
                           blockData={block}
                           width={C.BLOCK_W}
-                            // Pass reliability
-  subrbdreliability={block?.reliability}
+                          // Pass reliability
+                          subrbdreliability={block?.reliability}
 
-  // Pass unavailability if needed
-  subrbdunavailability={block?.unavailability}
+                          // Pass unavailability if needed
+                          subrbdunavailability={block?.unavailability}
                           height={C.BLOCK_H}
                           onOpenMenu={onOpenMenu}
                         />
-{console.log("subrbdreliability11111111111",block?.reliability)}
+                        {console.log("subrbdreliability11111111111", block?.reliability)}
                         <>
                           <line
                             x1={bx + C.BLOCK_W}
@@ -785,8 +785,8 @@ export const BiDirectionalSymbol = ({
               onEdit={onEditBlock}
               onDelete={onDeleteBlock}
               blockData={item.blockData}
-             subrbdreliability={item.blockData?.reliability}
-             subrbdunavailability={item.blockData?.unavailability}
+              subrbdreliability={item.blockData?.reliability}
+              subrbdunavailability={item.blockData?.unavailability}
               mission={missionTime}
               width={C.BLOCK_W}
               height={C.BLOCK_H}
@@ -1432,7 +1432,7 @@ export default function RBDButton() {
   const handleSubRBDConfirm = async (selectedRbd, mode, blockId, nodeIndex) => {
     console.log("selectedRbd received:", selectedRbd);
     console.log("reliability:", selectedRbd.reliability);
-    console.log("unavailability:", selectedRbd.unavailability);
+    console.log("unavailability:", selectedRbd?.unavailability);
     try {
       if (mode === "edit") {
         // UPDATE existing SubRBD block
@@ -1445,7 +1445,7 @@ export default function RBDButton() {
             description: selectedRbd.description,
             missionTime: selectedRbd.missionTime,
             reliability: selectedRbd.reliability,
-            unavailability: selectedRbd.unavailability,
+            unavailability: selectedRbd?.unavailability,
           },
         };
 
@@ -1478,7 +1478,7 @@ export default function RBDButton() {
                   subRbdId: selectedRbd.id,
                   subRbdData: updateData.subRbdData,
                   reliability: selectedRbd.reliability,
-                  unavailability: selectedRbd.unavailability,
+                  unavailability: selectedRbd?.unavailability,
                   isSubRBD: true,
                   data: {
                     ...block.data,
@@ -1507,14 +1507,14 @@ export default function RBDButton() {
           name: selectedRbd.rbdTitle,
           subRbdId: selectedRbd.id,
           reliability: selectedRbd.reliability,
-          unavailability: selectedRbd.unavailability,
+          unavailability: selectedRbd?.unavailability,
           subRbdData: {
             id: selectedRbd.id,
             rbdTitle: selectedRbd.rbdTitle,
             description: selectedRbd.description,
             missionTime: selectedRbd.missionTime,
             reliability: selectedRbd.reliability,
-            unavailability: selectedRbd.unavailability,
+            unavailability: selectedRbd?.unavailability,
           },
           isSubRBD: true,
           // You can add other fields as needed
@@ -1544,7 +1544,7 @@ export default function RBDButton() {
             subRbdId: selectedRbd.id,
             subRbdData: newBlockData.subRbdData,
             reliability: selectedRbd.reliability,
-            unavailability: selectedRbd.unavailability,
+            unavailability: selectedRbd?.unavailability,
             isSubRBD: true,
             data: {
               rbdData: newBlockData.subRbdData,
@@ -1809,12 +1809,12 @@ export default function RBDButton() {
         blocks.map((block) =>
           block.id === elementModal.blockId
             ? {
-                ...block,
-                data: {
-                  ...block.data,
-                  switchData: switchData,
-                },
-              }
+              ...block,
+              data: {
+                ...block.data,
+                switchData: switchData,
+              },
+            }
             : block,
         ),
       );
@@ -2427,7 +2427,7 @@ export default function RBDButton() {
                   onHide={() =>
                     setRbdListModal({ ...rbdListModal, open: false })
                   }
-                   rbdId={rbdId}  
+                  rbdId={rbdId}
 
                   rbdData={rbdListModal.selectedRbd}
                   mode={rbdListModal.mode}
@@ -2435,7 +2435,7 @@ export default function RBDButton() {
                   nodeIndex={rbdListModal.nodeIndex}
                   onConfirm={handleSubRBDConfirm}
                   rbdList={rbdList}
-                    currentRbdId={rbdId} 
+                  currentRbdId={rbdId}
                   totalReliability={totalReliability} // ← ADD THIS
                   totalUnavailability={totalUnavailability} // ← ADD THIS
                 />
