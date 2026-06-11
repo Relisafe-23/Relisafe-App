@@ -88,7 +88,7 @@ export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
       {/* Heading - shows Identical / Non-Identical / Load Sharing */}
       <text
         x={x + blockWidth / 2}
-        y={y - 8}
+        y={y - 15}
         textAnchor="middle"
         fontSize="8"
         fontWeight="bold"

@@ -20,23 +20,23 @@ import "../../css/RBD.scss";
 // import ReactFlowD from './ReactFlow/ReactFlowD.jsx';
 
 const C = {
-  TERMINAL_W: 60,
+  TERMINAL_W: 70,
   TERMINAL_H: 40,
-  TERMINAL_LEFT_X: 50,
-  ARROW_W: 12,
-  ARROW_H: 16,
+  TERMINAL_LEFT_X: 60,
+  ARROW_W: 15,
+  ARROW_H: 15,
   BLOCK_W: 60,
   BLOCK_H: 40,
-  BLOCK_SPACING: 20,
-  NODE_R: 5,
-  NODE_SPACING: 20,
-  BRANCH_MIN_H: 40,
-  BRANCH_SPACING: 20,
-  RAIL_PAD_X: 20,
-  INNER_PAD_X: 14,
-  BLOCK_GAP: 67,
-  CENTER_Y: 200,
-  MIN_OUTPUT_GAP: 40,
+  BLOCK_SPACING: 35,
+  NODE_R: 6,
+  NODE_SPACING: 30,
+  BRANCH_MIN_H: 60,
+  BRANCH_SPACING: 30,
+  RAIL_PAD_X: 15,
+  INNER_PAD_X: 25,
+  BLOCK_GAP: 35,
+  CENTER_Y: 320,
+  MIN_OUTPUT_GAP: 50,
   BASE_RIGHT_X: 200,
   MIN_CANVAS_W: 800,
   MIN_CANVAS_H: 420,
@@ -44,13 +44,13 @@ const C = {
 
 // ── Shared layout constants (must match RBDBlock exactly) ──────────────────
 const NESTED = {
-  BW: 60,
-  BH: 40,
-  GAP: 12,
-  RAIL_PAD: 20,
-  INNER_PAD: 14,
-  CONTAINER_PADDING: 20,
-  BRANCH_SPACING: 20,
+  BW: 12,
+  BH: 10,
+  GAP: 20,
+  RAIL_PAD: 15,
+  INNER_PAD: 20,
+  CONTAINER_PADDING: 15,
+  BRANCH_SPACING: 10,
 };
 
 // Recursive: actual height of a single branch (accounts for nested parallel sections)
@@ -589,7 +589,7 @@ export const BiDirectionalSymbol = ({
                           height={C.BLOCK_H}
                           onOpenMenu={onOpenMenu}
                         />
-                        {console.log("subrbdreliability11111111111", block?.reliability)}
+                
                         <>
                           <line
                             x1={bx + C.BLOCK_W}
@@ -2322,19 +2322,23 @@ export default function RBDButton() {
   return (
     <>
       <div className="mt-5">
-        <div>
-          <b>RBD Title: </b>
-          {RBDTitle}
-          <br />
-          <b>Reliability: </b>
-          {totalReliability?.toFixed(10)}
-        </div>
+    <div>
+  <b>RBD Title: </b>
+  {RBDTitle}
+  <br />
+  <b>Reliability: </b>
+  {Math.abs(totalReliability) < 1e-10 && totalReliability !== 0
+    ? totalReliability?.toExponential(4)
+    : totalReliability?.toFixed(10)}
+</div>
 
-        <div>
-          <b>Unavailability: </b>
-          {totalUnavailability?.toFixed(10)}
-        </div>
-      </div>
+<div>
+  <b>Unavailability: </b>
+  {Math.abs(totalUnavailability) < 1e-10 && totalUnavailability !== 0
+    ? totalUnavailability?.toExponential(4)
+    : totalUnavailability?.toFixed(10)}
+</div>
+</div>
       <div style={{ minHeight: "100vh", padding: "5%" }}>
         {!showSymbol && (
           <div className="text-center">

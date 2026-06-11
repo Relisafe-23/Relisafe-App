@@ -64,7 +64,7 @@
     "serve": "^14.2.4",
     "web-vitals": "^1.1.2",
     "xlsx": "^0.18.5",
-    "yup": "^0.32.9"
+    "yup": "^0.32.11"
   },
   "scripts": {
     "start": "react-scripts start",

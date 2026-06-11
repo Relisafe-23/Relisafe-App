@@ -757,14 +757,18 @@ export default function RBDButton() {
                 <TableCell>
                   {item?.totalUnavailability !== undefined &&
                   item?.totalUnavailability !== null
-                    ? Number(item.totalUnavailability).toFixed(9)
+                  ? Math.abs(item.totalUnavilability) < 1e-10 && item.totalUnavailability !==0
+                  ? Number(item.totalUnavailability).toExponential(4)
+                    : Number(item.totalUnavailability).toFixed(9)
                     : "Calculating..."}
                 </TableCell>
                 <TableCell>
-                  {item?.totalReliability !== undefined &&
-                  item?.totalReliability !== null
-                    ? Number(item.totalReliability).toFixed(9)
-                    : "Calculating..."}
+              {item?.totalReliability !== undefined && item?.totalReliability !== null
+  ? Math.abs(item.totalReliability) < 1e-10 && item.totalReliability !== 0
+    ? Number(item.totalReliability).toExponential(4)
+    : Number(item.totalReliability).toFixed(9)
+  : "Calculating..."}
+  
                 </TableCell>
                 <TableCell>
                   <Tooltip title="View">

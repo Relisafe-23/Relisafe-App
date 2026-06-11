@@ -4,6 +4,9 @@ import Api from "../../Api";
 import { useParams } from "react-router-dom";
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
+import * as Yup from "yup";
+
+
 
 export const KOfNConfigModal = ({
   isOpen,
@@ -17,6 +20,91 @@ export const KOfNConfigModal = ({
   selectedLabel,
   selectedCase,
 }) => {
+  const [errors, setErrors] = useState('')
+  const getKOfNValidationSchema = (selectedLabel) =>
+    Yup.object().shape({
+      // Basic Info
+
+      // productName: Yup.string().required("Product name is required"),
+
+
+      // K / N
+      k: Yup.number()
+        .typeError("K must be a number")
+        .integer("K must be an integer")
+        .min(1, "K must be at least 1")
+        .required("K is required"),
+
+      n: Yup.number()
+        .typeError("N must be a number")
+        .integer("N must be an integer")
+        .min(1, "N must be at least 1")
+        .required("N is required")
+        .test("k-lte-n", "N must be greater than or equal to K", function (n) {
+          const { k } = this.parent;
+          return !k || !n || parseInt(k) <= parseInt(n);
+        }),
+
+      // lambda: Yup.number()
+      //   .typeError("Lambda must be a number")
+      //   .min(0, "Lambda must be non-negative")
+      //   .when([], {
+      //     is: () => selectedLabel === "Identical",
+      //     then: (schema) => schema.required("Lambda is required"),
+      //     otherwise: (schema) => schema.nullable().optional(),
+      //   }),
+
+
+      //   mu: Yup.number()
+      //     .typeError("Mu must be a number")
+      //     .min(0, "Mu must be non-negative")
+      //      .required("Mu is required")
+      //       .when([], {
+      //   is: () => selectedLabel === "Non-Identical",
+      //   then: (schema) => schema.required("Lambda is required"),
+      //   otherwise: (schema) => schema.nullable().optional(),
+      // }),
+
+
+      // mttr: Yup.string().required("MTTR is required"),
+
+
+      // // Load — required for Identical (Load Sharing) only
+      // load: Yup.number()
+      //   .typeError("Load must be a number")
+      //   .min(0, "Load must be non-negative")
+      //   .when([], {
+      //     is: () => selectedLabel === "Identical (Load Sharing)",
+      //     then: (schema) => schema.required("Load is required for Load Sharing type"),
+      //     otherwise: (schema) => schema.nullable().optional(),
+      //   }),
+
+      // Non-Identical components — required only for Non-Identical type
+      // components: Yup.array()
+      //   .when([], {
+      //     is: () => selectedLabel === "Non-Identical",
+      //     then: (schema) =>
+      //       schema
+      //         .of(
+      //           Yup.object().shape({
+      //             productId: Yup.string().nullable().required("Component product ID is required"),
+      //             productName: Yup.string().required("Component product name is required"),
+      //             lambda: Yup.number()
+      //               .typeError("Lambda must be a number")
+      //               .min(0, "Lambda must be non-negative")
+      //               .required("Component lambda is required"),
+      //             mu: Yup.number()
+      //               .typeError("Mu must be a number")
+      //               .min(0, "Mu must be non-negative")
+      //               .required("Component mu is required"),
+      //             mttr: Yup.string().required("Component MTTR is required"),
+      //           })
+      //         )
+      //         .min(1, "At least one component is required for Non-Identical type")
+      //         .required("Components are required for Non-Identical type"),
+      //     otherwise: (schema) => schema.nullable().optional(),
+      //   }),
+    });
   const [k, setK] = useState("");
   const [n, setN] = useState("");
   const [formula, setFormula] = useState("standard");
@@ -37,7 +125,8 @@ export const KOfNConfigModal = ({
   console.log("nonIdenticalComponents", nonIdenticalComponents);
 
   const [values, setValues] = useState({
-    relDes: "",
+    // relDes: initialData?.productName || "",
+    productName: initialData?.productName || "",
     time: "",
     elementType: "K-out-of-N",
     reliability: 0,
@@ -45,21 +134,39 @@ export const KOfNConfigModal = ({
     partNumber: "",
     fr: "",
     color: "#ffffff",
-    productName: "",
     id: "",
     load: "",
     mttr: "",
     productNumber: "",
     productTreeItemID: "",
     productId: "",
-    indexCount: "",
-  });
+    indexCount: initialData?.indexCount || "",
+  })
+  // const [values, setValues] = useState({
+  //   relDes: initialData?.productName || "",
+  //   time: currentBlock?.time || " ",
+  //   elementType: currentBlock?.elementType || "K-out-of-N",
+  //   reliability: currentBlock?.systemReliability || 0,
+  //   unavailability: currentBlock?.systemUnavailability || 0,
+  //   partNumber: currentBlock?.partNumber || "",
+  //   fr: currentBlock?.fr || "",
+  //   color: currentBlock?.color || "#ffffff",
+  //   productName: currentBlock?.productName || "",
+  //   id: currentBlock?.id || "",
+  //   load: currentBlock?.load || "100",
+  //   mttr: currentBlock?.mttr || "",
+  //   productNumber: currentBlock?.productNumber || "",
+  //   productTreeItemID: currentBlock?.productTreeItemID || "",
+  //   productId: currentBlock?.productId || "",
+  //   indexCount: initialData?.indexCount || "",
+  // });
 
   // Populate values and states when in edit mode
   useEffect(() => {
     if (mode === "edit" && currentBlock) {
       setValues({
         relDes: currentBlock?.relDes || "",
+        productName: currentBlock?.productName || "",
         time: currentBlock?.time || "",
         elementType: "K-out-of-N",
         reliability: currentBlock?.systemReliability || 0,
@@ -67,7 +174,7 @@ export const KOfNConfigModal = ({
         partNumber: currentBlock?.partNumber || "",
         fr: currentBlock?.fr || "",
         color: currentBlock?.color || "#ffffff",
-        productName: currentBlock?.productName || "",
+
         id: currentBlock?.id || "",
         load: currentBlock?.load || "",
         mttr: currentBlock?.mttr || "",
@@ -95,13 +202,13 @@ export const KOfNConfigModal = ({
           productId: comp.productId || null,
           selectedOption: comp.productId
             ? {
-                label: comp.productName || `Component ${comp.id}`,
-                value: comp.productId,
-                productId: comp.productId,
-                productName: comp.productName,
-                lambda: comp.lambda,
-                mttr: comp.mttr,
-              }
+              label: comp.productName || `Component ${comp.id}`,
+              value: comp.productId,
+              productId: comp.productId,
+              productName: comp.productName,
+              lambda: comp.lambda,
+              mttr: comp.mttr,
+            }
             : null,
         }));
         setNonIdenticalComponents(componentsWithIds);
@@ -432,15 +539,14 @@ export const KOfNConfigModal = ({
 
     setNonIdenticalComponents(updatedComponents);
   };
-
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const newKOfNData = {
-      projectId: projectId,
+      projectId,
       productId: values.productId && values.productId !== "" ? values.productId : null,
-      rbdId: rbdId,
+      rbdId,
       k: parseInt(k),
       n: parseInt(n),
-      formula: formula,
+      formula,
       lambda: parseFloat(lambda) || 0,
       mu: mu || 0,
       type: "K-out-of-N",
@@ -455,18 +561,33 @@ export const KOfNConfigModal = ({
       productName: values.productName,
       color: values.color,
       load: selectedLabel === "Identical (Load Sharing)" ? load : values.load,
-      targetId: targetId,
+      targetId,
+      ...(selectedLabel === "Non-Identical" && {
+        components: nonIdenticalComponents.map((comp) => ({
+          productId: comp.productId && comp.productId !== "" ? comp.productId : null,
+          lambda: comp.lambda || 0,
+          mu: comp.mu || 0,
+          mttr: comp.mttr || "",
+          productName: comp.productName,
+          isManual: comp.isManual,
+        })),
+      }),
     };
 
-    if (selectedLabel === "Non-Identical") {
-      newKOfNData.components = nonIdenticalComponents.map((comp) => ({
-        productId: comp.productId && comp.productId !== "" ? comp.productId : null,
-        lambda: comp.lambda || 0,
-        mu: comp.mu || 0,
-        mttr: comp.mttr || "",
-        productName: comp.productName,
-        isManual: comp.isManual,
-      }));
+    try {
+      const schema = getKOfNValidationSchema(selectedLabel);
+      await schema.validate(newKOfNData, { abortEarly: false });
+    } catch (validationError) {
+      if (validationError.inner) {
+        // Show all errors at once — map them to your error state
+        const errors = validationError.inner.reduce((acc, err) => {
+          acc[err.path] = err.message;
+          return acc;
+        }, {});
+        setErrors(errors); // assumes you have an errors state
+        toast.error("Please fix the validation errors before submitting");
+      }
+      return;
     }
 
     Api.post("/api/v1/elementParametersRBD/create", newKOfNData)
@@ -487,7 +608,7 @@ export const KOfNConfigModal = ({
     console.log(parentItemId, "parentItemId");
     console.log(initialData, "initialData");
 
-    const blockId = initialData?._id || currentBlock?.id || values?.id;
+    const blockId = initialData?.id || initialData?._id || currentBlock?.id || values?.id;
 
     console.log(blockId, "blockId");
 
@@ -685,6 +806,7 @@ export const KOfNConfigModal = ({
                 </label>
                 <input
                   type="text"
+                  name="productName"
                   value={values?.productName || ""}
                   onChange={(e) => handleChange("productName", e.target.value)}
                   placeholder="Transmitter"
