@@ -524,7 +524,7 @@ default:
         case "SubRBD":
           return "#FF9800";
         case "K-out-of-N":
-          return "#FF5722";
+          return "#4CAF50";
         default:
           return "#4CAF50";
       }

@@ -18,180 +18,236 @@ import { toast } from "react-toastify";
 import "../../css/RBD.scss";
 // import { RBDSvgRenderer } from './RBDSvgRenderer';
 // import ReactFlowD from './ReactFlow/ReactFlowD.jsx';
-
 const C = {
   TERMINAL_W: 70,
   TERMINAL_H: 40,
-  TERMINAL_LEFT_X: 50,
+  TERMINAL_LEFT_X: 10,
   ARROW_W: 15,
   ARROW_H: 15,
-  BLOCK_W: 60,
+  BLOCK_W: 61.7,
   BLOCK_H: 40,
-  BLOCK_SPACING: 40,
+  BLOCK_SPACING: 50,
   NODE_R: 5,
   NODE_SPACING: 25,
-  BRANCH_MIN_H: 40,
-  BRANCH_SPACING: 45,
-  RAIL_PAD_X: 20,
-  INNER_PAD_X: 35,
-  BLOCK_GAP: 25,
+  BRANCH_MIN_H: 25,
+  BRANCH_SPACING: 25,
+  RAIL_PAD_X: 10,
+  INNER_PAD_X: 25,
+  BLOCK_GAP: 45,
   CENTER_Y: 350,
   MIN_OUTPUT_GAP: 35,
   BASE_RIGHT_X: 200,
   MIN_CANVAS_W: 800,
-  MIN_CANVAS_H: 420,
+  MIN_CANVAS_H: 320,
 };
 
+// ── Shared layout constants (must match RBDBlock exactly) ──────────────────
 const NESTED = {
-  BW: 60,
-  BH: 10,
-  GAP: 5,
-  RAIL_PAD: 35,
-  INNER_PAD: -25,
-  CONTAINER_PADDING: 25,
-  BRANCH_SPACING: 40,
+  BW: 20,
+  BH: 20,
+  GAP: 30,
+  RAIL_PAD: 20,
+  INNER_PAD: 20,
+  CONTAINER_PADDING: 10,
+  BRANCH_SPACING: 10,
 };
 
-const isParallelBlock = (block) =>
-  (block?.type === "Parallel Section" ||
-    block?.elementType === "Parallel Section" ||
-    block?.arrangement === "horizontal") &&
-  Array.isArray(block?.branches) &&
-  block.branches.length > 0;
-
-const getDrawBlockWidth = (block) => {
-  if (isParallelBlock(block)) return getNestedParallelSectionWidth(block);
-  return C.BLOCK_W;
-};
-
-const getDrawBlockHeight = (block) => {
-  if (isParallelBlock(block)) return getNestedParallelSectionHeight(block);
-  return C.BLOCK_H;
-};
-
+// Recursive: actual height of a single branch (accounts for nested parallel sections)
 const getNestedBranchHeight = (branch) => {
-  const branchBlocks = branch?.blocks || [];
+  const branchBlocks = branch.blocks || [];
+  let maxNestedH = 0;
 
-  if (!branchBlocks.length) return NESTED.BH + 30;
+  branchBlocks.forEach((block) => {
+    if (
+      (block.type === "Parallel Section" ||
+        block.elementType === "Parallel Section") &&
+      block.branches?.length > 0
+    ) {
+      const nestedH =
+        block.branches.reduce((sum, nb) => {
+          return sum + getNestedBranchHeight(nb) + NESTED.BRANCH_SPACING;
+        }, 0) +
+        NESTED.BH +
+        NESTED.CONTAINER_PADDING * 2;
+      maxNestedH = Math.max(maxNestedH, nestedH);
+    }
+  });
 
-  const maxHeight = Math.max(
-    ...branchBlocks.map((block) => {
-      if (isParallelBlock(block)) {
-        return getNestedParallelSectionHeight(block);
-      }
-      return NESTED.BH + 30;
-    })
-  );
-
-  return Math.max(maxHeight, NESTED.BH + 30);
+  return maxNestedH > 0 ? maxNestedH : NESTED.BH + 40;
 };
 
+// Total height of a nested parallel section block
 const getNestedParallelSectionHeight = (block) => {
-  const branches = block?.branches || [];
-
+  const branches = block.branches || [];
   if (!branches.length) return NESTED.BH + 40;
 
-  const totalBranchesHeight =
-    branches.reduce((sum, branch) => {
-      return sum + getNestedBranchHeight(branch);
-    }, 0) +
-    Math.max(0, branches.length - 1) * NESTED.BRANCH_SPACING;
-
-  return totalBranchesHeight + NESTED.CONTAINER_PADDING * 2;
+  const branchHeights = branches.map((b) => getNestedBranchHeight(b));
+  let runningY = NESTED.CONTAINER_PADDING + NESTED.BH / 2;
+  branchHeights.forEach((h) => {
+    runningY += h + NESTED.BRANCH_SPACING;
+  });
+  return runningY + NESTED.BH / 2 + NESTED.CONTAINER_PADDING;
 };
 
-const getNestedBranchWidth = (branch) => {
-  const branchBlocks = branch?.blocks || [];
-
-  if (!branchBlocks.length) return NESTED.BW;
-
-  return branchBlocks.reduce((total, block, index) => {
-    const blockW = isParallelBlock(block)
-      ? getNestedParallelSectionWidth(block)
+// Width of a nested parallel section block
+const getNestedParallelSectionWidth = (block) => {
+  const branches = block.branches || [];
+  const maxBranchW =
+    branches.length > 0
+      ? Math.max(
+        ...branches.map((br) => {
+          const branchBlocks = br.blocks || [];
+          let totalW = 0;
+          branchBlocks.forEach((b, idx) => {
+            if (
+              (b.type === "Parallel Section" ||
+                b.elementType === "Parallel Section") &&
+              b.branches?.length > 0
+            ) {
+              totalW +=
+                getNestedParallelSectionWidth(b) + (idx > 0 ? NESTED.GAP : 0);
+            } else {
+              totalW += NESTED.BW + (idx > 0 ? NESTED.GAP : 0);
+            }
+          });
+          return Math.max(totalW, NESTED.BW);
+        }),
+      )
       : NESTED.BW;
 
-    return total + blockW + (index > 0 ? NESTED.GAP : 0);
-  }, 0);
-};
-
-const getNestedParallelSectionWidth = (block) => {
-  const branches = block?.branches || [];
-
-  if (!branches.length) return NESTED.BW * 3;
-
-  const maxBranchW = Math.max(
-    ...branches.map((branch) => getNestedBranchWidth(branch))
-  );
-
+  const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD;
   return Math.max(
     NESTED.BW * 3,
-    NESTED.RAIL_PAD * 2 +
-      NESTED.INNER_PAD * 2 +
-      maxBranchW +
-      NESTED.CONTAINER_PADDING * 2
+    NESTED.RAIL_PAD * 2 + innerW + NESTED.CONTAINER_PADDING * 2,
   );
 };
 
-const getBranchBlocksWidth = (branch) => {
-  const branchBlocks = branch?.blocks || [];
+// const branchHeight = (branch) => {
+//   let height = C.BRANCH_MIN_H;
 
-  if (!branchBlocks.length) return C.BLOCK_W;
+//   // Check for nested parallel sections
+//   if (branch.blocks) {
+//     branch.blocks.forEach(block => {
+//       if ((block.type === 'Parallel Section' || block.elementType === 'Parallel Section') && block.branches) {
+//         // Calculate height needed for nested parallel section
+//         const nestedBranches = block.branches;
+//         const nestedHeight = nestedBranches.length * 70 + 40; // 70 is ROW_STEP, 40 is padding
+//         height = Math.max(height, nestedHeight);
+//       }
+//     });
+//   }
 
-  return branchBlocks.reduce((total, block, index) => {
-    return total + getDrawBlockWidth(block) + (index > 0 ? C.BLOCK_GAP : 0);
-  }, 0);
-};
+//   return height;
+// };
 
+// Height of one outer branch (used by BiDirectionalSymbol)
 const branchHeight = (branch) => {
-  const branchBlocks = branch?.blocks || [];
-
-  if (!branchBlocks.length) return C.BRANCH_MIN_H;
-
-  const maxBlockHeight = Math.max(
-    ...branchBlocks.map((block) => getDrawBlockHeight(block))
-  );
-
-  return Math.max(maxBlockHeight + 30, C.BRANCH_MIN_H);
+  let height = C.BRANCH_MIN_H;
+  if (branch.blocks) {
+    branch.blocks.forEach((block) => {
+      if (
+        (block.type === "Parallel Section" ||
+          block.elementType === "Parallel Section") &&
+        block.branches
+      ) {
+        const nestedH = getNestedParallelSectionHeight(block);
+        height = Math.max(height, nestedH);
+      }
+    });
+  }
+  return Math.max(height, C.BRANCH_MIN_H);
 };
 
+// const sectionTotalHeight = (branches) => {
+//   if (!branches || branches.length === 0) return C.BRANCH_MIN_H;
+//   return branches.reduce((acc, br) => acc + branchHeight(br), 0)
+//     + Math.max(0, branches.length - 1) * C.BRANCH_SPACING;
+// };
+
+// Fix sectionTotalHeight to use corrected branchHeight
 const sectionTotalHeight = (branches) => {
   if (!branches || branches.length === 0) return C.BRANCH_MIN_H;
-
   return (
     branches.reduce((acc, br) => acc + branchHeight(br), 0) +
     Math.max(0, branches.length - 1) * C.BRANCH_SPACING
   );
 };
 
-const sectionWidth = (block) => {
-  const branches = block?.branches || [];
-  const leftGrowth = block?.leftGrowth || 0;
+// const sectionWidth = (block) => {
+//   const branches = block.branches || [];
+//   const leftGrowth = block.leftGrowth || 0;
+//   if (!branches.length) return 160 + leftGrowth;
+//   const maxBlocks = Math.max(...branches.map(br => (br.blocks || []).length));
+//   const innerW = maxBlocks > 0
+//     ? C.INNER_PAD_X + maxBlocks * C.BLOCK_W + (maxBlocks - 1) * C.BLOCK_GAP + C.INNER_PAD_X
+//     : C.INNER_PAD_X * 2 + 40;
+//   return C.RAIL_PAD_X * 2 + innerW + leftGrowth;
+// };
 
+// Fix sectionWidth to account for nested parallel section widths
+const sectionWidth = (block) => {
+  const branches = block.branches || [];
+  const leftGrowth = block.leftGrowth || 0;
   if (!branches.length) return 160 + leftGrowth;
 
   const maxBranchW = Math.max(
-    ...branches.map((branch) => getBranchBlocksWidth(branch))
+    ...branches.map((br) => {
+      const branchBlocks = br.blocks || [];
+      let width = 0;
+      branchBlocks.forEach((b, idx) => {
+        if (
+          (b.type === "Parallel Section" ||
+            b.elementType === "Parallel Section") &&
+          b.branches
+        ) {
+          width +=
+            getNestedParallelSectionWidth(b) + (idx > 0 ? C.BLOCK_GAP : 0);
+        } else {
+          width += C.BLOCK_W + (idx > 0 ? C.BLOCK_GAP : 0);
+        }
+      });
+      return Math.max(width, C.BLOCK_W);
+    }),
   );
 
-  return (
-    C.RAIL_PAD_X * 2 +
-    C.INNER_PAD_X * 2 +
-    maxBranchW +
-    leftGrowth +
-    80
-  );
+  const innerW = C.INNER_PAD_X + maxBranchW + C.INNER_PAD_X;
+  return C.RAIL_PAD_X * 2 + innerW + leftGrowth;
 };
 
+// const branchCenterY = (branches, idx, secTopY) => {
+//   let y = secTopY;
+//   for (let i = 0; i < idx; i++) {
+//     // Calculate actual height for each branch including nested sections
+//     const branch = branches[i];
+//     let branchHeight = C.BRANCH_MIN_H;
+
+//     // Check if branch has any nested parallel sections
+//     if (branch.blocks) {
+//       branch.blocks.forEach(block => {
+//         if ((block.type === 'Parallel Section' || block.elementType === 'Parallel Section') && block.branches) {
+//           // Calculate height needed for nested parallel section
+//           const nestedBranches = block.branches;
+//           const nestedHeight = nestedBranches.length * 70 + 40; // 70 is ROW_STEP, 40 is padding
+//           branchHeight = Math.max(branchHeight, nestedHeight);
+//         }
+//       });
+//     }
+
+//     y += branchHeight + C.BRANCH_SPACING;
+//   }
+//   return y + (branchHeight(branches[idx]) / 2);
+// };
+
+// Fix branchCenterY to use the corrected branchHeight function
 const branchCenterY = (branches, idx, secTopY) => {
   let y = secTopY;
-
   for (let i = 0; i < idx; i++) {
     y += branchHeight(branches[i]) + C.BRANCH_SPACING;
   }
-
   return y + branchHeight(branches[idx]) / 2;
 };
 
+// ─── InsertionNode (dot with + cross) ─────────────────────────────────────────
 const InsertNode = ({
   cx,
   cy,
@@ -204,7 +260,12 @@ const InsertNode = ({
   const isSel = selectedNode === nodeId;
 
   return (
-    <g>
+    <g
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpenMenu(e.clientX, e.clientY, id);
+      }}
+      style={{ cursor: "pointer" }}>
       {isSel && (
         <circle
           cx={cx}
@@ -216,19 +277,14 @@ const InsertNode = ({
           strokeDasharray="4 2"
         />
       )}
-
       <circle
         cx={cx}
         cy={cy}
         r={r}
         fill={isSel ? "#0078d4" : "black"}
-        style={{ cursor: "pointer" }}
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpenMenu(e.clientX, e.clientY, id);
-        }}
-      />
 
+
+      />
       <line
         x1={cx - 3}
         y1={cy}
@@ -237,7 +293,6 @@ const InsertNode = ({
         stroke="white"
         strokeWidth="1.5"
       />
-
       <line
         x1={cx}
         y1={cy - 3}
@@ -250,6 +305,7 @@ const InsertNode = ({
   );
 };
 
+// ─── BiDirectionalSymbol ──────────────────────────────────────────────────────
 export const BiDirectionalSymbol = ({
   onNodeClick,
   setParentItem,
@@ -263,17 +319,21 @@ export const BiDirectionalSymbol = ({
   setIdforApi,
 }) => {
   const location = useLocation();
+  const RBDTitle = location?.state?.rbdTitle;
   const missionTime = location.state?.missionTime;
+
+  const [mission, setMission] = useState("");
+  const [rbdList, setRbdList] = useState([]);
   const { id, rbdId } = useParams();
-
+  const projectId = id;
+  // top-level blocks only (excludes nested parallel branches)
   const topLevel = blocks.filter(
-    (b) => b.type === "Parallel Section" || !b.data?.parentSection
+    (b) => b.type === "Parallel Section" || !b.data?.parentSection,
   );
-
+  // ── layout ─────────────────────────────────────────────────────────────────
   const calculateLayout = () => {
     if (topLevel.length === 0) {
       const cx = (C.TERMINAL_LEFT_X + C.TERMINAL_W + C.BASE_RIGHT_X) / 2;
-
       return {
         items: [],
         startX: cx,
@@ -283,29 +343,31 @@ export const BiDirectionalSymbol = ({
       };
     }
 
-    const itemWidths = topLevel.map((block) => {
-      if (block.type === "Parallel Section") {
-        return sectionWidth(block);
+    // First, calculate widths of all items
+    const itemWidths = topLevel.map((b) => {
+      if (b.type === "Parallel Section") {
+        return sectionWidth(b);
       }
       return C.BLOCK_W;
     });
 
+    // Calculate total width needed
     const totalItemsWidth = itemWidths.reduce((sum, w) => sum + w, 0);
     const totalNodesWidth = (topLevel.length * 2 + 1) * C.NODE_SPACING;
     const totalGapsWidth = (topLevel.length - 1) * C.BLOCK_SPACING;
     const totalNeeded = totalItemsWidth + totalNodesWidth + totalGapsWidth;
 
+    // Calculate required canvas width
     const reqRightX =
       C.TERMINAL_LEFT_X +
       C.TERMINAL_W +
       totalNeeded +
       C.MIN_OUTPUT_GAP +
       C.TERMINAL_W;
-
     const rightBoxX = Math.max(C.BASE_RIGHT_X, reqRightX);
 
+    // Calculate available space and starting X
     const available = rightBoxX - C.TERMINAL_LEFT_X - C.TERMINAL_W * 2;
-
     const startX =
       C.TERMINAL_LEFT_X +
       C.TERMINAL_W +
@@ -317,6 +379,7 @@ export const BiDirectionalSymbol = ({
     let nodeIdx = 0;
     let maxY = C.CENTER_Y + 150;
 
+    // First insertion node
     items.push({
       type: "node",
       id: "node-start",
@@ -324,23 +387,24 @@ export const BiDirectionalSymbol = ({
       y: C.CENTER_Y,
       nodeIndex: nodeIdx++,
     });
-
     curX += C.NODE_SPACING;
 
-    topLevel.forEach((block) => {
+    // Place each block with consistent spacing
+    topLevel.forEach((block, index) => {
       if (block.type === "Parallel Section") {
         const branches = block.branches || [];
         const dynW = sectionWidth(block);
         const totalH = sectionTotalHeight(branches);
         const secTopY = C.CENTER_Y - totalH / 2;
+
+        if (secTopY + totalH + 40 > maxY) maxY = secTopY + totalH + 60;
+
         const rightX = curX + dynW;
         const leftGrowth = block.leftGrowth || 0;
 
-        maxY = Math.max(maxY, secTopY + totalH + 80);
-
         items.push({
           type: "parallel-section",
-          id: block._id ?? block.id,
+          id: block.id,
           blockData: block,
           x: curX - leftGrowth,
           rightX,
@@ -349,42 +413,39 @@ export const BiDirectionalSymbol = ({
           totalH,
           branches,
         });
-
         curX += dynW + C.BLOCK_SPACING;
       } else {
         items.push({
           type: "block",
-          id: block._id ?? block.id,
+          id: block.id,
           blockType: block.type,
           blockData: block,
           x: curX,
           y: C.CENTER_Y - C.BLOCK_H / 2,
         });
-
         curX += C.BLOCK_W + C.BLOCK_SPACING;
       }
 
+      // Add node after block (except for the last one)
       items.push({
         type: "node",
-        id: `node-${block._id ?? block.id}`,
-        RelateId: `${block._id ?? block.id}`,
+        id: `node-${block.id}`,
+        RelateId: `${block.id}`,
         x: curX,
         y: C.CENTER_Y,
         nodeIndex: nodeIdx++,
       });
-
       curX += C.NODE_SPACING;
     });
 
-    const canvasH = Math.max(C.MIN_CANVAS_H, maxY + 80);
-    const svgW = Math.max(C.MIN_CANVAS_W, rightBoxX + 120);
+    const canvasH = Math.max(C.MIN_CANVAS_H, maxY + 50);
+    const svgW = Math.max(C.MIN_CANVAS_W, rightBoxX + 100);
 
     return { items, startX, rightBoxX, canvasH, svgW };
   };
-
+  // ── wire segments ───────────────────────────────────────────────────────────
   const buildWireLines = (items, rightBoxX) => {
     const lines = [];
-
     if (items.length === 0) {
       lines.push({
         x1: C.TERMINAL_LEFT_X + C.TERMINAL_W,
@@ -393,7 +454,6 @@ export const BiDirectionalSymbol = ({
       });
       return lines;
     }
-
     lines.push({
       x1: C.TERMINAL_LEFT_X + C.TERMINAL_W,
       x2: items[0].x - C.NODE_R,
@@ -403,54 +463,74 @@ export const BiDirectionalSymbol = ({
     for (let i = 0; i < items.length - 1; i++) {
       const cur = items[i];
       const next = items[i + 1];
-
       const fx =
         cur.type === "parallel-section"
           ? cur.rightX
           : cur.type === "block"
-          ? cur.x + C.BLOCK_W
-          : cur.x + C.NODE_R;
-
+            ? cur.x + C.BLOCK_W
+            : cur.x + C.NODE_R;
       const tx =
         next.type === "block" || next.type === "parallel-section"
           ? next.x
           : next.x - C.NODE_R;
-
-      if (fx < tx) {
-        lines.push({ x1: fx, x2: tx, y: C.CENTER_Y });
-      }
+      if (fx < tx) lines.push({ x1: fx, x2: tx, y: C.CENTER_Y });
     }
 
     const last = items[items.length - 1];
-
     const lastX =
       last.type === "parallel-section"
         ? last.rightX
         : last.type === "block"
-        ? last.x + C.BLOCK_W
-        : last.x + C.NODE_R;
-
+          ? last.x + C.BLOCK_W
+          : last.x + C.NODE_R;
     const endX = Math.min(lastX + 20, rightBoxX - C.MIN_OUTPUT_GAP);
-
     lines.push({ x1: lastX, x2: endX, y: C.CENTER_Y });
     lines.push({ x1: endX, x2: rightBoxX, y: C.CENTER_Y });
-
     return lines;
   };
+const hasNestedParallel = blocks?.some((block) => {
+  const isParallel =
+    block.type === "Parallel Section" ||
+    block.elementType === "Parallel Section";
 
+  if (!isParallel) return false;
+
+  // check if this parallel section contains another parallel section inside
+  return block.branches?.some((branch) =>
+    branch.blocks?.some(
+      (nestedBlock) =>
+        nestedBlock.type === "Parallel Section" ||
+        nestedBlock.elementType === "Parallel Section"
+    )
+  );
+});
+console.log("parallell section..",hasNestedParallel)
+console.log("blocks...",blocks)
   const renderParallelSection = (item) => {
-    const { x, rightX, branches, id, secTopY } = item;
-
+    const { x, rightX, branches, id, blockData, width: dynW, secTopY } = item;
     if (!branches || branches.length === 0) return null;
 
     const leftRailX = x + C.RAIL_PAD_X;
-    const rightRailX = rightX - C.RAIL_PAD_X;
+    // rightRailX is derived from the FIXED rightX anchor — never shifts
+    const rightRailX = rightX - C.RAIL_PAD_X + 20;
 
     const railTop = branchCenterY(branches, 0, secTopY);
     const railBottom = branchCenterY(branches, branches.length - 1, secTopY);
 
     return (
       <g key={id}>
+        {/* <text
+          x={x + dynW / 2}
+          y={secTopY}
+          textAnchor="middle"
+          dominantBaseline="auto"
+          fontSize="9"
+          fontWeight="bold"
+          fill="#333"
+        >
+          K={blockData?.k || 1}:N={branches.length}
+        </text> */}
+
         <line
           x1={leftRailX}
           y1={railTop}
@@ -459,7 +539,6 @@ export const BiDirectionalSymbol = ({
           stroke="black"
           strokeWidth="2"
         />
-
         <line
           x1={rightRailX}
           y1={railTop}
@@ -472,7 +551,8 @@ export const BiDirectionalSymbol = ({
         {branches.map((branch, idx) => {
           const wireY = branchCenterY(branches, idx, secTopY);
           const branchBlocks = branch.blocks || [];
-          const dash = idx === 0 ? undefined : "5,3";
+          const isMain = idx === 0;
+          const dash = isMain ? undefined : "5,3";
 
           const branchKey = branch._id ?? branch.id ?? idx;
           const leftNodeId = `branch-${branchKey}-left`;
@@ -482,7 +562,8 @@ export const BiDirectionalSymbol = ({
           const blockRowLeftX = leftRailX + C.INNER_PAD_X;
 
           return (
-            <g key={branchKey}>
+            <g key={branch._id ?? branch.id ?? idx}>
+              {/* LEFT NODE */}
               <circle
                 cx={leftRailX}
                 cy={wireY}
@@ -491,9 +572,7 @@ export const BiDirectionalSymbol = ({
                 style={{ cursor: "pointer" }}
                 onClick={(e) => {
                   e.stopPropagation();
-
-                  onOpenMenu(e.clientX, e.clientY, branch?._id ?? branch?.index);
-
+                  onOpenMenu(e.clientX, e.clientY, branch?.index);
                   setIdforApi({
                     branchId: branch?._id,
                     branchIndex: branch?.index,
@@ -515,6 +594,7 @@ export const BiDirectionalSymbol = ({
                 />
               ) : (
                 <>
+                  {/* LEFT RAIL → FIRST BLOCK */}
                   <line
                     x1={leftRailX}
                     y1={wireY}
@@ -526,19 +606,25 @@ export const BiDirectionalSymbol = ({
                   />
 
                   {branchBlocks.map((block, bIdx) => {
-                    const previousWidth = branchBlocks
-                      .slice(0, bIdx)
-                      .reduce((total, prevBlock) => {
-                        return total + getDrawBlockWidth(prevBlock) + C.BLOCK_GAP;
-                      }, 0);
-
-                    const blockW = getDrawBlockWidth(block);
-                    const blockH = getDrawBlockHeight(block);
-
-                    const bx = blockRowLeftX + previousWidth;
-                    const by = wireY - blockH / 2;
-
+                                        // Compute cumulative x by summing actual widths of all preceding blocks
+                    let bx = blockRowLeftX;
+                    for (let i = 0; i < bIdx; i++) {
+                      const prevBlock = branchBlocks[i];
+                      const isNestedPS =
+                        (prevBlock.type === "Parallel Section" ||
+                          prevBlock.elementType === "Parallel Section") &&
+                        prevBlock.branches?.length > 0;
+                      bx += (isNestedPS ? getNestedParallelSectionWidth(prevBlock) : C.BLOCK_W) + C.BLOCK_GAP;
+                    }
                     const isLast = bIdx === branchBlocks.length - 1;
+                    const isNestedPS =
+                      (block.type === "Parallel Section" ||
+                        block.elementType === "Parallel Section") &&
+                      block.branches?.length > 0;
+                    const blockW = isNestedPS ? getNestedParallelSectionWidth(block) : C.BLOCK_W;
+                    const blockH = isNestedPS ? getNestedParallelSectionHeight(block) : C.BLOCK_H;
+                    // const bx = blockRowLeftX + bIdx * (C.BLOCK_W + C.BLOCK_GAP);
+                    // const isLast = bIdx === branchBlocks.length - 1;
 
                     return (
                       <g
@@ -554,6 +640,8 @@ export const BiDirectionalSymbol = ({
                           setParentItemId(item?.id);
                         }}
                       >
+                        {/* LEFT NODE */}
+                      
                         <RBDBlock
                           id={block._id ?? block.id}
                           setParentItemId={setParentItemId}
@@ -562,71 +650,144 @@ export const BiDirectionalSymbol = ({
                           item={item}
                           leftRailX={leftRailX}
                           rightRailX={rightRailX}
-                          wireY={wireY}
+                          wireY={wireY} 
                           selectedNode={selectedNode}
                           leftNodeId={leftNodeId}
                           rightNodeId={rightNodeId}
                           x={bx}
-                          y={by}
-                          onEdit={onEditBlock}
+                          y={wireY - C.BLOCK_H / 2} 
+                          onEdit={(e, id, blockData) => onEditBlock(e, id, blockData, item)}
+                          // onEdit={onEditBlock}
                           onDelete={onDeleteBlock}
                           setIdforApi={setIdforApi}
                           blockData={block}
-                          width={blockW}
-                          height={blockH}
+                          width={C.BLOCK_W}
+                          // Pass reliability
                           subrbdreliability={block?.reliability}
+
+                          // Pass unavailability if needed
                           subrbdunavailability={block?.unavailability}
+                          height={C.BLOCK_H}
                           onOpenMenu={onOpenMenu}
                         />
-
-                        {!isLast && (
-                          <>
-                            <line
+                        {console.log("subrbdreliability11111111111", block?.reliability)}
+                        <>
+                          <line
                               x1={bx + blockW}
-                              y1={wireY}
-                              x2={bx + blockW + C.BLOCK_GAP}
-                              y2={wireY}
-                              stroke="black"
-                              strokeWidth="2"
-                              strokeDasharray={dash}
-                            />
+                            y1={wireY}
+                            x2={bx + blockW + C.BLOCK_GAP}
+                            y2={wireY}
+                            stroke="black"
+                            strokeWidth="2"
+                            strokeDasharray={dash}
+                          />
 
-                            <circle
-                              cx={bx + blockW + C.BLOCK_GAP / 2}
-                              cy={wireY}
-                              r={4}
-                              fill={
-                                selectedNode === midNodeId(bIdx)
-                                  ? "#0078d4"
-                                  : "black"
-                              }
-                              style={{ cursor: "pointer" }}
-                              onClick={(e) => {
-                                e.stopPropagation();
+{item?.blockData?.isParallel ? (
+  // For parallel sections: show dot only when block isNested is false (Regular block)
+  !block?.isNested && (
+    <circle
+      cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+      cy={wireY}
+      r={4}
+      fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
+      style={{ cursor: "pointer" }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpenMenu(
+          e.clientX,
+          e.clientY,
+          branch?._id,
+          `${branch.blocks[0]._id} ,parallel`
+        );
+        setParentItemId(item?.id);
+        setIdforApi({
+          branchId: branch?._id,
+          branchIndex: branch?.index,
+          ItemId: item?.id,
+          location: `branch-${branch?._id}-right`,
+        });
+      }}
+    />
+  )
+) : (
+  // For non-parallel: show dot between every block
+  <circle
+    cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+    cy={wireY}
+    r={4}
+    fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
+    style={{ cursor: "pointer" }}
+    onClick={(e) => {
+      e.stopPropagation();
+      onOpenMenu(
+        e.clientX,
+        e.clientY,
+        branch?._id,
+        `${branch.blocks[0]._id} ,parallel`
+      );
+      setParentItemId(item?.id);
+      setIdforApi({
+        branchId: branch?._id,
+        branchIndex: branch?.index,
+        ItemId: item?.id,
+        location: `branch-${branch?._id}-right`,
+      });
+    }}
+  />
+)}
+{/* ── SINGLE unified mid-node circle ── */}
+{(() => {
+  // Rule 1: Never show for nested parallel section blocks
+  const isNestedParallelBlock =
+    block?.isNested === true &&
+    (block?.type === "Parallel Section" ||
+      block?.elementType === "Parallel Section");
 
-                                onOpenMenu(
-                                  e.clientX,
-                                  e.clientY,
-                                  branch?._id,
-                                  `${block._id ?? block.id} ,parallel`
-                                );
+  if (isNestedParallelBlock) return null;
 
-                                setParentItemId(item?.id);
+  // Rule 2: Never show if branch has no blocks (block was deleted)
+  if (!branchBlocks || branchBlocks.length === 0) return null;
 
-                                setIdforApi({
-                                  branchId: branch?._id,
-                                  branchIndex: branch?.index,
-                                  ItemId: item?.id,
-                                  location: `branch-${branch?._id}-right`,
-                                });
-                              }}
-                            />
-                          </>
-                        )}
+  // Rule 3: If parent isParallel=true, only show on last block
+  if (item?.blockData?.isParallel) {
+    if (!isLast) return null;
+  }
 
+  return (
+    <circle
+      cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+      cy={wireY}
+      r={4}
+      fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
+      style={{ cursor: "pointer" }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onOpenMenu(
+          e.clientX,
+          e.clientY,
+          branch?._id,
+          `${block?._id ?? block?.id} ,parallel`
+        );
+        setParentItemId(item?.id);
+        setIdforApi({
+          branchId: branch?._id,
+          branchIndex: branch?.index,
+          ItemId: item?.id,
+          location: `branch-${branch?._id}-right`,
+        });
+      }}
+    />
+  );
+})()}
+{console.log("xcvbnm,",blocks?.find((item)=>item.isParallel))}
+
+                        </>
+                        {/* )} */}
+
+                        {/* LAST BLOCK → RIGHT */}
                         {isLast && (
                           <line
-                            x1={bx + blockW}
+                             x1={bx + blockW}
                             y1={wireY}
                             x2={rightRailX}
                             y2={wireY}
@@ -646,11 +807,10 @@ export const BiDirectionalSymbol = ({
       </g>
     );
   };
-
+  // ── assemble ────────────────────────────────────────────────────────────────
   const layout = calculateLayout();
   const { items, startX, rightBoxX, canvasH, svgW } = layout;
   const wireLines = buildWireLines(items, rightBoxX);
-
   const leftArrow = [
     [C.TERMINAL_LEFT_X + C.TERMINAL_W, C.CENTER_Y - C.ARROW_H / 2],
     [C.TERMINAL_LEFT_X + C.TERMINAL_W - C.ARROW_W, C.CENTER_Y],
@@ -658,7 +818,6 @@ export const BiDirectionalSymbol = ({
   ]
     .map((p) => p.join(","))
     .join(" ");
-
   const rightArrow = [
     [rightBoxX, C.CENTER_Y - C.ARROW_H / 2],
     [rightBoxX + C.ARROW_W, C.CENTER_Y],
@@ -674,18 +833,22 @@ export const BiDirectionalSymbol = ({
       viewBox={`0 0 ${svgW} ${canvasH}`}
       style={{ overflow: "visible" }}
     >
+      {/* main wire */}
       {wireLines.map((seg, i) => (
-        <line
-          key={`w-${i}`}
-          x1={seg.x1}
-          y1={seg.y}
-          x2={seg.x2}
-          y2={seg.y}
-          stroke="black"
-          strokeWidth="2"
-        />
+        <>
+          <line
+            key={`w${i}`}
+            x1={seg.x1}
+            y1={seg.y}
+            x2={seg.x2}
+            y2={seg.y}
+            stroke="black"
+            strokeWidth="2"
+          />
+        </>
       ))}
 
+      {/* Input terminal */}
       <g onClick={() => onNodeClick?.("LEFT")} style={{ cursor: "pointer" }}>
         <rect
           x={C.TERMINAL_LEFT_X}
@@ -694,9 +857,7 @@ export const BiDirectionalSymbol = ({
           height={C.TERMINAL_H}
           fill="black"
         />
-
         <polygon points={leftArrow} fill="white" />
-
         <text
           x={C.TERMINAL_LEFT_X + C.TERMINAL_W / 2}
           y={C.CENTER_Y}
@@ -710,6 +871,7 @@ export const BiDirectionalSymbol = ({
         </text>
       </g>
 
+      {/* Output terminal */}
       <g onClick={() => onNodeClick?.("RIGHT")} style={{ cursor: "pointer" }}>
         <rect
           x={rightBoxX}
@@ -718,9 +880,7 @@ export const BiDirectionalSymbol = ({
           height={C.TERMINAL_H}
           fill="black"
         />
-
         <polygon points={rightArrow} fill="white" />
-
         <text
           x={rightBoxX + C.TERMINAL_W / 2}
           y={C.CENTER_Y}
@@ -734,25 +894,26 @@ export const BiDirectionalSymbol = ({
         </text>
       </g>
 
+      {/* items */}
       {items.map((item) => {
         if (item.type === "node") {
           return (
-            <InsertNode
-              key={item.id}
-              id={item.RelateId}
-              cx={item.x}
-              cy={item.y}
-              nodeId={item.nodeIndex}
-              selectedNode={selectedNode}
-              onOpenMenu={onOpenMenu}
-            />
+            <>
+              <InsertNode
+                key={item.id}
+                id={item.RelateId}
+                cx={item.x}
+                cy={item.y}
+                nodeId={item.nodeIndex}
+                selectedNode={selectedNode}
+                onOpenMenu={onOpenMenu}
+              />
+              {/* {console.log(item, 'item')} */}
+            </>
           );
         }
-
-        if (item.type === "parallel-section") {
+        if (item.type === "parallel-section")
           return renderParallelSection(item);
-        }
-
         if (item.type === "block") {
           return (
             <RBDBlock
@@ -773,10 +934,10 @@ export const BiDirectionalSymbol = ({
             />
           );
         }
-
         return null;
       })}
 
+      {/* empty diagram single node */}
       {blocks.length === 0 && (
         <InsertNode
           cx={startX}
@@ -2267,6 +2428,13 @@ export default function RBDButton() {
       setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
     }
   };
+       const formatValue = (value) => {
+  if (value == null) return "0";
+
+  return Math.abs(value) < 1e-10
+    ? value.toExponential(10)
+    : value.toFixed(10);
+};
   const handleClose = () => {
     setKOfNModal((prev) => ({
       ...prev,
@@ -2302,23 +2470,29 @@ export default function RBDButton() {
   return (
     <>
       <div className="mt-5">
-    <div>
+
+
+<div>
   <b>RBD Title: </b>
   {RBDTitle}
   <br />
   <b>Reliability: </b>
-  {Math.abs(totalReliability) < 1e-10 && totalReliability !== 0
-    ? totalReliability?.toExponential(4)
-    : totalReliability?.toFixed(10)}
+  {totalReliability != null
+    ? Math.abs(totalReliability) < 1e-10
+      ? totalReliability.toExponential(10)
+      : totalReliability.toFixed(4)
+    : "0"}
 </div>
 
 <div>
   <b>Unavailability: </b>
-  {Math.abs(totalUnavailability) < 1e-10 && totalUnavailability !== 0
-    ? totalUnavailability?.toExponential(4)
-    : totalUnavailability?.toFixed(10)}
+  {totalUnavailability != null
+    ? Math.abs(totalUnavailability) < 1e-10
+      ? totalUnavailability.toExponential(10)
+      : totalUnavailability.toFixed(4)
+    : "0"}
 </div>
-</div>
+      </div>
       <div style={{ minHeight: "100vh", padding: "5%" }}>
         {!showSymbol && (
           <div className="text-center">

@@ -2,8 +2,8 @@
 import React from "react";
 
 export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
-  const blockWidth = 70;
-  const layerHeight = 0.5;
+  const blockWidth = 60;
+  const layerHeight = 0.2;
 
   // Get values from blockData
   const k = blockData?.k || blockData?.data?.k || '';
