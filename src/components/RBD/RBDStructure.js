@@ -512,7 +512,7 @@ console.log("blocks...",blocks)
 
     const leftRailX = x + C.RAIL_PAD_X;
     // rightRailX is derived from the FIXED rightX anchor — never shifts
-    const rightRailX = rightX - C.RAIL_PAD_X + 20;
+    const rightRailX = rightX - C.RAIL_PAD_X + 40;
 
     const railTop = branchCenterY(branches, 0, secTopY);
     const railBottom = branchCenterY(branches, branches.length - 1, secTopY);
@@ -735,9 +735,8 @@ console.log("blocks...",blocks)
     }}
   />
 )}
-{/* ── SINGLE unified mid-node circle ── */}
+
 {(() => {
-  // Rule 1: Never show for nested parallel section blocks
   const isNestedParallelBlock =
     block?.isNested === true &&
     (block?.type === "Parallel Section" ||
@@ -745,11 +744,17 @@ console.log("blocks...",blocks)
 
   if (isNestedParallelBlock) return null;
 
-  // Rule 2: Never show if branch has no blocks (block was deleted)
   if (!branchBlocks || branchBlocks.length === 0) return null;
 
   // Rule 3: If parent isParallel=true, only show on last block
-  if (item?.blockData?.isParallel) {
+  // BUT always show if the current block is NOT a parallel section
+  const isCurrentBlockParallel =
+    block?.type === "Parallel Section" ||
+    block?.elementType === "Parallel Section";
+
+  if (item?.blockData?.isParallel && !isCurrentBlockParallel) {
+    // Block was converted from parallel — always show the node
+  } else if (item?.blockData?.isParallel) {
     if (!isLast) return null;
   }
 
