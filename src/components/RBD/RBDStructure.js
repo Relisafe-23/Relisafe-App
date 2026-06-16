@@ -21,8 +21,8 @@ import "../../css/RBD.scss";
 const C = {
   TERMINAL_W: 70,
   TERMINAL_H: 40,
-  TERMINAL_LEFT_X: 10,
-  ARROW_W: 15,
+  TERMINAL_LEFT_X: 20,
+  ARROW_W: 25,
   ARROW_H: 15,
   BLOCK_W: 61.7,
   BLOCK_H: 40,
@@ -31,7 +31,7 @@ const C = {
   NODE_SPACING: 25,
   BRANCH_MIN_H: 25,
   BRANCH_SPACING: 25,
-  RAIL_PAD_X: 10,
+  RAIL_PAD_X: 40,
   INNER_PAD_X: 25,
   BLOCK_GAP: 45,
   CENTER_Y: 350,
@@ -115,7 +115,7 @@ const getNestedParallelSectionWidth = (block) => {
       )
       : NESTED.BW;
 
-  const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD;
+  const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD ;
   return Math.max(
     NESTED.BW * 3,
     NESTED.RAIL_PAD * 2 + innerW + NESTED.CONTAINER_PADDING * 2,
@@ -244,7 +244,7 @@ const branchCenterY = (branches, idx, secTopY) => {
   for (let i = 0; i < idx; i++) {
     y += branchHeight(branches[i]) + C.BRANCH_SPACING;
   }
-  return y + branchHeight(branches[idx]) / 2;
+  return y + branchHeight(branches[idx]) / 1.9;
 };
 
 // ─── InsertionNode (dot with + cross) ─────────────────────────────────────────
@@ -282,8 +282,6 @@ const InsertNode = ({
         cy={cy}
         r={r}
         fill={isSel ? "#0078d4" : "black"}
-
-
       />
       <line
         x1={cx - 3}
@@ -465,13 +463,13 @@ export const BiDirectionalSymbol = ({
       const next = items[i + 1];
       const fx =
         cur.type === "parallel-section"
-          ? cur.rightX
+          ? cur.rightX 
           : cur.type === "block"
             ? cur.x + C.BLOCK_W
             : cur.x + C.NODE_R;
       const tx =
         next.type === "block" || next.type === "parallel-section"
-          ? next.x
+          ? next.x + 40
           : next.x - C.NODE_R;
       if (fx < tx) lines.push({ x1: fx, x2: tx, y: C.CENTER_Y });
     }
@@ -518,7 +516,7 @@ console.log("blocks...",blocks)
     const railBottom = branchCenterY(branches, branches.length - 1, secTopY);
 
     return (
-      <g key={id}>
+      <g key={id} >
         {/* <text
           x={x + dynW / 2}
           y={secTopY}
@@ -562,7 +560,7 @@ console.log("blocks...",blocks)
           const blockRowLeftX = leftRailX + C.INNER_PAD_X;
 
           return (
-            <g key={branch._id ?? branch.id ?? idx}>
+            <g key={branch._id ?? branch.id ?? idx} >
               {/* LEFT NODE */}
               <circle
                 cx={leftRailX}
@@ -633,6 +631,7 @@ console.log("blocks...",blocks)
                           setParentItem(item);
                           setParentItemId(item?.id);
                         }}
+                       
                         onContextMenu={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -644,6 +643,7 @@ console.log("blocks...",blocks)
                       
                         <RBDBlock
                           id={block._id ?? block.id}
+                   
                           setParentItemId={setParentItemId}
                           type={block.type}
                           setTargetBranchId={setTargetBranchId}
