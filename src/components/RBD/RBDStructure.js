@@ -1022,7 +1022,7 @@ export const BlockContextMenu = ({
     {[
       "Edit...",
       "Delete...",
-      "Split K-out-of-N...",
+      // "Split K-out-of-N...",
       // "Add Regular",
       // "Add K-out-of-N",
       // "Add SubRBD",
