@@ -650,7 +650,7 @@ console.log("blocks...",blocks)
                           item={item}
                           leftRailX={leftRailX}
                           rightRailX={rightRailX}
-                          wireY={wireY} 
+                          wireY={wireY +10} 
                           selectedNode={selectedNode}
                           leftNodeId={leftNodeId}
                           rightNodeId={rightNodeId}
@@ -675,7 +675,7 @@ console.log("blocks...",blocks)
                           <line
                               x1={bx + blockW}
                             y1={wireY}
-                            x2={bx + blockW + C.BLOCK_GAP}
+                            x2={bx + blockW + C.BLOCK_GAP + 19}
                             y2={wireY}
                             stroke="black"
                             strokeWidth="2"
