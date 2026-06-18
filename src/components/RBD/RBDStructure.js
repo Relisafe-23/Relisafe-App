@@ -115,10 +115,10 @@ const getNestedParallelSectionWidth = (block) => {
       )
       : NESTED.BW;
 
-  const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD ;
+  const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD;
   return Math.max(
     NESTED.BW * 3,
-    NESTED.RAIL_PAD * 2 + innerW + NESTED.CONTAINER_PADDING  * 2,
+    NESTED.RAIL_PAD * 2 + innerW + NESTED.CONTAINER_PADDING * 2,
   );
 };
 
@@ -463,7 +463,7 @@ export const BiDirectionalSymbol = ({
       const next = items[i + 1];
       const fx =
         cur.type === "parallel-section"
-          ? cur.rightX 
+          ? cur.rightX
           : cur.type === "block"
             ? cur.x + C.BLOCK_W
             : cur.x + C.NODE_R;
@@ -486,24 +486,24 @@ export const BiDirectionalSymbol = ({
     lines.push({ x1: endX, x2: rightBoxX, y: C.CENTER_Y });
     return lines;
   };
-const hasNestedParallel = blocks?.some((block) => {
-  const isParallel =
-    block.type === "Parallel Section" ||
-    block.elementType === "Parallel Section";
+  const hasNestedParallel = blocks?.some((block) => {
+    const isParallel =
+      block.type === "Parallel Section" ||
+      block.elementType === "Parallel Section";
 
-  if (!isParallel) return false;
+    if (!isParallel) return false;
 
-  // check if this parallel section contains another parallel section inside
-  return block.branches?.some((branch) =>
-    branch.blocks?.some(
-      (nestedBlock) =>
-        nestedBlock.type === "Parallel Section" ||
-        nestedBlock.elementType === "Parallel Section"
-    )
-  );
-});
-console.log("parallell section..",hasNestedParallel)
-console.log("blocks...",blocks)
+    // check if this parallel section contains another parallel section inside
+    return block.branches?.some((branch) =>
+      branch.blocks?.some(
+        (nestedBlock) =>
+          nestedBlock.type === "Parallel Section" ||
+          nestedBlock.elementType === "Parallel Section"
+      )
+    );
+  });
+  console.log("parallell section..", hasNestedParallel)
+  console.log("blocks...", blocks)
   const renderParallelSection = (item) => {
     const { x, rightX, branches, id, blockData, width: dynW, secTopY } = item;
     if (!branches || branches.length === 0) return null;
@@ -604,7 +604,7 @@ console.log("blocks...",blocks)
                   />
 
                   {branchBlocks.map((block, bIdx) => {
-                                        // Compute cumulative x by summing actual widths of all preceding blocks
+                    // Compute cumulative x by summing actual widths of all preceding blocks
                     let bx = blockRowLeftX;
                     for (let i = 0; i < bIdx; i++) {
                       const prevBlock = branchBlocks[i];
@@ -631,7 +631,7 @@ console.log("blocks...",blocks)
                           setParentItem(item);
                           setParentItemId(item?.id);
                         }}
-                       
+
                         onContextMenu={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -640,22 +640,22 @@ console.log("blocks...",blocks)
                         }}
                       >
                         {/* LEFT NODE */}
-                      
+
                         <RBDBlock
                           id={block._id ?? block.id}
-                   
+
                           setParentItemId={setParentItemId}
                           type={block.type}
                           setTargetBranchId={setTargetBranchId}
                           item={item}
                           leftRailX={leftRailX}
                           rightRailX={rightRailX}
-                          wireY={wireY +10} 
+                          wireY={wireY + 10}
                           selectedNode={selectedNode}
                           leftNodeId={leftNodeId}
                           rightNodeId={rightNodeId}
                           x={bx}
-                          y={wireY - C.BLOCK_H / 2} 
+                          y={wireY - C.BLOCK_H / 2}
                           onEdit={(e, id, blockData) => onEditBlock(e, id, blockData, item)}
                           // onEdit={onEditBlock}
                           onDelete={onDeleteBlock}
@@ -673,7 +673,7 @@ console.log("blocks...",blocks)
                         {console.log("subrbdreliability11111111111", block?.reliability)}
                         <>
                           <line
-                              x1={bx + blockW}
+                            x1={bx + blockW}
                             y1={wireY}
                             x2={bx + blockW + C.BLOCK_GAP + 19}
                             y2={wireY}
@@ -682,109 +682,109 @@ console.log("blocks...",blocks)
                             strokeDasharray={dash}
                           />
 
-{item?.blockData?.isParallel ? (
-  // For parallel sections: show dot only when block isNested is false (Regular block)
-  !block?.isNested && (
-    <circle
-      cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
-      cy={wireY}
-      r={4}
-      fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
-      style={{ cursor: "pointer" }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onOpenMenu(
-          e.clientX,
-          e.clientY,
-          branch?._id,
-          `${branch.blocks[0]._id} ,parallel`
-        );
-        setParentItemId(item?.id);
-        setIdforApi({
-          branchId: branch?._id,
-          branchIndex: branch?.index,
-          ItemId: item?.id,
-          location: `branch-${branch?._id}-right`,
-        });
-      }}
-    />
-  )
-) : (
-  // For non-parallel: show dot between every block
-  <circle
-    cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
-    cy={wireY}
-    r={4}
-    fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
-    style={{ cursor: "pointer" }}
-    onClick={(e) => {
-      e.stopPropagation();
-      onOpenMenu(
-        e.clientX,
-        e.clientY,
-        branch?._id,
-        `${branch.blocks[0]._id} ,parallel`
-      );
-      setParentItemId(item?.id);
-      setIdforApi({
-        branchId: branch?._id,
-        branchIndex: branch?.index,
-        ItemId: item?.id,
-        location: `branch-${branch?._id}-right`,
-      });
-    }}
-  />
-)}
+                          {item?.blockData?.isParallel ? (
+                            // For parallel sections: show dot only when block isNested is false (Regular block)
+                            !block?.isNested && (
+                              <circle
+                                cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+                                cy={wireY}
+                                r={4}
+                                fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
+                                style={{ cursor: "pointer" }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenMenu(
+                                    e.clientX,
+                                    e.clientY,
+                                    branch?._id,
+                                    `${branch.blocks[0]._id} ,parallel`
+                                  );
+                                  setParentItemId(item?.id);
+                                  setIdforApi({
+                                    branchId: branch?._id,
+                                    branchIndex: branch?.index,
+                                    ItemId: item?.id,
+                                    location: `branch-${branch?._id}-right`,
+                                  });
+                                }}
+                              />
+                            )
+                          ) : (
+                            // For non-parallel: show dot between every block
+                            <circle
+                              cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+                              cy={wireY}
+                              r={4}
+                              fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenMenu(
+                                  e.clientX,
+                                  e.clientY,
+                                  branch?._id,
+                                  `${branch.blocks[0]._id} ,parallel`
+                                );
+                                setParentItemId(item?.id);
+                                setIdforApi({
+                                  branchId: branch?._id,
+                                  branchIndex: branch?.index,
+                                  ItemId: item?.id,
+                                  location: `branch-${branch?._id}-right`,
+                                });
+                              }}
+                            />
+                          )}
 
-{(() => {
-  const isNestedParallelBlock =
-    block?.isNested === true &&
-    (block?.type === "Parallel Section" ||
-      block?.elementType === "Parallel Section");
+                          {(() => {
+                            const isNestedParallelBlock =
+                              block?.isNested === true &&
+                              (block?.type === "Parallel Section" ||
+                                block?.elementType === "Parallel Section");
 
-  if (isNestedParallelBlock) return null;
+                            if (isNestedParallelBlock) return null;
 
-  if (!branchBlocks || branchBlocks.length === 0) return null;
+                            if (!branchBlocks || branchBlocks.length === 0) return null;
 
-  // Rule 3: If parent isParallel=true, only show on last block
-  // BUT always show if the current block is NOT a parallel section
-  const isCurrentBlockParallel =
-    block?.type === "Parallel Section" ||
-    block?.elementType === "Parallel Section";
+                            // Rule 3: If parent isParallel=true, only show on last block
+                            // BUT always show if the current block is NOT a parallel section
+                            const isCurrentBlockParallel =
+                              block?.type === "Parallel Section" ||
+                              block?.elementType === "Parallel Section";
 
-  if (item?.blockData?.isParallel && !isCurrentBlockParallel) {
-    // Block was converted from parallel — always show the node
-  } else if (item?.blockData?.isParallel) {
-    if (!isLast) return null;
-  }
+                            if (item?.blockData?.isParallel && !isCurrentBlockParallel) {
+                              // Block was converted from parallel — always show the node
+                            } else if (item?.blockData?.isParallel) {
+                              if (!isLast) return null;
+                            }
 
-  return (
-    <circle
-      cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
-      cy={wireY}
-      r={4}
-      fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
-      style={{ cursor: "pointer" }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onOpenMenu(
-          e.clientX,
-          e.clientY,
-          branch?._id,
-          `${block?._id ?? block?.id} ,parallel`
-        );
-        setParentItemId(item?.id);
-        setIdforApi({
-          branchId: branch?._id,
-          branchIndex: branch?.index,
-          ItemId: item?.id,
-          location: `branch-${branch?._id}-right`,
-        });
-      }}
-    />
-  );
-})()}
-{console.log("xcvbnm,",blocks?.find((item)=>item.isParallel))}
+                            return (
+                              <circle
+                                cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+                                cy={wireY}
+                                r={4}
+                                fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
+                                style={{ cursor: "pointer" }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenMenu(
+                                    e.clientX,
+                                    e.clientY,
+                                    branch?._id,
+                                    `${block?._id ?? block?.id} ,parallel`
+                                  );
+                                  setParentItemId(item?.id);
+                                  setIdforApi({
+                                    branchId: branch?._id,
+                                    branchIndex: branch?.index,
+                                    ItemId: item?.id,
+                                    location: `branch-${branch?._id}-right`,
+                                  });
+                                }}
+                              />
+                            );
+                          })()}
+                          {console.log("xcvbnm,", blocks?.find((item) => item.isParallel))}
 
                         </>
                         {/* )} */}
@@ -792,7 +792,7 @@ console.log("blocks...",blocks)
                         {/* LAST BLOCK → RIGHT */}
                         {isLast && (
                           <line
-                             x1={bx + blockW}
+                            x1={bx + blockW}
                             y1={wireY}
                             x2={rightRailX}
                             y2={wireY}
@@ -2433,13 +2433,13 @@ export default function RBDButton() {
       setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
     }
   };
-       const formatValue = (value) => {
-  if (value == null) return "0";
+  const formatValue = (value) => {
+    if (value == null) return "0";
 
-  return Math.abs(value) < 1e-10
-    ? value.toExponential(10)
-    : value.toFixed(10);
-};
+    return Math.abs(value) < 1e-10
+      ? value.toExponential(10)
+      : value.toFixed(10);
+  };
   const handleClose = () => {
     setKOfNModal((prev) => ({
       ...prev,
@@ -2477,26 +2477,26 @@ export default function RBDButton() {
       <div className="mt-5">
 
 
-<div>
-  <b>RBD Title: </b>
-  {RBDTitle}
-  <br />
-  <b>Reliability: </b>
-  {totalReliability != null
-    ? Math.abs(totalReliability) < 1e-10
-      ? totalReliability.toExponential(10)
-      : totalReliability.toFixed(4)
-    : "0"}
-</div>
+        <div>
+          <b>RBD Title: </b>
+          {RBDTitle}
+          <br />
+          <b>Reliability: </b>
+          {totalReliability != null
+            ? Math.abs(totalReliability) < 1e-10
+              ? totalReliability.toExponential(10)
+              : totalReliability.toFixed(4)
+            : "0"}
+        </div>
 
-<div>
-  <b>Unavailability: </b>
-  {totalUnavailability != null
-    ? Math.abs(totalUnavailability) < 1e-10
-      ? totalUnavailability.toExponential(10)
-      : totalUnavailability.toFixed(4)
-    : "0"}
-</div>
+        <div>
+          <b>Unavailability: </b>
+          {totalUnavailability != null
+            ? Math.abs(totalUnavailability) < 1e-10
+              ? totalUnavailability.toExponential(10)
+              : totalUnavailability.toFixed(4)
+            : "0"}
+        </div>
       </div>
       <div style={{ minHeight: "100vh", padding: "5%" }}>
         {!showSymbol && (
