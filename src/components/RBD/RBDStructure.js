@@ -118,7 +118,7 @@ const getNestedParallelSectionWidth = (block) => {
   const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD ;
   return Math.max(
     NESTED.BW * 3,
-    NESTED.RAIL_PAD * 2 + innerW + NESTED.CONTAINER_PADDING * 2,
+    NESTED.RAIL_PAD * 2 + innerW + NESTED.CONTAINER_PADDING  * 2,
   );
 };
 

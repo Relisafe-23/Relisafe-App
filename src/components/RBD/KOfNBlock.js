@@ -86,21 +86,12 @@ export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
       })}
 
       {/* Heading - shows Identical / Non-Identical / Load Sharing */}
-      <text
-        x={x + blockWidth / 2}
-        y={y - 15}
-        textAnchor="middle"
-        fontSize="8"
-        fontWeight="bold"
-        fill="#333"
-      >
-        {getHeading()}
-      </text>
+
 
       {/* Reliability */}
       <text
         x={x + blockWidth / 2}
-        y={y + 8}
+        y={y + 5}
         textAnchor="middle"
         fontSize="7"
         fill="#e8f5e9"
@@ -111,14 +102,25 @@ export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
       {/* Unavailability */}
       <text
         x={x + blockWidth / 2}
-        y={y + 18}
+        y={y + 15}
         textAnchor="middle"
         fontSize="7"
         fill="#ffebee"
       >
         U: {formatUnavailability()}
+ 
       </text>
 
+      <text
+        x={x + blockWidth / 2}
+        y={y + 25}
+        textAnchor="middle"
+        fontSize="7"
+        fontWeight="bold"
+        fill="#333"
+      >
+               {getHeading()}
+      </text>
       <defs>
         <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
           <feDropShadow dx="2" dy="2" stdDeviation="2" floodOpacity="0.2" />
