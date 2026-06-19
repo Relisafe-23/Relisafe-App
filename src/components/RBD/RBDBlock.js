@@ -132,15 +132,15 @@ function renderNestedParallelSection() {
 
   const BW = 60,
     BH = 40,
-    GAP = 12;
+    GAP = 15;
 
   const RAIL_PAD = 15,
     INNER_PAD = 20;
 
-  const CONTAINER_PADDING = 20,
-    BRANCH_SPACING = 5;
+const CONTAINER_PADDING = 8,
+      BRANCH_SPACING = -20;
 
-  const NESTED_BRANCH_OFFSET = 5; 
+const NESTED_BRANCH_OFFSET = -20;
 
   const isParallelBlock = (block) =>
     (block?.type === "Parallel Section" ||
@@ -479,7 +479,8 @@ function renderNestedParallelSection() {
               style={{ cursor: "pointer" }}
               onClick={(e) => {
                 e.stopPropagation();
-                onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
+                   onOpenMenu(e.clientX, e.clientY, branch?.blocks[0]?._id);
+                
                 setParentItemId(item?.id);
                 setTargetBranchId(branch?._id);
 

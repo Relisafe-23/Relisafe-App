@@ -57,9 +57,9 @@ const NESTED = {
   BH: 40,
   GAP: 12,
   RAIL_PAD: 20,
-  INNER_PAD: 14,
+  INNER_PAD: 5,
   CONTAINER_PADDING: 20,
-  BRANCH_SPACING: 5,
+  BRANCH_SPACING: -35,
 };
 
 // Recursive: actual height of a single branch (accounts for nested parallel sections)
