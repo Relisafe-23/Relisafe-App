@@ -158,29 +158,59 @@ console.log("subrbdreliability",subrbdreliability)
       return maxNestedH > 0 ? maxNestedH : BH + 40;
     };
 
+    // IMPORTANT FIX:
+    // Nested parallel sections cannot be positioned with fixed BW + GAP.
+    // Every child block must reserve its real recursive width/height.
+    const isParallelBlock = (block) =>
+      (block?.type === "Parallel Section" ||
+        block?.elementType === "Parallel Section") &&
+      block?.branches?.length > 0;
+
+    const getBlockRenderWidth = (block) => {
+      if (!isParallelBlock(block)) return BW;
+
+      const maxBranchW = Math.max(
+        ...block.branches.map((branch) => getBranchWidth(branch))
+      );
+      const innerW = INNER_PAD + maxBranchW + INNER_PAD;
+
+      return Math.max(
+        BW * 3,
+        RAIL_PAD * 2 + innerW + CONTAINER_PADDING * 2
+      );
+    };
+
+    const getBlockRenderHeight = (block) => {
+      if (!isParallelBlock(block)) return BH;
+
+      const branchHeights = block.branches.map((branch) => getBranchHeight(branch));
+      let totalH = CONTAINER_PADDING + BH / 2;
+
+      branchHeights.forEach((h) => {
+        totalH += h + BRANCH_SPACING;
+      });
+
+      return totalH + BH / 2 + CONTAINER_PADDING;
+    };
+
+    const getBlockX = (blocks, currentIndex, startX) => {
+      let currentX = startX;
+
+      for (let i = 0; i < currentIndex; i++) {
+        currentX += getBlockRenderWidth(blocks[i]) + GAP;
+      }
+
+      return currentX;
+    };
+
     const getBranchWidth = (branch) => {
       const branchBlocks = branch.blocks || [];
       let totalW = 0;
+
       branchBlocks.forEach((block, idx) => {
-        if (
-          (block.type === "Parallel Section" ||
-            block.elementType === "Parallel Section") &&
-          block.branches?.length > 0
-        ) {
-          const nestedMaxBlocks = Math.max(
-            ...block.branches.map((b) => (b.blocks || []).length),
-          );
-          const nestedInnerW =
-            INNER_PAD +
-            nestedMaxBlocks * BW +
-            (nestedMaxBlocks - 1) * GAP +
-            INNER_PAD;
-          const nestedW = RAIL_PAD * 2 + nestedInnerW + CONTAINER_PADDING * 2;
-          totalW += nestedW + (idx > 0 ? GAP : 0);
-        } else {
-          totalW += BW + (idx > 0 ? GAP : 0);
-        }
+        totalW += getBlockRenderWidth(block) + (idx > 0 ? GAP : 0);
       });
+
       return Math.max(totalW, BW);
     };
 
@@ -204,7 +234,8 @@ console.log("subrbdreliability",subrbdreliability)
     );
 
     // ── Position: center on wireY ────────────────────────────────────────────
-    const nestedSectionX = x - CONTAINER_PADDING;
+    // const nestedSectionX = x - CONTAINER_PADDING;
+    const nestedSectionX = x;
     const nestedSectionY = wireY - containerH / 2;
 
     const nestedLeftRailX = nestedSectionX + RAIL_PAD + CONTAINER_PADDING;
@@ -213,6 +244,13 @@ console.log("subrbdreliability",subrbdreliability)
 
     const railTop = nestedSectionY + branchYOffsets[0];
     const railBottom = nestedSectionY + branchYOffsets[branches.length - 1];
+
+    // Entry/exit stubs connect the parent branch wire to this nested section.
+    // Parent renderer connects to x and x + containerW, while the actual
+    // nested rails are inset by padding. Without these stubs the section
+    // looks aligned but electrically disconnected.
+    const entryX = nestedSectionX;
+    const exitX = nestedSectionX + containerW;
 
     return (
       <g>
@@ -224,6 +262,23 @@ console.log("subrbdreliability",subrbdreliability)
           fill="none"
           stroke="none"
           pointerEvents="none"
+        />
+
+        <line
+          x1={entryX}
+          y1={wireY}
+          x2={nestedLeftRailX}
+          y2={wireY}
+          stroke="black"
+          strokeWidth="1.5"
+        />
+        <line
+          x1={nestedRightRailX}
+          y1={wireY}
+          x2={exitX}
+          y2={wireY}
+          stroke="black"
+          strokeWidth="1.5"
         />
 
         <line
@@ -245,7 +300,6 @@ console.log("subrbdreliability",subrbdreliability)
 
         {branches.map((branch, branchIdx) => {
           const branchWireY = nestedSectionY + branchYOffsets[branchIdx];
-          const blockY = branchWireY - BH / 2;
           const branchBlocks = branch.blocks || [];
           const isMainBranch = branchIdx === 0;
           const dash = isMainBranch ? undefined : "5,3";
@@ -254,6 +308,8 @@ console.log("subrbdreliability",subrbdreliability)
           const leftNodeId = `nested-branch-${branchKey}-left`;
           const rightNodeId = `nested-branch-${branchKey}-right`;
           const midNodeId = (bIdx) => `nested-branch-${branchKey}-mid-${bIdx}`;
+          // Keep every nested branch content left-aligned from the same X.
+          // Do not center shorter branches; otherwise nested rows drift horizontally.
           const blockRowLeftX = nestedLeftRailX + INNER_PAD;
 
           return (
@@ -301,7 +357,10 @@ console.log("subrbdreliability",subrbdreliability)
                   />
 
                   {branchBlocks.map((block, blockIdx) => {
-                    const bx = blockRowLeftX + blockIdx * (BW + GAP);
+                    const bx = getBlockX(branchBlocks, blockIdx, blockRowLeftX);
+                    const blockW = getBlockRenderWidth(block);
+                    const blockH = getBlockRenderHeight(block);
+                    const blockY = branchWireY - blockH / 2;
                     const isLast = blockIdx === branchBlocks.length - 1;
 
                     return (
@@ -316,8 +375,8 @@ console.log("subrbdreliability",subrbdreliability)
                           onDelete={onDeleteBlock || onDelete}
                           setIdforApi={setIdforApi}
                           blockData={block}
-                          width={BW}
-                          height={BH}
+                          width={blockW}
+                          height={blockH}
                           onOpenMenu={onOpenMenu}
                           setParentItem={setParentItem}
                           setParentItemId={setParentItemId}
@@ -329,49 +388,53 @@ console.log("subrbdreliability",subrbdreliability)
                           setTargetBranchId={setTargetBranchId}
                         />
 
-                        {!isLast && (
-                          <>
-                            <line
-                              x1={bx + BW}
-                              y1={branchWireY}
-                              x2={bx + BW + GAP}
-                              y2={branchWireY}
-                              stroke="black"
-                              strokeWidth="1.5"
-                              strokeDasharray={dash}
-                            />
-                            <circle
-                              cx={bx + BW + GAP / 2}
-                              cy={branchWireY}
-                              r={4}
-                              fill={
-                                selectedNode === midNodeId(blockIdx)
-                                  ? "#0078D4"
-                                  : "black"
-                              }
-                              style={{ cursor: "pointer" }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onOpenMenu(
-                                  e.clientX,
-                                  e.clientY,
-                                  midNodeId(blockIdx),
-                                );
-                                setParentItemId(item?.id);
-                                setIdforApi?.({
-                                  branchId: branch._id,
-                                  branchIndex: branch.index,
-                                  ItemId: item?.id,
-                                  location: midNodeId(blockIdx),
-                                });
-                              }}
-                            />
-                          </>
-                        )}
+                        {!isLast && (() => {
+                          const nextBx = getBlockX(branchBlocks, blockIdx + 1, blockRowLeftX);
+                          const midX = (bx + blockW + nextBx) / 2;
+                          return (
+                            <>
+                              <line
+                                x1={bx + blockW}
+                                y1={branchWireY}
+                                x2={nextBx}
+                                y2={branchWireY}
+                                stroke="black"
+                                strokeWidth="1.5"
+                                strokeDasharray={dash}
+                              />
+                              <circle
+                                cx={midX}
+                                cy={branchWireY}
+                                r={4}
+                                fill={
+                                  selectedNode === midNodeId(blockIdx)
+                                    ? "#0078D4"
+                                    : "black"
+                                }
+                                style={{ cursor: "pointer" }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenMenu(
+                                    e.clientX,
+                                    e.clientY,
+                                    midNodeId(blockIdx),
+                                  );
+                                  setParentItemId(item?.id);
+                                  setIdforApi?.({
+                                    branchId: branch._id,
+                                    branchIndex: branch.index,
+                                    ItemId: item?.id,
+                                    location: midNodeId(blockIdx),
+                                  });
+                                }}
+                              />
+                            </>
+                          );
+                        })()}
 
                         {isLast && (
                           <line
-                            x1={bx + BW}
+                            x1={bx + blockW}
                             y1={branchWireY}
                             x2={nestedRightRailX}
                             y2={branchWireY}

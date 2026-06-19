@@ -42,14 +42,24 @@ const C = {
 };
 
 // ── Shared layout constants (must match RBDBlock exactly) ──────────────────
+// const NESTED = {
+//   BW: 20,
+//   BH: 20,
+//   GAP: 30,
+//   RAIL_PAD: 20,
+//   INNER_PAD: 20,
+//   CONTAINER_PADDING: 10,
+//   BRANCH_SPACING: 10,
+// };
+
 const NESTED = {
-  BW: 20,
-  BH: 20,
-  GAP: 30,
+  BW: 60,
+  BH: 40,
+  GAP: 12,
   RAIL_PAD: 20,
-  INNER_PAD: 20,
-  CONTAINER_PADDING: 10,
-  BRANCH_SPACING: 10,
+  INNER_PAD: 14,
+  CONTAINER_PADDING: 20,
+  BRANCH_SPACING: 20,
 };
 
 // Recursive: actual height of a single branch (accounts for nested parallel sections)
@@ -115,10 +125,10 @@ const getNestedParallelSectionWidth = (block) => {
       )
       : NESTED.BW;
 
-  const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD ;
+  const innerW = NESTED.INNER_PAD + maxBranchW + NESTED.INNER_PAD;
   return Math.max(
     NESTED.BW * 3,
-    NESTED.RAIL_PAD * 2 + innerW + NESTED.CONTAINER_PADDING  * 2,
+    NESTED.RAIL_PAD * 2 + innerW + NESTED.CONTAINER_PADDING * 2,
   );
 };
 
@@ -244,7 +254,8 @@ const branchCenterY = (branches, idx, secTopY) => {
   for (let i = 0; i < idx; i++) {
     y += branchHeight(branches[i]) + C.BRANCH_SPACING;
   }
-  return y + branchHeight(branches[idx]) / 1.9;
+  // return y + branchHeight(branches[idx]) / 1.9;
+  return y + branchHeight(branches[idx]) / 2;
 };
 
 // ─── InsertionNode (dot with + cross) ─────────────────────────────────────────
@@ -463,7 +474,7 @@ export const BiDirectionalSymbol = ({
       const next = items[i + 1];
       const fx =
         cur.type === "parallel-section"
-          ? cur.rightX 
+          ? cur.rightX
           : cur.type === "block"
             ? cur.x + C.BLOCK_W
             : cur.x + C.NODE_R;
@@ -486,34 +497,60 @@ export const BiDirectionalSymbol = ({
     lines.push({ x1: endX, x2: rightBoxX, y: C.CENTER_Y });
     return lines;
   };
-const hasNestedParallel = blocks?.some((block) => {
-  const isParallel =
-    block.type === "Parallel Section" ||
-    block.elementType === "Parallel Section";
+  const hasNestedParallel = blocks?.some((block) => {
+    const isParallel =
+      block.type === "Parallel Section" ||
+      block.elementType === "Parallel Section";
 
-  if (!isParallel) return false;
+    if (!isParallel) return false;
 
-  // check if this parallel section contains another parallel section inside
-  return block.branches?.some((branch) =>
-    branch.blocks?.some(
-      (nestedBlock) =>
-        nestedBlock.type === "Parallel Section" ||
-        nestedBlock.elementType === "Parallel Section"
-    )
-  );
-});
-console.log("parallell section..",hasNestedParallel)
-console.log("blocks...",blocks)
+    // check if this parallel section contains another parallel section inside
+    return block.branches?.some((branch) =>
+      branch.blocks?.some(
+        (nestedBlock) =>
+          nestedBlock.type === "Parallel Section" ||
+          nestedBlock.elementType === "Parallel Section"
+      )
+    );
+  });
+  console.log("parallell section..", hasNestedParallel)
+  console.log("blocks...", blocks)
   const renderParallelSection = (item) => {
     const { x, rightX, branches, id, blockData, width: dynW, secTopY } = item;
     if (!branches || branches.length === 0) return null;
 
     const leftRailX = x + C.RAIL_PAD_X;
     // rightRailX is derived from the FIXED rightX anchor — never shifts
-    const rightRailX = rightX - C.RAIL_PAD_X + 40;
+    // const rightRailX = rightX - C.RAIL_PAD_X + 40;
+    const rightRailX = rightX - C.RAIL_PAD_X;
 
     const railTop = branchCenterY(branches, 0, secTopY);
     const railBottom = branchCenterY(branches, branches.length - 1, secTopY);
+
+    // Center every branch's content inside the section.
+    // Without this, shorter/nested branches are left-aligned and look off-center.
+    const getBranchRenderWidth = (branch) => {
+      const branchBlocks = branch.blocks || [];
+      if (branchBlocks.length === 0) return 0;
+
+      return branchBlocks.reduce((total, block, idx) => {
+        const isNestedPS =
+          (block.type === "Parallel Section" ||
+            block.elementType === "Parallel Section") &&
+          block.branches?.length > 0;
+
+        const blockWidth = isNestedPS
+          ? getNestedParallelSectionWidth(block)
+          : C.BLOCK_W;
+
+        return total + blockWidth + (idx > 0 ? C.BLOCK_GAP : 0);
+      }, 0);
+    };
+
+    const maxBranchRenderW = Math.max(
+      0,
+      ...branches.map((branch) => getBranchRenderWidth(branch))
+    );
 
     return (
       <g key={id} >
@@ -528,6 +565,24 @@ console.log("blocks...",blocks)
         >
           K={blockData?.k || 1}:N={branches.length}
         </text> */}
+
+        {/* Center entry/exit stubs: connects section rails to main output wire */}
+        <line
+          x1={x}
+          y1={C.CENTER_Y}
+          x2={leftRailX}
+          y2={C.CENTER_Y}
+          stroke="black"
+          strokeWidth="2"
+        />
+        <line
+          x1={rightRailX}
+          y1={C.CENTER_Y}
+          x2={rightX}
+          y2={C.CENTER_Y}
+          stroke="black"
+          strokeWidth="2"
+        />
 
         <line
           x1={leftRailX}
@@ -557,6 +612,9 @@ console.log("blocks...",blocks)
           const rightNodeId = `branch-${branchKey}-right`;
           const midNodeId = (bIdx) => `branch-${branchKey}-mid-${bIdx}`;
 
+          const branchRenderW = getBranchRenderWidth(branch);
+          // Keep every branch content left-aligned from the same X.
+          // Do not center shorter branches; otherwise rows drift horizontally.
           const blockRowLeftX = leftRailX + C.INNER_PAD_X;
 
           return (
@@ -604,7 +662,7 @@ console.log("blocks...",blocks)
                   />
 
                   {branchBlocks.map((block, bIdx) => {
-                                        // Compute cumulative x by summing actual widths of all preceding blocks
+                    // Compute cumulative x by summing actual widths of all preceding blocks
                     let bx = blockRowLeftX;
                     for (let i = 0; i < bIdx; i++) {
                       const prevBlock = branchBlocks[i];
@@ -631,7 +689,7 @@ console.log("blocks...",blocks)
                           setParentItem(item);
                           setParentItemId(item?.id);
                         }}
-                       
+
                         onContextMenu={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -640,151 +698,203 @@ console.log("blocks...",blocks)
                         }}
                       >
                         {/* LEFT NODE */}
-                      
+
                         <RBDBlock
                           id={block._id ?? block.id}
-                   
                           setParentItemId={setParentItemId}
                           type={block.type}
                           setTargetBranchId={setTargetBranchId}
                           item={item}
                           leftRailX={leftRailX}
                           rightRailX={rightRailX}
-                          wireY={wireY +10} 
+                          // wireY={wireY + 10}
+                          wireY={wireY}
                           selectedNode={selectedNode}
                           leftNodeId={leftNodeId}
                           rightNodeId={rightNodeId}
                           x={bx}
-                          y={wireY - C.BLOCK_H / 2} 
+                          y={wireY - C.BLOCK_H / 2}
                           onEdit={(e, id, blockData) => onEditBlock(e, id, blockData, item)}
                           // onEdit={onEditBlock}
                           onDelete={onDeleteBlock}
                           setIdforApi={setIdforApi}
                           blockData={block}
-                          width={C.BLOCK_W}
+                          width={blockW}
                           // Pass reliability
                           subrbdreliability={block?.reliability}
 
                           // Pass unavailability if needed
                           subrbdunavailability={block?.unavailability}
-                          height={C.BLOCK_H}
+                          height={blockH}
                           onOpenMenu={onOpenMenu}
                         />
                         {console.log("subrbdreliability11111111111", block?.reliability)}
                         <>
-                          <line
-                              x1={bx + blockW}
-                            y1={wireY}
-                            x2={bx + blockW + C.BLOCK_GAP + 19}
-                            y2={wireY}
-                            stroke="black"
-                            strokeWidth="2"
-                            strokeDasharray={dash}
-                          />
+                          {!isLast && (() => {
+                            const nextBx = (() => {
+                              let nx = blockRowLeftX;
+                              for (let i = 0; i <= bIdx; i++) {
+                                const nextPrevBlock = branchBlocks[i];
+                                const nextPrevIsNestedPS =
+                                  (nextPrevBlock.type === "Parallel Section" ||
+                                    nextPrevBlock.elementType === "Parallel Section") &&
+                                  nextPrevBlock.branches?.length > 0;
+                                nx +=
+                                  (nextPrevIsNestedPS
+                                    ? getNestedParallelSectionWidth(nextPrevBlock)
+                                    : C.BLOCK_W) + C.BLOCK_GAP;
+                              }
+                              return nx;
+                            })();
+                            return (
+                              <line
+                                x1={bx + blockW}
+                                y1={wireY}
+                                x2={nextBx}
+                                y2={wireY}
+                                stroke="black"
+                                strokeWidth="2"
+                                strokeDasharray={dash}
+                              />
+                            );
+                          })()}
 
-{item?.blockData?.isParallel ? (
-  // For parallel sections: show dot only when block isNested is false (Regular block)
-  !block?.isNested && (
-    <circle
-      cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
-      cy={wireY}
-      r={4}
-      fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
-      style={{ cursor: "pointer" }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onOpenMenu(
-          e.clientX,
-          e.clientY,
-          branch?._id,
-          `${branch.blocks[0]._id} ,parallel`
-        );
-        setParentItemId(item?.id);
-        setIdforApi({
-          branchId: branch?._id,
-          branchIndex: branch?.index,
-          ItemId: item?.id,
-          location: `branch-${branch?._id}-right`,
-        });
-      }}
-    />
-  )
-) : (
-  // For non-parallel: show dot between every block
-  <circle
-    cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
-    cy={wireY}
-    r={4}
-    fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
-    style={{ cursor: "pointer" }}
-    onClick={(e) => {
-      e.stopPropagation();
-      onOpenMenu(
-        e.clientX,
-        e.clientY,
-        branch?._id,
-        `${branch.blocks[0]._id} ,parallel`
-      );
-      setParentItemId(item?.id);
-      setIdforApi({
-        branchId: branch?._id,
-        branchIndex: branch?.index,
-        ItemId: item?.id,
-        location: `branch-${branch?._id}-right`,
-      });
-    }}
-  />
-)}
+                          {item?.blockData?.isParallel ? (
+                            // For parallel sections: show dot only when block isNested is false (Regular block)
+                            !block?.isNested && (
+                              <circle
+                                cx={isLast ? bx + blockW + C.BLOCK_GAP / 2 : (() => {
+                                  let nx = blockRowLeftX;
+                                  for (let i = 0; i <= bIdx; i++) {
+                                    const prev = branchBlocks[i];
+                                    const prevIsNestedPS =
+                                      (prev.type === "Parallel Section" ||
+                                        prev.elementType === "Parallel Section") &&
+                                      prev.branches?.length > 0;
+                                    nx += (prevIsNestedPS ? getNestedParallelSectionWidth(prev) : C.BLOCK_W) + C.BLOCK_GAP;
+                                  }
+                                  return (bx + blockW + nx) / 2;
+                                })()}
+                                cy={wireY}
+                                r={4}
+                                fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
+                                style={{ cursor: "pointer" }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenMenu(
+                                    e.clientX,
+                                    e.clientY,
+                                    branch?._id,
+                                    `${branch.blocks[0]._id} ,parallel`
+                                  );
+                                  setParentItemId(item?.id);
+                                  setIdforApi({
+                                    branchId: branch?._id,
+                                    branchIndex: branch?.index,
+                                    ItemId: item?.id,
+                                    location: `branch-${branch?._id}-right`,
+                                  });
+                                }}
+                              />
+                            )
+                          ) : (
+                            // For non-parallel: show dot between every block
+                            <circle
+                              cx={isLast ? bx + blockW + C.BLOCK_GAP / 2 : (() => {
+                                  let nx = blockRowLeftX;
+                                  for (let i = 0; i <= bIdx; i++) {
+                                    const prev = branchBlocks[i];
+                                    const prevIsNestedPS =
+                                      (prev.type === "Parallel Section" ||
+                                        prev.elementType === "Parallel Section") &&
+                                      prev.branches?.length > 0;
+                                    nx += (prevIsNestedPS ? getNestedParallelSectionWidth(prev) : C.BLOCK_W) + C.BLOCK_GAP;
+                                  }
+                                  return (bx + blockW + nx) / 2;
+                                })()}
+                              cy={wireY}
+                              r={4}
+                              fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
+                              style={{ cursor: "pointer" }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenMenu(
+                                  e.clientX,
+                                  e.clientY,
+                                  branch?._id,
+                                  `${branch.blocks[0]._id} ,parallel`
+                                );
+                                setParentItemId(item?.id);
+                                setIdforApi({
+                                  branchId: branch?._id,
+                                  branchIndex: branch?.index,
+                                  ItemId: item?.id,
+                                  location: `branch-${branch?._id}-right`,
+                                });
+                              }}
+                            />
+                          )}
 
-{(() => {
-  const isNestedParallelBlock =
-    block?.isNested === true &&
-    (block?.type === "Parallel Section" ||
-      block?.elementType === "Parallel Section");
+                          {(() => {
+                            const isNestedParallelBlock =
+                              block?.isNested === true &&
+                              (block?.type === "Parallel Section" ||
+                                block?.elementType === "Parallel Section");
 
-  if (isNestedParallelBlock) return null;
+                            if (isNestedParallelBlock) return null;
 
-  if (!branchBlocks || branchBlocks.length === 0) return null;
+                            if (!branchBlocks || branchBlocks.length === 0) return null;
 
-  // Rule 3: If parent isParallel=true, only show on last block
-  // BUT always show if the current block is NOT a parallel section
-  const isCurrentBlockParallel =
-    block?.type === "Parallel Section" ||
-    block?.elementType === "Parallel Section";
+                            // Rule 3: If parent isParallel=true, only show on last block
+                            // BUT always show if the current block is NOT a parallel section
+                            const isCurrentBlockParallel =
+                              block?.type === "Parallel Section" ||
+                              block?.elementType === "Parallel Section";
 
-  if (item?.blockData?.isParallel && !isCurrentBlockParallel) {
-    // Block was converted from parallel — always show the node
-  } else if (item?.blockData?.isParallel) {
-    if (!isLast) return null;
-  }
+                            if (item?.blockData?.isParallel && !isCurrentBlockParallel) {
+                              // Block was converted from parallel — always show the node
+                            } else if (item?.blockData?.isParallel) {
+                              if (!isLast) return null;
+                            }
 
-  return (
-    <circle
-      cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
-      cy={wireY}
-      r={4}
-      fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
-      style={{ cursor: "pointer" }}
-      onClick={(e) => {
-        e.stopPropagation();
-        onOpenMenu(
-          e.clientX,
-          e.clientY,
-          branch?._id,
-          `${block?._id ?? block?.id} ,parallel`
-        );
-        setParentItemId(item?.id);
-        setIdforApi({
-          branchId: branch?._id,
-          branchIndex: branch?.index,
-          ItemId: item?.id,
-          location: `branch-${branch?._id}-right`,
-        });
-      }}
-    />
-  );
-})()}
-{console.log("xcvbnm,",blocks?.find((item)=>item.isParallel))}
+                            return (
+                              <circle
+                                cx={isLast ? bx + blockW + C.BLOCK_GAP / 2 : (() => {
+                                  let nx = blockRowLeftX;
+                                  for (let i = 0; i <= bIdx; i++) {
+                                    const prev = branchBlocks[i];
+                                    const prevIsNestedPS =
+                                      (prev.type === "Parallel Section" ||
+                                        prev.elementType === "Parallel Section") &&
+                                      prev.branches?.length > 0;
+                                    nx += (prevIsNestedPS ? getNestedParallelSectionWidth(prev) : C.BLOCK_W) + C.BLOCK_GAP;
+                                  }
+                                  return (bx + blockW + nx) / 2;
+                                })()}
+                                cy={wireY}
+                                r={4}
+                                fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
+                                style={{ cursor: "pointer" }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenMenu(
+                                    e.clientX,
+                                    e.clientY,
+                                    branch?._id,
+                                    `${block?._id ?? block?.id} ,parallel`
+                                  );
+                                  setParentItemId(item?.id);
+                                  setIdforApi({
+                                    branchId: branch?._id,
+                                    branchIndex: branch?.index,
+                                    ItemId: item?.id,
+                                    location: `branch-${branch?._id}-right`,
+                                  });
+                                }}
+                              />
+                            );
+                          })()}
+                          {console.log("xcvbnm,", blocks?.find((item) => item.isParallel))}
 
                         </>
                         {/* )} */}
@@ -792,7 +902,7 @@ console.log("blocks...",blocks)
                         {/* LAST BLOCK → RIGHT */}
                         {isLast && (
                           <line
-                             x1={bx + blockW}
+                            x1={bx + blockW}
                             y1={wireY}
                             x2={rightRailX}
                             y2={wireY}
@@ -2433,13 +2543,13 @@ export default function RBDButton() {
       setBlockMenu({ open: false, blockId: null, x: 0, y: 0 });
     }
   };
-       const formatValue = (value) => {
-  if (value == null) return "0";
+  const formatValue = (value) => {
+    if (value == null) return "0";
 
-  return Math.abs(value) < 1e-10
-    ? value.toExponential(10)
-    : value.toFixed(10);
-};
+    return Math.abs(value) < 1e-10
+      ? value.toExponential(10)
+      : value.toFixed(10);
+  };
   const handleClose = () => {
     setKOfNModal((prev) => ({
       ...prev,
@@ -2477,26 +2587,26 @@ export default function RBDButton() {
       <div className="mt-5">
 
 
-<div>
-  <b>RBD Title: </b>
-  {RBDTitle}
-  <br />
-  <b>Reliability: </b>
-  {totalReliability != null
-    ? Math.abs(totalReliability) < 1e-10
-      ? totalReliability.toExponential(10)
-      : totalReliability.toFixed(4)
-    : "0"}
-</div>
+        <div>
+          <b>RBD Title: </b>
+          {RBDTitle}
+          <br />
+          <b>Reliability: </b>
+          {totalReliability != null
+            ? Math.abs(totalReliability) < 1e-10
+              ? totalReliability.toExponential(10)
+              : totalReliability.toFixed(4)
+            : "0"}
+        </div>
 
-<div>
-  <b>Unavailability: </b>
-  {totalUnavailability != null
-    ? Math.abs(totalUnavailability) < 1e-10
-      ? totalUnavailability.toExponential(10)
-      : totalUnavailability.toFixed(4)
-    : "0"}
-</div>
+        <div>
+          <b>Unavailability: </b>
+          {totalUnavailability != null
+            ? Math.abs(totalUnavailability) < 1e-10
+              ? totalUnavailability.toExponential(10)
+              : totalUnavailability.toFixed(4)
+            : "0"}
+        </div>
       </div>
       <div style={{ minHeight: "100vh", padding: "5%" }}>
         {!showSymbol && (
