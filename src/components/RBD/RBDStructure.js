@@ -42,16 +42,26 @@ const C = {
 };
 
 // ── Shared layout constants (must match RBDBlock exactly) ──────────────────
+// const NESTED = {
+//   BW: 20,
+//   BH: 20,
+//   GAP: 30,
+//   RAIL_PAD: 20,
+//   INNER_PAD: 20,
+//   CONTAINER_PADDING: 10,
+//   BRANCH_SPACING: 10,
+// };
+
 const NESTED = {
-  BW: 20,
-  BH: 20,
-  GAP: 30,
+  BW: 60,
+  BH: 40,
+  GAP: 12,
   RAIL_PAD: 20,
-  INNER_PAD: 20,
-  CONTAINER_PADDING: 10,
+  INNER_PAD: 14,
+  CONTAINER_PADDING: 20,
   BRANCH_SPACING: 10,
 };
-
+const BRANCH_DOWN_OFFSET = 18;
 // Recursive: actual height of a single branch (accounts for nested parallel sections)
 const getNestedBranchHeight = (branch) => {
   const branchBlocks = branch.blocks || [];
@@ -244,7 +254,8 @@ const branchCenterY = (branches, idx, secTopY) => {
   for (let i = 0; i < idx; i++) {
     y += branchHeight(branches[i]) + C.BRANCH_SPACING;
   }
-  return y + branchHeight(branches[idx]) / 1.9;
+  // return y + branchHeight(branches[idx]) / 1.9;
+return y + branchHeight(branches[idx]) / 2 + BRANCH_DOWN_OFFSET;
 };
 
 // ─── InsertionNode (dot with + cross) ─────────────────────────────────────────
@@ -510,10 +521,36 @@ export const BiDirectionalSymbol = ({
 
     const leftRailX = x + C.RAIL_PAD_X;
     // rightRailX is derived from the FIXED rightX anchor — never shifts
-    const rightRailX = rightX - C.RAIL_PAD_X + 40;
+    // const rightRailX = rightX - C.RAIL_PAD_X + 40;
+    const rightRailX = rightX - C.RAIL_PAD_X;
 
     const railTop = branchCenterY(branches, 0, secTopY);
     const railBottom = branchCenterY(branches, branches.length - 1, secTopY);
+
+    // Center every branch's content inside the section.
+    // Without this, shorter/nested branches are left-aligned and look off-center.
+    const getBranchRenderWidth = (branch) => {
+      const branchBlocks = branch.blocks || [];
+      if (branchBlocks.length === 0) return 0;
+
+      return branchBlocks.reduce((total, block, idx) => {
+        const isNestedPS =
+          (block.type === "Parallel Section" ||
+            block.elementType === "Parallel Section") &&
+          block.branches?.length > 0;
+
+        const blockWidth = isNestedPS
+          ? getNestedParallelSectionWidth(block)
+          : C.BLOCK_W;
+
+        return total + blockWidth + (idx > 0 ? C.BLOCK_GAP : 0);
+      }, 0);
+    };
+
+    const maxBranchRenderW = Math.max(
+      0,
+      ...branches.map((branch) => getBranchRenderWidth(branch))
+    );
 
     return (
       <g key={id} >
@@ -528,6 +565,24 @@ export const BiDirectionalSymbol = ({
         >
           K={blockData?.k || 1}:N={branches.length}
         </text> */}
+
+        {/* Center entry/exit stubs: connects section rails to main output wire */}
+        <line
+          x1={x}
+          y1={C.CENTER_Y}
+          x2={leftRailX}
+          y2={C.CENTER_Y}
+          stroke="black"
+          strokeWidth="2"
+        />
+        <line
+          x1={rightRailX}
+          y1={C.CENTER_Y}
+          x2={rightX}
+          y2={C.CENTER_Y}
+          stroke="black"
+          strokeWidth="2"
+        />
 
         <line
           x1={leftRailX}
@@ -557,6 +612,9 @@ export const BiDirectionalSymbol = ({
           const rightNodeId = `branch-${branchKey}-right`;
           const midNodeId = (bIdx) => `branch-${branchKey}-mid-${bIdx}`;
 
+          const branchRenderW = getBranchRenderWidth(branch);
+          // Keep every branch content left-aligned from the same X.
+          // Do not center shorter branches; otherwise rows drift horizontally.
           const blockRowLeftX = leftRailX + C.INNER_PAD_X;
 
           return (
@@ -643,50 +701,81 @@ export const BiDirectionalSymbol = ({
 
                         <RBDBlock
                           id={block._id ?? block.id}
-
                           setParentItemId={setParentItemId}
                           type={block.type}
                           setTargetBranchId={setTargetBranchId}
                           item={item}
                           leftRailX={leftRailX}
                           rightRailX={rightRailX}
-                          wireY={wireY + 10}
+                          // wireY={wireY + 10}
+                          wireY={wireY}
                           selectedNode={selectedNode}
                           leftNodeId={leftNodeId}
                           rightNodeId={rightNodeId}
                           x={bx}
-                          y={wireY - C.BLOCK_H / 2}
+                          y={wireY - blockH / 2}
+                        // y={wireY - C.BLOCK_H / 2}  
                           onEdit={(e, id, blockData) => onEditBlock(e, id, blockData, item)}
                           // onEdit={onEditBlock}
                           onDelete={onDeleteBlock}
                           setIdforApi={setIdforApi}
                           blockData={block}
-                          width={C.BLOCK_W}
+                          width={blockW}
                           // Pass reliability
                           subrbdreliability={block?.reliability}
 
                           // Pass unavailability if needed
                           subrbdunavailability={block?.unavailability}
-                          height={C.BLOCK_H}
+                          height={blockH}
                           onOpenMenu={onOpenMenu}
                         />
                         {console.log("subrbdreliability11111111111", block?.reliability)}
                         <>
-                          <line
-                            x1={bx + blockW}
-                            y1={wireY}
-                            x2={bx + blockW + C.BLOCK_GAP + 19}
-                            y2={wireY}
-                            stroke="black"
-                            strokeWidth="2"
-                            strokeDasharray={dash}
-                          />
+                          {!isLast && (() => {
+                            const nextBx = (() => {
+                              let nx = blockRowLeftX;
+                              for (let i = 0; i <= bIdx; i++) {
+                                const nextPrevBlock = branchBlocks[i];
+                                const nextPrevIsNestedPS =
+                                  (nextPrevBlock.type === "Parallel Section" ||
+                                    nextPrevBlock.elementType === "Parallel Section") &&
+                                  nextPrevBlock.branches?.length > 0;
+                                nx +=
+                                  (nextPrevIsNestedPS
+                                    ? getNestedParallelSectionWidth(nextPrevBlock)
+                                    : C.BLOCK_W) + C.BLOCK_GAP;
+                              }
+                              return nx;
+                            })();
+                            return (
+                              <line
+                                x1={bx + blockW}
+                                y1={wireY}
+                                x2={nextBx}
+                                y2={wireY}
+                                stroke="black"
+                                strokeWidth="2"
+                                strokeDasharray={dash}
+                              />
+                            );
+                          })()}
 
                           {item?.blockData?.isParallel ? (
                             // For parallel sections: show dot only when block isNested is false (Regular block)
                             !block?.isNested && (
                               <circle
-                                cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+                                cx={isLast ? bx + blockW + C.BLOCK_GAP / 2 : (() => {
+                                  let nx = blockRowLeftX;
+                                  for (let i = 0; i <= bIdx; i++) {
+                                    const prev = branchBlocks[i];
+                                    const prevIsNestedPS =
+                                      (prev.type === "Parallel Section" ||
+                                        prev.elementType === "Parallel Section") &&
+                                      prev.branches?.length > 0;
+                                    nx += (prevIsNestedPS ? getNestedParallelSectionWidth(prev) : C.BLOCK_W) + C.BLOCK_GAP;
+                                  }
+                                  return (bx + blockW + nx) / 2;
+                                })()}
                                 cy={wireY}
                                 r={4}
                                 fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
@@ -712,7 +801,18 @@ export const BiDirectionalSymbol = ({
                           ) : (
                             // For non-parallel: show dot between every block
                             <circle
-                              cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+                              cx={isLast ? bx + blockW + C.BLOCK_GAP / 2 : (() => {
+                                  let nx = blockRowLeftX;
+                                  for (let i = 0; i <= bIdx; i++) {
+                                    const prev = branchBlocks[i];
+                                    const prevIsNestedPS =
+                                      (prev.type === "Parallel Section" ||
+                                        prev.elementType === "Parallel Section") &&
+                                      prev.branches?.length > 0;
+                                    nx += (prevIsNestedPS ? getNestedParallelSectionWidth(prev) : C.BLOCK_W) + C.BLOCK_GAP;
+                                  }
+                                  return (bx + blockW + nx) / 2;
+                                })()}
                               cy={wireY}
                               r={4}
                               fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
@@ -760,7 +860,18 @@ export const BiDirectionalSymbol = ({
 
                             return (
                               <circle
-                                cx={bx + C.BLOCK_W + C.BLOCK_GAP / 2}
+                                cx={isLast ? bx + blockW + C.BLOCK_GAP / 2 : (() => {
+                                  let nx = blockRowLeftX;
+                                  for (let i = 0; i <= bIdx; i++) {
+                                    const prev = branchBlocks[i];
+                                    const prevIsNestedPS =
+                                      (prev.type === "Parallel Section" ||
+                                        prev.elementType === "Parallel Section") &&
+                                      prev.branches?.length > 0;
+                                    nx += (prevIsNestedPS ? getNestedParallelSectionWidth(prev) : C.BLOCK_W) + C.BLOCK_GAP;
+                                  }
+                                  return (bx + blockW + nx) / 2;
+                                })()}
                                 cy={wireY}
                                 r={4}
                                 fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}

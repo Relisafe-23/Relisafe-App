@@ -91,7 +91,7 @@ export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
       {/* Reliability */}
       <text
         x={x + blockWidth / 2}
-        y={y + 5}
+        y={y + 4}
         textAnchor="middle"
         fontSize="7"
         fill="#e8f5e9"
@@ -113,11 +113,11 @@ export const KOfNBlock = ({ id, x, y, onEdit, onDelete, blockData }) => {
 
       <text
         x={x + blockWidth / 2}
-        y={y + 25}
+        y={y + 27}
         textAnchor="middle"
-        fontSize="7"
+        fontSize="8"
         fontWeight="bold"
-        fill="#333"
+        fill="#1f1e1e"
       >
                {getHeading()}
       </text>
