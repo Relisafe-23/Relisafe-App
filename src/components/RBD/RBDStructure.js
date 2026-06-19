@@ -59,7 +59,7 @@ const NESTED = {
   RAIL_PAD: 20,
   INNER_PAD: 14,
   CONTAINER_PADDING: 20,
-  BRANCH_SPACING: 20,
+  BRANCH_SPACING: 5,
 };
 
 // Recursive: actual height of a single branch (accounts for nested parallel sections)
@@ -801,17 +801,17 @@ export const BiDirectionalSymbol = ({
                             // For non-parallel: show dot between every block
                             <circle
                               cx={isLast ? bx + blockW + C.BLOCK_GAP / 2 : (() => {
-                                  let nx = blockRowLeftX;
-                                  for (let i = 0; i <= bIdx; i++) {
-                                    const prev = branchBlocks[i];
-                                    const prevIsNestedPS =
-                                      (prev.type === "Parallel Section" ||
-                                        prev.elementType === "Parallel Section") &&
-                                      prev.branches?.length > 0;
-                                    nx += (prevIsNestedPS ? getNestedParallelSectionWidth(prev) : C.BLOCK_W) + C.BLOCK_GAP;
-                                  }
-                                  return (bx + blockW + nx) / 2;
-                                })()}
+                                let nx = blockRowLeftX;
+                                for (let i = 0; i <= bIdx; i++) {
+                                  const prev = branchBlocks[i];
+                                  const prevIsNestedPS =
+                                    (prev.type === "Parallel Section" ||
+                                      prev.elementType === "Parallel Section") &&
+                                    prev.branches?.length > 0;
+                                  nx += (prevIsNestedPS ? getNestedParallelSectionWidth(prev) : C.BLOCK_W) + C.BLOCK_GAP;
+                                }
+                                return (bx + blockW + nx) / 2;
+                              })()}
                               cy={wireY}
                               r={4}
                               fill={selectedNode === midNodeId(bIdx) ? "#0078d4" : "black"}
@@ -1619,21 +1619,35 @@ export default function RBDButton() {
   // };
 
   const openMenu = (x, y, index, innerBlock) => {
-    const mode = parallelBranchModeRef.current; // ← avoids stale closure
+    const mode = parallelBranchModeRef.current;
 
     if (mode.active) {
-      if (!mode.startNode && mode.startNode !== null) {
-        setParallelBranchMode({
-          active: false,
-          startNode: null,
-          endNode: null,
-        });
-        return;
-      }
       createParallelBranch(mode.startNode, index);
       setParallelBranchMode({ active: false, startNode: null, endNode: null });
       return;
     }
+
+    const isBranchNode =
+      typeof index === "string" && index.startsWith("branch-");
+
+    const isNestedNode =
+      typeof index === "string" && index.startsWith("nested-branch-");
+
+    // IMPORTANT: clear old nested idforApi when clicking parent/main line node
+    if (!isBranchNode && !isNestedNode && !innerBlock) {
+      setIdforApi({
+        branchId: null,
+        branchIndex: null,
+        ItemId: null,
+        location: null,
+        nested: false,
+        targetId: null,
+      });
+
+      setParentItemId(null);
+      setTargetBranchId(null);
+    }
+
     setMenu({ x, y, index });
     setTargetId(index);
     setInnerTargetId(innerBlock);
@@ -2236,11 +2250,11 @@ export default function RBDButton() {
             ? innerIdMatch[1]
             : clickedNodeInfo.index,
         idforApi:
-          menu?.index == idforApi?.branchIndex
+          typeof clickedNodeInfo.index === "string" &&
+            (clickedNodeInfo.index.startsWith("branch-") ||
+              clickedNodeInfo.index.startsWith("nested-branch-"))
             ? idforApi
-            : idforApi.nested == true
-              ? idforApi
-              : null,
+            : null,
         // idforApi: idforApi
       });
     }
