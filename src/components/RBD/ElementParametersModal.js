@@ -354,27 +354,37 @@ const ElementParametersModal = ({
   };
 
   const handleChange = (field, value) => {
-    setValues(prev => {
-      const newValues = { ...prev, [field]: value };
-      if (field === 'fr') {
-        if (value && !isNaN(parseFloat(value)) && parseFloat(value) !== 0) {
-          newValues.mtbf = (1 / parseFloat(value)).toFixed(6);
+    setValues((prev) => {
+      const newValues = { ...prev };
+
+      // Always keep the typed value exactly as entered
+      newValues[field] = value;
+
+      if (field === "fr") {
+        if (value === "") {
+          newValues.mtbf = "";
         } else {
-          newValues.mtbf = '';
+          const num = parseFloat(value);
+          if (!isNaN(num) && num > 0) {
+            newValues.mtbf = (1 / num).toFixed(6);
+          }
         }
       }
-      else if (field === 'mtbf') {
-        if (value && !isNaN(parseFloat(value)) && parseFloat(value) !== 0) {
-          newValues.fr = (1 / parseFloat(value)).toFixed(6);
+
+      if (field === "mtbf") {
+        if (value === "") {
+          newValues.fr = "";
         } else {
-          newValues.fr = '';
+          const num = parseFloat(value);
+          if (!isNaN(num) && num > 0) {
+            newValues.fr = (1 / num).toFixed(6);
+          }
         }
       }
 
       return newValues;
     });
   };
-
   const handleSwitchClick = () => {
     onOpenSwitchConfig({
       n: values.n,
@@ -833,76 +843,7 @@ const ElementParametersModal = ({
 
               {/* Column 3 */}
               <div>
-                {/* <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'block', marginBottom: '5px', fontSize: '12px', fontWeight: 'bold' }}>
-                      FR distribution:
-                    </label>
-                    <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
-                      <div>
-                        <input
-                          type="radio"
-                          id="frDefault"
-                          name="frDistribution"
-                          value="default"
-                          checked={values.frDistribution === "default"}
-                          onChange={(e) => handleChange("frDistribution", e.target.value)}
-                        />
-                        <label htmlFor="frDefault" style={{ marginLeft: "5px", fontSize: "12px" }}>
-                          Default
-                        </label>
-                      </div>
-
-                      <div>
-                        <input
-                          type="radio"
-                          id="frKOutOfN"
-                          name="frDistribution"
-                          value="kOutOfN"
-                          checked={values.frDistribution === "kOutOfN"}
-                          onChange={(e) => handleChange("frDistribution", e.target.value)}
-                        />
-                        <label htmlFor="frKOutOfN" style={{ marginLeft: "5px", fontSize: "12px" }}>
-                          K out of N
-                        </label>
-                      </div>
-                    </div>
-
-                    {values?.frDistribution === "kOutOfN" && (
-                      <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                        <div>
-                          <label style={{ fontSize: '11px', marginRight: '5px' }}>K:</label>
-                          <input
-                            type="text"
-                            value={values.k}
-                            onChange={(e) => handleChange('k', e.target.value)}
-                            style={{
-                              width: '60px',
-                              padding: '4px',
-                              border: '1px solid #ccc',
-                              borderRadius: '3px',
-                              fontSize: '11px'
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: '11px', marginRight: '5px' }}>N:</label>
-                          <input
-                            type="text"
-                            value={values.n}
-                            onChange={(e) => handleChange('n', e.target.value)}
-                            style={{
-                              width: '60px',
-                              padding: '4px',
-                              border: '1px solid #ccc',
-                              borderRadius: '3px',
-                              fontSize: '11px'
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div> */}
-
+            
                 <div style={{ marginBottom: "15px" }}>
                   <label
                     style={{
@@ -946,10 +887,35 @@ const ElementParametersModal = ({
                       marginBottom: "5px",
                       fontSize: "10px",
                       fontWeight: "bold",
+                      fontSize: "12px"
                     }}
                   >
                     FR distribution parameters:
                   </label>
+
+                  <div>
+                    <label style={{ fontSize: "11px", marginRight: "5px" }}>
+                      Failure Rate [hours]:
+                    </label>
+
+                    <input
+                      type="number"
+                      value={values.fr}
+                      onChange={(e) => handleChange("fr", e.target.value)}
+                      style={{
+                        width: "100px",
+                        height: "30px",
+                        padding: "4px",
+                        border: "1px solid #ccc",
+                        borderRadius: "3px",
+                        fontSize: "11px",
+                      }}
+                    />
+                  </div>
+                  <label style={{ fontSize: "12px" }}>
+                    MTBF = 1 / Failure Rate (FR)
+                  </label>
+                  <br />
                   <div
                     style={{
                       display: "flex",
@@ -966,6 +932,7 @@ const ElementParametersModal = ({
                         type="text"
                         value={values?.mtbf}
                         onChange={(e) => handleChange('mtbf', e.target.value)}
+
                         style={{
                           width: "100px",
                           padding: "4px",
@@ -976,9 +943,9 @@ const ElementParametersModal = ({
                         placeholder="445089"
                       />
                       {console.log("MTBF", values?.mtbf)}
+
+                      {console.log("MTBF", values?.fr)}
                     </div>
-
-
                     <div>
                       <label style={{ fontSize: '11px', marginRight: '5px' }}>Mttr:</label>
                       <input
@@ -995,12 +962,32 @@ const ElementParametersModal = ({
                         placeholder="100"
                       />
                     </div>
+
                   </div>
-                  <div>
-                    {!values?.fr && (
-                      <span style={{ color: "red", fontSize: '11px' }}>Give the MTBF value</span>
-                    )}</div>
                 </div>
+                <div>
+                  {!values?.fr && (
+                    <span style={{ color: "red", fontSize: '11px' }}>Give the MTBF value</span>
+                  )}</div>
+                <div style={{ marginTop: "8px" }}>
+                  <small
+                    style={{
+                      fontSize: "11px",
+                      color: "#666",
+                      lineHeight: "1.5",
+                      display: "block",
+                    }}
+                  >
+
+
+                    <strong>Note:</strong><br />
+                    <b>Mode Failure Rate (MFR)</b>{" "}
+                    from the FMECA report (<b>FR × Alpha</b>).
+                    <br />
+                    <strong>Formula:</strong> MTBF = 1 / MFR (per hour).
+                  </small>
+                </div>
+
 
                 <div style={{ marginBottom: "15px" }}>
                   <label

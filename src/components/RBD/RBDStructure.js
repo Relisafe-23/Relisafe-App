@@ -16,6 +16,16 @@ import { RBDBlock } from "./RBDBlock";
 import { KOfNBlock } from "./KOfNBlock";
 import { toast } from "react-toastify";
 import "../../css/RBD.scss";
+import {
+  FaProjectDiagram,
+  FaShieldAlt,
+  FaExclamationTriangle,
+} from "react-icons/fa";
+import {
+  FaCalculator,
+  FaCheckCircle,
+  FaTimesCircle,
+} from "react-icons/fa";
 // import { RBDSvgRenderer } from './RBDSvgRenderer';
 // import ReactFlowD from './ReactFlow/ReactFlowD.jsx';
 const C = {
@@ -2599,28 +2609,33 @@ export default function RBDButton() {
   return (
     <>
       <div className="mt-5">
+<div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <FaProjectDiagram color="#6f42c1" size={18} />
+    <b>RBD Title:</b>
+    {RBDTitle}
+  </div>
 
+  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <FaShieldAlt color="#28a745" size={18} />
+    <b>Reliability:</b>
+    {totalReliability != null
+      ? Math.abs(totalReliability) < 1e-10
+        ? totalReliability.toExponential(10)
+        : totalReliability.toFixed(4)
+      : "0"}
+  </div>
 
-        <div>
-          <b>RBD Title: </b>
-          {RBDTitle}
-          <br />
-          <b>Reliability: </b>
-          {totalReliability != null
-            ? Math.abs(totalReliability) < 1e-10
-              ? totalReliability.toExponential(10)
-              : totalReliability.toFixed(4)
-            : "0"}
-        </div>
-
-        <div>
-          <b>Unavailability: </b>
-          {totalUnavailability != null
-            ? Math.abs(totalUnavailability) < 1e-10
-              ? totalUnavailability.toExponential(10)
-              : totalUnavailability.toFixed(4)
-            : "0"}
-        </div>
+  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <FaExclamationTriangle color="#dc3545" size={18} />
+    <b>Unavailability:</b>
+    {totalUnavailability != null
+      ? Math.abs(totalUnavailability) < 1e-10
+        ? totalUnavailability.toExponential(10)
+        : totalUnavailability.toFixed(4)
+      : "0"}
+  </div>
+</div>
       </div>
       <div style={{ minHeight: "100vh", padding: "5%" }}>
         {!showSymbol && (
