@@ -1061,6 +1061,9 @@ export default function RenderNode({
                         </span>
                       )}
 
+                      {/* {console.log(node?.calcTypes,'node?.calcTypes')}
+                      {console.log(isSteadyStateMode()),'isStradt'} */}
+
                       {/* #6 Periodical tests */}
                       {node?.calcTypes === "Periodical tests" && (
                         <span>
@@ -1466,7 +1469,7 @@ export default function RenderNode({
             name: selectedNodeId === node?.gateId && isChildCreate ? "" : type === "modify" ? newNode?.name : "",
             description:
               selectedNodeId === node?.gateId && isChildCreate ? "" : type === "modify" ? newNode?.description : "",
-            
+
             gateId:
               selectedNodeId === node?.gateId && isChildCreate
                 ? addGateCount
@@ -1925,117 +1928,220 @@ export default function RenderNode({
                   />
                   <ErrorMessage className="error text-danger" component="span" name="isProducts" />
                 </Form.Group>
+                
                 <Form.Group className="mb-2">
-                  <Label notify={true}>Calc. Type</Label>
-                  <Select
-                    type="select"
-                    styles={customStyles}
-                    value={values.calcTypes}
-                    name="calcTypes"
-                    placeholder="Select Calc. Type"
-                    onChange={(e) => {
-                      setFieldValue("calcTypes", { label: e.value, value: e.value });
-                      setOnChangeEventCalcTypes({ label: e.value, value: e.value });
-                    }}
-                    onBlur={handleBlur}
-                    options={eventFields}
-                  />
-                  <ErrorMessage className="error text-danger" component="span" name="calcTypes" />
-                  {values.calcTypes.value === "Probability" ? (
-                    <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
-                      The reliability data represents the probability that the component is not able to perform its
-                      function upon request.
-                    </p>
-                  ) : values.calcTypes.value === "Evident, P=λ*t" ? (
-                    <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
-                      Calculation by equation P=λ*t, where λ – failure rate (1/hour); t – failure exposure time (hours)
-                    </p>
-                  ) : values.calcTypes.value === "Constant mission time" ? (
-                    <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
-                      Calculation by equation P=λ*tm, where λ – failure rate (1/hour); tm – failure exposure time
-                      (hours)
-                    </p>
-                  ) : values.calcTypes.value === "Unrepairable" ? (
-                    <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
-                      Calculation by equation P(t) = 1-(1-q)*exp(-λ*t), where λ – failure rate (1/hour); t – failure
-                      exposure time (hours)
-                    </p>
-                  ) : values.calcTypes.value === "Repairable" ? (
-                    <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
-                      Calculation by equation P(t)=(λ/(λ+µ))*[1–exp(-(λ+µ)t)], P=λ/(λ+µ), where λ – failure rate
-                      (1/hour); µ - repair rate (1/MTTR) per hour
-                    </p>
-                  ) : values.calcTypes.value === "Latent, P=λ*T" ? (
-                    <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
-                      Calculation by equation P=λ*T, where λ – failure rate (1/hour); T – Inspection interval (hours)
-                    </p>
-                  ) : values.calcTypes.value === "Latent, P=λ*T/2" ? (
-                    <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
-                      Calculation by equation P=λ*T/2, where λ – failure rate (1/hour); T – Inspection interval (hours)
-                    </p>
-                  ) : values.calcTypes.value === "Latent,Life-time, P=1-e^(-λ*T)" ? (
-                    <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>
-                      Calculation by equation P(t) = 1-e^(-λ*T)/2, where λ – failure rate (1/hour); T – Inspection
-                      interval (hours)
-                    </p>
-                  ) : values.calcTypes.value === "Latent repairable" ? (
-                    <p style={{ margin: 0, fontWeight: "normal", color: "#00a9c9", marginTop: "5px" }}>not in use</p>
-                  ) : null}
-                  {(values.calcTypes?.value === "Periodical tests" ||
-                    values.calcTypes?.value === "Periodical Tests #2" ||
-                    values.calcTypes?.value === "Latent" ||
-                    values.calcTypes?.value === "Latent, P=λ*T" ||
-                    values.calcTypes?.value === "Latent, P=λ*T/2" ||
-                    values.calcTypes?.value === "Latent,Life-time, P=1-e^(-λ*T)" ||
-                    values.calcTypes?.value === "Latent repairable") && (
-                      <Form.Group className="mb-2" style={{ width: "95%" }}>
-                        <Label notify={true}>Ti (Test Interval)</Label>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Form.Control
-                            type="text"
-                            name="isT"
-                            placeholder="Test Interval"
-                            value={values.isT}
-                            onBlur={handleBlur}
-                            onChange={(e) => {
-                              setFieldValue("isT", e.target.value);
-                              setOnChangeEventIsT(e?.target?.value);
-                            }}
-                          />
-                          <p style={{ marginBottom: "0px", fontWeight: "bold", marginLeft: "20px" }}>(hours)</p>
-                        </div>
-                        <Form.Text className="text-muted">
-                          Test interval - time between periodic tests (Ti in Table 2 and Table 3)
-                        </Form.Text>
-                        <ErrorMessage className="error text-danger" component="span" name="isT" />
-                      </Form.Group>
-                    )}
+  <Label notify={true}>Calc. Type</Label>
+  <Select
+    type="select"
+    styles={customStyles}
+    value={values.calcTypes}
+    name="calcTypes"
+    placeholder="Select Calc. Type"
+    onChange={(e) => {
+      setFieldValue("calcTypes", { label: e.value, value: e.value });
+      setOnChangeEventCalcTypes({ label: e.value, value: e.value });
+    }}
+    onBlur={handleBlur}
+    options={eventFields}
+  />
+  <ErrorMessage className="error text-danger" component="span" name="calcTypes" />
+  
+  {/* Formula description based on selected calc type */}
+  <div style={{ 
+    marginTop: "10px", 
+    padding: "10px", 
+    backgroundColor: "#f8f9fa", 
+    borderRadius: "4px",
+    border: "1px solid #e9ecef",
+    display: values.calcTypes?.value ? "block" : "none"
+  }}>
+    <p style={{ margin: 0, fontWeight: "bold", color: "#00a9c9", fontSize: "13px" }}>
+      Formula:
+    </p>
+    
+    {/* Probability */}
+    {values.calcTypes?.value === "Probability" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>P = q</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          q = Probability value (0 to 1)
+        </span>
+      </p>
+    )}
 
-                  {/* Tf (Time to first test) input - Optional for periodic test models */}
-                  {(values.calcTypes?.value === "Periodical tests" ||
-                    values.calcTypes?.value === "Periodical Tests #2") && (
-                      <Form.Group className="mb-2" style={{ width: "95%" }}>
-                        <Label>Tf (Time to first test)</Label>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Form.Control
-                            type="text"
-                            name="timeToFirstTest"
-                            placeholder="0"
-                            value={values.timeToFirstTest}
-                            onBlur={handleBlur}
-                            onChange={(e) => {
-                              setFieldValue("timeToFirstTest", e.target.value);
-                              setOnChangeEventTimeToFirstTest(e?.target?.value);
-                            }}
-                          />
-                          <p style={{ marginBottom: "0px", fontWeight: "bold", marginLeft: "20px" }}>(hours)</p>
-                        </div>
-                        <Form.Text className="text-muted">
-                          Time to first test. Used in Table 2 formulas for Q(t) calculation. If not specified, first test occurs at t = Ti.
-                        </Form.Text>
-                        <ErrorMessage className="error text-danger" component="span" name="timeToFirstTest" />
-                      </Form.Group>
-                    )}                </Form.Group>
+    {/* Frequency */}
+    {values.calcTypes?.value === "Frequency" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>w(t) = f</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          f = Failure frequency (failures/hour)
+        </span>
+      </p>
+    )}
+
+    {/* Constant mission time */}
+    {values.calcTypes?.value === "Constant mission time" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>P = λ × tm</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          λ = Failure rate (1/hour); tm = Mission time (hours)
+        </span>
+      </p>
+    )}
+
+    {/* Evident */}
+    {values.calcTypes?.value === "Evident, P=λ*t" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>P = λ × t</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          λ = Failure rate (1/hour); t = Failure exposure time (hours)
+        </span>
+      </p>
+    )}
+
+    {/* Const.mission time */}
+    {values.calcTypes?.value === "Const.mission time, P=λ*tm" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>P = λ × tm</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          λ = Failure rate (1/hour); tm = Mission time (hours)
+        </span>
+      </p>
+    )}
+
+    {/* Unrepairable */}
+    {values.calcTypes?.value === "Unrepairable" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>Q(t) = 1 - (1 - q) × e^(-λ×t)</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          q = Initial probability; λ = Failure rate (1/hour); t = Time (hours)
+        </span>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          For Steady-state: Q̄ = 1
+        </span>
+      </p>
+    )}
+
+    {/* Repairable */}
+    {values.calcTypes?.value === "Repairable" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>Q(t) = (λ/(λ+μ)) × [1 - e^(-(λ+μ)×t)]</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          λ = Failure rate (1/hour); μ = Repair rate (1/MTTR per hour)
+        </span>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          For Steady-state: Q̄ = λ/(λ+μ)
+        </span>
+      </p>
+    )}
+
+    {/* Latent cases */}
+    {values.calcTypes?.value === "Latent, P=λ*T" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>P = λ × T</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          λ = Failure rate (1/hour); T = Inspection interval (hours)
+        </span>
+      </p>
+    )}
+
+    {values.calcTypes?.value === "Latent, P=λ*T/2" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>P = λ × T / 2</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          λ = Failure rate (1/hour); T = Inspection interval (hours)
+        </span>
+      </p>
+    )}
+
+    {values.calcTypes?.value === "Latent,Life-time, P=1-e^(-λ*T)" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>P = 1 - e^(-λ×T)</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          λ = Failure rate (1/hour); T = Inspection interval (hours)
+        </span>
+      </p>
+    )}
+
+    {values.calcTypes?.value === "Latent repairable" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>Q(t) = (λ/(λ+μ)) × [1 - e^(-(λ+μ)×T)]</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          λ = Failure rate (1/hour); μ = Repair rate (1/MTTR per hour); T = Inspection interval (hours)
+        </span>
+      </p>
+    )}
+
+    {/* Periodical tests */}
+    {values.calcTypes?.value === "Periodical tests" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>Q(t) = λ × (Ti/2 + MTTR)</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          λ = Failure rate (1/hour); Ti = Test interval (hours); MTTR = Mean time to repair (hours)
+        </span>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          For Steady-state: Q̄ = λ × (Ti/2 + MTTR)
+        </span>
+      </p>
+    )}
+
+    {/* Periodical Tests #2 */}
+    {values.calcTypes?.value === "Periodical Tests #2" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>Algorithm for Q(t) with periodic tests</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          Algorithm based on test interval Ti and time to first test Tf
+        </span>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          For Steady-state: Algorithm for Q̄
+        </span>
+      </p>
+    )}
+
+    {/* Latent (old format) */}
+    {values.calcTypes?.value === "Latent" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>Q(t) = 1 - (1-q)^t × e^(-λ×Ti)</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          q = Initial probability; λ = Failure rate (1/hour); Ti = Test interval (hours)
+        </span>
+      </p>
+    )}
+
+    {/* Average probability per mission hour */}
+    {values.calcTypes?.value === "Average probability per mission hour" && (
+      <p style={{ margin: "5px 0 0 0", fontSize: "12px", color: "#333" }}>
+        <strong>Q(t) = 1 - (1-q)^t</strong>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          q = Probability value
+        </span>
+        <br />
+        <span style={{ color: "#666", fontSize: "11px" }}>
+          For Steady-state: Q̄ = 1
+        </span>
+      </p>
+    )}
+  </div>
+</Form.Group>
 
                 {values.calcTypes.value === "Probability" ? (
                   <Form.Group className="mb-2">
